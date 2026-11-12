@@ -20944,6 +20944,13 @@ Köcheclub-App`,
         await protokoll(ich.person_id, "probe_beendet", { fuer: pid, seit: w.seit ?? null, gruppen: inGruppen.length, nachrichten_entfernt: entfernt });
         return json({ ok: true, gruppen: inGruppen.length, entfernt, name });
       }
+      // KC-CLUB-PREISETIKETTEN (12.11.2026): vom PC-Manager veröffentlichter Artikelstand (aktuelle Preise) – nur Clubleitung; fehlt er, nimmt die App den Grundstand der Kasse
+      case "etiketten_artikel": {
+        nurLeitung(ich);
+        const { data, error } = await db.from("kc_etikett_artikel_stand").select("artikel,veroeffentlicht_am").eq("org_id", ORG).maybeSingle();
+        if (error) return json({ artikel: null, stand: null, fehler: "nicht erreichbar" });
+        return json({ artikel: Array.isArray(data?.artikel) ? data.artikel : null, stand: data?.veroeffentlicht_am ?? null });
+      }
       case "haendlerausweis_codes": { // 2.690.0 KC-CLUB-HAENDLERAUSWEIS: nur Clubleitung; höchstens 120 Nummern je Abruf, Nummern 1–999
         nurLeitung(ich);
         const jahr = Math.trunc(Number(p.jahr)) || new Date().getFullYear(), von = Math.max(1, Math.trunc(Number(p.von)) || 1), bis = Math.min(999, Math.trunc(Number(p.bis)) || von);

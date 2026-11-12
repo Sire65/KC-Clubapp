@@ -7893,6 +7893,16 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.match(mig, /nr\s+text\s+not null check \(nr ~ '\^\[0-9\]\{3\}\$'/, "Nr als Text mit 3 Ziffern (führende Nullen)");
   assert.ok(!/grant (insert|update|delete)[^;]*to authenticated/.test(mig), "PC-Manager darf nur lesen");
 }
+// 2.926.0 KC-CLUB-PREISETIKETTEN + KC-CLUB-SCHILD-QUER
+{
+  assert.ok(aktionen.has("etiketten_artikel") && /case "etiketten_artikel": \{\s*nurLeitung\(ich\);/.test(server) && /from\("kc_etikett_artikel_stand"\)\.select\("artikel,veroeffentlicht_am"\)\.eq\("org_id", ORG\)/.test(server), "Preisetiketten: Server-Aktion nur Clubleitung, liest den veröffentlichten Stand");
+  const mig = fs.readFileSync(new URL("../supabase/migrations/20261112_kc_etikett_artikel_stand.sql", import.meta.url), "utf8");
+  assert.ok(/kc_private\.kc_core_has_app_access\(p_org_id, 'KC_MANAGER'/.test(mig) && /if v_uid is null or not/.test(mig) && /revoke all on function public\.kc_etikett_artikel_veroeffentlichen\(text, jsonb\) from public, anon;/.test(mig), "Preisetiketten: Veröffentlichen nur angemeldet mit Manager-Rechten, kein anon");
+  assert.ok(/PE_FORMATE = \[8, 7, 6, 5\]/.test(programm) && /\["foto", "Foto"\]/.test(programm) && /\["allergene", "Allergene"\]/.test(programm) && /\["qr", "QR-Code"\]/.test(programm) && /data-gruppe=/.test(programm) && /data-plus=/.test(programm) && /data-preis=/.test(programm), "Preisetiketten: Formate, Bausteine, Warengruppen, Anzahl, Preis änderbar");
+  assert.ok(/peKasse\(\) \+ "etiketten\/artikel\.json/.test(programm) && /⚠ nicht erfasst/.test(programm) && /q\.addData\(String\(a\.nummer\)\)/.test(programm), "Preisetiketten: Rückfall Grundstand der Kasse, fehlende Angaben rot, QR = Artikelnummer");
+  assert.ok(/"peStart\(\)"/.test(programm) && /preisetiketten: \{ bauen:/.test(programm), "Preisetiketten: im Büro-Drucker und im Druck-Kern");
+  assert.ok(/async function druckSchild\(\)/.test(programm) && /gedreht = quer \? await schildGedreht\(SDR\.bildUrl\) : null/.test(programm) && /@media print\{#druck \.sch-bild\{display:none!important\}\}/.test(programm), "Schild quer: im Druck gedreht auf Hochformat, Vorschau aufrecht");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
@@ -9268,7 +9278,8 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   // 2.150.0: Schilder (KC-CLUB-SCHILDER) haben ihr CD im Bild selbst (Kochmütze im weinroten Kreis + „Köcheclub Werne“ unten)
   // 2.526.0 KC-CLUB-ERSTATTUNG-BRIEFBOGEN: Erstattungsantrag als Briefbogen-Blatt (erstBlatt mit cdKopf + cdFuss) – zwei Einstiege
   // 2.766.0 KC-CLUB-SCHILDER-DRUCKPAKET: Druckpaket = Seiten als Bild (dseite) wie Originalseiten
-  assert.ok(ohne.length === 6 && ohne.every((x) => /dseite|titel: b\.betreff|SDR\.bildUrl|html: erstBlatt\(/.test(x)), "nur Originalseiten (Bild), Brief und Schild ohne zentralen Rahmen");
+  // 2.926.0 KC-CLUB-SCHILD-QUER: Schild quer hat eine zweite Rückgabe (gedreht für den Druck, aufrecht für die Vorschau)
+  assert.ok(ohne.length === 7 && ohne.every((x) => /dseite|titel: b\.betreff|SDR\.bildUrl|html: erstBlatt\(/.test(x)), "nur Originalseiten (Bild), Brief und Schild ohne zentralen Rahmen");
   assert.ok(/return `<div class="cd-blatt cd-brief">\$\{cdKopf\("Antrag auf Erstattung"/.test(programm) && /\$\{cdFuss\(`Erstellt mit der Köcheclub-App am/.test(programm), "Erstattungsantrag = Briefbogen-CD");
   const schild = programm.slice(programm.indexOf("function schZeichnen("), programm.indexOf("function schBild()"));
   assert.ok(/ctx\.fillStyle = KC_CD\.weinrot/.test(schild) && /ctx\.drawImage\(SCH_LOGO/.test(schild) && /ctx\.fillText\(KC_CD\.name/.test(schild) && /const SCH_LOGO = new Image\(\); SCH_LOGO\.src = KC_CD\.logo;/.test(programm), "Schild trägt das CD selbst");

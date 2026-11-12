@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.925.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.926.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12,13 +12,14 @@ const APP_STUFE = "RC";
 // Pflege: gleiche Namen in sw.js (TEILE); nach jeder Änderung an teile/*.js: node tools/teile-pruefsumme.mjs (der Vertragstest prüft beides).
 // Rückweg: docs/AUFTEILEN.md.
 const TEILE_LISTE = {
+  etiketten: { einstieg: ["peStart"], sri: "sha384-R+tuaXlwpCcGyqO4+A9q8MUqtDphfG9/l84axXb5KFAo6LRlKCKwFmBilUI9gWXy" }, // KC-CLUB-PREISETIKETTEN (12.11.2026): Büro → Drucker → 🏷️ Preisetiketten (nur Clubleitung)
   videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl", "installAnleitung"], sri: "sha384-A2zAwhQmdtDsHob2o/8SE342QNblyiSmunmih4H34/CVV7LE5grpMD6cv6OiUvjg" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
   szenen: { einstieg: ["jahreszeitVorschau"], sri: "sha384-mAuFkYPP7UnZNUqE/gD38eJ/THfwNSgLrJyvGLQUb5PBmCArQZ8wIH5DiImNHvlj" }, // Stufe 3b: Kopf-Szenen (Jahreszeiten, Sim-Jü, Themen) – kurz nach dem Start über szenenSpaeter
   sprache: { einstieg: ["spracheEnglisch", "spracheDeutsch"], sri: "sha384-Chqwpd0bk+v+mxRc527Icw9RRT0IZz4d+WrsNvcZpIK+RuYs+rbn2Nt+2eebNasd" }, // KC-CLUB-SPRACHE: Bedienung auf Englisch – nur geladen, wenn jemand 🇬🇧 wählt
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-NDuho5dgDL13uhtcTY8d0cGESAWhk+B+5qyWyvBuOxPgmADzmvY9YFCcwWM0s+kx" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
   spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-df8Lw0oCMMrnIIB7cpSpJ2Q2SKgIao/dXXHLrjtixnNByKoeFvC3pVc6zGaNCcVw" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
   tischlive: { einstieg: ["tlStart", "tlStopp", "tlZeichnen", "tlPlatz", "tlRegeln"], sri: "sha384-RCmsKY+DTRfsCMRHkJVG2UJlySANNdHxnEdMps4tkL9kgf8DC5O/b1jMcwVeY3XB" }, // 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: Ton, Kamera, Bildschirm, Unterlagen zeigen am Tisch
-  buero: { einstieg: ["ersBuchOeffnen", "eblDruck", "buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-3R20qEHqksVdLLMEYPdN5HiBCpGuyT15Jp7pMtNRpFPvdwxgfTnPr01dxRWMF4Y6" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
+  buero: { einstieg: ["ersBuchOeffnen", "eblDruck", "buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-Mr+xXsGpVuH61jBigfyh5hTIDmwT3dx3ov+rKlJsPETr+iYHDe0CD05eXiYl0vHq" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
   hilfe: { einstieg: ["twFrageStart", "twOffenStart", "sucheAuf", "suSucheKnopf"], sri: "sha384-qPS9/H66zIS2QeGHqQQs5CFqN4+XZns2HL1FnQYWzUWbVrYpK/BLZN111UDmKbRH" }, // Stufe 5: Hilfe-Werkzeuge (Frag Twinkey, Mitglied fragen, Schnellsuche) – beim ersten Antippen
   rechner: { einstieg: ["rechnerOeffnen"], sri: "sha384-UWrOf1EIXxhsoWWwxnLDzpzALsaxzNGXgeqoLAjVvqoQ6wbFnIGxYTkQPFpiRuQ4" }, // 2.811.0 KC-CLUB-RECHNER: Tischrechner im Büro, „rechne …“ per Sprache
   glueck: { einstieg: ["kaeferKommt", "kleeKommt"], sri: "sha384-hbPb96l3YrlvBxe1zJJfotwARA0pEPKKaDyb1BBVooEi5BCYbfYqihmMYABmlsg4" }, // KC-CLUB-MARIENKAEFER / KC-CLUB-GLUECKSKLEE (06.11.2026): 🐞 jeder 50., 🍀 jeder 25. Start
@@ -30482,8 +30483,27 @@ async function schWeitergeben() {
   einlZiel([datei], { titel: `Schild – ${SDR.name || SDR.d.titel || "Köcheclub"}`.slice(0, 120) }); // gleicher Weg wie 📥 Einlesen: Ordner, Nachricht, E-Mail
 }
 function schDrucken() { if (schLeer()) return; SDR.bildUrl = schBild().toDataURL("image/jpeg", 0.92); druckStarten("schild"); }
-function druckSchild() {
-  const quer = SDR.d?.format === "quer";
+// KC-CLUB-SCHILD-QUER (12.11.2026, Fund Hansi „Drucken von Preisliste übernimmt nicht Querformat“): Handy-Druckdienste und iPhone ignorieren
+// „@page A4 landscape“ und drucken hochkant (verkleinert). Darum geht ein Querformat-Schild um 90° gedreht auf ein Hochformat-Blatt – das Papier
+// sieht genauso aus wie quer gedruckt, klappt aber auf jedem Gerät. Am Bildschirm (Vorschau) bleibt das Schild aufrecht.
+let SCH_DREH = { quelle: null, url: null };
+async function schildGedreht(url) {
+  if (!url) return null;
+  if (SCH_DREH.quelle === url) return SCH_DREH.url;
+  const img = new Image(); img.src = url;
+  try { await img.decode(); } catch { return null; } // nicht lesbar → wie bisher ohne Drehung
+  const c = document.createElement("canvas"); c.width = img.naturalHeight; c.height = img.naturalWidth;
+  const g = c.getContext("2d"); g.translate(c.width, 0); g.rotate(Math.PI / 2); g.drawImage(img, 0, 0);
+  SCH_DREH = { quelle: url, url: c.toDataURL("image/jpeg", 0.92) }; return SCH_DREH.url;
+}
+function schildQuerHtml(aufrecht, gedreht) {
+  return `<style>@media screen{#druck .sch-druck{display:none!important}}@media print{#druck .sch-bild{display:none!important}}</style>
+    <img class="sch-bild" src="${aufrecht}" alt="" style="display:block;margin:0 auto;width:auto;height:auto;max-width:100%;max-height:180mm">
+    <img class="sch-druck" src="${gedreht}" alt="" style="display:block;margin:0 auto;width:auto;height:auto;max-width:100%;max-height:268mm">`;
+}
+async function druckSchild() {
+  const quer = SDR.d?.format === "quer", gedreht = quer ? await schildGedreht(SDR.bildUrl) : null;
+  if (gedreht) return { titel: SDR.name || SDR.d?.titel || "Schild", ohneRahmen: true, quer: false, randlos: false, html: schildQuerHtml(SDR.bildUrl, gedreht) };
   return { titel: SDR.name || SDR.d?.titel || "Schild", ohneRahmen: true, quer, randlos: false,
     html: `<img src="${SDR.bildUrl}" alt="" style="display:block;margin:0 auto;width:auto;height:auto;max-width:100%;max-height:${quer ? "180mm" : "268mm"}">` };
 }
@@ -30862,6 +30882,7 @@ const DRUCKARTEN = {
   dpLuecken: { titel: "🧩 Wo noch Helfer fehlen", optionen: () => '<p class="hinweis">Ein Blatt mit Logo: alle Tage und Stunden, an denen noch Leute fehlen – zum Aushängen oder für die, die noch keine Wünsche abgegeben haben. Rechnet sich von selbst neu, sobald ein Wunschplan dazukommt.</p><p class="hinweis">Beim Drucken „A4 Querformat“ und „Hintergrundgrafiken“ wählen.</p>', bauen: () => dpdLueckenBauen() }, // 2.676.0 KC-CLUB-DP-LUECKEN
   haendlerausweis: { bauen: (o, p) => ({ ohneRahmen: true, randlos: true, titel: p.probe ? "Händler-Ausweise – Probeblatt Duplex" : `Händler-Ausweise Weihnachtsmarkt ${p.jahr} (${p.n} Stück)`, html: p.bilder.map((b) => `<img class="dseite" src="${b}" alt="">`).join("") }) }, // 2.690.0 KC-CLUB-HAENDLERAUSWEIS
   haendlerausweis_liste: { bauen: (o, p) => druckHaendlerListe(p) },
+  preisetiketten: { bauen: (o, p) => ({ ohneRahmen: true, randlos: true, titel: p.probe ? `Preisetikett – Probe ${p.format} × ${p.format} cm` : `Preisetiketten ${p.format} × ${p.format} cm (${p.n} Stück)`, html: p.bilder.map((b) => `<img class="dseite" src="${b}" alt="">`).join("") }) }, // KC-CLUB-PREISETIKETTEN
   einrichtungskarte: { bauen: (o, param) => druckEinrichtungskarte(param) }, // KC-CLUB-EINRICHTUNGSKARTE (1.88.0) // KC-CLUB-BESTAETIGUNG (1.69.0): Aufstellung der eigenen Eingaben
 };
 // ---- KC-CLUB-KURZANLEITUNG (0.62.0): die App in 3 Schritten – für Einsteiger, zum Ausdrucken oder Verschicken ----
@@ -34492,6 +34513,7 @@ const SPUR_WAS = { glueckskeks: "🥠 Glückskeks geöffnet", kontakt_extern: "�
 // (Fenster-ID, Hilfe-ID, Video-/Film-ID) – erst der Admin-Bildschirm übersetzt sie in Namen (spurMitName). Übersicht je Mitglied: spurUebersicht().
 // Registry FENSTER_NAMEN: Fenster-ID → Name in den Wegen. Fehlt ein Name, steht dort „🪟 Fenster: „ID““ – tests/spur-voll.test.mjs meldet fehlende Namen.
 const FENSTER_NAMEN = {
+  peBlatt: "🏷️ Preisetiketten", // KC-CLUB-PREISETIKETTEN
   // 2.794.0 KC-CLUB-FENSTER-NAMEN-NACHTRAG (Fund Hansi 31.10.: in den Wegen stand „Fenster: „niFenster““) – Fenster, die nicht über blattAuf entstehen
   niFenster: "ℹ️ Nachricht-Info: gelesen/zugestellt", naMenue: "💬 Nachricht: Menü", naLoeschen: "🗑️ Nachricht löschen?", wlFenster: "↪️ Nachricht weiterleiten",
   pwFenster: "📌 Pinnwand-Hinweis", ansFenster: "🗣️ Sprachansagen", geFenster: "📱 Meine Geräte mit Push", rsFenster: "🖍️ Tippfehler rot unterstreichen",
