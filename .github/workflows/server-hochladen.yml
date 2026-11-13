@@ -47,7 +47,9 @@ jobs:
           VORHER: ${{ github.event.before }}
         run: |
           art="${EINGABE:-termin}"
-          case "$NACHRICHT" in *"[Notfall]"*) art=notfall;; *"[Hansi: einspielen]"*) art=hansi;; esac
+          # nur die erste Zeile (Titel) zählt – eine Erklärung im Text, die „[Notfall]“ nur erwähnt, ist kein Notfall (Fund 13.11.2026, 2.945.0)
+          titel="${NACHRICHT%%$'\n'*}"
+          case "$titel" in *"[Notfall]"*) art=notfall;; *"[Hansi: einspielen]"*) art=hansi;; esac
           neu=ja
           tools/einspielen-ruhe.sh "$art" "$neu"
       - name: Wartungsfenster an

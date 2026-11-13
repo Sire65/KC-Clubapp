@@ -59,7 +59,8 @@ Gilt für jedes Einspielen (12-/20-Uhr-Bündel und „sofort“). Jede Sitzung p
 gibt es zusätzlich eine technische Sperre (KC-EINSPIELEN-SPERRE):** `tools/einspielen-ruhe.sh` läuft in „Seite veröffentlichen“ und „Server hochladen“
 direkt vor dem Wartungsfenster, also kurz bevor die Version bei den Mitgliedern ankommt (zwischen Push und Ankommen liegen ~6 Minuten):
 - neue App-/Server-Version nur **11:45–13:00 und 19:45–21:00 Uhr** (deutsche Zeit), sonst roter Ablauf und nichts geht raus –
-  außer `[Hansi: einspielen]` oder `[Notfall]` im Commit-Text (bzw. „Run workflow“ mit art = hansi/notfall),
+  außer `[Hansi: einspielen]` oder `[Notfall]` im **Titel** (erste Zeile) des Commits (bzw. „Run workflow“ mit art = hansi/notfall) –
+  im übrigen Text wirken die Kennungen nicht (Fund 13.11.2026: eine bloße Erwähnung von „[Notfall]“ hatte alle Prüfungen übersprungen),
 - Spiegelung/Sicherung oder **mehr als 2 in der App** → alle 5 Min. neu prüfen, höchstens 60 Min., dann roter Ablauf (Hansi fragen,
   danach „Run workflow“ für **beide** Abläufe, sonst passen App und Server nicht zusammen); `[Notfall]` wartet nicht,
 - gezählt vom Club-Server (Aktion `einspielen_ruhe`, nur die Zahl, nur für die GitHub-Abläufe); Pushes ohne neue `version.json` (Werkzeuge, Doku) warten nicht.
