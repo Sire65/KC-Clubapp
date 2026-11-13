@@ -35806,13 +35806,16 @@ function zugangHilfeZeigen(h) {
   const knopf = (weg, t, haupt) => `<button type="button" class="knopf${haupt ? " haupt" : ""}" style="width:100%;margin-top:8px" onclick="zugangHilfe('${weg}', this)">${t}</button>`;
   const p = (t, oben = 8) => `<p class="hinweis" style="margin:${oben}px 0 0">${t}</p>`;
   if (h.art === "alt" && h.neuerLink) {
-    // 2.939.0 KC-CLUB-ALTER-LINK-KLAR (Wunsch Hansi 13.11.2026): kurz und klar – altes Symbol löschen, neuen Link aus WhatsApp nehmen
-    k.innerHTML = `<h3>👋 ${h.vorname ? `Hallo ${esc(h.vorname)}!` : "Hallo!"}</h3>
-      <p style="margin:0"><b>⚠️ Dieses Köcheclub-Symbol ist veraltet.</b> Bitte nicht mehr benutzen und <b>löschen</b>: Symbol auf dem Startbildschirm lange drücken → <b>„Entfernen“</b> bzw. <b>„App löschen“</b>.</p>
-      <p style="margin:10px 0 0"><b>📲 Du hast schon einen neuen Link bekommen – per WhatsApp von Hansi.</b> Öffne bitte diesen Link und leg die App daraus neu auf den Startbildschirm.</p>
+    // 2.939.0 KC-CLUB-ALTER-LINK-KLAR (Wunsch Hansi 13.11.2026, Starttext von Hansi): altes Symbol entfernen, neuen Link aus WhatsApp nehmen
+    const am = h.neuSeit ? tag(h.neuSeit) : "";
+    k.innerHTML = `<h3>👋 ${h.vorname ? `Hallo ${esc(h.vorname)},` : "Hallo,"}</h3>
+      <p style="margin:0">du versuchst gerade, die Club-App über alte Zugangsdaten zu öffnen. Aus Sicherheitsgründen ist das nicht möglich.</p>
+      <p style="margin:10px 0 0">Entferne am besten das <b>Kochmützen-Symbol</b> der Club-App von deinem Bildschirm (Symbol auf dem Startbildschirm lange drücken → <b>„Entfernen“</b> bzw. <b>„App löschen“</b>).</p>
+      <p style="margin:10px 0 0"><b>📲 Du hast ${am ? `am ${esc(am)} ` : ""}schon einen neuen Link bekommen – per WhatsApp von Hansi.</b> Öffne bitte den neuen Link und leg die App daraus neu auf den Startbildschirm in deinem Browser.</p>
       ${p("Neuen Link nicht gefunden?", 12)}${knopf("hansi", "📨 Hansi Bescheid geben", true)}
       ${h.mail ? knopf("mail", `✉️ Neuen Link an ${esc(h.mail)} schicken`) : ""}
-      ${p("🔢 Auf einem anderen Gerät schon angemeldet? Dann unten den <b>6-stelligen Code</b> eingeben.")}
+      ${p("🔢 Oder unten den <b>6-stelligen Code</b> eingeben, wenn du auf einem anderen Gerät schon angemeldet bist.")}
+      <p style="margin:10px 0 0">Viele Grüße</p>
       <p class="hinweis" id="zhAntwort" style="margin:8px 0 0" aria-live="polite"></p>`;
     k.style.borderColor = "var(--warn, #e65100)";
   } else if (h.art === "alt" || h.art === "pausiert") {

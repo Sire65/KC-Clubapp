@@ -406,12 +406,13 @@ async function zugangHilfeInfo(hash: string, gesperrtPid: string | null): Promis
     const mail = String(pe.email || "").trim();
     // 2.939.0 KC-CLUB-ALTER-LINK-KLAR (Wunsch Hansi 13.11.2026, Fall Marianne: altes Startsymbol immer wieder benutzt): gibt es schon einen
     // neueren, gültigen Link? Dann sagt die App klar „altes Symbol löschen – du hast schon einen neuen Link per WhatsApp“. Nur ja/nein, nie der Link.
-    let neuerLink = false;
+    let neuerLink = false, neuSeit: string | null = null;
     if (art === "alt") {
       const { data: z } = await db.from("kc_club_zugang").select("aktiv,erstellt_am").eq("person_id", pid).maybeSingle();
       neuerLink = !!z?.aktiv && (!seit || !z.erstellt_am || new Date(z.erstellt_am).getTime() >= new Date(seit).getTime() - 60000);
+      if (neuerLink && z?.erstellt_am) neuSeit = String(z.erstellt_am); // nur das Datum des neuen Links (für „Du hast am … bekommen“)
     }
-    return { art, vorname: vorname(pe as Person), seit, neuerLink, mail: art === "alt" && mail ? mailMaske(mail) : null, ticket: await zhTicket(pid, art) };
+    return { art, vorname: vorname(pe as Person), seit, neuerLink, neuSeit, mail: art === "alt" && mail ? mailMaske(mail) : null, ticket: await zhTicket(pid, art) };
   } catch { return { art: "unbekannt" }; }
 }
 // KC-CLUB-ZUGANG-HILFE (26.10.2026): neuer Link per Mail – gemeinsam für „Link verloren?“ (zugang_anfordern) und die Zugangs-Hilfe.
