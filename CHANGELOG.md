@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.942.0 – 2026-11-13 – 📋 Einsatzplan je Tag · Spätdienst bis Schluss (KC-CLUB-DP-EINSATZ, KC-CLUB-DP-SPAET-BIS-SCHLUSS)
+- Wunsch Hansi („je Tag eine A4-Seite: alle Personen, oben die Wunschzeit, darunter die Sollzeit – mit Balken, Besetzungsstatistik und Bereitschaft, sparsam aber übersichtlich“): neues Blatt **📋 Einsatzplan** im Ordner „Dienstplan zum Drucken“ (nur Admin). Je Tag eine Seite A4 quer mit schmalem CD-Kopf; im Tageskopf Art und Regelzeit, Soll, eingeteilt, fehlt. Alle Personen in fester Reihenfolge, auch ohne Angabe: oben ihre Angaben (Wunsch, kann, nur wenn nötig, gesperrt), darunter die Einteilung als Balken (Farbe nach Bereich, Aushilfen grau gestreift, ☕ ab 6 Std.), links die Dienstzeit, rechts W = Wunsch- und S = eingeteilte Stunden. Darunter Besetzt/Soll je halbe Stunde (grün/rot/gelb), „Fehlt“ und die selbst eingetragene Bereitschaft.
+- Wunsch Hansi („die letzten Leute, die Spätdienst haben, bis zum Schluss eintragen – sozusagen bis 23 Uhr“): Dienstplan-Rechnung Regel 9, `dp_druck_konfig.spaetBisSchluss = true` – am Markttag wird ein Dienst, der in den letzten 2 Std. vor Schluss endet, bis Marktschluss verlängert (nicht über eine Sperre, nicht über 8 Std. bzw. die eigenen Grenzen). Probe 13.11.: Lücken 17,5 statt 28,5 Std.
+
 ## 2.941.0 – 2026-11-13 – 🖼️ Roman Staffel 2: 13 neue Bleistift-Zeichnungen
 Wunsch Hansi 12./13.11.: Zeichnungen für Staffel 2 (von ChatGPT, geprüft auf Figuren und Szene, als Graustufen-WebP < 200 KB).
 - Heft 13 (Folge 1): Ralle am Teich, Mikes erster Tag, Bischofsmütze, Forelle für Tisch neun – dazu drei kurze Absätze (Stockenten, Servietten falten, Lena serviert Tisch neun).

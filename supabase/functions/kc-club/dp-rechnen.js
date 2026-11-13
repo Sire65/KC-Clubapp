@@ -31,7 +31,8 @@ const vgl = (a, b) => (a < b ? -1 : a > b ? 1 : 0); // wie Pythons sorted() für
 // bekommt sie; bei Überbesetzung bei dem streichen, der viel hat“): wunschZuerst – zuerst bekommt jeder an jedem Tag seinen Wunschblock (im Bedarf,
 // höchstens max/maxDienst Std.), dann werden überbesetzte Ränder bei dem gekürzt, der insgesamt die meisten Wunschstunden hat, dann füllt die
 // bisherige Rechnung die Lücken mit Kann-Zeiten. Sperren, Ruhetag nach maxTageAmStueck, maxGesamt und „nur mit anderen“ gelten weiter.
-export const DP_REGEL = 8;
+// 2.942.0 KC-CLUB-DP-SPAET-BIS-SCHLUSS: spaetBisSchluss – Spätdienst bis Marktschluss (siehe unten)
+export const DP_REGEL = 9;
 
 export function dpRechnen(e) {
   const MAXLEN = e.max ?? 8, FAIR = e.fair ?? 1.5, LO = e.von ?? 8, HI = e.bis ?? 23, DECKEL = e.wunschDeckel !== false, ANTEIL = Number.isFinite(e.wunschAnteil) ? e.wunschAnteil : 0.5;
@@ -171,6 +172,15 @@ export function dpRechnen(e) {
           if (!passt(n, a, b)) continue; const g = slots(a, b).filter(luecke).length;
           if (g >= 2 && (!best || g > best[0] || (g === best[0] && b - a < best[2] - best[1]))) best = [g, a, b]; }
         if (best) { const [, a, b] = best; used.add(n); liste.push([n, a, b]); hours.set(n, (hours.get(n) || 0) + b - a); for (const s of slots(a, b)) dazu(n, s); } }
+    }
+    // 2.942.0 KC-CLUB-DP-SPAET-BIS-SCHLUSS (Wunsch Hansi „die letzten Leute, die Spätdienst haben, bis zum Schluss eintragen – sozusagen bis 23 Uhr“):
+    // am Markttag wird ein Dienst, der in den letzten 2 Std. vor Schluss endet, bis Schluss verlängert – nicht bei Sperre, nicht über max/maxDienst/maxGesamt
+    if (e.spaetBisSchluss === true && kind.get(d) === "Markttag") {
+      const S = [...need.keys()].filter((s) => need.get(s)[0] > 0), ende = S.length ? Math.max(...S) + H : null;
+      if (ende !== null) for (const z of liste) { const [n, a, b] = z, L = lim(n), zu = slots(b, ende);
+        if (b >= ende - 2 - 1e-9 && b < ende - 1e-9 && !zu.some((s) => un.get(k2(n, d))?.has(s)) && ende - a <= Math.min(MAXLEN, L.maxDienst) + 1e-9 && (hours.get(n) || 0) + (ende - b) <= L.maxGesamt + 1e-9
+          && !(L.begleitet && zu.some((s) => (staff.get(s)?.filter((x) => x !== n).length ?? 0) < L.begleitet))) {
+          for (const s of zu) staff.get(s)?.push(n); hours.set(n, (hours.get(n) || 0) + ende - b); z[2] = ende; } }
     }
     plan.set(d, liste);
     for (const [n] of liste) { if (!tageVon.has(n)) tageVon.set(n, new Set()); tageVon.get(n).add(d); }
