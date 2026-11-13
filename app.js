@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.938.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.939.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -35805,7 +35805,20 @@ function zugangHilfeZeigen(h) {
   const tag = (iso) => { try { return new Date(iso).toLocaleDateString("de-DE", { timeZone: TZ, day: "2-digit", month: "2-digit", year: "numeric" }); } catch { return ""; } };
   const knopf = (weg, t, haupt) => `<button type="button" class="knopf${haupt ? " haupt" : ""}" style="width:100%;margin-top:8px" onclick="zugangHilfe('${weg}', this)">${t}</button>`;
   const p = (t, oben = 8) => `<p class="hinweis" style="margin:${oben}px 0 0">${t}</p>`;
-  if (h.art === "alt" || h.art === "pausiert") {
+  if (h.art === "alt" && h.neuerLink) {
+    // 2.939.0 KC-CLUB-ALTER-LINK-KLAR (Wunsch Hansi 13.11.2026, Starttext von Hansi): altes Symbol entfernen, neuen Link aus WhatsApp nehmen
+    const am = h.neuSeit ? tag(h.neuSeit) : "";
+    k.innerHTML = `<h3>👋 ${h.vorname ? `Hallo ${esc(h.vorname)},` : "Hallo,"}</h3>
+      <p style="margin:0">du versuchst gerade, die Club-App über alte Zugangsdaten zu öffnen. Aus Sicherheitsgründen ist das nicht möglich.</p>
+      <p style="margin:10px 0 0">Entferne am besten das <b>Kochmützen-Symbol</b> der Club-App von deinem Bildschirm (Symbol auf dem Startbildschirm lange drücken → <b>„Entfernen“</b> bzw. <b>„App löschen“</b>).</p>
+      <p style="margin:10px 0 0"><b>📲 Du hast ${am ? `am ${esc(am)} ` : ""}schon einen neuen Link bekommen – per WhatsApp von Hansi.</b> Öffne bitte den neuen Link und leg die App daraus neu auf den Startbildschirm in deinem Browser.</p>
+      ${p("Neuen Link nicht gefunden?", 12)}${knopf("hansi", "📨 Hansi Bescheid geben", true)}
+      ${h.mail ? knopf("mail", `✉️ Neuen Link an ${esc(h.mail)} schicken`) : ""}
+      ${p("🔢 Oder unten den <b>6-stelligen Code</b> eingeben, wenn du auf einem anderen Gerät schon angemeldet bist.")}
+      <p style="margin:10px 0 0">Viele Grüße</p>
+      <p class="hinweis" id="zhAntwort" style="margin:8px 0 0" aria-live="polite"></p>`;
+    k.style.borderColor = "var(--warn, #e65100)";
+  } else if (h.art === "alt" || h.art === "pausiert") {
     const warum = h.art === "alt"
       ? `Dein bisheriger Zugangslink gilt ${h.seit ? `seit dem ${esc(tag(h.seit))} ` : ""}leider nicht mehr – er wurde durch einen neueren ersetzt (zum Beispiel, weil du dir einen neuen per Mail geholt hast). Aus Sicherheitsgründen funktioniert immer nur der <b>neueste</b> Link.`
       : "Dein Zugang ist gerade pausiert – aus Sicherheitsgründen funktioniert der Link deshalb nicht.";

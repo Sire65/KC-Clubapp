@@ -194,7 +194,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.938.0";
+const SERVER_VERSION = "2.939.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -404,7 +404,15 @@ async function zugangHilfeInfo(hash: string, gesperrtPid: string | null): Promis
     const { data: pe } = await db.from("kc_core_people").select("person_id,display_name,given_name,preferred_name,email,active").eq("person_id", pid).maybeSingle();
     if (!pe?.active) return { art: "unbekannt" };
     const mail = String(pe.email || "").trim();
-    return { art, vorname: vorname(pe as Person), seit, mail: art === "alt" && mail ? mailMaske(mail) : null, ticket: await zhTicket(pid, art) };
+    // 2.939.0 KC-CLUB-ALTER-LINK-KLAR (Wunsch Hansi 13.11.2026, Fall Marianne: altes Startsymbol immer wieder benutzt): gibt es schon einen
+    // neueren, gültigen Link? Dann sagt die App klar „altes Symbol löschen – du hast schon einen neuen Link per WhatsApp“. Nur ja/nein, nie der Link.
+    let neuerLink = false, neuSeit: string | null = null;
+    if (art === "alt") {
+      const { data: z } = await db.from("kc_club_zugang").select("aktiv,erstellt_am").eq("person_id", pid).maybeSingle();
+      neuerLink = !!z?.aktiv && (!seit || !z.erstellt_am || new Date(z.erstellt_am).getTime() >= new Date(seit).getTime() - 60000);
+      if (neuerLink && z?.erstellt_am) neuSeit = String(z.erstellt_am); // nur das Datum des neuen Links (für „Du hast am … bekommen“)
+    }
+    return { art, vorname: vorname(pe as Person), seit, neuerLink, neuSeit, mail: art === "alt" && mail ? mailMaske(mail) : null, ticket: await zhTicket(pid, art) };
   } catch { return { art: "unbekannt" }; }
 }
 // KC-CLUB-ZUGANG-HILFE (26.10.2026): neuer Link per Mail – gemeinsam für „Link verloren?“ (zugang_anfordern) und die Zugangs-Hilfe.
