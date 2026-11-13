@@ -1,11 +1,12 @@
 # Änderungen
 
-## 2.942.0 – 2026-11-13 – 🏠 Gastgeberin bekommt den Anmeldestand am Vortag schon um 16 Uhr (KC-CLUB-GASTGEBER-16UHR) · Server 2.942.0
+## 2.942.0 – 2026-11-13 – 🏠 Gastgeberin bekommt den Anmeldestand am Vortag schon um 16 Uhr (KC-CLUB-GASTGEBER-16UHR) · 👣 Dienst-Vorgänge in den Wegen (KC-CLUB-SPUR-DIENST) · Server 2.942.0
 Wunsch Hansi 13.11.: „Nächster Köcheclub-Treff bei Reinhilde in Ondrup. Sie muss automatisch Push/Mail bekommen, wie viele Mitglieder angemeldet sind – einmal am Vortag bis 16.00 und am gleichen Tag, falls sich noch was geändert hat.“
 - Die Vortags-Meldung an die Gastgeberin (Push **und** E-Mail: Zusagen mit Namen, vielleicht, Absagen, noch offen, Hinweise, „bitte plane für … Personen“) kommt jetzt **ab 16 Uhr** statt ab 18 Uhr. Die Clubleitung bekommt denselben Stand.
 - Am Tag selbst wie bisher: jede Änderung kurz (gesammelt, höchstens alle 15 Min., nachts nicht) und **2 Stunden vorher nochmal der ganze Stand – nur, wenn sich etwas geändert hat**.
 - Gilt für jedes Treffen mit eingetragenem Gastgeber, z. B. Köcheclub-Sitzung am 24.11. bei Reinhilde in Ondrup (Meldung am 23.11. um 16 Uhr).
-- Keine Datenbank-Änderung. Test `tests/gastgeber-16uhr.test.mjs`. Rückweg: Server 2.939.0.
+- **👣 Wege der Mitglieder – Dienst** (Wunsch Hansi 13.11.: „ob sie es nur geöffnet hat oder auch Dienstzeiten eingetragen oder geändert – mit Ändern, damit ich sehe, ob es Änderungen gab“): neben „Mein Dienst geöffnet“ stehen jetzt die Vorgänge – 🗓️ Dienstwünsche abgegeben / ✏️ geändert (mit Fassung), ⏱️ Stunden gemeldet, ✅ Ist-Zeiten bestätigt / ✏️ geändert / 🚫 nicht da, 🟢 Kommen / 🔴 Gehen / ✏️ Zeit geändert, 🔁 Tausch angeboten / 🤝 übernommen / ↩️ zurückgezogen / ✅ bestätigt. Der Server schreibt sie selbst (auch von der Dienstwunsch-Seite). Nur der Vorgang mit Fassung bzw. Diensttag – nie Zeiten, Wünsche oder Texte.
+- Keine Datenbank-Änderung. Tests `tests/gastgeber-16uhr.test.mjs`, `tests/spur-dienst.test.mjs`. Rückweg: Server 2.939.0.
 - Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
 
 ## 2.941.0 – 2026-11-13 – 🖼️ Roman Staffel 2: 13 neue Bleistift-Zeichnungen

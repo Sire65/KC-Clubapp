@@ -5184,6 +5184,12 @@ async function spurZeilen(von: number, bis: number, pid: string | null, felder =
   return alle;
 }
 const SPUR_TAGE = 30;
+// KC-CLUB-SPUR-DIENST (13.11.2026, Wunsch Hansi „ob sie es nur geöffnet hat oder auch Dienstzeiten eingetragen oder geändert – mit Ändern, damit ich
+// sehe, ob es Änderungen gab“): Dienst-Vorgänge schreibt der Server selbst in die Wege (auch aus der Dienstwunsch-Seite, die keine Wege meldet).
+// Nur der Vorgang, „neu“ oder „geändert“, Fassung bzw. Tag als Kennung – nie Zeiten, Wünsche oder Texte.
+async function spurServer(pid: string, w: string, mit?: string) {
+  try { if (!SPUR_WAS.test(w) || (mit && !spurMitOk(mit))) return; await protokoll(pid, "spur", { s: [mit ? [Date.now(), w, mit] : [Date.now(), w]] }); } catch { /* Wege dürfen nie stören */ }
+}
 // KC-CLUB-STARTSTATISTIK (2.31.0, Wunsch Hansi): jeder App-Start mit Dauer, Gerät und Browser (Name nur für den Admin sichtbar), 180 Tage
 const START_TAGE = 180;
 // ---------- KC-CLUB-PROTOKOLL-WAECHTER (2.114.0, Wunsch Hansi „muss das Protokoll so wachsen? Wächter, der es leert, wenn zu voll“) ----------
@@ -13494,6 +13500,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         } else zeilen.push({ ...basis, art, zeit: new Date(zeitMs).toISOString(), grund: grund || null, ...(art === "out" ? { pause_min: Math.max(0, Math.min(240, Math.round(Number(p.pause) || 0))) } : {}) });
         const { error } = await db.from("kc_dp_stempel").insert(zeilen);
         if (error) throw new Fehler("Die Buchung konnte nicht gespeichert werden – bitte gleich noch einmal.", 503);
+        await spurServer(ich.person_id, zeilen.at(-1).art === "out" ? "tat_dienst_gehen" : "tat_dienst_kommen"); // KC-CLUB-SPUR-DIENST
         await protokoll(ich.person_id, "dienst_gebucht", { art: zeilen.at(-1).art, nachgetragen: zeilen.length > 1, vorOrt, spontan, abweichung: dienst ? dsGrundNoetig(zeilen.at(-1).art, zeitMs, dienst) : null });
         const neu = await dsLage(ich);
         let summe: number | null = null;
@@ -13513,6 +13520,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const { data: neu, error } = await db.from("kc_dp_stempel").insert({ ...rest, zeit: new Date(zeitMs).toISOString(), grund, korrektur_von: alt.id, erstellt_von: ich.person_id }).select("id").single();
         if (error || !neu) throw new Fehler("Die Änderung konnte nicht gespeichert werden.", 503);
         await db.from("kc_dp_stempel").update({ storniert_am: jetzt(), storniert_von: ich.person_id }).eq("id", alt.id).is("storniert_am", null);
+        await spurServer(ich.person_id, "tat_dienst_korrigiert"); // KC-CLUB-SPUR-DIENST
         await protokoll(ich.person_id, "dienst_korrigiert", { art: alt.art, von: alt.zeit, nach: new Date(zeitMs).toISOString() });
         return json({ ok: true, lage: await dsLage(ich) });
       }
@@ -13563,6 +13571,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const { error } = alt ? await db.from("kc_dp_dienst_rueckmeldung").update(zeile).eq("id", alt.id).eq("version", alt.version)
           : await db.from("kc_dp_dienst_rueckmeldung").insert(zeile);
         if (error) throw new Fehler("Konnte nicht gespeichert werden – bitte gleich noch einmal.", 503);
+        await spurServer(ich.person_id, ergebnis === "passt" ? (alt?.ergebnis ? "tat_ist_wieder_passt" : "tat_ist_passt") : ergebnis === "nicht_da" ? "tat_ist_nicht_da" : alt?.ergebnis ? "tat_ist_neu_geaendert" : "tat_ist_geaendert", "d" + d.datum); // KC-CLUB-SPUR-DIENST
         await protokoll(ich.person_id, "ist_rueckmeldung", { ref, ergebnis, vorher: alt?.ergebnis ? { ergebnis: alt.ergebnis, start: alt.ist_start, ende: alt.ist_ende, pause: alt.pause_min } : null,
           start: iso(start), ende: iso(ende), pause, status: planerStatus, version: zeile.version });
         // Bescheid an die Clubleitung bei jeder Zeitänderung (nicht bei „passt“ und nicht, wenn sich nichts geändert hat)
@@ -13835,6 +13844,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const { data: neu, error } = await db.from("kc_club_dienst_tausch").insert({ org_id: ORG, event_id: d!.event, dienst_ref: d!.ref, work_date: d!.datum, start_zeit: new Date(d!.startMs).toISOString(),
           ende_zeit: new Date(d!.endeMs).toISOString(), pause_min: d!.pause || 0, bereich: d!.bereich, zone: d!.zone, von_person: ich.person_id, nachricht }).select("id").single();
         if (error || !neu) throw new Fehler(error?.code === "23505" ? "Diesen Dienst hast du schon angeboten." : "Das Angebot konnte nicht gespeichert werden.", error?.code === "23505" ? 409 : 503);
+        await spurServer(ich.person_id, "tat_tausch_anbieten", "d" + d!.datum); // KC-CLUB-SPUR-DIENST
         await protokoll(ich.person_id, "dienst_tausch", { id: neu.id, aktion: "anbieten", ref: d!.ref });
         const andere = (await aktiveMitglieder()).map((m) => m.person_id).filter((x) => x !== ich.person_id);
         const versand = await dtSenden(andere, false, { titel: `🔁 ${ich.vorname} sucht Ersatz`, kurz: `${dtText(d!, TZ)}${nachricht ? ` – „${nachricht.slice(0, 80)}“` : ""} · Kannst du übernehmen?` }, `${neu.id}:neu`);
@@ -13875,6 +13885,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const { data: neu, error } = await db.from("kc_club_dienst_tausch").update(set).eq("id", r.id).eq("status", r.status).select("id");
         if (error) throw new Fehler("Das hat nicht geklappt – bitte nochmal.", 503);
         if (!neu?.length) throw new Fehler("Jemand anderes war schneller – die Liste wird neu geladen.", 409);
+        if (/^[a-z_]{1,18}$/.test(aktion)) await spurServer(ich.person_id, "tat_tausch_" + aktion, r.work_date ? "d" + r.work_date : undefined); // KC-CLUB-SPUR-DIENST
         await protokoll(ich.person_id, "dienst_tausch", { id: r.id, aktion, von: r.status, nach: w.nach, an, probe: r.probe });
         const pm = await personen([r.von_person, an || ""].filter(Boolean)), nm = (id: string | null) => (id ? (pm.get(id)?.display_name || id).split(" ")[0] : "");
         const wann = dtText(a, TZ), planerIds = await adminIds();
@@ -14043,6 +14054,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const r = alt ? await db.from("kc_dp_wish_inbox").update({ ...zeile, revision: alt.revision + 1 }).eq("id", alt.id).select("revision").single()
           : await db.from("kc_dp_wish_inbox").insert({ ...zeile, revision: 1 }).select("revision").single();
         if (r.error) throw new Fehler("Wünsche konnten nicht gespeichert werden.", 500);
+        await spurServer(ich.person_id, alt ? "tat_dw_geaendert" : "tat_dw_neu", "f" + r.data.revision); // KC-CLUB-SPUR-DIENST
         await protokoll(ich.person_id, "dienstwunsch_gespeichert", { eintraege: entries.length, bereitschaftTage: Object.keys(standby).length, revision: r.data.revision });
         // 2.665.0 KC-CLUB-DP-NEU-RECHNEN / 2.676.0 KC-CLUB-DP-AUTO: Dienstplan-Druck und Lücken-Blatt rechnen sich gleich selbst neu (nie Testpersonen)
         // 2.793.0 KC-CLUB-DW-PUSH-FERTIG (Wunsch Hansi „nach jedem Tag ein Push – besser erst, wenn komplett fertig, dann gesamt“): kein Push mehr je
@@ -21640,6 +21652,7 @@ async function sonderstundenMelden(ich: Ich, p: any) {
     if (r.error) throw new Fehler("Die Stunden konnten nicht gemeldet werden.", 500);
     zeilen = (r.data ?? []).map(shZeile);
   }
+  if (neu.length) await spurServer(ich.person_id, "tat_stunden", /^\d{4}-\d{2}-\d{2}$/.test(String(datum)) ? "d" + datum : undefined); // KC-CLUB-SPUR-DIENST
   await protokoll(ich.person_id, "sonderstunden_gemeldet", { einsatz: evId, datum, personen: neu.length, uebersprungen: uebersprungen.length, verspaetet });
   // Mitgemeldete Kollegen bekommen Bescheid (Einstellung „Dienste“) – mit Hinweis auf eigene Fahrtkosten/Auslagen
   const andere = neu.filter((z) => z.person_id !== ich.person_id);

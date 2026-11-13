@@ -34658,6 +34658,12 @@ const FENSTER_NAMEN = {
   vwMenueBlatt: "📤 Wie verschicken – nur diese Nachricht", vwSicherBlatt: "⚠️ Versand: Rückfrage", waEinfBlatt: "📋 Aus WhatsApp einfügen", wasNeuBlatt: "🆕 Was ist neu", wbBerichtBlatt: "📊 Wochenbericht",
   wbBlatt: "🖨️ Dein leerer Wunschbogen", wetterBlatt: "🌦️ Wetter", wkKlingel: "⏰ Wecker klingelt", zeBlatt: "👥 An wen?",
 };
+// KC-CLUB-SPUR-DIENST (13.11.2026): Dienst-Vorgänge – vom Server selbst in die Wege geschrieben (neu oder geändert, Fassung/Tag, nie Inhalte)
+Object.assign(SPUR_WAS, { tat_dw_neu: "🗓️ Dienstwünsche abgegeben", tat_dw_geaendert: "✏️ Dienstwünsche geändert", tat_stunden: "⏱️ Stunden gemeldet",
+  tat_ist_passt: "✅ Ist-Zeiten bestätigt", tat_ist_wieder_passt: "✏️ Ist-Zeiten doch bestätigt", tat_ist_geaendert: "✏️ Ist-Zeiten geändert gemeldet", tat_ist_neu_geaendert: "✏️ Ist-Zeiten nochmal geändert", tat_ist_nicht_da: "🚫 Dienst: nicht da gemeldet",
+  tat_dienst_kommen: "🟢 Dienst angemeldet (Kommen)", tat_dienst_gehen: "🔴 Dienst abgemeldet (Gehen)", tat_dienst_korrigiert: "✏️ Kommen/Gehen-Zeit geändert",
+  tat_tausch_anbieten: "🔁 Dienst zum Tausch angeboten", tat_tausch_uebernehmen: "🤝 Dienst übernommen", tat_tausch_zurueckziehen: "↩️ Tauschangebot zurückgezogen",
+  tat_tausch_zuruecktreten: "↩️ Übernahme zurückgenommen", tat_tausch_bestaetigen: "✅ Tausch bestätigt", tat_tausch_ablehnen: "❌ Tausch abgelehnt" });
 Object.assign(SPUR_WAS, {
   fenster: "🪟", vorlesen: "🔊 Text vorgelesen",
   klopf_verpasst: "👋 Verpasstes Anklopfen angezeigt", dw_laufband: "🗓️ Dienstwunsch aus dem Info-Feld geöffnet", eselsohr: "📄 Eselsohr: Rückseite des Kopfs geöffnet", kachel_rueck: "🔄 Kachel umgedreht (Rückseite)",
@@ -34723,6 +34729,8 @@ function spurMitName(w, k) {
     if (/^hz_/.test(w)) { const e = hzEintraege().find((x) => x.id === k); return e ? `${e.sym} ${e.t}` : k; }
     if (/^rg_|^tat_video/.test(w)) { const r = RUNDGAENGE.find((x) => x.id === k); return r ? `${r.sym} ${r.t}` : k; }
     if (/^film_/.test(w)) { const f = FILME.find((x) => x.id === k); return f ? `${f.sym} ${f.t}` : k; }
+    if (/^tat_(dw|stunden|ist|dienst|tausch)/.test(w)) { const f = /^f(\d+)$/.exec(k || ""), d = /^d(\d{4})-(\d{2})-(\d{2})$/.exec(k || ""); // KC-CLUB-SPUR-DIENST
+      return f ? (Number(f[1]) > 1 ? `(${f[1]}. Fassung)` : "(1. Fassung)") : d ? `– Dienst am ${d[3]}.${d[2]}.` : k; }
   } catch {}
   return k;
 }
