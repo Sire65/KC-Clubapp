@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.938.0 – 2026-11-13 – 🛎️ Dienstplan: nur selbst eingetragene Bereitschaft (KC-CLUB-DP-BEREITSCHAFT-EIGEN)
+Wunsch Hansi („keine automatische Bereitschaft – nur eintragen, wer welche Bereitschaft selber eingetragen hat“): Mit `dp_druck_konfig.bereitschaftAuto = false` (seit 13.11. so eingestellt) verteilt die Rechnung keine Bereitschaft mehr. Im Plan und auf dem Lückenblatt steht nur, was jemand im eigenen Wunschplan als Bereitschaft mit Uhrzeit angegeben hat (je Tag oder am Wunsch-Eintrag in Twinkey) – trägt jemand später etwas ein, steht es beim nächsten Rechnen von selbst drin. „Keine Bereitschaft“ je Person (z. B. Dieter, Steven) und „macht nicht mit“ schließen aus. „Generell bereit“ ohne Tag und Uhrzeit wird nicht eingeplant.
+
 ## 2.937.0 – 2026-11-12 – 📋 Tagesordnung: nur die echten Punkte, in der richtigen Reihenfolge (KC-CLUB-TA-TAGESORDNUNG-2)
 Fund Hansi 12.11.: „Die Frage ist kein Tagesordnungspunkt und Nr. 12 ‚Hansi‘ war meine Unterschrift – baue das besser in der Reihenfolge.“
 - „📋 Als Tagesordnung übernehmen“ nimmt aus der Notiz nur die **Aufzählung** (1., 2., … oder Spiegelstriche), wenn eine da ist – Anrede, Frage/Einleitung, Gruß und Unterschrift bleiben draußen, die Reihenfolge bleibt.
