@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.939.0 – 2026-11-13 – 🔗 Alter Link: kurze, klare Anleitung (KC-CLUB-ALTER-LINK-KLAR)
+Wunsch Hansi nach dem Fall Marianne (13.11.: drei abgelehnte Anmeldungen, immer mit dem am 09.10. ersetzten Link – vermutlich ein altes Startsymbol): Öffnet jemand die App mit einem **ersetzten** Link und hat schon einen neueren, gültigen Link, zeigt die App jetzt kurz und deutlich: „⚠️ Dieses Köcheclub-Symbol ist veraltet – bitte löschen (lange drücken → Entfernen)“ und „📲 Du hast schon einen neuen Link bekommen – per WhatsApp von Hansi. Öffne diesen Link.“ Darunter weiter „Hansi Bescheid geben“, „Neuen Link per Mail“ und der 6-stellige Code. Der Server meldet dafür nur `neuerLink` (ja/nein) in der Zugangs-Hilfe – nie den Link selbst. Ohne neueren Link bleibt die bisherige Erklärung.
+
 ## 2.938.0 – 2026-11-13 – 🛎️ Dienstplan: nur selbst eingetragene Bereitschaft (KC-CLUB-DP-BEREITSCHAFT-EIGEN)
 Wunsch Hansi („keine automatische Bereitschaft – nur eintragen, wer welche Bereitschaft selber eingetragen hat“): Mit `dp_druck_konfig.bereitschaftAuto = false` (seit 13.11. so eingestellt) verteilt die Rechnung keine Bereitschaft mehr. Im Plan und auf dem Lückenblatt steht nur, was jemand im eigenen Wunschplan als Bereitschaft mit Uhrzeit angegeben hat (je Tag oder am Wunsch-Eintrag in Twinkey) – trägt jemand später etwas ein, steht es beim nächsten Rechnen von selbst drin. „Keine Bereitschaft“ je Person (z. B. Dieter, Steven) und „macht nicht mit“ schließen aus. „Generell bereit“ ohne Tag und Uhrzeit wird nicht eingeplant.
 

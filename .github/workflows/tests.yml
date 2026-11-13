@@ -70,6 +70,7 @@ jobs:
       - run: node tests/turn-frisch.test.mjs
       - run: node tests/push-neu-fragen.test.mjs
       - run: node tests/security-definer-register.test.mjs
+      - run: node tests/alter-link-klar.test.mjs
       - run: node tests/online-jede-anfrage.test.mjs
       - run: node tests/schreibtisch.test.mjs
       - run: node tests/anleitungen.test.mjs
