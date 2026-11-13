@@ -1,8 +1,16 @@
 # Änderungen
 
-## 2.942.0 – 2026-11-13 – 📋 Einsatzplan je Tag · Spätdienst bis Schluss (KC-CLUB-DP-EINSATZ, KC-CLUB-DP-SPAET-BIS-SCHLUSS)
+## 2.943.0 – 2026-11-13 – 📋 Einsatzplan je Tag · Spätdienst bis Schluss (KC-CLUB-DP-EINSATZ, KC-CLUB-DP-SPAET-BIS-SCHLUSS)
 - Wunsch Hansi („je Tag eine A4-Seite: alle Personen, oben die Wunschzeit, darunter die Sollzeit – mit Balken, Besetzungsstatistik und Bereitschaft, sparsam aber übersichtlich“): neues Blatt **📋 Einsatzplan** im Ordner „Dienstplan zum Drucken“ (nur Admin). Je Tag eine Seite A4 quer mit schmalem CD-Kopf; im Tageskopf Art und Regelzeit, Soll, eingeteilt, fehlt. Alle Personen in fester Reihenfolge, auch ohne Angabe: oben ihre Angaben (Wunsch, kann, nur wenn nötig, gesperrt), darunter die Einteilung als Balken (Farbe nach Bereich, Aushilfen grau gestreift, ☕ ab 6 Std.), links die Dienstzeit, rechts W = Wunsch- und S = eingeteilte Stunden. Darunter Besetzt/Soll je halbe Stunde (grün/rot/gelb), „Fehlt“ und die selbst eingetragene Bereitschaft.
 - Wunsch Hansi („die letzten Leute, die Spätdienst haben, bis zum Schluss eintragen – sozusagen bis 23 Uhr“): Dienstplan-Rechnung Regel 9, `dp_druck_konfig.spaetBisSchluss = true` – am Markttag wird ein Dienst, der in den letzten 2 Std. vor Schluss endet, bis Marktschluss verlängert (nicht über eine Sperre, nicht über 8 Std. bzw. die eigenen Grenzen). Probe 13.11.: Lücken 17,5 statt 28,5 Std.
+
+## 2.942.0 – 2026-11-13 – 📰 Club-Küche 2028: Hefte 13–24 mit allen festen Inhalten vorbereitet (KC-CLUB-MAGAZIN-HEFTE-2028)
+Wunsch Hansi 13.11.: „Baue schon mal in alle Hefte die weiteren feststehenden Sachen ein wie Rätsel, Kräuter, Küchenlatein, Erklärungen, wusstest du schon …“
+- Hefte 13–24 (Januar–Dezember 2028), wie 2027 vorgefüllt: Küchentipp „Aus der Trickkiste“ + Tipp-Kasten, Küchenlatein (12 neue Begriffe), Küchenwitz, feste Termine 2028 (Feiertage, Ostern 16. April, Advent …, Wochentage geprüft), Schlagzeilen.
+- Rätsel-Ecke 2028: 12 neue Fehlerbilder (`magazin/raetsel/nr13…nr24-*.svg`) und 12 neue Kreuzworträtsel; Auflösung jeweils im nächsten Heft. Werkzeuge im KC-ICC (`docs/club-magazin-raetselecke/hefte/`).
+- Kraut des Monats und „Schon gewusst?“: zweites Jahr mit 12 neuen Kräutern und 36 neuen Kniffen (vorher hätten sich 2027er Inhalte wiederholt); Auswahl jetzt nach Heftnummer.
+- Offen für die Redaktion bleiben: Vorwort, Rezept des Monats, Backstube, Porträt, Rückblick, Club-Termine (kommen aus dem Kalender).
+- Tests `magazin-raetsel` und `magazin-kraeuter` auf die Hefte 13–24 erweitert. Update-Hinweis: nur „Kleine Systemanpassung“. Rückweg: App 2.941.0.
 
 ## 2.941.0 – 2026-11-13 – 🖼️ Roman Staffel 2: 13 neue Bleistift-Zeichnungen
 Wunsch Hansi 12./13.11.: Zeichnungen für Staffel 2 (von ChatGPT, geprüft auf Figuren und Szene, als Graustufen-WebP < 200 KB).

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.942.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.943.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -24,7 +24,7 @@ const TEILE_LISTE = {
   rechner: { einstieg: ["rechnerOeffnen"], sri: "sha384-UWrOf1EIXxhsoWWwxnLDzpzALsaxzNGXgeqoLAjVvqoQ6wbFnIGxYTkQPFpiRuQ4" }, // 2.811.0 KC-CLUB-RECHNER: Tischrechner im Büro, „rechne …“ per Sprache
   glueck: { einstieg: ["kaeferKommt", "kleeKommt"], sri: "sha384-hbPb96l3YrlvBxe1zJJfotwARA0pEPKKaDyb1BBVooEi5BCYbfYqihmMYABmlsg4" }, // KC-CLUB-MARIENKAEFER / KC-CLUB-GLUECKSKLEE (06.11.2026): 🐞 jeder 50., 🍀 jeder 25. Start
   hilfetipp: { einstieg: ["tippSenden", "tippListe"], sri: "sha384-cOxaOEtxAQP/CZRKEEryWTGLYs/TRIWVXRitip1nRotyRzYD9GRoisKEzLGKAbGF" }, // 2.835.0 KC-CLUB-HILFE-TIPPS: Clubleitung – Lösung schicken, Vorlagen, Gesendete Tipps
-  magazin: { einstieg: ["magStart", "wmProspekt", "magMenue", "magEinsenden", "magPostfach", "magMeine", "magArchiv", "magDruck"], sri: "sha384-mqxRDDvoLMHOdxM3JA9T4YY2jVafN24tjPc+aW62/+M6+q1VTx9mEihUx7bKfgcL" }, // KC-CLUB-MAGAZIN-GERUEST: Club-Küche und Weihnachtsmarkt-Prospekt (Gerüst, blättern)
+  magazin: { einstieg: ["magStart", "wmProspekt", "magMenue", "magEinsenden", "magPostfach", "magMeine", "magArchiv", "magDruck"], sri: "sha384-JD8GI6+Otg4ZF4lYnnKXDR8kl7/ahkcoRPcuGPZf7XUUrkT1MCgOfLerpfo9KiKg" }, // KC-CLUB-MAGAZIN-GERUEST: Club-Küche und Weihnachtsmarkt-Prospekt (Gerüst, blättern)
   strom: { einstieg: ["stromBlatt", "stromZeichnen"], sri: "sha384-dNcc30G8i65eI40hbgDTGIIBdKAE/KdpRichStzNk1mt1gGPNa+DYvNq03rjI4M/" }, // 2.799.0 KC-CLUB-STROM-UEBERSICHT: Admin „🔋 Stromverbrauch“ (nur beim Öffnen)
   anbieter: { einstieg: ["anbStart"], sri: "sha384-P5YH+VJ7JvIqD3Aj7m229epWr/Qh32v5T1bHLTneKzD1mvcFbAjsObnettv63rNh" }, // 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78): Admin-Kachel „📰 Anbieter“ (nur beim Öffnen)
   istzeit: { einstieg: ["irOeffnen", "irAenderungen"], sri: "sha384-LzIjOhEBd8XATuT8V19PFecWXSkWfEIIs+lWADFW+NrmCLfIl4LwmECdGwvhZbp7" }, // KC-CLUB-IST-RUECKFRAGE: „🗓️ Meine Ist-Zeiten“ nach dem Dienst (nur beim Öffnen)
@@ -30968,7 +30968,7 @@ const DRUCKARTEN = {
   einzelplan: { titel: "📄 Einzelplan", get optionen() { return ICH?.admin ? epOptionen : undefined; }, bauen: (o) => epBauen() }, // KC-CLUB-DP-EINZELPLAN
   dpDruck: { titel: "🗓️ Dienstplan drucken", optionen: () => dpdOptionen(), bauen: () => dpdBauen() }, // 2.642.0 KC-CLUB-DP-DRUCK
   dpVorschlag: { titel: "💡 Vorschläge zu den Lücken", optionen: () => '<p class="hinweis">Nur für dich zur Planung (nicht verteilen): je Lücke, wer früher kommen oder länger bleiben könnte, ob er die Zeit schon angeboten hat, wer Bereitschaft hat – und wo neue Helfer nötig sind.</p>', bauen: () => dpdVorschlagBauen() }, // 2.721.0 KC-CLUB-DP-VORSCHLAG
-  dpEinsatz: { titel: "📋 Einsatzplan", optionen: () => '<p class="hinweis">Je Tag eine Seite (A4 quer): alle Personen, oben ihre Angaben (Wunsch, kann, nur wenn nötig, gesperrt), darunter die Einteilung als Balken, rechts W = Wunsch- und S = eingeteilte Stunden; unten Besetzt/Soll je halbe Stunde und die selbst eingetragene Bereitschaft. Rechnet sich von selbst neu.</p><p class="hinweis">Beim Drucken „A4 Querformat“ und „Hintergrundgrafiken“ wählen.</p>', bauen: () => dpdEinsatzBauen() }, // 2.942.0 KC-CLUB-DP-EINSATZ
+  dpEinsatz: { titel: "📋 Einsatzplan", optionen: () => '<p class="hinweis">Je Tag eine Seite (A4 quer): alle Personen, oben ihre Angaben (Wunsch, kann, nur wenn nötig, gesperrt), darunter die Einteilung als Balken, rechts W = Wunsch- und S = eingeteilte Stunden; unten Besetzt/Soll je halbe Stunde und die selbst eingetragene Bereitschaft. Rechnet sich von selbst neu.</p><p class="hinweis">Beim Drucken „A4 Querformat“ und „Hintergrundgrafiken“ wählen.</p>', bauen: () => dpdEinsatzBauen() }, // 2.943.0 KC-CLUB-DP-EINSATZ
   dpLuecken: { titel: "🧩 Wo noch Helfer fehlen", optionen: () => '<p class="hinweis">Ein Blatt mit Logo: alle Tage und Stunden, an denen noch Leute fehlen – zum Aushängen oder für die, die noch keine Wünsche abgegeben haben. Rechnet sich von selbst neu, sobald ein Wunschplan dazukommt.</p><p class="hinweis">Beim Drucken „A4 Querformat“ und „Hintergrundgrafiken“ wählen.</p>', bauen: () => dpdLueckenBauen() }, // 2.676.0 KC-CLUB-DP-LUECKEN
   haendlerausweis: { bauen: (o, p) => ({ ohneRahmen: true, randlos: true, titel: p.probe ? "Händler-Ausweise – Probeblatt Duplex" : `Händler-Ausweise Weihnachtsmarkt ${p.jahr} (${p.n} Stück)`, html: p.bilder.map((b) => `<img class="dseite" src="${b}" alt="">`).join("") }) }, // 2.690.0 KC-CLUB-HAENDLERAUSWEIS
   haendlerausweis_liste: { bauen: (o, p) => druckHaendlerListe(p) },
@@ -33032,7 +33032,7 @@ async function dpdVorschlagBauen() {
   if (!d?.tage?.length) { melde("Noch kein Dienstplan-Stand vorhanden.", true); return null; }
   return { titel: `Vorschläge zu den Lücken – ${d.titel || ""}`.trim(), ohneRahmen: true, randlos: true, quer: true, html: `<div class="dpd">${dpdVorschlagBlatt(d)}</div>` };
 }
-// ---------- 2.942.0 KC-CLUB-DP-EINSATZ (Wunsch Hansi „je Tag eine A4-Seite: alle Personen, oben die Wunschzeit, darunter die Sollzeit – mit Balken,
+// ---------- 2.943.0 KC-CLUB-DP-EINSATZ (Wunsch Hansi „je Tag eine A4-Seite: alle Personen, oben die Wunschzeit, darunter die Sollzeit – mit Balken,
 // Besetzungsstatistik und Bereitschaft, sparsam aber übersichtlich, rechts W = Wunsch- und S = Soll-Stunden“): Einsatzplan aus dem Dienstplan-Stand (dp_druck).
 // Alle Personen stehen auf jeder Seite in fester Reihenfolge, auch ohne Angabe; Aushilfen grau gestreift; Spätdienst bis Schluss rechnet der Server.
 function dpdEinsatzBlatt(d) {

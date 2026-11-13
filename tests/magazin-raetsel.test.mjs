@@ -31,7 +31,7 @@ assert.equal(kw.loesung.felder.map(([r, c]) => Z[r][c]).join(""), kw.loesung.wor
 assert.equal(kw.loesung.anzeige.replace("Ö", "OE"), kw.loesung.wort);
 // KC-CLUB-MAGAZIN-RAETSEL-HEFTE (11.11.2026): Hefte 2–12 je ein eigenes Fehlerbild und Kreuzworträtsel, Auflösung immer im nächsten Heft (Nr. 13 löst Nr. 12 auf)
 const themen = new Set(), loesungen = new Set();
-for (let n = 2; n <= 12; n++) {
+for (let n = 2; n <= 24; n++) { // KC-CLUB-MAGAZIN-HEFTE-2028 (13.11.2026): auch die Hefte 13–24
   const r = daten.MAG_AUSGABEN[n].raetsel, f = r.fehlerbild, k = r.kreuzwort, Z = k.zeilen, W = Z[0].length;
   assert.equal(r.aufloesung, n - 1, `Nr. ${n} löst Nr. ${n - 1} auf`);
   assert.equal(f.fehler.length, 10, `Nr. ${n}: genau 10 Fehler`);
@@ -49,8 +49,8 @@ for (let n = 2; n <= 12; n++) {
   assert.equal(k.loesung.felder.map(([rr, cc]) => Z[rr][cc]).join(""), k.loesung.wort, `Nr. ${n}: Lösungswort`);
   assert.equal(k.loesung.anzeige.replace(/Ä/g, "AE").replace(/Ö/g, "OE").replace(/Ü/g, "UE"), k.loesung.wort); loesungen.add(k.loesung.wort);
 }
-assert.equal(themen.size, 11, "jedes Heft eine eigene Szene"); assert.equal(loesungen.size, 11, "jedes Heft ein eigenes Lösungswort");
-assert.deepEqual(daten.MAG_AUSGABEN[13].raetsel, { aufloesung: 12 }, "Auflösung von Nr. 12 steht in Nr. 13");
+assert.equal(themen.size, 23, "jedes Heft eine eigene Szene"); assert.equal(loesungen.size, 23, "jedes Heft ein eigenes Lösungswort");
+assert.equal(daten.MAG_AUSGABEN[13].raetsel.aufloesung, 12, "Auflösung von Nr. 12 steht in Nr. 13");
 // Bedienung und Darstellung
 for (const f of ["function magFbTipp", "function magKwEin", "function magKwPruefen", "function magRaetselSeiteNeu", "function magRaetselHtml", "kc_club_mag_raetsel"]) assert.ok(teil.includes(f), f);
 assert.ok(teil.includes('.replace(/Ü/g, "UE")') && teil.includes('.replace(/ß/g, "SS")'), "Umlaute werden zu AE/OE/UE");
