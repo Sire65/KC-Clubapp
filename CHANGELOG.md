@@ -7,6 +7,7 @@ Wunsch Hansi 13.11.: „Wo sehe ich das Protokoll an Klaus, wie er es bekommen h
 - Häkchen **„📧 Kopie der E-Mail an mich“** (vorbelegt): dieselbe E-Mail wie der Empfänger, nur per E-Mail.
 - Keine Datenbank-Änderung. Tests `tests/ta-protokoll.test.mjs`, Browser `tools/hilfe/ta-protokoll-browser.mjs` erweitert (nur Testdaten). Rückweg: App 2.945.0, Server 2.944.0.
 - Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+- Eingespielt 13.11. 20:46 Uhr auf Wunsch Hansi („Einspielen“), Ruhe geprüft: 0 in der App, keine Spiegelung/Sicherung.
 
 ## 2.945.0 – 2026-11-13 – ⏳ Höchstens eine Version je 15 Minuten · ehrlicher Hinweis beim Update (KC-EINSPIELEN-ABSTAND, KC-CLUB-UPDATE-HINWEIS)
 Fund Hansi 13.11. 20:06: Start dauerte 39 s mit „Das Netz ist gerade langsam“. Ursache: 2.943.0 (19:54) und 2.944.0 (20:01) kamen innerhalb von 7 Minuten – Hansis Update auf 2.943.0 lief mitten in die nächste Version (Mischstand Seite 2.943 / Programm 2.944, die App lud sich selbst neu).
