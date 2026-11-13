@@ -194,7 +194,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.936.0";
+const SERVER_VERSION = "2.938.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -5278,12 +5278,25 @@ async function dpDruckNeu(adminId: string) {
     .map((w: any) => ({ key: dpKurzname(name.get(String(w.person_id)) || String(w.person_id)), name: name.get(String(w.person_id)) || String(w.person_id),
       ...((kmVon.get(String(w.person_id)) ?? 0) >= grenzeKm ? { minDienst: minWeit } : {}), // KC-CLUB-DP-BEREITSCHAFT-WEIT: weite Anfahrt → keine kurze Bereitschaft
       nein: Object.entries(w.standby && typeof w.standby === "object" ? w.standby : {}).filter(([, v]: any) => v?.answer === "no").map(([d]) => d) }));
+  // 2.938.0 KC-CLUB-DP-BEREITSCHAFT-EIGEN (Wunsch Hansi „keine automatische Bereitschaft – nur eintragen, wer welche Bereitschaft selber eingetragen hat“):
+  // bei bereitschaftAuto: false kommen die Bereitschaften aus den Wunschplänen (Tag mit „ja“ und Zeitfenster – je Tag oder am Wunsch-Eintrag), dazu die
+  // Liste konf.bereitschaft; keineBereitschaft/aus schließen aus, doppelte (Tag + Person + Zeit) zählen einmal
+  const berEigen: { d: string; person_id: string; von: number; bis: number }[] = [];
+  if (konf.bereitschaftAuto === false) for (const w of wRoh ?? []) {
+    const pid = String(w.person_id); if (pid.startsWith("KC-P-TEST") || aus(pid) || pk[pid]?.keineBereitschaft === true) continue;
+    const tage: [string, any][] = [...Object.entries(w.standby && typeof w.standby === "object" ? w.standby : {}),
+      ...(Array.isArray(w.entries) ? w.entries : []).filter((x: any) => x?.assistantDay?.standby).map((x: any) => [String(x.date), x.assistantDay.standby] as [string, any])];
+    for (const [d, sb] of tage) if (sb?.answer === "yes") for (const sl of Array.isArray(sb.slots) ? sb.slots : [])
+      if (Number.isFinite(Number(sl?.start)) && Number(sl?.end) > Number(sl?.start)) berEigen.push({ d, person_id: pid, von: Number(sl.start), bis: Number(sl.end) });
+  }
+  const berListe = [...new Map([...berEigen, ...(Array.isArray(konf.bereitschaft) ? konf.bereitschaft : []).filter((x: any) => !aus(String(x.person_id)) && pk[String(x.person_id)]?.keineBereitschaft !== true)]
+    .map((x: any) => [`${x.d}|${x.person_id}|${Number(x.von)}|${Number(x.bis)}`, x])).values()];
   const ergebnis = dpRechnen({
     tage: (tageRoh ?? []).map((t: any) => ({ d: String(t.work_date), art: t.day_type === "market" ? "Markttag" : t.day_type === "prep" ? "Aufbau" : String(t.label || "Nachbereitung"),
       baender: (Array.isArray(t.demand) ? t.demand : []).map((b: any) => ({ start: Number(b.start), end: Number(b.end), total: Number(b.total) || 0, front: b.front ?? null, back: b.back ?? null })) })),
     personen,
     leer: (Array.isArray(konf.leerzeilen) ? konf.leerzeilen : []).map((x: any) => ({ key: dpKurzname(name.get(String(x.person_id)) || String(x.person_id)), name: name.get(String(x.person_id)) || String(x.person_id), label: String(x.label || "") })),
-    bereitschaft: (Array.isArray(konf.bereitschaft) ? konf.bereitschaft : []).map((x: any) => ({ d: String(x.d), name: name.get(String(x.person_id)) || String(x.person_id), von: Number(x.von), bis: Number(x.bis) })),
+    bereitschaft: berListe.map((x: any) => ({ d: String(x.d), name: name.get(String(x.person_id)) || String(x.person_id), von: Number(x.von), bis: Number(x.bis) })), // 2.938.0: auch selbst Eingetragenes
     bereitschaftFest: (Array.isArray(konf.bereitschaftFest) ? konf.bereitschaftFest : []).filter((x: any) => !aus(String(x.person_id))).map((x: any) => ({ d: String(x.d), name: name.get(String(x.person_id)) || String(x.person_id), von: Number(x.von), bis: Number(x.bis) })), // 2.789.0 feste Bereitschaft
     max: Number(konf.max) || 8, fair: Number(konf.fair) || 1.5,
     wunschZuerst: konf.wunschZuerst === true, // 2.936.0 KC-CLUB-DP-WUNSCH-ZUERST
