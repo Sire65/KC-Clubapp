@@ -194,7 +194,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.943.0";
+const SERVER_VERSION = "2.944.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -5184,6 +5184,12 @@ async function spurZeilen(von: number, bis: number, pid: string | null, felder =
   return alle;
 }
 const SPUR_TAGE = 30;
+// KC-CLUB-SPUR-DIENST (13.11.2026, Wunsch Hansi „ob sie es nur geöffnet hat oder auch Dienstzeiten eingetragen oder geändert – mit Ändern, damit ich
+// sehe, ob es Änderungen gab“): Dienst-Vorgänge schreibt der Server selbst in die Wege (auch aus der Dienstwunsch-Seite, die keine Wege meldet).
+// Nur der Vorgang, „neu“ oder „geändert“, Fassung bzw. Tag als Kennung – nie Zeiten, Wünsche oder Texte.
+async function spurServer(pid: string, w: string, mit?: string) {
+  try { if (!SPUR_WAS.test(w) || (mit && !spurMitOk(mit))) return; await protokoll(pid, "spur", { s: [mit ? [Date.now(), w, mit] : [Date.now(), w]] }); } catch { /* Wege dürfen nie stören */ }
+}
 // KC-CLUB-STARTSTATISTIK (2.31.0, Wunsch Hansi): jeder App-Start mit Dauer, Gerät und Browser (Name nur für den Admin sichtbar), 180 Tage
 const START_TAGE = 180;
 // ---------- KC-CLUB-PROTOKOLL-WAECHTER (2.114.0, Wunsch Hansi „muss das Protokoll so wachsen? Wächter, der es leert, wenn zu voll“) ----------
@@ -5307,7 +5313,7 @@ async function dpDruckNeu(adminId: string) {
     bereitschaft: berListe.map((x: any) => ({ d: String(x.d), name: name.get(String(x.person_id)) || String(x.person_id), von: Number(x.von), bis: Number(x.bis) })), // 2.938.0: auch selbst Eingetragenes
     bereitschaftFest: (Array.isArray(konf.bereitschaftFest) ? konf.bereitschaftFest : []).filter((x: any) => !aus(String(x.person_id))).map((x: any) => ({ d: String(x.d), name: name.get(String(x.person_id)) || String(x.person_id), von: Number(x.von), bis: Number(x.bis) })), // 2.789.0 feste Bereitschaft
     max: Number(konf.max) || 8, fair: Number(konf.fair) || 1.5,
-    spaetBisSchluss: konf.spaetBisSchluss === true, // 2.943.0 KC-CLUB-DP-SPAET-BIS-SCHLUSS
+    spaetBisSchluss: konf.spaetBisSchluss === true, // 2.944.0 KC-CLUB-DP-SPAET-BIS-SCHLUSS
     wunschZuerst: konf.wunschZuerst === true, // 2.936.0 KC-CLUB-DP-WUNSCH-ZUERST
     bereitschaftAuto, maxTageAmStueck: Number.isFinite(Number(konf.maxTageAmStueck)) ? Number(konf.maxTageAmStueck) : 5, wunschDeckel: konf.wunschDeckel !== false, wunschAnteil: Number.isFinite(Number(konf.wunschAnteil)) && konf.wunschAnteil !== null && konf.wunschAnteil !== undefined ? Number(konf.wunschAnteil) : 0.5, // 2.675.0
   });
@@ -8042,7 +8048,9 @@ function ggUnterschiede(alt: Record<string, string>, neu: Record<string, string>
   return z;
 }
 async function gastgeberStandLauf() {
-  const jetztMs = Date.now(), std = berlinStunde(new Date()), heuteAbend = std >= 18, nachts = std >= 22 || std < 7, morgen = berlinTag(new Date(jetztMs + 86400000));
+  // KC-CLUB-GASTGEBER-16UHR (13.11.2026, Wunsch Hansi „einmal am Vortag bis 16.00 und am gleichen Tag, falls sich noch was geändert hat“):
+  // die Vortags-Meldung kommt ab 16 Uhr (bisher 18 Uhr); am Tag selbst wie bisher 2 Std. vorher nur bei Änderung, dazwischen jede Änderung gesammelt.
+  const jetztMs = Date.now(), std = berlinStunde(new Date()), heuteAbend = std >= 16, nachts = std >= 22 || std < 7, morgen = berlinTag(new Date(jetztMs + 86400000));
   const { data: ts } = await db.from("kc_club_treffen").select("id,titel,beginn,ort,gastgeber_person_id").eq("status", "geplant").eq("art", "treffen")
     .gte("beginn", new Date(jetztMs).toISOString()).lte("beginn", new Date(jetztMs + 2 * 86400000).toISOString());
   for (const t of ts ?? []) {
@@ -8100,7 +8108,7 @@ async function gastgeberStandLauf() {
 async function gastgeberMitteilen(t: any, ich: string, art: "einladung" | "geaendert" | "abgesagt", vars: { titel: string; kurz: string; betreff: string; text: string; url: string }) {
   if (!t.gastgeber_person_id || t.gastgeber_person_id === ich) return false;
   const { count } = await db.from("kc_club_teilnahme").select("person_id", { count: "exact", head: true }).eq("treffen_id", t.id).eq("antwort", "ja");
-  const vorn = art === "abgesagt" ? "Du warst als Gastgeberin/Gastgeber eingetragen – das Treffen fällt aus." : `Du bist Gastgeberin/Gastgeber – aktuell ${count ?? 0} Zusage${count === 1 ? "" : "n"}. Am Vorabend bekommst du den genauen Stand, danach jede Änderung.`;
+  const vorn = art === "abgesagt" ? "Du warst als Gastgeberin/Gastgeber eingetragen – das Treffen fällt aus." : `Du bist Gastgeberin/Gastgeber – aktuell ${count ?? 0} Zusage${count === 1 ? "" : "n"}. Am Vortag um 16 Uhr bekommst du den genauen Stand, danach jede Änderung – und am Tag selbst 2 Stunden vorher nochmal, falls sich etwas geändert hat.`;
   await sendenGewaehlt("club_erinnerung", [t.gastgeber_person_id], ["push", "email"], { ...vars, titel: `🏠 ${vars.titel}`, kurz: `${vars.kurz}`,
     text: String(vars.text).replace(/^(Hallo[^\n]*,)\n\n/, (_, h) => `${h}\n\n${vorn}\n\n`) }, `club-gastgeber-${art}:${t.id}:${Date.now()}`).catch((e) => console.error("gastgeber mitteilen", String(e)));
   await protokoll(ich, "gastgeber_mitgeteilt", { treffen: t.id, art });
@@ -8997,7 +9005,8 @@ async function terminanfragenListe(ich: Ich, zeitraum?: { von: string; bis: stri
     const e = (zeilen ?? []).filter((z: any) => z.anfrage_id === a.id);
     const mein = e.find((z: any) => z.person_id === ich.person_id);
     return {
-      id: a.id, anlass: a.anlass, beginn: a.beginn, ende: a.ende, ort: a.ort, notiz: a.notiz, frist: a.frist, status: a.status, spiel: !!a.spiel_id, erstelltAm: a.erstellt_am, geaendertAm: a.geaendert_am, gegenvorschlag: a.gegenvorschlag !== false, vorbehalt: a.vorbehalt ?? null, anlagen: anl.get(a.id) ?? [],
+      id: a.id, anlass: a.anlass, beginn: a.beginn, ende: a.ende, ort: a.ort, notiz: a.notiz, frist: a.frist, status: a.status, spiel: !!a.spiel_id, erstelltAm: a.erstellt_am, geaendertAm: a.geaendert_am,
+      protokoll: a.protokoll && (a.erstellt_von === ich.person_id || a.protokoll.status === "gesendet") ? a.protokoll : null, // KC-CLUB-TA-PROTOKOLL: Angefragte sehen es erst, wenn es verschickt ist gegenvorschlag: a.gegenvorschlag !== false, vorbehalt: a.vorbehalt ?? null, anlagen: anl.get(a.id) ?? [],
       vonMir: a.erstellt_von === ich.person_id, von: { person_id: a.erstellt_von, name: name(a.erstellt_von), vorname: vorname(leute.get(a.erstellt_von)) || name(a.erstellt_von) },
       meine: mein?.antwort ?? null, meineNotiz: mein?.notiz ?? null, meinGelesen: mein?.gelesen_am ?? null, // KC-CLUB-TERMINANFRAGE-STATUS (2.23.50)
       meinVorschlag: mein?.vorschlag_beginn ? { beginn: mein.vorschlag_beginn, ende: mein.vorschlag_ende } : null, erinnerung: erin.get(a.id) ?? null, erinnerungStandard: a.erinnerung_min || 0,
@@ -10943,6 +10952,41 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         }
         await protokoll(ich.person_id, "terminanfrage_geaendert", { anfrage: a.id, neue_zeilen: neu.length, informiert: empfaenger, versand });
         return json({ ok: true, neu: neu.length, informiert: empfaenger, versand });
+      }
+
+      // KC-CLUB-TA-PROTOKOLL (13.11.2026, Wunsch Hansi „wie wird aus dem Termin mit Klaus und der Tagesordnung ein Protokoll?“ – „Ja bauen“):
+      // wer angefragt hat, schreibt zur Besprechung ein Protokoll (je TOP Ergebnis, Wer?, Bis wann?; Anwesend, Sonstiges, nächster Termin),
+      // speichert es als Entwurf oder schickt es an die Angefragten (Push + E-Mail mit dem ganzen Text). Protokoll ohne Inhalte.
+      case "terminanfrage_protokoll": {
+        const { data: a } = await db.from("kc_club_terminanfragen").select("*").eq("id", String(p.id || "")).maybeSingle();
+        if (!a) throw new Fehler("Anfrage nicht gefunden.", 404);
+        if (a.erstellt_von !== ich.person_id) throw new Fehler("Das Protokoll schreibt, wer angefragt hat.", 403);
+        if (a.status === "abgesagt") throw new Fehler("Die Besprechung ist abgesagt.", 409);
+        if (a.spiel_id) throw new Fehler("Zu einer Partie gibt es kein Protokoll.", 409);
+        if (Date.parse(a.beginn) > Date.now() + 2 * 3600000) throw new Fehler("Das Protokoll geht erst ab kurz vor der Besprechung.", 409);
+        const q = p.protokoll ?? {}, tag = (v: unknown) => /^\d{4}-\d{2}-\d{2}$/.test(String(v || "")) ? String(v) : null;
+        const tops = (Array.isArray(q.tops) ? q.tops : []).slice(0, 30).map((x: any) => ({ t: txt(x?.t, 160), ergebnis: txt(x?.ergebnis, 2000), wer: txt(x?.wer, 80), werName: txt(x?.werName, 80), bis: tag(x?.bis) }))
+          .filter((x: any) => x.t || x.ergebnis);
+        if (!tops.length && !txt(q.sonstiges, 10)) throw new Fehler("Bitte mindestens einen Punkt ausfüllen.");
+        const senden = p.senden === true, alt = a.protokoll || null, stand = new Date().toISOString();
+        const prot = { anwesend: txt(q.anwesend, 300), tops, sonstiges: txt(q.sonstiges, 2000), naechster: txt(q.naechster, 200),
+          status: senden || alt?.status === "gesendet" ? "gesendet" : "entwurf", gesendet_am: senden ? stand : alt?.gesendet_am ?? null, stand };
+        const { error } = await db.from("kc_club_terminanfragen").update({ protokoll: prot }).eq("id", a.id).eq("erstellt_von", ich.person_id);
+        if (error) throw new Fehler(error.code === "42703" || error.code === "PGRST204" ? "Das Protokoll geht erst nach dem nächsten Datenbank-Update – bitte später nochmal." : "Speichern fehlgeschlagen.", error.code === "42703" ? 503 : 500);
+        let versand: unknown = null, an = 0;
+        if (senden) {
+          const { data: em } = await db.from("kc_club_terminanfrage_empfaenger").select("person_id").eq("anfrage_id", a.id);
+          const ziel = (em ?? []).map((e: any) => String(e.person_id)); an = ziel.length;
+          const nochmal = alt?.status === "gesendet";
+          const text = `Hallo,\n\n${ich.name} schickt dir ${nochmal ? "das ergänzte" : "das"} Protokoll zur Besprechung:\n\n📌 ${a.anlass}\n📅 ${anfrageWann(a)}${a.ort ? "\n📍 " + a.ort : ""}${prot.anwesend ? "\n👥 Anwesend: " + prot.anwesend : ""}\n\n`
+            + tops.map((x: any, i: number) => `TOP ${i + 1}: ${x.t}${x.ergebnis ? "\n" + x.ergebnis : ""}${x.werName || x.bis ? `\n→ ${x.werName || "?"}${x.bis ? " bis " + x.bis.split("-").reverse().join(".") : ""}` : ""}`).join("\n\n")
+            + (prot.sonstiges ? `\n\nSonstiges:\n${prot.sonstiges}` : "") + (prot.naechster ? `\n\nNächster Termin: ${prot.naechster}` : "")
+            + `\n\nIn der Köcheclub-App (Termine → Kalender → ${anfrageWann(a).split(",")[0]}) kannst du es ansehen, drucken oder als PDF speichern: ${APP_URL}#termine\n\nViele Grüße\nKöcheclub Werne`;
+          if (ziel.length) versand = await sendenGewaehlt("club_treffen", ziel, ["push", "email"], { titel: `📝 Protokoll: ${a.anlass}`, kurz: `${ich.vorname} hat ${nochmal ? "das Protokoll ergänzt" : "das Protokoll geschickt"} – ${tops.length} Punkte`,
+            betreff: `Köcheclub Werne – Protokoll: ${a.anlass}, ${wann(a.beginn)}`, text, url: APP_URL + "#termine" }, `club-ta-protokoll:${a.id}:${stand}`);
+        }
+        await protokoll(ich.person_id, "terminanfrage_protokoll", { anfrage: a.id, tops: tops.length, status: prot.status, gesendet: senden, an, versand });
+        return json({ ok: true, protokoll: prot, an });
       }
 
       // ----- KC-CLUB-STANDORT (0.92.0) -----
@@ -13493,6 +13537,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         } else zeilen.push({ ...basis, art, zeit: new Date(zeitMs).toISOString(), grund: grund || null, ...(art === "out" ? { pause_min: Math.max(0, Math.min(240, Math.round(Number(p.pause) || 0))) } : {}) });
         const { error } = await db.from("kc_dp_stempel").insert(zeilen);
         if (error) throw new Fehler("Die Buchung konnte nicht gespeichert werden – bitte gleich noch einmal.", 503);
+        await spurServer(ich.person_id, zeilen.at(-1).art === "out" ? "tat_dienst_gehen" : "tat_dienst_kommen"); // KC-CLUB-SPUR-DIENST
         await protokoll(ich.person_id, "dienst_gebucht", { art: zeilen.at(-1).art, nachgetragen: zeilen.length > 1, vorOrt, spontan, abweichung: dienst ? dsGrundNoetig(zeilen.at(-1).art, zeitMs, dienst) : null });
         const neu = await dsLage(ich);
         let summe: number | null = null;
@@ -13512,6 +13557,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const { data: neu, error } = await db.from("kc_dp_stempel").insert({ ...rest, zeit: new Date(zeitMs).toISOString(), grund, korrektur_von: alt.id, erstellt_von: ich.person_id }).select("id").single();
         if (error || !neu) throw new Fehler("Die Änderung konnte nicht gespeichert werden.", 503);
         await db.from("kc_dp_stempel").update({ storniert_am: jetzt(), storniert_von: ich.person_id }).eq("id", alt.id).is("storniert_am", null);
+        await spurServer(ich.person_id, "tat_dienst_korrigiert"); // KC-CLUB-SPUR-DIENST
         await protokoll(ich.person_id, "dienst_korrigiert", { art: alt.art, von: alt.zeit, nach: new Date(zeitMs).toISOString() });
         return json({ ok: true, lage: await dsLage(ich) });
       }
@@ -13562,6 +13608,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const { error } = alt ? await db.from("kc_dp_dienst_rueckmeldung").update(zeile).eq("id", alt.id).eq("version", alt.version)
           : await db.from("kc_dp_dienst_rueckmeldung").insert(zeile);
         if (error) throw new Fehler("Konnte nicht gespeichert werden – bitte gleich noch einmal.", 503);
+        await spurServer(ich.person_id, ergebnis === "passt" ? (alt?.ergebnis ? "tat_ist_wieder_passt" : "tat_ist_passt") : ergebnis === "nicht_da" ? "tat_ist_nicht_da" : alt?.ergebnis ? "tat_ist_neu_geaendert" : "tat_ist_geaendert", "d" + d.datum); // KC-CLUB-SPUR-DIENST
         await protokoll(ich.person_id, "ist_rueckmeldung", { ref, ergebnis, vorher: alt?.ergebnis ? { ergebnis: alt.ergebnis, start: alt.ist_start, ende: alt.ist_ende, pause: alt.pause_min } : null,
           start: iso(start), ende: iso(ende), pause, status: planerStatus, version: zeile.version });
         // Bescheid an die Clubleitung bei jeder Zeitänderung (nicht bei „passt“ und nicht, wenn sich nichts geändert hat)
@@ -13834,6 +13881,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const { data: neu, error } = await db.from("kc_club_dienst_tausch").insert({ org_id: ORG, event_id: d!.event, dienst_ref: d!.ref, work_date: d!.datum, start_zeit: new Date(d!.startMs).toISOString(),
           ende_zeit: new Date(d!.endeMs).toISOString(), pause_min: d!.pause || 0, bereich: d!.bereich, zone: d!.zone, von_person: ich.person_id, nachricht }).select("id").single();
         if (error || !neu) throw new Fehler(error?.code === "23505" ? "Diesen Dienst hast du schon angeboten." : "Das Angebot konnte nicht gespeichert werden.", error?.code === "23505" ? 409 : 503);
+        await spurServer(ich.person_id, "tat_tausch_anbieten", "d" + d!.datum); // KC-CLUB-SPUR-DIENST
         await protokoll(ich.person_id, "dienst_tausch", { id: neu.id, aktion: "anbieten", ref: d!.ref });
         const andere = (await aktiveMitglieder()).map((m) => m.person_id).filter((x) => x !== ich.person_id);
         const versand = await dtSenden(andere, false, { titel: `🔁 ${ich.vorname} sucht Ersatz`, kurz: `${dtText(d!, TZ)}${nachricht ? ` – „${nachricht.slice(0, 80)}“` : ""} · Kannst du übernehmen?` }, `${neu.id}:neu`);
@@ -13874,6 +13922,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const { data: neu, error } = await db.from("kc_club_dienst_tausch").update(set).eq("id", r.id).eq("status", r.status).select("id");
         if (error) throw new Fehler("Das hat nicht geklappt – bitte nochmal.", 503);
         if (!neu?.length) throw new Fehler("Jemand anderes war schneller – die Liste wird neu geladen.", 409);
+        if (/^[a-z_]{1,18}$/.test(aktion)) await spurServer(ich.person_id, "tat_tausch_" + aktion, r.work_date ? "d" + r.work_date : undefined); // KC-CLUB-SPUR-DIENST
         await protokoll(ich.person_id, "dienst_tausch", { id: r.id, aktion, von: r.status, nach: w.nach, an, probe: r.probe });
         const pm = await personen([r.von_person, an || ""].filter(Boolean)), nm = (id: string | null) => (id ? (pm.get(id)?.display_name || id).split(" ")[0] : "");
         const wann = dtText(a, TZ), planerIds = await adminIds();
@@ -14042,6 +14091,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const r = alt ? await db.from("kc_dp_wish_inbox").update({ ...zeile, revision: alt.revision + 1 }).eq("id", alt.id).select("revision").single()
           : await db.from("kc_dp_wish_inbox").insert({ ...zeile, revision: 1 }).select("revision").single();
         if (r.error) throw new Fehler("Wünsche konnten nicht gespeichert werden.", 500);
+        await spurServer(ich.person_id, alt ? "tat_dw_geaendert" : "tat_dw_neu", "f" + r.data.revision); // KC-CLUB-SPUR-DIENST
         await protokoll(ich.person_id, "dienstwunsch_gespeichert", { eintraege: entries.length, bereitschaftTage: Object.keys(standby).length, revision: r.data.revision });
         // 2.665.0 KC-CLUB-DP-NEU-RECHNEN / 2.676.0 KC-CLUB-DP-AUTO: Dienstplan-Druck und Lücken-Blatt rechnen sich gleich selbst neu (nie Testpersonen)
         // 2.793.0 KC-CLUB-DW-PUSH-FERTIG (Wunsch Hansi „nach jedem Tag ein Push – besser erst, wenn komplett fertig, dann gesamt“): kein Push mehr je
@@ -21639,6 +21689,7 @@ async function sonderstundenMelden(ich: Ich, p: any) {
     if (r.error) throw new Fehler("Die Stunden konnten nicht gemeldet werden.", 500);
     zeilen = (r.data ?? []).map(shZeile);
   }
+  if (neu.length) await spurServer(ich.person_id, "tat_stunden", /^\d{4}-\d{2}-\d{2}$/.test(String(datum)) ? "d" + datum : undefined); // KC-CLUB-SPUR-DIENST
   await protokoll(ich.person_id, "sonderstunden_gemeldet", { einsatz: evId, datum, personen: neu.length, uebersprungen: uebersprungen.length, verspaetet });
   // Mitgemeldete Kollegen bekommen Bescheid (Einstellung „Dienste“) – mit Hinweis auf eigene Fahrtkosten/Auslagen
   const andere = neu.filter((z) => z.person_id !== ich.person_id);

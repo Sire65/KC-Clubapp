@@ -31,7 +31,7 @@ const vgl = (a, b) => (a < b ? -1 : a > b ? 1 : 0); // wie Pythons sorted() für
 // bekommt sie; bei Überbesetzung bei dem streichen, der viel hat“): wunschZuerst – zuerst bekommt jeder an jedem Tag seinen Wunschblock (im Bedarf,
 // höchstens max/maxDienst Std.), dann werden überbesetzte Ränder bei dem gekürzt, der insgesamt die meisten Wunschstunden hat, dann füllt die
 // bisherige Rechnung die Lücken mit Kann-Zeiten. Sperren, Ruhetag nach maxTageAmStueck, maxGesamt und „nur mit anderen“ gelten weiter.
-// 2.943.0 KC-CLUB-DP-SPAET-BIS-SCHLUSS: spaetBisSchluss – Spätdienst bis Marktschluss (siehe unten)
+// 2.944.0 KC-CLUB-DP-SPAET-BIS-SCHLUSS: spaetBisSchluss – Spätdienst bis Marktschluss (siehe unten)
 export const DP_REGEL = 9;
 
 export function dpRechnen(e) {
@@ -173,7 +173,7 @@ export function dpRechnen(e) {
           if (g >= 2 && (!best || g > best[0] || (g === best[0] && b - a < best[2] - best[1]))) best = [g, a, b]; }
         if (best) { const [, a, b] = best; used.add(n); liste.push([n, a, b]); hours.set(n, (hours.get(n) || 0) + b - a); for (const s of slots(a, b)) dazu(n, s); } }
     }
-    // 2.943.0 KC-CLUB-DP-SPAET-BIS-SCHLUSS (Wunsch Hansi „die letzten Leute, die Spätdienst haben, bis zum Schluss eintragen – sozusagen bis 23 Uhr“):
+    // 2.944.0 KC-CLUB-DP-SPAET-BIS-SCHLUSS (Wunsch Hansi „die letzten Leute, die Spätdienst haben, bis zum Schluss eintragen – sozusagen bis 23 Uhr“):
     // am Markttag wird ein Dienst, der in den letzten 2 Std. vor Schluss endet, bis Schluss verlängert – nicht bei Sperre, nicht über max/maxDienst/maxGesamt
     if (e.spaetBisSchluss === true && kind.get(d) === "Markttag") {
       const S = [...need.keys()].filter((s) => need.get(s)[0] > 0), ende = S.length ? Math.max(...S) + H : null;
