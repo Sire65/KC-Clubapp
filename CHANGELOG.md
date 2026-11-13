@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.942.0 – 2026-11-13 – 📰 Club-Küche 2028: Hefte 13–24 mit allen festen Inhalten vorbereitet (KC-CLUB-MAGAZIN-HEFTE-2028)
+Wunsch Hansi 13.11.: „Baue schon mal in alle Hefte die weiteren feststehenden Sachen ein wie Rätsel, Kräuter, Küchenlatein, Erklärungen, wusstest du schon …“
+- Hefte 13–24 (Januar–Dezember 2028), wie 2027 vorgefüllt: Küchentipp „Aus der Trickkiste“ + Tipp-Kasten, Küchenlatein (12 neue Begriffe), Küchenwitz, feste Termine 2028 (Feiertage, Ostern 16. April, Advent …, Wochentage geprüft), Schlagzeilen.
+- Rätsel-Ecke 2028: 12 neue Fehlerbilder (`magazin/raetsel/nr13…nr24-*.svg`) und 12 neue Kreuzworträtsel; Auflösung jeweils im nächsten Heft. Werkzeuge im KC-ICC (`docs/club-magazin-raetselecke/hefte/`).
+- Kraut des Monats und „Schon gewusst?“: zweites Jahr mit 12 neuen Kräutern und 36 neuen Kniffen (vorher hätten sich 2027er Inhalte wiederholt); Auswahl jetzt nach Heftnummer.
+- Offen für die Redaktion bleiben: Vorwort, Rezept des Monats, Backstube, Porträt, Rückblick, Club-Termine (kommen aus dem Kalender).
+- Tests `magazin-raetsel` und `magazin-kraeuter` auf die Hefte 13–24 erweitert. Update-Hinweis: nur „Kleine Systemanpassung“. Rückweg: App 2.941.0.
+
 ## 2.941.0 – 2026-11-13 – 🖼️ Roman Staffel 2: 13 neue Bleistift-Zeichnungen
 Wunsch Hansi 12./13.11.: Zeichnungen für Staffel 2 (von ChatGPT, geprüft auf Figuren und Szene, als Graustufen-WebP < 200 KB).
 - Heft 13 (Folge 1): Ralle am Teich, Mikes erster Tag, Bischofsmütze, Forelle für Tisch neun – dazu drei kurze Absätze (Stockenten, Servietten falten, Lena serviert Tisch neun).
