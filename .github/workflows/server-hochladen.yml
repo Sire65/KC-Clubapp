@@ -16,6 +16,7 @@ on:
 # 2.736.0 KC-CLUB-EINSPIELEN-FENSTER: id-token für die Meldung „wird gerade eingespielt“ (GitHub-signiert, kein Geheimnis)
 permissions:
   contents: read
+  actions: read # KC-EINSPIELEN-ABSTAND: Zeitpunkt der letzten Version
   id-token: write
 concurrency:
   group: server-hochladen
@@ -40,6 +41,7 @@ jobs:
       # Spiegelung/Sicherung, nicht wenn mehr als 2 in der App sind – geprüft direkt hier, kurz bevor die Version ankommt.
       - name: Termin und Ruhe abwarten
         env:
+          GH_TOKEN: ${{ github.token }}
           NACHRICHT: ${{ github.event.head_commit.message }}
           EINGABE: ${{ inputs.art }}
           VORHER: ${{ github.event.before }}

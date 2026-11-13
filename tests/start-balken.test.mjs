@@ -11,7 +11,7 @@ const pct = (t, erw) => Math.min(95, Math.round(95 * (1 - Math.exp(-2.3 * t / er
 assert.ok(kopf.includes("pct = Math.min(95, Math.round(95 * (1 - Math.exp(-2.3 * t / erw))))"), "gleiche Formel");
 assert.equal(pct(0, 2000), 0); assert.ok(pct(2000, 2000) >= 85 && pct(2000, 2000) <= 90); assert.equal(pct(60000, 2000), 95, "nie 100 %, bevor das Programm läuft");
 assert.ok(kopf.includes('zahl.textContent = pct + " % · " + (t / 1000).toFixed(1).replace(".", ",") + " s";'), "Prozent und Sekunden");
-assert.ok(kopf.includes("🔄 Die neue Version wird eingerichtet …") && kopf.includes("dauert heute etwas länger"), "erklärt Update und lange Starts");
+assert.ok(kopf.includes("🔄 Gerade wird ein Update eingespielt …") && kopf.includes("dauert heute etwas länger"), "erklärt Update und lange Starts");
 assert.ok(kopf.includes('if (!document.getElementById("appLaedt")) return;'), "endet, sobald das Programm die Anzeige entfernt");
 // Skript im Kopf läuft fehlerfrei an
 new Function(kopf.slice("<script>".length));

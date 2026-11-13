@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.944.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.945.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -244,7 +244,7 @@ function sparInfo() { melde(`🐢 Sparmodus: ${SPAR.grund}. Weniger Bewegung, se
 if (document.currentScript?.dataset.v !== APP_VERSION) {
   let schon = false; try { schon = sessionStorage.getItem("kc_club_mischstand") === APP_VERSION; sessionStorage.setItem("kc_club_mischstand", APP_VERSION); } catch {}
   try { window.KCFP?.neu?.("mischstand", { text: `Seite ${document.currentScript?.dataset.v || "?"} / Programm ${APP_VERSION}` }); } catch {}
-  if (!schon) location.replace(location.pathname + "?neu=" + Date.now() + location.hash);
+  if (!schon) { try { localStorage.setItem("kc_club_neustart_update", "mischstand"); } catch {} location.replace(location.pathname + "?neu=" + Date.now() + location.hash); } // 2.945.0 KC-CLUB-UPDATE-HINWEIS: Ladeanzeige sagt „Update“ statt „Netz langsam“
   throw new Error("Seite und Programm passen nicht zusammen – wird neu geladen");
 }
 // KC-CLUB-STARTZEIT (2.24.11, Wunsch Hansi): jeden Start in Abschnitte zerlegen – Seite, Programm laden, Programm einrichten,
