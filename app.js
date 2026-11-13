@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.945.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.946.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -27537,7 +27537,7 @@ function taKarte(a) {
     ${!ab && (a.vonMir || a.meine === "ja" || a.meine === "vielleicht") ? erinZeileHtml(a.erinnerung, `erinAnfrage('${a.id}')`, a.erinnerungStandard) : ""}
     ${taKalHtml(a, ab)}
     ${!ab && !a.spiel && (a.vonMir || a.meine === "ja" || a.meine === "vielleicht") ? taToSchalterHtml(a) : ""}
-    ${!ab && !a.spiel && (a.protokoll || (a.vonMir && Date.parse(a.beginn) <= Date.now() + 2 * 3600000)) ? `<div class="knoepfe"><button class="knopf klein${a.vonMir && !a.protokoll ? " haupt" : ""}" onclick="${a.vonMir ? "taProtokoll" : "taProtokollLesen"}('${a.id}')">📝 ${a.vonMir ? (a.protokoll ? (a.protokoll.status === "gesendet" ? "Protokoll (verschickt)" : "Protokoll (Entwurf)") : "Protokoll schreiben") : "Protokoll lesen"}</button></div>` : ""}
+    ${!ab && !a.spiel && (a.protokoll || (a.vonMir && Date.parse(a.beginn) <= Date.now() + 2 * 3600000)) ? `<div class="knoepfe"><button class="knopf klein${a.vonMir && !a.protokoll ? " haupt" : ""}" onclick="${a.vonMir ? "taProtokoll" : "taProtokollLesen"}('${a.id}')">📝 ${a.vonMir ? (a.protokoll ? (a.protokoll.status === "gesendet" ? "Protokoll (verschickt)" : "Protokoll (Entwurf)") : "Protokoll schreiben") : "Protokoll lesen"}</button>${a.vonMir && a.protokoll?.status === "gesendet" ? `<button class="knopf klein" onclick="taProtokollLesen('${a.id}')">👁️ So sieht ${esc(a.empfaenger.length === 1 ? a.empfaenger[0].name.split(" ")[0] : "es der Empfänger")} es</button>` : ""}</div>` : ""}
     ${a.vonMir && !ab ? `<div class="knoepfe">${a.spiel ? "" : `<button class="knopf klein" onclick="taAendern('${a.id}')">✏️ Ändern / ergänzen</button>`}<button class="knopf klein" onclick="taAbsagen('${a.id}')">🚫 Absagen</button></div>` : ""}</div>`;
 }
 // KC-CLUB-TA-TAGESORDNUNG (12.11.2026, Wunsch Hansi „als Tagesordnung übernehmen mit einem Häkchen und daraus eine Besprechungsvorlage bauen mit den Punkten“):
@@ -27699,6 +27699,7 @@ function taProtokoll(id) {
     <button type="button" class="knopf klein" onclick="taPrDazu()">＋ Punkt</button>
     <label class="feld">Sonstiges / Beschlüsse<textarea id="tapSonst" rows="3" maxlength="2000" data-diktat>${esc(q.sonstiges || "")}</textarea></label>
     <label class="feld">📅 Nächster Termin<input id="tapNaechst" maxlength="200" value="${esc(q.naechster || "")}" placeholder="z. B. Fr. 27.11., 11:30 Uhr bei mir"></label>
+    <label class="tap-todo"><input type="checkbox" id="tapKopie" checked> 📧 Kopie der E-Mail an mich</label>
     <label class="tap-todo"><input type="checkbox" id="tapTodo"${q.status === "gesendet" ? "" : " checked"}> ✅ Aus „Wer? Bis wann?“ To-dos anlegen (beim Senden)</label>
     <button class="knopf haupt" id="tapSenden">📨 Speichern und an ${esc(anText)} senden</button>
     <button class="knopf" id="tapEntwurf">💾 Als Entwurf speichern</button>
@@ -27708,11 +27709,16 @@ function taProtokoll(id) {
   const speichern = async (senden) => {
     const p = taPrLesenForm(); if (!p.tops.some((x) => x.t || x.ergebnis) && !p.sonstiges) return melde("📝 Bitte mindestens einen Punkt ausfüllen.");
     if (senden && !(await frage(`📨 Protokoll jetzt an ${anText} schicken (Push und E-Mail)?`, { ja: "Ja, senden", nein: "Abbrechen" }))) return;
-    try { const r = await api("terminanfrage_protokoll", { id, protokoll: p, senden }, { warten: true });
+    let pdf = null; // KC-CLUB-TA-PROTOKOLL-PDF: beim Senden das PDF auf dem Club-Briefkopf erzeugen und anhängen (klappt das nicht, geht das Protokoll trotzdem raus)
+    if (senden) try { const alt = a.protokoll; a.protokoll = { ...(alt || {}), ...p, status: "gesendet" }; DRUCK = { art: "taprotokoll", param: id };
+      if (await druckSeiteBauen()) { const name = `Protokoll_${a.anlass}_${berlinIso(a.beginn)}`.replace(/[^\wäöüÄÖÜß.-]+/g, "_").slice(0, 60) + ".pdf";
+        const up = await anlageHochladen(new File([await druckPdfBlob()], name, { type: "application/pdf" })); pdf = up?.id || null; }
+      a.protokoll = alt; } catch (e) { console.warn("protokoll pdf", e); }
+    try { const r = await api("terminanfrage_protokoll", { id, protokoll: p, senden, pdf, kopie: senden && !!$("tapKopie")?.checked }, { warten: true });
       a.protokoll = r.protokoll;
       let todos = 0; if (senden && $("tapTodo")?.checked) for (const x of p.tops.filter((y) => y.wer)) {
         try { await api("todo_anlegen", { text: `${a.anlass}: ${x.t}${x.ergebnis ? " – " + x.ergebnis : ""}`.slice(0, 200), zustaendige: [x.wer], faellig: x.bis || null, kategorie: "sonstiges", fuer: "ich" }, { still: true }); todos++; } catch {} }
-      melde(senden ? `📨 Protokoll ist an ${anText} geschickt${todos ? ` · ${todos} To-do${todos === 1 ? "" : "s"} angelegt` : ""}` : "💾 Entwurf gespeichert");
+      melde(senden ? `📨 Protokoll ist an ${anText} geschickt${r.protokoll?.pdf ? " · 📄 als PDF angehängt" : ""}${todos ? ` · ${todos} To-do${todos === 1 ? "" : "s"} angelegt` : ""}` : "💾 Entwurf gespeichert");
       if (senden) f.remove(); TA.markiert = id; await taLaden(); return true; } catch (e) { meldeFehler(e); return false; }
   };
   f.querySelector("#tapSenden").onclick = () => speichern(true);
@@ -27728,6 +27734,7 @@ function taProtokollLesen(id) {
     ${(q.tops || []).map((x, i) => `<div class="tap-lesen"><b>TOP ${i + 1}: ${esc(x.t)}</b>${x.ergebnis ? `<div style="white-space:pre-wrap">${esc(x.ergebnis)}</div>` : ""}${x.werName || x.bis ? `<div class="hinweis">→ ${esc(x.werName || "?")}${x.bis ? " bis " + esc(x.bis.split("-").reverse().join(".")) : ""}</div>` : ""}</div>`).join("")}
     ${q.sonstiges ? `<div class="tap-lesen"><b>Sonstiges</b><div style="white-space:pre-wrap">${esc(q.sonstiges)}</div></div>` : ""}
     ${q.naechster ? `<p>📅 <b>Nächster Termin:</b> ${esc(q.naechster)}</p>` : ""}
+    ${q.pdf ? `<button class="knopf haupt" onclick="anlageAktion(${jsArg(q.pdf)}, ${jsArg((a.anlagen || []).find((x) => x.id === q.pdf)?.name || "Protokoll.pdf")}, 'application/pdf')">📄 Protokoll als PDF (Briefkopf)</button>` : ""}
     <button class="knopf" onclick="druckStarten('taprotokoll', '${a.id}')">🖨️ Drucken / PDF</button><button class="knopf" onclick="$('taPrLesen').remove()">Schließen</button>`);
 }
 function taPrDruck(id) { // DRUCKARTEN.taprotokoll – Kopf, Logo und Fußzeile im Club-Design kommen aus der Druckvorschau

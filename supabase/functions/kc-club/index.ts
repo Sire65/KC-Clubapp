@@ -194,7 +194,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.944.0";
+const SERVER_VERSION = "2.946.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -10969,8 +10969,18 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           .filter((x: any) => x.t || x.ergebnis);
         if (!tops.length && !txt(q.sonstiges, 10)) throw new Fehler("Bitte mindestens einen Punkt ausfüllen.");
         const senden = p.senden === true, alt = a.protokoll || null, stand = new Date().toISOString();
+        // KC-CLUB-TA-PROTOKOLL-PDF (13.11.2026, Wunsch Hansi „normalerweise als PDF auf Kopfbogen mit Logo“): die App erzeugt beim Senden das PDF im Club-Design
+        // und lädt es hoch; es hängt dann als Anlage an der Terminanfrage (ein älteres Protokoll-PDF wird ersetzt). Nur selbst hochgeladene Dateien.
+        const pdfNeu = senden && /^[0-9a-f-]{36}$/i.test(String(p.pdf || "")) ? String(p.pdf) : null;
+        let pdf = alt?.pdf || null;
+        if (pdfNeu && pdfNeu !== pdf) {
+          if ((await objAnlagenSetzen(ich, "terminanfrage", a.id, [pdfNeu])) > 0) {
+            if (pdf) await db.from("kc_club_objekt_anlagen").delete().eq("art", "terminanfrage").eq("objekt_id", a.id).eq("attachment_id", pdf);
+            pdf = pdfNeu;
+          }
+        }
         const prot = { anwesend: txt(q.anwesend, 300), tops, sonstiges: txt(q.sonstiges, 2000), naechster: txt(q.naechster, 200),
-          status: senden || alt?.status === "gesendet" ? "gesendet" : "entwurf", gesendet_am: senden ? stand : alt?.gesendet_am ?? null, stand };
+          status: senden || alt?.status === "gesendet" ? "gesendet" : "entwurf", gesendet_am: senden ? stand : alt?.gesendet_am ?? null, stand, pdf };
         const { error } = await db.from("kc_club_terminanfragen").update({ protokoll: prot }).eq("id", a.id).eq("erstellt_von", ich.person_id);
         if (error) throw new Fehler(error.code === "42703" || error.code === "PGRST204" ? "Das Protokoll geht erst nach dem nächsten Datenbank-Update – bitte später nochmal." : "Speichern fehlgeschlagen.", error.code === "42703" ? 503 : 500);
         let versand: unknown = null, an = 0;
@@ -10981,11 +10991,14 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           const text = `Hallo,\n\n${ich.name} schickt dir ${nochmal ? "das ergänzte" : "das"} Protokoll zur Besprechung:\n\n📌 ${a.anlass}\n📅 ${anfrageWann(a)}${a.ort ? "\n📍 " + a.ort : ""}${prot.anwesend ? "\n👥 Anwesend: " + prot.anwesend : ""}\n\n`
             + tops.map((x: any, i: number) => `TOP ${i + 1}: ${x.t}${x.ergebnis ? "\n" + x.ergebnis : ""}${x.werName || x.bis ? `\n→ ${x.werName || "?"}${x.bis ? " bis " + x.bis.split("-").reverse().join(".") : ""}` : ""}`).join("\n\n")
             + (prot.sonstiges ? `\n\nSonstiges:\n${prot.sonstiges}` : "") + (prot.naechster ? `\n\nNächster Termin: ${prot.naechster}` : "")
-            + `\n\nIn der Köcheclub-App (Termine → Kalender → ${anfrageWann(a).split(",")[0]}) kannst du es ansehen, drucken oder als PDF speichern: ${APP_URL}#termine\n\nViele Grüße\nKöcheclub Werne`;
+            + `\n\n${pdf ? "📄 Das Protokoll als PDF auf dem Club-Briefkopf hängt an der Terminanfrage in der Köcheclub-App" : "In der Köcheclub-App kannst du es ansehen, drucken oder als PDF speichern"} (Termine → Kalender → ${anfrageWann(a).split(",")[0]}): ${APP_URL}#termine\n\nViele Grüße\nKöcheclub Werne`;
           if (ziel.length) versand = await sendenGewaehlt("club_treffen", ziel, ["push", "email"], { titel: `📝 Protokoll: ${a.anlass}`, kurz: `${ich.vorname} hat ${nochmal ? "das Protokoll ergänzt" : "das Protokoll geschickt"} – ${tops.length} Punkte`,
             betreff: `Köcheclub Werne – Protokoll: ${a.anlass}, ${wann(a.beginn)}`, text, url: APP_URL + "#termine" }, `club-ta-protokoll:${a.id}:${stand}`);
+          // KC-CLUB-TA-PROTOKOLL-KOPIE: auf Wunsch dieselbe E-Mail an mich (nur E-Mail, kein Push)
+          if (p.kopie === true) await sendenGewaehlt("club_treffen", [ich.person_id], ["email"], { titel: `📝 Kopie: Protokoll ${a.anlass}`, kurz: "Kopie deines Protokolls",
+            betreff: `Köcheclub Werne – Kopie: Protokoll ${a.anlass}, ${wann(a.beginn)}`, text: text.replace(/^Hallo,\n\n[^\n]*\n/, `Hallo,\n\nKopie – so hat ${ziel.length === 1 ? "der Angefragte" : "jeder Angefragte"} das Protokoll bekommen:\n`), url: APP_URL + "#termine" }, `club-ta-protokoll-kopie:${a.id}:${stand}`).catch(() => null);
         }
-        await protokoll(ich.person_id, "terminanfrage_protokoll", { anfrage: a.id, tops: tops.length, status: prot.status, gesendet: senden, an, versand });
+        await protokoll(ich.person_id, "terminanfrage_protokoll", { anfrage: a.id, tops: tops.length, status: prot.status, gesendet: senden, an, versand, pdf: !!pdf, kopie: senden && p.kopie === true });
         return json({ ok: true, protokoll: prot, an });
       }
 

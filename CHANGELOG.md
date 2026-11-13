@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.946.0 – 2026-11-13 – 📄 Besprechungs-Protokoll als PDF auf dem Club-Briefkopf · 👁️ „So sieht Klaus es“ · 📧 Kopie an mich (KC-CLUB-TA-PROTOKOLL-PDF) · Server 2.946.0
+Wunsch Hansi 13.11.: „Wo sehe ich das Protokoll an Klaus, wie er es bekommen hat?“ – „Ja, und normalerweise als PDF auf Kopfbogen mit Logo etc.“
+- Beim **Senden** erzeugt die App das Protokoll als **PDF im Club-Design** (Logo, Kopf, Fußzeile) und hängt es an die Terminanfrage. Die Angefragten sehen es dort als Anlage und im Lesefenster als **„📄 Protokoll als PDF (Briefkopf)“**; die E-Mail weist darauf hin. Erneutes Senden ersetzt das ältere PDF. Klappt das PDF einmal nicht, geht das Protokoll trotzdem raus.
+- Neuer Knopf **„👁️ So sieht Klaus es“** an der eigenen, verschickten Besprechung: genau das Lesefenster des Empfängers.
+- Häkchen **„📧 Kopie der E-Mail an mich“** (vorbelegt): dieselbe E-Mail wie der Empfänger, nur per E-Mail.
+- Keine Datenbank-Änderung. Tests `tests/ta-protokoll.test.mjs`, Browser `tools/hilfe/ta-protokoll-browser.mjs` erweitert (nur Testdaten). Rückweg: App 2.945.0, Server 2.944.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.945.0 – 2026-11-13 – ⏳ Höchstens eine Version je 15 Minuten · ehrlicher Hinweis beim Update (KC-EINSPIELEN-ABSTAND, KC-CLUB-UPDATE-HINWEIS)
 Fund Hansi 13.11. 20:06: Start dauerte 39 s mit „Das Netz ist gerade langsam“. Ursache: 2.943.0 (19:54) und 2.944.0 (20:01) kamen innerhalb von 7 Minuten – Hansis Update auf 2.943.0 lief mitten in die nächste Version (Mischstand Seite 2.943 / Programm 2.944, die App lud sich selbst neu).
 - **Abstand:** `tools/einspielen-ruhe.sh` sieht bei GitHub nach, wann die letzte andere Version live ging („Seite veröffentlichen“ auf main). Weniger als 15 Min. her → der Ablauf wartet den Rest ab. Gilt auch bei `[Hansi: einspielen]`, nicht bei `[Notfall]`. Die Abläufe dürfen dafür Actions lesen (`actions: read`). Regel in AGENTS.md.
