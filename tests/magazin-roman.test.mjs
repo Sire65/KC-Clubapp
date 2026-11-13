@@ -212,9 +212,9 @@ console.log("magazin-roman Antworten Hansi: ok");
   for (const b of [...b14, ...b15]) { assert.ok(b.da && /^magazin\/roman\/s2-0[23]-/.test(b.datei) && b.alt.startsWith("Bleistiftskizze: "));
     const st = fs.statSync(new URL("../" + b.datei, import.meta.url)); assert.ok(st.size > 5000 && st.size < 200000, "klein: " + b.datei); }
   assert.ok(magHeftHtml("roman", MAG_AUSGABEN[14].roman).includes("Skizzen by KI") && (magHeftHtml("roman", MAG_AUSGABEN[14].roman).match(/<img /g) || []).length === 3); }
-// Heft 20 (12.11.2026): Zeichnungen „Die Scheunenküche“ (hinter dem Abruf) und „Timo“ (Bank an der Rathausmauer)
+// Heft 20 (12.11.2026): Zeichnungen „Die Scheunenküche“ (hinter dem Abruf), „Mike hilft“ (Junge nach dem Fettbrand) und „Timo“ (Bank an der Rathausmauer)
 { const r = MAG_AUSGABEN[20].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
-  assert.deepEqual(r.bilder.map((b) => b.wo + " " + b.datei), ["absatz:21 magazin/roman/s2-08-01-scheunenkueche.webp", "absatz:70 magazin/roman/s2-08-02-timo.webp"]); assert.equal(p[20], "„Zwanzig.“"); assert.ok(p[69].includes("setzten sich damit auf eine Bank an der Rathausmauer"), "Timo-Bild an der Bank");
+  assert.deepEqual(r.bilder.map((b) => b.wo + " " + b.datei), ["absatz:21 magazin/roman/s2-08-01-scheunenkueche.webp", "absatz:46 magazin/roman/s2-08-03-mike-hilft.webp", "absatz:71 magazin/roman/s2-08-02-timo.webp"]); assert.equal(p[20], "„Zwanzig.“"); assert.ok(p[45].startsWith("Am Kindertisch, der dem Herd am nächsten stand") && p[45].includes("Löschdecke"), "Mike-hilft-Bild"); assert.ok(p[70].includes("setzten sich damit auf eine Bank an der Rathausmauer"), "Timo-Bild an der Bank");
   for (const b of r.bilder) assert.ok(b.da && b.alt.startsWith("Bleistiftskizze: ") && fs.statSync(new URL("../" + b.datei, import.meta.url)).size < 200000, b.datei); assert.ok(magHeftHtml("roman", r).includes("Skizzen by KI")); }
 // Heft 13 (12.11.2026): Zeichnungen „Mikes erster Tag“ (Schalottenkiste) und „Bischofsmütze“ und „Forelle für Tisch neun“ (je ein neuer Absatz dazu, Bilder von Hansi)
 { const r = MAG_AUSGABEN[13].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
