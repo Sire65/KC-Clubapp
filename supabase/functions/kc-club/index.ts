@@ -9004,7 +9004,8 @@ async function terminanfragenListe(ich: Ich, zeitraum?: { von: string; bis: stri
     const e = (zeilen ?? []).filter((z: any) => z.anfrage_id === a.id);
     const mein = e.find((z: any) => z.person_id === ich.person_id);
     return {
-      id: a.id, anlass: a.anlass, beginn: a.beginn, ende: a.ende, ort: a.ort, notiz: a.notiz, frist: a.frist, status: a.status, spiel: !!a.spiel_id, erstelltAm: a.erstellt_am, geaendertAm: a.geaendert_am, gegenvorschlag: a.gegenvorschlag !== false, vorbehalt: a.vorbehalt ?? null, anlagen: anl.get(a.id) ?? [],
+      id: a.id, anlass: a.anlass, beginn: a.beginn, ende: a.ende, ort: a.ort, notiz: a.notiz, frist: a.frist, status: a.status, spiel: !!a.spiel_id, erstelltAm: a.erstellt_am, geaendertAm: a.geaendert_am,
+      protokoll: a.protokoll && (a.erstellt_von === ich.person_id || a.protokoll.status === "gesendet") ? a.protokoll : null, // KC-CLUB-TA-PROTOKOLL: Angefragte sehen es erst, wenn es verschickt ist gegenvorschlag: a.gegenvorschlag !== false, vorbehalt: a.vorbehalt ?? null, anlagen: anl.get(a.id) ?? [],
       vonMir: a.erstellt_von === ich.person_id, von: { person_id: a.erstellt_von, name: name(a.erstellt_von), vorname: vorname(leute.get(a.erstellt_von)) || name(a.erstellt_von) },
       meine: mein?.antwort ?? null, meineNotiz: mein?.notiz ?? null, meinGelesen: mein?.gelesen_am ?? null, // KC-CLUB-TERMINANFRAGE-STATUS (2.23.50)
       meinVorschlag: mein?.vorschlag_beginn ? { beginn: mein.vorschlag_beginn, ende: mein.vorschlag_ende } : null, erinnerung: erin.get(a.id) ?? null, erinnerungStandard: a.erinnerung_min || 0,
@@ -10950,6 +10951,41 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         }
         await protokoll(ich.person_id, "terminanfrage_geaendert", { anfrage: a.id, neue_zeilen: neu.length, informiert: empfaenger, versand });
         return json({ ok: true, neu: neu.length, informiert: empfaenger, versand });
+      }
+
+      // KC-CLUB-TA-PROTOKOLL (13.11.2026, Wunsch Hansi „wie wird aus dem Termin mit Klaus und der Tagesordnung ein Protokoll?“ – „Ja bauen“):
+      // wer angefragt hat, schreibt zur Besprechung ein Protokoll (je TOP Ergebnis, Wer?, Bis wann?; Anwesend, Sonstiges, nächster Termin),
+      // speichert es als Entwurf oder schickt es an die Angefragten (Push + E-Mail mit dem ganzen Text). Protokoll ohne Inhalte.
+      case "terminanfrage_protokoll": {
+        const { data: a } = await db.from("kc_club_terminanfragen").select("*").eq("id", String(p.id || "")).maybeSingle();
+        if (!a) throw new Fehler("Anfrage nicht gefunden.", 404);
+        if (a.erstellt_von !== ich.person_id) throw new Fehler("Das Protokoll schreibt, wer angefragt hat.", 403);
+        if (a.status === "abgesagt") throw new Fehler("Die Besprechung ist abgesagt.", 409);
+        if (a.spiel_id) throw new Fehler("Zu einer Partie gibt es kein Protokoll.", 409);
+        if (Date.parse(a.beginn) > Date.now() + 2 * 3600000) throw new Fehler("Das Protokoll geht erst ab kurz vor der Besprechung.", 409);
+        const q = p.protokoll ?? {}, tag = (v: unknown) => /^\d{4}-\d{2}-\d{2}$/.test(String(v || "")) ? String(v) : null;
+        const tops = (Array.isArray(q.tops) ? q.tops : []).slice(0, 30).map((x: any) => ({ t: txt(x?.t, 160), ergebnis: txt(x?.ergebnis, 2000), wer: txt(x?.wer, 80), werName: txt(x?.werName, 80), bis: tag(x?.bis) }))
+          .filter((x: any) => x.t || x.ergebnis);
+        if (!tops.length && !txt(q.sonstiges, 10)) throw new Fehler("Bitte mindestens einen Punkt ausfüllen.");
+        const senden = p.senden === true, alt = a.protokoll || null, stand = new Date().toISOString();
+        const prot = { anwesend: txt(q.anwesend, 300), tops, sonstiges: txt(q.sonstiges, 2000), naechster: txt(q.naechster, 200),
+          status: senden || alt?.status === "gesendet" ? "gesendet" : "entwurf", gesendet_am: senden ? stand : alt?.gesendet_am ?? null, stand };
+        const { error } = await db.from("kc_club_terminanfragen").update({ protokoll: prot }).eq("id", a.id).eq("erstellt_von", ich.person_id);
+        if (error) throw new Fehler(error.code === "42703" || error.code === "PGRST204" ? "Das Protokoll geht erst nach dem nächsten Datenbank-Update – bitte später nochmal." : "Speichern fehlgeschlagen.", error.code === "42703" ? 503 : 500);
+        let versand: unknown = null, an = 0;
+        if (senden) {
+          const { data: em } = await db.from("kc_club_terminanfrage_empfaenger").select("person_id").eq("anfrage_id", a.id);
+          const ziel = (em ?? []).map((e: any) => String(e.person_id)); an = ziel.length;
+          const nochmal = alt?.status === "gesendet";
+          const text = `Hallo,\n\n${ich.name} schickt dir ${nochmal ? "das ergänzte" : "das"} Protokoll zur Besprechung:\n\n📌 ${a.anlass}\n📅 ${anfrageWann(a)}${a.ort ? "\n📍 " + a.ort : ""}${prot.anwesend ? "\n👥 Anwesend: " + prot.anwesend : ""}\n\n`
+            + tops.map((x: any, i: number) => `TOP ${i + 1}: ${x.t}${x.ergebnis ? "\n" + x.ergebnis : ""}${x.werName || x.bis ? `\n→ ${x.werName || "?"}${x.bis ? " bis " + x.bis.split("-").reverse().join(".") : ""}` : ""}`).join("\n\n")
+            + (prot.sonstiges ? `\n\nSonstiges:\n${prot.sonstiges}` : "") + (prot.naechster ? `\n\nNächster Termin: ${prot.naechster}` : "")
+            + `\n\nIn der Köcheclub-App (Termine → Kalender → ${anfrageWann(a).split(",")[0]}) kannst du es ansehen, drucken oder als PDF speichern: ${APP_URL}#termine\n\nViele Grüße\nKöcheclub Werne`;
+          if (ziel.length) versand = await sendenGewaehlt("club_treffen", ziel, ["push", "email"], { titel: `📝 Protokoll: ${a.anlass}`, kurz: `${ich.vorname} hat ${nochmal ? "das Protokoll ergänzt" : "das Protokoll geschickt"} – ${tops.length} Punkte`,
+            betreff: `Köcheclub Werne – Protokoll: ${a.anlass}, ${wann(a.beginn)}`, text, url: APP_URL + "#termine" }, `club-ta-protokoll:${a.id}:${stand}`);
+        }
+        await protokoll(ich.person_id, "terminanfrage_protokoll", { anfrage: a.id, tops: tops.length, status: prot.status, gesendet: senden, an, versand });
+        return json({ ok: true, protokoll: prot, an });
       }
 
       // ----- KC-CLUB-STANDORT (0.92.0) -----

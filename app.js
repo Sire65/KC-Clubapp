@@ -27501,7 +27501,9 @@ async function taLaden() {
   try { TA.liste = (await api("terminanfragen_liste")).anfragen || []; } catch (e) { $("terminanfragen").innerHTML = ""; return; }
   // 2.23.30 (Wunsch Hansi): abgesagte Anfragen bleiben blass als Stornierung stehen, bis der Termin vorbei ist – sie zählen nicht mit
   // und zeigen keine Antwortzeile („⏳ offen“) mehr
-  const kommend = TA.liste.filter((a) => new Date(a.ende || a.beginn) > Date.now() - 3 * 3600000);
+  // KC-CLUB-TA-PROTOKOLL: aus dem Kalender angetippte Anfrage immer zeigen; eigene Besprechung ohne verschicktes Protokoll 3 Tage, mit Protokoll 14 Tage
+  const kommend = TA.liste.filter((a) => new Date(a.ende || a.beginn) > Date.now() - 3 * 3600000 || a.id === TA.markiert
+    || (a.status !== "abgesagt" && !a.spiel && (a.protokoll ? Date.parse(a.beginn) > Date.now() - 14 * 86400000 : a.vonMir && Date.parse(a.beginn) > Date.now() - 3 * 86400000)));
   $("terminanfragen").innerHTML = kommend.length ? `<details class="karte tm-klappe" data-klappe="tm_anfragen" data-ohne-unten open><summary>📨 Terminanfragen${kommend.some((a) => a.status !== "abgesagt") ? ` <span class="marke">${kommend.filter((a) => a.status !== "abgesagt").length}</span>` : ""}</summary>${kommend.map(taKarte).join("")}</details>` : ""; // 1.46.0
   klappenMerken($("terminanfragen"));
   // KC-CLUB-TERMINANFRAGE-STATUS (2.23.50): angezeigt = „👁️ gelesen“ für den, der angefragt hat
@@ -27535,6 +27537,7 @@ function taKarte(a) {
     ${!ab && (a.vonMir || a.meine === "ja" || a.meine === "vielleicht") ? erinZeileHtml(a.erinnerung, `erinAnfrage('${a.id}')`, a.erinnerungStandard) : ""}
     ${taKalHtml(a, ab)}
     ${!ab && !a.spiel && (a.vonMir || a.meine === "ja" || a.meine === "vielleicht") ? taToSchalterHtml(a) : ""}
+    ${!ab && !a.spiel && (a.protokoll || (a.vonMir && Date.parse(a.beginn) <= Date.now() + 2 * 3600000)) ? `<div class="knoepfe"><button class="knopf klein${a.vonMir && !a.protokoll ? " haupt" : ""}" onclick="${a.vonMir ? "taProtokoll" : "taProtokollLesen"}('${a.id}')">📝 ${a.vonMir ? (a.protokoll ? (a.protokoll.status === "gesendet" ? "Protokoll (verschickt)" : "Protokoll (Entwurf)") : "Protokoll schreiben") : "Protokoll lesen"}</button></div>` : ""}
     ${a.vonMir && !ab ? `<div class="knoepfe">${a.spiel ? "" : `<button class="knopf klein" onclick="taAendern('${a.id}')">✏️ Ändern / ergänzen</button>`}<button class="knopf klein" onclick="taAbsagen('${a.id}')">🚫 Absagen</button></div>` : ""}</div>`;
 }
 // KC-CLUB-TA-TAGESORDNUNG (12.11.2026, Wunsch Hansi „als Tagesordnung übernehmen mit einem Häkchen und daraus eine Besprechungsvorlage bauen mit den Punkten“):
@@ -27658,6 +27661,109 @@ function taAendern(id) {
       f.remove(); melde(r.unveraendert ? "Nichts geändert." : r.informiert ? `✏️ Gespeichert – ${r.informiert === 1 ? an[0] || "der Angefragte" : r.informiert + " Angefragte"} ${r.informiert === 1 ? "bekommt" : "bekommen"} Bescheid` : "✏️ Gespeichert");
       TA.markiert = id; await taLaden(); } catch (e) { meldeFehler(e); }
   };
+}
+// ---------- KC-CLUB-TA-PROTOKOLL (13.11.2026, Wunsch Hansi „wie wird aus dem Termin mit Klaus und der Tagesordnung ein Protokoll?“ – „Ja bauen“) ----------
+// Protokoll zur Besprechung aus der Terminanfrage: Punkte aus der Tagesordnung (Häkchen) bzw. der Notiz, je TOP Ergebnis, Wer?, Bis wann?;
+// Anwesend, Sonstiges, nächster Termin; Foto der handschriftlichen Besprechungsvorlage lesen; Entwurf oder an die Angefragten schicken;
+// auf Wunsch To-dos aus „Wer? Bis wann?“; drucken/PDF/ablegen im Club-Design. Angefragte sehen es erst, wenn es verschickt ist.
+const TAP = { id: null };
+function taPrLeute(a) { return [{ id: a.vonMir ? ICH?.person_id : a.von?.person_id, name: a.vonMir ? ICH?.name : a.von?.name }, ...a.empfaenger.map((e) => ({ id: e.person_id, name: e.name }))].filter((x) => x.id && x.name); }
+function taPrStart(a) {
+  if (a.protokoll) return JSON.parse(JSON.stringify(a.protokoll));
+  const st = taToLesen()[a.id], punkte = (st?.an ? taToPunkte(a).filter((p) => p.an).map((p) => p.t) : taToAusNotiz(a.notiz));
+  const da = [ICH?.name, ...a.empfaenger.filter((e) => e.antwort === "ja" || e.antwort === "vielleicht").map((e) => e.name)].filter(Boolean);
+  return { anwesend: da.join(", "), tops: punkte.map((t) => ({ t, ergebnis: "", wer: "", bis: null })), sonstiges: "", naechster: "", status: "neu" };
+}
+function taPrTopHtml(x, i, leute) {
+  return `<div class="tap-top" data-i="${i}"><div class="tap-kopf"><b>TOP ${i + 1}</b><input class="tap-t" maxlength="160" value="${esc(x.t || "")}" placeholder="Punkt"><button type="button" class="tap-weg" title="Punkt entfernen" aria-label="Punkt entfernen" onclick="taPrWeg(${i})">✕</button></div>
+    <textarea class="tap-e" rows="3" maxlength="2000" data-diktat placeholder="Ergebnis / Notiz …">${esc(x.ergebnis || "")}</textarea>
+    <div class="tap-wer"><label>Wer?<select class="tap-w"><option value="">–</option>${leute.map((l) => `<option value="${esc(l.id)}"${x.wer === l.id ? " selected" : ""}>${esc(l.name)}</option>`).join("")}</select></label>
+    <label>Bis wann?<input type="date" class="tap-b" value="${esc(x.bis || "")}"></label></div></div>`;
+}
+function taPrLesenForm() {
+  const f = $("taPrBlatt"); if (!f) return null; const a = TA.liste.find((x) => x.id === TAP.id), leute = a ? taPrLeute(a) : [];
+  return { anwesend: $("tapAnw").value.trim(), sonstiges: $("tapSonst").value.trim(), naechster: $("tapNaechst").value.trim(),
+    tops: [...f.querySelectorAll(".tap-top")].map((d) => { const w = d.querySelector(".tap-w").value; return { t: d.querySelector(".tap-t").value.trim(), ergebnis: d.querySelector(".tap-e").value.trim(), wer: w, werName: leute.find((l) => l.id === w)?.name || "", bis: d.querySelector(".tap-b").value || null }; }) };
+}
+function taPrTopsZeichnen(tops) { const a = TA.liste.find((x) => x.id === TAP.id); $("tapTops").innerHTML = tops.map((x, i) => taPrTopHtml(x, i, taPrLeute(a))).join("") || '<p class="hinweis">Noch keine Punkte – unten „＋ Punkt“.</p>'; }
+function taPrWeg(i) { const q = taPrLesenForm(); q.tops.splice(i, 1); taPrTopsZeichnen(q.tops); }
+function taPrDazu() { const q = taPrLesenForm(); q.tops.push({ t: "", ergebnis: "", wer: "", bis: null }); taPrTopsZeichnen(q.tops); setTimeout(() => [...document.querySelectorAll("#tapTops .tap-t")].pop()?.focus(), 50); }
+function taProtokoll(id) {
+  const a = TA.liste.find((x) => x.id === id); if (!a || !a.vonMir) return; TAP.id = id;
+  const q = taPrStart(a), an = a.empfaenger.map((e) => e.name.split(" ")[0]), anText = an.length === 1 ? an[0] : an.length + " Angefragte";
+  const f = blattAuf("taPrBlatt", `<h3 style="margin:0">📝 Protokoll: ${esc(a.anlass)}</h3>
+    <p class="hinweis" style="margin:0">📅 ${esc(wann(a.beginn))}${a.ort ? " · 📍 " + esc(a.ort) : ""}${q.status === "gesendet" ? " · ✅ verschickt" + (q.gesendet_am ? " am " + esc(wann(q.gesendet_am)) : "") : q.status === "entwurf" ? " · Entwurf" : ""}</p>
+    <label class="feld">👥 Anwesend<input id="tapAnw" maxlength="300" value="${esc(q.anwesend || "")}"></label>
+    <div class="tap-foto"><button type="button" class="knopf klein" onclick="$('tapFoto').click()">📷 Foto der Besprechungsvorlage lesen</button><input type="file" id="tapFoto" accept="image/*,application/pdf" multiple class="versteckt" onchange="taPrFoto(this.files)"><span id="tapFotoStand" class="hinweis"></span></div>
+    <div id="tapTops"></div>
+    <button type="button" class="knopf klein" onclick="taPrDazu()">＋ Punkt</button>
+    <label class="feld">Sonstiges / Beschlüsse<textarea id="tapSonst" rows="3" maxlength="2000" data-diktat>${esc(q.sonstiges || "")}</textarea></label>
+    <label class="feld">📅 Nächster Termin<input id="tapNaechst" maxlength="200" value="${esc(q.naechster || "")}" placeholder="z. B. Fr. 27.11., 11:30 Uhr bei mir"></label>
+    <label class="tap-todo"><input type="checkbox" id="tapTodo"${q.status === "gesendet" ? "" : " checked"}> ✅ Aus „Wer? Bis wann?“ To-dos anlegen (beim Senden)</label>
+    <button class="knopf haupt" id="tapSenden">📨 Speichern und an ${esc(anText)} senden</button>
+    <button class="knopf" id="tapEntwurf">💾 Als Entwurf speichern</button>
+    <button class="knopf" id="tapDruck">🖨️ Drucken / PDF / Ablegen</button>
+    <button class="knopf" onclick="$('taPrBlatt').remove()">Schließen</button>`);
+  taPrTopsZeichnen(q.tops || []);
+  const speichern = async (senden) => {
+    const p = taPrLesenForm(); if (!p.tops.some((x) => x.t || x.ergebnis) && !p.sonstiges) return melde("📝 Bitte mindestens einen Punkt ausfüllen.");
+    if (senden && !(await frage(`📨 Protokoll jetzt an ${anText} schicken (Push und E-Mail)?`, { ja: "Ja, senden", nein: "Abbrechen" }))) return;
+    try { const r = await api("terminanfrage_protokoll", { id, protokoll: p, senden }, { warten: true });
+      a.protokoll = r.protokoll;
+      let todos = 0; if (senden && $("tapTodo")?.checked) for (const x of p.tops.filter((y) => y.wer)) {
+        try { await api("todo_anlegen", { text: `${a.anlass}: ${x.t}${x.ergebnis ? " – " + x.ergebnis : ""}`.slice(0, 200), zustaendige: [x.wer], faellig: x.bis || null, kategorie: "sonstiges", fuer: "ich" }, { still: true }); todos++; } catch {} }
+      melde(senden ? `📨 Protokoll ist an ${anText} geschickt${todos ? ` · ${todos} To-do${todos === 1 ? "" : "s"} angelegt` : ""}` : "💾 Entwurf gespeichert");
+      if (senden) f.remove(); TA.markiert = id; await taLaden(); return true; } catch (e) { meldeFehler(e); return false; }
+  };
+  f.querySelector("#tapSenden").onclick = () => speichern(true);
+  f.querySelector("#tapEntwurf").onclick = () => speichern(false);
+  f.querySelector("#tapDruck").onclick = async () => { const p = taPrLesenForm(); a.protokoll = { ...(a.protokoll || {}), ...p, status: a.protokoll?.status || "entwurf" }; druckStarten("taprotokoll", id); };
+}
+function taProtokollLesen(id) {
+  const a = TA.liste.find((x) => x.id === id); if (!a?.protokoll) return melde("Zu dieser Besprechung gibt es noch kein Protokoll.");
+  const q = a.protokoll;
+  blattAuf("taPrLesen", `<h3 style="margin:0">📝 Protokoll: ${esc(a.anlass)}</h3>
+    <p class="hinweis" style="margin:0">📅 ${esc(wann(a.beginn))}${a.ort ? " · 📍 " + esc(a.ort) : ""} · von ${esc(a.von?.name || "")}${q.gesendet_am ? " · verschickt am " + esc(wann(q.gesendet_am)) : ""}</p>
+    ${q.anwesend ? `<p style="margin:6px 0 0">👥 <b>Anwesend:</b> ${esc(q.anwesend)}</p>` : ""}
+    ${(q.tops || []).map((x, i) => `<div class="tap-lesen"><b>TOP ${i + 1}: ${esc(x.t)}</b>${x.ergebnis ? `<div style="white-space:pre-wrap">${esc(x.ergebnis)}</div>` : ""}${x.werName || x.bis ? `<div class="hinweis">→ ${esc(x.werName || "?")}${x.bis ? " bis " + esc(x.bis.split("-").reverse().join(".")) : ""}</div>` : ""}</div>`).join("")}
+    ${q.sonstiges ? `<div class="tap-lesen"><b>Sonstiges</b><div style="white-space:pre-wrap">${esc(q.sonstiges)}</div></div>` : ""}
+    ${q.naechster ? `<p>📅 <b>Nächster Termin:</b> ${esc(q.naechster)}</p>` : ""}
+    <button class="knopf" onclick="druckStarten('taprotokoll', '${a.id}')">🖨️ Drucken / PDF</button><button class="knopf" onclick="$('taPrLesen').remove()">Schließen</button>`);
+}
+function taPrDruck(id) { // DRUCKARTEN.taprotokoll – Kopf, Logo und Fußzeile im Club-Design kommen aus der Druckvorschau
+  const a = TA.liste.find((x) => x.id === id), q = a?.protokoll; if (!q) { melde("Kein Protokoll da."); return null; }
+  const h = (t) => `<h2 style="font-size:4.6mm;margin:6mm 0 2mm;border-bottom:2px solid #741521;padding-bottom:1mm">${t}</h2>`;
+  const html = `<div style="font-size:3.6mm;margin:0 0 1mm"><b>Anlass:</b> ${esc(a.anlass)}</div>
+    <div style="font-size:3.6mm;margin:0 0 1mm"><b>Termin:</b> ${esc(wann(a.beginn, true))}${a.ort ? " · " + esc(a.ort) : ""}</div>
+    ${q.anwesend ? `<div style="font-size:3.6mm;margin:0 0 1mm"><b>Anwesend:</b> ${esc(q.anwesend)}</div>` : ""}
+    <div style="font-size:3.6mm;margin:0 0 1mm"><b>Protokoll:</b> ${esc(a.vonMir ? ICH?.name || "" : a.von?.name || "")}</div>
+    ${h("Ergebnisse")}${(q.tops || []).map((x, i) => `<div style="break-inside:avoid;margin:0 0 4mm"><div style="font-size:4mm;font-weight:800;margin-top:2mm">TOP ${i + 1}: ${esc(x.t)}</div>
+      ${x.ergebnis ? `<div style="font-size:3.6mm;white-space:pre-wrap;margin-top:1mm">${esc(x.ergebnis)}</div>` : ""}${x.werName || x.bis ? `<div style="font-size:3.4mm;margin-top:1mm;color:#741521"><b>→ ${esc(x.werName || "?")}</b>${x.bis ? " bis " + esc(x.bis.split("-").reverse().join(".")) : ""}</div>` : ""}</div>`).join("")}
+    ${q.sonstiges ? `${h("Sonstiges / Beschlüsse")}<div style="font-size:3.6mm;white-space:pre-wrap">${esc(q.sonstiges)}</div>` : ""}
+    ${q.naechster ? `<p style="margin:5mm 0 0;font-size:3.8mm"><b>Nächster Termin:</b> ${esc(q.naechster)}</p>` : ""}`;
+  return { titel: `Protokoll: ${a.anlass}`, unter: `${wann(a.beginn, true)}${a.ort ? " · " + a.ort : ""}`, rechts: "Besprechungs-Protokoll", html, fuss: q.status === "gesendet" ? "verschickt" : "Entwurf" };
+}
+// Foto der handschriftlichen Besprechungsvorlage: Text erkennen und nach „TOP n“ auf die Punkte verteilen (Rest → Sonstiges); alles bleibt änderbar
+async function taPrFoto(dateien) {
+  const st = $("tapFotoStand"); if (!dateien?.length) return; st.textContent = "🔎 Lese die Fotos … (dauert etwas)";
+  try {
+    const bilder = []; for (const d of [...dateien].slice(0, 4)) bilder.push(await erkdBild(d));
+    const text = (await ocrLauf(bilder, undefined, (i) => { st.textContent = `🔎 Lese Foto ${i + 1} von ${bilder.length} …`; })).map((x) => x.text || "").join("\n");
+    const q = taPrLesenForm(), zu = taPrFotoVerteilen(text, q.tops.length);
+    zu.tops.forEach((t, i) => { if (t && q.tops[i]) q.tops[i].ergebnis = [q.tops[i].ergebnis, t].filter(Boolean).join("\n"); });
+    taPrTopsZeichnen(q.tops); if (zu.rest) $("tapSonst").value = [$("tapSonst").value.trim(), zu.rest].filter(Boolean).join("\n");
+    st.textContent = `✅ Gelesen – bitte prüfen (Handschrift wird nicht immer richtig erkannt).`;
+  } catch (e) { st.textContent = "⚠️ Fotos konnten nicht gelesen werden."; console.warn(e); }
+}
+function taPrFotoVerteilen(text, n) { // „TOP 3: Titel“ beginnt Punkt 3; Titelzeile, Linien und Kopf/Fuß der Vorlage fallen weg
+  const tops = Array(n).fill(""), rest = []; let i = -1;
+  for (const roh of String(text || "").split(/\r?\n/)) {
+    const z = roh.replace(/[_—–-]{3,}/g, "").trim(); if (!z) continue;
+    const m = /^T\s?O\s?P\s*(\d{1,2})\b/i.exec(z); if (m) { i = Number(m[1]) - 1; continue; }
+    if (/^(Beschl(ü|u)sse|Sonstiges|N(ä|a)chster Termin|Protokoll \(Name|Besprechungsleitung|Anwesend|Entschuldigt|G(ä|a)ste|Protokollf(ü|u)hrer|Gedruckt am|K(ö|o)checlub Werne)/i.test(z)) { i = -2; if (!/^(Beschl|Sonst)/i.test(z)) continue; else continue; }
+    if (i >= 0 && i < n) tops[i] += (tops[i] ? "\n" : "") + z; else if (i === -2) rest.push(z);
+  }
+  return { tops, rest: rest.join("\n") };
 }
 // KC-CLUB-ANFRAGE-VORBEHALT (2.23.57, Wunsch Hansi): Gegenvorschlag annehmen, unter Vorbehalt annehmen oder ablehnen – mit kurzem Text
 function taVorschlagBlatt(id, pid, wahl) {
@@ -30961,6 +31067,7 @@ const DRUCKARTEN = {
   rezept: { bauen: (o, id) => druckRezept(id) },
   buchungsliste: { ablegen: { register: ["Kasse", "Erstattungen", "Sonstiges"], stichworte: "Erstattung, Buchungsliste, Kasse" }, bauen: () => eblDruck() }, // KC-CLUB-ERSTATTUNG-BUCHUNGEN
   besprechung: { ablegen: { register: ["Besprechungen", "Protokolle", "Sonstiges"], stichworte: "Besprechung, Tagesordnung, Terminanfrage" }, bauen: (o, id) => taBesprechungDruck(id) }, // KC-CLUB-TA-TAGESORDNUNG
+  taprotokoll: { ablegen: { register: ["Besprechungen", "Protokolle", "Sonstiges"], stichworte: "Besprechung, Protokoll, Terminanfrage" }, bauen: (o, id) => taPrDruck(id) }, // KC-CLUB-TA-PROTOKOLL
   magazin: { ablegen: { register: ["Club-Magazin", "Club-Küche", "Sonstiges"], stichworte: "Club-Küche, Magazin" }, bauen: (o, p) => magDruck(p) }, // KC-CLUB-MAGAZIN-ARCHIV: ganze Ausgabe drucken/PDF/senden/ablegen
   fitness: { bauen: () => fiDruck() }, // KC-CLUB-FITNESS (2.55.0) // KC-CLUB-REZEPTBUCH (2.23.83)
   kmabrechnung: { titel: "🖨️ km-Abrechnung drucken", optionen: () => druckKmOptionen(), bauen: () => druckKmAbrechnung() }, // KC-CLUB-KM-ABRECHNUNG (2.25.3)
@@ -34651,7 +34758,7 @@ const FENSTER_NAMEN = {
   smHinweisBlatt: "🎓 Du bist zur Schulung eingeladen", smVBlatt: "💬 Kein Termin passt", snBlatt: "📣 Startnachricht", sosInfo: "🆘 Meine SOS-Angaben", spAn: "💬 An wen?",
   spEinlBlatt: "🎲 Spiel-Einladung", spHerausBlatt: "🎲 Herausfordern", spLiveBlatt: "🎲 Spiel-Herausforderung", spTerminBlatt: "📅 Termin für die Partie", sperreBlatt: "🔒 Personen sperren",
   sprForm: "💬 Eigener Spruch", sprungBlatt: "🔘 Knopf in die Nachricht", spurFrageBlatt: "🟢 Frage: Wege ansehen?", statusBlatt: "🙂 Mein Status", studioBlatt: "🎬 Studio",
-  svBlatt: "⚙️ Sitzungs-Vorgaben", taAeBlatt: "✏️ Terminanfrage ändern", taGvBlatt: "🔄 Andere Zeit vorschlagen", taHinweisBlatt: "📨 Hinweis: Terminanfragen", taVkBlatt: "🔄 Gegenvorschlag", tdtBlatt: "💡 Tipp des Tages",
+  svBlatt: "⚙️ Sitzungs-Vorgaben", taAeBlatt: "✏️ Terminanfrage ändern", taPrBlatt: "📝 Besprechungs-Protokoll schreiben", taPrLesen: "📝 Besprechungs-Protokoll lesen", taGvBlatt: "🔄 Andere Zeit vorschlagen", taHinweisBlatt: "📨 Hinweis: Terminanfragen", taVkBlatt: "🔄 Gegenvorschlag", tdtBlatt: "💡 Tipp des Tages",
   teilenBlatt: "📥 Mit Köcheclub geteilt", themaFrage: "✅ Zusage: Thema/Mitbringen", mtBlatt: "💡 Ein Tipp für dich", twBlatt: "🧑‍🍳 Frag Twinkey", twOffenBlatt: "📥 Fragen an Twinkey",
   uaAdminBlatt: "🙋 Unterstützungs-Anfragen", ustBlatt: "🤝 Wie viel Unterstützung möchtest du?", verbindungBlatt: "📡 Verbindung", verlassenBlatt: "👋 Hinweis beim Verlassen", verpasstBlatt: "👋 Verpasstes Anklopfen",
   versandBlatt: "📤 Wie verschicken?", vfAuswahlBlatt: "👥 Auswahl: an wen", vfVorlageBlatt: "📄 Vorlage übernehmen", vorschlagBearb: "✏️ Vorschlag bearbeiten", vorschlagInfo: "💡 Vorschlag ansehen",

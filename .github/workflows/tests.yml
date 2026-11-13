@@ -121,6 +121,7 @@ jobs:
       - run: node tests/ta-aendern.test.mjs
       - run: node tests/gastgeber-16uhr.test.mjs
       - run: node tests/spur-dienst.test.mjs
+      - run: node tests/ta-protokoll.test.mjs
       - run: node tests/sprache.test.mjs
       - run: node tests/see.test.mjs
       - run: node tests/rt-clubabend-mitfahrt.test.mjs
