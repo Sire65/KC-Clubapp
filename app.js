@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.943.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.944.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -31075,6 +31075,7 @@ const DRUCKARTEN = {
   einzelplan: { titel: "📄 Einzelplan", get optionen() { return ICH?.admin ? epOptionen : undefined; }, bauen: (o) => epBauen() }, // KC-CLUB-DP-EINZELPLAN
   dpDruck: { titel: "🗓️ Dienstplan drucken", optionen: () => dpdOptionen(), bauen: () => dpdBauen() }, // 2.642.0 KC-CLUB-DP-DRUCK
   dpVorschlag: { titel: "💡 Vorschläge zu den Lücken", optionen: () => '<p class="hinweis">Nur für dich zur Planung (nicht verteilen): je Lücke, wer früher kommen oder länger bleiben könnte, ob er die Zeit schon angeboten hat, wer Bereitschaft hat – und wo neue Helfer nötig sind.</p>', bauen: () => dpdVorschlagBauen() }, // 2.721.0 KC-CLUB-DP-VORSCHLAG
+  dpEinsatz: { titel: "📋 Einsatzplan", optionen: () => '<p class="hinweis">Je Tag eine Seite (A4 quer): alle Personen, oben ihre Angaben (Wunsch, kann, nur wenn nötig, gesperrt), darunter die Einteilung als Balken, rechts W = Wunsch- und S = eingeteilte Stunden; unten Besetzt/Soll je halbe Stunde und die selbst eingetragene Bereitschaft. Rechnet sich von selbst neu.</p><p class="hinweis">Beim Drucken „A4 Querformat“ und „Hintergrundgrafiken“ wählen.</p>', bauen: () => dpdEinsatzBauen() }, // 2.944.0 KC-CLUB-DP-EINSATZ
   dpLuecken: { titel: "🧩 Wo noch Helfer fehlen", optionen: () => '<p class="hinweis">Ein Blatt mit Logo: alle Tage und Stunden, an denen noch Leute fehlen – zum Aushängen oder für die, die noch keine Wünsche abgegeben haben. Rechnet sich von selbst neu, sobald ein Wunschplan dazukommt.</p><p class="hinweis">Beim Drucken „A4 Querformat“ und „Hintergrundgrafiken“ wählen.</p>', bauen: () => dpdLueckenBauen() }, // 2.676.0 KC-CLUB-DP-LUECKEN
   haendlerausweis: { bauen: (o, p) => ({ ohneRahmen: true, randlos: true, titel: p.probe ? "Händler-Ausweise – Probeblatt Duplex" : `Händler-Ausweise Weihnachtsmarkt ${p.jahr} (${p.n} Stück)`, html: p.bilder.map((b) => `<img class="dseite" src="${b}" alt="">`).join("") }) }, // 2.690.0 KC-CLUB-HAENDLERAUSWEIS
   haendlerausweis_liste: { bauen: (o, p) => druckHaendlerListe(p) },
@@ -32963,6 +32964,7 @@ function dpdOptionen() {
       ${neu.length ? `<div style="margin-top:4px;color:var(--textRot,#b3261e);font-weight:700">🆕 ${neu.length === 1 ? "1 neuer oder geänderter Wunschplan" : neu.length + " neue oder geänderte Wunschpläne"} seit dem letzten Rechnen: ${neu.map(esc).join(", ")}</div>` : i ? '<div class="hinweis" style="margin-top:4px">✅ Alle Wunschpläne sind eingerechnet.</div>' : ""}
       <button type="button" class="knopf${neu.length ? " haupt" : ""}" style="margin-top:8px" onclick="dpdNeuRechnen(this)">🔄 Jetzt neu rechnen</button>
       <div class="hinweis" style="margin-top:4px;font-size:.8rem">Rechnet sich von selbst neu, sobald ein Wunschplan, der Bedarf oder die Einstellungen sich ändern. Regel: nie länger als die Wunschzeit, mindestens die Hälfte darin. Nichts geht nach DP2.</div>
+      <button type="button" class="knopf" style="margin-top:8px" onclick="druckZu();druckStarten('dpEinsatz')">📋 Einsatzplan – je Tag eine Seite</button>
       <button type="button" class="knopf" style="margin-top:8px" onclick="druckZu();druckStarten('dpLuecken')">🧩 Nur das Blatt „Wo noch Helfer fehlen“</button>
       <button type="button" class="knopf" style="margin-top:8px" onclick="druckZu();druckStarten('dpVorschlag')">💡 Vorschläge zu den Lücken (nur für dich)</button></div>`;
   return `${stand}<p class="hinweis">Zeigt den neuesten Stand, den Claude für dich gerechnet hat: alle Wünsche, den Entwurf, Bereitschaft (Vorschlag) und rot, wo noch Leute fehlen. Neue Wünsche oder Änderungen? Claude macht die Übersicht neu – dann hier wieder drucken.</p>
@@ -33136,6 +33138,54 @@ async function dpdVorschlagBauen() {
   const d = await api("dp_druck", {});
   if (!d?.tage?.length) { melde("Noch kein Dienstplan-Stand vorhanden.", true); return null; }
   return { titel: `Vorschläge zu den Lücken – ${d.titel || ""}`.trim(), ohneRahmen: true, randlos: true, quer: true, html: `<div class="dpd">${dpdVorschlagBlatt(d)}</div>` };
+}
+// ---------- 2.944.0 KC-CLUB-DP-EINSATZ (Wunsch Hansi „je Tag eine A4-Seite: alle Personen, oben die Wunschzeit, darunter die Sollzeit – mit Balken,
+// Besetzungsstatistik und Bereitschaft, sparsam aber übersichtlich, rechts W = Wunsch- und S = Soll-Stunden“): Einsatzplan aus dem Dienstplan-Stand (dp_druck).
+// Alle Personen stehen auf jeder Seite in fester Reihenfolge, auch ohne Angabe; Aushilfen grau gestreift; Spätdienst bis Schluss rechnet der Server.
+function dpdEinsatzBlatt(d) {
+  const von0 = d.von ?? 8, alle = [...new Set(d.tage.flatMap((t) => t.leute.map((l) => l.n)))].sort((a, b) => a.localeCompare(b, "de"));
+  const uhr = (v) => { const h = Math.floor(v), m = Math.round((v - h) * 60); return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`; }, kurz = (v) => uhr(v).replace(":00", "");
+  const ART = { p: "pw", a: "pk", i: "pn", u: "ps" }, ARTX = { p: "Wunsch", a: "kann", i: "wenn nötig", u: "gesperrt" }, stand = d.stand ? wann(d.stand) : "";
+  const aushilfe = (z) => /Aushilfe/.test(z || ""), zone = (z) => aushilfe(z) ? "aus" : /vorne\+hinten/.test(z) ? "b" : /vorne/.test(z) ? "v" : /hinten/.test(z) ? "h" : "b";
+  const zusatz = (z) => aushilfe(z) ? "Aushilfe" : /vorne\+hinten/.test(z || "") ? "" : /vorne/.test(z || "") ? "vorne" : /hinten/.test(z || "") ? "hinten" : "";
+  const seite = (t, nr) => {
+    const x = new Date(t.d + "T12:00:00"), mit = t.bedarf.map((b, i) => (b > 0 ? i : -1)).filter((i) => i >= 0);
+    const i0 = mit.length ? Math.min(...mit) : 0, i1 = mit.length ? Math.max(...mit) + 1 : t.bedarf.length, n = Math.max(1, i1 - i0), v = von0 + i0 / 2, b = von0 + i1 / 2;
+    const pos = (a, e) => `left:${(a / n) * 100}%;width:${((e - a) / n) * 100}%`, idx = (h) => Math.round((h - von0) * 2) - i0;
+    const soll = t.bedarf.slice(i0, i1).reduce((p, q) => p + q, 0) / 2, ist = t.leute.filter((l) => l.s).reduce((p, l) => p + l.s[1] - l.s[0], 0), fehlt = t.fehlt.reduce((p, q) => p + q, 0) / 2;
+    const achse = Array.from({ length: n }, (_, k) => `<i>${k % 2 ? "" : `<span>${Math.floor(v + k / 2)}</span>`}</i>`).join("");
+    const zeile = (name) => {
+      const l = t.leute.find((y) => y.n === name), w = l ? l.w : "", segs = [];
+      for (let k = i0; k < i1;) { const c = w[k]; let j = k; while (j < i1 && w[j] === c) j++; if (ART[c]) segs.push([c, k - i0, j - i0]); k = j; }
+      const wStd = [...w.slice(i0, i1)].filter((c) => c === "p").length / 2, dauer = l?.s ? l.s[1] - l.s[0] : 0;
+      const angaben = segs.length ? segs.map(([c, a, e]) => `<b class="seg ${ART[c]}" style="${pos(a, e)}">${e - a >= 3 ? `${ARTX[c]} ${kurz(v + a / 2)}–${kurz(v + e / 2)}` : ""}</b>`).join("") : '<span class="nix">keine Angabe</span>';
+      const balken = l?.s ? `<b class="bal ${zone(l.z)}" style="${pos(idx(l.s[0]), idx(l.s[1]))}">${kurz(l.s[0])}–${kurz(l.s[1])}${dauer > 6 ? " ☕" : ""}</b>` : "";
+      return `<tr class="wz${l?.s ? "" : " frei"}"><td class="nm" rowspan="2">${esc(name)}<small>${esc(zusatz(l?.z))}</small></td><td class="zt art">Angaben</td><td class="gr">${angaben}</td><td class="st klein">W ${dpdStd(wStd)}</td></tr>
+        <tr class="sz${l?.s ? "" : " frei"}"><td class="zt">${l?.s ? `${uhr(l.s[0])}–${uhr(l.s[1])}` : "—"}</td><td class="gr">${balken}</td><td class="st">S ${l?.s ? dpdStd(dauer) : "0"}</td></tr>`;
+    };
+    const zahlen = (f) => `<div class="zahlen">${Array.from({ length: n }, (_, k) => f(k + i0)).join("")}</div>`;
+    const ber = (t.ber || []).length ? t.ber.map((z) => `<tr class="ber"><td class="nm">☎ ${esc(z.n)}<small>Bereitschaft</small></td><td class="zt">${uhr(z.s[0])}–${uhr(z.s[1])}</td><td class="gr"><b class="bal bs" style="${pos(Math.max(0, idx(z.s[0])), Math.min(n, idx(z.s[1])))}">Bereitschaft ${kurz(z.s[0])}–${kurz(z.s[1])}</b></td><td class="st"></td></tr>`).join("")
+      : '<tr class="ber"><td class="nm leer" colspan="4">☎ Bereitschaft: keine eingetragen</td></tr>';
+    return `<section class="dpd-blatt dpe" style="--n:${n}">${cdKopf("Einsatzplan – Angaben und Einteilung", `${d.titel || "Weihnachtsmarkt"}${stand ? " · Stand " + stand : ""}`)}
+      <div class="dpe-leg"><b>Angaben:</b><span><i class="pw"></i>Wunsch</span><span><i class="pk"></i>kann</span><span><i class="pn"></i>nur wenn nötig</span><span><i class="ps"></i>gesperrt</span>
+        <b>Einteilung:</b><span><i class="b"></i>vorne + hinten</span><span><i class="v"></i>vorne</span><span><i class="h"></i>hinten</span><span><i class="aus"></i>Aushilfe</span><span>☕ Pause</span><span>Besetzt: grün passt · rot fehlt · gelb zu viel</span></div>
+      <div class="dpe-tag"><div><b>${DPD_WD[x.getDay()]} ${t.d.slice(8, 10)}.${t.d.slice(5, 7)}.${t.d.slice(0, 4)}</b> · ${esc(dpdArtName(t.art, x))} · Regelzeit <b>${uhr(v)}–${uhr(b)} Uhr</b></div>
+        <div>Soll <b>${dpdStd(soll)} Std.</b> · eingeteilt <b>${dpdStd(ist)} Std.</b> · ${fehlt ? `<span class="rot">fehlt ${dpdStd(fehlt)} Std.</span>` : '<span class="gruen">voll besetzt ✓</span>'}</div></div>
+      <table class="dpe-tab"><thead><tr><th class="nm">Person</th><th class="zt">Zeit</th><th class="gr achse">${achse}</th><th class="st">Std.</th></tr></thead>
+        <tbody>${alle.map(zeile).join("")}</tbody>
+        <tbody class="stat"><tr><td class="nm">Besetzt</td><td class="zt">je ½ Std.</td><td class="gr">${zahlen((i) => `<i class="${t.besetzt[i] < t.bedarf[i] ? "rot" : t.besetzt[i] > t.bedarf[i] ? "gelb" : "gruen"}">${t.besetzt[i]}</i>`)}</td><td class="st">${dpdStd(ist)}</td></tr>
+          <tr><td class="nm">Soll</td><td class="zt"></td><td class="gr">${zahlen((i) => `<i class="soll">${t.bedarf[i]}</i>`)}</td><td class="st">${dpdStd(soll)}</td></tr>
+          ${fehlt ? `<tr><td class="nm rot">Fehlt</td><td class="zt"></td><td class="gr">${zahlen((i) => `<i class="${t.fehlt[i] ? "rot" : ""}">${t.fehlt[i] || ""}</i>`)}</td><td class="st rot">${dpdStd(fehlt)}</td></tr>` : ""}</tbody>
+        <tbody>${ber}</tbody></table>
+      ${cdFuss(`Dienstplan-Entwurf – nicht veröffentlicht · W = Wunschstunden des Tages · S = eingeteilte Stunden (Soll nach Planer) · Seite ${nr} von ${d.tage.length}`)}</section>`;
+  };
+  return d.tage.map((t, k) => seite(t, k + 1)).join("");
+}
+async function dpdEinsatzBauen() {
+  if (!ICH?.admin) return null;
+  const d = await api("dp_druck", {});
+  if (!d?.tage?.length) { melde("Noch kein Dienstplan-Stand vorhanden.", true); return null; }
+  return { titel: `Einsatzplan – ${d.titel || ""}`.trim(), ohneRahmen: true, randlos: true, quer: true, html: `<div class="dpd">${dpdEinsatzBlatt(d)}</div>` };
 }
 async function dpdLueckenBauen() {
   const d = await api("dp_druck", {});

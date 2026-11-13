@@ -3281,6 +3281,28 @@
     #druck .dpl-hinweis.dpl-abend { border-left-color: #1d3557; background: #e8eef6; } /* 2.683.0 KC-CLUB-DP-LUECKEN-ABEND */
     #druck .dpv-tab { table-layout: fixed; } #druck .dpv-tab td { padding: 1mm 1.5mm; } #druck .dpv-tab th:nth-child(1) { width: 24mm; } #druck .dpv-tab th:nth-child(2) { width: 22mm; } #druck .dpv-tab th:nth-child(3), #druck .dpv-tab th:nth-child(4) { width: 13mm; } #druck .dpv-tab th.text, #druck .dpv-tab td.text { width: auto; font-size: 8.5pt; line-height: 1.35; } #druck .dpv-tab tr { break-inside: avoid; } #druck .dpv-tab td.rot { background: #f6d3d0; color: #8b1a12; font-weight: 800; } /* 2.721.0 KC-CLUB-DP-VORSCHLAG */
     #druck .dpv { height: auto; min-height: 210mm; overflow: visible; }
+    /* 2.944.0 KC-CLUB-DP-EINSATZ: Einsatzplan je Tag – schmaler Kopf, je Person Angaben + Einteilung, Statistik, Bereitschaft */
+    #druck .dpe { display: flex; flex-direction: column; padding: 5mm 9mm 4mm; } #druck .dpe .cd-kopf { margin-bottom: 1mm; padding-bottom: 1mm; } #druck .dpe .cd-kopf .cd-logo { width: 10mm !important; height: 10mm !important; }
+    #druck .dpe .cd-kopf .cd-name { font-size: 13pt; } #druck .dpe .cd-kopf h1 { font-size: 11pt; margin: 0; } #druck .dpe .cd-fuss { margin-top: auto; padding-top: 1mm; font-size: 6.5pt; }
+    #druck .dpe-leg { display: flex; flex-wrap: wrap; gap: 1mm 3mm; font-size: 6.5pt; color: #5b544d; margin-bottom: 1mm; align-items: center; } #druck .dpe-leg i { display: inline-block; width: 4.5mm; height: 2.4mm; border-radius: .6mm; margin-right: .8mm; vertical-align: -.3mm; }
+    #druck .dpe-tag { display: flex; justify-content: space-between; background: #f3e9dc; border: .25mm solid #e0cfb9; border-bottom: none; border-radius: 1.5mm 1.5mm 0 0; padding: .8mm 2mm; font-size: 9pt; }
+    #druck .dpe-tag .rot { color: #9b1c13; font-weight: 800; } #druck .dpe-tag .gruen { color: #2f5a1f; font-weight: 800; }
+    #druck .dpe-tab { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 7.5pt; font-variant-numeric: tabular-nums; }
+    #druck .dpe-tab th, #druck .dpe-tab td { border-bottom: .2mm solid #eadfd2; padding: 0 1mm; vertical-align: middle; } #druck .dpe-tab th { background: #faf5ef; font-size: 6.5pt; color: #5b544d; height: 3.6mm; }
+    #druck .dpe-tab .nm { width: 38mm; text-align: left; white-space: nowrap; overflow: hidden; } #druck .dpe-tab .nm small { display: block; color: #8a8076; font-size: 5.5pt; line-height: 1; }
+    #druck .dpe-tab .zt { width: 21mm; text-align: center; white-space: nowrap; font-size: 7pt; } #druck .dpe-tab .zt.art { font-size: 5.8pt; color: #8a8076; } #druck .dpe-tab .st { width: 10mm; text-align: right; font-weight: 800; } #druck .dpe-tab .st.klein { font-size: 5.8pt; font-weight: 500; color: #8a8076; }
+    #druck .dpe-tab .gr { position: relative; padding: 0; background-image: repeating-linear-gradient(90deg, transparent 0, transparent calc(100% / var(--n) - .2mm), #efe6db calc(100% / var(--n) - .2mm), #efe6db calc(100% / var(--n))); }
+    #druck .dpe-tab .achse { display: flex; } #druck .dpe-tab .achse i { flex: 1; font-style: normal; text-align: left; font-size: 6.5pt; } #druck .dpe-tab .achse i span { position: relative; left: -1.2mm; }
+    #druck .dpe-tab .wz td { height: 3.6mm; border-bottom: none; } #druck .dpe-tab .sz td { height: 4.6mm; border-bottom: .5mm solid #b9a58e; } #druck .dpe-tab .nm[rowspan] { border-bottom: .5mm solid #b9a58e; } #druck .dpe-tab .frei .nm { color: #8a8076; }
+    #druck .dpe-tab .seg { position: absolute; top: .45mm; bottom: .45mm; border-radius: .7mm; font-size: 5.8pt; color: #5b4a3a; display: flex; align-items: center; padding-left: .8mm; white-space: nowrap; overflow: hidden; }
+    #druck .dpe .pw { background: #ecd7b2; } #druck .dpe .pk { background: #f6ecd9; } #druck .dpe .pn { background: repeating-linear-gradient(135deg, #f6ecd9 0 1mm, #fff 1mm 2mm); border: .2mm dashed #d9c4a0; } #druck .dpe .ps { background: repeating-linear-gradient(135deg, #e2dcd6 0 .8mm, #f4f1ee .8mm 1.6mm); color: #7a7068; }
+    #druck .dpe-tab .nix { position: absolute; left: 1mm; top: 0; font-size: 5.8pt; color: #b0a69c; font-style: italic; line-height: 3.6mm; }
+    #druck .dpe-tab .bal { position: absolute; top: .6mm; bottom: .6mm; border-radius: 1mm; color: #fff; font-size: 7pt; font-weight: 700; display: flex; align-items: center; justify-content: center; white-space: nowrap; overflow: hidden; }
+    #druck .dpe .b { background: #741521; } #druck .dpe .v { background: #c0612b; } #druck .dpe .h { background: #35607e; } #druck .dpe .aus { background: repeating-linear-gradient(135deg, #8a7f76 0 1.5mm, #9e938a 1.5mm 3mm); }
+    #druck .dpe-tab .bal.bs { background: repeating-linear-gradient(135deg, #fff 0 1mm, #e8f0e2 1mm 2mm); border: .4mm dashed #4f7a3a; color: #2f5a1f; }
+    #druck .dpe-tab .stat td { background: #fcfaf7; height: 3.8mm; } #druck .dpe-tab .zahlen { display: flex; } #druck .dpe-tab .zahlen i { flex: 1; font-style: normal; text-align: center; font-size: 6.5pt; line-height: 3.8mm; }
+    #druck .dpe-tab .zahlen .gruen { background: #e3f1dc; color: #2f5a1f; font-weight: 800; } #druck .dpe-tab .zahlen .rot { background: #f7d4d0; color: #9b1c13; font-weight: 800; } #druck .dpe-tab .zahlen .gelb { background: #fbefc6; color: #7a5b00; font-weight: 800; } #druck .dpe-tab .zahlen .soll { color: #8a8076; }
+    #druck .dpe-tab td.rot { color: #9b1c13; font-weight: 800; } #druck .dpe-tab .ber td { height: 4.2mm; } #druck .dpe-tab .leer { color: #8a8076; font-style: italic; }
     #druck .dpd-bed { border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 7pt; font-variant-numeric: tabular-nums; }
     #druck .dpd-bed th, #druck .dpd-bed td { border: .15mm solid var(--lin); padding: .6mm .5mm; text-align: center; vertical-align: middle; height: 9.4mm; }
     #druck .dpd-bed thead th { background: #f3e9dc; font-weight: 700; font-size: 6.5pt; height: auto; }
@@ -7012,7 +7034,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.943.0" data-v="2.943.0"></script>
+<script src="app.js?v=2.944.0" data-v="2.944.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>
