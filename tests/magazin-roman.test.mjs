@@ -207,11 +207,24 @@ console.log("magazin-roman Staffel 1 sanft: ok");
 console.log("magazin-roman Antworten Hansi: ok");
 // KC-CLUB-MAGAZIN-STAFFEL-2-BILDER (11.11.2026, Wunsch Hansi „Bau die fertigen Bilder schon mit ein“): geprüfte Zeichnungen Staffel 2, Graustufen-WebP
 { const b14 = MAG_AUSGABEN[14].roman.bilder, b15 = MAG_AUSGABEN[15].roman.bilder;
-  assert.deepEqual(b14.map((b) => b.wo), ["absatz:1", "h:Vierzig Kilo"]); assert.deepEqual(b15.map((b) => b.wo), ["absatz:27"]);
+  assert.deepEqual(b14.map((b) => b.wo), ["absatz:1", "h:Vierzig Kilo", "absatz:94"]); assert.ok(MAG_AUSGABEN[14].roman.text.filter(([a]) => a === "p")[93][1].startsWith("Nina rannte."), "Bild „Lena hilft“ hinter dem Absatz mit dem Griff"); assert.deepEqual(b15.map((b) => b.wo), ["absatz:27", "absatz:86"]); assert.ok(MAG_AUSGABEN[15].roman.text.filter(([a]) => a === "p")[85][1].startsWith("Durch das Fenster der Schwingtür sah Lena den Mann essen"), "Kritiker-Bild hinter dem Blick durchs Türfenster");
   assert.ok(MAG_AUSGABEN[15].roman.text.filter(([a]) => a === "p")[26][1].startsWith("Sie stellte die Tonne ab"), "Schaum-Bild hinter dem Foto-Absatz");
   for (const b of [...b14, ...b15]) { assert.ok(b.da && /^magazin\/roman\/s2-0[23]-/.test(b.datei) && b.alt.startsWith("Bleistiftskizze: "));
     const st = fs.statSync(new URL("../" + b.datei, import.meta.url)); assert.ok(st.size > 5000 && st.size < 200000, "klein: " + b.datei); }
-  assert.ok(magHeftHtml("roman", MAG_AUSGABEN[14].roman).includes("Skizzen by KI") && (magHeftHtml("roman", MAG_AUSGABEN[14].roman).match(/<img /g) || []).length === 2); }
+  assert.ok(magHeftHtml("roman", MAG_AUSGABEN[14].roman).includes("Skizzen by KI") && (magHeftHtml("roman", MAG_AUSGABEN[14].roman).match(/<img /g) || []).length === 3); }
+// Heft 20 (12.11.2026): Zeichnungen „Die Scheunenküche“ (hinter dem Abruf), „Mike hilft“ (Junge nach dem Fettbrand) und „Timo“ (Bank an der Rathausmauer)
+{ const r = MAG_AUSGABEN[20].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
+  assert.deepEqual(r.bilder.map((b) => b.wo + " " + b.datei), ["absatz:21 magazin/roman/s2-08-01-scheunenkueche.webp", "absatz:46 magazin/roman/s2-08-03-mike-hilft.webp", "absatz:71 magazin/roman/s2-08-02-timo.webp"]); assert.equal(p[20], "„Zwanzig.“"); assert.ok(p[45].startsWith("Am Kindertisch, der dem Herd am nächsten stand") && p[45].includes("Löschdecke"), "Mike-hilft-Bild"); assert.ok(p[70].includes("setzten sich damit auf eine Bank an der Rathausmauer"), "Timo-Bild an der Bank");
+  for (const b of r.bilder) assert.ok(b.da && b.alt.startsWith("Bleistiftskizze: ") && fs.statSync(new URL("../" + b.datei, import.meta.url)).size < 200000, b.datei); assert.ok(magHeftHtml("roman", r).includes("Skizzen by KI")); }
+// Heft 21 (13.11.2026): Zeichnung „Mike und die Kamera“ hinter dem gefangenen Tablett
+{ const r = MAG_AUSGABEN[21].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
+  assert.deepEqual(r.bilder.map((b) => b.wo + " " + b.datei), ["absatz:44 magazin/roman/s2-09-01-mike-und-die-kamera.webp"]); assert.ok(p[43].startsWith("Mike fing sich. Das Tablett schwankte"));
+  for (const b of r.bilder) assert.ok(b.da && b.alt.startsWith("Bleistiftskizze: ") && fs.statSync(new URL("../" + b.datei, import.meta.url)).size < 200000, b.datei); assert.ok(magHeftHtml("roman", r).includes("Skizzen by KI")); }
+// Heft 13 (12.11.2026): Zeichnungen „Mikes erster Tag“ (Schalottenkiste) und „Bischofsmütze“ und „Forelle für Tisch neun“ (je ein neuer Absatz dazu, Bilder von Hansi)
+{ const r = MAG_AUSGABEN[13].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
+  assert.deepEqual(r.bilder.map((b) => b.wo + " " + b.datei), ["absatz:12 magazin/roman/s2-01-02-mikes-erster-tag.webp", "absatz:56 magazin/roman/s2-01-01-ralle-am-teich.webp", "absatz:118 magazin/roman/s2-01-04-bischofsmuetze.webp", "absatz:125 magazin/roman/s2-01-03-forelle-fuer-tisch-neun.webp"]); assert.ok(p[11].startsWith("„Erste Aufgabe.“ Sie schob ihm eine Kiste hin")); assert.ok(p[55].includes("vier Stockenten") && p[55].includes("Fische stiegen")); assert.ok(p[117].startsWith("Am Nachmittag fehlte im Service eine Kraft") && p[117].includes("Bischofsmütze")); assert.ok(p[124].startsWith("Weil im Service immer noch jemand fehlte, trug Lena die Forellen für Tisch neun"));
+  for (const b of r.bilder) assert.ok(b.da && b.alt.startsWith("Bleistiftskizze: ") && fs.statSync(new URL("../" + b.datei, import.meta.url)).size < 200000, b.datei);
+  assert.ok(magHeftHtml("roman", r).includes("Skizzen by KI")); }
 { const r = MAG_AUSGABEN[16].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
   assert.deepEqual(r.bilder.map((b) => b.wo), ["h:Sechzig kleine Fische", "absatz:46", "absatz:69", "h:Herr Akın"]); assert.equal(p[68], "Ralle hob immer alles auf."); assert.ok(p[45].startsWith("Die Kinder hatten die Telefone") && !p.some((t) => /zwei halbwüchsigen Söhnen|Die Söhne hatten/.test(t)), "Folge 4: Bild Ostern bei Kerzenlicht, Familie mit Junge und Mädchen");
   for (const b of r.bilder) { const st = fs.statSync(new URL("../" + b.datei, import.meta.url)); assert.ok(st.size > 5000 && st.size < 200000, b.datei); } assert.ok(p.some((t) => t.includes("dann hockte Lena sich unten ans Ufer"))); }
@@ -221,7 +234,7 @@ console.log("magazin-roman Antworten Hansi: ok");
 { const r = MAG_AUSGABEN[18].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
   assert.deepEqual(r.bilder.map((b) => b.wo), ["absatz:21", "absatz:34", "absatz:88"]); assert.ok(p[87].startsWith("Henrik legte ihr den Arm") && p[20].startsWith("Zur Belohnung schickte Jonas ihn an den Nebenposten")); assert.equal(p[33], "Lena hatte Ralle noch nie lachen sehen. Nicht so.");
   assert.ok(!/Kinderklinik|krank/i.test(r.bilder[0].alt), "Bildtext verrät nichts über Emmas Krankheit"); }
-assert.deepEqual(MAG_AUSGABEN[19].roman.bilder.map((b) => b.wo), ["h:Was Luca sah"]);
+assert.deepEqual(MAG_AUSGABEN[19].roman.bilder.map((b) => b.wo), ["absatz:12", "absatz:65", "h:Was Luca sah", "absatz:100"]); assert.ok(MAG_AUSGABEN[19].roman.text.filter(([a]) => a === "p")[11][1].startsWith("Am Dienstag gingen sie noch einmal den Bach hinauf"), "Pättken-Bild am Bachweg"); assert.ok(MAG_AUSGABEN[19].roman.text.filter(([a]) => a === "p")[99][1].startsWith("Ralle kam drei Minuten später, im Unterhemd"), "Gewitter-Bild hinter Ralles Ankunft"); assert.equal(MAG_AUSGABEN[19].roman.text.filter(([a]) => a === "p")[64][1], "„Dann passt es ja für Sylt.“", "Kartoffelwasser-Bild beim Personalessen");
 console.log("magazin-roman Staffel-2-Bilder: ok");
 // Antworten Hansi 12.11.2026: Louis Bertram – gesiezt „Herr Bertram“ (Hollmann duzt: „Louis“, französisch); Martinsgänse: vierzehn auf sieben Blechen; Zwischenprüfung bleibt
 { const t = (n) => JSON.stringify(MAG_AUSGABEN[n].roman.text);

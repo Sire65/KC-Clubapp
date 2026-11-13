@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.941.0 – 2026-11-13 – 🖼️ Roman Staffel 2: 13 neue Bleistift-Zeichnungen
+Wunsch Hansi 12./13.11.: Zeichnungen für Staffel 2 (von ChatGPT, geprüft auf Figuren und Szene, als Graustufen-WebP < 200 KB).
+- Heft 13 (Folge 1): Ralle am Teich, Mikes erster Tag, Bischofsmütze, Forelle für Tisch neun – dazu drei kurze Absätze (Stockenten, Servietten falten, Lena serviert Tisch neun).
+- Heft 14 (Folge 2): Lena hilft. Heft 15 (Folge 3): Der falsche Kritiker („runde“ Türfenster gestrichen).
+- Heft 19 (Folge 7): Das Pättken, Kartoffelwasser (drei Zeilen), Das Gewitter (Lena führt die letzten Gäste hinaus).
+- Heft 20 (Folge 8): Die Scheunenküche, Mike hilft (Junge nach dem Fettbrand), Timo (Bank an der Rathausmauer). Heft 21 (Folge 9): Mike und die Kamera.
+- Hefte 20 und 21 mit Vermerk „Skizzen by KI“. Test `tests/magazin-roman.test.mjs` erweitert.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“. Rückweg: App 2.940.0.
+
 ## 2.940.0 – Zeitansage: Videos „Koch-Figur als Bild aussuchen“, „Eigene Figur zusammenstellen“, „Chat für Fortgeschrittene“ und „Geheim schreiben“ – damit haben alle Erklär-Videos die Zeitansage · Video-Rahmen bleibt am Ziel (KC-CLUB-VIDEO-ZEITANSAGE, Wunschliste #81)
 - **Fehler in allen Erklär-Videos behoben:** Wird eine Ansicht während eines Schritts neu gezeichnet (z. B. die Kacheln kurz nach dem Wechsel aufs Register „Meins“), blieb der gelbe Rahmen am alten, verschwundenen Element hängen und war weg – so im Video „Koch-Figur“ beim ersten Schritt „Mein Bild“. Jetzt sucht das Video sein Ziel neu, sobald es verschwunden ist.
 - **Koch-Figur:** Schritte geprüft (Mein Bild, einfache/hochwertige Figuren, antippen, übernehmen, eigene Figur, individuell anpassen, eigenes Foto; „Kochjacke wechselt“ nur mit eigenem Bild).
