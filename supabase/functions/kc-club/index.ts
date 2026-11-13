@@ -194,7 +194,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.939.0";
+const SERVER_VERSION = "2.942.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -8041,7 +8041,9 @@ function ggUnterschiede(alt: Record<string, string>, neu: Record<string, string>
   return z;
 }
 async function gastgeberStandLauf() {
-  const jetztMs = Date.now(), std = berlinStunde(new Date()), heuteAbend = std >= 18, nachts = std >= 22 || std < 7, morgen = berlinTag(new Date(jetztMs + 86400000));
+  // KC-CLUB-GASTGEBER-16UHR (13.11.2026, Wunsch Hansi „einmal am Vortag bis 16.00 und am gleichen Tag, falls sich noch was geändert hat“):
+  // die Vortags-Meldung kommt ab 16 Uhr (bisher 18 Uhr); am Tag selbst wie bisher 2 Std. vorher nur bei Änderung, dazwischen jede Änderung gesammelt.
+  const jetztMs = Date.now(), std = berlinStunde(new Date()), heuteAbend = std >= 16, nachts = std >= 22 || std < 7, morgen = berlinTag(new Date(jetztMs + 86400000));
   const { data: ts } = await db.from("kc_club_treffen").select("id,titel,beginn,ort,gastgeber_person_id").eq("status", "geplant").eq("art", "treffen")
     .gte("beginn", new Date(jetztMs).toISOString()).lte("beginn", new Date(jetztMs + 2 * 86400000).toISOString());
   for (const t of ts ?? []) {
@@ -8099,7 +8101,7 @@ async function gastgeberStandLauf() {
 async function gastgeberMitteilen(t: any, ich: string, art: "einladung" | "geaendert" | "abgesagt", vars: { titel: string; kurz: string; betreff: string; text: string; url: string }) {
   if (!t.gastgeber_person_id || t.gastgeber_person_id === ich) return false;
   const { count } = await db.from("kc_club_teilnahme").select("person_id", { count: "exact", head: true }).eq("treffen_id", t.id).eq("antwort", "ja");
-  const vorn = art === "abgesagt" ? "Du warst als Gastgeberin/Gastgeber eingetragen – das Treffen fällt aus." : `Du bist Gastgeberin/Gastgeber – aktuell ${count ?? 0} Zusage${count === 1 ? "" : "n"}. Am Vorabend bekommst du den genauen Stand, danach jede Änderung.`;
+  const vorn = art === "abgesagt" ? "Du warst als Gastgeberin/Gastgeber eingetragen – das Treffen fällt aus." : `Du bist Gastgeberin/Gastgeber – aktuell ${count ?? 0} Zusage${count === 1 ? "" : "n"}. Am Vortag um 16 Uhr bekommst du den genauen Stand, danach jede Änderung – und am Tag selbst 2 Stunden vorher nochmal, falls sich etwas geändert hat.`;
   await sendenGewaehlt("club_erinnerung", [t.gastgeber_person_id], ["push", "email"], { ...vars, titel: `🏠 ${vars.titel}`, kurz: `${vars.kurz}`,
     text: String(vars.text).replace(/^(Hallo[^\n]*,)\n\n/, (_, h) => `${h}\n\n${vorn}\n\n`) }, `club-gastgeber-${art}:${t.id}:${Date.now()}`).catch((e) => console.error("gastgeber mitteilen", String(e)));
   await protokoll(ich, "gastgeber_mitgeteilt", { treffen: t.id, art });

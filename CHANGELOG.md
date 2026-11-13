@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.942.0 – 2026-11-13 – 🏠 Gastgeberin bekommt den Anmeldestand am Vortag schon um 16 Uhr (KC-CLUB-GASTGEBER-16UHR) · Server 2.942.0
+Wunsch Hansi 13.11.: „Nächster Köcheclub-Treff bei Reinhilde in Ondrup. Sie muss automatisch Push/Mail bekommen, wie viele Mitglieder angemeldet sind – einmal am Vortag bis 16.00 und am gleichen Tag, falls sich noch was geändert hat.“
+- Die Vortags-Meldung an die Gastgeberin (Push **und** E-Mail: Zusagen mit Namen, vielleicht, Absagen, noch offen, Hinweise, „bitte plane für … Personen“) kommt jetzt **ab 16 Uhr** statt ab 18 Uhr. Die Clubleitung bekommt denselben Stand.
+- Am Tag selbst wie bisher: jede Änderung kurz (gesammelt, höchstens alle 15 Min., nachts nicht) und **2 Stunden vorher nochmal der ganze Stand – nur, wenn sich etwas geändert hat**.
+- Gilt für jedes Treffen mit eingetragenem Gastgeber, z. B. Köcheclub-Sitzung am 24.11. bei Reinhilde in Ondrup (Meldung am 23.11. um 16 Uhr).
+- Keine Datenbank-Änderung. Test `tests/gastgeber-16uhr.test.mjs`. Rückweg: Server 2.939.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.941.0 – 2026-11-13 – 🖼️ Roman Staffel 2: 13 neue Bleistift-Zeichnungen
 Wunsch Hansi 12./13.11.: Zeichnungen für Staffel 2 (von ChatGPT, geprüft auf Figuren und Szene, als Graustufen-WebP < 200 KB).
 - Heft 13 (Folge 1): Ralle am Teich, Mikes erster Tag, Bischofsmütze, Forelle für Tisch neun – dazu drei kurze Absätze (Stockenten, Servietten falten, Lena serviert Tisch neun).
