@@ -63,6 +63,9 @@ direkt vor dem Wartungsfenster, also kurz bevor die Version bei den Mitgliedern 
 - Spiegelung/Sicherung oder **mehr als 2 in der App** → alle 5 Min. neu prüfen, höchstens 60 Min., dann roter Ablauf (Hansi fragen,
   danach „Run workflow“ für **beide** Abläufe, sonst passen App und Server nicht zusammen); `[Notfall]` wartet nicht,
 - gezählt vom Club-Server (Aktion `einspielen_ruhe`, nur die Zahl, nur für die GitHub-Abläufe); Pushes ohne neue `version.json` (Werkzeuge, Doku) warten nicht.
+- **Abstand (KC-EINSPIELEN-ABSTAND, 13.11.2026, Wunsch Hansi nach 2.943.0 und 2.944.0 innerhalb von 7 Min.):** höchstens **eine Version je 15 Minuten** –
+  ging die letzte andere Version vor weniger als 15 Min. live, wartet der Ablauf den Rest ab (auch bei `[Hansi: einspielen]`, nicht bei `[Notfall]`).
+  Darum: mehrere fertige Änderungen zu **einer** Version bündeln, nicht kurz hintereinander einspielen.
 - Test `tests/einspielen-sperre.test.mjs`.
 
 Die eigene Prüfung jeder Sitzung vor dem Push bleibt:

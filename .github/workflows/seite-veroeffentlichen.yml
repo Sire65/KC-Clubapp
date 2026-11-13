@@ -13,6 +13,7 @@ on:
         default: "termin"
 permissions:
   contents: read
+  actions: read # KC-EINSPIELEN-ABSTAND: Zeitpunkt der letzten Version
   pages: write
   id-token: write
 concurrency:
@@ -76,6 +77,7 @@ jobs:
       # Spiegelung/Sicherung, nicht wenn mehr als 2 in der App sind – geprüft direkt hier, kurz bevor die Version ankommt.
       - name: Termin und Ruhe abwarten
         env:
+          GH_TOKEN: ${{ github.token }}
           NACHRICHT: ${{ github.event.head_commit.message }}
           EINGABE: ${{ inputs.art }}
           VORHER: ${{ github.event.before }}

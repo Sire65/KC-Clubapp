@@ -77,14 +77,15 @@
   try {
     var st = JSON.parse(localStorage.getItem("kc_club_starts") || "[]"), jetzt = Date.now();
     // Neustart durch „Jetzt aktualisieren“ zählt nicht als erneutes Öffnen (0.95.1, Fund bei Steven: Fehlalarm nach Update)
-    var durchUpdate = localStorage.getItem("kc_club_neustart_update"); localStorage.removeItem("kc_club_neustart_update");
+    var durchUpdate = localStorage.getItem("kc_club_neustart_update"); localStorage.removeItem("kc_club_neustart_update"); window.KCFP.durchUpdate = !!durchUpdate; // KC-CLUB-UPDATE-HINWEIS
     st = st.filter(function (x) { return jetzt - x < 600000; }); if (!durchUpdate) st.push(jetzt); localStorage.setItem("kc_club_starts", JSON.stringify(st.slice(-10)));
     if (st.length >= 3) { window.KCFP.mehrfach = st.length; neu("mehrfachstart", { text: st.length + "× in 10 Minuten geöffnet" }); }
   } catch (e) {}
   if (!speicherOk) neu("speicher", { text: "Speicher gesperrt (privater Modus?) – App kann sich nichts merken" });
   // Start-Wächter: nach 12 s noch nicht fertig → mitschreiben; ist die App gar nicht angelaufen, einfache Hilfe anzeigen
   // 2.481.0 KC-CLUB-LADEANZEIGE: lädt das Programm lange, erklärt die Ladeanzeige es (15 s) und bietet später „Neu laden“ an (45 s)
-  setTimeout(function () { var l = document.getElementById("appLaedtLang"); if (l) l.hidden = false; }, 15000);
+  // KC-CLUB-UPDATE-HINWEIS (2.945.0, Wunsch Hansi 13.11.2026): nach einem Update nicht „Netz langsam“, sondern ehrlich „größeres Update“
+  setTimeout(function () { var l = document.getElementById("appLaedtLang"); if (!l) return; if (window.KCFP.durchUpdate && l.firstChild) l.firstChild.textContent = "🔄 Gerade wird ein größeres Update eingespielt – die App richtet sich neu ein. Bitte kurz warten und die App nicht schließen."; l.hidden = false; }, 15000);
   setTimeout(function () { var k = document.getElementById("appLaedtNeu"); if (k) k.hidden = false; }, 45000);
   // KC-CLUB-START-BALKEN (Wunsch Hansi 08.11.2026: „Beim Start einen Laufbalken mit Dauer und Prozent – gerade hat der Start etwas gedauert, wahrscheinlich wegen Update“):
   // Fortschritt in Prozent und vergangene Sekunden, geschätzt aus den letzten Starts dieses Geräts (kc_club_startmess: Seite + Programm + Einrichten, Mittelwert).
@@ -107,12 +108,12 @@
         text = document.getElementById("appLaedtText"); fuell = document.getElementById("appLaedtFuell"); zahl = document.getElementById("appLaedtZahl"); balken = document.getElementById("appLaedtBalken");
         if (!fuell || !zahl || !balken) { if (Date.now() - t0 < 60000) setTimeout(schritt, 50); return; }
       }
-      if (!gesetzt) { gesetzt = true; if (upd && text) text.textContent = "🔄 Die neue Version wird eingerichtet …"; }
+      if (!gesetzt) { gesetzt = true; if (upd && text) text.textContent = "🔄 Gerade wird ein Update eingespielt …"; }
       if (!document.getElementById("appLaedt")) return; // Programm läuft – Anzeige ist weg
       var t = Math.max(0, Date.now() - t0), pct = Math.min(95, Math.round(95 * (1 - Math.exp(-2.3 * t / erw))));
       fuell.style.width = pct + "%"; balken.setAttribute("aria-valuenow", String(pct));
       zahl.textContent = pct + " % · " + (t / 1000).toFixed(1).replace(".", ",") + " s";
-      if (!lang && t > erw * 1.6 && t > 3000 && text) { lang = true; text.textContent = upd ? "🔄 Neue Version wird geladen – das dauert einmalig etwas länger …" : "Die Club-App wird geladen – dauert heute etwas länger …"; }
+      if (!lang && t > erw * 1.6 && t > 3000 && text) { lang = true; text.textContent = upd ? "🔄 Gerade wird ein größeres Update eingespielt – das dauert einmalig etwas länger …" : "Die Club-App wird geladen – dauert heute etwas länger …"; }
       setTimeout(schritt, 100);
     }
     schritt();
@@ -7034,7 +7035,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.944.0" data-v="2.944.0"></script>
+<script src="app.js?v=2.945.0" data-v="2.945.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>
