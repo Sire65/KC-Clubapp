@@ -220,6 +220,11 @@ console.log("magazin-roman Antworten Hansi: ok");
 { const r = MAG_AUSGABEN[23].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
   assert.deepEqual(r.bilder.map((b) => b.wo + " " + b.datei), ["absatz:25 magazin/roman/s2-11-01-martinsgans.webp"]); assert.ok(p[24].startsWith("Leon schob die ersten Bleche wieder in den Ofen"));
   for (const b of r.bilder) assert.ok(b.da && b.alt.startsWith("Bleistiftskizze: ") && fs.statSync(new URL("../" + b.datei, import.meta.url)).size < 200000, b.datei); assert.ok(magHeftHtml("roman", r).includes("Skizzen by KI")); }
+// Heft 24 (14.11.2026): Zeichnungen „Ein Spiegel“ (Ralle hinter Emmas Stuhl) und „Unter der Lichterkette“ (der Ring)
+{ const r = MAG_AUSGABEN[24].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
+  assert.deepEqual(r.bilder.map((b) => b.wo + " " + b.datei), ["absatz:46 magazin/roman/s2-12-01-ein-spiegel.webp", "absatz:168 magazin/roman/s2-12-04-unter-der-lichterkette.webp"]);
+  assert.equal(p[45], "Ralle war an den Tisch getreten. Er stand hinter Emmas Stuhl, die Hände auf der Lehne."); assert.ok(p[167].startsWith("Er steckte ihr den Ring an, beim zweiten Versuch"));
+  for (const b of r.bilder) assert.ok(b.da && b.alt.startsWith("Bleistiftskizze: ") && fs.statSync(new URL("../" + b.datei, import.meta.url)).size < 200000, b.datei); assert.ok(magHeftHtml("roman", r).includes("Skizzen by KI")); }
 // Heft 21 (13./14.11.2026): Zeichnungen „Mike und die Kamera“ (gefangenes Tablett) „Emmas Beet“ (Schulklasse im Kräutergarten) und „Timo am Herd“ (Saucen-Abend)
 { const r = MAG_AUSGABEN[21].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
   assert.deepEqual(r.bilder.map((b) => b.wo + " " + b.datei), ["absatz:44 magazin/roman/s2-09-01-mike-und-die-kamera.webp", "absatz:86 magazin/roman/s2-09-02-emmas-beet.webp", "absatz:99 magazin/roman/s2-09-03-timo-am-herd.webp"]); assert.ok(p[98].startsWith("Abends stand Voss am Pass, wie er früher dort gestanden hatte.")); assert.ok(p[43].startsWith("Mike fing sich. Das Tablett schwankte")); assert.ok(p[85].startsWith("Emma saß am Rand, auf der Steinkante eines Beets."));
