@@ -28,11 +28,13 @@ jobs:
       SPEICHER: kc-notfall-zweitkopie
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
       - name: Werkzeug holen
-        run: npm i --no-save --no-audit --no-fund postgres@3.4.5
+        run: npm i --ignore-scripts --no-save --no-audit --no-fund postgres@3.4.5
       - name: Zweitkopie anlegen
         id: pack
         run: |

@@ -36,11 +36,13 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "22" # 2.874.0: Node 20 ist seit 30.04.2026 ohne Pflege
       - name: Werkzeug holen
-        run: npm i --no-save --no-audit --no-fund postgres@3.4.5
+        run: npm i --ignore-scripts --no-save --no-audit --no-fund postgres@3.4.5
       # KC-CORE-NOTFALL-TRESOR: die Schlüssel-Kopie kommt aus dem Cloudflare-Tresor (befüllt vom Ablauf „Notfall einrichten“) –
       # nur dieser Ablauf bekommt sie (GitHub-OIDC). Hilfsweise GitHub-Secrets, falls von Hand hinterlegt. Ohne beides: übersprungen (grau).
       # Der Schrittname „Sicherung lesen“ ist Vertrag: die Club-App (Admin → Notfall) liest sein Ergebnis öffentlich bei GitHub
