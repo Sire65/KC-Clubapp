@@ -216,9 +216,9 @@ console.log("magazin-roman Antworten Hansi: ok");
 { const r = MAG_AUSGABEN[20].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
   assert.deepEqual(r.bilder.map((b) => b.wo + " " + b.datei), ["absatz:21 magazin/roman/s2-08-01-scheunenkueche.webp", "absatz:46 magazin/roman/s2-08-03-mike-hilft.webp", "absatz:71 magazin/roman/s2-08-02-timo.webp"]); assert.equal(p[20], "„Zwanzig.“"); assert.ok(p[45].startsWith("Am Kindertisch, der dem Herd am nächsten stand") && p[45].includes("Löschdecke"), "Mike-hilft-Bild"); assert.ok(p[70].includes("setzten sich damit auf eine Bank an der Rathausmauer"), "Timo-Bild an der Bank");
   for (const b of r.bilder) assert.ok(b.da && b.alt.startsWith("Bleistiftskizze: ") && fs.statSync(new URL("../" + b.datei, import.meta.url)).size < 200000, b.datei); assert.ok(magHeftHtml("roman", r).includes("Skizzen by KI")); }
-// Heft 21 (13.11.2026): Zeichnung „Mike und die Kamera“ hinter dem gefangenen Tablett
+// Heft 21 (13./14.11.2026): Zeichnungen „Mike und die Kamera“ (gefangenes Tablett) und „Emmas Beet“ (Schulklasse im Kräutergarten)
 { const r = MAG_AUSGABEN[21].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
-  assert.deepEqual(r.bilder.map((b) => b.wo + " " + b.datei), ["absatz:44 magazin/roman/s2-09-01-mike-und-die-kamera.webp"]); assert.ok(p[43].startsWith("Mike fing sich. Das Tablett schwankte"));
+  assert.deepEqual(r.bilder.map((b) => b.wo + " " + b.datei), ["absatz:44 magazin/roman/s2-09-01-mike-und-die-kamera.webp", "absatz:86 magazin/roman/s2-09-02-emmas-beet.webp"]); assert.ok(p[43].startsWith("Mike fing sich. Das Tablett schwankte")); assert.ok(p[85].startsWith("Emma saß am Rand, auf der Steinkante eines Beets."));
   for (const b of r.bilder) assert.ok(b.da && b.alt.startsWith("Bleistiftskizze: ") && fs.statSync(new URL("../" + b.datei, import.meta.url)).size < 200000, b.datei); assert.ok(magHeftHtml("roman", r).includes("Skizzen by KI")); }
 // Heft 13 (12.11.2026): Zeichnungen „Mikes erster Tag“ (Schalottenkiste) und „Bischofsmütze“ und „Forelle für Tisch neun“ (je ein neuer Absatz dazu, Bilder von Hansi)
 { const r = MAG_AUSGABEN[13].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
