@@ -221,9 +221,9 @@ console.log("magazin-roman Antworten Hansi: ok");
 { const r = MAG_AUSGABEN[23].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
   assert.deepEqual(r.bilder.map((b) => b.wo + " " + b.datei), ["absatz:25 magazin/roman/s2-11-01-martinsgans.webp"]); assert.ok(p[24].startsWith("Leon schob die ersten Bleche wieder in den Ofen"));
   for (const b of r.bilder) assert.ok(b.da && b.alt.startsWith("Bleistiftskizze: ") && fs.statSync(new URL("../" + b.datei, import.meta.url)).size < 200000, b.datei); assert.ok(magHeftHtml("roman", r).includes("Skizzen by KI")); }
-// Heft 24 (14.11.2026): Zeichnungen „Ein Spiegel“ (Ralle hinter Emmas Stuhl) und „Unter der Lichterkette“ (der Ring)
+// Heft 24 (14.11.2026): Zeichnungen „Ein Spiegel“ (Ralle hinter Emmas Stuhl), „Neun Uhr“ (die sechs Blätter) und „Unter der Lichterkette“ (der Ring)
 { const r = MAG_AUSGABEN[24].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
-  assert.deepEqual(r.bilder.map((b) => b.wo + " " + b.datei), ["absatz:46 magazin/roman/s2-12-01-ein-spiegel.webp", "absatz:168 magazin/roman/s2-12-04-unter-der-lichterkette.webp"]);
+  assert.deepEqual(r.bilder.map((b) => b.wo + " " + b.datei), ["absatz:46 magazin/roman/s2-12-01-ein-spiegel.webp", "absatz:111 magazin/roman/s2-12-02-neun-uhr.webp", "absatz:168 magazin/roman/s2-12-04-unter-der-lichterkette.webp"]); assert.ok(p[110].startsWith("Sechs Blätter. Es war kaum etwas darunter"));
   assert.equal(p[45], "Ralle war an den Tisch getreten. Er stand hinter Emmas Stuhl, die Hände auf der Lehne."); assert.ok(p[167].startsWith("Er steckte ihr den Ring an, beim zweiten Versuch"));
   for (const b of r.bilder) assert.ok(b.da && b.alt.startsWith("Bleistiftskizze: ") && fs.statSync(new URL("../" + b.datei, import.meta.url)).size < 200000, b.datei); assert.ok(magHeftHtml("roman", r).includes("Skizzen by KI")); }
 // Heft 21 (13./14.11.2026): Zeichnungen „Mike und die Kamera“ (gefangenes Tablett) „Emmas Beet“ (Schulklasse im Kräutergarten) und „Timo am Herd“ (Saucen-Abend)
