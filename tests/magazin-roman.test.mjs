@@ -48,7 +48,8 @@ assert.ok(alles2.includes("„Du kannst nicht so tun, als hätte es uns beide ni
 assert.ok(r2.bisher.length > 40 && r2.ende.includes("**Folge 3 – Alte Geschichten**"));
 const out2 = magHeftHtml("roman", r2);
 assert.ok(out2.includes('class="mag-roman-bisher"') && out2.includes('class="mag-roman-untertitel"') && (out2.match(/mag-roman-pause/g) || []).length === 5);
-assert.equal(r2.bilder.length, 3); assert.ok(r2.bilder.every((b) => /^magazin\/roman\/f2-/.test(b.datei)) && (out2.match(/<img /g) || []).length === 1, "Folge 2: Paul-Bild da (14.11.2026), die anderen beiden noch Bildplatz");
+assert.equal(r2.bilder.length, 3); assert.ok(r2.bilder.every((b) => /^magazin\/roman\/f2-/.test(b.datei)) && (out2.match(/<img /g) || []).length === 2, "Folge 2: Paul und Kartoffeltaler da (14.11.2026), Getränkelager noch Bildplatz");
+assert.ok(r2.bilder[1].da && r2.text.filter(([a]) => a === "p")[+r2.bilder[1].wo.slice(7) - 1][1].startsWith("In den nächsten Minuten arbeiteten sie beinahe ohne Worte."), "Folge 2: Kartoffeltaler an der Stelle");
 assert.ok(r2.bilder[0].da && r2.bilder[0].wo === "absatz:48" && r2.text.filter(([a]) => a === "p")[47][1].startsWith("Während Lena in die Umkleide verschwand"), "Folge 2: Paul mit dem Brot hinter der Begrüßung");
 for (const k of [".mag-roman-bisher ", ".mag-roman-pause ", ".mag-roman-untertitel "]) assert.ok(html.includes(k), "CSS " + k);
 // Folge 3 in Heft 3 (Entwurf): vollständig nach folgen/03-alte-geschichten.md, Bildplätze statt fehlender Zeichnungen
