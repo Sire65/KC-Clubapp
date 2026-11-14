@@ -48,7 +48,8 @@ assert.ok(alles2.includes("„Du kannst nicht so tun, als hätte es uns beide ni
 assert.ok(r2.bisher.length > 40 && r2.ende.includes("**Folge 3 – Alte Geschichten**"));
 const out2 = magHeftHtml("roman", r2);
 assert.ok(out2.includes('class="mag-roman-bisher"') && out2.includes('class="mag-roman-untertitel"') && (out2.match(/mag-roman-pause/g) || []).length === 5);
-assert.equal(r2.bilder.length, 3); assert.ok(r2.bilder.every((b) => !b.da && /^magazin\/roman\/f2-/.test(b.datei)) && !/<img/.test(out2), "Folge 2: noch keine Zeichnungen → Bildplatz, kein kaputtes Bild");
+assert.equal(r2.bilder.length, 3); assert.ok(r2.bilder.every((b) => /^magazin\/roman\/f2-/.test(b.datei)) && (out2.match(/<img /g) || []).length === 1, "Folge 2: Paul-Bild da (14.11.2026), die anderen beiden noch Bildplatz");
+assert.ok(r2.bilder[0].da && r2.bilder[0].wo === "absatz:48" && r2.text.filter(([a]) => a === "p")[47][1].startsWith("Während Lena in die Umkleide verschwand"), "Folge 2: Paul mit dem Brot hinter der Begrüßung");
 for (const k of [".mag-roman-bisher ", ".mag-roman-pause ", ".mag-roman-untertitel "]) assert.ok(html.includes(k), "CSS " + k);
 // Folge 3 in Heft 3 (Entwurf): vollständig nach folgen/03-alte-geschichten.md, Bildplätze statt fehlender Zeichnungen
 { const r = MAG_AUSGABEN[3].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
