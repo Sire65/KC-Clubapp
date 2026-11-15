@@ -12120,7 +12120,7 @@ function kachelnZeigen() {
   $("raster").classList.toggle("klein3", reg !== "admin" && !einfach() && kStufe !== "normal"); // KC-CLUB-KACHEL-KLEIN (2.23.87): auf Wunsch überall 3 je Reihe
   $("raster").classList.toggle("klein4", reg !== "admin" && !einfach() && kStufe === "mini"); // KC-CLUB-KACHEL-MINI (2.54.0): 4 je Reihe
   if (kaBearb) {
-    $("kaAusHinweis").innerHTML = "";
+    $("kaAusHinweis").innerHTML = ""; if ($("kaKopfKnoepfe")) $("kaKopfKnoepfe").innerHTML = ""; // KC-CLUB-KA-KOPF: beim Anordnen nicht
     if (einfach()) { // einfache Ansicht: untereinander, nur ▲ / ▼ (kein Ausblenden)
       const alle = einfachKacheln(), n = alle.length;
       const b = (i, d, z, t) => `<button title="${t}" aria-label="${t}" ${i + d < 0 || i + d >= n ? "disabled" : ""} onclick="kaSchieben('${alle[i].id}',${d})">${z}</button>`;
@@ -12143,6 +12143,11 @@ function kachelnZeigen() {
   // KC-CLUB-NUR-AUSGEBLENDETE (2.37.0, Wunsch Hansi): unten umschalten – nur die ausgeblendeten Kacheln zeigen (voll bedienbar), nochmal tippen = wieder verbergen
   $("kaAusHinweis").innerHTML = nurAus ? `<p class="hinweis ka-nuraus-text">🙈 Du siehst gerade nur die <b>ausgeblendeten</b> Kacheln.</p><button class="knopf ka-nuraus an" onclick="kaNurAus(false)">🙈 Ausgeblendete wieder verbergen</button>`
     : ausN ? `<button class="knopf ka-nuraus" onclick="kaNurAus(true)">👀 Nur ausgeblendete zeigen (${ausN})</button><button class="kaausgeblendet" onclick="kaBearbeiten(true)">🙈 ${ausN} ausgeblendete Kachel${ausN > 1 ? "n" : ""} – anzeigen</button>` : "";
+  // KC-CLUB-KA-KOPF (Wunsch Hansi 15.11.2026: „Auf dem Tablet ist neben ‚Erweiterte Ansicht‘ rechts noch Platz – 2 Buttons mit Icons: nur ausgeblendete anzeigen
+  // und x ausgeblendete anzeigen, so wie es unten dafür schon Buttons gibt“): dieselben zwei Knöpfe klein oben im Kopf „Schnellzugriff“ – nur breit (CSS ab 600 px)
+  const kopfK = $("kaKopfKnoepfe");
+  if (kopfK) kopfK.innerHTML = nurAus ? `<button type="button" class="ka-kopf-k an" onclick="kaNurAus(false)" title="Ausgeblendete wieder verbergen">🙈 Wieder verbergen</button>`
+    : ausN ? `<button type="button" class="ka-kopf-k" onclick="kaNurAus(true)" title="Nur die ausgeblendeten Kacheln zeigen">👀 Nur ausgeblendete (${ausN})</button><button type="button" class="ka-kopf-k" onclick="kaBearbeiten(true)" title="Ausgeblendete Kacheln anzeigen und wieder einblenden">🙈 ${ausN} ausgeblendete</button>` : "";
   $("raster").classList.toggle("nur-aus", nurAus);
   $("raster").innerHTML = (nurAus ? kaSortiert(reg).filter((k) => KA.aus.includes(k.id)) : kacheln(reg)).map((k, i) => {
     const z = k.zahl ? k.zahl() : 0;
