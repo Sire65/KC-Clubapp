@@ -1,12 +1,49 @@
 # Änderungen
 
-## 2.955.0 – 2026-11-15 – 🟢 Einmal fragen: Meldung, wenn jemand online kommt? · ✏️ Änderung erbitten (KC-CLUB-ONLINE-FRAGE, KC-CLUB-AENDERUNG-ERBITTEN)
+## 2.957.0 – 2026-11-15 – 🟢 Einmal fragen: Meldung, wenn jemand online kommt? · ✏️ Änderung erbitten (KC-CLUB-ONLINE-FRAGE, KC-CLUB-AENDERUNG-ERBITTEN)
 **✏️ Änderung erbitten** (Wunsch Hansi, Fall Christina „neue Handynummer – mit Sofort-Taste, immer automatisch, wenn klar ist, dass jemand etwas Neues hat, z. B. Adresse“): Beim Mitglied gibt es für den Admin den Knopf „✏️ Änderung erbitten“ (Handynummer, Anschrift, Festnetz, E-Mail, Name, Notfallkontakt; optional ein kurzer Satz). Beim nächsten Start – sobald nichts anderes offen ist, höchstens einmal am Tag – kommt: „Hallo Christina, bitte melde 📱 deine neue Handynummer – damit im Club alles aktuell ist …“ mit **✏️ Sofort erledigen** (öffnet gleich das passende Änderungsformular), **⏰ Später** (morgen wieder) und **Hat sich nichts geändert**. Ist die Meldung abgeschickt, streicht der Server die Bitte von selbst; „Bitte zurücknehmen“ beim Admin löscht sie. Neue Einstellung `aenderung_bitte` (nur Arten, nie Werte), Aktion `aenderung_erbitten` (nur Admin). Test `tests/aenderung-erbitten.test.mjs`.
 
 
 Wunsch Hansi („Möglichkeit 2 umsetzen … Dann kannst du die Person direkt kontaktieren bzw. anklopfen“) statt „bei allen einschalten“ (wären ~7 Meldungen am Tag je Mitglied gewesen). Mitglieder, bei denen Push auf dem Gerät läuft und die noch nie entschieden haben, sehen beim Start einmal: „🟢 Melden, wenn jemand online kommt? … z. B. ‚🟢 Karla ist jetzt online‘? Dann kannst du die Person direkt kontaktieren bzw. anklopfen.“ – **Ja, gerne** (an) · **Nein, danke** (aus, nie wieder gefragt) · **Später** (in 3 Tagen wieder, neue Einstellung `online_frage`). Ist die Sprachansage auf dem Gerät noch aus, gibt es dazu einen (nicht vorab gesetzten) Haken „🗣️ Bei offener App auch ansagen lassen“ – mit „Ja, gerne“ wird sie dann auf diesem Gerät mit eingeschaltet; der Hinweis nennt beide Einstellungen. Nicht für Admins (dort Standard an), nie bei „Kommunikation aus“, höchstens einmal am Tag je Gerät und nie über einer anderen Frage. Niemand bekommt die Meldung ungefragt. Test `tests/online-frage.test.mjs`.
 - **Hinweis „Datenbank hat viel zu tun“** kennt die neuen Spiegel-Zeiten (KC-SPIEGEL-SCHONEND): 05/14/23 Uhr (04/13/22 UTC), :10–:45 statt 04/10/16/22 :10–:30 (`SCHWER_ZEITEN` im Server, Tests `db-viel-zu-tun`, `spiegel-schonend`).
 
+## 2.956.0 – 2026-11-15 – ↔️ Gegenvorschlag bei Themen (KC-CLUB-GEGENVORSCHLAG, Wunschliste #93) · 🔴 „… ist offline“ nach 1 Minute (KC-CLUB-OFFLINE-SCHNELL) · Server 2.956.0
+### ↔️ Gegenvorschlag
+Wunschliste #93, Hansi 15.11.: „An der Stelle einen Taster einbauen ‚Gegenvorschlag einreichen‘ … damit die Mitglieder über 2 Vorschläge abstimmen können“ – Antworten: bis zu 3 (A, B, C), jedes Mitglied darf, keine Push an die Unterstützer, Knopf heißt „Gegenvorschlag“.
+- Auf jeder offenen Themen-Karte „↔️ Gegenvorschlag“ (bis 3 Vorschläge je Thema). Das Formular zeigt „Gegenvorschlag zu: …“; der Termin ist derselbe wie beim ersten.
+- In der Liste steht die Gruppe als **eine** Kachel „A … oder B …“ mit 👍 je Vorschlag und „👉 Welcher ist dir lieber?“ bzw. „✔ Du bist für B“. Antippen öffnet alle nebeneinander (Handy untereinander).
+- Jedes Mitglied unterstützt **einen** davon – tippt es auf einen anderen, wandert die Stimme (Server nimmt sie beim anderen weg).
+- Benachrichtigt wird wie bei jedem Themenvorschlag nur die Clubleitung („↔️ Gegenvorschlag“), nicht die Unterstützer.
+- Tagesordnung: die Gruppe wird **ein** Punkt „↔️ A: … (👍 3) oder B: … (👍 2)“. Nach dem Protokoll gilt „behandelt“/„vertagt“ für alle der Gruppe.
+- Zieht einer zurück, bleibt der Rest (B und C bzw. ein normaler Vorschlag). Kein Gegenvorschlag zu Abstimmungen und Spenden.
+- Datenbank: neue Spalte `gegen_zu` an der Vorschlags-Tabelle (Migration 20261115_kc_club_vorschlag_gegen.sql, Probelauf grün).
+- Test: neu `tests/gegenvorschlag.test.mjs`; abgeschirmter Browser-Lauf mit Testdaten (Kachel, Blatt, Unterstützen, Gegenvorschlag C, kein vierter).
+### 🔴 „… ist offline“ schon etwa 1 Minute nach dem Verlassen
+Wunsch Hansi 15.11.: „Ich hätte gerne schneller die Push, wenn jemand die App verlassen hat – es gibt doch die direkte Leitung.“
+- Bisher kam „🔴 X ist offline“ nur aus dem 5-Minuten-Lauf – 5½ bis 10½ Minuten nach dem Verlassen.
+- Die App meldet das Weglegen aber sofort („weg“, zusammen mit der direkten Leitung). Jetzt wartet der Server danach **1 Minute** und schickt die Meldung, wenn das Mitglied nicht wieder da ist. Kurz in eine andere App wechseln und zurückkommen löst nichts aus. Die Zeit in der Meldung ist der Zeitpunkt des Verlassens.
+- Gleiche Empfänger und Regeln wie bisher (Einstellung, Ruhezeit, unsichtbar/inkognito, keine Testkonten). Der 5-Minuten-Lauf bleibt für Geräte, deren „weg“ nicht ankommt (Akku leer, kein Netz). Nichts geht doppelt raus (Vermerk je Sitzung + gleicher Schlüssel).
+- Kosten: nur wenn jemand die App weglegt, 1 Lesen + ggf. 1 Schreiben + der Push.
+- Test: `tests/offline-push.test.mjs` erweitert (Ablauf nachgespielt). Rückweg Server: 2.955.0.
+- Rückweg App: 2.955.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+## 2.955.0 – 2026-11-15 – 🍲 Gemeinschaftsgericht · 🔒 Adventskalender nach der Uhr des Servers (KC-CLUB-GEMEINSCHAFTSGERICHT, KC-CLUB-ADVENT-SERVERUHR) · Server 2.955.0 + Datenbank
+Wunsch Hansi 15.11.: „Jedes Türchen darf nur am Tag geöffnet werden, nicht schon vorher. Im Nachhinein ist es erlaubt“ – „Ja, mit Server-Uhr absichern“.
+- Bisher richtete sich der Kalender nach dem Datum im Handy – wer es vorstellte, konnte Türchen früher ansehen. Jetzt schickt der Server beim App-Start seine Uhr mit (`serverJetzt`), die App rechnet den Tag daraus in **deutscher Zeit** (auch Mitternacht stimmt). Vor- oder zurückgestellte Handys bekommen den richtigen Tag.
+- Regeln unverändert: nur das Türchen von heute, frühere jederzeit, ab 25.12. alle; vor Dezember sehen Mitglieder den Kalender nicht; Admin-Vorschau nur außerhalb des Dezembers. Preis-Türchen prüft der Server wie bisher zusätzlich selbst.
+- Ohne Verbindung (offline/Notbetrieb) gilt wie bisher die Handy-Uhr.
+- Test: `tests/advent-serveruhr.test.mjs`.
+
+**🍲 Gemeinschaftsgericht (Wunschliste #94, Antworten Hansi 15.11.: „Viele Köche verderben den Brei – bei uns nicht“)**
+- **Admin-Kachel „🍲 Gemeinschaftsgericht“:** Runde starten ohne festen Termin – Titel (z. B. „im Februar“), Einsendezeitraum von–bis, **1 oder 2 Zutaten je Person**. Ändern oder abbrechen jederzeit.
+- **Alle (Mitglieder und Aushilfen, keine Gäste) werden beim App-Start gefragt:** „Welche Zutat, welches Gewürz oder Kraut gibst du in unser Gemeinschaftsgericht?“ – Liste nach 10 Warengruppen (rund 150 Zutaten) mit Suche oder **„✏️ Eigene Zutat“** (z. B. Stierhoden). Knöpfe ✅ Speichern · ⏰ Später (fragt beim nächsten Mal wieder) · 🙅 Diesmal nicht. Kachel „🍲 Gemeinschaftsgericht“ im Club-Register, solange die Runde läuft – dort kann man die Wahl bis zum Ende ändern. **Jeder sieht nur seine eigenen Zutaten.**
+- **Hansi sieht alle Zutaten laufend mit Namen** und wie viele schon eingereicht haben. Eigene Zutaten: „✅ Passt“ oder „🔁 Andere bitte“ (mit Hinweis – das Mitglied bekommt einen Push und wird beim nächsten Start neu gefragt).
+- **Erinnerung 2 Tage vor Ende** (Push, genau einmal) an alle, die noch nichts eingereicht und nicht „Diesmal nicht“ gesagt haben.
+- **Rezept:** „🔎 Rezept finden & verschicken“ sucht im Rezeptbuch die Rezepte mit den meisten eingereichten Zutaten (Treffer „3 von 5 Zutaten“); passt keins → neues Rezept im Rezeptbuch anlegen (Hansi oder mit Claude) und auswählen. Vorschau/Drucken möglich.
+- **PDF auf dem Kopfbogen an alle (Push + E-Mail mit Anhang):** Foto des Rezepts, Portionen/Dauer, **Zutaten mit Mengen und „(Name)“, wer sie ausgesucht hat**, „Außerdem ausgesucht“ für Zutaten, die nicht im Rezept stehen, Zubereitung. Ablegen im Archiv wie bei anderen Ausdrucken.
+- Datenbank: `supabase/migrations/20261115_kc_club_gemeinschaftsgericht.sql` (zwei Tabellen, nur Club-Server, gespiegelt und gesichert). Fehlt sie noch, startet die App normal ohne Gemeinschaftsgericht. Test: `tests/gemeinschaftsgericht.test.mjs`; im abgeschirmten Browser geprüft (Frage, Admin, PDF-Inhalt).
+- **Noch nicht freigegeben (Hansi 15.11.: „Ja, aber noch nicht freigegeben“):** neue Freigabe „🍲 Gemeinschaftsgericht“, Standard **🔒 Nur für mich (Test)** – dann wird nur Hansi gefragt, es gehen keine Erinnerungen raus, und „Als PDF an alle senden“ schickt als Test nur an Hansi (die Runde bleibt offen). Für alle: Verwaltung → Freigaben → „🍲 Gemeinschaftsgericht“ → ✅ Für alle frei.
+- Rückweg: App 2.954.0, Server 2.950.0 (Tabellen dürfen bleiben).
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
 ## Spiegelung schonend – 2026-11-15 (KC-SPIEGEL-SCHONEND) · App unverändert
 Fund Hansi 15.11. („App ist schon wieder langsam … woran liegt es?“): Nicht das WLAN und nicht die App – die Supabase-Datenbank (kostenloser Tarif, kleiner Rechner) brach um 16:16 UTC (17:16 Uhr) mitten in der Spiegel-Welle nach Neon ab und startete neu (1,5 Min. weg, davor bis 9 s je Anfrage). Die langsamsten Viertelstunden der letzten 24 Std. lagen beide in Spiegel-Wellen (11:15 und 17:15 Uhr); das kurze Stocken am 12.11. 23:16 und 14.11. 11:16 ebenfalls (jeweils Minute :16).
 1. **Entzerrt:** 1 Paket je Minute statt 3; Welle :11–:40 statt :11–:22 (`kc_neon_low_compute_cycle`, `kc_internal.kc_db_mirror_welle_senden`).

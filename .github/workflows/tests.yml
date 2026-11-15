@@ -98,6 +98,7 @@ jobs:
       - run: node tests/buero-fein.test.mjs
       - run: node tests/pinnwand-nie-auto.test.mjs
       - run: node tests/offline-push.test.mjs
+      - run: node tests/gegenvorschlag.test.mjs
       - run: node tests/install-einladung.test.mjs
       - run: node tests/install-stand.test.mjs
       # KC-CLUB-FA-NEU (2.855.0)
@@ -121,6 +122,8 @@ jobs:
       - run: node tests/heft-pc-druck.test.mjs
       - run: node tests/kopf-ecke.test.mjs
       - run: node tests/advent-nikolaus-foto.test.mjs
+      - run: node tests/advent-serveruhr.test.mjs
+      - run: node tests/gemeinschaftsgericht.test.mjs
       - run: node tests/anfrage-gegenvorschlag.test.mjs
       - run: node tests/netz-balken.test.mjs
       - run: node tests/muenze-gesicht.test.mjs
