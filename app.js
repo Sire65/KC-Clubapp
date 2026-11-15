@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.952.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.953.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -32595,7 +32595,7 @@ async function pushPruefen() {
   const reg = await navigator.serviceWorker.ready; let sub = null; try { sub = await reg.pushManager.getSubscription(); } catch {}
   const r = await api("push_pruefen", { endpoint: sub?.endpoint || "", ua: navigator.userAgent });
   if (Notification.permission === "granted") {
-    if (sub && r.diesesAktiv) return; // alles in Ordnung
+    if (sub && r.diesesAktiv) return onlineFragen(r); // alles in Ordnung – 2.953.0: dann einmal fragen, ob „… ist online“ gewünscht ist
     if (sub && r.diesesBekannt) { try { await sub.unsubscribe(); } catch {} sub = null; } // vom Push-Dienst abgelehnt (410) → neu anlegen
     sub = sub || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64url(INIT.vapidPublicKey) });
     await api("push_anmelden", { subscription: sub.toJSON(), userAgent: navigator.userAgent, wieder: true });
@@ -32636,6 +32636,32 @@ function pushNeuFragen(r) {
     if (was === "ja") return pushEinschalten();
     if (was === "nein") merken({ bis: new Date(Date.now() + PUSH_NEU_NEIN_TAGE * 86400000).toISOString() });
     if (was === "nie") { merken({ nie: true }); melde("In Ordnung – einschalten kannst du Push jederzeit unter ⚙️ → 🔔 Benachrichtigungen."); }
+  }));
+}
+// 2.953.0 KC-CLUB-ONLINE-FRAGE (Wunsch Hansi 15.11.2026, statt „bei allen einschalten“): Mitglieder mit funktionierendem Push, die noch nie
+// entschieden haben, ob sie „🟢 … ist jetzt online“ bekommen wollen, werden beim Start einmal gefragt. Ja → an · Nein → aus (nie wieder gefragt)
+// · Später → in 3 Tagen wieder. Nicht für Admins (bei ihnen Standard an), nie bei „Kommunikation aus“, höchstens einmal am Tag je Gerät,
+// nicht über einem anderen offenen Fenster. Abschalten jederzeit unter ⚙️ → 🔔 Benachrichtigungen.
+const ONLINE_FRAGE_SPAETER_TAGE = 3;
+function onlineFragen(r) {
+  const e = INIT?.einstellungen || {};
+  if (!ICH || ICH.admin || r?.kommAus || e.online_push) return;
+  if (e.online_frage?.bis && Date.parse(e.online_frage.bis) > Date.now()) return;
+  const heute = heuteIso(); if (lsLesen("kc_club_online_gefragt") === heute) return;
+  if (document.querySelector(".dlg-blatt")) return; // nicht über eine andere Frage legen – morgen wieder
+  lsSetzen("kc_club_online_gefragt", heute);
+  const vn = ICH?.vorname ? " " + esc(ICH.vorname) : "";
+  const f = dlgOeffnen(`<h3 class="dlg-kopf">🟢 Melden, wenn jemand online kommt?</h3>
+    <p class="dlg-text">Hallo${vn}, möchtest du eine kurze Meldung bekommen, wenn ein Mitglied die Club-App öffnet – z. B. „🟢 Karla ist jetzt online“?
+    Dann kannst du die Person <b>direkt kontaktieren</b> bzw. <b>anklopfen</b>.</p>
+    <p class="dlg-text hinweis">Ändern kannst du das jederzeit unter ⚙️ → 🔔 Benachrichtigungen.</p>
+    <div class="dlg-knoepfe"><button class="knopf haupt" data-w="ja">🟢 Ja, gerne</button><button class="knopf" data-w="nein">Nein, danke</button><button class="knopf" data-w="spaeter">Später</button></div>`, () => {});
+  f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = async () => {
+    f.remove(); const was = b.dataset.w;
+    if (was === "ja") return onlinePushSchalter(true);
+    if (was === "nein") { await onlinePushSchalter(false); return; }
+    const wert = { bis: new Date(Date.now() + ONLINE_FRAGE_SPAETER_TAGE * 86400000).toISOString() };
+    try { await api("einstellung_setzen", { schluessel: "online_frage", wert }); if (INIT) INIT.einstellungen = { ...(INIT.einstellungen || {}), online_frage: wert }; } catch {}
   }));
 }
 async function pushUmschalten() {

@@ -194,7 +194,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.950.0";
+const SERVER_VERSION = "2.953.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -2259,6 +2259,8 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
     .filter(([id, d]) => KA_ID.test(id) && typeof d === "string" && !isNaN(Date.parse(d))).slice(0, 40).map(([id, d]) => [id, new Date(String(d)).toISOString()])) }),
   // KC-CLUB-ONLINE-PUSH (1.57.0): Admin bekommt eine Push, wenn ein Mitglied online kommt (Standard: an)
   online_push: (w) => ({ an: w?.an !== false }),
+  // 2.953.0 KC-CLUB-ONLINE-FRAGE (Wunsch Hansi 15.11.2026): „Später“ bei der Frage „Meldung, wenn jemand online kommt?“ – bis wann nicht wieder fragen
+  online_frage: (w) => ({ bis: w?.bis && !isNaN(Date.parse(String(w.bis))) ? new Date(String(w.bis)).toISOString() : null }),
   // KC-CLUB-ZULETZT-DA (1.20.0): anderen zeigen, wann ich zuletzt in der App war (Standard: an, gegenseitig wie WhatsApp)
   zuletzt: (w) => ({ zeigen: w?.zeigen !== false }),
   // KC-CLUB-BRIEFBOGEN (1.26.0): eigene Absenderzeile/Fußzeile und Unterschrift je Person (Clubleitung)
