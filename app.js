@@ -17711,7 +17711,7 @@ async function neuLadenRoh(vonHand) {
     if (!ONL.timer) nachUpdatePruefen(begruesst);
     if (!ONL.timer) { onlinePing(); onlineTakt(); pushAktivPruefen(); herzStarten(); const a = /#anklopfen=([0-9a-f-]{36})/.exec(START_HASH || ""); if (a) anklopfenAusLink(a[1]); const c = /#anruf=([0-9a-f-]{36})/.exec(START_HASH || ""); if (c) { ONL.erledigt.add("r" + c[1]); anrufEingehend(c[1]); } }
     if (!PW.startGeprueft) { PW.startGeprueft = true; pwStart(begruesst); }
-    if (!SH_START.geprueft) { SH_START.geprueft = true; setTimeout(startHinweisPruefen, 2500); setTimeout(filmHinweisPruefen, 4000); setTimeout(eingangHinweisPruefen, 5000); setTimeout(neuesGeraetFragen, 6000); setTimeout(gartenTagPruefen, 8000); setTimeout(() => lsPruefen(true), 1500); } // KC-CLUB-START-HINWEIS · 2.726.0 neues Gerät + Liegen-Schutz
+    if (!SH_START.geprueft) { SH_START.geprueft = true; setTimeout(startHinweisPruefen, 2500); setTimeout(filmHinweisPruefen, 4000); setTimeout(eingangHinweisPruefen, 5000); setTimeout(neuesGeraetFragen, 6000); setTimeout(gartenTagPruefen, 8000); setTimeout(aeBittePruefen, 9000); /* 2.953.0 KC-CLUB-AENDERUNG-ERBITTEN */ setTimeout(() => lsPruefen(true), 1500); } // KC-CLUB-START-HINWEIS · 2.726.0 neues Gerät + Liegen-Schutz
     if (!begruesst) ustPruefen(); // KC-CLUB-UNTERSTUETZUNG (2.85.0): einmal fragen, wie viel Hilfe gewünscht ist
     designUebernehmen(INIT.einstellungen?.design); infoFelderAktualisieren(); infoStartUebernehmen(INIT.einstellungen?.infofeld); ansichtInfo();
     VB.wartung = INIT.wartung || null; VB.server = INIT.server || null; vbCommSetzen(INIT.communicator || null);
@@ -29534,9 +29534,51 @@ function aeWert(art, w) {
   if (art === "kleidung") return [w.kochjacke && "Kochjacke " + w.kochjacke, w.kochhose && "Kochhose " + w.kochhose].filter(Boolean).join(" · ") || "–";
   return Object.values(w).filter(Boolean).join(" · ") || "–";
 }
-async function aeStart() {
+async function aeStart(vorwahl) {
   blattAuf("aeBlatt", '<h3 style="margin:0">✏️ Meine Daten haben sich geändert</h3><p class="hinweis">⏳ Wird geladen …</p>');
-  try { AE.d = await api("aenderung_start", {}); AE.art = null; aeZeichnen(); } catch (e) { $("aeBlatt")?.remove(); meldeFehler(e); }
+  try { AE.d = await api("aenderung_start", {}); AE.art = typeof vorwahl === "string" && AE.d.arten.some((a) => a.id === vorwahl && !a.aus) ? vorwahl : null; aeZeichnen(); } // 2.953.0: direkt zur erbetenen Art
+  catch (e) { $("aeBlatt")?.remove(); meldeFehler(e); }
+}
+// ---------- 2.953.0 KC-CLUB-AENDERUNG-ERBITTEN (Wunsch Hansi 15.11.2026, Fall Christina „neue Handynummer“) ----------
+// Admin: beim Mitglied „✏️ Änderung erbitten“ (Handy, Anschrift …). Mitglied: beim nächsten Start (wenn nichts anderes offen ist) die Bitte mit
+// „✏️ Sofort erledigen“ (öffnet gleich das passende Formular), „⏰ Später“ (morgen wieder) und „Hat sich nichts geändert“ (Bitte erledigt).
+// Ist die Meldung abgeschickt, streicht der Server die Bitte von selbst. Werte stehen nie in der Bitte – nur, WAS gemeldet werden soll.
+// [Art, Zeichen, Knopf beim Admin, Satzteil beim Mitglied („bitte melde …“)]
+const AE_BITTE_ARTEN = [["handy", "📱", "Neue Handynummer", "deine neue Handynummer"], ["anschrift", "🏠", "Neue Anschrift", "deine neue Anschrift"],
+  ["festnetz", "☎️", "Neue Festnetznummer", "deine neue Festnetznummer"], ["mail", "✉️", "Neue E-Mail-Adresse", "deine neue E-Mail-Adresse"],
+  ["name", "🪪", "Neuer Name", "deinen neuen Namen"], ["notfall", "🆘", "Notfallkontakt", "deinen Notfallkontakt"]];
+async function aeErbitten(pid, vn) {
+  const f = dlgOeffnen(`<h3 class="dlg-kopf">✏️ ${esc(vn)} um eine Änderung bitten</h3>
+    <p class="dlg-text">Was soll ${esc(vn)} melden? Beim nächsten Öffnen der App kommt die Bitte mit „✏️ Sofort erledigen“.</p>
+    ${AE_BITTE_ARTEN.map(([id, s, t]) => `<label class="dlg-text" style="display:flex;gap:8px;align-items:center;margin:4px 0"><input type="checkbox" value="${id}"${id === "handy" ? " checked" : ""}> ${s} ${esc(t)}</label>`).join("")}
+    <label class="dlg-text" style="display:block;margin-top:8px">Kurzer Satz dazu (freiwillig)<input type="text" id="aeBitteNotiz" maxlength="200" placeholder="z. B. Ich habe gesehen, du hast eine neue Nummer." style="width:100%"></label>
+    <div class="dlg-knoepfe"><button class="knopf haupt" data-w="ja">✏️ Bitte schicken</button><button class="knopf" data-w="weg">Bitte zurücknehmen</button><button class="knopf" data-w="nein">Abbrechen</button></div>`, () => f.remove());
+  f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = async () => {
+    const was = b.dataset.w; if (was === "nein") return f.remove();
+    const arten = was === "weg" ? [] : [...f.querySelectorAll("input[type=checkbox]:checked")].map((x) => x.value);
+    if (was === "ja" && !arten.length) return melde("Bitte mindestens eins ankreuzen.", true);
+    try { await api("aenderung_erbitten", { an: pid, arten, notiz: f.querySelector("#aeBitteNotiz")?.value || "" }); f.remove();
+      melde(arten.length ? `✏️ ${vn} bekommt die Bitte beim nächsten Öffnen der App` : `Bitte an ${vn} zurückgenommen`); }
+    catch (e) { meldeFehler(e); }
+  }));
+}
+const AE_BITTE = { versuche: 0 };
+async function aeBittePruefen() {
+  const w = INIT?.einstellungen?.aenderung_bitte, arten = (w?.arten || []).filter((id) => AE_BITTE_ARTEN.some(([a]) => a === id));
+  if (!ICH || !arten.length) return;
+  if (document.querySelector(FENSTER_OFFEN + ", .dlg, .dlg-blatt, #rgSchicht")) { if (++AE_BITTE.versuche < 20) setTimeout(aeBittePruefen, 4000); return; } // erst wenn nichts anderes offen ist
+  const heute = heuteIso(); if (lsLesen("kc_club_ae_bitte") === heute) return; lsSetzen("kc_club_ae_bitte", heute);
+  const namen = arten.map((id) => { const a = AE_BITTE_ARTEN.find(([x]) => x === id); return `${a[1]} ${a[3]}`; });
+  const liste = namen.length === 1 ? namen[0] : `${namen.slice(0, -1).join(", ")} und ${namen[namen.length - 1]}`;
+  const f = dlgOeffnen(`<h3 class="dlg-kopf">Hallo ${esc(ICH.vorname || "")},</h3>
+    <p class="dlg-text">bitte melde ${liste} – damit im Club alles aktuell ist und dich alle erreichen.${w.notiz ? `<br><i>„${esc(w.notiz)}“</i>${w.von ? ` – ${esc(w.von)}` : ""}` : ""}</p>
+    <p class="dlg-text hinweis">Das dauert nur einen Moment: antippen, Neues eintragen, fertig.</p>
+    <div class="dlg-knoepfe"><button class="knopf haupt" data-w="jetzt">✏️ Sofort erledigen</button><button class="knopf" data-w="spaeter">⏰ Später</button><button class="knopf" data-w="nichts">Hat sich nichts geändert</button></div>`, () => f.remove());
+  f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = async () => {
+    f.remove(); const was = b.dataset.w;
+    if (was === "jetzt") return aeStart(arten[0]);
+    if (was === "nichts") { const wert = { ...w, arten: [] }; try { await api("einstellung_setzen", { schluessel: "aenderung_bitte", wert }); INIT.einstellungen.aenderung_bitte = wert; } catch {} melde("Danke für die Rückmeldung!"); }
+  }));
 }
 function aeZeichnen() {
   const d = AE.d, b = $("aeBlatt"); if (!d || !b) return;
@@ -31940,6 +31982,7 @@ function mitgliedZeigen() {
       ${ICH?.admin ? `<button class="knopf" onclick="linkTeilen('${m.person_id}')"><span class="kt-ico">🔗</span>App-Link</button><button class="knopf" onclick="einrichtungskarte('${m.person_id}')"><span class="kt-ico">🖨️</span>Einrichtungs&shy;karte</button><button class="knopf" onclick="rolleBearbeiten('${m.person_id}')"><span class="kt-ico">🎖️</span>Amt & Rechte</button><button class="knopf" onclick="ansageVorgabeSetzen('${m.person_id}', ${esc(JSON.stringify((m.name || "").split(" ")[0]))})"><span class="kt-ico">🗣️</span>Online-Ansagen einschalten</button>` : ""}
       ${(ICH?.admin || ICH?.vorstand) && !m.selbst ? `<button class="knopf" onclick="elternHandy('${esc(m.person_id)}')"><span class="kt-ico">👪</span>Eltern-Handy</button>` : ""}
       ${(ICH?.admin || ICH?.vorstand) && !m.selbst ? `<button class="knopf" onclick="mgEingang('${esc(m.person_id)}')"><span class="kt-ico">📥</span>In den Eingangskorb</button>` : ""}
+      ${ICH?.admin && !m.selbst ? `<button class="knopf" onclick="aeErbitten(${jsArg(m.person_id)}, ${jsArg(String(m.name || "").split(" ")[0])})"><span class="kt-ico">✏️</span>Änderung erbitten</button>` : ""}
       ${zeilen ? '<button class="knopf" onclick="kontaktSpeichern()"><span class="kt-ico">📇</span>Ins Telefonbuch</button>' : ""}
       ${zeilen && zugang() === "mitglied" ? '<button class="knopf" onclick="kwExtern()"><span class="kt-ico">📤</span>Kontakt weiterleiten</button>' : ""}
     </div>
