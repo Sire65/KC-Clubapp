@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.947.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.948.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -8784,14 +8784,25 @@ function netzStricheHtml(q) {
 }
 function netzBalkenZeigen(art, q) {
   const b = $("netzBalken"); if (!b) return;
-  const an = einst("netzBalken", true); b.classList.toggle("versteckt", !an); if (!an) return;
+  const an = einst("netzBalken", true); b.classList.toggle("versteckt", !an); if (!an) return kopfEckeAnordnen();
   const sym = q.stufe === 0 ? "✕" : art === "wlan" ? "📶" : art === "mobil" ? "📱" : "🌐";
   const wort = q.stufe === 0 ? "Offline" : q.stufe == null ? "…" : ["", "Schwach", "Mäßig", "Gut", "Sehr gut"][q.stufe];
   const schl = [art, q.stufe, q.farbe, einst("animiert", true)].join("|"); if (b.dataset.schl === schl) return; b.dataset.schl = schl; // nur bei Änderung neu zeichnen
   b.className = "nb-chip nb-" + q.farbe + (einst("animiert", true) ? " nb-puls" : "");
   b.innerHTML = `<span class="nb-art">${sym}</span>${netzStricheHtml(q)}<span class="nb-text">${esc(wort)}</span>`;
   b.title = `${art ? NETZ_NAME[art] : "Netzart unbekannt"} · ${q.text} – antippen für Einzelheiten`; b.setAttribute("aria-label", b.title);
+  kopfEckeAnordnen();
 }
+// KC-CLUB-KOPF-ECKE (Fund Hansi 15.11.2026: „Im Tablet-Modus berührt die Flagge die Anzeige der Verbindungsqualität“): ab 600 px steht im Netz-Chip
+// zusätzlich das Wort („Sehr gut“ …) – er wird breiter, die Flagge stand fest bei right: 98px. Jetzt sitzt die Flagge immer 8 px links neben dem Chip
+// (Handy: bleibt bei 98 px wie bisher); Chip aus → Platz wie bisher.
+function kopfEckeAnordnen() {
+  const s = $("spKnopf"), b = $("netzBalken"); if (!s) return;
+  if (!b || b.classList.contains("versteckt") || !b.offsetWidth) { s.style.right = ""; return; }
+  const rechts = parseFloat(getComputedStyle(b).right) || 18;
+  s.style.right = Math.max(98, Math.ceil(rechts + b.offsetWidth + 8)) + "px";
+}
+addEventListener("resize", () => { try { kopfEckeAnordnen(); } catch {} }, { passive: true });
 function netzSymbolZeigen() {
   try { const na = netzArtJetzt(); netzBalkenZeigen(na.art, netzQualitaet()); } catch {} // KC-CLUB-NETZ-BALKEN
   const b = $("naNetz"); if (!b) return;
