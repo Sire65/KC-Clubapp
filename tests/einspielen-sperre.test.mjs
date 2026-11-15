@@ -31,6 +31,19 @@ assert.equal(lauf(["termin", "ja"], { EINSPIEL_UHR: "2000", EINSPIEL_UTC: "1615"
 assert.equal(lauf(["termin", "ja"], { EINSPIEL_UHR: "2000", EINSPIEL_UTC: "0150", EINSPIEL_DRIN: "0" }), 1, "FRA-Sicherung läuft → warten");
 assert.equal(lauf(["notfall", "ja"], { EINSPIEL_UHR: "1816", EINSPIEL_DRIN: "9" }), 0, "Notfall → sofort");
 assert.equal(lauf(["termin", "nein"], { EINSPIEL_UHR: "1816", EINSPIEL_DRIN: "9" }), 0, "keine neue Version → nichts abzuwarten");
+// KC-EINSPIELEN-ABSTAND (13.11.2026): höchstens eine Version je 15 Min. – auch bei [Hansi: einspielen], nicht bei [Notfall]
+const abst = (art, min) => spawnSync("bash", [wurzel + "tools/einspielen-ruhe.sh", art, "ja"], { env: { PATH: process.env.PATH, EINSPIEL_TAKT: "0", EINSPIEL_RUNDEN: "1", EINSPIEL_ABSTAND_SCHLAF: "0", EINSPIEL_UHR: "2000", ...ruhig, EINSPIEL_LETZTE_MIN: String(min) }, encoding: "utf8" });
+assert.match(abst("termin", 5).stdout, /vor 5 Min\. live – warte noch 10 Min\./, "5 Min. nach der letzten Version → 10 Min. warten");
+assert.match(abst("hansi", 14).stdout, /warte noch 1 Min\./, "auch bei Hansi: einspielen");
+assert.match(abst("termin", 15).stdout, /Abstand eingehalten/, "ab 15 Min. kein Warten");
+assert.doesNotMatch(abst("notfall", 1).stdout, /warte noch/, "Notfall wartet nicht");
+for (const [n, y] of [["Seite", seite], ["Server", srv]]) assert.ok(/\n  actions: read/.test(y) && /- name: Termin und Ruhe abwarten\n\s+env:\n\s+GH_TOKEN: \$\{\{ github\.token \}\}/.test(y), n + ": darf die letzte Version nachsehen");
+// Fund 13.11.2026 (2.945.0): die Kennung zählt nur im Titel (erste Zeile), nicht wenn der Text sie bloß erwähnt
+for (const [n, y] of [["Seite", seite], ["Server", srv]]) assert.ok(/titel="\$\{NACHRICHT%%\$'\\n'\*\}"\n\s+case "\$titel" in \*"\[Notfall\]"\*\)/.test(y), n + ": nur der Titel zählt");
+{ const r = spawnSync("bash", ["-c", `NACHRICHT=$'2.9 Titel\n\nnicht bei [Notfall]'; titel="\${NACHRICHT%%$'\\n'*}"; art=termin; case "$titel" in *"[Notfall]"*) art=notfall;; *"[Hansi: einspielen]"*) art=hansi;; esac; echo $art`], { encoding: "utf8" });
+  assert.equal(r.stdout.trim(), "termin", "Erwähnung im Text ist kein Notfall"); }
+{ const r = spawnSync("bash", ["-c", `NACHRICHT=$'2.9 Titel [Hansi: einspielen]\n\nText'; titel="\${NACHRICHT%%$'\\n'*}"; art=termin; case "$titel" in *"[Notfall]"*) art=notfall;; *"[Hansi: einspielen]"*) art=hansi;; esac; echo $art`], { encoding: "utf8" });
+  assert.equal(r.stdout.trim(), "hansi", "Kennung im Titel wirkt"); }
 // Regel steht in AGENTS.md
 assert.ok(/KC-EINSPIELEN-SPERRE/.test(agents) && /\[Hansi: einspielen\]/.test(agents) && /\[Notfall\]/.test(agents), "Regel in AGENTS.md");
 // 2.917.0 KC-CLUB-RUNDGANG-PFLICHT (Hansi 11.11.2026): veröffentlicht wird nur nach grünem Klick-Rundgang

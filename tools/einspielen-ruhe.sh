@@ -10,9 +10,13 @@
 #   Notfall (Sicherheit, App für Mitglieder unbenutzbar, Datensicherung kaputt): „[Notfall]“ im Commit-Text (art = notfall) – ohne Warten,
 #   vorher kurze Rückmeldung an Hansi (AGENTS.md).
 #   Ändert der Push weder version.json noch den Server (z. B. nur Werkzeuge/Doku), startet keine App neu → nichts abzuwarten.
+#   3. KC-EINSPIELEN-ABSTAND (Wunsch Hansi 13.11.2026, nach 2.943.0 und 2.944.0 innerhalb von 7 Min. – Hansis Update lief mitten in die
+#      zweite Version, Start 39 s): ist die letzte andere Version vor weniger als 15 Min. live gegangen, wartet dieser Ablauf den Rest ab.
+#      Gilt auch bei [Hansi: einspielen]; nur [Notfall] wartet nicht. Klappt die Abfrage bei GitHub nicht, wird nicht gewartet.
 #
 # Aufruf: tools/einspielen-ruhe.sh <termin|hansi|notfall> <ja|nein>      (2. Wert: neue Version dabei?)
-# Für Tests: EINSPIEL_UHR=HHMM (Berlin), EINSPIEL_UTC=HHMM, EINSPIEL_DRIN=<Zahl>, EINSPIEL_TAKT=<Sek.>, EINSPIEL_RUNDEN=<Anzahl>
+# Für Tests: EINSPIEL_UHR=HHMM (Berlin), EINSPIEL_UTC=HHMM, EINSPIEL_DRIN=<Zahl>, EINSPIEL_TAKT=<Sek.>, EINSPIEL_RUNDEN=<Anzahl>,
+#            EINSPIEL_LETZTE_MIN=<Minuten seit der letzten anderen Version>, EINSPIEL_ABSTAND_SCHLAF=0 (nicht wirklich schlafen)
 set -u
 art="${1:-termin}"; neu="${2:-ja}"
 takt="${EINSPIEL_TAKT:-300}"; runden="${EINSPIEL_RUNDEN:-12}"
@@ -26,6 +30,28 @@ if [ "$art" != "hansi" ]; then
     echo "::error::Außerhalb der Einspiel-Termine (12 und 20 Uhr) – nichts wird eingespielt. Nur wenn Hansi ausdrücklich „einspielen“ sagt: [Hansi: einspielen] in den Commit-Text, sonst zum Termin per „Run workflow“."
     exit 1
   fi
+fi
+
+ABSTAND_MIN=15
+letzte_min() { # Minuten seit die letzte ANDERE Version live ging (Ablauf „Seite veröffentlichen“ auf main); leer = unbekannt
+  if [ -n "${EINSPIEL_LETZTE_MIN:-}" ]; then echo "$EINSPIEL_LETZTE_MIN"; return; fi
+  [ -z "${GH_TOKEN:-}" ] || [ -z "${GITHUB_REPOSITORY:-}" ] && return
+  local zeit
+  zeit=$(curl -sS -m 20 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+    "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/workflows/seite-veroeffentlichen.yml/runs?branch=main&status=success&per_page=10" \
+    | jq -r --arg sha "${GITHUB_SHA:-}" '[.workflow_runs[] | select(.head_sha != $sha)][0].updated_at // empty' 2>/dev/null)
+  [ -z "$zeit" ] && return
+  echo $(( ($(date -u +%s) - $(date -u -d "$zeit" +%s)) / 60 ))
+}
+m=$(letzte_min)
+if [ -n "$m" ] && [ "$m" -ge 0 ] && [ "$m" -lt "$ABSTAND_MIN" ]; then
+  rest=$((ABSTAND_MIN - m))
+  echo "Die letzte Version ging vor $m Min. live – warte noch $rest Min. (KC-EINSPIELEN-ABSTAND: höchstens eine Version je $ABSTAND_MIN Min.)."
+  [ "${EINSPIEL_ABSTAND_SCHLAF:-1}" != "0" ] && sleep $((rest * 60))
+elif [ -z "$m" ]; then
+  echo "::warning::Zeitpunkt der letzten Version nicht abrufbar – Abstand wird nicht geprüft."
+else
+  echo "Letzte andere Version vor $m Min. – Abstand eingehalten."
 fi
 
 im_fenster() { # Spiegel :05–:30 um 4/10/16/22 UTC, Neon-Nachtsicherung 0:35–1:00, FRA-Sicherung 1:00–3:00

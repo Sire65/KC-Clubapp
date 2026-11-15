@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.922.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.948.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12,18 +12,19 @@ const APP_STUFE = "RC";
 // Pflege: gleiche Namen in sw.js (TEILE); nach jeder Änderung an teile/*.js: node tools/teile-pruefsumme.mjs (der Vertragstest prüft beides).
 // Rückweg: docs/AUFTEILEN.md.
 const TEILE_LISTE = {
-  videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl", "installAnleitung"], sri: "sha384-A2zAwhQmdtDsHob2o/8SE342QNblyiSmunmih4H34/CVV7LE5grpMD6cv6OiUvjg" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
+  etiketten: { einstieg: ["peStart"], sri: "sha384-hZPVTBtZRkjm/gH7EiiPwId/cpV/5bFoQ/Zasy+rHzKYdMbfrZ1Muv762mCmZd7d" }, // KC-CLUB-PREISETIKETTEN (12.11.2026): Büro → Drucker → 🏷️ Preisetiketten (nur Clubleitung)
+  videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl", "installAnleitung"], sri: "sha384-SF133G1bPVhIfBpvN6X87Wj07EElgjIIAYpK6I/22MbnXbxI8cCl5o+e3x5HUTi3" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
   szenen: { einstieg: ["jahreszeitVorschau"], sri: "sha384-mAuFkYPP7UnZNUqE/gD38eJ/THfwNSgLrJyvGLQUb5PBmCArQZ8wIH5DiImNHvlj" }, // Stufe 3b: Kopf-Szenen (Jahreszeiten, Sim-Jü, Themen) – kurz nach dem Start über szenenSpaeter
   sprache: { einstieg: ["spracheEnglisch", "spracheDeutsch"], sri: "sha384-Chqwpd0bk+v+mxRc527Icw9RRT0IZz4d+WrsNvcZpIK+RuYs+rbn2Nt+2eebNasd" }, // KC-CLUB-SPRACHE: Bedienung auf Englisch – nur geladen, wenn jemand 🇬🇧 wählt
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-NDuho5dgDL13uhtcTY8d0cGESAWhk+B+5qyWyvBuOxPgmADzmvY9YFCcwWM0s+kx" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
   spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-df8Lw0oCMMrnIIB7cpSpJ2Q2SKgIao/dXXHLrjtixnNByKoeFvC3pVc6zGaNCcVw" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
   tischlive: { einstieg: ["tlStart", "tlStopp", "tlZeichnen", "tlPlatz", "tlRegeln"], sri: "sha384-RCmsKY+DTRfsCMRHkJVG2UJlySANNdHxnEdMps4tkL9kgf8DC5O/b1jMcwVeY3XB" }, // 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: Ton, Kamera, Bildschirm, Unterlagen zeigen am Tisch
-  buero: { einstieg: ["ersBuchOeffnen", "eblDruck", "buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-3R20qEHqksVdLLMEYPdN5HiBCpGuyT15Jp7pMtNRpFPvdwxgfTnPr01dxRWMF4Y6" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
+  buero: { einstieg: ["ersBuchOeffnen", "eblDruck", "buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-yAwGCyLlT2Kuwu6bV41eSa+i3aIeE29efY0w5UNXpxY8I64pQi+7fYS6/kRpzEqf" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
   hilfe: { einstieg: ["twFrageStart", "twOffenStart", "sucheAuf", "suSucheKnopf"], sri: "sha384-qPS9/H66zIS2QeGHqQQs5CFqN4+XZns2HL1FnQYWzUWbVrYpK/BLZN111UDmKbRH" }, // Stufe 5: Hilfe-Werkzeuge (Frag Twinkey, Mitglied fragen, Schnellsuche) – beim ersten Antippen
   rechner: { einstieg: ["rechnerOeffnen"], sri: "sha384-UWrOf1EIXxhsoWWwxnLDzpzALsaxzNGXgeqoLAjVvqoQ6wbFnIGxYTkQPFpiRuQ4" }, // 2.811.0 KC-CLUB-RECHNER: Tischrechner im Büro, „rechne …“ per Sprache
   glueck: { einstieg: ["kaeferKommt", "kleeKommt"], sri: "sha384-hbPb96l3YrlvBxe1zJJfotwARA0pEPKKaDyb1BBVooEi5BCYbfYqihmMYABmlsg4" }, // KC-CLUB-MARIENKAEFER / KC-CLUB-GLUECKSKLEE (06.11.2026): 🐞 jeder 50., 🍀 jeder 25. Start
   hilfetipp: { einstieg: ["tippSenden", "tippListe"], sri: "sha384-cOxaOEtxAQP/CZRKEEryWTGLYs/TRIWVXRitip1nRotyRzYD9GRoisKEzLGKAbGF" }, // 2.835.0 KC-CLUB-HILFE-TIPPS: Clubleitung – Lösung schicken, Vorlagen, Gesendete Tipps
-  magazin: { einstieg: ["magStart", "wmProspekt", "magMenue", "magEinsenden", "magPostfach", "magMeine", "magArchiv", "magDruck"], sri: "sha384-dXx1EMQK2KrbiJeWPFFeXLo8IQM7rlbr0bWmMDvcAEQMGNITCtSDiBJjirT4V/pX" }, // KC-CLUB-MAGAZIN-GERUEST: Club-Küche und Weihnachtsmarkt-Prospekt (Gerüst, blättern)
+  magazin: { einstieg: ["magStart", "wmProspekt", "magMenue", "magEinsenden", "magPostfach", "magMeine", "magArchiv", "magDruck"], sri: "sha384-JD8GI6+Otg4ZF4lYnnKXDR8kl7/ahkcoRPcuGPZf7XUUrkT1MCgOfLerpfo9KiKg" }, // KC-CLUB-MAGAZIN-GERUEST: Club-Küche und Weihnachtsmarkt-Prospekt (Gerüst, blättern)
   strom: { einstieg: ["stromBlatt", "stromZeichnen"], sri: "sha384-dNcc30G8i65eI40hbgDTGIIBdKAE/KdpRichStzNk1mt1gGPNa+DYvNq03rjI4M/" }, // 2.799.0 KC-CLUB-STROM-UEBERSICHT: Admin „🔋 Stromverbrauch“ (nur beim Öffnen)
   anbieter: { einstieg: ["anbStart"], sri: "sha384-P5YH+VJ7JvIqD3Aj7m229epWr/Qh32v5T1bHLTneKzD1mvcFbAjsObnettv63rNh" }, // 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78): Admin-Kachel „📰 Anbieter“ (nur beim Öffnen)
   istzeit: { einstieg: ["irOeffnen", "irAenderungen"], sri: "sha384-LzIjOhEBd8XATuT8V19PFecWXSkWfEIIs+lWADFW+NrmCLfIl4LwmECdGwvhZbp7" }, // KC-CLUB-IST-RUECKFRAGE: „🗓️ Meine Ist-Zeiten“ nach dem Dienst (nur beim Öffnen)
@@ -243,7 +244,7 @@ function sparInfo() { melde(`🐢 Sparmodus: ${SPAR.grund}. Weniger Bewegung, se
 if (document.currentScript?.dataset.v !== APP_VERSION) {
   let schon = false; try { schon = sessionStorage.getItem("kc_club_mischstand") === APP_VERSION; sessionStorage.setItem("kc_club_mischstand", APP_VERSION); } catch {}
   try { window.KCFP?.neu?.("mischstand", { text: `Seite ${document.currentScript?.dataset.v || "?"} / Programm ${APP_VERSION}` }); } catch {}
-  if (!schon) location.replace(location.pathname + "?neu=" + Date.now() + location.hash);
+  if (!schon) { try { localStorage.setItem("kc_club_neustart_update", "mischstand"); } catch {} location.replace(location.pathname + "?neu=" + Date.now() + location.hash); } // 2.945.0 KC-CLUB-UPDATE-HINWEIS: Ladeanzeige sagt „Update“ statt „Netz langsam“
   throw new Error("Seite und Programm passen nicht zusammen – wird neu geladen");
 }
 // KC-CLUB-STARTZEIT (2.24.11, Wunsch Hansi): jeden Start in Abschnitte zerlegen – Seite, Programm laden, Programm einrichten,
@@ -2082,22 +2083,22 @@ const RUNDGAENGE = [
   { id: "sprache", stand: "1", zeit: "10.11.2026", sym: "🎙️", t: "Sprachsteuerung komplett", u: "Einschalten, Mikrofon, alle Befehle, weiter diktieren, Training (ca. 3 Min.)", st: () => RG_SPRACHE },
   { id: "anpassen", stand: "2", zeit: "11.11.2026", sym: "🎨", t: "Meine App nach meinem Geschmack", u: "Themen, Farben, Tag/Nacht, Schrift, Jahreszeiten-Bild, Deko, Effekte, Sparmodus & Eselsohr – alle Möglichkeiten (ca. 4 Min.)", st: () => RG_ANPASSEN }, // 2.344.0 KC-CLUB-VIDEO-ANPASSEN
   { id: "effekte", stand: "3", zeit: "11.11.2026", sym: "✨", t: "Effekte & Wetter", u: "Kacheln, Kopf auf und zu, Geburtstags-Vogel, Jahreszeiten im Kopf, Twinkey, Wetter-Tage – und wo du alles abschaltest (ca. 4 Min.)", st: () => RG_EFFEKTE }, // 2.265.0 KC-CLUB-ERKLAERVIDEOS-EFFEKTE
-  { id: "figur", stand: "2", sym: "🧑‍🍳", t: "Koch-Figur als Bild aussuchen", u: "Mein Bild: einfache oder hochwertige Figur antippen, übernehmen (ca. 2 Min.)", st: () => RG_FIGUR, nur: () => frei("avatar") }, // 2.248.0 KC-CLUB-ERKLAERVIDEOS-FIGUR
-  { id: "figurbau", stand: "2", sym: "🧩", t: "Eigene Figur zusammenstellen", u: "Kacheln, Stil, Haare, Mütze, Gesicht, Brille, Schmuck, Kochjacke – und später bearbeiten (ca. 3 Min.)", st: () => RG_FIGUR_BAU, nur: () => frei("avatar") && frei("avatar_baukasten") },
+  { id: "figur", stand: "2", zeit: "12.11.2026", sym: "🧑‍🍳", t: "Koch-Figur als Bild aussuchen", u: "Mein Bild: einfache oder hochwertige Figur antippen, übernehmen (ca. 2 Min.)", st: () => RG_FIGUR, nur: () => frei("avatar") }, // 2.248.0 KC-CLUB-ERKLAERVIDEOS-FIGUR
+  { id: "figurbau", stand: "2", zeit: "12.11.2026", sym: "🧩", t: "Eigene Figur zusammenstellen", u: "Kacheln, Stil, Haare, Mütze, Gesicht, Brille, Schmuck, Kochjacke – und später bearbeiten (ca. 3 Min.)", st: () => RG_FIGUR_BAU, nur: () => frei("avatar") && frei("avatar_baukasten") },
   { id: "leitung", stand: "2", ziel: "leitung", sym: "🗂️", t: "Für die Clubleitung: Büro & mehr", u: "Büro, Termine für alle, Abstimmung, eigene Einstellungen – nur für die Clubleitung", st: () => RG_LEITUNG, nur: () => !!(ICH?.buero || ICH?.vorstand) },
   { id: "admin", stand: "1", ziel: "admin", sym: "🛠️", t: "Für Admins: Leitstand", u: "Admin-Register, Lämpchen, Admin-Einstellungen – nur für Admins", st: () => RG_ADMIN, nur: () => !!ICH?.admin },
   // 2.348.0 KC-CLUB-VIDEOS-NEU (Wunsch Hansi „für alle Themen Videos“)
   { id: "push", stand: "1", zeit: "11.11.2026", sym: "🔔", t: "Benachrichtigungen richtig einrichten", u: "Push einschalten, je Bereich wählen, Test an mich, Meine Geräte, Anklopfton – und was tun, wenn nichts ankommt (ca. 4 Min.)", st: () => RG_PUSH }, // 2.348.0
   { id: "privat", stand: "2", zeit: "11.11.2026", sym: "🔒", t: "Privatsphäre & Handy weitergeben", u: "Wer sieht was: online, zuletzt da, Tippen, Geburtstag, Kontakt – Abmelden, persönlicher Link, Link verloren, Meine Daten (ca. 4 Min.)", st: () => RG_PRIVAT }, // 2.348.0
-  { id: "probleme", stand: "1", sym: "🛠️", t: "Wenn etwas nicht klappt", u: "App neu öffnen, Update, Lämpchen, Schnecke, Laden dauert, zweimal offen, Mikrofon, Sicherheits-Check – und wann du Hansi fragst (ca. 4 Min.)", st: () => RG_PROBLEME }, // 2.348.0
-  { id: "chatprofi", stand: "4", sym: "💬", t: "Chat für Fortgeschrittene", u: "Antippen, Pfeil, Haken, Sprachtempo, Vorlesen, Abstimmung, Selbstlöschen, Entwurf, Archiv, ganzer Chat, „… schreibt dir gerade“ (ca. 5 Min.)", st: () => RG_CHATPROFI }, // 2.348.0 · 2.533.0 Fassung 2
-  { id: "geheim", stand: "2", sym: "🕵️", t: "Geheim schreiben: verschlüsseln & Schlüsselbund", u: "Schloss, Rückfrage, Schlüssel, Geheimagent – und so kommt es beim Empfänger an: Mitteilung, Schlüssel eingeben, Schlüsselbund – nichts wird gesendet (ca. 5 Min.)", st: () => RG_GEHEIM }, // 2.533.0 KC-CLUB-VIDEO-GEHEIM
+  { id: "probleme", stand: "1", zeit: "11.11.2026", sym: "🛠️", t: "Wenn etwas nicht klappt", u: "App neu öffnen, Update, Lämpchen, Schnecke, Laden dauert, zweimal offen, Mikrofon, Sicherheits-Check – und wann du Hansi fragst (ca. 4 Min.)", st: () => RG_PROBLEME }, // 2.348.0
+  { id: "chatprofi", stand: "4", zeit: "12.11.2026", sym: "💬", t: "Chat für Fortgeschrittene", u: "Antippen, Pfeil, Haken, Sprachtempo, Vorlesen, Abstimmung, Selbstlöschen, Entwurf, Archiv, ganzer Chat, „… schreibt dir gerade“ (ca. 5 Min.)", st: () => RG_CHATPROFI }, // 2.348.0 · 2.533.0 Fassung 2
+  { id: "geheim", stand: "2", zeit: "12.11.2026", sym: "🕵️", t: "Geheim schreiben: verschlüsseln & Schlüsselbund", u: "Schloss, Rückfrage, Schlüssel, Geheimagent – und so kommt es beim Empfänger an: Mitteilung, Schlüssel eingeben, Schlüsselbund – nichts wird gesendet (ca. 5 Min.)", st: () => RG_GEHEIM }, // 2.533.0 KC-CLUB-VIDEO-GEHEIM
   { id: "gruppen", stand: "1", zeit: "11.11.2026", sym: "👥", t: "Gruppen anlegen & verwalten", u: "Neue Gruppe, Name & Symbol, Mitglieder, Bereiche klappen, Gruppen-Admin, auflösen – und in Nachricht oder Terminanfrage nutzen (ca. 3 Min.)", st: () => RG_GRUPPEN }, // 2.348.0
-  { id: "terminfinden", stand: "1", sym: "📅", t: "Termin ausmachen & Tag finden", u: "Terminanfrage, Stand der Anfrage, Gegenvorschlag unter Vorbehalt, Terminfindung, Terminreihen (ca. 4 Min.)", st: () => RG_TERMINFINDEN }, // 2.348.0
+  { id: "terminfinden", stand: "1", zeit: "11.11.2026", sym: "📅", t: "Termin ausmachen & Tag finden", u: "Terminanfrage, Stand der Anfrage, Gegenvorschlag unter Vorbehalt, Terminfindung, Terminreihen (ca. 4 Min.)", st: () => RG_TERMINFINDEN }, // 2.348.0
   { id: "todo", stand: "1", zeit: "11.11.2026", sym: "✅", t: "Die gemeinsame To-do-Liste", u: "Umschalter To-do, Aufgabe eintragen, verteilen, abhaken, Frist-Erinnerung, Aufgaben aus Protokollen (ca. 3 Min.)", st: () => RG_TODO }, // 2.348.0
-  { id: "einfach", stand: "1", sym: "👴", t: "Die einfache Ansicht", u: "Große Kacheln, die Leiste unten, das Fragezeichen – und wie du umschaltest (ca. 3 Min.)", st: () => RG_EINFACH }, // 2.348.0
-  { id: "raetsel", stand: "1", sym: "🧩", t: "Rätsel & Bestenliste", u: "Werne oder Küche, Bild wird schärfer, roter Buzzer, 6 Antworten, Punkte, Wochen-Rätsel und Club-Bestenliste (ca. 3 Min.)", st: () => RG_RAETSEL, nur: () => esAn() }, // 2.348.0
-  { id: "buehne", stand: "1", sym: "🎭", t: "Bühne, Musik & Club-Song", u: "Bereitlegen, Twinkey turnt vor, Trainingsuhr, Regler, nur Musik hören, Club-Song zum Mitsingen, Einladung zur Bewegung (ca. 4 Min.)", st: () => RG_BUEHNE, nur: () => esAn() }, // 2.348.0
+  { id: "einfach", stand: "1", zeit: "12.11.2026", sym: "👴", t: "Die einfache Ansicht", u: "Große Kacheln, die Leiste unten, das Fragezeichen – und wie du umschaltest (ca. 3 Min.)", st: () => RG_EINFACH }, // 2.348.0
+  { id: "raetsel", stand: "1", zeit: "12.11.2026", sym: "🧩", t: "Rätsel & Bestenliste", u: "Werne oder Küche, Bild wird schärfer, roter Buzzer, 6 Antworten, Punkte, Wochen-Rätsel und Club-Bestenliste (ca. 3 Min.)", st: () => RG_RAETSEL, nur: () => esAn() }, // 2.348.0
+  { id: "buehne", stand: "1", zeit: "12.11.2026", sym: "🎭", t: "Bühne, Musik & Club-Song", u: "Bereitlegen, Twinkey turnt vor, Trainingsuhr, Regler, nur Musik hören, Club-Song zum Mitsingen, Einladung zur Bewegung (ca. 4 Min.)", st: () => RG_BUEHNE, nur: () => esAn() }, // 2.348.0
   { id: "buero", stand: "2", ziel: "leitung", sym: "🗂️", t: "Büro im Alltag", u: "Eingangskorb, Bestätigung für Dienstwünsche, ablegen, einlesen, E-Mail mit Anhang, Schilder-Druckerei – nur für die Clubleitung (ca. 4 Min.)", st: () => RG_BUERO, nur: () => !!(ICH?.buero || ICH?.vorstand) }, // 2.348.0
 ];
 const RG = { an: false, i: 0, pause: false, uhr: 0, lauf: 0, ziel: null, ton: false, von: "start", richtung: 1, wach: null, tour: "ueberblick", st: [], zurueck: [], vorI: -1, liste: [], liveTok: 0, liveI: -1, tippI: -1 };
@@ -8783,14 +8784,25 @@ function netzStricheHtml(q) {
 }
 function netzBalkenZeigen(art, q) {
   const b = $("netzBalken"); if (!b) return;
-  const an = einst("netzBalken", true); b.classList.toggle("versteckt", !an); if (!an) return;
+  const an = einst("netzBalken", true); b.classList.toggle("versteckt", !an); if (!an) return kopfEckeAnordnen();
   const sym = q.stufe === 0 ? "✕" : art === "wlan" ? "📶" : art === "mobil" ? "📱" : "🌐";
   const wort = q.stufe === 0 ? "Offline" : q.stufe == null ? "…" : ["", "Schwach", "Mäßig", "Gut", "Sehr gut"][q.stufe];
   const schl = [art, q.stufe, q.farbe, einst("animiert", true)].join("|"); if (b.dataset.schl === schl) return; b.dataset.schl = schl; // nur bei Änderung neu zeichnen
   b.className = "nb-chip nb-" + q.farbe + (einst("animiert", true) ? " nb-puls" : "");
   b.innerHTML = `<span class="nb-art">${sym}</span>${netzStricheHtml(q)}<span class="nb-text">${esc(wort)}</span>`;
   b.title = `${art ? NETZ_NAME[art] : "Netzart unbekannt"} · ${q.text} – antippen für Einzelheiten`; b.setAttribute("aria-label", b.title);
+  kopfEckeAnordnen();
 }
+// KC-CLUB-KOPF-ECKE (Fund Hansi 15.11.2026: „Im Tablet-Modus berührt die Flagge die Anzeige der Verbindungsqualität“): ab 600 px steht im Netz-Chip
+// zusätzlich das Wort („Sehr gut“ …) – er wird breiter, die Flagge stand fest bei right: 98px. Jetzt sitzt die Flagge immer 8 px links neben dem Chip
+// (Handy: bleibt bei 98 px wie bisher); Chip aus → Platz wie bisher.
+function kopfEckeAnordnen() {
+  const s = $("spKnopf"), b = $("netzBalken"); if (!s) return;
+  if (!b || b.classList.contains("versteckt") || !b.offsetWidth) { s.style.right = ""; return; }
+  const rechts = parseFloat(getComputedStyle(b).right) || 18;
+  s.style.right = Math.max(98, Math.ceil(rechts + b.offsetWidth + 8)) + "px";
+}
+addEventListener("resize", () => { try { kopfEckeAnordnen(); } catch {} }, { passive: true });
 function netzSymbolZeigen() {
   try { const na = netzArtJetzt(); netzBalkenZeigen(na.art, netzQualitaet()); } catch {} // KC-CLUB-NETZ-BALKEN
   const b = $("naNetz"); if (!b) return;
@@ -12832,7 +12844,7 @@ function suWahlZeigen() {
 // Geöffnete Türchen merkt sich das Gerät (kein Server, keine Datenbank). Erinnerung im Info-Laufband, solange das heutige Türchen zu ist.
 // Abschaltbar unter ⚙️ → Effekte. Neues Türchen/anderer Inhalt = nur AK_TUERCHEN ändern (Registry).
 // 2.869.0 KC-CLUB-ADVENT-2026 (Konzept docs/adventskalender-2026, Wunsch Hansi 06.11.2026): Rathaus-Bild (von Hansi) als Hintergrund; Türchen im Wechsel
-// 🍬 Nascherei → ✂️ Basteln → 🕯️ Deko, an den Adventssonntagen 6./13./20.12. 🍫 Kinderriegel-Gutschein (Riegel beim Weihnachtsessen im Januar,
+// 🍬 Nascherei → ✂️ Basteln → 🕯️ Deko, an den Adventssonntagen Überraschungen (seit 2.947.0: 6.12. Schoko-Nikolaus, 20.12. Kinderriegel; 13.12. Mandarinen-Licht) (Preise beim Weihnachtsessen im Januar,
 // kein Abhaken, kein Server), Türchen 24 ☕ Einladung zum Frühstück bei Hansi (Termin folgt; Antwort über die vorhandene Abstimmung). Basteln/Deko:
 // kleine Symbole + Link zur echten Anleitung (geprüft 06.11.2026). Kein Kalender für Gäste und Aushilfen. Keine Nascherei geht verloren: AK_NASCH → Fach „Alle Naschereien“.
 const AK_NASCH = [ // 2.468.0 (Wunsch Hansi): Bastelanleitungen für kleine süße Naschereien – z = Zutaten, s = Schritte
@@ -12861,28 +12873,31 @@ const AK_NASCH = [ // 2.468.0 (Wunsch Hansi): Bastelanleitungen für kleine sü�
   { sym: "🥝", t: "Obst-Tannenbaum", z: ["Kiwi, grüne Weintrauben", "1 Apfel", "1 Karotte", "Granatapfelkerne oder Johannisbeeren"], s: ["Den Apfel halbieren und mit der flachen Seite auf einen Teller legen – das ist der Fuß.", "Die Karotte als Stamm hineinstecken.", "Kiwi-Scheiben und Trauben mit Zahnstochern von unten nach oben immer kleiner anstecken.", "Granatapfelkerne als Kugeln, oben ein Stern aus Apfel oder Karotte."], tipp: "Gesund und bunt – ein schöner Gegenpol zu den Plätzchen." },
 ];
 const akN = (t, link) => ({ art: "naschen", ...AK_NASCH.find((x) => x.t === t), ...(link ? { link } : {}) });
-const AK_RIEGEL = (nr, text) => ({ art: "riegel", sym: "🍫", t: "Ein Kinderriegel für dich!", nr, text });
+// 2.947.0 KC-CLUB-ADVENT-PREISE (Wunschliste #89, Hansi 15.11.2026): Preis-Türchen – 6.12. Mini-Schoko-Nikolaus, 20.12. Kinderriegel (je einer pro Person).
+// „🎁 Ja, den nehme ich“ trägt dich in Hansis Liste „Wer bekommt was“ ein (Austeilen beim Weihnachtsessen im Januar). Neuer Preis = Eintrag hier + ADVENT_PREISE im Server.
+const AK_PREISE = { nikolaus: { sym: "🎅", name: "Mini-Schoko-Nikolaus", bild: "SCHOKO-NIKOLAUS" }, kinderriegel: { sym: "🍫", name: "Kinderriegel", bild: "KINDERRIEGEL" } };
+const AK_RIEGEL = (preis, text) => ({ art: "riegel", sym: AK_PREISE[preis].sym, t: `Ein ${AK_PREISE[preis].name} für dich!`, preis, text });
 const AK_TUERCHEN = [ // 2.869.0 KC-CLUB-ADVENT-2026: Tag 1–24; art: naschen | basteln | deko | riegel | einladung; link = echte Anleitung (neues Fenster)
   akN("Lokomotive aus Dominosteinen"),
   { art: "basteln", sym: "⭐", t: "Sterne aus Butterbrottüten", dauer: "ca. 30 Minuten", kinder: true, z: ["7 Butterbrottüten", "Klebestift", "Schere, Bleistift", "Band zum Aufhängen"], s: ["Die Tüten flach aufeinanderkleben – jeweils unten einen breiten Streifen und senkrecht einen in der Mitte (wie ein „T“).", "Oben eine Spitze oder einen Bogen aufzeichnen und den ganzen Stapel zuschneiden, an den Seiten kleine Muster herausschneiden.", "Die oberste und die unterste Tüte zusammenkleben – der Stern klappt auf.", "Band durchziehen und ans Fenster hängen."], tipp: "Mit einer Lichterkette dahinter leuchtet der Stern wie eine Laterne.", link: "https://www.dm.de/tipps-und-trends/bastelideen/bastelideen-weihnachten/himmlische-papiersterne-aus-butterbrottueten-475304" },
   { art: "deko", sym: "🫙", t: "Frost-Windlicht mit Salzkristallen", dauer: "10 Minuten + ein paar Tage warten", kinder: true, z: ["schmale, hohe Gläser", "grobes Salz", "Wasser", "Teelicht (am besten LED)", "Tannengrün, Schnur, Zapfen"], s: ["Etwa 1 cm hoch grobes Salz in jedes Glas füllen.", "Nur so viel Wasser dazugeben, dass das Salz feucht ist – es soll nicht schwimmen.", "Die Gläser an einen warmen Ort stellen (Fensterbank über der Heizung) und das Salz feucht halten – nach ein paar Tagen klettern Kristalle wie Raureif hoch.", "Teelicht hinein, Schnur um den Hals, Tannengrün und Zapfen daneben."], tipp: "Heute ansetzen – zum 2. Advent glitzert es wie Frost.", link: "https://www.heleneweberhaus.de/wp-content/uploads/2022/11/Upcycling-Schneelichter-aus-Salzkristallen.pdf" },
   akN("Nikolaus aus Schokokuss"),
   { art: "basteln", sym: "🥾", t: "Nikolausstiefel aus Filz", dauer: "ca. 45 Minuten", kinder: "mit Hilfe", z: ["roter und weißer Filz", "Papier für die Schablone", "Schere, Locher", "Wollfaden oder Pfeifenputzer"], s: ["Einen Stiefel auf Papier zeichnen, ausschneiden und zweimal auf roten Filz übertragen.", "Beide Teile ausschneiden und aufeinanderlegen.", "Rundherum (außer oben) mit dem Locher Löcher stanzen und mit Wolle oder Pfeifenputzer zusammenfädeln.", "Oben einen weißen Filzstreifen als Fellrand aufkleben, Schlaufe zum Aufhängen anbringen."], tipp: "Heute Abend vor die Tür stellen – morgen ist Nikolaus!", link: "https://www.dm.de/tipps-und-trends/bastelideen/bastelideen-kinder/nikolausstiefel-andere-weihnachtsdeko-aus-filz-58928" },
-  AK_RIEGEL(1, "Der Nikolaus war da – und hat im Köcheclub etwas Süßes dagelassen. Schönen 2. Advent!"),
+  AK_RIEGEL("nikolaus", "Der Nikolaus war da – und hat für jede und jeden im Köcheclub einen kleinen Schoko-Nikolaus dagelassen. Schönen 2. Advent!"),
   { art: "deko", sym: "🍊", t: "Girlande aus Orangenscheiben", dauer: "ca. 1½ Stunden (meist Backofen)", kinder: "mit Hilfe", z: ["2–4 Orangen", "Backgitter + Blech", "Nadel und Faden", "nach Wunsch Zimtstangen, Sternanis"], s: ["Die Orangen in etwa ½ cm dünne Scheiben schneiden.", "Auf das Backgitter legen, ein Blech darunterschieben (tropft).", "Bei 100 °C etwa eine Stunde trocknen, dann auf dem Gitter auskühlen lassen.", "Die Scheiben in der Mitte auffädeln – nach Wunsch abwechselnd mit Zimtstangen."], tipp: "Duftet herrlich am Fenster oder am Tannenbaum.", link: "https://www.nau.ch/lifestyle/wohnen/orangegirlande-simple-weihnachtsdeko-zum-selbermachen-65826299" },
   akN("Rentier aus Marshmallow", "https://tv.orf.at/program/kids/box-weihnachtliche-jause100.pdf"),
   { art: "basteln", sym: "❄️", t: "Schneeflocken aus Papier", dauer: "ca. 15 Minuten", kinder: true, z: ["quadratisches weißes Papier (z. B. 20 × 20 cm)", "Schere", "Bleistift", "Faden"], s: ["Das Papier dreimal falten: längs zur Hälfte, quer zum Quadrat, dann schräg zum Dreieck.", "Die Ecke mit der Papiermitte festhalten und die gegenüberliegende Seite rund abschneiden.", "An den Seiten kleine Dreiecke, Bögen und Zacken herausschneiden – die Kanten nie ganz durchschneiden.", "Vorsichtig auffalten, glatt streichen, aufhängen."], tipp: "Butterbrotpapier lässt sich besonders leicht schneiden.", link: "https://www.wdrmaus.de/elefantenseite/elternseiten/selbermachen/pdfs/Bastelanleitung-Papier-Schneeflocke.pdf" },
   { art: "deko", sym: "🌲", t: "Zapfenwichtel", dauer: "ca. 1 Stunde", kinder: "mit Hilfe", z: ["Tannen- oder Kiefernzapfen", "Filzreste", "Plüsch oder Watte (Bart)", "Holzperle (Nase)", "Heißkleber oder Bastelkleber"], s: ["Für jeden Zapfen zwei Mützenhälften aus Filz schneiden, die Ränder zusammenkleben und umstülpen.", "Aus Plüsch oder Watte einen Bart schneiden und vorne an den Zapfen kleben.", "Die Holzperle als Nase daraufsetzen.", "Mütze aufkleben – nach Wunsch ein Band zum Aufhängen anbringen."], tipp: "Jede Mütze passt du an deinen Zapfen an – deshalb gibt es keine feste Vorlage.", link: "https://www.vbs-hobby.at/zapfenwichtel-basteln-t6004/?format=pdf" },
   akN("Schneeflocke aus Brezeln"),
   { art: "basteln", ...AK_NASCH.find((x) => x.t === "Engel aus Nudeln (Baumschmuck)"), dauer: "ca. 30 Minuten + trocknen", kinder: true, link: "https://www.tu-chemnitz.de/advent/2010/17/" },
-  AK_RIEGEL(2, "Zum 3. Advent – und heute ist auch Lucia, das Lichterfest. Mehr Licht gibt's im Fach „Alle Naschereien“: das Mandarinen-Licht."),
+  akN("Mandarinen-Licht (Luciatag)"),
   { art: "deko", sym: "🍊", t: "Duft-Orange mit Nelken", dauer: "ca. 20 Minuten", kinder: true, z: ["1 feste Orange", "ganze Gewürznelken (ca. 24)", "Holzspieß zum Vorstechen", "Band"], s: ["Die Orange kurz in der Hand rollen, damit die Schale etwas weicher wird.", "Mit dem Holzspieß kleine Löcher vorstechen – in Streifen, Spiralen oder als Stern.", "Die Nelken mit dem Stiel voran hineinstecken.", "Ein Band herumbinden und aufhängen oder auf einen Teller legen."], tipp: "In Schweden steckt man genau 24 Nelken – und zieht jeden Tag eine heraus, wie bei einem Adventskalender.", link: "https://utopia.de/ratgeber/weihnachtsduefte-die-klassiker-ohne-chemie-einfach-selbstgemacht_272916/" },
   akN("Schokolöffel für heiße Milch", "https://www.dm.at/inspiration-und-beratung/ernaehrung/rezepte-kochtipps/schokoloeffel-rezept-491614"),
   { art: "basteln", sym: "💌", t: "Karte mit Stehauf-Tannenbäumen", dauer: "ca. 30 Minuten", kinder: true, z: ["Tonpapier (doppelte Kartengröße)", "grünes Papier", "Schere, Klebestift", "Plätzchenform als Vorlage"], s: ["Das Tonpapier zuschneiden und in der Mitte falten – das ist die Karte.", "Auf grünes Papier Tannenbäume in verschiedenen Größen zeichnen und unten an beiden Seiten einen schmalen Klebestreifen dazuzeichnen.", "Ausschneiden, jeden Baum senkrecht in der Mitte falten, die Klebestreifen nach hinten knicken.", "Die Streifen mit Kleber bestreichen und die Bäume mittig in die Falz kleben – beim Aufklappen stehen sie auf."], tipp: "Ein paar Sterne aus Goldpapier über den Bäumen – fertig ist der Winterwald.", link: "https://www.fuersie.de/lifestyle/weihnachten/galerie/weihnachtskarten-selbermachen" },
   { art: "deko", sym: "🏺", t: "Leuchtende Doppelvase", dauer: "ca. 20 Minuten", kinder: true, z: ["eine große und eine schmale Vase", "LED-Lichterkette (ca. 2 m)", "Weihnachtskugeln", "Tannenzweige", "nach Wunsch Schnee- oder Goldspray"], s: ["Die Lichterkette um die schmale Vase wickeln.", "Die schmale Vase mittig in die große stellen.", "Den Zwischenraum mit Weihnachtskugeln füllen.", "Tannenzweige (nach Wunsch mit Schneespray) in die schmale Vase stecken."], tipp: "Mit Batterie-Lichterkette bleibt die Steckdose frei – Batteriefach unten verstecken.", link: "https://www.desired.de/artikel/kreativer-weihnachtszauber-selbstgemachte-deko-die-deinen-tisch-zum-strahlen-bringt--g34f84g8rx" },
   akN("Hexenhaus aus Butterkeksen", "https://www.lecker.de/buntes-hexenhaus-26290.html"),
   { art: "basteln", sym: "🥔", t: "Geschenkpapier mit Kartoffeldruck", dauer: "ca. 45 Minuten + trocknen", kinder: "mit Hilfe", z: ["Kartoffeln", "Messer, Plätzchenform", "Acryl- oder Wasserfarbe, Pinsel", "Packpapier"], s: ["Kartoffel waschen, trocknen und halbieren.", "Eine Plätzchenform (Stern, Baum) in die Schnittfläche drücken und den Rand rundherum wegschneiden.", "Den Stempel mit dem Pinsel einfärben und fest auf das Packpapier drücken.", "Wiederholen, bis das Muster gefällt, dann 1–2 Stunden trocknen lassen."], tipp: "Erst einen Probedruck auf Schmierpapier machen.", link: "https://utopia.de/ratgeber/geschenkpapier-selber-machen-gestalten-einfach_36918/" },
-  AK_RIEGEL(3, "Schönen 4. Advent! Nur noch vier Tage bis Heiligabend."),
+  AK_RIEGEL("kinderriegel", "Schönen 4. Advent! Nur noch vier Tage bis Heiligabend."),
   { art: "deko", sym: "🍽️", t: "Servietten-Tannenbaum", dauer: "ca. 5 Minuten je Serviette", kinder: true, z: ["grüne Stoff- oder Papierservietten", "Bügeleisen (bei Stoff)", "nach Wunsch ein kleiner Stern"], s: ["Die Serviette zweimal zum Quadrat falten, die offenen Ecken zeigen nach oben.", "Die einzelnen Lagen nacheinander nach unten falten, jede ein Stück versetzt – wie Tannenäste.", "Umdrehen und die Seiten zur Mitte einschlagen, so dass ein spitzer Baum entsteht.", "Wieder umdrehen, die Lagen etwas nach oben schieben, Stern auf die Spitze."], tipp: "Stoffservietten vorher glatt bügeln – dann halten die Falten besser.", link: "https://www.dm.de/tipps-und-trends/bastelideen/bastelideen-weihnachten/weihnachtsbaum-serviette-2570968" },
   akN("Tannenbaum aus Eiswaffel"),
   { art: "basteln", sym: "🎁", t: "Geschenke natürlich verpacken", dauer: "ca. 30 Minuten", kinder: true, z: ["Packpapier", "Jutegarn oder Kordel", "Zimtstangen, Zapfen, getrocknete Orangen", "Baumrinde oder Pappe, Lochzange", "Heißkleber"], s: ["Das Geschenk in Packpapier einwickeln und mit Jutegarn verschnüren.", "Zimtstangen, Zapfen oder Orangenscheiben unter das Garn stecken oder festkleben.", "Aus Rinde oder Pappe einen Stern oder ein Herz als Namensschild schneiden.", "Ein Loch stanzen, Namen draufschreiben und mit Kordel ans Geschenk binden."], tipp: "Last minute – und es duftet nach Weihnachten.", link: "https://www.vbs-hobby.at/natuerliche-geschenkverpackung-zu-weihnachten-t6007/?format=pdf" },
@@ -12900,7 +12915,6 @@ const akAn = () => einst("advent", true);
 const akSichtbar = () => zugang() === "mitglied" && (!!ICH?.admin || new Date().getMonth() === 11);
 function akSichtbarSetzen() { const z = $("setAdventZeile"); if (z) z.classList.toggle("versteckt", !akSichtbar()); }
 const akVorschau = () => !akHeute() && !!ICH?.admin; // Admin außerhalb Dezember: alle Türchen zum Ansehen
-const akRiegelOffen = (offen = akOffen()) => AK_TUERCHEN.filter((T, i) => T.art === "riegel" && offen.includes(i + 1)).length;
 function akZeigen() {
   if (!akSichtbar()) return;
   const h = akHeute(), offen = akOffen(), vorschau = akVorschau();
@@ -12909,7 +12923,7 @@ function akZeigen() {
     <div class="ak-raster">${AK_REIHE.map((n) => `<button type="button" class="ak-tuer${offen.includes(n) ? " auf" : ""}${n === h ? " heute" : ""}${n > h && !vorschau ? " zu" : ""}${n === 24 ? " ak-24" : ""}" data-n="${n}" onclick="akTuer(${n})" aria-label="Türchen ${n}"><span class="ak-zahl">${n}</span><span class="ak-sym" aria-hidden="true">${AK_TUERCHEN[n - 1].sym}</span><span class="ak-art" aria-hidden="true">${n}</span></button>`).join("")}<span class="ak-muetze" aria-hidden="true"><img src="kc-kochmuetze-weiss.webp" alt=""></span></div>
     <div class="ak-legende">${Object.values(AK_ARTEN).map(([s, t]) => `<span>${s} ${t}</span>`).join("")}</div>
     <div id="akInhalt" class="ak-inhalt" aria-live="polite"></div>
-    ${h || vorschau ? `<button type="button" class="knopf ak-fach" onclick="akNaschFach()">📖 Alle Naschereien</button>` : ""}
+    ${h || vorschau ? `<button type="button" class="knopf ak-fach" onclick="akNaschFach()">📖 Alle Naschereien</button>` : ""}${ICH?.admin ? `<button type="button" class="knopf ak-fach" onclick="akPreisListe()">📋 Wer bekommt was</button>` : ""}
     <p class="ak-quelle">Bild: Altes Rathaus Werne im Advent – Hansi, Köcheclub Werne</p>`);
   f.classList.add("ak-blatt");
 }
@@ -12923,12 +12937,38 @@ function akAnleitung(T, n) { // Nascherei, Basteln, Deko: Kurzfassung + Link zur
     ${T.link ? `<a class="knopf ak-link" href="${esc(T.link)}" target="_blank" rel="noopener">🔗 Zur ausführlichen Anleitung (mit Bildern)</a>` : ""}</div></div>`;
 }
 function akRiegelKarte(T, n) {
-  const zahl = akRiegelOffen();
-  return `<div class="ak-karte ak-riegel-karte"><div><span class="ak-marke">🍫 Überraschung</span><br><b>${n}. Dezember – ${esc(T.t)}</b>
-    <div class="ak-riegel" aria-hidden="true"><span>KINDERRIEGEL</span></div><p style="margin:6px 0">${esc(T.text)}</p>
-    <div class="ak-gutschein">🎟️ <b>Gutschein Nr. ${T.nr} von 3</b><br>Dein Kinderriegel wartet beim <b>Weihnachtsessen im Januar</b> auf dich.</div>
-    ${zahl > 1 ? `<p class="hinweis" style="margin:6px 0 0">🍫 ${zahl} Kinderriegel warten beim Weihnachtsessen auf dich.</p>` : ""}</div></div>`;
+  const P = AK_PREISE[T.preis];
+  return `<div class="ak-karte ak-riegel-karte"><div style="width:100%"><span class="ak-marke">${P.sym} Überraschung</span><br><b>${n}. Dezember – ${esc(T.t)}</b>
+    <div class="ak-riegel${T.preis === "nikolaus" ? " ak-nikolaus" : ""}" aria-hidden="true"><span>${P.bild}</span></div><p style="margin:6px 0">${esc(T.text)}</p>
+    <div class="ak-gutschein">🎟️ <b>Gutschein für einen ${P.name}</b><br>Er wartet beim <b>Weihnachtsessen im Januar</b> auf dich.</div>
+    <div id="akPreis" class="ak-antwort">${akPreisKnopf(n)}</div></div></div>`;
 }
+// 2.947.0 KC-CLUB-ADVENT-PREISE: gemeldete Tage (Server, eine Abfrage beim ersten Preis-Türchen), Knopf und Hansis Liste
+const AK_GEMELDET = { tage: null };
+const akPreisKnopf = (n) => !akHeute() ? '<p class="hinweis">🎁 Im Dezember tippst du hier auf „Ja, den nehme ich“.</p>'
+  : AK_GEMELDET.tage?.includes(n) ? `<p class="ak-ok">✅ Notiert – Hansi legt deinen ${AK_PREISE[AK_TUERCHEN[n - 1].preis].name} für dich bereit.</p>`
+  : `<button type="button" class="knopf haupt" style="width:100%;margin-top:6px" onclick="akPreisMelden(${n}, this)">🎁 Ja, den nehme ich</button>`;
+async function akPreiseLaden(n) {
+  if (!akHeute() || AK_GEMELDET.tage) return;
+  try { AK_GEMELDET.tage = (await api("advent_preise_meine")).tage || []; } catch { return; }
+  if ($("akPreis") && n) $("akPreis").innerHTML = akPreisKnopf(n);
+}
+async function akPreisMelden(n, knopf) {
+  if (knopf) knopf.disabled = true;
+  try { await api("advent_preis_melden", { tag: n }, { warten: true }); if (!AK_GEMELDET.tage) AK_GEMELDET.tage = []; AK_GEMELDET.tage.push(n); melde("🎁 Notiert – danke!"); }
+  catch (e) { meldeFehler(e); }
+  if ($("akPreis")) $("akPreis").innerHTML = akPreisKnopf(n);
+}
+async function akPreisListe() { // nur Admin: wer bekommt was (zum Austeilen im Januar) – ansehen und drucken
+  const b = blattAuf("akPreisBlatt", '<h3 style="margin:0">📋 Adventskalender – wer bekommt was</h3><div id="akPreisListe"><p class="hinweis">⏳ Wird geladen …</p></div>');
+  let r; try { r = await api("advent_preise_liste", {}, { warten: true }); } catch (e) { if ($("akPreisListe")) $("akPreisListe").innerHTML = `<p class="hinweis">⚠️ ${esc(fehlerText(e))}</p>`; return; }
+  const gruppen = Object.values(AK_PREISE).map((P) => ({ P, leute: r.preise.filter((x) => x.preis === P.name).map((x) => x.name).sort((a, c) => a.localeCompare(c, "de")) }));
+  const html = gruppen.map(({ P, leute }) => `<h4 style="margin:12px 0 4px">${P.sym} ${esc(P.name)} – ${leute.length} Stück</h4>${leute.length ? `<ol style="margin:0;padding-left:22px">${leute.map((x) => `<li>${esc(x)}</li>`).join("")}</ol>` : '<p class="hinweis" style="margin:0">Noch niemand gemeldet.</p>'}`).join("");
+  if (!$("akPreisListe")) return;
+  $("akPreisListe").innerHTML = html + `<div class="knoepfe" style="margin-top:12px"><button type="button" class="knopf haupt" onclick="akPreisDruck()">🖨️ Drucken</button><button type="button" class="knopf" onclick="fensterZu($('akPreisBlatt'))">Schließen</button></div>`;
+  AK_GEMELDET.druck = { jahr: r.jahr, html };
+}
+const akPreisDruck = () => AK_GEMELDET.druck && druckStarten("advent_preise"); // Druck-Baustein mit Club-Kopf und -Fuß (AGENTS.md Regel 19)
 const AK_FRUEHSTUECK = /fr(ü|ue)hst(ü|ue)ck/i; // Abstimmung von Hansi (Vorschläge → 🗳️ Abstimmung), deren Titel „Frühstück“ enthält
 function akEinladungKarte() {
   return `<div class="ak-karte ak-einladung"><div style="width:100%"><div class="ak-gross" aria-hidden="true">☕🥐🍳</div>
@@ -12956,6 +12996,7 @@ function akTuer(n) {
   const T = AK_TUERCHEN[n - 1];
   $("akInhalt").innerHTML = T.art === "riegel" ? akRiegelKarte(T, n) : T.art === "einladung" ? akEinladungKarte() : akAnleitung(T, n);
   if (T.art === "einladung") akAntwortLaden();
+  if (T.art === "riegel") akPreiseLaden(n);
   $("akInhalt").scrollIntoView({ block: "nearest", behavior: "smooth" });
   if (n === h) try { ilZeigen(); } catch {} // Erinnerung im Laufband verschwindet
 }
@@ -17951,6 +17992,8 @@ async function einstSpeichern(schluessel, wert) {
 // außer Start und SOS warten jetzt auf die Anmeldung und öffnen sich dann von selbst (zuletzt angetippter Bereich gewinnt).
 const ZEIGE_OHNE_ICH = new Set(["start", "sos"]);
 let startBereitLoesen; const startBereit = new Promise((ok) => { startBereitLoesen = ok; });
+// 2.923.0 KC-CLUB-FRAGE-AB-START: das „?“ unten rechts kam bisher erst mit dem ersten Seitenwechsel (hzFrageEinsetzen läuft in zeige) – auf der Startseite direkt nach dem Öffnen fehlte es
+startBereit.then(() => { try { if (aktuelleAnsicht === "start" && !$("hzFrage")) hzFrageEinsetzen("start"); } catch {} });
 let ZEIGE_WARTET = null;
 function zeige(v, ausHistorie) {
   if (v !== "dokansicht" && DOKA.zurueck) dokFensterZurueck(); // 2.822.0 KC-CLUB-ANLAGE-UEBER-FENSTER
@@ -27212,13 +27255,15 @@ function mgKachelnHtml(liste) {
     // 2.648.0 KC-CLUB-WAS-MACHT (Wunsch Hansi „nur für Admin: ist ein Mitglied online, rechts oben ein Fragezeichen – Klick zeigt, was die Person
     // gerade in der App macht“): öffnet die vorhandenen „Wege der Mitglieder“ (heute, nur diese Person). Nur Admin und nur bei online; der Server prüft „spur_liste“ mit nurAdmin.
     const was = ICH.admin && on && !ich ? `<button type="button" class="mg-was" title="Was macht ${esc(m.name.split(" ")[0])} gerade?" aria-label="Was macht ${esc(m.name)} gerade in der App?" onclick="event.stopPropagation();mgWasMacht('${m.person_id}')">?</button>` : "";
+    // 2.948.0 KC-CLUB-MG-PUSH-ZEICHEN (Wunschliste #91, Hansi 15.11.2026 „A“): 🔔 Push an / 🔕 kein Push oben links auf der Kachel – nur Admin und Clubleitung
+    const push = (ICH.admin || ICH.vorstand) && m.wege ? `<span class="mg-push${m.wege.push ? "" : " aus"}" title="${m.wege.push ? "Push ist eingeschaltet" : "Kein Push – bekommt Benachrichtigungen nur per E-Mail oder gar nicht"}" aria-label="${m.wege.push ? "Push an" : "kein Push"}">${m.wege.push ? "🔔" : "🔕"}</span>` : "";
     return `<div class="mini-kachel mg-kachel${on ? " mg-online" : ""}" onclick="mitgliedOeffnen('${m.person_id}')" role="button" tabindex="0">
-      ${was}${kreis(m, m.name, 58)}<span class="mk-titel">${esc(m.name)}${gbKerze(m.person_id)}</span>
+      ${was}${push}${kreis(m, m.name, 58)}<span class="mk-titel">${esc(m.name)}${gbKerze(m.person_id)}</span>
       ${m.aemter?.length ? `<span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}
       ${m.status || m.aktiv ? `<span class="stmarke st-${statusArt(m.status)}">${esc(m.status ? statusText(m.status) : "🟢 verfügbar")}</span>` : ""}${da}${ICH.admin && m.unerreichbar ? '<span class="mk-unter" title="kein Push, keine E-Mail – nur über 🔗 Link oder Telefon">📵 nicht erreichbar</span>' : ""}${ICH.admin && m.probe ? `<span class="mk-unter" title="Probephase – nur für dich als Admin sichtbar">🧪 Probe${m.probe.bis ? " bis " + esc(prDatum(m.probe.bis)) : ""}</span>` : ""}
       ${ich ? '<span class="mk-unter"><b>(du)</b></span>' : `<span class="mg-knoepfe" onclick="event.stopPropagation()">${mgStern(m)}<button class="knopf klein" title="Nachricht" onclick="direkt('${m.person_id}')">💬</button>${mgKlopfKnopf(m)}${mgAnrufKnoepfe(m)}</span>`}</div>`; // 2.23.87 (Wunsch Hansi): 📞/🎥 auch auf der Kachel – aktiv bei online (gleicher Baustein wie in der Liste)
   };
-  return `<p class="hinweis" style="margin:0 2px 8px;font-size:.85rem">🟢 online · 🔵 heute da · 🟠 abwesend · ⚪ noch nie in der App – Kachel antippen für Telefon, Adresse${ICH?.admin ? ", 🔗 Link und 🎖️ Ämter" : " usw."}</p>
+  return `<p class="hinweis" style="margin:0 2px 8px;font-size:.85rem">🟢 online · 🔵 heute da · 🟠 abwesend · ⚪ noch nie in der App${ICH?.admin || ICH?.vorstand ? " · 🔔 Push an · 🔕 kein Push" : ""} – Kachel antippen für Telefon, Adresse${ICH?.admin ? ", 🔗 Link und 🎖️ Ämter" : " usw."}</p>
     <div class="mini-kacheln mg-kacheln">${liste.map(k).join("")}</div>`;
 }
 // KC-CLUB-MG-GRUPPEN (1.34.0, Wunsch Hansi): eigene Gruppen (z. B. „Innovation“) als Filter – antippen zeigt nur deren Mitglieder
@@ -27498,7 +27543,9 @@ async function taLaden() {
   try { TA.liste = (await api("terminanfragen_liste")).anfragen || []; } catch (e) { $("terminanfragen").innerHTML = ""; return; }
   // 2.23.30 (Wunsch Hansi): abgesagte Anfragen bleiben blass als Stornierung stehen, bis der Termin vorbei ist – sie zählen nicht mit
   // und zeigen keine Antwortzeile („⏳ offen“) mehr
-  const kommend = TA.liste.filter((a) => new Date(a.ende || a.beginn) > Date.now() - 3 * 3600000);
+  // KC-CLUB-TA-PROTOKOLL: aus dem Kalender angetippte Anfrage immer zeigen; eigene Besprechung ohne verschicktes Protokoll 3 Tage, mit Protokoll 14 Tage
+  const kommend = TA.liste.filter((a) => new Date(a.ende || a.beginn) > Date.now() - 3 * 3600000 || a.id === TA.markiert
+    || (a.status !== "abgesagt" && !a.spiel && (a.protokoll ? Date.parse(a.beginn) > Date.now() - 14 * 86400000 : a.vonMir && Date.parse(a.beginn) > Date.now() - 3 * 86400000)));
   $("terminanfragen").innerHTML = kommend.length ? `<details class="karte tm-klappe" data-klappe="tm_anfragen" data-ohne-unten open><summary>📨 Terminanfragen${kommend.some((a) => a.status !== "abgesagt") ? ` <span class="marke">${kommend.filter((a) => a.status !== "abgesagt").length}</span>` : ""}</summary>${kommend.map(taKarte).join("")}</details>` : ""; // 1.46.0
   klappenMerken($("terminanfragen"));
   // KC-CLUB-TERMINANFRAGE-STATUS (2.23.50): angezeigt = „👁️ gelesen“ für den, der angefragt hat
@@ -27521,7 +27568,7 @@ function taKarte(a) {
     <div>📅 <b>${esc(wann(a.beginn))}</b>${a.ende ? ` – ${esc(fZeit.format(new Date(a.ende)))} Uhr` : ""}</div>
     ${a.ort ? `<div>📍 ${esc(a.ort)}</div>` : ""}
     <div class="hinweis" style="font-size:.85rem">${a.vonMir ? `<b>Anfrage an ${esc(taAnWen(a))}</b>` : "von " + esc(a.von.name) + " · an " + (a.empfaenger.length === 1 ? "dich" : a.empfaenger.length + " Mitglieder")}</div>
-    ${a.notiz ? `<p class="hinweis" style="white-space:pre-wrap;margin:6px 0 0">📝 ${esc(a.notiz)}</p>` : ""}${oaAnzeige(a.anlagen)}
+    ${a.notiz ? `<p class="hinweis" style="white-space:pre-wrap;margin:6px 0 0">📝 ${esc(a.notiz)}</p>` : ""}${a.geaendertAm && a.erstelltAm && new Date(a.geaendertAm) - new Date(a.erstelltAm) > 60000 && !ab ? `<div class="hinweis" style="font-size:.8rem">✏️ ergänzt am ${esc(wann(a.geaendertAm))}</div>` : ""}${oaAnzeige(a.anlagen)}
     ${a.vonMir && !ab && !a.spiel && a.gegenvorschlag === false ? `<div class="hinweis" style="font-size:.82rem">🔒 ohne Gegenvorschläge</div>` : ""}
     ${a.vorbehalt && !ab ? `<p class="ta-vorbehalt">🤔 <b>Unter Vorbehalt</b> (${esc(a.vonMir ? "deiner" : a.von.vorname)}): „${esc(a.vorbehalt)}“</p>` : ""}
     ${!a.vonMir && !ab ? `<div class="ta-antw">${k("ja")}${k("vielleicht")}${k("nein")}</div>
@@ -27531,7 +27578,74 @@ function taKarte(a) {
     ${ab ? "" : `<details style="margin-top:8px"${a.vonMir ? " open" : ""}><summary class="hinweis">✅ ${n("ja")} · 🤔 ${n("vielleicht")} · ❌ ${n("nein")} · ⏳ ${offen} offen</summary>${wer}</details>`}
     ${!ab && (a.vonMir || a.meine === "ja" || a.meine === "vielleicht") ? erinZeileHtml(a.erinnerung, `erinAnfrage('${a.id}')`, a.erinnerungStandard) : ""}
     ${taKalHtml(a, ab)}
-    ${a.vonMir && !ab ? `<div class="knoepfe"><button class="knopf klein" onclick="taAbsagen('${a.id}')">🚫 Absagen</button></div>` : ""}</div>`;
+    ${!ab && !a.spiel && (a.vonMir || a.meine === "ja" || a.meine === "vielleicht") ? taToSchalterHtml(a) : ""}
+    ${!ab && !a.spiel && (a.protokoll || (a.vonMir && Date.parse(a.beginn) <= Date.now() + 2 * 3600000)) ? `<div class="knoepfe"><button class="knopf klein${a.vonMir && !a.protokoll ? " haupt" : ""}" onclick="${a.vonMir ? "taProtokoll" : "taProtokollLesen"}('${a.id}')">📝 ${a.vonMir ? (a.protokoll ? (a.protokoll.status === "gesendet" ? "Protokoll (verschickt)" : "Protokoll (Entwurf)") : "Protokoll schreiben") : "Protokoll lesen"}</button>${a.vonMir && a.protokoll?.status === "gesendet" ? `<button class="knopf klein" onclick="taProtokollLesen('${a.id}')">👁️ So sieht ${esc(a.empfaenger.length === 1 ? a.empfaenger[0].name.split(" ")[0] : "es der Empfänger")} es</button>` : ""}</div>` : ""}
+    ${a.vonMir && !ab ? `<div class="knoepfe">${a.spiel ? "" : `<button class="knopf klein" onclick="taAendern('${a.id}')">✏️ Ändern / ergänzen</button>`}<button class="knopf klein" onclick="taAbsagen('${a.id}')">🚫 Absagen</button></div>` : ""}</div>`;
+}
+// KC-CLUB-TA-TAGESORDNUNG (12.11.2026, Wunsch Hansi „als Tagesordnung übernehmen mit einem Häkchen und daraus eine Besprechungsvorlage bauen mit den Punkten“):
+// In der Terminanfrage ein Häkchen „📋 Als Tagesordnung übernehmen“ – die Notiz wird in Punkte zerlegt (je Zeile bzw. „;“, Aufzählungszeichen weg),
+// jeder Punkt hat ein eigenes Häkchen, eigene Punkte lassen sich ergänzen. „🗂️ Besprechungsvorlage“ druckt im Club-Design: Anlass, Termin, Ort,
+// wie die Sitzungs-Vorlage aus dem Büro: Protokollführer, Ort, Anwesend zum Ankreuzen, Entschuldigt, Gäste, je TOP Schreiblinien, Beschlüsse/Sonstiges,
+// nächster Termin, Unterschriften (Hansi 12.11.: „es gibt bereits eine Vorlage mit Tagesordnung und Linien – die nehmen, mit Logo, Kopf und CD“).
+// Nur auf diesem Gerät gemerkt (localStorage) – keine Datenbank-Änderung, nichts geht an andere.
+const TA_TO_KEY = "kc_club_ta_tagesordnung";
+function taToLesen() { try { const m = JSON.parse(lsLesen(TA_TO_KEY) || "{}"); return m && typeof m === "object" ? m : {}; } catch { return {}; } }
+function taToMerken(id, st) { const m = taToLesen(); if (st) m[id] = st; else delete m[id]; lsSetzen(TA_TO_KEY, JSON.stringify(m)); }
+function taToAusNotiz(notiz) { // KC-CLUB-TA-TAGESORDNUNG-2 (12.11.2026, Fund Hansi: „die Frage ist kein Tagesordnungspunkt und ‚Hansi‘ war meine Unterschrift“)
+  const LISTE = /^\s*(?:TOP\s*\d+\s*[:.)-]?|\d{1,2}\s*[.)]|[-–•*·▪►✓✔☐☑]+)\s*/i;
+  const GRUSS = /^(?:(?:viele|liebe|beste|herzliche|schöne)\s+)?gr(?:ü|ue)(?:ß|ss)e\b|^gru(?:ß|ss)\b|^(?:lg|vg|mfg)\b|^bis (?:morgen|dann|bald)\b/i;
+  const zeilen = String(notiz || "").split(/\r?\n/).map((z) => z.trim()).filter(Boolean);
+  const liste = zeilen.filter((z) => LISTE.test(z));
+  // Steht eine Aufzählung drin (mind. 2 Punkte), zählen nur deren Punkte – Anrede, Frage, Gruß und Unterschrift bleiben draußen, die Reihenfolge bleibt.
+  // Sonst: alles vor dem Gruß, ohne Anrede und ohne Fragen/Einleitungen („…?“, „…:“).
+  const quelle = liste.length >= 2 ? liste : zeilen.slice(0, (zeilen.findIndex((z) => GRUSS.test(z)) + 1 || zeilen.length + 1) - 1)
+    .filter((z) => !/^(?:hallo|hi|hey|moin|servus|liebe[rs]?|guten (?:morgen|tag|abend))\b/i.test(z) && !/[?:]\s*$/.test(z));
+  return quelle.flatMap((z) => z.split(";")).map((z) => z.replace(LISTE, "").trim()).filter((z) => z.length > 1).slice(0, 20);
+}
+function taToPunkte(a) { const st = taToLesen()[a.id] || {}, aus = new Set(st.aus || []);
+  return [...taToAusNotiz(a.notiz).map((t, i) => ({ t, k: "n" + i })), ...(st.extra || []).map((t, i) => ({ t, k: "e" + i, eigen: true }))].map((p) => ({ ...p, an: !aus.has(p.k) })); }
+function taToSchalterHtml(a) {
+  const an = !!taToLesen()[a.id]?.an;
+  return `<div class="ta-to"><label class="ta-to-schalter"><input type="checkbox"${an ? " checked" : ""} onchange="taToSchalten('${a.id}', this.checked)"> 📋 <b>Als Tagesordnung übernehmen</b></label>
+    <div id="taTo-${a.id}">${an ? taToListeHtml(a) : ""}</div></div>`;
+}
+function taToListeHtml(a) {
+  const P = taToPunkte(a), n = P.filter((p) => p.an).length;
+  return `<ol class="ta-to-liste">${P.map((p) => `<li><label><input type="checkbox"${p.an ? " checked" : ""} onchange="taToPunkt('${a.id}', '${p.k}', this.checked)"> <span>${esc(p.t)}</span></label>${p.eigen ? ` <button type="button" class="ta-to-weg" title="Punkt entfernen" aria-label="Punkt entfernen" onclick="taToWeg('${a.id}', '${p.k}')">✕</button>` : ""}</li>`).join("")}</ol>
+    ${P.length ? "" : `<p class="hinweis" style="margin:4px 0">In der Notiz stehen keine Punkte – trag sie hier ein.</p>`}
+    <div class="ta-to-neu"><input type="text" id="taToNeu-${a.id}" maxlength="160" placeholder="Weiterer Punkt …" onkeydown="if (event.key === 'Enter') { event.preventDefault(); taToDazu('${a.id}'); }"><button type="button" class="knopf klein" onclick="taToDazu('${a.id}')">＋</button></div>
+    <button type="button" class="knopf haupt klein" style="margin-top:6px"${n ? "" : " disabled"} onclick="druckStarten('besprechung', '${a.id}')">🗂️ Besprechungsvorlage (${n} ${n === 1 ? "Punkt" : "Punkte"})</button>`;
+}
+function taToNeuZeichnen(id) { const a = TA.liste.find((x) => x.id === id), z = $("taTo-" + id); if (a && z) z.innerHTML = taToLesen()[id]?.an ? taToListeHtml(a) : ""; }
+function taToSchalten(id, an) { const st = taToLesen()[id] || {}; taToMerken(id, an ? { ...st, an: true } : (st.extra?.length || st.aus?.length ? { ...st, an: false } : null)); taToNeuZeichnen(id); }
+function taToPunkt(id, k, an) { const st = taToLesen()[id] || { an: true }, aus = new Set(st.aus || []); if (an) aus.delete(k); else aus.add(k); taToMerken(id, { ...st, aus: [...aus] }); taToNeuZeichnen(id); }
+function taToDazu(id) { const f = $("taToNeu-" + id), t = (f?.value || "").trim().slice(0, 160); if (!t) return f?.focus();
+  const st = taToLesen()[id] || { an: true }; if ((st.extra || []).length >= 20) return melde("Höchstens 20 eigene Punkte.");
+  taToMerken(id, { ...st, extra: [...(st.extra || []), t] }); taToNeuZeichnen(id); setTimeout(() => $("taToNeu-" + id)?.focus(), 30); }
+function taToWeg(id, k) { const st = taToLesen()[id] || {}, i = Number(k.slice(1)), extra = [...(st.extra || [])]; extra.splice(i, 1);
+  const aus = (st.aus || []).filter((x) => !x.startsWith("e")).concat((st.aus || []).filter((x) => x.startsWith("e")).map((x) => Number(x.slice(1))).filter((j) => j !== i).map((j) => "e" + (j > i ? j - 1 : j)));
+  taToMerken(id, { ...st, extra, aus }); taToNeuZeichnen(id); }
+function taBesprechungDruck(id) { // DRUCKARTEN.besprechung – wie die Sitzungs-Vorlage aus dem Büro (druckSitzung): Schreiblinien zum Mitschreiben; Logo, Kopf und Fußzeile im Club-Design kommen aus der Druckvorschau
+  const a = TA.liste.find((x) => x.id === id); if (!a) { melde("Die Terminanfrage ist nicht mehr da."); return null; }
+  const P = taToPunkte(a).filter((p) => p.an);
+  const linien = (n) => Array.from({ length: n }, () => '<div style="border-bottom:1px solid #999;height:8.5mm"></div>').join("");
+  const box = () => '<span style="display:inline-block;width:4.2mm;height:4.2mm;border:1.4px solid #222;margin-right:2mm;vertical-align:-0.6mm"></span>';
+  const h = (t) => `<h2 style="font-size:4.6mm;margin:6mm 0 2mm;border-bottom:2px solid #741521;padding-bottom:1mm">${t}</h2>`;
+  const strich = (mm) => `<span style="display:inline-block;width:${mm}mm;border-bottom:1px solid #555;height:4mm;vertical-align:-1mm"></span>`;
+  const zeile = (t, inhalt) => `<div style="font-size:3.6mm;margin:0 0 2mm"><b>${t}:</b> ${inhalt}</div>`;
+  const alle = [{ name: a.vonMir ? ICH?.name : a.von?.name, antwort: "ja" }, ...a.empfaenger.map((e) => ({ name: e.name, antwort: e.antwort, notiz: e.notiz }))].filter((x) => x.name);
+  const nein = alle.filter((x) => x.antwort === "nein"), rest = alle.filter((x) => x.antwort !== "nein");
+  const zeilen = P.length > 6 ? 3 : 4;
+  const html = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:0 6mm;margin:0 0 1mm">${zeile("Protokollführer", strich(48))}${zeile("Ort", a.ort ? esc(a.ort) : strich(55))}</div>
+    ${zeile("Anlass", `<b>${esc(a.anlass)}</b>`)}
+    ${h("Anwesend")}<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.5mm 4mm;font-size:3.6mm">${rest.map((x) => `<div>${box()}${esc(x.name)}</div>`).join("")}<div>${box()}${strich(32)}</div></div>
+    <p style="margin:3mm 0 0;font-size:3.6mm"><b>Entschuldigt bzw. fehlend:</b> ${nein.length ? nein.map((x) => esc(x.name) + (x.notiz ? ` (${esc(x.notiz)})` : "")).join(", ") + " · " : ""}${strich(nein.length ? 50 : 120)}</p>
+    <p style="margin:2mm 0 0;font-size:3.6mm"><b>Gäste:</b> ${strich(150)}</p>
+    ${h("Tagesordnung")}${P.map((t, i) => `<div style="break-inside:avoid;margin:0 0 3mm"><div style="font-size:4mm;font-weight:800;margin-top:3mm">TOP ${i + 1}: ${esc(t.t)}</div>${linien(zeilen)}</div>`).join("")}
+    <div style="break-inside:avoid">${h("Beschlüsse / Sonstiges")}${linien(Math.max(3, zeilen))}
+    <p style="margin:3mm 0 0;font-size:3.8mm"><b>Nächster Termin:</b> Datum ${strich(30)} Uhrzeit ${strich(18)} Ort ${strich(55)}</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10mm;margin-top:9mm;font-size:3.3mm"><div style="border-top:1px solid #222;padding-top:1mm">Protokoll (Name, Unterschrift)</div><div style="border-top:1px solid #222;padding-top:1mm">Besprechungsleitung (Name, Unterschrift)</div></div></div>`;
+  return { titel: `Besprechung: ${a.anlass}`, unter: `${wann(a.beginn, true)}${a.ort ? " · " + a.ort : ""}`, html, fuss: "Besprechungsvorlage aus der Terminanfrage" };
 }
 // KC-CLUB-TERMINANFRAGE-STATUS (2.23.50, Wunsch Hansi): Stand je Empfänger – angefragt → gelesen → bestätigt / vielleicht / abgelehnt /
 // Gegenvorschlag; ohne Antwort nach der Antwortfrist bzw. nach Beginn: abgelaufen. Eine Stelle für Liste, Kalender und Überblick.
@@ -27567,6 +27681,138 @@ function taGegenvorschlag(id) {
     try { await api("terminanfrage_gegenvorschlag", { id, beginn: beginn.toISOString(), ende: ende ? ende.toISOString() : null, notiz: $("taGvNotiz").value.trim() });
       f.remove(); melde(`🔄 Vorschlag ist an ${a.von.vorname} geschickt`); TA.markiert = id; await taLaden(); } catch (e) { meldeFehler(e); }
   };
+}
+// KC-CLUB-TA-AENDERN (12.11.2026, Wunsch Hansi): wer angefragt hat, ändert Anlass, Ort und Notiz (z. B. weitere Tagesordnungspunkte) und gibt
+// auf Wunsch allen Angefragten Bescheid – mit den neuen Zeilen und einem kurzen Hinweis. Die Zeit bleibt (dafür gelten die Antworten).
+function taAendern(id) {
+  const a = TA.liste.find((x) => x.id === id); if (!a || !a.vonMir) return;
+  const an = a.empfaenger.filter((e) => e.antwort !== "nein").map((e) => e.name.split(" ")[0]);
+  const f = blattAuf("taAeBlatt", `<h3 style="margin:0">✏️ Anfrage ändern / ergänzen</h3>
+    <p class="hinweis" style="margin:0">📅 ${esc(wann(a.beginn))} – die Zeit bleibt. Für eine andere Zeit bitte absagen und neu anfragen.</p>
+    <label>Anlass<input id="taAeAnlass" maxlength="120" value="${esc(a.anlass)}"></label>
+    <label>Ort <small class="hinweis">(freiwillig)</small><input id="taAeOrt" maxlength="200" value="${esc(a.ort || "")}"></label>
+    <label>Notiz / Punkte <small class="hinweis">(ein Punkt je Zeile)</small><textarea id="taAeNotiz" rows="7" maxlength="1000" data-diktat>${esc(a.notiz || "")}</textarea></label>
+    ${an.length ? `<label class="ta-ae-info"><input type="checkbox" id="taAeInfo" checked> 📨 ${esc(an.length === 1 ? an[0] : an.length + " Angefragten")} Bescheid geben, dass sich weitere Punkte ergeben haben</label>
+    <label id="taAeHinweisFeld">Kurzer Hinweis dazu <small class="hinweis">(freiwillig)</small><input id="taAeHinweis" maxlength="300" data-diktat placeholder="z. B. Es sind noch zwei Punkte dazugekommen."></label>` : ""}
+    <button class="knopf haupt" id="taAeOk">💾 Speichern</button><button class="knopf" onclick="$('taAeBlatt').remove()">Abbrechen</button>`);
+  const info = f.querySelector("#taAeInfo"); if (info) info.onchange = () => $("taAeHinweisFeld")?.classList.toggle("versteckt", !info.checked);
+  setTimeout(() => { const t = $("taAeNotiz"); if (t) { t.focus(); t.setSelectionRange(t.value.length, t.value.length); } }, 60);
+  f.querySelector("#taAeOk").onclick = async () => {
+    const anlass = $("taAeAnlass").value.trim(); if (!anlass) return melde("📌 Bitte einen Anlass angeben.");
+    try { const r = await api("terminanfrage_aendern", { id, anlass, ort: $("taAeOrt").value.trim(), notiz: $("taAeNotiz").value.trim(), informieren: !!info?.checked, hinweis: $("taAeHinweis")?.value.trim() || "" }, { warten: true });
+      f.remove(); melde(r.unveraendert ? "Nichts geändert." : r.informiert ? `✏️ Gespeichert – ${r.informiert === 1 ? an[0] || "der Angefragte" : r.informiert + " Angefragte"} ${r.informiert === 1 ? "bekommt" : "bekommen"} Bescheid` : "✏️ Gespeichert");
+      TA.markiert = id; await taLaden(); } catch (e) { meldeFehler(e); }
+  };
+}
+// ---------- KC-CLUB-TA-PROTOKOLL (13.11.2026, Wunsch Hansi „wie wird aus dem Termin mit Klaus und der Tagesordnung ein Protokoll?“ – „Ja bauen“) ----------
+// Protokoll zur Besprechung aus der Terminanfrage: Punkte aus der Tagesordnung (Häkchen) bzw. der Notiz, je TOP Ergebnis, Wer?, Bis wann?;
+// Anwesend, Sonstiges, nächster Termin; Foto der handschriftlichen Besprechungsvorlage lesen; Entwurf oder an die Angefragten schicken;
+// auf Wunsch To-dos aus „Wer? Bis wann?“; drucken/PDF/ablegen im Club-Design. Angefragte sehen es erst, wenn es verschickt ist.
+const TAP = { id: null };
+function taPrLeute(a) { return [{ id: a.vonMir ? ICH?.person_id : a.von?.person_id, name: a.vonMir ? ICH?.name : a.von?.name }, ...a.empfaenger.map((e) => ({ id: e.person_id, name: e.name }))].filter((x) => x.id && x.name); }
+function taPrStart(a) {
+  if (a.protokoll) return JSON.parse(JSON.stringify(a.protokoll));
+  const st = taToLesen()[a.id], punkte = (st?.an ? taToPunkte(a).filter((p) => p.an).map((p) => p.t) : taToAusNotiz(a.notiz));
+  const da = [ICH?.name, ...a.empfaenger.filter((e) => e.antwort === "ja" || e.antwort === "vielleicht").map((e) => e.name)].filter(Boolean);
+  return { anwesend: da.join(", "), tops: punkte.map((t) => ({ t, ergebnis: "", wer: "", bis: null })), sonstiges: "", naechster: "", status: "neu" };
+}
+function taPrTopHtml(x, i, leute) {
+  return `<div class="tap-top" data-i="${i}"><div class="tap-kopf"><b>TOP ${i + 1}</b><input class="tap-t" maxlength="160" value="${esc(x.t || "")}" placeholder="Punkt"><button type="button" class="tap-weg" title="Punkt entfernen" aria-label="Punkt entfernen" onclick="taPrWeg(${i})">✕</button></div>
+    <textarea class="tap-e" rows="3" maxlength="2000" data-diktat placeholder="Ergebnis / Notiz …">${esc(x.ergebnis || "")}</textarea>
+    <div class="tap-wer"><label>Wer?<select class="tap-w"><option value="">–</option>${leute.map((l) => `<option value="${esc(l.id)}"${x.wer === l.id ? " selected" : ""}>${esc(l.name)}</option>`).join("")}</select></label>
+    <label>Bis wann?<input type="date" class="tap-b" value="${esc(x.bis || "")}"></label></div></div>`;
+}
+function taPrLesenForm() {
+  const f = $("taPrBlatt"); if (!f) return null; const a = TA.liste.find((x) => x.id === TAP.id), leute = a ? taPrLeute(a) : [];
+  return { anwesend: $("tapAnw").value.trim(), sonstiges: $("tapSonst").value.trim(), naechster: $("tapNaechst").value.trim(),
+    tops: [...f.querySelectorAll(".tap-top")].map((d) => { const w = d.querySelector(".tap-w").value; return { t: d.querySelector(".tap-t").value.trim(), ergebnis: d.querySelector(".tap-e").value.trim(), wer: w, werName: leute.find((l) => l.id === w)?.name || "", bis: d.querySelector(".tap-b").value || null }; }) };
+}
+function taPrTopsZeichnen(tops) { const a = TA.liste.find((x) => x.id === TAP.id); $("tapTops").innerHTML = tops.map((x, i) => taPrTopHtml(x, i, taPrLeute(a))).join("") || '<p class="hinweis">Noch keine Punkte – unten „＋ Punkt“.</p>'; }
+function taPrWeg(i) { const q = taPrLesenForm(); q.tops.splice(i, 1); taPrTopsZeichnen(q.tops); }
+function taPrDazu() { const q = taPrLesenForm(); q.tops.push({ t: "", ergebnis: "", wer: "", bis: null }); taPrTopsZeichnen(q.tops); setTimeout(() => [...document.querySelectorAll("#tapTops .tap-t")].pop()?.focus(), 50); }
+function taProtokoll(id) {
+  const a = TA.liste.find((x) => x.id === id); if (!a || !a.vonMir) return; TAP.id = id;
+  const q = taPrStart(a), an = a.empfaenger.map((e) => e.name.split(" ")[0]), anText = an.length === 1 ? an[0] : an.length + " Angefragte";
+  const f = blattAuf("taPrBlatt", `<h3 style="margin:0">📝 Protokoll: ${esc(a.anlass)}</h3>
+    <p class="hinweis" style="margin:0">📅 ${esc(wann(a.beginn))}${a.ort ? " · 📍 " + esc(a.ort) : ""}${q.status === "gesendet" ? " · ✅ verschickt" + (q.gesendet_am ? " am " + esc(wann(q.gesendet_am)) : "") : q.status === "entwurf" ? " · Entwurf" : ""}</p>
+    <label class="feld">👥 Anwesend<input id="tapAnw" maxlength="300" value="${esc(q.anwesend || "")}"></label>
+    <div class="tap-foto"><button type="button" class="knopf klein" onclick="$('tapFoto').click()">📷 Foto der Besprechungsvorlage lesen</button><input type="file" id="tapFoto" accept="image/*,application/pdf" multiple class="versteckt" onchange="taPrFoto(this.files)"><span id="tapFotoStand" class="hinweis"></span></div>
+    <div id="tapTops"></div>
+    <button type="button" class="knopf klein" onclick="taPrDazu()">＋ Punkt</button>
+    <label class="feld">Sonstiges / Beschlüsse<textarea id="tapSonst" rows="3" maxlength="2000" data-diktat>${esc(q.sonstiges || "")}</textarea></label>
+    <label class="feld">📅 Nächster Termin<input id="tapNaechst" maxlength="200" value="${esc(q.naechster || "")}" placeholder="z. B. Fr. 27.11., 11:30 Uhr bei mir"></label>
+    <label class="tap-todo"><input type="checkbox" id="tapKopie" checked> 📧 Kopie der E-Mail an mich</label>
+    <label class="tap-todo"><input type="checkbox" id="tapTodo"${q.status === "gesendet" ? "" : " checked"}> ✅ Aus „Wer? Bis wann?“ To-dos anlegen (beim Senden)</label>
+    <button class="knopf haupt" id="tapSenden">📨 Speichern und an ${esc(anText)} senden</button>
+    <button class="knopf" id="tapEntwurf">💾 Als Entwurf speichern</button>
+    <button class="knopf" id="tapDruck">🖨️ Drucken / PDF / Ablegen</button>
+    <button class="knopf" onclick="$('taPrBlatt').remove()">Schließen</button>`);
+  taPrTopsZeichnen(q.tops || []);
+  const speichern = async (senden) => {
+    const p = taPrLesenForm(); if (!p.tops.some((x) => x.t || x.ergebnis) && !p.sonstiges) return melde("📝 Bitte mindestens einen Punkt ausfüllen.");
+    if (senden && !(await frage(`📨 Protokoll jetzt an ${anText} schicken (Push und E-Mail)?`, { ja: "Ja, senden", nein: "Abbrechen" }))) return;
+    let pdf = null; // KC-CLUB-TA-PROTOKOLL-PDF: beim Senden das PDF auf dem Club-Briefkopf erzeugen und anhängen (klappt das nicht, geht das Protokoll trotzdem raus)
+    if (senden) try { const alt = a.protokoll; a.protokoll = { ...(alt || {}), ...p, status: "gesendet" }; DRUCK = { art: "taprotokoll", param: id };
+      if (await druckSeiteBauen()) { const name = `Protokoll_${a.anlass}_${berlinIso(a.beginn)}`.replace(/[^\wäöüÄÖÜß.-]+/g, "_").slice(0, 60) + ".pdf";
+        const up = await anlageHochladen(new File([await druckPdfBlob()], name, { type: "application/pdf" })); pdf = up?.id || null; }
+      a.protokoll = alt; } catch (e) { console.warn("protokoll pdf", e); }
+    try { const r = await api("terminanfrage_protokoll", { id, protokoll: p, senden, pdf, kopie: senden && !!$("tapKopie")?.checked }, { warten: true });
+      a.protokoll = r.protokoll;
+      let todos = 0; if (senden && $("tapTodo")?.checked) for (const x of p.tops.filter((y) => y.wer)) {
+        try { await api("todo_anlegen", { text: `${a.anlass}: ${x.t}${x.ergebnis ? " – " + x.ergebnis : ""}`.slice(0, 200), zustaendige: [x.wer], faellig: x.bis || null, kategorie: "sonstiges", fuer: "ich" }, { still: true }); todos++; } catch {} }
+      melde(senden ? `📨 Protokoll ist an ${anText} geschickt${r.protokoll?.pdf ? " · 📄 als PDF angehängt" : ""}${todos ? ` · ${todos} To-do${todos === 1 ? "" : "s"} angelegt` : ""}` : "💾 Entwurf gespeichert");
+      if (senden) f.remove(); TA.markiert = id; await taLaden(); return true; } catch (e) { meldeFehler(e); return false; }
+  };
+  f.querySelector("#tapSenden").onclick = () => speichern(true);
+  f.querySelector("#tapEntwurf").onclick = () => speichern(false);
+  f.querySelector("#tapDruck").onclick = async () => { const p = taPrLesenForm(); a.protokoll = { ...(a.protokoll || {}), ...p, status: a.protokoll?.status || "entwurf" }; druckStarten("taprotokoll", id); };
+}
+function taProtokollLesen(id) {
+  const a = TA.liste.find((x) => x.id === id); if (!a?.protokoll) return melde("Zu dieser Besprechung gibt es noch kein Protokoll.");
+  const q = a.protokoll;
+  blattAuf("taPrLesen", `<h3 style="margin:0">📝 Protokoll: ${esc(a.anlass)}</h3>
+    <p class="hinweis" style="margin:0">📅 ${esc(wann(a.beginn))}${a.ort ? " · 📍 " + esc(a.ort) : ""} · von ${esc(a.von?.name || "")}${q.gesendet_am ? " · verschickt am " + esc(wann(q.gesendet_am)) : ""}</p>
+    ${q.anwesend ? `<p style="margin:6px 0 0">👥 <b>Anwesend:</b> ${esc(q.anwesend)}</p>` : ""}
+    ${(q.tops || []).map((x, i) => `<div class="tap-lesen"><b>TOP ${i + 1}: ${esc(x.t)}</b>${x.ergebnis ? `<div style="white-space:pre-wrap">${esc(x.ergebnis)}</div>` : ""}${x.werName || x.bis ? `<div class="hinweis">→ ${esc(x.werName || "?")}${x.bis ? " bis " + esc(x.bis.split("-").reverse().join(".")) : ""}</div>` : ""}</div>`).join("")}
+    ${q.sonstiges ? `<div class="tap-lesen"><b>Sonstiges</b><div style="white-space:pre-wrap">${esc(q.sonstiges)}</div></div>` : ""}
+    ${q.naechster ? `<p>📅 <b>Nächster Termin:</b> ${esc(q.naechster)}</p>` : ""}
+    ${q.pdf ? `<button class="knopf haupt" onclick="anlageAktion(${jsArg(q.pdf)}, ${jsArg((a.anlagen || []).find((x) => x.id === q.pdf)?.name || "Protokoll.pdf")}, 'application/pdf')">📄 Protokoll als PDF (Briefkopf)</button>` : ""}
+    <button class="knopf" onclick="druckStarten('taprotokoll', '${a.id}')">🖨️ Drucken / PDF</button><button class="knopf" onclick="$('taPrLesen').remove()">Schließen</button>`);
+}
+function taPrDruck(id) { // DRUCKARTEN.taprotokoll – Kopf, Logo und Fußzeile im Club-Design kommen aus der Druckvorschau
+  const a = TA.liste.find((x) => x.id === id), q = a?.protokoll; if (!q) { melde("Kein Protokoll da."); return null; }
+  const h = (t) => `<h2 style="font-size:4.6mm;margin:6mm 0 2mm;border-bottom:2px solid #741521;padding-bottom:1mm">${t}</h2>`;
+  const html = `<div style="font-size:3.6mm;margin:0 0 1mm"><b>Anlass:</b> ${esc(a.anlass)}</div>
+    <div style="font-size:3.6mm;margin:0 0 1mm"><b>Termin:</b> ${esc(wann(a.beginn, true))}${a.ort ? " · " + esc(a.ort) : ""}</div>
+    ${q.anwesend ? `<div style="font-size:3.6mm;margin:0 0 1mm"><b>Anwesend:</b> ${esc(q.anwesend)}</div>` : ""}
+    <div style="font-size:3.6mm;margin:0 0 1mm"><b>Protokoll:</b> ${esc(a.vonMir ? ICH?.name || "" : a.von?.name || "")}</div>
+    ${h("Ergebnisse")}${(q.tops || []).map((x, i) => `<div style="break-inside:avoid;margin:0 0 4mm"><div style="font-size:4mm;font-weight:800;margin-top:2mm">TOP ${i + 1}: ${esc(x.t)}</div>
+      ${x.ergebnis ? `<div style="font-size:3.6mm;white-space:pre-wrap;margin-top:1mm">${esc(x.ergebnis)}</div>` : ""}${x.werName || x.bis ? `<div style="font-size:3.4mm;margin-top:1mm;color:#741521"><b>→ ${esc(x.werName || "?")}</b>${x.bis ? " bis " + esc(x.bis.split("-").reverse().join(".")) : ""}</div>` : ""}</div>`).join("")}
+    ${q.sonstiges ? `${h("Sonstiges / Beschlüsse")}<div style="font-size:3.6mm;white-space:pre-wrap">${esc(q.sonstiges)}</div>` : ""}
+    ${q.naechster ? `<p style="margin:5mm 0 0;font-size:3.8mm"><b>Nächster Termin:</b> ${esc(q.naechster)}</p>` : ""}`;
+  return { titel: `Protokoll: ${a.anlass}`, unter: `${wann(a.beginn, true)}${a.ort ? " · " + a.ort : ""}`, rechts: "Besprechungs-Protokoll", html, fuss: q.status === "gesendet" ? "verschickt" : "Entwurf" };
+}
+// Foto der handschriftlichen Besprechungsvorlage: Text erkennen und nach „TOP n“ auf die Punkte verteilen (Rest → Sonstiges); alles bleibt änderbar
+async function taPrFoto(dateien) {
+  const st = $("tapFotoStand"); if (!dateien?.length) return; st.textContent = "🔎 Lese die Fotos … (dauert etwas)";
+  try {
+    const bilder = []; for (const d of [...dateien].slice(0, 4)) bilder.push(await erkdBild(d));
+    const text = (await ocrLauf(bilder, undefined, (i) => { st.textContent = `🔎 Lese Foto ${i + 1} von ${bilder.length} …`; })).map((x) => x.text || "").join("\n");
+    const q = taPrLesenForm(), zu = taPrFotoVerteilen(text, q.tops.length);
+    zu.tops.forEach((t, i) => { if (t && q.tops[i]) q.tops[i].ergebnis = [q.tops[i].ergebnis, t].filter(Boolean).join("\n"); });
+    taPrTopsZeichnen(q.tops); if (zu.rest) $("tapSonst").value = [$("tapSonst").value.trim(), zu.rest].filter(Boolean).join("\n");
+    st.textContent = `✅ Gelesen – bitte prüfen (Handschrift wird nicht immer richtig erkannt).`;
+  } catch (e) { st.textContent = "⚠️ Fotos konnten nicht gelesen werden."; console.warn(e); }
+}
+function taPrFotoVerteilen(text, n) { // „TOP 3: Titel“ beginnt Punkt 3; Titelzeile, Linien und Kopf/Fuß der Vorlage fallen weg
+  const tops = Array(n).fill(""), rest = []; let i = -1;
+  for (const roh of String(text || "").split(/\r?\n/)) {
+    const z = roh.replace(/[_—–-]{3,}/g, "").trim(); if (!z) continue;
+    const m = /^T\s?O\s?P\s*(\d{1,2})\b/i.exec(z); if (m) { i = Number(m[1]) - 1; continue; }
+    if (/^(Beschl(ü|u)sse|Sonstiges|N(ä|a)chster Termin|Protokoll \(Name|Besprechungsleitung|Anwesend|Entschuldigt|G(ä|a)ste|Protokollf(ü|u)hrer|Gedruckt am|K(ö|o)checlub Werne)/i.test(z)) { i = -2; if (!/^(Beschl|Sonst)/i.test(z)) continue; else continue; }
+    if (i >= 0 && i < n) tops[i] += (tops[i] ? "\n" : "") + z; else if (i === -2) rest.push(z);
+  }
+  return { tops, rest: rest.join("\n") };
 }
 // KC-CLUB-ANFRAGE-VORBEHALT (2.23.57, Wunsch Hansi): Gegenvorschlag annehmen, unter Vorbehalt annehmen oder ablehnen – mit kurzem Text
 function taVorschlagBlatt(id, pid, wahl) {
@@ -30206,7 +30452,7 @@ function schZeigen() {
   const vor = schVorlagenFuer(SDR.anlass), gesp = (SDR.liste || []).filter((x) => x.anlass === SDR.anlass && !schIstPaket(x)), pakete = (SDR.liste || []).filter((x) => x.anlass === SDR.anlass && schIstPaket(x));
   const f = blattAuf("schBlatt", `<h3 style="margin:0 0 2px">🪧 Schilder-Druckerei</h3>
     <p class="hinweis" style="margin:0 0 10px">1. Anlass und Vorlage wählen · 2. Text ändern · 3. Aussehen · 4. 🖨️ Drucken oder 📤 an Mitglieder senden (die drucken zuhause)</p>
-    <div class="sdr-anlaesse">${SCH_ANLAESSE.map((a) => `<button class="knopf${a.id === SDR.anlass ? " haupt" : ""}" onclick="SDR.anlass='${a.id}';schZeigen()"><span>${a.sym}</span>${esc(a.t)}</button>`).join("")}</div>
+    <div class="sdr-anlaesse">${SCH_ANLAESSE.map((a) => `<button class="knopf${a.id === SDR.anlass ? " haupt" : ""}" onclick="SDR.anlass='${a.id}';schZeigen()"><span>${a.sym}</span>${esc(a.t)}</button>`).join("")}<button class="knopf sdr-pe" onclick="peStart()" title="Preisetiketten für Kessel, Becher &amp; Kasse – 8 bis 5 cm, Foto, Preis, Allergene, QR-Code"><span>🏷️</span>Preisetiketten</button></div> <!-- 2.930.0 (Wunsch Hansi): Preisetiketten als Kachel neben „Allgemein“ – spart eine Zeile -->
     <h4 style="margin:12px 0 6px">📋 Vorlagen</h4>
     <div class="sdr-vorlagen">${vor.map((v) => `<button class="sdr-vorlage" onclick="schVorlage('${v.id}')"><canvas data-schmini="${v.id}"></canvas><span>${esc(schName(v))}</span></button>`).join("")}</div>
     <h4 style="margin:14px 0 6px">💾 Gespeicherte Schilder${gesp.length ? ` (${gesp.length})` : ""}</h4>
@@ -30480,8 +30726,27 @@ async function schWeitergeben() {
   einlZiel([datei], { titel: `Schild – ${SDR.name || SDR.d.titel || "Köcheclub"}`.slice(0, 120) }); // gleicher Weg wie 📥 Einlesen: Ordner, Nachricht, E-Mail
 }
 function schDrucken() { if (schLeer()) return; SDR.bildUrl = schBild().toDataURL("image/jpeg", 0.92); druckStarten("schild"); }
-function druckSchild() {
-  const quer = SDR.d?.format === "quer";
+// KC-CLUB-SCHILD-QUER (12.11.2026, Fund Hansi „Drucken von Preisliste übernimmt nicht Querformat“): Handy-Druckdienste und iPhone ignorieren
+// „@page A4 landscape“ und drucken hochkant (verkleinert). Darum geht ein Querformat-Schild um 90° gedreht auf ein Hochformat-Blatt – das Papier
+// sieht genauso aus wie quer gedruckt, klappt aber auf jedem Gerät. Am Bildschirm (Vorschau) bleibt das Schild aufrecht.
+let SCH_DREH = { quelle: null, url: null };
+async function schildGedreht(url) {
+  if (!url) return null;
+  if (SCH_DREH.quelle === url) return SCH_DREH.url;
+  const img = new Image(); img.src = url;
+  try { await img.decode(); } catch { return null; } // nicht lesbar → wie bisher ohne Drehung
+  const c = document.createElement("canvas"); c.width = img.naturalHeight; c.height = img.naturalWidth;
+  const g = c.getContext("2d"); g.translate(c.width, 0); g.rotate(Math.PI / 2); g.drawImage(img, 0, 0);
+  SCH_DREH = { quelle: url, url: c.toDataURL("image/jpeg", 0.92) }; return SCH_DREH.url;
+}
+function schildQuerHtml(aufrecht, gedreht) {
+  return `<style>@media screen{#druck .sch-druck{display:none!important}}@media print{#druck .sch-bild{display:none!important}}</style>
+    <img class="sch-bild" src="${aufrecht}" alt="" style="display:block;margin:0 auto;width:auto;height:auto;max-width:100%;max-height:180mm">
+    <img class="sch-druck" src="${gedreht}" alt="" style="display:block;margin:0 auto;width:auto;height:auto;max-width:100%;max-height:268mm">`;
+}
+async function druckSchild() {
+  const quer = SDR.d?.format === "quer", gedreht = quer ? await schildGedreht(SDR.bildUrl) : null;
+  if (gedreht) return { titel: SDR.name || SDR.d?.titel || "Schild", ohneRahmen: true, quer: false, randlos: false, html: schildQuerHtml(SDR.bildUrl, gedreht) };
   return { titel: SDR.name || SDR.d?.titel || "Schild", ohneRahmen: true, quer, randlos: false,
     html: `<img src="${SDR.bildUrl}" alt="" style="display:block;margin:0 auto;width:auto;height:auto;max-width:100%;max-height:${quer ? "180mm" : "268mm"}">` };
 }
@@ -30848,8 +31113,11 @@ const DRUCKARTEN = {
   verbindung: { bauen: () => druckVerbindung() }, // KC-CLUB-VERBINDUNG-MELDEN (2.23.76)
   chat: { bauen: () => druckChat() }, // 2.23.80: ganzer Chat
   meinedaten: { bauen: () => druckMeineDaten() }, // KC-CLUB-MEINE-DATEN (2.23.82)
+  advent_preise: { bauen: () => AK_GEMELDET.druck && { titel: `Adventskalender ${AK_GEMELDET.druck.jahr} – wer bekommt was`, unter: "Austeilen beim Weihnachtsessen im Januar", html: AK_GEMELDET.druck.html } }, // 2.947.0 KC-CLUB-ADVENT-PREISE
   rezept: { bauen: (o, id) => druckRezept(id) },
   buchungsliste: { ablegen: { register: ["Kasse", "Erstattungen", "Sonstiges"], stichworte: "Erstattung, Buchungsliste, Kasse" }, bauen: () => eblDruck() }, // KC-CLUB-ERSTATTUNG-BUCHUNGEN
+  besprechung: { ablegen: { register: ["Besprechungen", "Protokolle", "Sonstiges"], stichworte: "Besprechung, Tagesordnung, Terminanfrage" }, bauen: (o, id) => taBesprechungDruck(id) }, // KC-CLUB-TA-TAGESORDNUNG
+  taprotokoll: { ablegen: { register: ["Besprechungen", "Protokolle", "Sonstiges"], stichworte: "Besprechung, Protokoll, Terminanfrage" }, bauen: (o, id) => taPrDruck(id) }, // KC-CLUB-TA-PROTOKOLL
   magazin: { ablegen: { register: ["Club-Magazin", "Club-Küche", "Sonstiges"], stichworte: "Club-Küche, Magazin" }, bauen: (o, p) => magDruck(p) }, // KC-CLUB-MAGAZIN-ARCHIV: ganze Ausgabe drucken/PDF/senden/ablegen
   fitness: { bauen: () => fiDruck() }, // KC-CLUB-FITNESS (2.55.0) // KC-CLUB-REZEPTBUCH (2.23.83)
   kmabrechnung: { titel: "🖨️ km-Abrechnung drucken", optionen: () => druckKmOptionen(), bauen: () => druckKmAbrechnung() }, // KC-CLUB-KM-ABRECHNUNG (2.25.3)
@@ -30857,9 +31125,11 @@ const DRUCKARTEN = {
   einzelplan: { titel: "📄 Einzelplan", get optionen() { return ICH?.admin ? epOptionen : undefined; }, bauen: (o) => epBauen() }, // KC-CLUB-DP-EINZELPLAN
   dpDruck: { titel: "🗓️ Dienstplan drucken", optionen: () => dpdOptionen(), bauen: () => dpdBauen() }, // 2.642.0 KC-CLUB-DP-DRUCK
   dpVorschlag: { titel: "💡 Vorschläge zu den Lücken", optionen: () => '<p class="hinweis">Nur für dich zur Planung (nicht verteilen): je Lücke, wer früher kommen oder länger bleiben könnte, ob er die Zeit schon angeboten hat, wer Bereitschaft hat – und wo neue Helfer nötig sind.</p>', bauen: () => dpdVorschlagBauen() }, // 2.721.0 KC-CLUB-DP-VORSCHLAG
+  dpEinsatz: { titel: "📋 Einsatzplan", optionen: () => '<p class="hinweis">Je Tag eine Seite (A4 quer): alle Personen, oben ihre Angaben (Wunsch, kann, nur wenn nötig, gesperrt), darunter die Einteilung als Balken, rechts W = Wunsch- und S = eingeteilte Stunden; unten Besetzt/Soll je halbe Stunde und die selbst eingetragene Bereitschaft. Rechnet sich von selbst neu.</p><p class="hinweis">Beim Drucken „A4 Querformat“ und „Hintergrundgrafiken“ wählen.</p>', bauen: () => dpdEinsatzBauen() }, // 2.944.0 KC-CLUB-DP-EINSATZ
   dpLuecken: { titel: "🧩 Wo noch Helfer fehlen", optionen: () => '<p class="hinweis">Ein Blatt mit Logo: alle Tage und Stunden, an denen noch Leute fehlen – zum Aushängen oder für die, die noch keine Wünsche abgegeben haben. Rechnet sich von selbst neu, sobald ein Wunschplan dazukommt.</p><p class="hinweis">Beim Drucken „A4 Querformat“ und „Hintergrundgrafiken“ wählen.</p>', bauen: () => dpdLueckenBauen() }, // 2.676.0 KC-CLUB-DP-LUECKEN
   haendlerausweis: { bauen: (o, p) => ({ ohneRahmen: true, randlos: true, titel: p.probe ? "Händler-Ausweise – Probeblatt Duplex" : `Händler-Ausweise Weihnachtsmarkt ${p.jahr} (${p.n} Stück)`, html: p.bilder.map((b) => `<img class="dseite" src="${b}" alt="">`).join("") }) }, // 2.690.0 KC-CLUB-HAENDLERAUSWEIS
   haendlerausweis_liste: { bauen: (o, p) => druckHaendlerListe(p) },
+  preisetiketten: { bauen: (o, p) => ({ ohneRahmen: true, randlos: true, titel: p.probe ? `Preisetikett – Probe ${p.format} × ${p.format} cm` : `Preisetiketten ${p.format} × ${p.format} cm (${p.n} Stück)`, html: p.bilder.map((b) => `<img class="dseite" src="${b}" alt="">`).join("") }) }, // KC-CLUB-PREISETIKETTEN
   einrichtungskarte: { bauen: (o, param) => druckEinrichtungskarte(param) }, // KC-CLUB-EINRICHTUNGSKARTE (1.88.0) // KC-CLUB-BESTAETIGUNG (1.69.0): Aufstellung der eigenen Eingaben
 };
 // ---- KC-CLUB-KURZANLEITUNG (0.62.0): die App in 3 Schritten – für Einsteiger, zum Ausdrucken oder Verschicken ----
@@ -32744,6 +33014,7 @@ function dpdOptionen() {
       ${neu.length ? `<div style="margin-top:4px;color:var(--textRot,#b3261e);font-weight:700">🆕 ${neu.length === 1 ? "1 neuer oder geänderter Wunschplan" : neu.length + " neue oder geänderte Wunschpläne"} seit dem letzten Rechnen: ${neu.map(esc).join(", ")}</div>` : i ? '<div class="hinweis" style="margin-top:4px">✅ Alle Wunschpläne sind eingerechnet.</div>' : ""}
       <button type="button" class="knopf${neu.length ? " haupt" : ""}" style="margin-top:8px" onclick="dpdNeuRechnen(this)">🔄 Jetzt neu rechnen</button>
       <div class="hinweis" style="margin-top:4px;font-size:.8rem">Rechnet sich von selbst neu, sobald ein Wunschplan, der Bedarf oder die Einstellungen sich ändern. Regel: nie länger als die Wunschzeit, mindestens die Hälfte darin. Nichts geht nach DP2.</div>
+      <button type="button" class="knopf" style="margin-top:8px" onclick="druckZu();druckStarten('dpEinsatz')">📋 Einsatzplan – je Tag eine Seite</button>
       <button type="button" class="knopf" style="margin-top:8px" onclick="druckZu();druckStarten('dpLuecken')">🧩 Nur das Blatt „Wo noch Helfer fehlen“</button>
       <button type="button" class="knopf" style="margin-top:8px" onclick="druckZu();druckStarten('dpVorschlag')">💡 Vorschläge zu den Lücken (nur für dich)</button></div>`;
   return `${stand}<p class="hinweis">Zeigt den neuesten Stand, den Claude für dich gerechnet hat: alle Wünsche, den Entwurf, Bereitschaft (Vorschlag) und rot, wo noch Leute fehlen. Neue Wünsche oder Änderungen? Claude macht die Übersicht neu – dann hier wieder drucken.</p>
@@ -32917,6 +33188,54 @@ async function dpdVorschlagBauen() {
   const d = await api("dp_druck", {});
   if (!d?.tage?.length) { melde("Noch kein Dienstplan-Stand vorhanden.", true); return null; }
   return { titel: `Vorschläge zu den Lücken – ${d.titel || ""}`.trim(), ohneRahmen: true, randlos: true, quer: true, html: `<div class="dpd">${dpdVorschlagBlatt(d)}</div>` };
+}
+// ---------- 2.944.0 KC-CLUB-DP-EINSATZ (Wunsch Hansi „je Tag eine A4-Seite: alle Personen, oben die Wunschzeit, darunter die Sollzeit – mit Balken,
+// Besetzungsstatistik und Bereitschaft, sparsam aber übersichtlich, rechts W = Wunsch- und S = Soll-Stunden“): Einsatzplan aus dem Dienstplan-Stand (dp_druck).
+// Alle Personen stehen auf jeder Seite in fester Reihenfolge, auch ohne Angabe; Aushilfen grau gestreift; Spätdienst bis Schluss rechnet der Server.
+function dpdEinsatzBlatt(d) {
+  const von0 = d.von ?? 8, alle = [...new Set(d.tage.flatMap((t) => t.leute.map((l) => l.n)))].sort((a, b) => a.localeCompare(b, "de"));
+  const uhr = (v) => { const h = Math.floor(v), m = Math.round((v - h) * 60); return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`; }, kurz = (v) => uhr(v).replace(":00", "");
+  const ART = { p: "pw", a: "pk", i: "pn", u: "ps" }, ARTX = { p: "Wunsch", a: "kann", i: "wenn nötig", u: "gesperrt" }, stand = d.stand ? wann(d.stand) : "";
+  const aushilfe = (z) => /Aushilfe/.test(z || ""), zone = (z) => aushilfe(z) ? "aus" : /vorne\+hinten/.test(z) ? "b" : /vorne/.test(z) ? "v" : /hinten/.test(z) ? "h" : "b";
+  const zusatz = (z) => aushilfe(z) ? "Aushilfe" : /vorne\+hinten/.test(z || "") ? "" : /vorne/.test(z || "") ? "vorne" : /hinten/.test(z || "") ? "hinten" : "";
+  const seite = (t, nr) => {
+    const x = new Date(t.d + "T12:00:00"), mit = t.bedarf.map((b, i) => (b > 0 ? i : -1)).filter((i) => i >= 0);
+    const i0 = mit.length ? Math.min(...mit) : 0, i1 = mit.length ? Math.max(...mit) + 1 : t.bedarf.length, n = Math.max(1, i1 - i0), v = von0 + i0 / 2, b = von0 + i1 / 2;
+    const pos = (a, e) => `left:${(a / n) * 100}%;width:${((e - a) / n) * 100}%`, idx = (h) => Math.round((h - von0) * 2) - i0;
+    const soll = t.bedarf.slice(i0, i1).reduce((p, q) => p + q, 0) / 2, ist = t.leute.filter((l) => l.s).reduce((p, l) => p + l.s[1] - l.s[0], 0), fehlt = t.fehlt.reduce((p, q) => p + q, 0) / 2;
+    const achse = Array.from({ length: n }, (_, k) => `<i>${k % 2 ? "" : `<span>${Math.floor(v + k / 2)}</span>`}</i>`).join("");
+    const zeile = (name) => {
+      const l = t.leute.find((y) => y.n === name), w = l ? l.w : "", segs = [];
+      for (let k = i0; k < i1;) { const c = w[k]; let j = k; while (j < i1 && w[j] === c) j++; if (ART[c]) segs.push([c, k - i0, j - i0]); k = j; }
+      const wStd = [...w.slice(i0, i1)].filter((c) => c === "p").length / 2, dauer = l?.s ? l.s[1] - l.s[0] : 0;
+      const angaben = segs.length ? segs.map(([c, a, e]) => `<b class="seg ${ART[c]}" style="${pos(a, e)}">${e - a >= 3 ? `${ARTX[c]} ${kurz(v + a / 2)}–${kurz(v + e / 2)}` : ""}</b>`).join("") : '<span class="nix">keine Angabe</span>';
+      const balken = l?.s ? `<b class="bal ${zone(l.z)}" style="${pos(idx(l.s[0]), idx(l.s[1]))}">${kurz(l.s[0])}–${kurz(l.s[1])}${dauer > 6 ? " ☕" : ""}</b>` : "";
+      return `<tr class="wz${l?.s ? "" : " frei"}"><td class="nm" rowspan="2">${esc(name)}<small>${esc(zusatz(l?.z))}</small></td><td class="zt art">Angaben</td><td class="gr">${angaben}</td><td class="st klein">W ${dpdStd(wStd)}</td></tr>
+        <tr class="sz${l?.s ? "" : " frei"}"><td class="zt">${l?.s ? `${uhr(l.s[0])}–${uhr(l.s[1])}` : "—"}</td><td class="gr">${balken}</td><td class="st">S ${l?.s ? dpdStd(dauer) : "0"}</td></tr>`;
+    };
+    const zahlen = (f) => `<div class="zahlen">${Array.from({ length: n }, (_, k) => f(k + i0)).join("")}</div>`;
+    const ber = (t.ber || []).length ? t.ber.map((z) => `<tr class="ber"><td class="nm">☎ ${esc(z.n)}<small>Bereitschaft</small></td><td class="zt">${uhr(z.s[0])}–${uhr(z.s[1])}</td><td class="gr"><b class="bal bs" style="${pos(Math.max(0, idx(z.s[0])), Math.min(n, idx(z.s[1])))}">Bereitschaft ${kurz(z.s[0])}–${kurz(z.s[1])}</b></td><td class="st"></td></tr>`).join("")
+      : '<tr class="ber"><td class="nm leer" colspan="4">☎ Bereitschaft: keine eingetragen</td></tr>';
+    return `<section class="dpd-blatt dpe" style="--n:${n}">${cdKopf("Einsatzplan – Angaben und Einteilung", `${d.titel || "Weihnachtsmarkt"}${stand ? " · Stand " + stand : ""}`)}
+      <div class="dpe-leg"><b>Angaben:</b><span><i class="pw"></i>Wunsch</span><span><i class="pk"></i>kann</span><span><i class="pn"></i>nur wenn nötig</span><span><i class="ps"></i>gesperrt</span>
+        <b>Einteilung:</b><span><i class="b"></i>vorne + hinten</span><span><i class="v"></i>vorne</span><span><i class="h"></i>hinten</span><span><i class="aus"></i>Aushilfe</span><span>☕ Pause</span><span>Besetzt: grün passt · rot fehlt · gelb zu viel</span></div>
+      <div class="dpe-tag"><div><b>${DPD_WD[x.getDay()]} ${t.d.slice(8, 10)}.${t.d.slice(5, 7)}.${t.d.slice(0, 4)}</b> · ${esc(dpdArtName(t.art, x))} · Regelzeit <b>${uhr(v)}–${uhr(b)} Uhr</b></div>
+        <div>Soll <b>${dpdStd(soll)} Std.</b> · eingeteilt <b>${dpdStd(ist)} Std.</b> · ${fehlt ? `<span class="rot">fehlt ${dpdStd(fehlt)} Std.</span>` : '<span class="gruen">voll besetzt ✓</span>'}</div></div>
+      <table class="dpe-tab"><thead><tr><th class="nm">Person</th><th class="zt">Zeit</th><th class="gr achse">${achse}</th><th class="st">Std.</th></tr></thead>
+        <tbody>${alle.map(zeile).join("")}</tbody>
+        <tbody class="stat"><tr><td class="nm">Besetzt</td><td class="zt">je ½ Std.</td><td class="gr">${zahlen((i) => `<i class="${t.besetzt[i] < t.bedarf[i] ? "rot" : t.besetzt[i] > t.bedarf[i] ? "gelb" : "gruen"}">${t.besetzt[i]}</i>`)}</td><td class="st">${dpdStd(ist)}</td></tr>
+          <tr><td class="nm">Soll</td><td class="zt"></td><td class="gr">${zahlen((i) => `<i class="soll">${t.bedarf[i]}</i>`)}</td><td class="st">${dpdStd(soll)}</td></tr>
+          ${fehlt ? `<tr><td class="nm rot">Fehlt</td><td class="zt"></td><td class="gr">${zahlen((i) => `<i class="${t.fehlt[i] ? "rot" : ""}">${t.fehlt[i] || ""}</i>`)}</td><td class="st rot">${dpdStd(fehlt)}</td></tr>` : ""}</tbody>
+        <tbody>${ber}</tbody></table>
+      ${cdFuss(`Dienstplan-Entwurf – nicht veröffentlicht · W = Wunschstunden des Tages · S = eingeteilte Stunden (Soll nach Planer) · Seite ${nr} von ${d.tage.length}`)}</section>`;
+  };
+  return d.tage.map((t, k) => seite(t, k + 1)).join("");
+}
+async function dpdEinsatzBauen() {
+  if (!ICH?.admin) return null;
+  const d = await api("dp_druck", {});
+  if (!d?.tage?.length) { melde("Noch kein Dienstplan-Stand vorhanden.", true); return null; }
+  return { titel: `Einsatzplan – ${d.titel || ""}`.trim(), ohneRahmen: true, randlos: true, quer: true, html: `<div class="dpd">${dpdEinsatzBlatt(d)}</div>` };
 }
 async function dpdLueckenBauen() {
   const d = await api("dp_druck", {});
@@ -34490,6 +34809,7 @@ const SPUR_WAS = { glueckskeks: "🥠 Glückskeks geöffnet", kontakt_extern: "�
 // (Fenster-ID, Hilfe-ID, Video-/Film-ID) – erst der Admin-Bildschirm übersetzt sie in Namen (spurMitName). Übersicht je Mitglied: spurUebersicht().
 // Registry FENSTER_NAMEN: Fenster-ID → Name in den Wegen. Fehlt ein Name, steht dort „🪟 Fenster: „ID““ – tests/spur-voll.test.mjs meldet fehlende Namen.
 const FENSTER_NAMEN = {
+  peBlatt: "🏷️ Preisetiketten", // KC-CLUB-PREISETIKETTEN
   // 2.794.0 KC-CLUB-FENSTER-NAMEN-NACHTRAG (Fund Hansi 31.10.: in den Wegen stand „Fenster: „niFenster““) – Fenster, die nicht über blattAuf entstehen
   niFenster: "ℹ️ Nachricht-Info: gelesen/zugestellt", naMenue: "💬 Nachricht: Menü", naLoeschen: "🗑️ Nachricht löschen?", wlFenster: "↪️ Nachricht weiterleiten",
   pwFenster: "📌 Pinnwand-Hinweis", ansFenster: "🗣️ Sprachansagen", geFenster: "📱 Meine Geräte mit Push", rsFenster: "🖍️ Tippfehler rot unterstreichen",
@@ -34498,7 +34818,7 @@ const FENSTER_NAMEN = {
   stadtBlatt: "🏙️ Termine der Stadt Werne", uaBlatt: "🙋 Unterstützung bei der Club-App", treffenInfo: "📅 Termin-Details", ugBlatt: "📭 Noch nicht gelesen", snAdmin: "📣 Startnachricht schreiben",
   ltBlatt: "🔴 Live-Abstimmung", aeBlatt: "✏️ Meine Daten haben sich geändert", aeEingBlatt: "📬 Änderungen der Mitglieder", ausweisBlatt: "🪪 Mitgliedsausweis", fdkAbgabeBlatt: "🃏 Fang den Koch: Abgabe",
   abAufnahmeBlatt: "🎙️ Sprachaufnahme", ablageBlatt: "🗄️ Ablage", ablkBlatt: "📥 Ablagekorb", ablkEgBlatt: "📥 In die Eingangskörbe der Mitglieder", pfoBlatt: "🔎 Protokoll-Fotos lesen", prWunschBlatt: "✏️ Protokoll: Änderung wünschen", nuBlatt: "📈 So nutzen wir die App", npBlatt: "📊 Nutzungsstatistik", irBlatt: "🗓️ Meine Ist-Zeiten", kwxBlatt: "📤 Kontakt weiterleiten", irAeBlatt: "📋 Zeitänderungen", impressumBlatt: "§ Impressum", teilnahmeBlatt: "👥 Teilnahme an den Sitzungen", einlEgBlatt: "👥 Einlesen: in die Eingangskörbe", adBlatt: "🛠️ Verwaltung",
-  adbBlatt: "📒 Adressbuch", adbFormBlatt: "📒 Adresse melden/ändern", adminBlatt: "🛠️ Verwaltungsfenster", akBlatt: "🎄 Adventskalender", alarmBlatt: "🚨 Notfall-Meldung",
+  adbBlatt: "📒 Adressbuch", akPreisBlatt: "📋 Adventskalender – wer bekommt was", adbFormBlatt: "📒 Adresse melden/ändern", adminBlatt: "🛠️ Verwaltungsfenster", akBlatt: "🎄 Adventskalender", alarmBlatt: "🚨 Notfall-Meldung",
   alarmVorschau: "🚨 Notfall-Probe", ampelInfo: "🚦 Die Ampel", angebotInfo: "🎁 Angebot ansehen", anlAnsehBlatt: "📎 Anhang", anlBlatt: "📄 Anhang",
   anlLinkBlatt: "📄 Anhang (Link)", anlageBlatt: "📎 Anlage hinzufügen", ansichtBlatt: "👓 Ansicht wählen", arMenue: "🗄️ Archiv: Dokument", arWegBlatt: "🗑️ Dokument entfernen",
   arWohinBlatt: "🗄️ Dokument ablegen", asBlatt: "⚠️ Die App läuft nicht rund", atArchivBlatt: "🗄️ Aus dem Archiv dazulegen", schArchivBlatt: "🖨️ Druckpaket: aus dem Archiv", tlArchivBlatt: "🔴 Live: Unterlage aus dem Archiv", atBlatt: "💼 Aktentasche packen", atDruckBlatt: "🖨️ Was soll gedruckt werden?",
@@ -34538,13 +34858,19 @@ const FENSTER_NAMEN = {
   smHinweisBlatt: "🎓 Du bist zur Schulung eingeladen", smVBlatt: "💬 Kein Termin passt", snBlatt: "📣 Startnachricht", sosInfo: "🆘 Meine SOS-Angaben", spAn: "💬 An wen?",
   spEinlBlatt: "🎲 Spiel-Einladung", spHerausBlatt: "🎲 Herausfordern", spLiveBlatt: "🎲 Spiel-Herausforderung", spTerminBlatt: "📅 Termin für die Partie", sperreBlatt: "🔒 Personen sperren",
   sprForm: "💬 Eigener Spruch", sprungBlatt: "🔘 Knopf in die Nachricht", spurFrageBlatt: "🟢 Frage: Wege ansehen?", statusBlatt: "🙂 Mein Status", studioBlatt: "🎬 Studio",
-  svBlatt: "⚙️ Sitzungs-Vorgaben", taGvBlatt: "🔄 Andere Zeit vorschlagen", taHinweisBlatt: "📨 Hinweis: Terminanfragen", taVkBlatt: "🔄 Gegenvorschlag", tdtBlatt: "💡 Tipp des Tages",
+  svBlatt: "⚙️ Sitzungs-Vorgaben", taAeBlatt: "✏️ Terminanfrage ändern", taPrBlatt: "📝 Besprechungs-Protokoll schreiben", taPrLesen: "📝 Besprechungs-Protokoll lesen", taGvBlatt: "🔄 Andere Zeit vorschlagen", taHinweisBlatt: "📨 Hinweis: Terminanfragen", taVkBlatt: "🔄 Gegenvorschlag", tdtBlatt: "💡 Tipp des Tages",
   teilenBlatt: "📥 Mit Köcheclub geteilt", themaFrage: "✅ Zusage: Thema/Mitbringen", mtBlatt: "💡 Ein Tipp für dich", twBlatt: "🧑‍🍳 Frag Twinkey", twOffenBlatt: "📥 Fragen an Twinkey",
   uaAdminBlatt: "🙋 Unterstützungs-Anfragen", ustBlatt: "🤝 Wie viel Unterstützung möchtest du?", verbindungBlatt: "📡 Verbindung", verlassenBlatt: "👋 Hinweis beim Verlassen", verpasstBlatt: "👋 Verpasstes Anklopfen",
   versandBlatt: "📤 Wie verschicken?", vfAuswahlBlatt: "👥 Auswahl: an wen", vfVorlageBlatt: "📄 Vorlage übernehmen", vorschlagBearb: "✏️ Vorschlag bearbeiten", vorschlagInfo: "💡 Vorschlag ansehen",
   vwMenueBlatt: "📤 Wie verschicken – nur diese Nachricht", vwSicherBlatt: "⚠️ Versand: Rückfrage", waEinfBlatt: "📋 Aus WhatsApp einfügen", wasNeuBlatt: "🆕 Was ist neu", wbBerichtBlatt: "📊 Wochenbericht",
   wbBlatt: "🖨️ Dein leerer Wunschbogen", wetterBlatt: "🌦️ Wetter", wkKlingel: "⏰ Wecker klingelt", zeBlatt: "👥 An wen?",
 };
+// KC-CLUB-SPUR-DIENST (13.11.2026): Dienst-Vorgänge – vom Server selbst in die Wege geschrieben (neu oder geändert, Fassung/Tag, nie Inhalte)
+Object.assign(SPUR_WAS, { tat_dw_neu: "🗓️ Dienstwünsche abgegeben", tat_dw_geaendert: "✏️ Dienstwünsche geändert", tat_stunden: "⏱️ Stunden gemeldet",
+  tat_ist_passt: "✅ Ist-Zeiten bestätigt", tat_ist_wieder_passt: "✏️ Ist-Zeiten doch bestätigt", tat_ist_geaendert: "✏️ Ist-Zeiten geändert gemeldet", tat_ist_neu_geaendert: "✏️ Ist-Zeiten nochmal geändert", tat_ist_nicht_da: "🚫 Dienst: nicht da gemeldet",
+  tat_dienst_kommen: "🟢 Dienst angemeldet (Kommen)", tat_dienst_gehen: "🔴 Dienst abgemeldet (Gehen)", tat_dienst_korrigiert: "✏️ Kommen/Gehen-Zeit geändert",
+  tat_tausch_anbieten: "🔁 Dienst zum Tausch angeboten", tat_tausch_uebernehmen: "🤝 Dienst übernommen", tat_tausch_zurueckziehen: "↩️ Tauschangebot zurückgezogen",
+  tat_tausch_zuruecktreten: "↩️ Übernahme zurückgenommen", tat_tausch_bestaetigen: "✅ Tausch bestätigt", tat_tausch_ablehnen: "❌ Tausch abgelehnt" });
 Object.assign(SPUR_WAS, {
   fenster: "🪟", vorlesen: "🔊 Text vorgelesen",
   klopf_verpasst: "👋 Verpasstes Anklopfen angezeigt", dw_laufband: "🗓️ Dienstwunsch aus dem Info-Feld geöffnet", eselsohr: "📄 Eselsohr: Rückseite des Kopfs geöffnet", kachel_rueck: "🔄 Kachel umgedreht (Rückseite)",
@@ -34610,6 +34936,8 @@ function spurMitName(w, k) {
     if (/^hz_/.test(w)) { const e = hzEintraege().find((x) => x.id === k); return e ? `${e.sym} ${e.t}` : k; }
     if (/^rg_|^tat_video/.test(w)) { const r = RUNDGAENGE.find((x) => x.id === k); return r ? `${r.sym} ${r.t}` : k; }
     if (/^film_/.test(w)) { const f = FILME.find((x) => x.id === k); return f ? `${f.sym} ${f.t}` : k; }
+    if (/^tat_(dw|stunden|ist|dienst|tausch)/.test(w)) { const f = /^f(\d+)$/.exec(k || ""), d = /^d(\d{4})-(\d{2})-(\d{2})$/.exec(k || ""); // KC-CLUB-SPUR-DIENST
+      return f ? (Number(f[1]) > 1 ? `(${f[1]}. Fassung)` : "(1. Fassung)") : d ? `– Dienst am ${d[3]}.${d[2]}.` : k; }
   } catch {}
   return k;
 }
@@ -35692,7 +36020,20 @@ function zugangHilfeZeigen(h) {
   const tag = (iso) => { try { return new Date(iso).toLocaleDateString("de-DE", { timeZone: TZ, day: "2-digit", month: "2-digit", year: "numeric" }); } catch { return ""; } };
   const knopf = (weg, t, haupt) => `<button type="button" class="knopf${haupt ? " haupt" : ""}" style="width:100%;margin-top:8px" onclick="zugangHilfe('${weg}', this)">${t}</button>`;
   const p = (t, oben = 8) => `<p class="hinweis" style="margin:${oben}px 0 0">${t}</p>`;
-  if (h.art === "alt" || h.art === "pausiert") {
+  if (h.art === "alt" && h.neuerLink) {
+    // 2.939.0 KC-CLUB-ALTER-LINK-KLAR (Wunsch Hansi 13.11.2026, Starttext von Hansi): altes Symbol entfernen, neuen Link aus WhatsApp nehmen
+    const am = h.neuSeit ? tag(h.neuSeit) : "";
+    k.innerHTML = `<h3>👋 ${h.vorname ? `Hallo ${esc(h.vorname)},` : "Hallo,"}</h3>
+      <p style="margin:0">du versuchst gerade, die Club-App über alte Zugangsdaten zu öffnen. Aus Sicherheitsgründen ist das nicht möglich.</p>
+      <p style="margin:10px 0 0">Entferne am besten das <b>Kochmützen-Symbol</b> der Club-App von deinem Bildschirm (Symbol auf dem Startbildschirm lange drücken → <b>„Entfernen“</b> bzw. <b>„App löschen“</b>).</p>
+      <p style="margin:10px 0 0"><b>📲 Du hast ${am ? `am ${esc(am)} ` : ""}schon einen neuen Link bekommen – per WhatsApp von Hansi.</b> Öffne bitte den neuen Link und leg die App daraus neu auf den Startbildschirm in deinem Browser.</p>
+      ${p("Neuen Link nicht gefunden?", 12)}${knopf("hansi", "📨 Hansi Bescheid geben", true)}
+      ${h.mail ? knopf("mail", `✉️ Neuen Link an ${esc(h.mail)} schicken`) : ""}
+      ${p("🔢 Oder unten den <b>6-stelligen Code</b> eingeben, wenn du auf einem anderen Gerät schon angemeldet bist.")}
+      <p style="margin:10px 0 0">Viele Grüße</p>
+      <p class="hinweis" id="zhAntwort" style="margin:8px 0 0" aria-live="polite"></p>`;
+    k.style.borderColor = "var(--warn, #e65100)";
+  } else if (h.art === "alt" || h.art === "pausiert") {
     const warum = h.art === "alt"
       ? `Dein bisheriger Zugangslink gilt ${h.seit ? `seit dem ${esc(tag(h.seit))} ` : ""}leider nicht mehr – er wurde durch einen neueren ersetzt (zum Beispiel, weil du dir einen neuen per Mail geholt hast). Aus Sicherheitsgründen funktioniert immer nur der <b>neueste</b> Link.`
       : "Dein Zugang ist gerade pausiert – aus Sicherheitsgründen funktioniert der Link deshalb nicht.";

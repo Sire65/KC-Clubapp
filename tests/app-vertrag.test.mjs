@@ -5919,7 +5919,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\) \|\| Number\(r\.headers\?\.get\?\.\("x-club-ms"\)\);.{0,200}schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693|694|695|696|699|709|710|712|721|722|723|724|726|728|729|730|731|736|738|739|740|741|743|754|755|760|761|762|763|764|765|766|772|773|774|775|776|781|783|784|785|786|789|790|792|795|796|799|800|802|804|806|809|810|813|814|817|818|822|824|829|830|833|834|835|839|840|841|842|843|844|845|846|850|851|857|859|862|863|865|869|870|871|872|878|885|886|887|893|897|899|900|901|902|903|907|909|912|921)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693|694|695|696|699|709|710|712|721|722|723|724|726|728|729|730|731|736|738|739|740|741|743|754|755|760|761|762|763|764|765|766|772|773|774|775|776|781|783|784|785|786|789|790|792|795|796|799|800|802|804|806|809|810|813|814|817|818|822|824|829|830|833|834|835|839|840|841|842|843|844|845|846|850|851|857|859|862|863|865|869|870|871|872|878|885|886|887|893|897|899|900|901|902|903|907|909|912|921|934|935|936|938|939|942|943|944|946|947)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -7207,7 +7207,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   for (const t of ["📲 Beim Empfänger: die Mitteilung", "🕵️ Der Agent liefert ab", "🔑 Einmal-Schlüssel: eintippen", "❌ Falscher Schlüssel", "🔑 Mit Schlüsselbund: öffnet sich von selbst"])
     assert.ok(seg.includes(`t: "${t}"`), "Video-Station: " + t);
   assert.ok(/ankunftEffekt\(el, "agent"\)/.test(seg), "Agent kommt beim Empfänger an (vorhandener Effekt)");
-  assert.ok(/\{ id: "geheim", stand: "2", sym: "🕵️"/.test(programm), "Video-Stand 2");
+  assert.ok(/\{ id: "geheim", stand: "2", (zeit: "[\d.]+", )?sym: "🕵️"/.test(programm), "Video-Stand 2");
 }
 // 2.544.0 KC-CLUB-KOPF-PFEIL-NEU: bei eingerolltem Kopf blinkt der Pfeil der Stellung, wenn Neues (Nachrichten, Mitglieder) ankommt
 {
@@ -7892,6 +7892,31 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.match(mig, /primary key\s*\(jahr, nr\)/, "Jahr + Nr eindeutig");
   assert.match(mig, /nr\s+text\s+not null check \(nr ~ '\^\[0-9\]\{3\}\$'/, "Nr als Text mit 3 Ziffern (führende Nullen)");
   assert.ok(!/grant (insert|update|delete)[^;]*to authenticated/.test(mig), "PC-Manager darf nur lesen");
+}
+// 2.926.0 KC-CLUB-PREISETIKETTEN + KC-CLUB-SCHILD-QUER
+{
+  assert.ok(aktionen.has("etiketten_artikel") && /case "etiketten_artikel": \{\s*nurLeitung\(ich\);/.test(server) && /from\("kc_etikett_artikel_stand"\)\.select\("artikel,veroeffentlicht_am"\)\.eq\("org_id", ORG\)/.test(server), "Preisetiketten: Server-Aktion nur Clubleitung, liest den veröffentlichten Stand");
+  const mig = fs.readFileSync(new URL("../supabase/migrations/20261112_kc_etikett_artikel_stand.sql", import.meta.url), "utf8");
+  assert.ok(/kc_private\.kc_core_has_app_access\(p_org_id, 'KC_MANAGER'/.test(mig) && /if v_uid is null or not/.test(mig) && /revoke all on function public\.kc_etikett_artikel_veroeffentlichen\(text, jsonb\) from public, anon;/.test(mig), "Preisetiketten: Veröffentlichen nur angemeldet mit Manager-Rechten, kein anon");
+  assert.ok(/PE_FORMATE = \[8, 7, 6, 5\]/.test(programm) && /\["foto", "Foto"\]/.test(programm) && /\["allergene", "Allergene"\]/.test(programm) && /\["qr", "QR-Code"\]/.test(programm) && /data-gruppe=/.test(programm) && /data-plus=/.test(programm) && /data-preis=/.test(programm), "Preisetiketten: Formate, Bausteine, Warengruppen, Anzahl, Preis änderbar");
+  assert.ok(/peKasse\(\) \+ "etiketten\/artikel\.json/.test(programm) && /⚠ nicht erfasst/.test(programm) && /q\.addData\(String\(a\.nummer\)\)/.test(programm), "Preisetiketten: Rückfall Grundstand der Kasse, fehlende Angaben rot, QR = Artikelnummer");
+  assert.ok(/"peStart\(\)"/.test(programm) && /preisetiketten: \{ bauen:/.test(programm), "Preisetiketten: im Büro-Drucker und im Druck-Kern");
+  assert.ok(/async function druckSchild\(\)/.test(programm) && /gedreht = quer \? await schildGedreht\(SDR\.bildUrl\) : null/.test(programm) && /@media print\{#druck \.sch-bild\{display:none!important\}\}/.test(programm), "Schild quer: im Druck gedreht auf Hochformat, Vorschau aufrecht");
+}
+// 2.928.0 KC-CLUB-PREISETIKETTEN: Pfand/Sonstiges, BAR-Code, Probe je Größe, Ordner im Büro
+{
+  assert.ok(/nummer: "CMD-CHECKOUT", kategorie: "Kassen-Codes", spezial: "bar"/.test(programm) && /if \(a\.spezial === "bar"\) return peBarEtikett\(/.test(programm), "Preisetiketten: BAR-Etikett mit CMD-CHECKOUT");
+  assert.ok(/const essbar = !\/\^\(Pfand\|Sonstiges\)\$\/i\.test/.test(programm) && /\(b < 0 \? "−" : ""\)/.test(programm), "Preisetiketten: Pfand/Sonstiges ohne Allergene, Rückgabe mit Minus");
+  assert.ok(/🎯 Probe \$\{PE\.format\} × \$\{PE\.format\} cm/.test(programm), "Preisetiketten: Probe in der gewählten Größe");
+  // 2.929.0 (Wunsch Hansi „in den Ordner Schilderdruck, keinen eigenen Ordner“): nur Knopf in der Schilder-Druckerei, kein Regal-Ordner
+  assert.ok(!/\{ id: "preisetiketten", sym: "🏷️"/.test(programm) && /<button class="knopf sdr-pe" onclick="peStart\(\)"[^>]*><span>🏷️<\/span>Preisetiketten<\/button><\/div>/.test(programm), "Preisetiketten: in der Schilder-Druckerei, kein eigener Ordner im Regal");
+  assert.ok(/const PE_FARBWAHL = \[\["gruppe", "Warengruppe"\], \["artikel", "Artikel"\], \["keine", "Grau \(Schwarz-Weiß\)"\]\]/.test(programm) && /ok\(a\.warengruppeFarbe\)/.test(programm) && /const bh = 10 \* u, schrift = peHell\(farbe\) \? "#111" : "#fff"/.test(programm), "Preisetiketten: Kopfband in der Warengruppenfarbe, Farb-Schalter, Kontrast");
+}
+// 2.930.0 KC-CLUB-ORDNER-SCHILD (Wunsch Hansi „Ordnerrückentext beim Darüberfahren lesbar“, Variante 2): waagerechtes Namensschild im Büro-Regal
+{
+  assert.ok(/aria-label="\$\{esc\(o\.t\)\}" data-schild="/.test(programm), "Büro: Ordnerrücken ohne data-schild");
+  assert.ok(/\(function buOrdnerSchild\(\)/.test(programm) && /e\.pointerType !== "mouse"/.test(programm) && /focusin/.test(programm) && /setTimeout\(\(\) => \{ zeigen\(b\); unterdruecken = true; \}, 450\)/.test(programm), "Büro: Namensschild für Maus, Tastatur und langes Drücken");
+  assert.ok(/Math\.max\(6, Math\.min\(innerWidth - w - 6, x\)\)/.test(programm) && /#buOrdnerSchild \{ position: fixed;/.test(html), "Büro: Namensschild bleibt im sichtbaren Bereich");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
@@ -9268,7 +9293,8 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   // 2.150.0: Schilder (KC-CLUB-SCHILDER) haben ihr CD im Bild selbst (Kochmütze im weinroten Kreis + „Köcheclub Werne“ unten)
   // 2.526.0 KC-CLUB-ERSTATTUNG-BRIEFBOGEN: Erstattungsantrag als Briefbogen-Blatt (erstBlatt mit cdKopf + cdFuss) – zwei Einstiege
   // 2.766.0 KC-CLUB-SCHILDER-DRUCKPAKET: Druckpaket = Seiten als Bild (dseite) wie Originalseiten
-  assert.ok(ohne.length === 6 && ohne.every((x) => /dseite|titel: b\.betreff|SDR\.bildUrl|html: erstBlatt\(/.test(x)), "nur Originalseiten (Bild), Brief und Schild ohne zentralen Rahmen");
+  // 2.926.0 KC-CLUB-SCHILD-QUER: Schild quer hat eine zweite Rückgabe (gedreht für den Druck, aufrecht für die Vorschau)
+  assert.ok(ohne.length === 7 && ohne.every((x) => /dseite|titel: b\.betreff|SDR\.bildUrl|html: erstBlatt\(/.test(x)), "nur Originalseiten (Bild), Brief und Schild ohne zentralen Rahmen");
   assert.ok(/return `<div class="cd-blatt cd-brief">\$\{cdKopf\("Antrag auf Erstattung"/.test(programm) && /\$\{cdFuss\(`Erstellt mit der Köcheclub-App am/.test(programm), "Erstattungsantrag = Briefbogen-CD");
   const schild = programm.slice(programm.indexOf("function schZeichnen("), programm.indexOf("function schBild()"));
   assert.ok(/ctx\.fillStyle = KC_CD\.weinrot/.test(schild) && /ctx\.drawImage\(SCH_LOGO/.test(schild) && /ctx\.fillText\(KC_CD\.name/.test(schild) && /const SCH_LOGO = new Image\(\); SCH_LOGO\.src = KC_CD\.logo;/.test(programm), "Schild trägt das CD selbst");
@@ -10534,7 +10560,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 // 2.481.0 KC-CLUB-GASTGEBER-FRUEHWARNUNG: 2 Std. vorher nur bei Änderung, dazwischen jede Änderung (gesammelt, nachts nicht) an die Gastgeberin
 {
   const g = server.slice(server.indexOf("async function gastgeberStandLauf("), server.indexOf("async function gastgeberMitteilen("));
-  assert.ok(/await gastgeberStandLauf\(\)\.catch/.test(server) && /const vorabendFaellig = !war\("vorabend"\) && heuteAbend && berlinTag\(new Date\(t\.beginn\)\) === morgen;/.test(g) && /heuteAbend = std >= 18/.test(g), "Vorabend ab 18 Uhr, im Zeitplaner");
+  assert.ok(/await gastgeberStandLauf\(\)\.catch/.test(server) && /const vorabendFaellig = !war\("vorabend"\) && heuteAbend && berlinTag\(new Date\(t\.beginn\)\) === morgen;/.test(g) && /heuteAbend = std >= 16/.test(g), "Vortag ab 16 Uhr (KC-CLUB-GASTGEBER-16UHR, vorher 18 Uhr), im Zeitplaner");
   assert.ok(/else if \(zweiStd\) stufe = aenderungen\.length \|\| altVorabend \? "2std" : "2std_ruhig";/.test(g) && /uebersprungen: "keine Änderung"/.test(g), "2 Std. vorher nur, wenn sich etwas geändert hat");
   assert.ok(/else if \(aenderungen\.length && !nachts && jetztMs - Date\.parse\(letzte\.zeit\) >= GG_PAUSE_MS\) stufe = "aenderung";/.test(g) && /nachts = std >= 22 \|\| std < 7/.test(g) && /const GG_PAUSE_MS = 15 \* 60000;/.test(server), "Änderungen gesammelt, höchstens alle 15 Min., nachts zurückgehalten");
   assert.ok(/if \(!vorabendFaellig && !letzte && !\(zweiStd && altVorabend\)\) continue;/.test(g), "vor dem Vorabend keine Änderungsmeldungen");
@@ -11079,7 +11105,7 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
 // KC-CORE-NOTFALL-LESEN (13.10.2026): verschlüsselte Neon-Sicherung ohne Supabase lesen – wöchentliche Probe, Wiederherstellen nur mit JA
 {
   const s = lies("tools/notfall/sicherung-lesen.mjs"), w = lies(".github/workflows/notfall-sicherung-lesen.yml");
-  assert.ok(/name: "AES-GCM", iv: b64\(p\.iv\)/.test(s) && /crypto\.subtle\.digest\("SHA-256"/.test(s), "gleiche Entschlüsselung wie kc-db-backup-verify-v2");
+  assert.ok(/name: "AES-GCM", iv: b64\(p\.iv\)/.test(s) && /crypto\.subtle\.digest\("SHA-256"/.test(s) && /additionalData: new TextEncoder\(\)\.encode\("kc-backup\|gzip"\)/.test(s), "gleiche Entschlüsselung wie kc-db-backup-verify-v2 (auch gepackt)");
   assert.ok(/if \(!BESTAETIGT\) throw new Error\("Wiederherstellen nur mit bestaetigen = JA"\)/.test(s), "Wiederherstellen nur mit JA");
   assert.ok(/"notfall_" \+ new Date\(\)/.test(s) && !/(insert into|create table|drop table|delete from|update) public\./i.test(s), "schreibt nie nach public");
   assert.ok(!/(merke|console\.(log|error))\([^)]*\b(text|arr|klar|payload|GEHEIM|URL_NEON)\b(?!\.length)/.test(s.replace(/arr\.length/g, "")), "keine Inhalte oder Geheimnisse im öffentlichen Protokoll");
@@ -12404,7 +12430,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   const su = html.slice(html.indexOf("function suAppListe"), html.indexOf("function suAppListe") + 30000);
   assert.ok(/\["🔒", "Nachricht verschlüsselt senden/.test(su) && /\["🔑", "Schlüsselbund/.test(su) && /\["📥", "Teilen → Köcheclub \(Ablagekorb\)"/.test(su) && /\["📝", "Normal, Wichtig, Express/.test(su), "Lupe findet die Neuheiten");
   assert.ok(/\[\/verschlüssel\|geheime\? nachricht\|geheim schreiben\/, "verschlüsselt"\]/.test(html) && html.indexOf("[/verschlüssel|") < html.indexOf("let q; if ((q = t.match(/^(?:such"), "Sprachsuche: Verschlüsseln & Co. → Lupe");
-  assert.ok(/\{ id: "geheim", stand: "\d+", sym: "🕵️"[^\n]*st: \(\) => RG_GEHEIM \}/.test(html) && /videos: \[[^\]]*"chatprofi", "geheim"/.test(html), "Video „Geheim schreiben“ registriert und im Thema");
+  assert.ok(/\{ id: "geheim", stand: "\d+", (zeit: "[\d.]+", )?sym: "🕵️"[^\n]*st: \(\) => RG_GEHEIM \}/.test(html) && /videos: \[[^\]]*"chatprofi", "geheim"/.test(html), "Video „Geheim schreiben“ registriert und im Thema");
   const g = html.slice(html.indexOf("// ---------- 2.533.0 KC-CLUB-VIDEO-GEHEIM"), html.indexOf("const RG_GR_ID"));
   assert.ok(g.length > 3000 && !/vnVer\(|vnUmschalten\(|vbMenue\(|localStorage\.setItem|senden\(/.test(g), "Video verschlüsselt, speichert und sendet nichts");
   assert.ok(/RG\.zurueck\.push\(\(\) => \{\s*RG\.ghAn = false; api = alt\.api;/.test(g) && /VN\.klar\.delete\(rgGeheimAuf2\(\)\)/.test(g), "am Ende alles zurück");
@@ -12433,7 +12459,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 // KICC-F-107 Quelle: Backup-Arbeiter liegt als Quelle im Repo (Stand Deploy Version 20, übernommen 20.10.2026; kein automatisches Hochladen)
 {
   const bw = lies("supabase/functions/kc-db-backup-worker/index.ts");
-  assert.ok(/"X-KC-Function-Version":"20"/.test(bw), "Backup-Arbeiter: Stand Version 20");
+  assert.ok(/"X-KC-Function-Version":"22"/.test(bw), "Backup-Arbeiter: Stand Version 22 (KC-SICHERUNG-PACKEN, 15.11.2026)");
   assert.ok(/!await sicherGleich\(token,String\(expected\)\)/.test(bw) && /token\.length<32/.test(bw), "Backup-Arbeiter: Token zeitkonstant geprüft");
   assert.ok(/encryptPayload\(payload,String\(backupKey\)\)/.test(bw) && /rejectUnauthorized:true/.test(bw), "Backup-Arbeiter: verschlüsselt, TLS geprüft");
   assert.ok(!/postgres(ql)?:\/\/|eyJ[A-Za-z0-9_-]{20,}|sk_[A-Za-z0-9]{16,}/.test(bw), "Backup-Arbeiter: keine Verbindungsdaten oder Schlüssel im Quelltext");
@@ -13349,7 +13375,7 @@ function idx0() { return lies("index.html"); }
 }
 // 2.648.0 KC-CLUB-WAS-MACHT: „?“ auf der Mitglieder-Kachel – nur Admin, nur online, nie bei mir; öffnet die Wege der Person; Server nur Admin
 {
-  assert.ok(/const was = ICH\.admin && on && !ich \? `<button type="button" class="mg-was"/.test(programm) && /\$\{was\}\$\{kreis\(m, m\.name, 58\)\}/.test(programm), "Fragezeichen nur Admin, nur online, nicht bei mir");
+  assert.ok(/const was = ICH\.admin && on && !ich \? `<button type="button" class="mg-was"/.test(programm) && /\$\{was\}(\$\{push\})?\$\{kreis\(m, m\.name, 58\)\}/.test(programm), "Fragezeichen nur Admin, nur online, nicht bei mir");
   assert.ok(/function mgWasMacht\(pid\) \{ if \(!ICH\?\.admin\) return; spurAdmin\(heuteIso\(\), pid\); \}/.test(programm), "öffnet die Wege der Person (heute), nur Admin");
   const fall = server.slice(server.indexOf('case "spur_liste": {'), server.indexOf('case "spur_liste": {') + 200);
   assert.ok(/^\s*nurAdmin\(ich\);/m.test(fall), "Server gibt die Wege nur dem Admin");
@@ -13763,4 +13789,47 @@ assert.ok(/if \(!gezeigt && !nurZaehlen && !\(START_HASH && START_HASH !== "#"\)
   const m = server.slice(server.indexOf("async function ekDienstwunschMelden()"), server.indexOf("async function ekDienstwunschMelden()") + 2600);
   assert.ok(/\.lt\("updated_at", new Date\(Date\.now\(\) - 10 \* 60000\)/.test(m) && /gemeldet_rev/.test(m), "ein Push je Wunschplan, erst nach 10 Minuten Ruhe");
   assert.ok(/anAdm = an\.filter\(\(id\) => adm\.has\(id\)\)/.test(m) && /url: `\$\{APP_URL\}#dpdruck`/.test(m), "Admin: Weg zum Dienstplan-Druck");
+}
+// 2.936.0 KC-CLUB-DP-WUNSCH-ZUERST (Wunsch Hansi „Wunschzeiten ausreizen, bei Überbesetzung bei dem streichen, der viel hat“)
+{
+  const { dpRechnen, DP_REGEL } = await import(new URL("../supabase/functions/kc-club/dp-rechnen.js", import.meta.url));
+  assert.ok(DP_REGEL >= 8, "Regel-Stand steigt → gespeicherter Stand wird von selbst neu gerechnet");
+  const tag = { d: "2026-12-05", art: "Markttag", baender: [{ start: 11, end: 17, total: 2, front: null, back: null }] };
+  const w = (a, b) => [{ d: "2026-12-05", t: "avai", z: "B", a, b }, { d: "2026-12-05", t: "pref", z: "B", a, b }];
+  // Viel (40 Std. Wunsch insgesamt, hier 11–17) und Wenig (11–15) und Mittel (13–17): Bedarf 2 → Wenig behält seinen ganzen Wunsch, gekürzt wird bei Viel
+  const viel = [...w(11, 17), ...["2026-12-06", "2026-12-07", "2026-12-08", "2026-12-09"].flatMap((d) => [{ d, t: "pref", z: "B", a: 11, b: 19 }, { d, t: "avai", z: "B", a: 11, b: 19 }])];
+  const tage = [tag, ...["2026-12-06", "2026-12-07", "2026-12-08", "2026-12-09"].map((d) => ({ d, art: "Markttag", baender: [{ start: 11, end: 19, total: 1, front: null, back: null }] }))];
+  const r = dpRechnen({ tage, personen: [{ key: "Viel", name: "Viel", eintraege: viel }, { key: "Wenig", name: "Wenig", eintraege: w(11, 15) }, { key: "Mittel", name: "Mittel", eintraege: w(13, 17) }], wunschZuerst: true, maxTageAmStueck: 9 });
+  const am = (n) => r.tage[0].leute.find((x) => x.n === n).s;
+  assert.deepEqual(am("Wenig"), [11, 15], "wer wenig hat, bekommt seinen ganzen Wunsch");
+  assert.deepEqual(am("Mittel"), [13, 17], "Mittel ganz");
+  assert.ok(!am("Viel") || am("Viel")[1] - am("Viel")[0] <= 2 + 1e-9, "gekürzt wird bei dem mit den meisten Wunschstunden");
+  assert.ok(r.tage[0].besetzt.every((b, i) => b <= Math.max(r.tage[0].bedarf[i], 2)), "keine unnötige Überbesetzung am Rand");
+  assert.ok(/wunschZuerst: konf\.wunschZuerst === true/.test(server), "Server: einschaltbar in dp_druck_konfig");
+}
+// 2.938.0 KC-CLUB-DP-BEREITSCHAFT-EIGEN (Wunsch Hansi „keine automatische Bereitschaft – nur eintragen, wer welche Bereitschaft selber eingetragen hat“)
+{
+  const i = server.indexOf("const berEigen"), teil = server.slice(i, i + 2200);
+  assert.ok(i > 0 && /if \(konf\.bereitschaftAuto === false\) for \(const w of wRoh \?\? \[\]\)/.test(teil) && /sb\?\.answer === "yes"/.test(teil) && /x\?\.assistantDay\?\.standby/.test(teil), "Bereitschaft aus den Wunschplänen (Tag und Wunsch-Eintrag)");
+  assert.ok(/pk\[pid\]\?\.keineBereitschaft === true\) continue;/.test(teil) && /bereitschaft: berListe\.map/.test(server), "keineBereitschaft schließt aus, Liste geht an die Rechnung");
+  const { dpRechnen } = await import(new URL("../supabase/functions/kc-club/dp-rechnen.js", import.meta.url));
+  const r = dpRechnen({ tage: [{ d: "2026-12-08", art: "Markttag", baender: [{ start: 18, end: 23, total: 1, front: null, back: null }] }], personen: [], bereitschaft: [{ d: "2026-12-08", name: "Willfried W", von: 20, bis: 23 }] });
+  assert.deepEqual(r.tage[0].ber, [{ n: "Willfried W", s: [20, 23] }], "ohne Automatik nur die eingetragene Bereitschaft");
+}
+// 2.944.0 KC-CLUB-DP-SPAET-BIS-SCHLUSS + KC-CLUB-DP-EINSATZ (Wunsch Hansi „Spätdienst bis zum Schluss“, „je Tag eine Seite: alle Personen, Wunschzeit und Sollzeit“)
+{
+  const { dpRechnen, DP_REGEL } = await import(new URL("../supabase/functions/kc-club/dp-rechnen.js", import.meta.url));
+  assert.ok(DP_REGEL >= 9, "Regel-Stand steigt → gespeicherter Stand wird von selbst neu gerechnet");
+  const tag = (d) => ({ d, art: "Markttag", baender: [{ start: 17, end: 23, total: 1, front: null, back: null }] });
+  const p = (key, a, b, x = {}) => ({ key, name: key, eintraege: [{ d: "2026-12-05", t: "pref", z: "B", a, b }, { d: "2026-12-05", t: "avai", z: "B", a, b }], ...x });
+  let r = dpRechnen({ tage: [tag("2026-12-05")], personen: [p("Spät", 17, 22)], spaetBisSchluss: true });
+  assert.deepEqual(r.tage[0].leute[0].s, [17, 23], "Spätdienst bis Schluss");
+  r = dpRechnen({ tage: [tag("2026-12-05")], personen: [{ ...p("Gesperrt", 17, 22), eintraege: [...p("x", 17, 22).eintraege, { d: "2026-12-05", t: "unav", z: "B", a: 22, b: 23 }] }], spaetBisSchluss: true });
+  assert.deepEqual(r.tage[0].leute[0].s, [17, 22], "nicht über eine Sperre hinaus");
+  r = dpRechnen({ tage: [tag("2026-12-05")], personen: [p("Ohne", 17, 22)] });
+  assert.deepEqual(r.tage[0].leute[0].s, [17, 22], "nur eingeschaltet");
+  assert.ok(/spaetBisSchluss: konf\.spaetBisSchluss === true/.test(server), "Server: einschaltbar in dp_druck_konfig");
+  assert.ok(/dpEinsatz: \{ titel: "📋 Einsatzplan"/.test(programm) && /druckStarten\('dpEinsatz'\)/.test(programm) && /async function dpdEinsatzBauen\(\) \{\s*if \(!ICH\?\.admin\) return null;/.test(programm), "Blatt Einsatzplan im Ordner, nur Admin");
+  assert.ok(/W \$\{dpdStd\(wStd\)\}/.test(programm) && /S \$\{l\?\.s \? dpdStd\(dauer\) : "0"\}/.test(programm) && /keine Angabe/.test(programm), "W/S-Stunden, alle Personen auch ohne Angabe");
+  assert.ok(/#druck \.dpe-tab/.test(html), "Druck-CSS vorhanden");
 }

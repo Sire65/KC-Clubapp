@@ -9,19 +9,23 @@
 //   modus=wiederherstellen : gewählte (oder alle) Tabellen entschlüsselt in ein eigenes Schema notfall_JJJJMMTT auf Neon schreiben
 //                            (je Tabelle eine Spalte „zeile“ jsonb – verlustfrei). public.* wird NIE verändert. Nur mit bestaetigen=JA.
 // Gibt NIE Inhalte aus (öffentliches Repository → Protokolle sind öffentlich): nur Tabellennamen, Zahlen, ok/Fehler.
-import postgres from "postgres";
+import { gunzipSync } from "node:zlib";
 
 const URL_NEON = process.env.KC_NEON_URL || "", GEHEIM = process.env.KC_BACKUP_KEY || "";
 const MODUS = (process.env.MODUS || "probe").trim(), TABELLE = (process.env.TABELLE || "").trim(), BESTAETIGT = (process.env.BESTAETIGEN || "").trim() === "JA";
 const zeile = []; const merke = (t) => { zeile.push(t); console.log(t); };
 
 export const b64 = (s) => Uint8Array.from(Buffer.from(String(s), "base64"));
+// KC-SICHERUNG-PACKEN (15.11.2026): seit Backup-Worker Version 22 ist der Klartext gzip-gepackt (compression:"gzip", AAD "kc-backup|gzip").
+// Ungepackte Altsätze bleiben lesbar.
 export async function entschluesseln(payload, geheim) {
   const p = typeof payload === "string" ? JSON.parse(payload) : payload;
+  const gz = p.compression === "gzip";
+  if (p.compression && !gz) throw new Error("Unbekannte Packart in der Sicherung");
   const h = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(geheim));
   const k = await crypto.subtle.importKey("raw", h, { name: "AES-GCM" }, false, ["decrypt"]);
-  const klar = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64(p.iv) }, k, b64(p.ciphertext));
-  return new TextDecoder().decode(klar);
+  const klar = new Uint8Array(await crypto.subtle.decrypt(gz ? { name: "AES-GCM", iv: b64(p.iv), additionalData: new TextEncoder().encode("kc-backup|gzip") } : { name: "AES-GCM", iv: b64(p.iv) }, k, b64(p.ciphertext)));
+  return new TextDecoder().decode(gz ? gunzipSync(klar) : klar);
 }
 
 async function pruefsumme(sql, tabelle, text) { // gleiche Rechnung wie kc-db-backup-verify-v2 (in der Datenbank, mit dem Tabellentyp des Spiegels)
@@ -36,6 +40,7 @@ async function pruefsumme(sql, tabelle, text) { // gleiche Rechnung wie kc-db-ba
 async function main() {
   if (!URL_NEON || !GEHEIM) { merke("⚪ Noch nicht eingerichtet: GitHub-Secrets KC_NEON_URL und/oder KC_BACKUP_KEY fehlen – nichts geprüft (Anleitung: docs/NOTFALL_DATEN_ZURUECKHOLEN.md)."); return 0; }
   if (TABELLE && !/^[a-z0-9_]+$/.test(TABELLE)) throw new Error("Ungültiger Tabellenname");
+  const { default: postgres } = await import("postgres"); // erst hier laden – entschluesseln() ist so ohne Paket nutzbar (Tests, Zweitkopie-Prüfung)
   const sql = postgres(URL_NEON, { max: 1, prepare: false, ssl: /sslmode=disable/.test(URL_NEON) ? false : "require", connect_timeout: 30, onnotice: () => {} }); // Neon immer verschlüsselt (nur der lokale Test schaltet es ab)
   try {
     const [satz] = await sql`select s.backup_set, max(s.taken_at) as am, count(*)::int as tabellen from kc_backup_snapshots s

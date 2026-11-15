@@ -11,14 +11,14 @@ const { AK_NASCH, AK_TUERCHEN, AK_ARTEN } = new Function(block + "; return { AK_
 
 // 24 Türchen, Rhythmus Nascherei → Basteln → Deko, Sonntage 6./13./20.12.2026 Kinderriegel, Tag 24 Einladung
 assert.equal(AK_TUERCHEN.length, 24, "24 Türchen");
-assert.equal(AK_TUERCHEN.map((T) => T.art[0]).join(""), "nbdnbrdnbdnbrdnbdnbrdnbe", "Reihenfolge der Sorten wie im Konzept (Abschnitt 5)");
+assert.equal(AK_TUERCHEN.map((T) => T.art[0]).join(""), "nbdnbrdnbdnbndnbdnbrdnbe", "Reihenfolge der Sorten (2.947.0: 13.12. Mandarinen-Licht statt Gutschein)");
 AK_TUERCHEN.forEach((T, i) => {
-  assert.equal(new Date(2026, 11, i + 1).getDay() === 0, T.art === "riegel", `Tag ${i + 1}: Kinderriegel genau an den Adventssonntagen`);
+  assert.equal([6, 20].includes(i + 1), T.art === "riegel", `Tag ${i + 1}: Preis-Türchen nur am 6.12. (Schoko-Nikolaus) und 20.12. (Kinderriegel)`);
   assert.ok(AK_ARTEN[T.art] && T.sym && T.t, `Tag ${i + 1}: Sorte, Symbol, Titel`);
 });
 assert.equal(AK_TUERCHEN[23].art, "einladung", "Türchen 24: Einladung");
-assert.deepEqual(AK_TUERCHEN.filter((T) => T.art === "riegel").map((T) => T.nr), [1, 2, 3], "Gutschein 1 bis 3");
-assert.equal(AK_TUERCHEN.filter((T) => T.art === "naschen").length, 7, "7 Naschereien");
+assert.deepEqual(AK_TUERCHEN.filter((T) => T.art === "riegel").map((T) => T.preis), ["nikolaus", "kinderriegel"], "6.12. Schoko-Nikolaus, 20.12. ein Kinderriegel (Hansi 15.11.2026)");
+assert.equal(AK_TUERCHEN.filter((T) => T.art === "naschen").length, 8, "8 Naschereien (13.12. Mandarinen-Licht)");
 assert.equal(AK_TUERCHEN.filter((T) => T.art === "basteln").length, 7, "7 Bastelideen");
 assert.equal(AK_TUERCHEN.filter((T) => T.art === "deko").length, 6, "6 Deko-Ideen");
 
@@ -39,9 +39,11 @@ for (const t of ["Lokomotive aus Dominosteinen", "Schneemann aus Pfeffernüssen"
 for (const T of AK_TUERCHEN.filter((x) => x.art === "naschen")) assert.ok(AK_NASCH.some((x) => x.t === T.t), "Kalender-Nascherei stammt aus AK_NASCH: " + T.t);
 assert.ok(/function akNaschFach\(\)/.test(js) && /onclick="akNaschFach\(\)">📖 Alle Naschereien</.test(js), "Fach „Alle Naschereien“");
 
-// Kinderriegel: Gutschein fürs Weihnachtsessen im Januar – kein Abhaken, kein Server
+// Preis-Türchen: Gutschein fürs Weihnachtsessen im Januar; seit 2.947.0 (Wunsch #89, Hansi 15.11.2026) „🎁 Ja, den nehme ich“ → Hansis Liste.
+// Nur die drei eigenen Server-Wege, kein „Eingelöst“-Abhaken.
 const riegel = js.slice(js.indexOf("function akRiegelKarte"), js.indexOf("const AK_FRUEHSTUECK"));
-assert.ok(/Weihnachtsessen im Januar/.test(riegel) && !/api\(|Eingelöst/.test(riegel), "Gutschein ohne Abhaken und ohne Server");
+assert.ok(/Weihnachtsessen im Januar/.test(riegel) && !/Eingelöst/.test(riegel), "Gutschein fürs Weihnachtsessen");
+assert.deepEqual([...new Set((riegel.match(/api\("([a-z_]+)"/g) || []).map((x) => x.slice(5, -1)))].sort(), ["advent_preis_melden", "advent_preise_liste", "advent_preise_meine"], "nur die Advent-Preis-Wege");
 assert.ok(!/KINDERRIEGEL[^<]*<img|ferrero/i.test(riegel), "kein Markenlogo");
 
 // Türchen 24: Termin folgt, Antwort über die vorhandene Abstimmung (kein neuer Server-Weg)

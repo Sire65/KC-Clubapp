@@ -1,5 +1,212 @@
 # Änderungen
 
+## 2.948.0 – 2026-11-15 – 🏳️ Tablet: Flagge berührt die Verbindungsanzeige nicht mehr (KC-CLUB-KOPF-ECKE)
+Fund Hansi 15.11.: „Im Tablet-Modus berührt die Flagge die Anzeige der Verbindungsqualität.“
+- Ab 600 px Breite steht im Verbindungs-Chip oben rechts zusätzlich das Wort („Sehr gut“, „Schwach“ …) – er wird breiter, die Sprach-Flagge stand aber fest an derselben Stelle und lag darauf. Jetzt rückt die Flagge immer 8 px links neben den Chip (auch beim Drehen des Tablets); am Handy bleibt sie, wo sie war. Geprüft im abgeschirmten Browser: Tablet hoch/quer und Handy.
+- Test: `tests/kopf-ecke.test.mjs`. Rückweg: App 2.947.0. Nur die App.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+## 2.947.0 – 🎄 Adventskalender: Preis-Türchen mit „🎁 Ja, den nehme ich“ und Hansis Liste „Wer bekommt was“ (KC-CLUB-ADVENT-PREISE, Wunschliste #89) · 🔔/🔕 auf den Mitglieder-Kacheln (KC-CLUB-MG-PUSH-ZEICHEN, #91) · App + Server 2.947.0 + Datenbank
+Antworten Hansi 15.11.2026: „Mini-Nikolaus aus Schokolade … jeder am 06.12. einen. Kinderriegel nur 1 Stück pro Person. Jeder, der die Tür öffnet, bekommt die Sachen. Liste passt.“
+- **6.12. (Nikolaus):** Türchen „🎅 Ein Mini-Schoko-Nikolaus für dich!“ – jede/r bekommt einen.
+- **20.12. (4. Advent):** Türchen „🍫 Ein Kinderriegel für dich!“ – nur noch **ein** Kinderriegel pro Person (vorher drei Gutscheine an 6./13./20.12.). Am **13.12. (Lucia)** gibt es dafür die Nascherei „Mandarinen-Licht“.
+- In beiden Preis-Türchen: **„🎁 Ja, den nehme ich“** – damit steht man in der Liste. Danach: „✅ Notiert – Hansi legt deinen … für dich bereit.“ Melden geht erst ab dem jeweiligen Tag und nur einmal.
+- **Nur Admin:** im Adventskalender „📋 Wer bekommt was“ – je Preis die Namen und die Anzahl, mit **🖨️ Drucken** (Club-Briefkopf) zum Austeilen beim Weihnachtsessen im Januar.
+- Datenbank: neue kleine Tabelle `kc_club_advent_preise` (Person, Jahr, Tag, Preis), RLS an, keine Rechte für Browser, gespiegelt und gesichert. Server: `advent_preis_melden`, `advent_preise_meine`, `advent_preise_liste` (nur Admin).
+- Neue Preise später (z. B. mit Hansis Fotos) = Eintrag in `AK_PREISE` (App) und `ADVENT_PREISE` (Server).
+- **Mitglieder-Kacheln (#91, Hansi „A“):** oben links ein kleines **🔔** (Push eingeschaltet) oder **🔕** (kein Push) – **nur für Admin und Clubleitung**, damit Hansi sieht, wen er ans Einschalten erinnern kann. Legende darüber ergänzt. (Die Listen-Ansicht zeigt die Wege-Zeichen 🔔 ✉️ WA wie bisher.)
+- Tests: neu `tests/advent-preise.test.mjs`, `tests/advent-2026.test.mjs` angepasst, `tests/wunschliste-november.test.mjs` erweitert. Rückweg: App + Server 2.946.0 (Tabelle bleibt, stört nicht).
+## Sicherungen gepackt – Backup-Arbeiter Version 22, Prüfdienst Version 12 – 2026-11-15 (KC-SICHERUNG-PACKEN) · App unverändert
+Wunsch Hansi („Neon wird voll – gerade wenn der Weihnachtsmarkt losgeht; setze 1 und 2 um“). Befund 15.11.: Neon 712 von 1.024 MB, davon 539 MB (82 %) die 11 nächtlichen Sicherungen (je 45–50 MB, verschlüsselt, aber ungepackt, +1 MB je Tag durch Protokolle). Hochrechnung: Grenze um den 10.–15.12.
+- **Packen:** Der Backup-Arbeiter packt den Klartext jeder Tabelle vor dem Verschlüsseln mit gzip (`compression:"gzip"`, AES-GCM-Zusatzdaten `kc-backup|gzip` schützen das Merkmal). Unveränderte Tabellen werden nur noch aus schon gepackten Snapshots kopiert – in der ersten Nacht wird darum einmal alles neu (gepackt) übertragen.
+- **Lesen:** Prüfdienst (stückweise und im Ganzen) und Notfall-Werkzeug `tools/notfall/sicherung-lesen.mjs` (auch für die Zweitkopie) lesen gepackte und ungepackte Sätze; unbekannte Packart oder entferntes Merkmal → Fehler. `postgres` wird im Notfall-Werkzeug erst beim Lauf geladen.
+- **Geprüft:** Rundweg Arbeiter → Prüfdienst → Notfall-Werkzeug mit Testdaten (Faktor ~35 bei Protokoll-ähnlichen Daten); neuer Prüfdienst am echten Satz vom 15.11. (ungepackt): 300/300 Tabellen, 0 Fehler. Neuer Test `tests/sicherung-packen.test.mjs`.
+- **Punkt 2:** Dienstplan-Fassungen im Neon-Spiegel verdichtet (VACUUM FULL, 47 → 12 MB, 15 Zeilen unverändert).
+- Eingespielt per Supabase (kc-db-backup-verify-v2 Version 13 = Quelle 12, kc-db-backup-worker Version 22). Die alten ungepackten Sätze laufen über die Aufbewahrungsregel (7 Tage/4 Wochen/3 Monate) nach und nach aus.
+
+## 2.946.0 – 2026-11-13 – 📄 Besprechungs-Protokoll als PDF auf dem Club-Briefkopf · 👁️ „So sieht Klaus es“ · 📧 Kopie an mich (KC-CLUB-TA-PROTOKOLL-PDF) · Server 2.946.0
+Wunsch Hansi 13.11.: „Wo sehe ich das Protokoll an Klaus, wie er es bekommen hat?“ – „Ja, und normalerweise als PDF auf Kopfbogen mit Logo etc.“
+- Beim **Senden** erzeugt die App das Protokoll als **PDF im Club-Design** (Logo, Kopf, Fußzeile) und hängt es an die Terminanfrage. Die Angefragten sehen es dort als Anlage und im Lesefenster als **„📄 Protokoll als PDF (Briefkopf)“**; die E-Mail weist darauf hin. Erneutes Senden ersetzt das ältere PDF. Klappt das PDF einmal nicht, geht das Protokoll trotzdem raus.
+- Neuer Knopf **„👁️ So sieht Klaus es“** an der eigenen, verschickten Besprechung: genau das Lesefenster des Empfängers.
+- Häkchen **„📧 Kopie der E-Mail an mich“** (vorbelegt): dieselbe E-Mail wie der Empfänger, nur per E-Mail.
+- Keine Datenbank-Änderung. Tests `tests/ta-protokoll.test.mjs`, Browser `tools/hilfe/ta-protokoll-browser.mjs` erweitert (nur Testdaten). Rückweg: App 2.945.0, Server 2.944.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+- Eingespielt 13.11. 20:46 Uhr auf Wunsch Hansi („Einspielen“), Ruhe geprüft: 0 in der App, keine Spiegelung/Sicherung.
+
+## 2.945.0 – 2026-11-13 – ⏳ Höchstens eine Version je 15 Minuten · ehrlicher Hinweis beim Update (KC-EINSPIELEN-ABSTAND, KC-CLUB-UPDATE-HINWEIS)
+Fund Hansi 13.11. 20:06: Start dauerte 39 s mit „Das Netz ist gerade langsam“. Ursache: 2.943.0 (19:54) und 2.944.0 (20:01) kamen innerhalb von 7 Minuten – Hansis Update auf 2.943.0 lief mitten in die nächste Version (Mischstand Seite 2.943 / Programm 2.944, die App lud sich selbst neu).
+- **Abstand:** `tools/einspielen-ruhe.sh` sieht bei GitHub nach, wann die letzte andere Version live ging („Seite veröffentlichen“ auf main). Weniger als 15 Min. her → der Ablauf wartet den Rest ab. Gilt auch bei `[Hansi: einspielen]`, nicht bei `[Notfall]`. Die Abläufe dürfen dafür Actions lesen (`actions: read`). Regel in AGENTS.md.
+- **Hinweis:** Kommt der Start durch ein Update (auch das Selbst-Neuladen bei Mischstand), steht auf der Ladeanzeige „🔄 Gerade wird ein größeres Update eingespielt – die App richtet sich neu ein. Bitte kurz warten und die App nicht schließen.“ statt „Das Netz ist gerade langsam“. Ohne Update bleibt der Netz-Hinweis.
+- Tests: `tests/einspielen-sperre.test.mjs` (Abstand), neu `tests/update-hinweis.test.mjs`.
+
+## 2.944.0 – 2026-11-13 – 📋 Einsatzplan je Tag · Spätdienst bis Schluss (KC-CLUB-DP-EINSATZ, KC-CLUB-DP-SPAET-BIS-SCHLUSS)
+- Wunsch Hansi („je Tag eine A4-Seite: alle Personen, oben die Wunschzeit, darunter die Sollzeit – mit Balken, Besetzungsstatistik und Bereitschaft, sparsam aber übersichtlich“): neues Blatt **📋 Einsatzplan** im Ordner „Dienstplan zum Drucken“ (nur Admin). Je Tag eine Seite A4 quer mit schmalem CD-Kopf; im Tageskopf Art und Regelzeit, Soll, eingeteilt, fehlt. Alle Personen in fester Reihenfolge, auch ohne Angabe: oben ihre Angaben (Wunsch, kann, nur wenn nötig, gesperrt), darunter die Einteilung als Balken (Farbe nach Bereich, Aushilfen grau gestreift, ☕ ab 6 Std.), links die Dienstzeit, rechts W = Wunsch- und S = eingeteilte Stunden. Darunter Besetzt/Soll je halbe Stunde (grün/rot/gelb), „Fehlt“ und die selbst eingetragene Bereitschaft.
+- Wunsch Hansi („die letzten Leute, die Spätdienst haben, bis zum Schluss eintragen – sozusagen bis 23 Uhr“): Dienstplan-Rechnung Regel 9, `dp_druck_konfig.spaetBisSchluss = true` – am Markttag wird ein Dienst, der in den letzten 2 Std. vor Schluss endet, bis Marktschluss verlängert (nicht über eine Sperre, nicht über 8 Std. bzw. die eigenen Grenzen). Probe 13.11.: Lücken 17,5 statt 28,5 Std.
+
+## 2.943.0 – 2026-11-13 – 🏠 Gastgeberin bekommt den Anmeldestand am Vortag schon um 16 Uhr (KC-CLUB-GASTGEBER-16UHR) · 👣 Dienst-Vorgänge in den Wegen (KC-CLUB-SPUR-DIENST) · 📝 Besprechungs-Protokoll aus der Terminanfrage (KC-CLUB-TA-PROTOKOLL) · Server 2.943.0 + Datenbank
+Wunsch Hansi 13.11.: „Nächster Köcheclub-Treff bei Reinhilde in Ondrup. Sie muss automatisch Push/Mail bekommen, wie viele Mitglieder angemeldet sind – einmal am Vortag bis 16.00 und am gleichen Tag, falls sich noch was geändert hat.“
+- Die Vortags-Meldung an die Gastgeberin (Push **und** E-Mail: Zusagen mit Namen, vielleicht, Absagen, noch offen, Hinweise, „bitte plane für … Personen“) kommt jetzt **ab 16 Uhr** statt ab 18 Uhr. Die Clubleitung bekommt denselben Stand.
+- Am Tag selbst wie bisher: jede Änderung kurz (gesammelt, höchstens alle 15 Min., nachts nicht) und **2 Stunden vorher nochmal der ganze Stand – nur, wenn sich etwas geändert hat**.
+- Gilt für jedes Treffen mit eingetragenem Gastgeber, z. B. Köcheclub-Sitzung am 24.11. bei Reinhilde in Ondrup (Meldung am 23.11. um 16 Uhr).
+- **👣 Wege der Mitglieder – Dienst** (Wunsch Hansi 13.11.: „ob sie es nur geöffnet hat oder auch Dienstzeiten eingetragen oder geändert – mit Ändern, damit ich sehe, ob es Änderungen gab“): neben „Mein Dienst geöffnet“ stehen jetzt die Vorgänge – 🗓️ Dienstwünsche abgegeben / ✏️ geändert (mit Fassung), ⏱️ Stunden gemeldet, ✅ Ist-Zeiten bestätigt / ✏️ geändert / 🚫 nicht da, 🟢 Kommen / 🔴 Gehen / ✏️ Zeit geändert, 🔁 Tausch angeboten / 🤝 übernommen / ↩️ zurückgezogen / ✅ bestätigt. Der Server schreibt sie selbst (auch von der Dienstwunsch-Seite). Nur der Vorgang mit Fassung bzw. Diensttag – nie Zeiten, Wünsche oder Texte.
+- **📝 Besprechungs-Protokoll** (Wunsch Hansi 13.11.: „Wo ist der Termin und die Tagesordnung und wie wird daraus ein Protokoll?“ – „Ja bauen“): an der eigenen Terminanfrage ab kurz vor Beginn **„📝 Protokoll schreiben“**. Punkte aus der Tagesordnung (Häkchen) bzw. der Notiz sind vorbelegt, je TOP **Ergebnis**, **Wer?** (Teilnehmer) und **Bis wann?**; Anwesend (vorbelegt), Sonstiges, nächster Termin; Punkte ergänzen/entfernen; **📷 Foto der handschriftlichen Besprechungsvorlage lesen** (Text wird nach „TOP n“ auf die Punkte verteilt, bitte prüfen). **Entwurf speichern** oder **an die Angefragten senden** (Push + E-Mail mit dem ganzen Protokoll), auf Wunsch **To-dos** aus „Wer? Bis wann?“. **Drucken / PDF / Ablegen** im Club-Design (Register „Besprechungen“). Angefragte sehen „📝 Protokoll lesen“, sobald es verschickt ist.
+- Vergangene Besprechungen bleiben unter Termine sichtbar: ohne verschicktes Protokoll 3 Tage, mit Protokoll 14 Tage; aus dem Kalender angetippt immer.
+- Datenbank: Spalte `protokoll` an `kc_club_terminanfragen` (Migration 20261113, Probelauf 113, eingespielt 13.11.). Server-Aktion `terminanfrage_protokoll` (nur wer angefragt hat; Protokoll ohne Inhalte).
+- Tests `tests/gastgeber-16uhr.test.mjs`, `tests/spur-dienst.test.mjs`, `tests/ta-protokoll.test.mjs`, Browser `tools/hilfe/ta-protokoll-browser.mjs` (nur Testdaten). Rückweg: App 2.942.0, Server 2.939.0 (Spalte darf bleiben).
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+- Eingespielt 13.11. 19:53 Uhr zum 20-Uhr-Termin, Ruhe geprüft: 0 in der App, keine Spiegelung/Sicherung.
+## 2.942.0 – 2026-11-13 – 📰 Club-Küche 2028: Hefte 13–24 mit allen festen Inhalten vorbereitet (KC-CLUB-MAGAZIN-HEFTE-2028)
+Wunsch Hansi 13.11.: „Baue schon mal in alle Hefte die weiteren feststehenden Sachen ein wie Rätsel, Kräuter, Küchenlatein, Erklärungen, wusstest du schon …“
+- Hefte 13–24 (Januar–Dezember 2028), wie 2027 vorgefüllt: Küchentipp „Aus der Trickkiste“ + Tipp-Kasten, Küchenlatein (12 neue Begriffe), Küchenwitz, feste Termine 2028 (Feiertage, Ostern 16. April, Advent …, Wochentage geprüft), Schlagzeilen.
+- Rätsel-Ecke 2028: 12 neue Fehlerbilder (`magazin/raetsel/nr13…nr24-*.svg`) und 12 neue Kreuzworträtsel; Auflösung jeweils im nächsten Heft. Werkzeuge im KC-ICC (`docs/club-magazin-raetselecke/hefte/`).
+- Kraut des Monats und „Schon gewusst?“: zweites Jahr mit 12 neuen Kräutern und 36 neuen Kniffen (vorher hätten sich 2027er Inhalte wiederholt); Auswahl jetzt nach Heftnummer.
+- Offen für die Redaktion bleiben: Vorwort, Rezept des Monats, Backstube, Porträt, Rückblick, Club-Termine (kommen aus dem Kalender).
+- Tests `magazin-raetsel` und `magazin-kraeuter` auf die Hefte 13–24 erweitert. Update-Hinweis: nur „Kleine Systemanpassung“. Rückweg: App 2.941.0.
+
+## 2.941.0 – 2026-11-13 – 🖼️ Roman Staffel 2: 13 neue Bleistift-Zeichnungen
+Wunsch Hansi 12./13.11.: Zeichnungen für Staffel 2 (von ChatGPT, geprüft auf Figuren und Szene, als Graustufen-WebP < 200 KB).
+- Heft 13 (Folge 1): Ralle am Teich, Mikes erster Tag, Bischofsmütze, Forelle für Tisch neun – dazu drei kurze Absätze (Stockenten, Servietten falten, Lena serviert Tisch neun).
+- Heft 14 (Folge 2): Lena hilft. Heft 15 (Folge 3): Der falsche Kritiker („runde“ Türfenster gestrichen).
+- Heft 19 (Folge 7): Das Pättken, Kartoffelwasser (drei Zeilen), Das Gewitter (Lena führt die letzten Gäste hinaus).
+- Heft 20 (Folge 8): Die Scheunenküche, Mike hilft (Junge nach dem Fettbrand), Timo (Bank an der Rathausmauer). Heft 21 (Folge 9): Mike und die Kamera.
+- Hefte 20 und 21 mit Vermerk „Skizzen by KI“. Test `tests/magazin-roman.test.mjs` erweitert.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“. Rückweg: App 2.940.0.
+
+## 2.940.0 – Zeitansage: Videos „Koch-Figur als Bild aussuchen“, „Eigene Figur zusammenstellen“, „Chat für Fortgeschrittene“ und „Geheim schreiben“ – damit haben alle Erklär-Videos die Zeitansage · Video-Rahmen bleibt am Ziel (KC-CLUB-VIDEO-ZEITANSAGE, Wunschliste #81)
+- **Fehler in allen Erklär-Videos behoben:** Wird eine Ansicht während eines Schritts neu gezeichnet (z. B. die Kacheln kurz nach dem Wechsel aufs Register „Meins“), blieb der gelbe Rahmen am alten, verschwundenen Element hängen und war weg – so im Video „Koch-Figur“ beim ersten Schritt „Mein Bild“. Jetzt sucht das Video sein Ziel neu, sobald es verschwunden ist.
+- **Koch-Figur:** Schritte geprüft (Mein Bild, einfache/hochwertige Figuren, antippen, übernehmen, eigene Figur, individuell anpassen, eigenes Foto; „Kochjacke wechselt“ nur mit eigenem Bild).
+- **Eigene Figur zusammenstellen:** alle 16 Schritte geprüft (Vorschau, Kacheln, Stil, Koch/Köchin, Haut und Haare, Kopf, Bart, Gesicht, Brille, Schmuck, Kochjacke, Hintergrund, Info, Speichern).
+- **Chat für Fortgeschrittene:** 26 Schritte geprüft (Trenner, Antippen, Zitat, Anheften, Merken, Pfeil, wichtig, Haken, Sprachnachricht schneller, Vorlesen, Abstimmen, Selbstlöschen, Entwurf, ohne Netz, später senden, Drucken, Archivieren, Gemerktes, schreibt gerade, senden ohne Warten, ändern, an weitere; „Archivierte Chats“ nur, wenn es welche gibt).
+- **Geheim schreiben:** alle 17 Schritte geprüft (Schloss, Rückfrage, Schlüssel, Geheimagent, Mitteilung, Ankunft, Einmal-Schlüssel, falscher Schlüssel, Schlüsselbund, Datei, gut zu wissen).
+- **Damit sagen alle Erklär-Videos zu Beginn ihre Dauer an** (Wunsch #81 erledigt).
+- Zeitansage in allen vier eingeschaltet. Test: `tests/video-zeitansage.test.mjs` erweitert. Rückweg: Version 2.939.0 einspielen.
+## 2.939.0 – 2026-11-13 – 🔗 Alter Link: kurze, klare Anleitung (KC-CLUB-ALTER-LINK-KLAR)
+Wunsch Hansi nach dem Fall Marianne (13.11.: drei abgelehnte Anmeldungen, immer mit dem am 09.10. ersetzten Link – vermutlich ein altes Startsymbol): Öffnet jemand die App mit einem **ersetzten** Link und hat schon einen neueren, gültigen Link, zeigt die App Hansis Starttext: „Hallo …, du versuchst gerade, die Club-App über alte Zugangsdaten zu öffnen. Aus Sicherheitsgründen ist das nicht möglich. Entferne am besten das Kochmützen-Symbol … 📲 Du hast am TT.MM.JJJJ schon einen neuen Link bekommen – per WhatsApp von Hansi …“ Darunter weiter „Hansi Bescheid geben“, „Neuen Link per Mail“ und der 6-stellige Code. Der Server meldet dafür nur `neuerLink` (ja/nein) und das Datum des neuen Links (`neuSeit`) in der Zugangs-Hilfe – nie den Link selbst. Ohne neueren Link bleibt die bisherige Erklärung.
+
+## 2.938.0 – 2026-11-13 – 🛎️ Dienstplan: nur selbst eingetragene Bereitschaft (KC-CLUB-DP-BEREITSCHAFT-EIGEN)
+Wunsch Hansi („keine automatische Bereitschaft – nur eintragen, wer welche Bereitschaft selber eingetragen hat“): Mit `dp_druck_konfig.bereitschaftAuto = false` (seit 13.11. so eingestellt) verteilt die Rechnung keine Bereitschaft mehr. Im Plan und auf dem Lückenblatt steht nur, was jemand im eigenen Wunschplan als Bereitschaft mit Uhrzeit angegeben hat (je Tag oder am Wunsch-Eintrag in Twinkey) – trägt jemand später etwas ein, steht es beim nächsten Rechnen von selbst drin. „Keine Bereitschaft“ je Person (z. B. Dieter, Steven) und „macht nicht mit“ schließen aus. „Generell bereit“ ohne Tag und Uhrzeit wird nicht eingeplant.
+
+## 2.937.0 – 2026-11-12 – 📋 Tagesordnung: nur die echten Punkte, in der richtigen Reihenfolge (KC-CLUB-TA-TAGESORDNUNG-2)
+Fund Hansi 12.11.: „Die Frage ist kein Tagesordnungspunkt und Nr. 12 ‚Hansi‘ war meine Unterschrift – baue das besser in der Reihenfolge.“
+- „📋 Als Tagesordnung übernehmen“ nimmt aus der Notiz nur die **Aufzählung** (1., 2., … oder Spiegelstriche), wenn eine da ist – Anrede, Frage/Einleitung, Gruß und Unterschrift bleiben draußen, die Reihenfolge bleibt.
+- Ohne Aufzählung: alles vor dem Gruß, ohne Anrede und ohne Zeilen, die mit „?“ oder „:“ enden.
+- In Hansis Anfrage an Klaus (13.11.) stehen die nachgetragenen Punkte jetzt als 10. und 11. hinter Punkt 9 statt nach der Unterschrift.
+- Keine Datenbank-, keine Server-Änderung. Test `tests/ta-tagesordnung.test.mjs` erweitert. Rückweg: App 2.936.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+- Eingespielt 12.11. 20:55 Uhr im 20-Uhr-Termin (Besprechung am 13.11. um 11:30), Ruhe geprüft: 0 in der App, keine Spiegelung/Sicherung.
+## 2.936.0 – 2026-11-12 – 🗓️ Dienstplan: Wunschzeiten zuerst, gerecht gekürzt (KC-CLUB-DP-WUNSCH-ZUERST)
+Wunsch Hansi („Wunschzeiten der Leute ausreizen und ihnen nicht unbedingt weniger Stunden geben – wer 47 Std. wünscht, bekommt sie; bei Überbesetzung bei dem streichen, der viel hat, damit wir zu einem gerechten Plan kommen“) – Dienstplan-Rechnung Regel 8, eingeschaltet mit `dp_druck_konfig.wunschZuerst = true`:
+1. Jeder bekommt an jedem Tag seinen Wunschblock (im Bedarf, höchstens 8 Std. bzw. seine Grenze). Wer insgesamt weniger Wunschstunden hat, kommt zuerst; wer mehr hat, bekommt den Teil seines Wunsches, in dem noch jemand fehlt.
+2. Bleibt am Rand eine Überbesetzung, wird bei dem gekürzt, der die meisten Wunschstunden hat (Dienst bleibt mind. 2 Std.).
+3. Dann füllt die bisherige Rechnung die Lücken mit Kann-Zeiten. Sperrtage, Sperrzeiten, freier Tag nach 5 Tagen, Obergrenzen und „nur mit anderen“ gelten weiter.
+Probe mit den Wunschplänen vom 12.11.: Lücken 28,5 statt 33 Std.; Karla, Ruth, Reinhilde, Hansi, Klaus, Steven kommen nahe an ihren Wunsch.
+
+## 2.935.0 – 2026-11-12 – 📖 Roman: fünftes Lektoratsgutachten eingearbeitet
+Wunsch Hansi 12.11.: „baue die 5 punkte noch und mache die einträge in der Club app neu und in den 2 pdfs“.
+- Staffel 2, Folge 1 (Heft 13): Erinnerung an Lenas ersten Tag passt jetzt zu Staffel 1 (Jonas erklärt Brunoise, Lenas Würfel waren gut) – kein Widerspruch mehr. Weniger Erklär-Dialog: im Text nur noch Pass, Brunoise, Salamander; Posten, Pâtisserie, Bon, geklärte Butter stehen im Notizbuch-Kasten.
+- Staffel 2, Folge 12 (Heft 24): Wildkamera glaubwürdig – ein Fuchs löst die Bilderserie aus, der Wagen ist im Glas dahinter zu sehen. Onkel Georg: ein Satz, warum er auch Hartmann heißt.
+- Staffel 2, Folge 7 (Heft 19): Schlusssatz zeigt nicht mehr auf den Täter.
+- Staffel 1: Folge 11 (Heft 11) – Voss' Nachricht verrät die Lösung nicht mehr; Folge 8 (Heft 8) – Schluss ohne Hinweis auf den Sellerie; Folge 7 (Heft 7) – Rückblick: Jonas ist nicht der Restaurantbesitzer.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“. Rückweg: App 2.934.0.
+
+## 2.934.0 – 2026-11-12 – ✏️ Terminanfrage ändern / ergänzen und Bescheid geben (KC-CLUB-TA-AENDERN) · Server 2.934.0
+Wunsch Hansi 12.11.: „Baue noch ein Ändern der Anfrage, damit man selber noch ändern und was dazuschreiben kann. Dann den anderen informieren, dass sich noch weitere Punkte ergeben haben.“
+- Bei der eigenen Terminanfrage neuer Knopf **„✏️ Ändern / ergänzen“**: Anlass, Ort und Notiz/Punkte (ein Punkt je Zeile) ändern. Die Zeit bleibt – dafür gelten die Antworten (andere Zeit: absagen und neu anfragen).
+- Häkchen **„📨 … Bescheid geben, dass sich weitere Punkte ergeben haben“** (vorbelegt) mit kurzem eigenem Hinweis: die Angefragten (ohne die, die abgelehnt haben) bekommen eine Nachricht mit den **neu dazugekommenen Zeilen**.
+- In der Anfrage steht danach „✏️ ergänzt am …“. Neue Punkte erscheinen sofort unter „📋 Als Tagesordnung übernehmen“ und in der Besprechungsvorlage.
+- Server: neue Aktion `terminanfrage_aendern` (nur wer angefragt hat, nicht abgesagt, nicht vorbei, nicht bei Partien); Protokoll ohne Inhalte. Keine Datenbank-Änderung (Spalte `geaendert_am` gab es schon).
+- Test `tests/ta-aendern.test.mjs`, Browser `tools/hilfe/ta-tagesordnung-browser.mjs` erweitert (nur Testdaten). Rückweg: App 2.933.0, Server 2.921.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+- Eingespielt 12.11. 20:40 Uhr auf Wunsch Hansi („sofort einspielen“), Ruhe geprüft: 0 in der App, keine Spiegelung/Sicherung.
+
+## 2.933.0 – 2026-11-12 – 🗂️ Besprechungsvorlage wie die Sitzungs-Vorlage – mit Schreiblinien (KC-CLUB-TA-TAGESORDNUNG)
+Hansi 12.11.: „Es gibt bereits eine Vorlage mit Tagesordnung und Linien zum handschriftlichen Eintrag – die kannst du dafür nehmen, mit Logo und Kopf und CD.“
+- Die Besprechungsvorlage aus der Terminanfrage hat jetzt denselben Aufbau wie die **Sitzungs-Vorlage aus dem Büro**: Protokollführer, Ort, Anlass, **Anwesend zum Ankreuzen** (plus freie Zeile), Entschuldigt bzw. fehlend, Gäste, **je TOP Schreiblinien** zum Mitschreiben, Beschlüsse / Sonstiges, nächster Termin (Datum, Uhrzeit, Ort), Unterschriften Protokoll und Besprechungsleitung.
+- Logo, Kopf und Fußzeile im Club-Design wie bei allen Ausdrucken. Statt der Tabelle aus 2.932.0.
+- Keine Datenbank-, keine Server-Änderung. Rückweg: App 2.932.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+- Eingespielt 12.11. 20:31 Uhr im 20-Uhr-Termin, Ruhe geprüft: 1 in der App, keine Spiegelung/Sicherung.
+
+## 2.932.0 – 2026-11-12 – 📋 Terminanfrage als Tagesordnung übernehmen · 🗂️ Besprechungsvorlage (KC-CLUB-TA-TAGESORDNUNG)
+Wunsch Hansi 12.11.: „Es gibt eine Terminanfrage von mir an Klaus. Baue dort ein: als Tagesordnung übernehmen mit einem Häkchen und dann daraus eine Besprechungsvorlage bauen mit den Punkten.“
+- In jeder Terminanfrage (für den, der anfragt, und für alle, die zugesagt oder „vielleicht“ gesagt haben) ein Häkchen **„📋 Als Tagesordnung übernehmen“**.
+- Die **Notiz der Anfrage wird in Punkte zerlegt** (je Zeile oder „;“, Aufzählungszeichen/Nummern weg). Jeder Punkt hat ein eigenes Häkchen; weitere Punkte lassen sich ergänzen (✕ entfernt eigene).
+- **„🗂️ Besprechungsvorlage“** druckt im Club-Design: Anlass, Termin, Ort, Protokollführer, Teilnehmer zum Abhaken (mit Rückmeldung), Tagesordnung mit Platz für Notizen/Ergebnis und „Wer? Bis wann?“, „Verschiedenes“, nächster Termin. Drucken, PDF, senden oder in der Ablage ablegen.
+- Häkchen und Punkte werden nur auf dem eigenen Gerät gemerkt – keine Datenbank-, keine Server-Änderung, nichts geht an andere.
+- Test `tests/ta-tagesordnung.test.mjs`, Browser `tools/hilfe/ta-tagesordnung-browser.mjs` (nur Testdaten). Rückweg: App 2.931.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+- Eingespielt 12.11. 20:23 Uhr zum 20-Uhr-Termin, Ruhe geprüft: 0 in der App, keine Spiegelung/Sicherung.
+
+## 2.931.0 – 2026-11-12 – 📖 Club-Küche: Fachbegriffe erklärt · Fortsetzungsroman nach vier Gutachten überarbeitet (KC-CLUB-MAGAZIN-FACHBEGRIFFE, KC-CLUB-MAGAZIN-ROMAN-RUNDE-5)
+Wünsche Hansi 12.11.: „Übersetzungen für Nicht-Fachleute … im Roman könnte der Jonas oder Herr Voss das zu Lena oder Mike sagen, im Heft kann es in Klammern dahinter stehen“; „alle Stufen angehen, damit wir besser werden“; „Ja a nehmen“.
+- **Fachbegriffe im Heft:** rund 40 Begriffe (Brunoise, Julienne, Mise en place, blanchieren, pochieren, montieren, Fond, Jus, Reduktion, Pass, Posten …) bekommen beim ersten Vorkommen je Heftseite eine kurze Erklärung in Klammern – am Bildschirm und im gedruckten Heft. Nicht im Roman, Küchenlatein, Rätsel und Witz; Überschriften bleiben frei.
+- **Fortsetzungsroman (Staffel 1 und 2) nach vier unabhängigen Verlagsgutachten überarbeitet:** Fachbegriffe erklären die Figuren im Gespräch (Jonas, Voss, Leon, Mira, Timo an Lena bzw. Mike). Staffel 1: Lena überführt den Trüffeldieb selbst (Beleg-Original, eigene Notizen, Kühldaten), Mira als zweite Verdächtige, neue Cliffhanger, Rahmentexte ohne Spoiler. Staffel 2: zweiter Fischzüchter Hubert Lammerding und Getränkehändler Dirk Wessels als falsche Fährten, falsches Alibi für den Täter, Lena löst den Fall selbst und geht im Finale ein Risiko ein, weniger Floskeln.
+- Bilder und Lenas Notizbuch bleiben; Rezept-Garzeit korrigiert (ca. 12 Min.).
+- Fund Hansi: Brunoise richtig erklärt – sehr kleine Würfel von 1–2 mm (Karotte, Sellerie, Lauch, Zwiebel …), nicht „wie Zuckerkörner“ (Heft-Klammer, Staffel 1 Folge 1 und 9, Staffel 2 Folge 1).
+- Tests: `tests/magazin-fachbegriffe.test.mjs` (neu), `tests/magazin-roman.test.mjs`. Keine Datenbank-, keine Server-Änderung. Rückweg: App 2.930.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+## 2.930.0 – 2026-11-12 – 🗂️ Büro: Ordnernamen beim Darüberfahren lesbar, Preisetiketten-Kachel
+KC-CLUB-ORDNER-SCHILD, Wunsch Hansi („wenn man mit der Maus über einen Ordner im Büro geht, soll der Ordnerrückentext als Tooltip angezeigt werden – die Beschriftung ist quer und nicht so gut lesbar“, Wahl Variante 2; „der Knopf für Preisetiketten kann rechts neben Allgemein, damit eine Zeile gespart wird“).
+- Büro-Regal: Maus über einen Ordnerrücken → sofort ein **waagerechtes Namensschild** über dem Ordner (Symbol, voller Name, ggf. „· 3 neu“), im Stil des Ordneretiketts; bleibt immer im sichtbaren Bereich.
+- Auch mit der Tastatur (Tab) und auf Handy/Tablet durch **langes Drücken** (kurz tippen öffnet wie bisher).
+- Archiv der Mitglieder geprüft: dort stehen die Namen schon waagerecht und vollständig (mit Umbruch), dazu gibt es den Tooltip – keine Änderung nötig.
+- 🪧 Schilder-Druckerei: **🏷️ Preisetiketten** als Kachel rechts neben „Allgemein“ statt eigener Zeile.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+## 2.929.0 – 2026-11-12 – 🏷️ Preisetiketten in den Farben der Warengruppen
+KC-CLUB-PREISETIKETTEN, Wunsch Hansi („die Warengruppen in der Kasse haben verschiedene Farben – die sollen auf die Etiketten“, Wahl Vorschlag B; „in den Ordner Schilderdruck, keinen eigenen Ordner“):
+- Oben auf jedem Etikett ein **Kopfband in der Farbe der Warengruppe** wie an der Kasse (Getränke dunkelblau, Speisen braun, Pfand blau, Sonstiges grau – so wie im PC-Manager eingestellt), darin klein die Warengruppe und groß der Name; Rahmen in derselben Farbe. Bei sehr heller Gruppenfarbe dunkle Schrift. QR-Code bleibt schwarz auf weiß, BAR-Etikett grün.
+- Schalter **Farbe**: Warengruppe · Artikel · Grau (für Schwarz-Weiß-Drucker).
+- Die Preisetiketten sind nur noch in der **🪧 Schilder-Druckerei** (und im 🖨️ Drucker) – kein eigener Ordner im Regal.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+## 2.928.0 – 2026-11-12 – 🏷️ Preisetiketten: Pfand, Sonstiges, BAR-Code, Ordner im Büro
+KC-CLUB-PREISETIKETTEN, Wunsch Hansi („weitere Warengruppen wie Pfand, Sonstiges – auch das Außer-Haus-Gefäß“, „der BAR-Barcode, der den Kassiervorgang abschließt“, „Probeetikett im gewünschten Maß“, „auch in den Ordner Druckstudio im Büro“):
+- Alle Warengruppen mit Artikelnummer: Getränke, Speisen, **Pfand** (Ausgabe und Rückgabe mit „−2,00“), **Sonstiges** (z. B. Außer-Haus-Becher, Wertmarke). Bei Pfand und Sonstiges keine Allergen-/Zusatzstoff-Zeilen (keine Lebensmittel).
+- Neue Gruppe **Kassen-Codes** mit dem Etikett **BAR**: QR-Code `CMD-CHECKOUT` – an der Kasse gescannt = bar kassieren, Verkauf abschließen.
+- 🎯 Probe trägt die gewählte Größe im Knopf („Probe 6 × 6 cm“) und geht auch ohne gewählte Anzahl (Etikett aus der Vorschau).
+- Büro: eigener Ordner **🏷️ Preisetiketten** im Regal neben der Schilder-Druckerei, und in der 🪧 Schilder-Druckerei oben ein Knopf dorthin.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+## 2.927.0 – 2026-11-12 – 🖨️ Heft am PC: PDF sichtbar anzeigen und drucken (KC-CLUB-HEFT-PC-DRUCK-3)
+Fund Hansi 12.11. (Bildschirmfoto): „Fehler beim Drucken – Beim Drucken ist ein Fehler aufgetreten“ nach „🖨️ Jetzt drucken“.
+- Ursache: Chrome/Edge können eine PDF aus einem unsichtbaren Rahmen nicht drucken (2.925.0).
+- Jetzt heißt der Knopf **🖨️ PDF anzeigen und drucken**: Die PDF erscheint groß über der App mit der Werkzeugleiste des Browsers (Drucker-Symbol oben rechts, „1 / 20“), dazu „Im neuen Tab“, „Speichern“ und „Schließen“. Kein verstecktes Drucken mehr.
+- Test: `tests/heft-pc-druck.test.mjs`. Rückweg: App 2.926.0 („PDF in neuem Tab öffnen“ funktioniert dort). Nur Programmteil Magazin.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+## 2.926.0 – 2026-11-12 – 🏷️ Preisetiketten im Büro-Drucker · Schild quer auf jedem Gerät
+- KC-CLUB-PREISETIKETTEN: Wunsch Hansi („Preisetiketten in die Club-App – Formate 8x8, 7x7, 6x6, 5x5, mit oder ohne Foto, Allergene, Preis usw., völlig flexibel, auch nach Warengruppen; Anzahl und Vorschau“, „die Club-App muss auch die aktuellen Preise übernehmen“; Wahl: PC-Manager veröffentlicht + im Dialog änderbar, nur Clubleitung). **Büro → 🖨️ Drucker → 🏷️ Preisetiketten**: Größe wählen, Bausteine an/aus (Name, Foto, Preis, „inkl. Pfand“, QR-Code, Art.-Nr., Allergene, Zusatzstoffe, „Enthält Alkohol“, farbiger Rahmen), Warengruppe (Getränke, Speisen …), Anzahl je Artikel, Live-Vorschau, 🎯 Probe mit 5-cm-Maß, Druck als A4-Bogen mit Schnittmarken (8×8: 6, 7×7: 8, 6×6: 12, 5×5: 15 je Blatt). Aufbau wie die erprobten Kesselschild-Etiketten: Foto links, Preis inkl. Pfand ohne €-Zeichen rechts, darunter der QR-Code mit der Artikelnummer. Preise: zuerst der vom PC-Manager veröffentlichte Stand (neue Tabelle `kc_etikett_artikel_stand`, Migration `20261112_kc_etikett_artikel_stand.sql`, Server-Aktion `etiketten_artikel`), sonst der Grundstand der Kasse (`/Kasse/etiketten/artikel.json`) mit Hinweis; jeder Preis für den Druck von Hand änderbar. Gezeichnet in 300 dpi als Bild (kein Betrachter kann Fotos weglassen). Fehlende Angaben rot „⚠ nicht erfasst“. Nachladbarer Programmteil `teile/etiketten.js`.
+- KC-CLUB-SCHILD-QUER: Fund Hansi („Drucken von Preisliste übernimmt nicht Querformat“). Handy-Druckdienste und iPhone ignorieren die Querformat-Anweisung. Ein Querformat-Schild wird beim Drucken jetzt um 90° gedreht auf ein Hochformat-Blatt gelegt – das Papier sieht aus wie quer gedruckt, auf jedem Gerät; die Vorschau bleibt aufrecht.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+## 2.925.0 – 2026-11-12 – 🖨️ Club-Küche als Heft am PC: Drucken, Öffnen, Speichern (KC-CLUB-HEFT-PC-DRUCK-2)
+Fund Hansi 12.11.: „der Ausdruck klappt nicht, es ist nur eine Seite rausgekommen am PC … ich will jetzt ein Heft drucken“.
+- Ursache: Am PC öffnete die App beim Tippen sofort einen Tab mit „⏳ Die PDF wird erstellt …“ und lud die PDF erst danach hinein – kam sie dort nicht an oder wurde vorher gedruckt, kam genau diese eine Platzhalter-Seite heraus. Die PDF selbst war vollständig (Nr. 1: 36 Seiten A5 bzw. 18 Druckseiten A4 quer).
+- Jetzt am PC kein Tab vorab: Nach „📄 Heft A5“ bzw. „🖨️ Druckbögen“ erscheinen im Heft-Fenster **🖨️ Jetzt drucken** (Druckfenster des Browsers mit der ganzen PDF), **🔎 PDF in neuem Tab öffnen** und **💾 PDF speichern**, dazu der Hinweis „Seiten: Alle, beidseitig, Wenden an der kurzen Kante, A4 quer, 100 %“. Handy/Tablet unverändert (Teilen-Menü).
+- Test: `tests/heft-pc-druck.test.mjs` (neu gefasst); Browser-Probe mit Testdaten (Knöpfe, 18 Seiten in der PDF, Speichern). Rückweg: App 2.924.0. Nur Programmteil Magazin.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+## 2.924.0 – 2026-11-12 – 🧩 Club-Küche: Rätsel-Ecke für die Hefte 2–12 (KC-CLUB-MAGAZIN-RAETSEL-HEFTE)
+Wunsch Hansi 11.11.: „Baue neue Bilderrätsel für die weiteren Ausgaben und Kreuzworträtsel für alle 12 Ausgaben“.
+- **Fehlerbild je Heft** („Finde die 10 Fehler“), jedes mit eigener Szene zum Monat: Karneval in der Backstube, Fischstand, Osterfrühstück, Spargelzeit, Erdbeer-Konditorei, Picknick am Mühlteich, Grillabend, Hofladen zum Erntedank, Herbstküche, Martinsgans am Pass, Weihnachtsbäckerei. Genau 10 wirksame Fehler, Fundkreise überlappen nicht, keine Schrift im Bild.
+- **Kreuzworträtsel je Heft** mit Begriffen zum Monat (18–21 Begriffe, Lösungswörter KAMELLE, FISCHER, OSTERNEST, MAIBAUM, ERDBEERE, PICKNICK, GRILLFEST, ERNTEDANK, KÜRBIS, LATERNE, PLÄTZCHEN); jede Buchstabenfolge ist ein gewolltes Wort, keine Frage verrät die Antwort.
+- **Auflösung** jeweils im nächsten Heft (Nr. 13 löst Nr. 12 auf).
+- **Fortsetzungsroman Staffel 2:** erste 13 Bleistiftzeichnungen eingebaut (Heft 19: Luca und die Fotos; Heft 18: Spargel schälen – dazu ein neuer Absatz, Ralle und Emma auf der Bank, Miras Hochzeitstorte; Heft 17: Lena und Ralle auf der Mauer, Lenas Prüfung – dazu neuer kurzer Absatz in Folge 5 auf Wunsch Hansi; Heft 14: Schnee an der Mühle, Voss und die Schalotten; Heft 15: Schaum am Wehr; Heft 16: Setzlinge, Ostern bei Kerzenlicht, der Morgen danach, Herr Akın nimmt Proben – im Text dazu „Familie mit Junge und Mädchen“ statt „zwei Söhnen“ und Lena hockt beim Einsetzen am Ufer) – Graustufen-WebP, Gesichter gegen Staffel 1 geprüft.
+- Antworten Hansi 12.11. (Staffel 2): Bertram wird gesiezt („Herr Bertram“, von Mrs. Vogt „Mr. Bertram“), nur Hollmann duzt ihn – „Louis“, französisch ausgesprochen; Martinsgänse auf sieben Blechen; „Zwischenprüfung“ bleibt; Onkel Georg ist der Bruder der Mutter.
+- **Fortsetzungsroman nachgeschärft nach Verlagsgutachten** (Wunsch Hansi 12.11. „Beide angehen“): Staffel 1 ohne Vorwegnahmen des Erzählers, Steckbriefe und Amtsdeutsch, kürzere Erklär-Dialoge, neue Cliffhanger (Folge 1, 3, 4, 5, 7, 8, 9, 10, 11); Staffel 2 mit leiseren Hinweisen auf den Täter, stärkeren falschen Fährten (Verena, Metallwerk), weniger Wiederholungen (Glocke, Kopfweiden, Voss-Sprüche) und Vorschauen ohne Spoiler. Handlung, Bilder und Notizbuch unverändert.
+- **Knöpfe lesbar** (auch Heft 1): „💡 Auflösen“ und „✔️ Prüfen“ hatten dunkle Schrift auf dunklem Grund – jetzt Weinrot mit weißer Schrift; Umlaut-Hinweis dunkler.
+- Erzeugt mit KC-Infrastructure-Control-Center `docs/club-magazin-raetselecke/hefte/`. Test: `tests/magazin-raetsel.test.mjs`. Keine Datenbank-, keine Server-Änderung. Rückweg: App 2.923.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+## 2.923.0 – Zeitansage: Videos „Termin ausmachen & Tag finden“, „Wenn etwas nicht klappt“, „Die einfache Ansicht“, „Rätsel & Bestenliste“ und „Bühne, Musik & Club-Song“ · „?“ gleich nach dem Start (KC-CLUB-VIDEO-ZEITANSAGE, KC-CLUB-FRAGE-AB-START, Wunschliste #81)
+- **Termin finden:** alle 18 Schritte geprüft (Terminanfrage, An wen, Anlass/Tag/Uhrzeit, Antwort bis, Senden, Stand, gefragt werden, Gegenvorschlag, unter Vorbehalt, Tag finden mit Umfrage, Serientermine, Reihe ändern/löschen).
+- **Wenn etwas nicht klappt:** 13 Schritte geprüft (Schließen/neu öffnen, Update, Version, Lämpchen, Schnecke, Laden dauert, zweimal offen, Mikrofon, Sicherheits-Check, Problem melden; ein Schritt nur in der einfachen Ansicht).
+- **Die einfache Ansicht:** 20 Schritte geprüft. **Fehler in der App behoben:** Das runde „?“ unten rechts (Hilfe zum Bereich) erschien auf der Startseite erst, nachdem man einmal eine andere Seite geöffnet hatte – direkt nach dem Öffnen fehlte es. Darum übersprang das Video den Schritt „❓ Das Fragezeichen“. Jetzt ist das „?“ gleich nach dem Start da (ausgeblendet bleibt es weiter, wenn man es selbst ausgeschaltet hat).
+- **Rätsel & Bestenliste:** 16 Schritte geprüft (Eselsohr, Reiter, Werne/Küche, Bild wird schärfer, Buzzer, sechs Antworten, Wochen-Rätsel, Bestenliste, Bildnachweise, eigene Club-Fotos).
+- **Bühne, Musik & Club-Song:** alle 17 Schritte geprüft (Sitzen/Stehen/Küchenhelfer, Dauer, Bereitlegen, Twinkey, Trainingsuhr, Regler, Nur Musik, Musikrichtung, Club-Song mit Mitsingen, Einladung).
+- Zeitansage in allen fünf eingeschaltet. Test: `tests/video-zeitansage.test.mjs` erweitert. Rückweg: Version 2.922.0 einspielen.
 ## 2.922.0 – 2026-11-12 – 🖨️ Club-Küche als Heft: am PC wieder selbst drucken (KC-CLUB-HEFT-PC-DRUCK)
 Fund Hansi 12.11.: „Ich kann nicht selber drucken. Es kommt ein Fenster mit Freigeben, aber sonst passiert nix.“
 - „📄 Heft A5“ und „🖨️ Druckbögen A4 quer“ gaben die PDF immer ans Teilen-Menü – am Windows-PC ist das nur „Freigeben“ ohne Drucker. Jetzt öffnet sich am PC die PDF in einem **neuen Tab** (Browser-Ansicht mit 🖨️ Drucken, Hinweis „beidseitig, Wenden an der kurzen Kante“). Der Tab geht sofort beim Tippen auf, damit der Browser ihn nicht als Pop-up sperrt; gesperrt → die PDF wird gespeichert (Downloads).

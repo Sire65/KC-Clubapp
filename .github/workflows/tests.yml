@@ -70,6 +70,9 @@ jobs:
       - run: node tests/turn-frisch.test.mjs
       - run: node tests/push-neu-fragen.test.mjs
       - run: node tests/security-definer-register.test.mjs
+      - run: node tests/alter-link-klar.test.mjs
+      - run: node tests/update-hinweis.test.mjs
+      - run: node tests/sicherung-packen.test.mjs
       - run: node tests/online-jede-anfrage.test.mjs
       - run: node tests/schreibtisch.test.mjs
       - run: node tests/anleitungen.test.mjs
@@ -83,6 +86,7 @@ jobs:
       - run: node tests/magazin-roman.test.mjs
       - run: node tests/magazin-postfach.test.mjs
       - run: node tests/magazin-raetsel.test.mjs
+      - run: node tests/magazin-fachbegriffe.test.mjs
       - run: node tests/magazin-heft.test.mjs
       - run: node tests/magazin-premium.test.mjs
       - run: node tests/magazin-termine.test.mjs
@@ -112,9 +116,15 @@ jobs:
       - run: node tests/kontakt-extern.test.mjs
       - run: node tests/spar-kurz.test.mjs
       - run: node tests/heft-pc-druck.test.mjs
+      - run: node tests/kopf-ecke.test.mjs
       - run: node tests/anfrage-gegenvorschlag.test.mjs
       - run: node tests/netz-balken.test.mjs
       - run: node tests/muenze-gesicht.test.mjs
+      - run: node tests/ta-tagesordnung.test.mjs
+      - run: node tests/ta-aendern.test.mjs
+      - run: node tests/gastgeber-16uhr.test.mjs
+      - run: node tests/spur-dienst.test.mjs
+      - run: node tests/ta-protokoll.test.mjs
       - run: node tests/sprache.test.mjs
       - run: node tests/see.test.mjs
       - run: node tests/rt-clubabend-mitfahrt.test.mjs
@@ -170,6 +180,7 @@ jobs:
       - run: node tests/video-abgleich.test.mjs
       - run: node tests/video-stimme-stumm.test.mjs
       - run: node tests/advent-2026.test.mjs
+      - run: node tests/advent-preise.test.mjs
       - run: node tests/teilen-eigen.test.mjs
       - run: node tests/clubabend-anwesend.test.mjs
       - run: node tests/sitzung-schritte.test.mjs

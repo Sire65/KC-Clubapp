@@ -492,7 +492,7 @@ function buStartListeHtml() {
     </div>`) : ""}
     ${buBereich("mitglieder", "👥 Mitglieder", `<div class="mini-kacheln">${L ? k("kontakt", "👥", "Mitglieder kontaktieren", "Gruppe wählen · schreiben · anrufen", "buKontakt()") : ""}${k("feste", "🎂", "Geburtstage & Jubiläen", festBald ? `${festBald} in den nächsten 7 Tagen` : "gratulieren · Liste drucken", "buFeste()", festHeute.length ? '<span class="marke gelb">heute!</span>' : "")}${L ? k("fl", "🤍", "Freud & Leid", FL.d ? (FL.d.faelle.filter((f) => f.status === "offen").length ? `${FL.d.faelle.filter((f) => f.status === "offen").length} offen` : "Geburt, Hochzeit, Trauerfall …") : "Geburt, Hochzeit, Trauerfall …", "buFreudLeid()") : ""}${L ? k("liste", "📇", "Mitgliederliste drucken", "Übersicht · Telefon · Adressen · Unterschriften", "buListe()") : ""}</div>`)}
     ${!S ? "" : buBereich("schreiben", "✉️ Schreiben", `<div class="mini-kacheln">${k("brief", "✉️", "Briefbogen", "Brief mit Logo – Spende, Dank, Einladung …", "buBrief()")}</div>`)}
-    ${buBereich("drucken", "🖨️ Drucken & Vorlagen", `<div class="mini-kacheln">${k("drucker", "🖨️", "Alle Druckvorlagen", "Sitzung · Listen · Termine · Briefbogen …", "buDrucker()")}${L ? k("haendler", "🪪", "Händler-Ausweis", "Weihnachtsmarkt · Rabatt · QR-Code", "haStart()") : ""}</div>`)} <!-- 2.691.0 KC-CLUB-DRUCKER-LISTE: auch in der Listen-Ansicht (Fund Hansi „wo sind die Ausweise“) -->
+    ${buBereich("drucken", "🖨️ Drucken & Vorlagen", `<div class="mini-kacheln">${k("drucker", "🖨️", "Alle Druckvorlagen", "Sitzung · Listen · Termine · Briefbogen …", "buDrucker()")}${L ? k("haendler", "🪪", "Händler-Ausweis", "Weihnachtsmarkt · Rabatt · QR-Code", "haStart()") : ""}${L ? k("preisetiketten", "🏷️", "Preisetiketten", "Foto · Preis · Allergene · QR", "peStart()") : ""}</div>`)} <!-- 2.691.0 KC-CLUB-DRUCKER-LISTE: auch in der Listen-Ansicht (Fund Hansi „wo sind die Ausweise“) -->
     ${!L ? "" : buBereich("eingang", `📥 Eingang ${summe ? `<span class="marke gelb">${summe}</span>` : ""}`, `<button class="knopf haupt" style="width:100%;margin:0 0 8px" onclick="buEingang()">📥 Eingang öffnen – alles auf einen Blick erledigen</button>
     <div class="mini-kacheln">${eingang.map(([sym, t2, z, fn]) => `<button class="mini-kachel${z ? " mk-offen" : ""}" onclick="${fn}"><span class="mk-sym">${sym}</span><span class="mk-titel">${esc(t2)}</span><span class="mk-gross">${z || "–"}</span></button>`).join("")}</div>`)}`;
 }
@@ -712,7 +712,8 @@ function buRaumHtml() {
   const flOffen = FL.d ? FL.d.faelle.filter((f) => f.status === "offen").length : 0;
   const zahl = { fl: flOffen + (L ? fest.length : 0), feste: fest.length, nachher: nt ? 1 : 0, liste: AE.offen }; // 2.22.10: Änderungsmeldungen im Ordner „Mitglieder“
   const ordner = BU_REGAL.filter(buRecht);
-  const ruecken = (o) => `<button class="bu-ordner" style="--of:${o.farbe}" onclick="${o.bereich ? `buOrdner('${o.id}')` : o.fn}" aria-label="${esc(o.t)}"><span class="bu-osym">${o.sym}</span><span class="bu-otext">${esc(o.t)}</span>${zahl[o.id] ? `<span class="bu-ozahl">${zahl[o.id]}</span>` : ""}<span class="bu-oloch"></span></button>`;
+  // 2.930.0 KC-CLUB-ORDNER-SCHILD: data-schild = Text des waagerechten Namensschilds (Maus darüber, Tab, lange drücken)
+  const ruecken = (o) => `<button class="bu-ordner" style="--of:${o.farbe}" onclick="${o.bereich ? `buOrdner('${o.id}')` : o.fn}" aria-label="${esc(o.t)}" data-schild="${esc(`${o.sym} ${o.t}${zahl[o.id] ? ` · ${zahl[o.id]} neu` : ""}`)}"><span class="bu-osym">${o.sym}</span><span class="bu-otext">${esc(o.t)}</span>${zahl[o.id] ? `<span class="bu-ozahl">${zahl[o.id]}</span>` : ""}<span class="bu-oloch"></span></button>`;
   const naechst = (r.sitzungen || []).find((x) => new Date(x.beginn) >= Date.now() - 6 * 3600000) || t;
   const kal = naechst ? new Date(naechst.beginn) : null;
   const ding = (cls, inhalt, label, fn, extra = "") => `<button class="bu-ding ${cls}" onclick="${fn}">${inhalt}<span class="bu-dlabel">${label}</span>${extra}</button>`;
@@ -976,6 +977,7 @@ function buDrucker() {
     [true, "📅", "Termine", "Kalender oder To-do-Liste", "druckStarten('termine')"], [true, "🎂", "Geburtstage & Jubiläen", "Liste", "druckStarten('feste')"], [S, "✉️", "Briefbogen", "Brief mit Logo", "buBrief()"],
     [!!ICH?.admin, "📲", "Einrichtungskarte", "QR-Code + Schritte für ein Mitglied", "buPersonWahl('🖨️ Einrichtungskarte für wen?', '📲', einrichtungskarte)"],
     [L, "🪪", "Händler-Ausweis", "Weihnachtsmarkt · Rabatt · QR-Code", "haStart()"],
+    [L, "🏷️", "Preisetiketten", "8–5 cm · Foto · Preis · Allergene · QR", "peStart()"], // KC-CLUB-PREISETIKETTEN (12.11.2026)
     [L, "🪧", "Schild drucken", "Hinweis · Preisliste · Öffnungszeiten", "schStart()"]].filter((x) => x[0]); // 2.811.0: Schild vom Füller zum Drucker // 2.690.0 KC-CLUB-HAENDLERAUSWEIS
   const f = blattAuf("buDruckerBlatt", `${einwHtml("b-bu-drucker")}<h3 style="margin-top:0">🖨️ Was möchtest du drucken?</h3>
     <div class="bu-wahl">${w.map(([, sym, t2, u, fn]) => `<button class="mini-kachel" data-fn="${esc(fn)}"><span class="mk-sym">${sym}</span><span class="mk-titel">${esc(t2)}</span><span class="mk-unter">${esc(u)}</span></button>`).join("")}</div>
@@ -2650,3 +2652,32 @@ async function eblCsv() {
   try { if (navigator.canShare?.({ files: [datei] })) { await teilenMitRueckfall({ files: [datei], title: "Buchungsliste (CSV)" }); return; } } catch (x) { if (x?.name === "AbortError") return; }
   const url = URL.createObjectURL(datei), a = document.createElement("a"); a.href = url; a.download = datei.name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 60000); melde("💾 CSV gespeichert – in Excel öffnen");
 }
+
+// ---------- 2.930.0 KC-CLUB-ORDNER-SCHILD (Wunsch Hansi 12.11.2026: „Wenn man mit der Maus über einen Ordner im Büro geht, soll der Ordnerrückentext
+// als Tooltip angezeigt werden – die Beschriftung ist quer und nicht so gut lesbar“; Wahl Variante 2): sofort ein waagerechtes Namensschild über dem
+// Ordnerrücken (Symbol, Name, ggf. „· 3 neu“) – mit der Maus beim Darüberfahren, mit der Tastatur beim Ansteuern, auf Handy/Tablet durch langes
+// Drücken (kurz tippen öffnet wie bisher). Bleibt immer im sichtbaren Bereich. Bildschirmleser lesen weiter das aria-label.
+(function buOrdnerSchild() {
+  if (window.__buOrdnerSchild) return; window.__buOrdnerSchild = true;
+  let el = null, lang = null, weg = null, unterdruecken = false, start = null;
+  const ziel = (t) => t?.closest?.(".bu-ordner[data-schild]");
+  const zeigen = (b) => {
+    if (!el) { el = document.createElement("div"); el.id = "buOrdnerSchild"; el.setAttribute("role", "tooltip"); document.body.appendChild(el); }
+    el.textContent = b.dataset.schild; el.style.display = "block"; clearTimeout(weg);
+    const r = b.getBoundingClientRect(), w = el.offsetWidth, h = el.offsetHeight;
+    let x = r.left + r.width / 2 - w / 2, y = r.top - h - 8; x = Math.max(6, Math.min(innerWidth - w - 6, x)); if (y < 6) y = Math.min(innerHeight - h - 6, r.bottom + 8);
+    el.style.left = x + "px"; el.style.top = y + "px";
+  };
+  const verstecken = () => { clearTimeout(weg); if (el) el.style.display = "none"; };
+  document.addEventListener("pointerover", (e) => { if (e.pointerType !== "mouse") return; const b = ziel(e.target); if (b) zeigen(b); else if (el?.style.display === "block") verstecken(); });
+  document.addEventListener("focusin", (e) => { const b = ziel(e.target); if (b && b.matches(":focus-visible")) zeigen(b); });
+  document.addEventListener("focusout", (e) => { if (ziel(e.target)) verstecken(); });
+  document.addEventListener("pointerdown", (e) => { if (e.pointerType === "mouse") return; const b = ziel(e.target); if (!b) return;
+    start = [e.clientX, e.clientY]; clearTimeout(lang); lang = setTimeout(() => { zeigen(b); unterdruecken = true; }, 450); });
+  document.addEventListener("pointermove", (e) => { if (start && Math.hypot(e.clientX - start[0], e.clientY - start[1]) > 10) { clearTimeout(lang); start = null; } });
+  const loslassen = () => { clearTimeout(lang); start = null; if (el?.style.display === "block" && unterdruecken) weg = setTimeout(verstecken, 1800); };
+  document.addEventListener("pointerup", loslassen); document.addEventListener("pointercancel", loslassen);
+  document.addEventListener("click", (e) => { if (unterdruecken && ziel(e.target)) { e.preventDefault(); e.stopPropagation(); } unterdruecken = false; }, true); // langes Drücken öffnet den Ordner nicht
+  document.addEventListener("contextmenu", (e) => { if (ziel(e.target)) e.preventDefault(); });
+  addEventListener("scroll", verstecken, true);
+})();

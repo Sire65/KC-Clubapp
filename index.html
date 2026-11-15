@@ -77,14 +77,15 @@
   try {
     var st = JSON.parse(localStorage.getItem("kc_club_starts") || "[]"), jetzt = Date.now();
     // Neustart durch „Jetzt aktualisieren“ zählt nicht als erneutes Öffnen (0.95.1, Fund bei Steven: Fehlalarm nach Update)
-    var durchUpdate = localStorage.getItem("kc_club_neustart_update"); localStorage.removeItem("kc_club_neustart_update");
+    var durchUpdate = localStorage.getItem("kc_club_neustart_update"); localStorage.removeItem("kc_club_neustart_update"); window.KCFP.durchUpdate = !!durchUpdate; // KC-CLUB-UPDATE-HINWEIS
     st = st.filter(function (x) { return jetzt - x < 600000; }); if (!durchUpdate) st.push(jetzt); localStorage.setItem("kc_club_starts", JSON.stringify(st.slice(-10)));
     if (st.length >= 3) { window.KCFP.mehrfach = st.length; neu("mehrfachstart", { text: st.length + "× in 10 Minuten geöffnet" }); }
   } catch (e) {}
   if (!speicherOk) neu("speicher", { text: "Speicher gesperrt (privater Modus?) – App kann sich nichts merken" });
   // Start-Wächter: nach 12 s noch nicht fertig → mitschreiben; ist die App gar nicht angelaufen, einfache Hilfe anzeigen
   // 2.481.0 KC-CLUB-LADEANZEIGE: lädt das Programm lange, erklärt die Ladeanzeige es (15 s) und bietet später „Neu laden“ an (45 s)
-  setTimeout(function () { var l = document.getElementById("appLaedtLang"); if (l) l.hidden = false; }, 15000);
+  // KC-CLUB-UPDATE-HINWEIS (2.945.0, Wunsch Hansi 13.11.2026): nach einem Update nicht „Netz langsam“, sondern ehrlich „größeres Update“
+  setTimeout(function () { var l = document.getElementById("appLaedtLang"); if (!l) return; if (window.KCFP.durchUpdate && l.firstChild) l.firstChild.textContent = "🔄 Gerade wird ein größeres Update eingespielt – die App richtet sich neu ein. Bitte kurz warten und die App nicht schließen."; l.hidden = false; }, 15000);
   setTimeout(function () { var k = document.getElementById("appLaedtNeu"); if (k) k.hidden = false; }, 45000);
   // KC-CLUB-START-BALKEN (Wunsch Hansi 08.11.2026: „Beim Start einen Laufbalken mit Dauer und Prozent – gerade hat der Start etwas gedauert, wahrscheinlich wegen Update“):
   // Fortschritt in Prozent und vergangene Sekunden, geschätzt aus den letzten Starts dieses Geräts (kc_club_startmess: Seite + Programm + Einrichten, Mittelwert).
@@ -107,12 +108,12 @@
         text = document.getElementById("appLaedtText"); fuell = document.getElementById("appLaedtFuell"); zahl = document.getElementById("appLaedtZahl"); balken = document.getElementById("appLaedtBalken");
         if (!fuell || !zahl || !balken) { if (Date.now() - t0 < 60000) setTimeout(schritt, 50); return; }
       }
-      if (!gesetzt) { gesetzt = true; if (upd && text) text.textContent = "🔄 Die neue Version wird eingerichtet …"; }
+      if (!gesetzt) { gesetzt = true; if (upd && text) text.textContent = "🔄 Gerade wird ein Update eingespielt …"; }
       if (!document.getElementById("appLaedt")) return; // Programm läuft – Anzeige ist weg
       var t = Math.max(0, Date.now() - t0), pct = Math.min(95, Math.round(95 * (1 - Math.exp(-2.3 * t / erw))));
       fuell.style.width = pct + "%"; balken.setAttribute("aria-valuenow", String(pct));
       zahl.textContent = pct + " % · " + (t / 1000).toFixed(1).replace(".", ",") + " s";
-      if (!lang && t > erw * 1.6 && t > 3000 && text) { lang = true; text.textContent = upd ? "🔄 Neue Version wird geladen – das dauert einmalig etwas länger …" : "Die Club-App wird geladen – dauert heute etwas länger …"; }
+      if (!lang && t > erw * 1.6 && t > 3000 && text) { lang = true; text.textContent = upd ? "🔄 Gerade wird ein größeres Update eingespielt – das dauert einmalig etwas länger …" : "Die Club-App wird geladen – dauert heute etwas länger …"; }
       setTimeout(schritt, 100);
     }
     schritt();
@@ -2049,6 +2050,8 @@
   .ak-riegel-karte > div, .ak-einladung { width: 100%; } .ak-einladung { text-align: center; } .ak-einladung h4 { margin: 6px 0; color: #741521; font: 700 1.3rem Georgia, serif; }
   .ak-riegel { margin: 10px auto 6px; width: min(230px, 80%); height: 50px; border-radius: 8px; background: linear-gradient(180deg, #5a3418, #3d220f); position: relative; transform: rotate(-4deg); box-shadow: 0 4px 10px rgba(0,0,0,.35); animation: akRiegel .7s ease-out; }
   .ak-riegel span { position: absolute; inset: 13px 0 auto; height: 24px; background: #fff; display: grid; place-items: center; font: 900 .85rem system-ui, sans-serif; color: #741521; letter-spacing: .04em; }
+  .ak-riegel.ak-nikolaus { background: linear-gradient(180deg, #b3202c, #741521); } .ak-riegel.ak-nikolaus span { color: #b3202c; } /* 2.947.0 KC-CLUB-ADVENT-PREISE */
+  .ak-ok { margin: 8px 0 0; padding: 8px 10px; border-radius: 10px; background: rgba(47,133,90,.14); font-weight: 700; }
   @keyframes akRiegel { from { transform: translateY(30px) rotate(-14deg); opacity: 0; } to { transform: rotate(-4deg); opacity: 1; } }
   @media (prefers-reduced-motion: reduce) { .ak-riegel { animation: none; } }
   .ak-gutschein { border: 2px dashed #741521; border-radius: 10px; padding: 8px 10px; margin-top: 8px; }
@@ -2868,6 +2871,7 @@
   .vw-art.an { border: 2px solid var(--textGruen); background: var(--gruenbg); }
   .vw-ohne { display: flex; gap: 8px; align-items: flex-start; margin: 10px 0 0; padding: 8px; border: 1px dashed var(--rand, #ccc); border-radius: 10px; }
   .mg-was { position: absolute; top: 6px; right: 6px; width: 30px; height: 30px; min-height: 0; padding: 0; border-radius: 50%; border: 2px solid var(--textGruen); background: var(--karte); color: var(--textGruen); font: 900 1rem/1 system-ui, sans-serif; cursor: pointer; box-shadow: var(--schatten); }
+  .mg-push { position: absolute; top: 6px; left: 6px; font-size: 1.05rem; line-height: 1; } .mg-push.aus { opacity: .75; } /* 2.948.0 KC-CLUB-MG-PUSH-ZEICHEN */
   .mg-was:focus-visible { outline: 3px solid var(--textGruen); outline-offset: 2px; }
   .mg-kachel .mk-titel { text-align: center; }
   /* KC-CLUB-MG-ONLINE-FARBE (2.42.0, Wunsch Hansi): Kachel eines Mitglieds, das gerade online ist, sofort erkennbar grün */
@@ -3281,6 +3285,28 @@
     #druck .dpl-hinweis.dpl-abend { border-left-color: #1d3557; background: #e8eef6; } /* 2.683.0 KC-CLUB-DP-LUECKEN-ABEND */
     #druck .dpv-tab { table-layout: fixed; } #druck .dpv-tab td { padding: 1mm 1.5mm; } #druck .dpv-tab th:nth-child(1) { width: 24mm; } #druck .dpv-tab th:nth-child(2) { width: 22mm; } #druck .dpv-tab th:nth-child(3), #druck .dpv-tab th:nth-child(4) { width: 13mm; } #druck .dpv-tab th.text, #druck .dpv-tab td.text { width: auto; font-size: 8.5pt; line-height: 1.35; } #druck .dpv-tab tr { break-inside: avoid; } #druck .dpv-tab td.rot { background: #f6d3d0; color: #8b1a12; font-weight: 800; } /* 2.721.0 KC-CLUB-DP-VORSCHLAG */
     #druck .dpv { height: auto; min-height: 210mm; overflow: visible; }
+    /* 2.944.0 KC-CLUB-DP-EINSATZ: Einsatzplan je Tag – schmaler Kopf, je Person Angaben + Einteilung, Statistik, Bereitschaft */
+    #druck .dpe { display: flex; flex-direction: column; padding: 5mm 9mm 4mm; } #druck .dpe .cd-kopf { margin-bottom: 1mm; padding-bottom: 1mm; } #druck .dpe .cd-kopf .cd-logo { width: 10mm !important; height: 10mm !important; }
+    #druck .dpe .cd-kopf .cd-name { font-size: 13pt; } #druck .dpe .cd-kopf h1 { font-size: 11pt; margin: 0; } #druck .dpe .cd-fuss { margin-top: auto; padding-top: 1mm; font-size: 6.5pt; }
+    #druck .dpe-leg { display: flex; flex-wrap: wrap; gap: 1mm 3mm; font-size: 6.5pt; color: #5b544d; margin-bottom: 1mm; align-items: center; } #druck .dpe-leg i { display: inline-block; width: 4.5mm; height: 2.4mm; border-radius: .6mm; margin-right: .8mm; vertical-align: -.3mm; }
+    #druck .dpe-tag { display: flex; justify-content: space-between; background: #f3e9dc; border: .25mm solid #e0cfb9; border-bottom: none; border-radius: 1.5mm 1.5mm 0 0; padding: .8mm 2mm; font-size: 9pt; }
+    #druck .dpe-tag .rot { color: #9b1c13; font-weight: 800; } #druck .dpe-tag .gruen { color: #2f5a1f; font-weight: 800; }
+    #druck .dpe-tab { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 7.5pt; font-variant-numeric: tabular-nums; }
+    #druck .dpe-tab th, #druck .dpe-tab td { border-bottom: .2mm solid #eadfd2; padding: 0 1mm; vertical-align: middle; } #druck .dpe-tab th { background: #faf5ef; font-size: 6.5pt; color: #5b544d; height: 3.6mm; }
+    #druck .dpe-tab .nm { width: 38mm; text-align: left; white-space: nowrap; overflow: hidden; } #druck .dpe-tab .nm small { display: block; color: #8a8076; font-size: 5.5pt; line-height: 1; }
+    #druck .dpe-tab .zt { width: 21mm; text-align: center; white-space: nowrap; font-size: 7pt; } #druck .dpe-tab .zt.art { font-size: 5.8pt; color: #8a8076; } #druck .dpe-tab .st { width: 10mm; text-align: right; font-weight: 800; } #druck .dpe-tab .st.klein { font-size: 5.8pt; font-weight: 500; color: #8a8076; }
+    #druck .dpe-tab .gr { position: relative; padding: 0; background-image: repeating-linear-gradient(90deg, transparent 0, transparent calc(100% / var(--n) - .2mm), #efe6db calc(100% / var(--n) - .2mm), #efe6db calc(100% / var(--n))); }
+    #druck .dpe-tab .achse { display: flex; } #druck .dpe-tab .achse i { flex: 1; font-style: normal; text-align: left; font-size: 6.5pt; } #druck .dpe-tab .achse i span { position: relative; left: -1.2mm; }
+    #druck .dpe-tab .wz td { height: 3.6mm; border-bottom: none; } #druck .dpe-tab .sz td { height: 4.6mm; border-bottom: .5mm solid #b9a58e; } #druck .dpe-tab .nm[rowspan] { border-bottom: .5mm solid #b9a58e; } #druck .dpe-tab .frei .nm { color: #8a8076; }
+    #druck .dpe-tab .seg { position: absolute; top: .45mm; bottom: .45mm; border-radius: .7mm; font-size: 5.8pt; color: #5b4a3a; display: flex; align-items: center; padding-left: .8mm; white-space: nowrap; overflow: hidden; }
+    #druck .dpe .pw { background: #ecd7b2; } #druck .dpe .pk { background: #f6ecd9; } #druck .dpe .pn { background: repeating-linear-gradient(135deg, #f6ecd9 0 1mm, #fff 1mm 2mm); border: .2mm dashed #d9c4a0; } #druck .dpe .ps { background: repeating-linear-gradient(135deg, #e2dcd6 0 .8mm, #f4f1ee .8mm 1.6mm); color: #7a7068; }
+    #druck .dpe-tab .nix { position: absolute; left: 1mm; top: 0; font-size: 5.8pt; color: #b0a69c; font-style: italic; line-height: 3.6mm; }
+    #druck .dpe-tab .bal { position: absolute; top: .6mm; bottom: .6mm; border-radius: 1mm; color: #fff; font-size: 7pt; font-weight: 700; display: flex; align-items: center; justify-content: center; white-space: nowrap; overflow: hidden; }
+    #druck .dpe .b { background: #741521; } #druck .dpe .v { background: #c0612b; } #druck .dpe .h { background: #35607e; } #druck .dpe .aus { background: repeating-linear-gradient(135deg, #8a7f76 0 1.5mm, #9e938a 1.5mm 3mm); }
+    #druck .dpe-tab .bal.bs { background: repeating-linear-gradient(135deg, #fff 0 1mm, #e8f0e2 1mm 2mm); border: .4mm dashed #4f7a3a; color: #2f5a1f; }
+    #druck .dpe-tab .stat td { background: #fcfaf7; height: 3.8mm; } #druck .dpe-tab .zahlen { display: flex; } #druck .dpe-tab .zahlen i { flex: 1; font-style: normal; text-align: center; font-size: 6.5pt; line-height: 3.8mm; }
+    #druck .dpe-tab .zahlen .gruen { background: #e3f1dc; color: #2f5a1f; font-weight: 800; } #druck .dpe-tab .zahlen .rot { background: #f7d4d0; color: #9b1c13; font-weight: 800; } #druck .dpe-tab .zahlen .gelb { background: #fbefc6; color: #7a5b00; font-weight: 800; } #druck .dpe-tab .zahlen .soll { color: #8a8076; }
+    #druck .dpe-tab td.rot { color: #9b1c13; font-weight: 800; } #druck .dpe-tab .ber td { height: 4.2mm; } #druck .dpe-tab .leer { color: #8a8076; font-style: italic; }
     #druck .dpd-bed { border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 7pt; font-variant-numeric: tabular-nums; }
     #druck .dpd-bed th, #druck .dpd-bed td { border: .15mm solid var(--lin); padding: .6mm .5mm; text-align: center; vertical-align: middle; height: 9.4mm; }
     #druck .dpd-bed thead th { background: #f3e9dc; font-weight: 700; font-size: 6.5pt; height: auto; }
@@ -3328,6 +3354,11 @@
   .bs-fotos { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; } .bs-mini { height: 40px; border-radius: 6px; vertical-align: middle; } #bsBlatt textarea { width: 100%; box-sizing: border-box; }
   .ta-kal-alt { margin: 8px 0 0; padding: 8px; border-radius: 8px; background: #d6eaf8; color: #1b4f72; display: grid; gap: 6px; } .ta-kal-alt .knopf { width: auto; justify-self: start; } /* 2.23.58 */
   .ta-vk { margin: 4px 0 2px; } .ta-vorbehalt { margin: 6px 0 0; padding: 6px 8px; border-radius: 8px; background: #fdebd0; color: #7e5109; } #taVkBlatt textarea { width: 100%; box-sizing: border-box; } #taVkBlatt label { display: grid; gap: 2px; } .ta-gv-zeit { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } #taGvBlatt label { display: grid; gap: 2px; }
+  /* KC-CLUB-TA-TAGESORDNUNG (12.11.2026): Häkchen „Als Tagesordnung übernehmen“ und Punkte in der Terminanfrage */
+  .ta-to { margin: 8px 0 0; padding: 8px 10px; border-radius: 10px; background: color-mix(in srgb, var(--gold) 12%, transparent); } .ta-to-schalter { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  .ta-to-liste { margin: 6px 0 4px; padding-left: 22px; } .ta-to-liste li { margin: 2px 0; } .ta-to-liste label { display: inline-flex; align-items: flex-start; gap: 6px; cursor: pointer; } .ta-to-weg { border: none; background: none; color: var(--rot); font-size: 1rem; cursor: pointer; padding: 0 4px; }
+  .ta-to-neu { display: flex; gap: 6px; } .ta-to-neu input { flex: 1; min-width: 0; }
+  #taAeBlatt label { display: grid; gap: 2px; } /* KC-CLUB-TA-PROTOKOLL */ .tap-top { margin: 8px 0; padding: 8px; border-radius: 10px; background: color-mix(in srgb, var(--gold) 10%, transparent); display: grid; gap: 6px; } .tap-kopf { display: flex; align-items: center; gap: 6px; } .tap-kopf .tap-t { flex: 1; min-width: 0; font-weight: 700; } .tap-weg { border: none; background: none; color: var(--rot); font-size: 1rem; cursor: pointer; } .tap-top textarea { width: 100%; box-sizing: border-box; } .tap-wer { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; } .tap-wer label { display: grid; gap: 2px; font-size: .85rem; } .tap-foto { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 6px 0; } .tap-todo { display: flex; gap: 6px; align-items: flex-start; margin: 6px 0; } .tap-lesen { margin: 8px 0; padding: 8px; border-radius: 10px; background: color-mix(in srgb, var(--gold) 10%, transparent); } #taPrBlatt textarea, #taPrBlatt input:not([type=checkbox]) { box-sizing: border-box; } #taAeBlatt textarea { width: 100%; box-sizing: border-box; } #taAeBlatt label.ta-ae-info { display: flex; align-items: flex-start; gap: 6px; } /* KC-CLUB-TA-AENDERN */
   /* 2.23.48 KC-CLUB-KUECHENCHEF → 2.23.49 KC-CLUB-TWINKEY */
   .tw-chef-knopf { width: 100%; margin: 8px 0 4px; text-align: center !important; }
   .tw-blatt .blatt-innen, #twOffenBlatt .blatt-innen { max-height: 92vh !important; }
@@ -3754,6 +3785,10 @@
   .bu-ordner:hover, .bu-ordner:focus-visible { transform: translateY(-8px); box-shadow: 0 8px 14px rgba(0,0,0,.25); }
   .bu-ordner:active { transform: translateY(-12px) scale(1.02); }
   .bu-osym { font-size: 1.25rem; line-height: 1; }
+  /* 2.930.0 KC-CLUB-ORDNER-SCHILD: waagerechtes Namensschild über dem Ordnerrücken (wie das Etikett des Ordners) */
+  #buOrdnerSchild { position: fixed; z-index: 4000; display: none; pointer-events: none; white-space: nowrap; background: #fbf7ef; color: #3b2f2a; border: 1px solid #cbb994; border-radius: 6px;
+    padding: 5px 11px; font-weight: 800; font-size: .95rem; box-shadow: 0 3px 10px rgba(0,0,0,.28); }
+  .bu-ordner { -webkit-touch-callout: none; }
   .bu-otext { flex: 1; writing-mode: vertical-rl; transform: rotate(180deg); background: #fbf7ef; color: #3b2f2a; border-radius: 3px; padding: 6px 3px; font-weight: 800; font-size: .86rem; letter-spacing: .02em;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-height: 150px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.06); }
   .bu-oloch { width: 15px; height: 15px; border-radius: 50%; background: rgba(0,0,0,.25); box-shadow: inset 0 2px 3px rgba(0,0,0,.35); }
@@ -5462,6 +5497,8 @@
   .mag-fb-flaeche { position: relative; cursor: crosshair; touch-action: manipulation; border: 1px solid #e6dccf; border-radius: 6px; overflow: hidden; }
   .mag-fb-flaeche img { display: block; width: 100%; height: auto; pointer-events: none; -webkit-user-select: none; user-select: none; }
   .mag-fb-marke { position: absolute; aspect-ratio: 1; transform: translate(-50%, -50%); border: 3px solid #2e7d4f; border-radius: 50%; box-shadow: 0 0 0 2px rgba(255,255,255,.7); pointer-events: none; }
+  .mag-erkl { color: inherit; opacity: .78; font-size: .93em; font-style: italic; } /* KC-CLUB-MAGAZIN-FACHBEGRIFFE: Erklärung in Klammern */
+  .mag-fb-stand .knopf, .mag-kw .knopf { background: #741521; color: #fff; border: 1px solid #741521; } .mag-fb-stand .knopf:hover, .mag-kw .knopf:hover { background: #5c101a; } .mag-kw .mag-kw-hinweis { color: #5a4a40; } /* KC-CLUB-MAGAZIN-RAETSEL-KNOPF: auf der hellen Heftseite lesbar (vorher dunkle Schrift auf dunklem Knopf) */
   .mag-fb-stand { font: .95rem system-ui, sans-serif; margin: 8px 0; } .mag-fb-liste { font: .88rem/1.5 system-ui, sans-serif; padding-left: 1.4em; columns: 15em 2; }
   .mag-kw-gitter { display: grid; gap: 0; max-width: 34em; margin: 4px 0 10px; border: 2px solid #2b1a1c; background: #faf4ea; }
   .mag-kw-leer, .mag-kw-feld { aspect-ratio: 1; min-width: 0; }
@@ -7001,7 +7038,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.922.0" data-v="2.922.0"></script>
+<script src="app.js?v=2.948.0" data-v="2.948.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

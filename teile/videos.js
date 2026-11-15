@@ -3228,6 +3228,7 @@ function rgZeigen() {
   $("rgPause").textContent = RG.pause ? (RG.i === 0 ? "▶ Los geht's" : "▶ Weiter") : "⏸ Pause";
   for (const ms of [60, 450, 1000, 2000, 3500, 5500]) setTimeout(() => { // Kartei-Blättern und Laden verschieben das Ziel noch
     // 2.245.1 (Fund Hansi: Chats als Rollkartei scrollen beim Öffnen zur Kartei – „＋ Neu“ oben war nicht zu sehen): Ziel wieder ins Bild holen
+    if (ms > 60 && RG.an && RG.st[RG.i] === s && RG.ziel && !RG.ziel.isConnected) { RG.ziel = rgZiel(s) || RG.ziel; rgPulsStart(s); } // 2.925.0: Ansicht neu gezeichnet (z. B. Kacheln nach dem Registerwechsel) – Rahmen am neuen Element statt am verschwundenen
     if (ms > 60 && RG.an && RG.st[RG.i] === s && RG.ziel && !rgImBild(RG.ziel)) rgHin();
     rgLage(); }, ms);
   setTimeout(() => { if (RG.an && RG.st[RG.i] === s && !rgSichtbar(RG.ziel)) { RG.ziel = rgZiel(s); rgHin(); rgLage(); } }, 350); // Inhalt kommt evtl. erst nach dem Laden
