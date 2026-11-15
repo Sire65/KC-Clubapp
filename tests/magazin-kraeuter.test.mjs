@@ -43,3 +43,11 @@ console.log("magazin-vorbau: ok");
   assert.ok(/Produkt des Monats: Grünkohl/.test(w.magWare(1)) && /Produkt des Monats: Spargel/.test(w.magWare(5)) && /Produkt des Monats: Rotkohl/.test(w.magWare(24)));
   assert.ok(/r\.id === "saison"\) inhalt \+= magKraut\(nr\) \+ magWare\(nr\)/.test(teil), "Einbau im Saisonkalender"); }
 console.log("magazin-warenkunde: ok");
+// KC-CLUB-MAGAZIN-FERIEN (15.11.2026): Schulferien aller Länder (NRW oben) und Feiertage im Heftmonat – KMK-Ferienkalender
+{ const f = new Function("esc", "MAG_MONATE", "fTagDp", teil.slice(teil.indexOf("// KC-CLUB-MAGAZIN-FERIEN"), teil.indexOf("// KC-CLUB-MAGAZIN-TERMINE (11.11.2026)")) + "; return { MAG_LAENDER, MAG_FERIEN, MAG_FEIERTAGE, magFerienHtml };")((t) => String(t), ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"], new Intl.DateTimeFormat("de-DE", { weekday: "short", day: "numeric", month: "long", timeZone: "UTC" }));
+  assert.equal(Object.keys(f.MAG_LAENDER).length, 16); assert.ok(Object.keys(f.MAG_LAENDER).every((l) => f.MAG_FERIEN[l]?.length >= 5), "Ferien für alle 16 Länder");
+  assert.ok(f.MAG_FERIEN.NW.some(([n, v, b]) => /Oster/.test(n) && v === "2027-03-22" && b === "2027-04-03") && f.MAG_FERIEN.NW.some(([n, v]) => /Sommer/.test(n) && v === "2027-07-19"), "NRW 2027 laut Schulministerium");
+  const juli = f.magFerienHtml(2027, 7); assert.ok(/^[\s\S]*?<tbody><tr class="mag-nrw"><th>Nordrhein-Westfalen<\/th>/.test(juli), "NRW steht oben");
+  assert.ok(f.MAG_FEIERTAGE.some(([t, n, l]) => t === "2027-05-27" && n === "Fronleichnam" && l.includes("NW")) && f.magFerienHtml(2027, 5).includes("Fronleichnam"), "Fronleichnam 2027 (27. Mai) mit NRW");
+  assert.ok(/inhalt \+= magFerienHtml\(MAG\.jahr, MAG\.monat\)/.test(teil), "Einbau auf der Termine-Seite"); }
+console.log("magazin-ferien: ok");
