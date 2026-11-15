@@ -10689,7 +10689,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 // 2.272.0 KC-CLUB-ERKLAERVIDEOS-8 (Wunsch Hansi): Versteckte Helfer, Kommunikationszentrale, Sprachsteuerung – nur vorgeführt
 {
   const b = html.slice(html.indexOf("// KC-CLUB-ERKLAERVIDEOS-8"), html.indexOf("// KC-CLUB-ERKLAERVIDEOS-EFFEKTE"));
-  for (const [id, st] of [["spezial", "RG_SPEZIAL"], ["zentrale", "RG_ZENTRALE"], ["sprache", "RG_SPRACHE"]]) assert.ok(new RegExp(`\\{ id: "${id}", stand: "1", [^\\n]*st: \\(\\) => ${st} \\}`).test(html), `Video ${id} registriert`);
+  for (const [id, st] of [["spezial", "RG_SPEZIAL"], ["zentrale", "RG_ZENTRALE"], ["sprache", "RG_SPRACHE"]]) assert.ok(new RegExp(`\\{ id: "${id}", stand: "\\d+", [^\\n]*st: \\(\\) => ${st} \\}`).test(html), `Video ${id} registriert`); // 2.955.0: Fassung darf steigen (KC-CLUB-HILFE-2955)
   assert.ok(!/[;{(]\s*(await )?(zeSenden|zeAnrufen|anrufen|anklopfen|sbHoeren|sbSchalter|sbStumm|sbtLos|dunkelUmschalten|webseite|sucheAuf|hzFrageSchalter|ansichtWechseln|ansichtSetzen)\(|\bapi\(/.test(b), "nichts gesendet, angerufen, eingeschaltet oder umgestellt");
   assert.ok(/RG\.zurueck\.push\(\(\) => \{ const a = RG\.zeAlt; RG\.zeAlt = null; Object\.assign\(ZE, a\);/.test(b) && /klickZeigen\(false\)/.test(b), "Zentrale-Auswahl und Klick-Anzeige zurück");
   assert.ok(!/rgSchalter\(/.test(b), "keine erst später definierte Hilfe (sonst bricht die App beim Laden ab)");
@@ -13576,7 +13576,7 @@ assert.ok(/:where\(:root\.sch-an\) :is\(\.kachel,[^)]*\.register button\) \{ box
   const wk = html.slice(html.indexOf("// 2.671.0 KC-CLUB-VIDEO-WECKER (Hilfe-Nachtrag 5)"), html.indexOf("// ---------- 2.533.0 KC-CLUB-VIDEO-GEHEIM"));
   assert.ok(wk.length > 3000 && wk.length < 9000 && !/wkWeckerStellen\(\)|wkTimerStart\(|wkServer|api\(|wkKlingeln\(/.test(wk.replace(/'[^'\n]*'/g, "''").replace(/"[^"\n]*"/g, '""')), "Wecker-Video stellt nichts und sendet nichts");
   assert.ok(/RG\.zurueck\.push\(\(\) => \{ RG\.wkZurueck = false;/.test(wk), "Wecker-Video stellt Stoppuhr und Anzeige zurück");
-  assert.ok(/\{ id: "effekte", stand: "3"/.test(html) && /t: "🌗 Schatten und Ecken"/.test(html) && /\{ id: "chatprofi", stand: "[3-9]"/.test(html) && /t: "⏳ Senden ohne Warten"/.test(html) && /\{ id: "nachricht", stand: "[3-9]"/.test(html) && /t: "📤 Wie verschicken\?"/.test(html), "Videos erweitert");
+  assert.ok(/\{ id: "effekte", stand: "[3-9]"/.test(html) && /t: "🌗 Schatten und Ecken"/.test(html) && /\{ id: "chatprofi", stand: "[3-9]"/.test(html) && /t: "⏳ Senden ohne Warten"/.test(html) && /\{ id: "nachricht", stand: "[3-9]"/.test(html) && /t: "📤 Wie verschicken\?"/.test(html), "Videos erweitert");
   assert.ok(/"h:uhr_wecker": \["wecker"\]/.test(html) && /"h:wie_verschicken": \["nachricht"\]/.test(html), "Twinkey bietet die Videos an");
   assert.ok(/\["⏰", "Wecker, Stoppuhr, Timer \(große Uhr\)"/.test(html) && /\["📤", "„Wie verschicken\?“/.test(html), "Lupe");
   assert.ok(/\[\/\^\(einen\? \|den \)\?\(wecker\|timer\|stoppuhr\|eieruhr\)/.test(html), "Sprachsuche Wecker");
