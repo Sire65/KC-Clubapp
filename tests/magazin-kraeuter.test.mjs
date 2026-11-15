@@ -36,3 +36,10 @@ console.log("magazin-kraeuter: ok");
   assert.ok(a[2].backstube.bild === "magazin/backstube/nr02-mohn-aprikosen-herzen.webp" && a[2].backstube.bildNachweis === "Bild: KI-generiert" && fs.statSync(new URL("../" + a[2].backstube.bild, import.meta.url)).size < 200000, "Februar: KI-Bild mit Nachweis");
   for (const n of [2, 12]) { const b = a[n].backstube; assert.ok(!b.foto && !b.id && b.zutaten.length === 3 && b.schritte.length >= 6 && b.tipp && b.fakten.length === 4, `Heft ${n}: Backstube vollständig`); } }
 console.log("magazin-vorbau: ok");
+// KC-CLUB-MAGAZIN-WARENKUNDE (15.11.2026): Produkt des Monats in allen 24 Heften, auf der Seite „Saisonkalender“ unter dem Kraut des Monats
+{ const w = new Function("esc", teil.slice(teil.indexOf("const MAG_WARENKUNDE"), teil.indexOf("const MAG = {")) + "; return { MAG_WARENKUNDE, magWare };")((t) => String(t));
+  assert.equal(w.MAG_WARENKUNDE.length, 24); assert.equal(new Set(w.MAG_WARENKUNDE.map((x) => x.n)).size, 24, "jedes Produkt nur einmal");
+  for (const x of w.MAG_WARENKUNDE) for (const f of ["n", "sym", "saison", "einkauf", "lagern", "kueche", "profi", "wissen"]) assert.ok(x[f] && x[f].length > 0, `${x.n}: ${f}`);
+  assert.ok(/Produkt des Monats: Grünkohl/.test(w.magWare(1)) && /Produkt des Monats: Spargel/.test(w.magWare(5)) && /Produkt des Monats: Rotkohl/.test(w.magWare(24)));
+  assert.ok(/r\.id === "saison"\) inhalt \+= magKraut\(nr\) \+ magWare\(nr\)/.test(teil), "Einbau im Saisonkalender"); }
+console.log("magazin-warenkunde: ok");
