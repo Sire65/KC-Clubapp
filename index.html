@@ -2050,6 +2050,8 @@
   .ak-riegel-karte > div, .ak-einladung { width: 100%; } .ak-einladung { text-align: center; } .ak-einladung h4 { margin: 6px 0; color: #741521; font: 700 1.3rem Georgia, serif; }
   .ak-riegel { margin: 10px auto 6px; width: min(230px, 80%); height: 50px; border-radius: 8px; background: linear-gradient(180deg, #5a3418, #3d220f); position: relative; transform: rotate(-4deg); box-shadow: 0 4px 10px rgba(0,0,0,.35); animation: akRiegel .7s ease-out; }
   .ak-riegel span { position: absolute; inset: 13px 0 auto; height: 24px; background: #fff; display: grid; place-items: center; font: 900 .85rem system-ui, sans-serif; color: #741521; letter-spacing: .04em; }
+  .ak-riegel.ak-nikolaus { background: linear-gradient(180deg, #b3202c, #741521); } .ak-riegel.ak-nikolaus span { color: #b3202c; } /* 2.947.0 KC-CLUB-ADVENT-PREISE */
+  .ak-ok { margin: 8px 0 0; padding: 8px 10px; border-radius: 10px; background: rgba(47,133,90,.14); font-weight: 700; }
   @keyframes akRiegel { from { transform: translateY(30px) rotate(-14deg); opacity: 0; } to { transform: rotate(-4deg); opacity: 1; } }
   @media (prefers-reduced-motion: reduce) { .ak-riegel { animation: none; } }
   .ak-gutschein { border: 2px dashed #741521; border-radius: 10px; padding: 8px 10px; margin-top: 8px; }
@@ -2869,6 +2871,7 @@
   .vw-art.an { border: 2px solid var(--textGruen); background: var(--gruenbg); }
   .vw-ohne { display: flex; gap: 8px; align-items: flex-start; margin: 10px 0 0; padding: 8px; border: 1px dashed var(--rand, #ccc); border-radius: 10px; }
   .mg-was { position: absolute; top: 6px; right: 6px; width: 30px; height: 30px; min-height: 0; padding: 0; border-radius: 50%; border: 2px solid var(--textGruen); background: var(--karte); color: var(--textGruen); font: 900 1rem/1 system-ui, sans-serif; cursor: pointer; box-shadow: var(--schatten); }
+  .mg-push { position: absolute; top: 6px; left: 6px; font-size: 1.05rem; line-height: 1; } .mg-push.aus { opacity: .75; } /* 2.948.0 KC-CLUB-MG-PUSH-ZEICHEN */
   .mg-was:focus-visible { outline: 3px solid var(--textGruen); outline-offset: 2px; }
   .mg-kachel .mk-titel { text-align: center; }
   /* KC-CLUB-MG-ONLINE-FARBE (2.42.0, Wunsch Hansi): Kachel eines Mitglieds, das gerade online ist, sofort erkennbar grün */
@@ -7035,7 +7038,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.946.0" data-v="2.946.0"></script>
+<script src="app.js?v=2.947.0" data-v="2.947.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

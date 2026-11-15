@@ -179,6 +179,7 @@ jobs:
       - run: node tests/video-abgleich.test.mjs
       - run: node tests/video-stimme-stumm.test.mjs
       - run: node tests/advent-2026.test.mjs
+      - run: node tests/advent-preise.test.mjs
       - run: node tests/teilen-eigen.test.mjs
       - run: node tests/clubabend-anwesend.test.mjs
       - run: node tests/sitzung-schritte.test.mjs

@@ -249,3 +249,17 @@ Noch zu tun vor dem Einbau: Hansi segnet die Linkliste ab (Abschnitt 5.2).
 ---
 Dateien in diesem Ordner: `KONZEPT_ADVENTSKALENDER_2026.md` (dieses Konzept), `entwurf.html` + `entwurf.webp` (Entwurfsbild, keine Funktion),
 `advent-rathaus.webp` (Rathaus-Bild für die App vorbereitet, 1280 × 720, 110 KB). Original im KICC-Repo: `docs/club-app-adventskalender/`.
+
+## Nachtrag 15.11.2026 – Preis-Türchen (KC-CLUB-ADVENT-PREISE, Wunschliste #89, Version 2.947.0)
+
+Antworten Hansi: „Mini-Nikolaus aus Schokolade … jeder am 06.12. einen. Kinderriegel nur 1 Stück pro Person. Jeder, der die Tür öffnet, bekommt die Sachen. Liste passt.“
+
+| Tag | Türchen | Preis |
+|---|---|---|
+| 6.12. (Nikolaus, 2. Advent) | 🎅 Ein Mini-Schoko-Nikolaus für dich! | Mini-Schoko-Nikolaus |
+| 13.12. (Lucia, 3. Advent) | 🍬 Mandarinen-Licht (Nascherei) | – (vorher 2. Kinderriegel-Gutschein) |
+| 20.12. (4. Advent) | 🍫 Ein Kinderriegel für dich! | Kinderriegel (nur einer pro Person) |
+
+- In den Preis-Türchen: **„🎁 Ja, den nehme ich“** → Eintrag in `kc_club_advent_preise` (Person, Jahr, Tag, Preis; einmal je Person und Tag, erst ab dem Tag).
+- **Admin:** „📋 Wer bekommt was“ im Kalender – Namen je Preis mit Anzahl, Drucken mit Club-Briefkopf. Austeilen beim Weihnachtsessen im Januar.
+- Weitere Preise (Hansi schickt Fotos) = Eintrag in `AK_PREISE` (App) und `ADVENT_PREISE` (Server).

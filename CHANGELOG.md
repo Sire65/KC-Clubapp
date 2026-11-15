@@ -1,5 +1,15 @@
 # Änderungen
 
+## 2.947.0 – 🎄 Adventskalender: Preis-Türchen mit „🎁 Ja, den nehme ich“ und Hansis Liste „Wer bekommt was“ (KC-CLUB-ADVENT-PREISE, Wunschliste #89) · 🔔/🔕 auf den Mitglieder-Kacheln (KC-CLUB-MG-PUSH-ZEICHEN, #91) · App + Server 2.947.0 + Datenbank
+Antworten Hansi 15.11.2026: „Mini-Nikolaus aus Schokolade … jeder am 06.12. einen. Kinderriegel nur 1 Stück pro Person. Jeder, der die Tür öffnet, bekommt die Sachen. Liste passt.“
+- **6.12. (Nikolaus):** Türchen „🎅 Ein Mini-Schoko-Nikolaus für dich!“ – jede/r bekommt einen.
+- **20.12. (4. Advent):** Türchen „🍫 Ein Kinderriegel für dich!“ – nur noch **ein** Kinderriegel pro Person (vorher drei Gutscheine an 6./13./20.12.). Am **13.12. (Lucia)** gibt es dafür die Nascherei „Mandarinen-Licht“.
+- In beiden Preis-Türchen: **„🎁 Ja, den nehme ich“** – damit steht man in der Liste. Danach: „✅ Notiert – Hansi legt deinen … für dich bereit.“ Melden geht erst ab dem jeweiligen Tag und nur einmal.
+- **Nur Admin:** im Adventskalender „📋 Wer bekommt was“ – je Preis die Namen und die Anzahl, mit **🖨️ Drucken** (Club-Briefkopf) zum Austeilen beim Weihnachtsessen im Januar.
+- Datenbank: neue kleine Tabelle `kc_club_advent_preise` (Person, Jahr, Tag, Preis), RLS an, keine Rechte für Browser, gespiegelt und gesichert. Server: `advent_preis_melden`, `advent_preise_meine`, `advent_preise_liste` (nur Admin).
+- Neue Preise später (z. B. mit Hansis Fotos) = Eintrag in `AK_PREISE` (App) und `ADVENT_PREISE` (Server).
+- **Mitglieder-Kacheln (#91, Hansi „A“):** oben links ein kleines **🔔** (Push eingeschaltet) oder **🔕** (kein Push) – **nur für Admin und Clubleitung**, damit Hansi sieht, wen er ans Einschalten erinnern kann. Legende darüber ergänzt. (Die Listen-Ansicht zeigt die Wege-Zeichen 🔔 ✉️ WA wie bisher.)
+- Tests: neu `tests/advent-preise.test.mjs`, `tests/advent-2026.test.mjs` angepasst, `tests/wunschliste-november.test.mjs` erweitert. Rückweg: App + Server 2.946.0 (Tabelle bleibt, stört nicht).
 ## Sicherungen gepackt – Backup-Arbeiter Version 22, Prüfdienst Version 12 – 2026-11-15 (KC-SICHERUNG-PACKEN) · App unverändert
 Wunsch Hansi („Neon wird voll – gerade wenn der Weihnachtsmarkt losgeht; setze 1 und 2 um“). Befund 15.11.: Neon 712 von 1.024 MB, davon 539 MB (82 %) die 11 nächtlichen Sicherungen (je 45–50 MB, verschlüsselt, aber ungepackt, +1 MB je Tag durch Protokolle). Hochrechnung: Grenze um den 10.–15.12.
 - **Packen:** Der Backup-Arbeiter packt den Klartext jeder Tabelle vor dem Verschlüsseln mit gzip (`compression:"gzip"`, AES-GCM-Zusatzdaten `kc-backup|gzip` schützen das Merkmal). Unveränderte Tabellen werden nur noch aus schon gepackten Snapshots kopiert – in der ersten Nacht wird darum einmal alles neu (gepackt) übertragen.

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.946.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.947.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12833,7 +12833,7 @@ function suWahlZeigen() {
 // Geöffnete Türchen merkt sich das Gerät (kein Server, keine Datenbank). Erinnerung im Info-Laufband, solange das heutige Türchen zu ist.
 // Abschaltbar unter ⚙️ → Effekte. Neues Türchen/anderer Inhalt = nur AK_TUERCHEN ändern (Registry).
 // 2.869.0 KC-CLUB-ADVENT-2026 (Konzept docs/adventskalender-2026, Wunsch Hansi 06.11.2026): Rathaus-Bild (von Hansi) als Hintergrund; Türchen im Wechsel
-// 🍬 Nascherei → ✂️ Basteln → 🕯️ Deko, an den Adventssonntagen 6./13./20.12. 🍫 Kinderriegel-Gutschein (Riegel beim Weihnachtsessen im Januar,
+// 🍬 Nascherei → ✂️ Basteln → 🕯️ Deko, an den Adventssonntagen Überraschungen (seit 2.947.0: 6.12. Schoko-Nikolaus, 20.12. Kinderriegel; 13.12. Mandarinen-Licht) (Preise beim Weihnachtsessen im Januar,
 // kein Abhaken, kein Server), Türchen 24 ☕ Einladung zum Frühstück bei Hansi (Termin folgt; Antwort über die vorhandene Abstimmung). Basteln/Deko:
 // kleine Symbole + Link zur echten Anleitung (geprüft 06.11.2026). Kein Kalender für Gäste und Aushilfen. Keine Nascherei geht verloren: AK_NASCH → Fach „Alle Naschereien“.
 const AK_NASCH = [ // 2.468.0 (Wunsch Hansi): Bastelanleitungen für kleine süße Naschereien – z = Zutaten, s = Schritte
@@ -12862,28 +12862,31 @@ const AK_NASCH = [ // 2.468.0 (Wunsch Hansi): Bastelanleitungen für kleine sü�
   { sym: "🥝", t: "Obst-Tannenbaum", z: ["Kiwi, grüne Weintrauben", "1 Apfel", "1 Karotte", "Granatapfelkerne oder Johannisbeeren"], s: ["Den Apfel halbieren und mit der flachen Seite auf einen Teller legen – das ist der Fuß.", "Die Karotte als Stamm hineinstecken.", "Kiwi-Scheiben und Trauben mit Zahnstochern von unten nach oben immer kleiner anstecken.", "Granatapfelkerne als Kugeln, oben ein Stern aus Apfel oder Karotte."], tipp: "Gesund und bunt – ein schöner Gegenpol zu den Plätzchen." },
 ];
 const akN = (t, link) => ({ art: "naschen", ...AK_NASCH.find((x) => x.t === t), ...(link ? { link } : {}) });
-const AK_RIEGEL = (nr, text) => ({ art: "riegel", sym: "🍫", t: "Ein Kinderriegel für dich!", nr, text });
+// 2.947.0 KC-CLUB-ADVENT-PREISE (Wunschliste #89, Hansi 15.11.2026): Preis-Türchen – 6.12. Mini-Schoko-Nikolaus, 20.12. Kinderriegel (je einer pro Person).
+// „🎁 Ja, den nehme ich“ trägt dich in Hansis Liste „Wer bekommt was“ ein (Austeilen beim Weihnachtsessen im Januar). Neuer Preis = Eintrag hier + ADVENT_PREISE im Server.
+const AK_PREISE = { nikolaus: { sym: "🎅", name: "Mini-Schoko-Nikolaus", bild: "SCHOKO-NIKOLAUS" }, kinderriegel: { sym: "🍫", name: "Kinderriegel", bild: "KINDERRIEGEL" } };
+const AK_RIEGEL = (preis, text) => ({ art: "riegel", sym: AK_PREISE[preis].sym, t: `Ein ${AK_PREISE[preis].name} für dich!`, preis, text });
 const AK_TUERCHEN = [ // 2.869.0 KC-CLUB-ADVENT-2026: Tag 1–24; art: naschen | basteln | deko | riegel | einladung; link = echte Anleitung (neues Fenster)
   akN("Lokomotive aus Dominosteinen"),
   { art: "basteln", sym: "⭐", t: "Sterne aus Butterbrottüten", dauer: "ca. 30 Minuten", kinder: true, z: ["7 Butterbrottüten", "Klebestift", "Schere, Bleistift", "Band zum Aufhängen"], s: ["Die Tüten flach aufeinanderkleben – jeweils unten einen breiten Streifen und senkrecht einen in der Mitte (wie ein „T“).", "Oben eine Spitze oder einen Bogen aufzeichnen und den ganzen Stapel zuschneiden, an den Seiten kleine Muster herausschneiden.", "Die oberste und die unterste Tüte zusammenkleben – der Stern klappt auf.", "Band durchziehen und ans Fenster hängen."], tipp: "Mit einer Lichterkette dahinter leuchtet der Stern wie eine Laterne.", link: "https://www.dm.de/tipps-und-trends/bastelideen/bastelideen-weihnachten/himmlische-papiersterne-aus-butterbrottueten-475304" },
   { art: "deko", sym: "🫙", t: "Frost-Windlicht mit Salzkristallen", dauer: "10 Minuten + ein paar Tage warten", kinder: true, z: ["schmale, hohe Gläser", "grobes Salz", "Wasser", "Teelicht (am besten LED)", "Tannengrün, Schnur, Zapfen"], s: ["Etwa 1 cm hoch grobes Salz in jedes Glas füllen.", "Nur so viel Wasser dazugeben, dass das Salz feucht ist – es soll nicht schwimmen.", "Die Gläser an einen warmen Ort stellen (Fensterbank über der Heizung) und das Salz feucht halten – nach ein paar Tagen klettern Kristalle wie Raureif hoch.", "Teelicht hinein, Schnur um den Hals, Tannengrün und Zapfen daneben."], tipp: "Heute ansetzen – zum 2. Advent glitzert es wie Frost.", link: "https://www.heleneweberhaus.de/wp-content/uploads/2022/11/Upcycling-Schneelichter-aus-Salzkristallen.pdf" },
   akN("Nikolaus aus Schokokuss"),
   { art: "basteln", sym: "🥾", t: "Nikolausstiefel aus Filz", dauer: "ca. 45 Minuten", kinder: "mit Hilfe", z: ["roter und weißer Filz", "Papier für die Schablone", "Schere, Locher", "Wollfaden oder Pfeifenputzer"], s: ["Einen Stiefel auf Papier zeichnen, ausschneiden und zweimal auf roten Filz übertragen.", "Beide Teile ausschneiden und aufeinanderlegen.", "Rundherum (außer oben) mit dem Locher Löcher stanzen und mit Wolle oder Pfeifenputzer zusammenfädeln.", "Oben einen weißen Filzstreifen als Fellrand aufkleben, Schlaufe zum Aufhängen anbringen."], tipp: "Heute Abend vor die Tür stellen – morgen ist Nikolaus!", link: "https://www.dm.de/tipps-und-trends/bastelideen/bastelideen-kinder/nikolausstiefel-andere-weihnachtsdeko-aus-filz-58928" },
-  AK_RIEGEL(1, "Der Nikolaus war da – und hat im Köcheclub etwas Süßes dagelassen. Schönen 2. Advent!"),
+  AK_RIEGEL("nikolaus", "Der Nikolaus war da – und hat für jede und jeden im Köcheclub einen kleinen Schoko-Nikolaus dagelassen. Schönen 2. Advent!"),
   { art: "deko", sym: "🍊", t: "Girlande aus Orangenscheiben", dauer: "ca. 1½ Stunden (meist Backofen)", kinder: "mit Hilfe", z: ["2–4 Orangen", "Backgitter + Blech", "Nadel und Faden", "nach Wunsch Zimtstangen, Sternanis"], s: ["Die Orangen in etwa ½ cm dünne Scheiben schneiden.", "Auf das Backgitter legen, ein Blech darunterschieben (tropft).", "Bei 100 °C etwa eine Stunde trocknen, dann auf dem Gitter auskühlen lassen.", "Die Scheiben in der Mitte auffädeln – nach Wunsch abwechselnd mit Zimtstangen."], tipp: "Duftet herrlich am Fenster oder am Tannenbaum.", link: "https://www.nau.ch/lifestyle/wohnen/orangegirlande-simple-weihnachtsdeko-zum-selbermachen-65826299" },
   akN("Rentier aus Marshmallow", "https://tv.orf.at/program/kids/box-weihnachtliche-jause100.pdf"),
   { art: "basteln", sym: "❄️", t: "Schneeflocken aus Papier", dauer: "ca. 15 Minuten", kinder: true, z: ["quadratisches weißes Papier (z. B. 20 × 20 cm)", "Schere", "Bleistift", "Faden"], s: ["Das Papier dreimal falten: längs zur Hälfte, quer zum Quadrat, dann schräg zum Dreieck.", "Die Ecke mit der Papiermitte festhalten und die gegenüberliegende Seite rund abschneiden.", "An den Seiten kleine Dreiecke, Bögen und Zacken herausschneiden – die Kanten nie ganz durchschneiden.", "Vorsichtig auffalten, glatt streichen, aufhängen."], tipp: "Butterbrotpapier lässt sich besonders leicht schneiden.", link: "https://www.wdrmaus.de/elefantenseite/elternseiten/selbermachen/pdfs/Bastelanleitung-Papier-Schneeflocke.pdf" },
   { art: "deko", sym: "🌲", t: "Zapfenwichtel", dauer: "ca. 1 Stunde", kinder: "mit Hilfe", z: ["Tannen- oder Kiefernzapfen", "Filzreste", "Plüsch oder Watte (Bart)", "Holzperle (Nase)", "Heißkleber oder Bastelkleber"], s: ["Für jeden Zapfen zwei Mützenhälften aus Filz schneiden, die Ränder zusammenkleben und umstülpen.", "Aus Plüsch oder Watte einen Bart schneiden und vorne an den Zapfen kleben.", "Die Holzperle als Nase daraufsetzen.", "Mütze aufkleben – nach Wunsch ein Band zum Aufhängen anbringen."], tipp: "Jede Mütze passt du an deinen Zapfen an – deshalb gibt es keine feste Vorlage.", link: "https://www.vbs-hobby.at/zapfenwichtel-basteln-t6004/?format=pdf" },
   akN("Schneeflocke aus Brezeln"),
   { art: "basteln", ...AK_NASCH.find((x) => x.t === "Engel aus Nudeln (Baumschmuck)"), dauer: "ca. 30 Minuten + trocknen", kinder: true, link: "https://www.tu-chemnitz.de/advent/2010/17/" },
-  AK_RIEGEL(2, "Zum 3. Advent – und heute ist auch Lucia, das Lichterfest. Mehr Licht gibt's im Fach „Alle Naschereien“: das Mandarinen-Licht."),
+  akN("Mandarinen-Licht (Luciatag)"),
   { art: "deko", sym: "🍊", t: "Duft-Orange mit Nelken", dauer: "ca. 20 Minuten", kinder: true, z: ["1 feste Orange", "ganze Gewürznelken (ca. 24)", "Holzspieß zum Vorstechen", "Band"], s: ["Die Orange kurz in der Hand rollen, damit die Schale etwas weicher wird.", "Mit dem Holzspieß kleine Löcher vorstechen – in Streifen, Spiralen oder als Stern.", "Die Nelken mit dem Stiel voran hineinstecken.", "Ein Band herumbinden und aufhängen oder auf einen Teller legen."], tipp: "In Schweden steckt man genau 24 Nelken – und zieht jeden Tag eine heraus, wie bei einem Adventskalender.", link: "https://utopia.de/ratgeber/weihnachtsduefte-die-klassiker-ohne-chemie-einfach-selbstgemacht_272916/" },
   akN("Schokolöffel für heiße Milch", "https://www.dm.at/inspiration-und-beratung/ernaehrung/rezepte-kochtipps/schokoloeffel-rezept-491614"),
   { art: "basteln", sym: "💌", t: "Karte mit Stehauf-Tannenbäumen", dauer: "ca. 30 Minuten", kinder: true, z: ["Tonpapier (doppelte Kartengröße)", "grünes Papier", "Schere, Klebestift", "Plätzchenform als Vorlage"], s: ["Das Tonpapier zuschneiden und in der Mitte falten – das ist die Karte.", "Auf grünes Papier Tannenbäume in verschiedenen Größen zeichnen und unten an beiden Seiten einen schmalen Klebestreifen dazuzeichnen.", "Ausschneiden, jeden Baum senkrecht in der Mitte falten, die Klebestreifen nach hinten knicken.", "Die Streifen mit Kleber bestreichen und die Bäume mittig in die Falz kleben – beim Aufklappen stehen sie auf."], tipp: "Ein paar Sterne aus Goldpapier über den Bäumen – fertig ist der Winterwald.", link: "https://www.fuersie.de/lifestyle/weihnachten/galerie/weihnachtskarten-selbermachen" },
   { art: "deko", sym: "🏺", t: "Leuchtende Doppelvase", dauer: "ca. 20 Minuten", kinder: true, z: ["eine große und eine schmale Vase", "LED-Lichterkette (ca. 2 m)", "Weihnachtskugeln", "Tannenzweige", "nach Wunsch Schnee- oder Goldspray"], s: ["Die Lichterkette um die schmale Vase wickeln.", "Die schmale Vase mittig in die große stellen.", "Den Zwischenraum mit Weihnachtskugeln füllen.", "Tannenzweige (nach Wunsch mit Schneespray) in die schmale Vase stecken."], tipp: "Mit Batterie-Lichterkette bleibt die Steckdose frei – Batteriefach unten verstecken.", link: "https://www.desired.de/artikel/kreativer-weihnachtszauber-selbstgemachte-deko-die-deinen-tisch-zum-strahlen-bringt--g34f84g8rx" },
   akN("Hexenhaus aus Butterkeksen", "https://www.lecker.de/buntes-hexenhaus-26290.html"),
   { art: "basteln", sym: "🥔", t: "Geschenkpapier mit Kartoffeldruck", dauer: "ca. 45 Minuten + trocknen", kinder: "mit Hilfe", z: ["Kartoffeln", "Messer, Plätzchenform", "Acryl- oder Wasserfarbe, Pinsel", "Packpapier"], s: ["Kartoffel waschen, trocknen und halbieren.", "Eine Plätzchenform (Stern, Baum) in die Schnittfläche drücken und den Rand rundherum wegschneiden.", "Den Stempel mit dem Pinsel einfärben und fest auf das Packpapier drücken.", "Wiederholen, bis das Muster gefällt, dann 1–2 Stunden trocknen lassen."], tipp: "Erst einen Probedruck auf Schmierpapier machen.", link: "https://utopia.de/ratgeber/geschenkpapier-selber-machen-gestalten-einfach_36918/" },
-  AK_RIEGEL(3, "Schönen 4. Advent! Nur noch vier Tage bis Heiligabend."),
+  AK_RIEGEL("kinderriegel", "Schönen 4. Advent! Nur noch vier Tage bis Heiligabend."),
   { art: "deko", sym: "🍽️", t: "Servietten-Tannenbaum", dauer: "ca. 5 Minuten je Serviette", kinder: true, z: ["grüne Stoff- oder Papierservietten", "Bügeleisen (bei Stoff)", "nach Wunsch ein kleiner Stern"], s: ["Die Serviette zweimal zum Quadrat falten, die offenen Ecken zeigen nach oben.", "Die einzelnen Lagen nacheinander nach unten falten, jede ein Stück versetzt – wie Tannenäste.", "Umdrehen und die Seiten zur Mitte einschlagen, so dass ein spitzer Baum entsteht.", "Wieder umdrehen, die Lagen etwas nach oben schieben, Stern auf die Spitze."], tipp: "Stoffservietten vorher glatt bügeln – dann halten die Falten besser.", link: "https://www.dm.de/tipps-und-trends/bastelideen/bastelideen-weihnachten/weihnachtsbaum-serviette-2570968" },
   akN("Tannenbaum aus Eiswaffel"),
   { art: "basteln", sym: "🎁", t: "Geschenke natürlich verpacken", dauer: "ca. 30 Minuten", kinder: true, z: ["Packpapier", "Jutegarn oder Kordel", "Zimtstangen, Zapfen, getrocknete Orangen", "Baumrinde oder Pappe, Lochzange", "Heißkleber"], s: ["Das Geschenk in Packpapier einwickeln und mit Jutegarn verschnüren.", "Zimtstangen, Zapfen oder Orangenscheiben unter das Garn stecken oder festkleben.", "Aus Rinde oder Pappe einen Stern oder ein Herz als Namensschild schneiden.", "Ein Loch stanzen, Namen draufschreiben und mit Kordel ans Geschenk binden."], tipp: "Last minute – und es duftet nach Weihnachten.", link: "https://www.vbs-hobby.at/natuerliche-geschenkverpackung-zu-weihnachten-t6007/?format=pdf" },
@@ -12901,7 +12904,6 @@ const akAn = () => einst("advent", true);
 const akSichtbar = () => zugang() === "mitglied" && (!!ICH?.admin || new Date().getMonth() === 11);
 function akSichtbarSetzen() { const z = $("setAdventZeile"); if (z) z.classList.toggle("versteckt", !akSichtbar()); }
 const akVorschau = () => !akHeute() && !!ICH?.admin; // Admin außerhalb Dezember: alle Türchen zum Ansehen
-const akRiegelOffen = (offen = akOffen()) => AK_TUERCHEN.filter((T, i) => T.art === "riegel" && offen.includes(i + 1)).length;
 function akZeigen() {
   if (!akSichtbar()) return;
   const h = akHeute(), offen = akOffen(), vorschau = akVorschau();
@@ -12910,7 +12912,7 @@ function akZeigen() {
     <div class="ak-raster">${AK_REIHE.map((n) => `<button type="button" class="ak-tuer${offen.includes(n) ? " auf" : ""}${n === h ? " heute" : ""}${n > h && !vorschau ? " zu" : ""}${n === 24 ? " ak-24" : ""}" data-n="${n}" onclick="akTuer(${n})" aria-label="Türchen ${n}"><span class="ak-zahl">${n}</span><span class="ak-sym" aria-hidden="true">${AK_TUERCHEN[n - 1].sym}</span><span class="ak-art" aria-hidden="true">${n}</span></button>`).join("")}<span class="ak-muetze" aria-hidden="true"><img src="kc-kochmuetze-weiss.webp" alt=""></span></div>
     <div class="ak-legende">${Object.values(AK_ARTEN).map(([s, t]) => `<span>${s} ${t}</span>`).join("")}</div>
     <div id="akInhalt" class="ak-inhalt" aria-live="polite"></div>
-    ${h || vorschau ? `<button type="button" class="knopf ak-fach" onclick="akNaschFach()">📖 Alle Naschereien</button>` : ""}
+    ${h || vorschau ? `<button type="button" class="knopf ak-fach" onclick="akNaschFach()">📖 Alle Naschereien</button>` : ""}${ICH?.admin ? `<button type="button" class="knopf ak-fach" onclick="akPreisListe()">📋 Wer bekommt was</button>` : ""}
     <p class="ak-quelle">Bild: Altes Rathaus Werne im Advent – Hansi, Köcheclub Werne</p>`);
   f.classList.add("ak-blatt");
 }
@@ -12924,12 +12926,38 @@ function akAnleitung(T, n) { // Nascherei, Basteln, Deko: Kurzfassung + Link zur
     ${T.link ? `<a class="knopf ak-link" href="${esc(T.link)}" target="_blank" rel="noopener">🔗 Zur ausführlichen Anleitung (mit Bildern)</a>` : ""}</div></div>`;
 }
 function akRiegelKarte(T, n) {
-  const zahl = akRiegelOffen();
-  return `<div class="ak-karte ak-riegel-karte"><div><span class="ak-marke">🍫 Überraschung</span><br><b>${n}. Dezember – ${esc(T.t)}</b>
-    <div class="ak-riegel" aria-hidden="true"><span>KINDERRIEGEL</span></div><p style="margin:6px 0">${esc(T.text)}</p>
-    <div class="ak-gutschein">🎟️ <b>Gutschein Nr. ${T.nr} von 3</b><br>Dein Kinderriegel wartet beim <b>Weihnachtsessen im Januar</b> auf dich.</div>
-    ${zahl > 1 ? `<p class="hinweis" style="margin:6px 0 0">🍫 ${zahl} Kinderriegel warten beim Weihnachtsessen auf dich.</p>` : ""}</div></div>`;
+  const P = AK_PREISE[T.preis];
+  return `<div class="ak-karte ak-riegel-karte"><div style="width:100%"><span class="ak-marke">${P.sym} Überraschung</span><br><b>${n}. Dezember – ${esc(T.t)}</b>
+    <div class="ak-riegel${T.preis === "nikolaus" ? " ak-nikolaus" : ""}" aria-hidden="true"><span>${P.bild}</span></div><p style="margin:6px 0">${esc(T.text)}</p>
+    <div class="ak-gutschein">🎟️ <b>Gutschein für einen ${P.name}</b><br>Er wartet beim <b>Weihnachtsessen im Januar</b> auf dich.</div>
+    <div id="akPreis" class="ak-antwort">${akPreisKnopf(n)}</div></div></div>`;
 }
+// 2.947.0 KC-CLUB-ADVENT-PREISE: gemeldete Tage (Server, eine Abfrage beim ersten Preis-Türchen), Knopf und Hansis Liste
+const AK_GEMELDET = { tage: null };
+const akPreisKnopf = (n) => !akHeute() ? '<p class="hinweis">🎁 Im Dezember tippst du hier auf „Ja, den nehme ich“.</p>'
+  : AK_GEMELDET.tage?.includes(n) ? `<p class="ak-ok">✅ Notiert – Hansi legt deinen ${AK_PREISE[AK_TUERCHEN[n - 1].preis].name} für dich bereit.</p>`
+  : `<button type="button" class="knopf haupt" style="width:100%;margin-top:6px" onclick="akPreisMelden(${n}, this)">🎁 Ja, den nehme ich</button>`;
+async function akPreiseLaden(n) {
+  if (!akHeute() || AK_GEMELDET.tage) return;
+  try { AK_GEMELDET.tage = (await api("advent_preise_meine")).tage || []; } catch { return; }
+  if ($("akPreis") && n) $("akPreis").innerHTML = akPreisKnopf(n);
+}
+async function akPreisMelden(n, knopf) {
+  if (knopf) knopf.disabled = true;
+  try { await api("advent_preis_melden", { tag: n }, { warten: true }); if (!AK_GEMELDET.tage) AK_GEMELDET.tage = []; AK_GEMELDET.tage.push(n); melde("🎁 Notiert – danke!"); }
+  catch (e) { meldeFehler(e); }
+  if ($("akPreis")) $("akPreis").innerHTML = akPreisKnopf(n);
+}
+async function akPreisListe() { // nur Admin: wer bekommt was (zum Austeilen im Januar) – ansehen und drucken
+  const b = blattAuf("akPreisBlatt", '<h3 style="margin:0">📋 Adventskalender – wer bekommt was</h3><div id="akPreisListe"><p class="hinweis">⏳ Wird geladen …</p></div>');
+  let r; try { r = await api("advent_preise_liste", {}, { warten: true }); } catch (e) { if ($("akPreisListe")) $("akPreisListe").innerHTML = `<p class="hinweis">⚠️ ${esc(fehlerText(e))}</p>`; return; }
+  const gruppen = Object.values(AK_PREISE).map((P) => ({ P, leute: r.preise.filter((x) => x.preis === P.name).map((x) => x.name).sort((a, c) => a.localeCompare(c, "de")) }));
+  const html = gruppen.map(({ P, leute }) => `<h4 style="margin:12px 0 4px">${P.sym} ${esc(P.name)} – ${leute.length} Stück</h4>${leute.length ? `<ol style="margin:0;padding-left:22px">${leute.map((x) => `<li>${esc(x)}</li>`).join("")}</ol>` : '<p class="hinweis" style="margin:0">Noch niemand gemeldet.</p>'}`).join("");
+  if (!$("akPreisListe")) return;
+  $("akPreisListe").innerHTML = html + `<div class="knoepfe" style="margin-top:12px"><button type="button" class="knopf haupt" onclick="akPreisDruck()">🖨️ Drucken</button><button type="button" class="knopf" onclick="fensterZu($('akPreisBlatt'))">Schließen</button></div>`;
+  AK_GEMELDET.druck = { jahr: r.jahr, html };
+}
+const akPreisDruck = () => AK_GEMELDET.druck && druckStarten("advent_preise"); // Druck-Baustein mit Club-Kopf und -Fuß (AGENTS.md Regel 19)
 const AK_FRUEHSTUECK = /fr(ü|ue)hst(ü|ue)ck/i; // Abstimmung von Hansi (Vorschläge → 🗳️ Abstimmung), deren Titel „Frühstück“ enthält
 function akEinladungKarte() {
   return `<div class="ak-karte ak-einladung"><div style="width:100%"><div class="ak-gross" aria-hidden="true">☕🥐🍳</div>
@@ -12957,6 +12985,7 @@ function akTuer(n) {
   const T = AK_TUERCHEN[n - 1];
   $("akInhalt").innerHTML = T.art === "riegel" ? akRiegelKarte(T, n) : T.art === "einladung" ? akEinladungKarte() : akAnleitung(T, n);
   if (T.art === "einladung") akAntwortLaden();
+  if (T.art === "riegel") akPreiseLaden(n);
   $("akInhalt").scrollIntoView({ block: "nearest", behavior: "smooth" });
   if (n === h) try { ilZeigen(); } catch {} // Erinnerung im Laufband verschwindet
 }
@@ -27215,13 +27244,15 @@ function mgKachelnHtml(liste) {
     // 2.648.0 KC-CLUB-WAS-MACHT (Wunsch Hansi „nur für Admin: ist ein Mitglied online, rechts oben ein Fragezeichen – Klick zeigt, was die Person
     // gerade in der App macht“): öffnet die vorhandenen „Wege der Mitglieder“ (heute, nur diese Person). Nur Admin und nur bei online; der Server prüft „spur_liste“ mit nurAdmin.
     const was = ICH.admin && on && !ich ? `<button type="button" class="mg-was" title="Was macht ${esc(m.name.split(" ")[0])} gerade?" aria-label="Was macht ${esc(m.name)} gerade in der App?" onclick="event.stopPropagation();mgWasMacht('${m.person_id}')">?</button>` : "";
+    // 2.948.0 KC-CLUB-MG-PUSH-ZEICHEN (Wunschliste #91, Hansi 15.11.2026 „A“): 🔔 Push an / 🔕 kein Push oben links auf der Kachel – nur Admin und Clubleitung
+    const push = (ICH.admin || ICH.vorstand) && m.wege ? `<span class="mg-push${m.wege.push ? "" : " aus"}" title="${m.wege.push ? "Push ist eingeschaltet" : "Kein Push – bekommt Benachrichtigungen nur per E-Mail oder gar nicht"}" aria-label="${m.wege.push ? "Push an" : "kein Push"}">${m.wege.push ? "🔔" : "🔕"}</span>` : "";
     return `<div class="mini-kachel mg-kachel${on ? " mg-online" : ""}" onclick="mitgliedOeffnen('${m.person_id}')" role="button" tabindex="0">
-      ${was}${kreis(m, m.name, 58)}<span class="mk-titel">${esc(m.name)}${gbKerze(m.person_id)}</span>
+      ${was}${push}${kreis(m, m.name, 58)}<span class="mk-titel">${esc(m.name)}${gbKerze(m.person_id)}</span>
       ${m.aemter?.length ? `<span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}
       ${m.status || m.aktiv ? `<span class="stmarke st-${statusArt(m.status)}">${esc(m.status ? statusText(m.status) : "🟢 verfügbar")}</span>` : ""}${da}${ICH.admin && m.unerreichbar ? '<span class="mk-unter" title="kein Push, keine E-Mail – nur über 🔗 Link oder Telefon">📵 nicht erreichbar</span>' : ""}${ICH.admin && m.probe ? `<span class="mk-unter" title="Probephase – nur für dich als Admin sichtbar">🧪 Probe${m.probe.bis ? " bis " + esc(prDatum(m.probe.bis)) : ""}</span>` : ""}
       ${ich ? '<span class="mk-unter"><b>(du)</b></span>' : `<span class="mg-knoepfe" onclick="event.stopPropagation()">${mgStern(m)}<button class="knopf klein" title="Nachricht" onclick="direkt('${m.person_id}')">💬</button>${mgKlopfKnopf(m)}${mgAnrufKnoepfe(m)}</span>`}</div>`; // 2.23.87 (Wunsch Hansi): 📞/🎥 auch auf der Kachel – aktiv bei online (gleicher Baustein wie in der Liste)
   };
-  return `<p class="hinweis" style="margin:0 2px 8px;font-size:.85rem">🟢 online · 🔵 heute da · 🟠 abwesend · ⚪ noch nie in der App – Kachel antippen für Telefon, Adresse${ICH?.admin ? ", 🔗 Link und 🎖️ Ämter" : " usw."}</p>
+  return `<p class="hinweis" style="margin:0 2px 8px;font-size:.85rem">🟢 online · 🔵 heute da · 🟠 abwesend · ⚪ noch nie in der App${ICH?.admin || ICH?.vorstand ? " · 🔔 Push an · 🔕 kein Push" : ""} – Kachel antippen für Telefon, Adresse${ICH?.admin ? ", 🔗 Link und 🎖️ Ämter" : " usw."}</p>
     <div class="mini-kacheln mg-kacheln">${liste.map(k).join("")}</div>`;
 }
 // KC-CLUB-MG-GRUPPEN (1.34.0, Wunsch Hansi): eigene Gruppen (z. B. „Innovation“) als Filter – antippen zeigt nur deren Mitglieder
@@ -31071,6 +31102,7 @@ const DRUCKARTEN = {
   verbindung: { bauen: () => druckVerbindung() }, // KC-CLUB-VERBINDUNG-MELDEN (2.23.76)
   chat: { bauen: () => druckChat() }, // 2.23.80: ganzer Chat
   meinedaten: { bauen: () => druckMeineDaten() }, // KC-CLUB-MEINE-DATEN (2.23.82)
+  advent_preise: { bauen: () => AK_GEMELDET.druck && { titel: `Adventskalender ${AK_GEMELDET.druck.jahr} – wer bekommt was`, unter: "Austeilen beim Weihnachtsessen im Januar", html: AK_GEMELDET.druck.html } }, // 2.947.0 KC-CLUB-ADVENT-PREISE
   rezept: { bauen: (o, id) => druckRezept(id) },
   buchungsliste: { ablegen: { register: ["Kasse", "Erstattungen", "Sonstiges"], stichworte: "Erstattung, Buchungsliste, Kasse" }, bauen: () => eblDruck() }, // KC-CLUB-ERSTATTUNG-BUCHUNGEN
   besprechung: { ablegen: { register: ["Besprechungen", "Protokolle", "Sonstiges"], stichworte: "Besprechung, Tagesordnung, Terminanfrage" }, bauen: (o, id) => taBesprechungDruck(id) }, // KC-CLUB-TA-TAGESORDNUNG
@@ -34775,7 +34807,7 @@ const FENSTER_NAMEN = {
   stadtBlatt: "🏙️ Termine der Stadt Werne", uaBlatt: "🙋 Unterstützung bei der Club-App", treffenInfo: "📅 Termin-Details", ugBlatt: "📭 Noch nicht gelesen", snAdmin: "📣 Startnachricht schreiben",
   ltBlatt: "🔴 Live-Abstimmung", aeBlatt: "✏️ Meine Daten haben sich geändert", aeEingBlatt: "📬 Änderungen der Mitglieder", ausweisBlatt: "🪪 Mitgliedsausweis", fdkAbgabeBlatt: "🃏 Fang den Koch: Abgabe",
   abAufnahmeBlatt: "🎙️ Sprachaufnahme", ablageBlatt: "🗄️ Ablage", ablkBlatt: "📥 Ablagekorb", ablkEgBlatt: "📥 In die Eingangskörbe der Mitglieder", pfoBlatt: "🔎 Protokoll-Fotos lesen", prWunschBlatt: "✏️ Protokoll: Änderung wünschen", nuBlatt: "📈 So nutzen wir die App", npBlatt: "📊 Nutzungsstatistik", irBlatt: "🗓️ Meine Ist-Zeiten", kwxBlatt: "📤 Kontakt weiterleiten", irAeBlatt: "📋 Zeitänderungen", impressumBlatt: "§ Impressum", teilnahmeBlatt: "👥 Teilnahme an den Sitzungen", einlEgBlatt: "👥 Einlesen: in die Eingangskörbe", adBlatt: "🛠️ Verwaltung",
-  adbBlatt: "📒 Adressbuch", adbFormBlatt: "📒 Adresse melden/ändern", adminBlatt: "🛠️ Verwaltungsfenster", akBlatt: "🎄 Adventskalender", alarmBlatt: "🚨 Notfall-Meldung",
+  adbBlatt: "📒 Adressbuch", akPreisBlatt: "📋 Adventskalender – wer bekommt was", adbFormBlatt: "📒 Adresse melden/ändern", adminBlatt: "🛠️ Verwaltungsfenster", akBlatt: "🎄 Adventskalender", alarmBlatt: "🚨 Notfall-Meldung",
   alarmVorschau: "🚨 Notfall-Probe", ampelInfo: "🚦 Die Ampel", angebotInfo: "🎁 Angebot ansehen", anlAnsehBlatt: "📎 Anhang", anlBlatt: "📄 Anhang",
   anlLinkBlatt: "📄 Anhang (Link)", anlageBlatt: "📎 Anlage hinzufügen", ansichtBlatt: "👓 Ansicht wählen", arMenue: "🗄️ Archiv: Dokument", arWegBlatt: "🗑️ Dokument entfernen",
   arWohinBlatt: "🗄️ Dokument ablegen", asBlatt: "⚠️ Die App läuft nicht rund", atArchivBlatt: "🗄️ Aus dem Archiv dazulegen", schArchivBlatt: "🖨️ Druckpaket: aus dem Archiv", tlArchivBlatt: "🔴 Live: Unterlage aus dem Archiv", atBlatt: "💼 Aktentasche packen", atDruckBlatt: "🖨️ Was soll gedruckt werden?",

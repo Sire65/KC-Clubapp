@@ -194,7 +194,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.946.0";
+const SERVER_VERSION = "2.947.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -474,6 +474,8 @@ const jetzt = () => new Date().toISOString();
 const fTag = new Intl.DateTimeFormat("de-DE", { timeZone: TZ, weekday: "short", day: "2-digit", month: "2-digit" });
 const fTagLang = new Intl.DateTimeFormat("de-DE", { timeZone: TZ, weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" });
 const fZeit = new Intl.DateTimeFormat("de-DE", { timeZone: TZ, hour: "2-digit", minute: "2-digit" });
+// 2.947.0 KC-CLUB-ADVENT-PREISE: Preis-Türchen (Tag → Preis); muss zu ADVENT_PREISE/AK_TUERCHEN in der App passen (Test advent-preise)
+const ADVENT_PREISE: Record<number, string> = { 6: "Mini-Schoko-Nikolaus", 20: "Kinderriegel" };
 const berlinTag = (d: Date) => new Intl.DateTimeFormat("sv-SE", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
 const berlinStunde = (d: Date) => Number(new Intl.DateTimeFormat("en-US", { timeZone: TZ, hourCycle: "h23", hour: "2-digit" }).format(d));
 const wann = (iso: string, lang = false) => `${(lang ? fTagLang : fTag).format(new Date(iso))}, ${fZeit.format(new Date(iso))} Uhr`;
@@ -12457,6 +12459,29 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const leute = await personen((data ?? []).map((x: any) => x.person_id));
         return json({ ok: true, jetzt: jetzt(), beete: (data ?? []).filter((x: any) => (x.pflanzen || []).length).map((x: any) => ({ name: vorname(leute.get(x.person_id)) || "Mitglied", ich: x.person_id === ich.person_id, automatik: !!x.automatik,
           pflanzen: (x.pflanzen || []).map((q: any) => ({ art: q.art, gesaet: q.gesaet, gegossen: q.gegossen, stand: q.stand, wachs: q.wachs })) })) });
+      }
+      // 2.947.0 KC-CLUB-ADVENT-PREISE (Wunschliste #89, Hansi 15.11.2026): Preis-Türchen im Adventskalender – „🎁 Ja, den nehme ich“ → Hansis Liste.
+      case "advent_preis_melden": case "advent_preise_meine": case "advent_preise_liste": {
+        if (ich.zugang !== "mitglied") throw new Fehler("Der Adventskalender ist nur für Mitglieder.", 403);
+        const heute = berlinTag(new Date()), jahr = Number(heute.slice(0, 4));
+        if (a === "advent_preise_liste") {
+          if (!ich.admin) throw new Fehler("Nur für den Admin.", 403);
+          const j = Number(p.jahr) || jahr;
+          const { data, error } = await db.from("kc_club_advent_preise").select("person_id,tag,preis,gemeldet_am").eq("jahr", j).order("tag").limit(1000);
+          if (error) throw new Fehler("Die Liste ist gerade nicht erreichbar.", 503);
+          const leute = await personen([...new Set((data ?? []).map((x: any) => x.person_id))]);
+          return json({ ok: true, jahr: j, preise: (data ?? []).map((x: any) => ({ tag: x.tag, preis: x.preis, am: x.gemeldet_am, name: leute.get(x.person_id)?.display_name || vorname(leute.get(x.person_id)) || "Mitglied" })) });
+        }
+        if (a === "advent_preise_meine") {
+          const { data } = await db.from("kc_club_advent_preise").select("tag").eq("person_id", ich.person_id).eq("jahr", jahr);
+          return json({ ok: true, tage: (data ?? []).map((x: any) => x.tag) });
+        }
+        const tag = Math.round(Number(p.tag)), preis = ADVENT_PREISE[tag];
+        if (!preis) throw new Fehler("Hinter diesem Türchen gibt es keinen Preis.");
+        if (heute.slice(5, 7) !== "12" || Number(heute.slice(8, 10)) < tag) throw new Fehler(`Dieses Türchen öffnet erst am ${tag}. Dezember.`, 409);
+        const { error } = await db.from("kc_club_advent_preise").upsert({ person_id: ich.person_id, jahr, tag, preis }, { onConflict: "person_id,jahr,tag", ignoreDuplicates: true });
+        if (error) throw new Fehler("Das hat gerade nicht geklappt – bitte gleich noch einmal.", 503);
+        return json({ ok: true, tag, preis });
       }
       case "rezept_bewerten": { // 2.730.0 KC-CLUB-REZEPT-WEIHNACHT: Sterne 1–5 (oder keine) und „nachgebacken“ – eine Zeile je Mitglied und Rezept
         await nurWennFrei("rezepte", ich, "Das Rezeptbuch");
