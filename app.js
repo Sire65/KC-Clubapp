@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.951.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.952.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -25602,7 +25602,7 @@ async function bfAusloesen() {
   try {
     await bfBibliothek();
     a.style.visibility = "hidden";
-    const bg = getComputedStyle(document.body).backgroundColor;
+    const bg = bfRgba(getComputedStyle(document.body).backgroundColor); // 2.952.0: auch die Grundfarbe kann „oklab(…)“ sein
     const c = await window.html2canvas(document.body, {
       x: scrollX, y: scrollY, width: innerWidth, height: innerHeight, windowWidth: innerWidth, windowHeight: innerHeight,
       scale: Math.min(2, devicePixelRatio || 1), useCORS: true, logging: false, backgroundColor: bg,
@@ -25617,17 +25617,32 @@ async function bfAusloesen() {
     bfVorschau();
   } catch (e) { if (a) a.style.visibility = ""; melde(e.message || "Bildschirmfoto hat nicht geklappt.", true); }
 }
-// Der Browser rechnet Mischfarben (color-mix) in „color(srgb …)“ um – das kennt die Bibliothek nicht. Im Abbild (nur in der
-// Kopie, die Seite selbst bleibt unverändert) werden solche Werte in rgba() umgeschrieben; Deko-Pseudoelemente entfallen.
-const bfRgba = (v) => String(v).replace(/color\(srgb\s+([\d.e-]+)\s+([\d.e-]+)\s+([\d.e-]+)(?:\s*\/\s*([\d.e-]+%?))?\)/g, (_, r, g, b, a) =>
-  `rgba(${Math.round(r * 255)}, ${Math.round(g * 255)}, ${Math.round(b * 255)}, ${a === undefined ? 1 : a.endsWith("%") ? parseFloat(a) / 100 : a})`);
+// Der Browser rechnet Mischfarben (color-mix) in „color(srgb …)“ um, neuere Browser auch in „oklab(…)“/„oklch(…)“ – das kennt die
+// Bibliothek nicht („Attempting to parse an unsupported color function …“). Im Abbild (nur in der Kopie, die Seite selbst bleibt
+// unverändert) werden solche Werte in rgba() umgeschrieben; Deko-Pseudoelemente entfallen.
+// 2.952.0 KC-CLUB-BILDSCHIRMFOTO-OKLAB (Fund Hansi 15.11.2026: Foto anhängen → Fehlermeldung „oklab“): jede moderne Farbangabe
+// (color, oklab, oklch, lab, lch, hwb) lässt der Browser selbst auf einen 1-Pixel-Malgrund malen und liest das Ergebnis als rgba zurück.
+const BF_MODERN = /\b(?:color|oklab|oklch|lab|lch|hwb)\((?:[^()]|\([^()]*\))*\)/g, BF_FARB_MERK = new Map();
+function bfFarbeRgba(f) {
+  if (BF_FARB_MERK.has(f)) return BF_FARB_MERK.get(f);
+  let out = "rgba(0, 0, 0, 0)";
+  try {
+    const c = document.createElement("canvas"); c.width = c.height = 1; const x = c.getContext("2d", { willReadFrequently: true });
+    x.clearRect(0, 0, 1, 1); x.fillStyle = "rgba(0, 0, 0, 0)"; x.fillStyle = f; x.fillRect(0, 0, 1, 1);
+    const [r, g, b, a] = x.getImageData(0, 0, 1, 1).data; out = `rgba(${r}, ${g}, ${b}, ${Math.round((a / 255) * 1000) / 1000})`;
+  } catch {}
+  if (BF_FARB_MERK.size < 500) BF_FARB_MERK.set(f, out);
+  return out;
+}
+const bfRgba = (v) => String(v).replace(BF_MODERN, (m) => bfFarbeRgba(m));
+const bfModern = (v) => { BF_MODERN.lastIndex = 0; const ja = BF_MODERN.test(v); BF_MODERN.lastIndex = 0; return ja; };
 const BF_FARBFELDER = ["color", "background-color", "background-image", "border-top-color", "border-right-color", "border-bottom-color", "border-left-color", "outline-color", "box-shadow", "text-shadow", "text-decoration-color", "fill", "stroke", "caret-color", "column-rule-color"];
 function bfKlonGlaetten(d) {
   const st = d.createElement("style"); st.textContent = ".kachel::after{background:none!important}.warten{display:none!important}*{box-shadow:none!important}"; d.head.appendChild(st);
   const win = d.defaultView || window;
   for (const el of d.querySelectorAll("*")) {
     const cs = win.getComputedStyle(el);
-    for (const f of BF_FARBFELDER) { const v = cs.getPropertyValue(f); if (v && v.includes("color(")) el.style.setProperty(f, bfRgba(v), "important"); }
+    for (const f of BF_FARBFELDER) { const v = cs.getPropertyValue(f); if (v && bfModern(v)) el.style.setProperty(f, bfRgba(v), "important"); }
   }
 }
 function bfVorschau() {
@@ -35260,7 +35275,7 @@ async function stFesthalten() {
   try {
     await bfBibliothek();
     const w = STD.frame?.w || 400, h = STD.frame?.h || 700;
-    const c = await window.html2canvas(doc.documentElement, { x: 0, y: doc.defaultView.scrollY, width: w, height: h, windowWidth: w, windowHeight: h, scale: 1, useCORS: true, logging: false, backgroundColor: getComputedStyle(doc.body).backgroundColor });
+    const c = await window.html2canvas(doc.documentElement, { x: 0, y: doc.defaultView.scrollY, width: w, height: h, windowWidth: w, windowHeight: h, scale: 1, useCORS: true, logging: false, backgroundColor: bfRgba(getComputedStyle(doc.body).backgroundColor), onclone: bfKlonGlaetten }); // 2.952.0: moderne Farben glätten
     stFotoNeu(c.toDataURL("image/jpeg", 0.8)); melde("📸 Festgehalten – unten antippen zum Speichern");
   } catch (e) { melde("📸 Festhalten ging gerade nicht – bitte nochmal.", true); }
 }
@@ -35487,7 +35502,7 @@ const MSCH = { id: null, uhr: null, bis: 0, laeuft: false, wer: "" };
 async function ssBildMachen() {
   await bfBibliothek();
   const c = await window.html2canvas(document.body, { x: scrollX, y: scrollY, width: innerWidth, height: innerHeight, windowWidth: innerWidth, windowHeight: innerHeight,
-    scale: 1, useCORS: true, logging: false, backgroundColor: getComputedStyle(document.body).backgroundColor,
+    scale: 1, useCORS: true, logging: false, backgroundColor: bfRgba(getComputedStyle(document.body).backgroundColor),
     ignoreElements: (el) => !!el.classList?.contains("meldung") || el.id === "ssLiveLeiste", onclone: bfKlonGlaetten });
   const f = Math.min(1, 900 / c.width), k = document.createElement("canvas"); k.width = Math.round(c.width * f); k.height = Math.round(c.height * f);
   k.getContext("2d").drawImage(c, 0, 0, k.width, k.height);
