@@ -1,11 +1,21 @@
 # Änderungen
 
-## 2.954.0 – 2026-11-15 – 🔒 Adventskalender nach der Uhr des Servers (KC-CLUB-ADVENT-SERVERUHR) · Server 2.954.0
+## 2.954.0 – 2026-11-15 – 🍲 Gemeinschaftsgericht · 🔒 Adventskalender nach der Uhr des Servers (KC-CLUB-GEMEINSCHAFTSGERICHT, KC-CLUB-ADVENT-SERVERUHR) · Server 2.954.0 + Datenbank
 Wunsch Hansi 15.11.: „Jedes Türchen darf nur am Tag geöffnet werden, nicht schon vorher. Im Nachhinein ist es erlaubt“ – „Ja, mit Server-Uhr absichern“.
 - Bisher richtete sich der Kalender nach dem Datum im Handy – wer es vorstellte, konnte Türchen früher ansehen. Jetzt schickt der Server beim App-Start seine Uhr mit (`serverJetzt`), die App rechnet den Tag daraus in **deutscher Zeit** (auch Mitternacht stimmt). Vor- oder zurückgestellte Handys bekommen den richtigen Tag.
 - Regeln unverändert: nur das Türchen von heute, frühere jederzeit, ab 25.12. alle; vor Dezember sehen Mitglieder den Kalender nicht; Admin-Vorschau nur außerhalb des Dezembers. Preis-Türchen prüft der Server wie bisher zusätzlich selbst.
 - Ohne Verbindung (offline/Notbetrieb) gilt wie bisher die Handy-Uhr.
-- Test: `tests/advent-serveruhr.test.mjs`. Rückweg: App 2.953.0, Server 2.950.0.
+- Test: `tests/advent-serveruhr.test.mjs`.
+
+**🍲 Gemeinschaftsgericht (Wunschliste #94, Antworten Hansi 15.11.: „Viele Köche verderben den Brei – bei uns nicht“)**
+- **Admin-Kachel „🍲 Gemeinschaftsgericht“:** Runde starten ohne festen Termin – Titel (z. B. „im Februar“), Einsendezeitraum von–bis, **1 oder 2 Zutaten je Person**. Ändern oder abbrechen jederzeit.
+- **Alle (Mitglieder und Aushilfen, keine Gäste) werden beim App-Start gefragt:** „Welche Zutat, welches Gewürz oder Kraut gibst du in unser Gemeinschaftsgericht?“ – Liste nach 10 Warengruppen (rund 150 Zutaten) mit Suche oder **„✏️ Eigene Zutat“** (z. B. Stierhoden). Knöpfe ✅ Speichern · ⏰ Später (fragt beim nächsten Mal wieder) · 🙅 Diesmal nicht. Kachel „🍲 Gemeinschaftsgericht“ im Club-Register, solange die Runde läuft – dort kann man die Wahl bis zum Ende ändern. **Jeder sieht nur seine eigenen Zutaten.**
+- **Hansi sieht alle Zutaten laufend mit Namen** und wie viele schon eingereicht haben. Eigene Zutaten: „✅ Passt“ oder „🔁 Andere bitte“ (mit Hinweis – das Mitglied bekommt einen Push und wird beim nächsten Start neu gefragt).
+- **Erinnerung 2 Tage vor Ende** (Push, genau einmal) an alle, die noch nichts eingereicht und nicht „Diesmal nicht“ gesagt haben.
+- **Rezept:** „🔎 Rezept finden & verschicken“ sucht im Rezeptbuch die Rezepte mit den meisten eingereichten Zutaten (Treffer „3 von 5 Zutaten“); passt keins → neues Rezept im Rezeptbuch anlegen (Hansi oder mit Claude) und auswählen. Vorschau/Drucken möglich.
+- **PDF auf dem Kopfbogen an alle (Push + E-Mail mit Anhang):** Foto des Rezepts, Portionen/Dauer, **Zutaten mit Mengen und „(Name)“, wer sie ausgesucht hat**, „Außerdem ausgesucht“ für Zutaten, die nicht im Rezept stehen, Zubereitung. Ablegen im Archiv wie bei anderen Ausdrucken.
+- Datenbank: `supabase/migrations/20261115_kc_club_gemeinschaftsgericht.sql` (zwei Tabellen, nur Club-Server, gespiegelt und gesichert). Fehlt sie noch, startet die App normal ohne Gemeinschaftsgericht. Test: `tests/gemeinschaftsgericht.test.mjs`; im abgeschirmten Browser geprüft (Frage, Admin, PDF-Inhalt).
+- Rückweg: App 2.953.0, Server 2.950.0 (Tabellen dürfen bleiben).
 - Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
 
 ## 2.953.0 – 2026-11-15 – 👀 Ausgeblendete Kacheln: oben nur noch ein Umschalt-Knopf (KC-CLUB-KA-KOPF-TOGGLE)
