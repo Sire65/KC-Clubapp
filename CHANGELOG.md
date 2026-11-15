@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.949.0 – 2026-11-15 – 🎅 Adventskalender: echter Schoko-Nikolaus am 6.12. (KC-CLUB-ADVENT-NIKOLAUS-FOTO)
+Wunsch Hansi 15.11.: „Der Schoko-Weihnachtsmann ist freigestellt … Bau ihn in den Adventskalender ein am 06.12.“
+- Türchen 6 (Überraschung „Ein Mini-Schoko-Nikolaus für dich!“) zeigt jetzt Hansis freigestelltes Foto statt des gezeichneten Riegels – schwebt mit leichtem Schatten herein (ruhig bei „Bewegung reduzieren“). `advent/schoko-nikolaus.webp`, 324 × 520, ≈ 52 KB, durchsichtiger Hintergrund.
+- Der Kinderriegel am 20.12. bleibt gezeichnet, bis es auch dafür ein Foto gibt (dann nur `foto:` in `AK_PREISE` ergänzen).
+- Test: `tests/advent-nikolaus-foto.test.mjs`. Rückweg: App 2.948.0. Nur die App.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.948.0 – 2026-11-15 – 🏳️ Tablet: Flagge frei · 👀 Ausgeblendete Kacheln oben im Schnellzugriff (KC-CLUB-KOPF-ECKE, KC-CLUB-KA-KOPF)
 Fund Hansi 15.11.: „Im Tablet-Modus berührt die Flagge die Anzeige der Verbindungsqualität.“
 - Ab 600 px Breite steht im Verbindungs-Chip oben rechts zusätzlich das Wort („Sehr gut“, „Schwach“ …) – er wird breiter, die Sprach-Flagge stand aber fest an derselben Stelle und lag darauf. Jetzt rückt die Flagge immer 8 px links neben den Chip (auch beim Drehen des Tablets); am Handy bleibt sie, wo sie war. Geprüft im abgeschirmten Browser: Tablet hoch/quer und Handy.

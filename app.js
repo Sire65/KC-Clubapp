@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.948.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.949.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12894,7 +12894,8 @@ const AK_NASCH = [ // 2.468.0 (Wunsch Hansi): Bastelanleitungen für kleine sü�
 const akN = (t, link) => ({ art: "naschen", ...AK_NASCH.find((x) => x.t === t), ...(link ? { link } : {}) });
 // 2.947.0 KC-CLUB-ADVENT-PREISE (Wunschliste #89, Hansi 15.11.2026): Preis-Türchen – 6.12. Mini-Schoko-Nikolaus, 20.12. Kinderriegel (je einer pro Person).
 // „🎁 Ja, den nehme ich“ trägt dich in Hansis Liste „Wer bekommt was“ ein (Austeilen beim Weihnachtsessen im Januar). Neuer Preis = Eintrag hier + ADVENT_PREISE im Server.
-const AK_PREISE = { nikolaus: { sym: "🎅", name: "Mini-Schoko-Nikolaus", bild: "SCHOKO-NIKOLAUS" }, kinderriegel: { sym: "🍫", name: "Kinderriegel", bild: "KINDERRIEGEL" } };
+// foto: Hansis freigestelltes Foto (15.11.2026, KC-CLUB-ADVENT-NIKOLAUS-FOTO) statt des gezeichneten Riegels – ohne foto bleibt der gezeichnete Riegel
+const AK_PREISE = { nikolaus: { sym: "🎅", name: "Mini-Schoko-Nikolaus", bild: "SCHOKO-NIKOLAUS", foto: "advent/schoko-nikolaus.webp" }, kinderriegel: { sym: "🍫", name: "Kinderriegel", bild: "KINDERRIEGEL" } };
 const AK_RIEGEL = (preis, text) => ({ art: "riegel", sym: AK_PREISE[preis].sym, t: `Ein ${AK_PREISE[preis].name} für dich!`, preis, text });
 const AK_TUERCHEN = [ // 2.869.0 KC-CLUB-ADVENT-2026: Tag 1–24; art: naschen | basteln | deko | riegel | einladung; link = echte Anleitung (neues Fenster)
   akN("Lokomotive aus Dominosteinen"),
@@ -12958,7 +12959,8 @@ function akAnleitung(T, n) { // Nascherei, Basteln, Deko: Kurzfassung + Link zur
 function akRiegelKarte(T, n) {
   const P = AK_PREISE[T.preis];
   return `<div class="ak-karte ak-riegel-karte"><div style="width:100%"><span class="ak-marke">${P.sym} Überraschung</span><br><b>${n}. Dezember – ${esc(T.t)}</b>
-    <div class="ak-riegel${T.preis === "nikolaus" ? " ak-nikolaus" : ""}" aria-hidden="true"><span>${P.bild}</span></div><p style="margin:6px 0">${esc(T.text)}</p>
+    ${P.foto ? `<img class="ak-preis-foto" src="${P.foto}" alt="${esc(P.name)}" width="324" height="520" decoding="async">`
+      : `<div class="ak-riegel${T.preis === "nikolaus" ? " ak-nikolaus" : ""}" aria-hidden="true"><span>${P.bild}</span></div>`}<p style="margin:6px 0">${esc(T.text)}</p>
     <div class="ak-gutschein">🎟️ <b>Gutschein für einen ${P.name}</b><br>Er wartet beim <b>Weihnachtsessen im Januar</b> auf dich.</div>
     <div id="akPreis" class="ak-antwort">${akPreisKnopf(n)}</div></div></div>`;
 }
