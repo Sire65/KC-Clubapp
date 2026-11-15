@@ -3719,6 +3719,10 @@
   body:not(.einfach) #v-einstellungen details[data-klappe="einfach"] { display: none; }
   /* KC-CLUB-ANSICHT-NAME (0.66.0): hinter „Schnellzugriff“ klein und farbig, welche Ansicht gerade aktiv ist.
      2.23.16 (Wunsch Hansi): etwas größer (.66 → .82rem); erweitert „< … >“ (nach außen), einfach „> … <“ (nach innen) statt Klammern */
+  /* KC-CLUB-KA-KOPF (Wunsch Hansi 15.11.2026): neben „Erweiterte Ansicht“ zwei kleine Knöpfe für ausgeblendete Kacheln – nur breit (Tablet/PC), nicht in der einfachen Ansicht */
+  .ka-kopf { display: none; } @media (min-width: 600px) { body:not(.einfach) .ka-kopf:not(:empty) { display: flex; gap: 6px; margin: 0 auto 0 12px; flex-wrap: wrap; } }
+  .ka-kopf-k { border: none; border-radius: 999px; padding: 6px 12px; background: var(--karte2); color: inherit; font: inherit; font-size: .8rem; font-weight: 700; cursor: pointer; white-space: nowrap; }
+  .ka-kopf-k.an { background: var(--rot); color: #fff; } .ka-kopf-k:active { filter: brightness(.92); }
   .ansichtname { font-size: .82rem; font-weight: 700; margin-left: 2px; vertical-align: middle; white-space: nowrap; border: none; background: none; padding: 6px 2px; font-family: inherit; cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; }
   #versionMarke { white-space: nowrap; flex: none; display: inline-flex; align-items: center; gap: 4px; }
   #versionMarke .qr-sym { width: 15px; height: 15px; }
@@ -6045,7 +6049,7 @@
     <div id="irKarte"></div><!-- KC-CLUB-IST-RUECKFRAGE: Wie lief dein Dienst? -->
     <div id="rundKarte"></div><!-- 2.762.0 KC-CLUB-RUNDER-TISCH: „Gleich: Runder Tisch …“ -->
     <div id="rgHinweis"></div><!-- KC-CLUB-RUNDGANG-HINWEIS (2.243.0) -->
-    <div class="abschnitt"><h3><button type="button" class="sz-link" onclick="schnellstartOben()" title="Antippen: oben die Schnellstart-Symbole zeigen">Schnellzugriff</button> <button type="button" class="ansichtname ein" onclick="ansichtWechseln()" title="Antippen: zur erweiterten Ansicht wechseln">&gt; Einfache Ansicht &lt;</button><button type="button" class="ansichtname erw" onclick="ansichtWechseln()" title="Antippen: zur einfachen Ansicht wechseln">&lt; Erweiterte Ansicht &gt;</button></h3><button class="marke" id="versionMarke" style="border:none;cursor:pointer" title="Mein Ausweis-QR" onclick="versionMarkeTipp()">v–</button></div>
+    <div class="abschnitt"><h3><button type="button" class="sz-link" onclick="schnellstartOben()" title="Antippen: oben die Schnellstart-Symbole zeigen">Schnellzugriff</button> <button type="button" class="ansichtname ein" onclick="ansichtWechseln()" title="Antippen: zur erweiterten Ansicht wechseln">&gt; Einfache Ansicht &lt;</button><button type="button" class="ansichtname erw" onclick="ansichtWechseln()" title="Antippen: zur einfachen Ansicht wechseln">&lt; Erweiterte Ansicht &gt;</button></h3><span class="ka-kopf" id="kaKopfKnoepfe"></span><!-- KC-CLUB-KA-KOPF --><button class="marke" id="versionMarke" style="border:none;cursor:pointer" title="Mein Ausweis-QR" onclick="versionMarkeTipp()">v–</button></div>
     <div class="register" id="register"></div>
     <div class="kachelleiste versteckt" id="kachelLeiste"><p>✏️ <b>Kacheln anordnen:</b> <span class="kl-erw">Kachel <b>kurz festhalten</b>, an den neuen Platz <b>ziehen</b> und loslassen (oder ◀ ▲ ▼ ▶ antippen). ✕ blendet aus, 👁️ wieder ein. Ausgeblendete bleiben hier blass an ihrem Platz.</span><span class="kl-ein">Kachel <b>festhalten</b> und nach oben oder unten <b>ziehen</b> – oder ▲ ▼ antippen.</span></p>
       <button class="knopf haupt klein" onclick="kaBearbeiten(false)">✅ Fertig</button><button class="knopf klein" onclick="kaStandard()">↺ Standard</button></div>

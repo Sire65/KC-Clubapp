@@ -1,8 +1,9 @@
 # Änderungen
 
-## 2.948.0 – 2026-11-15 – 🏳️ Tablet: Flagge berührt die Verbindungsanzeige nicht mehr (KC-CLUB-KOPF-ECKE)
+## 2.948.0 – 2026-11-15 – 🏳️ Tablet: Flagge frei · 👀 Ausgeblendete Kacheln oben im Schnellzugriff (KC-CLUB-KOPF-ECKE, KC-CLUB-KA-KOPF)
 Fund Hansi 15.11.: „Im Tablet-Modus berührt die Flagge die Anzeige der Verbindungsqualität.“
 - Ab 600 px Breite steht im Verbindungs-Chip oben rechts zusätzlich das Wort („Sehr gut“, „Schwach“ …) – er wird breiter, die Sprach-Flagge stand aber fest an derselben Stelle und lag darauf. Jetzt rückt die Flagge immer 8 px links neben den Chip (auch beim Drehen des Tablets); am Handy bleibt sie, wo sie war. Geprüft im abgeschirmten Browser: Tablet hoch/quer und Handy.
+- **Ausgeblendete Kacheln oben (Wunsch Hansi 15.11.: „neben ‚Erweiterte Ansicht‘ ist rechts noch Platz – 2 Buttons mit Icons“):** auf Tablet und PC stehen jetzt neben „< Erweiterte Ansicht >“ dieselben zwei Knöpfe wie unten: **👀 Nur ausgeblendete (n)** und **🙈 n ausgeblendete** (anzeigen und wieder einblenden); bei „nur ausgeblendete“ wird daraus **🙈 Wieder verbergen**. Nur wenn es ausgeblendete Kacheln gibt, nicht am Handy, nicht in der einfachen Ansicht, nicht beim Anordnen. Die Knöpfe unten bleiben.
 - Test: `tests/kopf-ecke.test.mjs`. Rückweg: App 2.947.0. Nur die App.
 - Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
 
