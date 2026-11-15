@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.953.0 – 2026-11-15 – 👀 Ausgeblendete Kacheln: oben nur noch ein Umschalt-Knopf (KC-CLUB-KA-KOPF-TOGGLE)
+Wunsch Hansi 15.11.: „Unter dem Kopf gibt es seit heute 2 neue Buttons (Ausgeblendet ansehen). Das soll nur ein Button sein, ein Toggle – einmal klicken schaltet, wieder klicken zurück, dann passt der auch auf schmale Handys.“
+- Neben „< Erweiterte Ansicht >“ steht nur noch **ein** runder Knopf: 👀 = nur die ausgeblendeten Kacheln zeigen, danach 🙈 (rot) = wieder verbergen. Der zweite Knopf („x ausgeblendete anzeigen“ → Anordnen) ist oben weg; unten gibt es beide Wege weiter.
+- Auch auf **schmalen Handys** (bisher erst ab 400 px): Die Platzprüfung misst jetzt die Zeile ohne Knopf – bricht „Schnellzugriff“ dort ohnehin auf zwei Zeilen um, bleibt der Knopf, solange er sie nicht noch höher macht oder den QR-Knopf überdeckt. Geprüft im abgeschirmten Browser mit 320, 360 und 412 px (Klick → 🙈, nochmal → 👀).
+- Test: `tests/kopf-ecke.test.mjs` erweitert. Rückweg: App 2.952.0. Nur die App.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.952.0 – 2026-11-15 – 📸 Bildschirmfoto auch mit modernen Farben (KC-CLUB-BILDSCHIRMFOTO-OKLAB)
 Fund Hansi 15.11.: Beim Anhängen eines Bildschirmfotos im Chat kam bei einem Mitglied „Attempting to parse an unsupported color function \"oklab\"“. Die Bildschirmfoto-Bibliothek (html2canvas 1.4.1) kennt nur alte Farbangaben; neuere Browser liefern Mischfarben als `oklab(…)`/`oklch(…)` statt `color(srgb …)` – bisher wurde nur letzteres umgerechnet. Jetzt lässt die App jede moderne Farbangabe (color, oklab, oklch, lab, lch, hwb) vom Browser selbst auf einen 1-Pixel-Malgrund malen und setzt im Abbild das Ergebnis als rgba ein – auch für die Grundfarbe (`backgroundColor`). Gilt für 📸 Bildschirmfoto, das Live-Bild der Fernhilfe (Festhalten und Bild beim Mitglied) und die PDF-Erstellung im Büro. Neuer abgeschirmter Browser-Test `tests/bildschirmfoto-farben.browser.mjs` (im Testlauf neben dem Rundgang).
 

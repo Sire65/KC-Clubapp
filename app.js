@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.952.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.953.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -8808,7 +8808,9 @@ function kaKopfPasst() {
   const k = $("kaKopfKnoepfe"), a = k?.closest(".abschnitt"); if (!k || !a) return;
   k.classList.remove("kk-eng"); a.classList.remove("kk-knapp"); if (!k.innerHTML || getComputedStyle(k).display === "none") return;
   const h = a.querySelector("h3"), m = $("versionMarke");
-  const eng = () => (h && h.getBoundingClientRect().height > 44) || (m && m.offsetWidth && k.getBoundingClientRect().right > m.getBoundingClientRect().left - 4);
+  // KC-CLUB-KA-KOPF-TOGGLE: Grundhöhe ohne Knopf messen – bricht die Zeile auf schmalen Handys schon von selbst um, zählt nur, ob der Knopf sie höher macht
+  k.classList.add("kk-eng"); const grund = h ? h.getBoundingClientRect().height : 0; k.classList.remove("kk-eng");
+  const eng = () => (h && h.getBoundingClientRect().height > Math.max(44, grund + 2)) || (m && m.offsetWidth && k.getBoundingClientRect().right > m.getBoundingClientRect().left + 1); // KC-CLUB-KA-KOPF-TOGGLE: nur echtes Überlappen zählt (die Zeile ordnet sie nebeneinander)
   if (!eng()) return;
   a.classList.add("kk-knapp"); // erst: beim QR-Knopf nur das Symbol (spart ≈ 25 px)
   if (eng()) { a.classList.remove("kk-knapp"); k.classList.add("kk-eng"); } // passt trotzdem nicht → Knöpfe oben weg (unten gibt es sie immer)
@@ -12161,8 +12163,9 @@ function kachelnZeigen() {
   const kopfK = $("kaKopfKnoepfe");
   // 15.11. (Hansi „ohne Text, nur Knopf“): nur Symbol – Erklärung im Hinweis beim Draufhalten und für Vorlesen; nur wenn wirklich welche ausgeblendet sind
   const kkn = (f, sym, t, an = false) => `<button type="button" class="ka-kopf-k${an ? " an" : ""}" onclick="${f}" title="${t}" aria-label="${t}">${sym}</button>`;
+  // KC-CLUB-KA-KOPF-TOGGLE (15.11.2026, Hansi „nur ein Button, ein Toggle – einmal klicken schaltet, wieder klicken zurück, dann passt er auch auf schmale Handys“)
   if (kopfK) kopfK.innerHTML = nurAus ? kkn("kaNurAus(false)", "🙈", "Ausgeblendete wieder verbergen", true)
-    : ausN ? kkn("kaNurAus(true)", "👀", `Nur ausgeblendete zeigen (${ausN})`) + kkn("kaBearbeiten(true)", "🙈", `${ausN} ausgeblendete Kachel${ausN > 1 ? "n" : ""} – anzeigen`) : "";
+    : ausN ? kkn("kaNurAus(true)", "👀", `Nur ausgeblendete zeigen (${ausN})`) : "";
   kaKopfPasst();
   $("raster").classList.toggle("nur-aus", nurAus);
   $("raster").innerHTML = (nurAus ? kaSortiert(reg).filter((k) => KA.aus.includes(k.id)) : kacheln(reg)).map((k, i) => {
