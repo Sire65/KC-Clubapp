@@ -1,5 +1,13 @@
 # Änderungen
 
+## Sicherungen gepackt – Backup-Arbeiter Version 22, Prüfdienst Version 12 – 2026-11-15 (KC-SICHERUNG-PACKEN) · App unverändert
+Wunsch Hansi („Neon wird voll – gerade wenn der Weihnachtsmarkt losgeht; setze 1 und 2 um“). Befund 15.11.: Neon 712 von 1.024 MB, davon 539 MB (82 %) die 11 nächtlichen Sicherungen (je 45–50 MB, verschlüsselt, aber ungepackt, +1 MB je Tag durch Protokolle). Hochrechnung: Grenze um den 10.–15.12.
+- **Packen:** Der Backup-Arbeiter packt den Klartext jeder Tabelle vor dem Verschlüsseln mit gzip (`compression:"gzip"`, AES-GCM-Zusatzdaten `kc-backup|gzip` schützen das Merkmal). Unveränderte Tabellen werden nur noch aus schon gepackten Snapshots kopiert – in der ersten Nacht wird darum einmal alles neu (gepackt) übertragen.
+- **Lesen:** Prüfdienst (stückweise und im Ganzen) und Notfall-Werkzeug `tools/notfall/sicherung-lesen.mjs` (auch für die Zweitkopie) lesen gepackte und ungepackte Sätze; unbekannte Packart oder entferntes Merkmal → Fehler. `postgres` wird im Notfall-Werkzeug erst beim Lauf geladen.
+- **Geprüft:** Rundweg Arbeiter → Prüfdienst → Notfall-Werkzeug mit Testdaten (Faktor ~35 bei Protokoll-ähnlichen Daten); neuer Prüfdienst am echten Satz vom 15.11. (ungepackt): 300/300 Tabellen, 0 Fehler. Neuer Test `tests/sicherung-packen.test.mjs`.
+- **Punkt 2:** Dienstplan-Fassungen im Neon-Spiegel verdichtet (VACUUM FULL, 47 → 12 MB, 15 Zeilen unverändert).
+- Eingespielt per Supabase (kc-db-backup-verify-v2 Version 13 = Quelle 12, kc-db-backup-worker Version 22). Die alten ungepackten Sätze laufen über die Aufbewahrungsregel (7 Tage/4 Wochen/3 Monate) nach und nach aus.
+
 ## 2.946.0 – 2026-11-13 – 📄 Besprechungs-Protokoll als PDF auf dem Club-Briefkopf · 👁️ „So sieht Klaus es“ · 📧 Kopie an mich (KC-CLUB-TA-PROTOKOLL-PDF) · Server 2.946.0
 Wunsch Hansi 13.11.: „Wo sehe ich das Protokoll an Klaus, wie er es bekommen hat?“ – „Ja, und normalerweise als PDF auf Kopfbogen mit Logo etc.“
 - Beim **Senden** erzeugt die App das Protokoll als **PDF im Club-Design** (Logo, Kopf, Fußzeile) und hängt es an die Terminanfrage. Die Angefragten sehen es dort als Anlage und im Lesefenster als **„📄 Protokoll als PDF (Briefkopf)“**; die E-Mail weist darauf hin. Erneutes Senden ersetzt das ältere PDF. Klappt das PDF einmal nicht, geht das Protokoll trotzdem raus.

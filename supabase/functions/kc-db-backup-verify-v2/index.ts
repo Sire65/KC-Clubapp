@@ -10,15 +10,20 @@
 // Tabelle fuer Tabelle – im Speicher liegt hoechstens eine Tabelle; (2) bricht ein Paket trotzdem ab, wird es halbiert und
 // einzeln geprueft (runPartAdaptive); (3) die verschluesselten Daten werden stueckweise (1 MB) gelesen und ohne atob-Zwischenkopie
 // entschluesselt. Pruefregeln, Hashes, Antwortformat und Eintraege bleiben gleich.
+// Version 12 (KC-SICHERUNG-PACKEN, 15.11.2026): gepackte Saetze (compression:"gzip", AAD "kc-backup|gzip") entschluesseln und entpacken;
+// ungepackte Altsaetze wie bisher.
 async function sicherGleich(a:string,b:string){const h=async(s:string)=>new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)));const [x,y]=await Promise.all([h(a),h(b)]);let diff=0;for(let i=0;i<x.length;i++)diff|=x[i]^y[i];return diff===0}
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import postgres from "npm:postgres@3.4.5";
 import { assessBackupCompleteness } from "./completeness.js";
 import { splitIntoParts, mergePartChecks, runPartAdaptive } from "./parts.js";
-const J={"Content-Type":"application/json","X-KC-Function-Version":"11"}; const b64d=(s:string)=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+const J={"Content-Type":"application/json","X-KC-Function-Version":"12"}; const b64d=(s:string)=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
 const PART_SIZE=40, PARALLEL=3;
 const safeUuid=(v:string)=>/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+const GZ_AAD=new TextEncoder().encode("kc-backup|gzip");
+async function entpacken(b:Uint8Array):Promise<Uint8Array>{const s=new DecompressionStream("gzip");const w=s.writable.getWriter();const fertig=w.write(b).then(()=>w.close());const r=s.readable.getReader(),teile:Uint8Array[]=[];let n=0;for(;;){const {value,done}=await r.read();if(done)break;teile.push(value);n+=value.length}await fertig;const out=new Uint8Array(n);let o=0;for(const t of teile){out.set(t,o);o+=t.length}return out}
+const gzArt=(c:any)=>{if(c==null||c==="")return false;if(c==="gzip")return true;throw new Error("unknown backup compression")};
 async function aesKey(s:string){const h=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s));return crypto.subtle.importKey("raw",h,{name:"AES-GCM"},false,["decrypt"])}
 // Version 11: Base64 direkt in ein vorbereitetes Byte-Feld entschluesseln (ohne Zwischen-Zeichenkette wie bei atob) –
 // so passt auch die groesste Tabelle (kc_dp_workspace_revisions, ~18 MB verschluesselt) in den Speicher der Funktion.
@@ -32,14 +37,16 @@ function b64InFeld(s:string,ziel:Uint8Array,pos:number){
 const STUECK=4*262144; // 1 MB Base64 je Abfrage (Vielfaches von 4)
 // Laedt iv + ciphertext einer Tabelle stueckweise aus Neon und entschluesselt. Rueckgabe: Klartext (JSON-Text der Zeilen).
 async function ladeUndEntschluessle(neon:any,set:string,table:string,key:CryptoKey){
-  const m=await neon.unsafe("select jsonb_typeof(payload) t,payload->>'iv' iv,length(payload->>'ciphertext') l from public.kc_backup_snapshots where backup_set=$1::uuid and table_name=$2 limit 1",[set,table]);
+  const m=await neon.unsafe("select jsonb_typeof(payload) t,payload->>'iv' iv,payload->>'compression' c,length(payload->>'ciphertext') l from public.kc_backup_snapshots where backup_set=$1::uuid and table_name=$2 limit 1",[set,table]);
   if(m[0]?.t!=="object"){const row=await neon.unsafe("select payload from public.kc_backup_snapshots where backup_set=$1::uuid and table_name=$2 limit 1",[set,table]);return decrypt(row[0]?.payload,key)} // alte Form: wie bisher
   const L=Number(m[0]?.l||0);let ct:Uint8Array|null=new Uint8Array(Math.floor(L*3/4));let pos=0;
   for(let i=0;i<L;i+=STUECK){const r=await neon.unsafe("select substr(payload->>'ciphertext',$3,$4) s from public.kc_backup_snapshots where backup_set=$1::uuid and table_name=$2 limit 1",[set,table,i+1,STUECK]);pos=b64InFeld(String(r[0]?.s??""),ct,pos)}
-  let plain:ArrayBuffer|null=await crypto.subtle.decrypt({name:"AES-GCM",iv:b64d(String(m[0].iv))},key,ct.subarray(0,pos));ct=null;
+  const gz=gzArt(m[0]?.c);
+  let plain:Uint8Array|null=new Uint8Array(await crypto.subtle.decrypt(gz?{name:"AES-GCM",iv:b64d(String(m[0].iv)),additionalData:GZ_AAD}:{name:"AES-GCM",iv:b64d(String(m[0].iv))},key,ct.subarray(0,pos)));ct=null;
+  if(gz)plain=await entpacken(plain);
   const text=new TextDecoder().decode(plain);plain=null;return text;
 }
-async function decrypt(p:any,key:CryptoKey){if(typeof p==="string")p=JSON.parse(p);const plain=await crypto.subtle.decrypt({name:"AES-GCM",iv:b64d(String(p.iv))},key,b64d(String(p.ciphertext)));return new TextDecoder().decode(plain)}
+async function decrypt(p:any,key:CryptoKey){if(typeof p==="string")p=JSON.parse(p);const gz=gzArt(p?.compression);const plain=new Uint8Array(await crypto.subtle.decrypt(gz?{name:"AES-GCM",iv:b64d(String(p.iv)),additionalData:GZ_AAD}:{name:"AES-GCM",iv:b64d(String(p.iv))},key,b64d(String(p.ciphertext))));return new TextDecoder().decode(gz?await entpacken(plain):plain)}
 
 // Erwartung des Satzes: Tabellenzahl aus dem Dispatch-Audit, Namen aus der Backup-Registry (wie im Backup-Worker).
 async function expectation(sb:any,set:string){
