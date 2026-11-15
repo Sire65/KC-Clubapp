@@ -2144,14 +2144,15 @@ const FILME = [
     u: "Zugang, Türsteher, Verschlüsselung, Privatsphäre, Handy, Sicherungen, Prüfung durch KI (die keine Chats liest) und deine Rechte – einfach erklärt", wo: "unter Technik → 🔐 Sicherheit & Datenschutz", fuer: () => false },
   // KC-CLUB-ANSICHTFILM (Anregung Clubsitzung „die App ist zu voll“, Wunsch Hansi 02.11.2026): für alle Mitglieder einmal beim Start angeboten,
   // jederzeit oben in Technik → 🎬 Erklär-Videos (inVideos). Wer ihn gesehen hat: 👀 in der Film-Karte (nur Admin, Server „film_zuschauer“).
-  { id: "ansichtfilm", sym: "🧹", t: "Deine App – so, wie du sie willst", dauer: "3½ Min. mit Ton", datei: "film/app-selbst-einrichten.mp4?v=5", bild: "film/app-einrichten-vorschau.webp",
-    u: "Einfache und erweiterte Ansicht, wofür Club, Meins und Technik da sind und wie du sie anordnest, Kacheln lange drücken und mit ◀ ▲ ▼ ▶ verschieben, ausblenden, Beispiel mit nur 4 Kacheln, Kachelgröße (2, 3 oder 4 nebeneinander), die Zahl am Reiter, Kacheln umdrehen mit dem 🔄, nur ausgeblendete zeigen, Kopf einrollen, Startmeldungen aus – und wo es weitere Erklär-Videos gibt",
+  { id: "ansichtfilm", sym: "🧹", t: "Deine App – so, wie du sie willst", dauer: "3½ Min. mit Ton", datei: "film/app-selbst-einrichten.mp4?v=6", bild: "film/app-einrichten-vorschau.webp",
+    u: "Einfache und erweiterte Ansicht, wofür Club, Meins und Technik da sind und wie du sie anordnest, Kacheln lange drücken und mit ◀ ▲ ▼ ▶ verschieben, ausblenden, Beispiel mit nur 4 Kacheln, die Zahl am Reiter, der runde 👀/🙈-Knopf oben (nur ausgeblendete zeigen), wieder einblenden, Kachelgröße (2, 3 oder 4 nebeneinander), Kacheln umdrehen mit dem 🔄, Kopf mit dem runden Knopf in vier Stufen einfahren, Startmeldungen aus – und wo es weitere Erklär-Videos gibt",
     wo: "unter Technik → 🎬 Erklär-Videos", inVideos: true, fuer: () => true },
-  // KC-CLUB-KOPFFILM (Wunsch Hansi 04.11.2026 „Erklärvideo nur über den Kopfbereich – kein Admin-Bereich“). Quellen und Konzept: KC-Infrastructure-Control-Center kopffilm/
+  // KC-CLUB-KOPFFILM (Wunsch Hansi 04.11.2026 „Erklärvideo nur über den Kopfbereich – kein Admin-Bereich“). Neu aufgebaut 15.11.2026 (KC-CLUB-FILME-NEU, Hansi „alles neu aufbauen,
+  // damit es passt“): beide Filme mit Bildern der echten App – Quellen und Anleitung zum Neu-Erzeugen: tools/film/kopffilm/ und tools/film/ansichtfilm/ (README dort)
   // Gestaffelt (Wunsch Hansi 04.11. „4 Tage zurückhalten, nur Mitgliedern anbieten, die den ersten bereits gesehen haben – den anderen erst ein paar Tage später“):
   // wer den Ansichtfilm angesehen hat, bekommt ihn sofort (beim Start und in Technik → 🎬 Erklär-Videos), alle anderen ab KOPFFILM_AB.
-  { id: "kopffilm", sym: "🧭", t: "Der Kopf der Club-App", dauer: "3 Min. mit Ton", datei: "film/kopf-der-app.mp4?v=2", bild: "film/kopf-vorschau.webp",
-    u: "Kopfzeile, Status und Lämpchen, Blättern mit ‹ › und « », gelbe Punkte, Wetter, Für dich, Demnächst, Fotos, Kommunikationszentrale, Startkarte und die Szenen im Kopf",
+  { id: "kopffilm", sym: "🧭", t: "Der Kopf der Club-App", dauer: "3½ Min. mit Ton", datei: "film/kopf-der-app.mp4?v=3", bild: "film/kopf-vorschau.webp",
+    u: "Kopfzeile, der runde Knopf mit vier Punkten (Kopf in vier Stufen einfahren), Verbindungs-Balken, Flagge Deutsch/English, Status und Lämpchen, Blättern mit ‹ › und « », gelbe Punkte, Schnellstart, Wetter, Für dich, Demnächst, Fotos, Kommunikationszentrale, Startkarte, Szenen im Kopf und Eselsohr",
     wo: "unter Technik → 🎬 Erklär-Videos", get inVideos() { return this.fuer(); }, fuer: () => filmGesehen("ansichtfilm") || heuteIso() >= KOPFFILM_AB },
 ];
 const filmeFuerMich = () => (ICH ? FILME.filter((f) => f.fuer()) : []);
