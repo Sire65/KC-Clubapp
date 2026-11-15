@@ -51,3 +51,14 @@ console.log("magazin-warenkunde: ok");
   assert.ok(f.MAG_FEIERTAGE.some(([t, n, l]) => t === "2027-05-27" && n === "Fronleichnam" && l.includes("NW")) && f.magFerienHtml(2027, 5).includes("Fronleichnam"), "Fronleichnam 2027 (27. Mai) mit NRW");
   assert.ok(/inhalt \+= magFerienHtml\(MAG\.jahr, MAG\.monat\)/.test(teil), "Einbau auf der Termine-Seite"); }
 console.log("magazin-ferien: ok");
+// KC-CLUB-MAGAZIN-BASTELECKE + KC-CLUB-MAGAZIN-BLUME (15.11.2026): jede Ausgabe eine Bastelecke zum Monat, Blume des Monats auf derselben Seite
+{ const a = new Function("esc", teil.slice(teil.indexOf("const MAG_START"), teil.indexOf("// Bausteine für die Heftseiten")) + "; return MAG_AUSGABEN;")((t) => String(t));
+  const titel = new Set();
+  for (let n = 1; n <= 24; n++) { const h = a[n].hobby; assert.ok(h && h.titel && h.material.length >= 5 && h.schritte.length >= 5 && h.schnell.ideen.length === 3, `Heft ${n}: Bastelecke`); titel.add(h.titel); }
+  assert.equal(titel.size, 24, "jedes Bastelthema nur einmal");
+  const b = new Function("esc", teil.slice(teil.indexOf("const MAG_BLUMEN"), teil.indexOf("const MAG_WARENKUNDE")) + "; return { MAG_BLUMEN, magBlume };")((t) => String(t));
+  assert.equal(b.MAG_BLUMEN.length, 24); assert.equal(new Set(b.MAG_BLUMEN.map((x) => x.l)).size, 24);
+  const hz = b.MAG_BLUMEN.find((x) => x.n === "Herbstzeitlose"); assert.ok(/giftig/i.test(hz.kueche) && /Bärlauch/.test(hz.kueche), "Warnung Herbstzeitlose/Bärlauch");
+  assert.ok(/Blume des Monats: Christrose/.test(b.magBlume(1)) && !/Blütezeit:<\/b> Blütezeit/.test(b.magBlume(10)));
+  assert.ok(/r\.id === "hobby"\) inhalt \+= magBlume\(nr\)/.test(teil), "Einbau Bastelecke"); }
+console.log("magazin-bastelecke: ok");
