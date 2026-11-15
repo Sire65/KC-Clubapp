@@ -35,7 +35,8 @@ assert.equal(lauf({ breite: 123, da: false }), "", "kein Chip → CSS-Platz");
   assert.ok(/aria-label="\$\{t\}">\$\{sym\}<\/button>/.test(kz), "nur das Symbol, Erklärung als Hinweis/Vorlesen");
   assert.ok(/\$\("kaAusHinweis"\)\.innerHTML = ""; if \(\$\("kaKopfKnoepfe"\)\) \$\("kaKopfKnoepfe"\)\.innerHTML = "";/.test(kz), "beim Anordnen weg");
   // Platz-Prüfung
-  const pc = stueck("function kaKopfPasst()", "\naddEventListener(");
+  const pc = "const KA_KOPF_ZWEI_ZEILEN = 70;\n" + stueck("function kaKopfPasst()", "\naddEventListener(");
+  assert.ok(app.includes("const KA_KOPF_ZWEI_ZEILEN = 70;"), "zwei Zeilen erlaubt (2.955.0)");
   const lauf2 = (hoehen, rechts, qrLinks, grund = 33) => {
     const kl = new Set(), akl = new Set(); let n = 0;
     const k = { innerHTML: "x", classList: { add: (c) => kl.add(c), remove: (c) => kl.delete(c), contains: (c) => kl.has(c) }, getBoundingClientRect: () => ({ right: rechts[Math.min(n, rechts.length - 1)] }),
@@ -49,7 +50,8 @@ assert.equal(lauf({ breite: 123, da: false }), "", "kein Chip → CSS-Platz");
   assert.deepEqual(lauf2([33], [380, 380], [370, 390]), { eng: false, knapp: true }, "zu nah am QR → QR-Wort weg, dann passt es");
   assert.deepEqual(lauf2([61, 61], [380], [370]), { eng: true, knapp: false }, "bricht trotzdem um → Knöpfe oben weg");
   assert.deepEqual(lauf2([61], [300], [400], 61), { eng: false, knapp: false }, "schmales Handy: Zeile bricht schon ohne Knopf um, Knopf macht sie nicht höher → Knopf bleibt (KC-CLUB-KA-KOPF-TOGGLE)");
-  assert.deepEqual(lauf2([90, 90], [300], [400], 61), { eng: true, knapp: false }, "Knopf macht die Zeile noch höher → weg");
+  assert.deepEqual(lauf2([90, 90], [300], [400], 61), { eng: true, knapp: false }, "Knopf macht die Zeile dreizeilig → weg");
+  assert.deepEqual(lauf2([61], [300], [400], 33), { eng: false, knapp: false }, "390 px: Zeile bricht erst durch den Knopf auf zwei Zeilen um → Knopf bleibt (2.955.0)");
   assert.ok(/k\.classList\.add\("kk-eng"\); const grund = h \? h\.getBoundingClientRect\(\)\.height : 0; k\.classList\.remove\("kk-eng"\);/.test(pc), "Grundhöhe ohne Knopf");
 }
 console.log("✅ kopf-ecke: alle Prüfungen bestanden");

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.954.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.955.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -8827,13 +8827,15 @@ function kopfEckeAnordnen() {
 }
 // KC-CLUB-KA-KOPF (15.11.2026, Hansi „auf breiten Handys auch einblenden“): die Symbol-Knöpfe neben „Erweiterte Ansicht“ nur, wenn sie in DIE Zeile passen –
 // bricht „Schnellzugriff < Erweiterte Ansicht >“ dadurch um oder stoßen sie an den QR-Knopf, bleiben sie weg (kk-eng); die Knöpfe unten gibt es immer.
+const KA_KOPF_ZWEI_ZEILEN = 70; // px: „Schnellzugriff“ + „< Erweiterte Ansicht >“ in zwei Zeilen ≈ 61 px
 function kaKopfPasst() {
   const k = $("kaKopfKnoepfe"), a = k?.closest(".abschnitt"); if (!k || !a) return;
   k.classList.remove("kk-eng"); a.classList.remove("kk-knapp"); if (!k.innerHTML || getComputedStyle(k).display === "none") return;
   const h = a.querySelector("h3"), m = $("versionMarke");
   // KC-CLUB-KA-KOPF-TOGGLE: Grundhöhe ohne Knopf messen – bricht die Zeile auf schmalen Handys schon von selbst um, zählt nur, ob der Knopf sie höher macht
   k.classList.add("kk-eng"); const grund = h ? h.getBoundingClientRect().height : 0; k.classList.remove("kk-eng");
-  const eng = () => (h && h.getBoundingClientRect().height > Math.max(44, grund + 2)) || (m && m.offsetWidth && k.getBoundingClientRect().right > m.getBoundingClientRect().left + 1); // KC-CLUB-KA-KOPF-TOGGLE: nur echtes Überlappen zählt (die Zeile ordnet sie nebeneinander)
+  // 2.955.0 (Fund beim Filmdreh: bei 390 px brach die Zeile erst durch den Knopf um → Knopf weg): zwei Zeilen sind in Ordnung (bei 360 px ohnehin) – weg erst ab der dritten
+  const eng = () => (h && h.getBoundingClientRect().height > Math.max(KA_KOPF_ZWEI_ZEILEN, grund + 2)) || (m && m.offsetWidth && k.getBoundingClientRect().right > m.getBoundingClientRect().left + 1); // KC-CLUB-KA-KOPF-TOGGLE: nur echtes Überlappen zählt (die Zeile ordnet sie nebeneinander)
   if (!eng()) return;
   a.classList.add("kk-knapp"); // erst: beim QR-Knopf nur das Symbol (spart ≈ 25 px)
   if (eng()) { a.classList.remove("kk-knapp"); k.classList.add("kk-eng"); } // passt trotzdem nicht → Knöpfe oben weg (unten gibt es sie immer)
