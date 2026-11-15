@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.957.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.958.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -14352,20 +14352,20 @@ function grFrage(vonHand) {
     <p style="margin:6px 0">Viele Köche verderben den Brei – <b>bei uns nicht!</b> ${zwei ? "Welche <b>zwei</b> Zutaten, Gewürze oder Kräuter gibst" : "Welche Zutat, welches Gewürz oder Kraut gibst"} du in unser Gemeinschaftsgericht?</p>
     <p class="hinweis" style="margin:0 0 8px">Einsenden bis ${grDatum(g.runde.bis)} · die anderen sehen deine Wahl nicht · das fertige Rezept bekommen alle als PDF.</p>
     ${abgelehnt.map((z) => `<div class="karte gr-abgelehnt">🔁 „${esc(z.zutat)}“ passt leider nicht${z.grund ? ": " + esc(z.grund) : ""} – bitte wähle eine andere.</div>`).join("")}
-    <div id="grWahl" class="gr-wahl" aria-live="polite"></div>
-    <input id="grSuche" class="gr-suche" type="search" placeholder="🔍 Zutat suchen …" autocomplete="off" oninput="GGR.suche=this.value;ggListe()">
+    <div id="ggWahl" class="gr-wahl" aria-live="polite"></div>
+    <input id="ggSuche" class="gr-suche" type="search" placeholder="🔍 Zutat suchen …" autocomplete="off" oninput="GGR.suche=this.value;ggListe()">
     <div id="ggListe" class="gr-liste"></div>
-    <div class="gr-eigen"><input id="grEigen" maxlength="60" placeholder="✏️ Eigene Zutat, z. B. Stierhoden" autocomplete="off" onkeydown="if(event.key==='Enter')grEigen()"><button type="button" class="knopf klein" onclick="grEigen()" aria-label="Eigene Zutat übernehmen">➕</button></div>
+    <div class="gr-eigen"><input id="ggEigenFeld" maxlength="60" placeholder="✏️ Eigene Zutat, z. B. Stierhoden" autocomplete="off" onkeydown="if(event.key==='Enter')grEigen()"><button type="button" class="knopf klein" onclick="grEigen()" aria-label="Eigene Zutat übernehmen">➕</button></div>
     <p class="hinweis" style="margin:2px 0 8px">Eigene Zutaten schaut sich ${esc(adminName())} kurz an.</p>
-    <div class="knoepfe"><button class="knopf haupt" id="grLos" onclick="grSenden()">✅ Speichern</button>
+    <div class="knoepfe"><button class="knopf haupt" id="ggLos" onclick="grSenden()">✅ Speichern</button>
       ${vonHand ? `<button class="knopf" onclick="fensterZu($('grBlatt'))">Schließen</button>` : `<button class="knopf" onclick="grAntwort('spaeter')">⏰ Später</button><button class="knopf" onclick="grAntwort('nein')">🙅 Diesmal nicht</button>`}</div>`);
   grWahlZeigen(); ggListe();
 }
 function grWahlZeigen() {
-  const el = $("grWahl"), n = INIT?.gericht?.runde?.je || 1; if (!el) return;
+  const el = $("ggWahl"), n = INIT?.gericht?.runde?.je || 1; if (!el) return; // gg…-Kennungen: grTitel/grSuche gibt es schon (Gruppen-Bearbeitung, Fund Hansi 15.11.)
   el.innerHTML = GGR.wahl.length ? GGR.wahl.map((z, i) => `<span class="gr-gewaehlt">${esc(z.zutat)}${z.eigen ? " ✏️" : ""}<button type="button" aria-label="${esc(z.zutat)} entfernen" onclick="GGR.wahl.splice(${i},1);grWahlZeigen();ggListe()">✕</button></span>`).join("")
     + (GGR.wahl.length < n ? `<span class="hinweis">noch ${n - GGR.wahl.length} frei</span>` : "") : `<span class="hinweis">Noch nichts gewählt – unten antippen oder eintippen.</span>`;
-  const k = $("grLos"); if (k) k.disabled = !GGR.wahl.length;
+  const k = $("ggLos"); if (k) k.disabled = !GGR.wahl.length;
 }
 function ggListe() { // gg…: grListe/grAdmin gibt es schon (Gruppen-Bearbeitung)
   const el = $("ggListe"); if (!el) return;
@@ -14380,13 +14380,13 @@ function grNehmen(t, gruppe, eigen = false) {
   grWahlZeigen(); ggListe();
 }
 function grEigen() {
-  const t = ($("grEigen")?.value || "").replace(/\s+/g, " ").trim(); if (!t) return melde("Bitte eine Zutat eintippen.");
+  const t = ($("ggEigenFeld")?.value || "").replace(/\s+/g, " ").trim(); if (!t) return melde("Bitte eine Zutat eintippen.");
   const aus = Object.entries(GR_ZUTATEN).find(([, l]) => l.some((x) => x.toLowerCase() === t.toLowerCase())); // steht sie in der Liste, gilt sie als Listen-Zutat
-  $("grEigen").value = ""; grNehmen(aus ? aus[1].find((x) => x.toLowerCase() === t.toLowerCase()) : t, aus ? aus[0] : null, !aus);
+  $("ggEigenFeld").value = ""; grNehmen(aus ? aus[1].find((x) => x.toLowerCase() === t.toLowerCase()) : t, aus ? aus[0] : null, !aus);
 }
 async function grSenden() {
   const g = INIT?.gericht; if (!g?.runde || !GGR.wahl.length) return;
-  const k = $("grLos"); if (k) k.disabled = true;
+  const k = $("ggLos"); if (k) k.disabled = true;
   try { const r = await api("gericht_zutat_setzen", { runde: g.runde.id, zutaten: GGR.wahl.map((z) => ({ zutat: z.zutat, gruppe: z.gruppe, eigen: z.eigen })) }, { warten: true });
     grSetzen(r); fensterZu($("grBlatt")); kachelnZeigen();
     melde(`🍲 Danke! ${GGR.wahl.length > 1 ? "Deine Zutaten sind" : "Deine Zutat ist"} dabei: ${GGR.wahl.map((z) => z.zutat).join(", ")}${GGR.wahl.some((z) => z.eigen) ? ` – ${adminName()} schaut sie sich noch kurz an` : ""}. Ändern geht bis ${grDatum(g.runde.bis)} über die Kachel 🍲.`);
@@ -14423,18 +14423,20 @@ function grRundeForm(aendern) {
   const el = document.querySelector("#grAdminBlatt .blatt-innen"); if (!el) return;
   const r = aendern ? GRA.d.runde : null, heute = GRA.d.heute;
   el.innerHTML = `<h3 style="margin:0">🍲 ${r ? "Runde ändern" : "Neue Runde starten"}</h3>
-    <label class="feld">Titel<input id="grTitel" maxlength="80" value="${esc(r?.titel || "Unser Gemeinschaftsgericht")}"></label>
-    <label class="feld">Einsenden ab<input id="grVon" type="date" value="${esc(r?.von || heute)}"></label>
-    <label class="feld">Einsenden bis<input id="grBis" type="date" value="${esc(r?.bis || "")}"></label>
-    <div class="feld"><b>Zutaten je Person</b><div class="umschalter" id="grJe"><button type="button" data-je="1" class="${(r?.je_person || 1) === 1 ? "an" : ""}" onclick="grJe(1)">1 Zutat</button><button type="button" data-je="2" class="${r?.je_person === 2 ? "an" : ""}" onclick="grJe(2)">2 Zutaten</button></div></div>
+    <label class="feld">Titel<input id="ggTitel" maxlength="80" value="${esc(r?.titel || "Unser Gemeinschaftsgericht")}"></label>
+    <label class="feld">Einsenden ab<input id="ggVon" type="date" value="${esc(r?.von || heute)}"></label>
+    <label class="feld">Einsenden bis<input id="ggBis" type="date" value="${esc(r?.bis || "")}"></label>
+    <div class="feld"><b>Zutaten je Person</b><div class="umschalter" id="ggJe"><button type="button" data-je="1" class="${(r?.je_person || 1) === 1 ? "an" : ""}" onclick="grJe(1)">1 Zutat</button><button type="button" data-je="2" class="${r?.je_person === 2 ? "an" : ""}" onclick="grJe(2)">2 Zutaten</button></div></div>
     <p class="hinweis">Ab dem ersten Tag fragt die App alle (Mitglieder und Aushilfen) beim Öffnen. Die Zutaten der anderen sieht nur du. 2 Tage vor Ende kommt eine Erinnerung an alle, die noch nichts eingereicht haben.</p>
     <div class="knoepfe"><button class="knopf haupt" onclick="grRundeSpeichern(${r ? jsArg(r.id) : "null"})">${r ? "💾 Speichern" : "🍲 Runde starten"}</button><button class="knopf" onclick="grAdminZeigen()">Zurück</button></div>`;
 }
-function grJe(n) { document.querySelectorAll("#grJe [data-je]").forEach((b) => b.classList.toggle("an", Number(b.dataset.je) === n)); }
+function grJe(n) { document.querySelectorAll("#ggJe [data-je]").forEach((b) => b.classList.toggle("an", Number(b.dataset.je) === n)); }
 async function grRundeSpeichern(id) {
-  const je = Number(document.querySelector("#grJe .an")?.dataset.je || 1);
-  if (!$("grBis").value) return melde("Bitte das Ende des Einsendezeitraums wählen.");
-  try { GRA.d = await api("gericht_runde_speichern", { id, titel: $("grTitel").value, von: $("grVon").value, bis: $("grBis").value, je }, { warten: true }); grAdminZeigen();
+  // Fund Hansi 15.11. („Habe den Titel eingetragen, geht aber nicht“): grTitel gab es schon (Gruppen-Bearbeitung, unsichtbar, leer) – jetzt ggTitel …, nur im Blatt gesucht
+  const f = (id) => document.querySelector(`#grAdminBlatt #${id}`);
+  const je = Number(document.querySelector("#ggJe .an")?.dataset.je || 1);
+  if (!f("ggBis")?.value) return melde("Bitte das Ende des Einsendezeitraums wählen.");
+  try { GRA.d = await api("gericht_runde_speichern", { id, titel: f("ggTitel").value, von: f("ggVon").value, bis: f("ggBis").value, je }, { warten: true }); grAdminZeigen();
     melde(id ? "💾 Runde gespeichert" : "🍲 Runde gestartet – ab dem ersten Tag fragt die App alle beim Öffnen"); } catch (e) { meldeFehler(e); }
 }
 async function grAbbrechen() {
