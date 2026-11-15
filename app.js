@@ -30,7 +30,7 @@ const TEILE_LISTE = {
   istzeit: { einstieg: ["irOeffnen", "irAenderungen"], sri: "sha384-LzIjOhEBd8XATuT8V19PFecWXSkWfEIIs+lWADFW+NrmCLfIl4LwmECdGwvhZbp7" }, // KC-CLUB-IST-RUECKFRAGE: „🗓️ Meine Ist-Zeiten“ nach dem Dienst (nur beim Öffnen)
   nutzperson: { einstieg: ["npStart", "npAlle"], sri: "sha384-Z+v9oW3/Vp/DObApKnj6423OFyD/mLKqkI6+rUmBzRUYABaoE9X1rnta/qubtMEX" }, // KC-CLUB-NUTZUNG-PERSON: „📊 Meine Nutzung“ / „📊 Nutzung je Mitglied“ (nur beim Öffnen)
   nutzung: { einstieg: ["nuStart"], sri: "sha384-V8qj7CYfmmydkhppRZkaB/XjF0ATARL/4dwYcdXMeRUQ+cFMm2ijWGLzZIt1uha/" }, // 2.829.0 KC-CLUB-NUTZUNG-ALLE: „📈 So nutzen wir die App“ für alle (nur beim Öffnen)
-  garten: { einstieg: ["gartenStart", "gartenTag"], sri: "sha384-6aJ7BC8onHSBkTJfke0PZ2xpqNkKve2zPAKRfEciPgMowI960w0UXsF+SgwXCHMm" }, // KC-CLUB-SAMEN (#84): „🌱 Mein Garten“ – nur beim Öffnen und einmal am Tag beim Start
+  garten: { einstieg: ["gartenStart", "gartenTag", "gartenReif"], sri: "sha384-/ydTNoIDsiedFVIAayJkP6bgrCAPv+fa7q5ktl5nts9bsSIypSeVNedb6aiUIVx/" }, // KC-CLUB-SAMEN (#84): „🌱 Mein Garten“ – nur beim Öffnen und einmal am Tag beim Start
   probe: { einstieg: ["teilProbe"], sri: "sha384-11uzQ0U/9pY4FZjTqOq5jlmzO0XsA4hQVrV8iqqTT7Jp9y3/VSG/gTIggGmcZud8" }, // Probe für den Nachlade-Weg (Klick-Rundgang, Sicherheits-Check)
 };
 const TEILE_STAND = {};
@@ -12098,7 +12098,9 @@ function gartenKurz() {
   return g.pflanzen?.length ? `${g.pflanzen.length} Pflanze${g.pflanzen.length === 1 ? "" : "n"} · ${g.tage} Tage dabei` : `${g.tage} Tage dabei`;
 }
 function gartenTagPruefen() {
-  if (!ICH || zugang() !== "mitglied" || !frei("garten") || gartenSpeicher()?.tag === heuteIso()) return;
+  if (!ICH || zugang() !== "mitglied" || !frei("garten")) return;
+  // KC-CLUB-GARTEN-ERNTE: heute schon gezählt → ohne Abfrage nur prüfen, ob ein Kraut reif geworden ist (nur wenn Pflanzen da sind)
+  if (gartenSpeicher()?.tag === heuteIso()) { if (gartenSpeicher()?.g?.pflanzen?.length) gartenReif().catch(() => {}); return; }
   gartenTag().catch(() => {}); // still – im schlechtesten Fall morgen wieder
 }
 function kachelnZeigen() {
@@ -34806,7 +34808,7 @@ const FENSTER_NAMEN = {
   onlineBlatt: "🟢 Gerade online", personenBlatt: "👉 Wer?", prBlatt: "🧪 Probephase", pwTeilBlatt: "📌 Zettel abnehmen", rcAngebotBlatt: "🧳 Reise-Checkliste angeboten",
   rcBlatt: "🧳 Meine Reise-Checkliste", rgAuswBlatt: "📊 Auswertung der Erklär-Videos", rgListeBlatt: "🎬 Erklär-Videos (Liste)", rgsBlatt: "🗣️ Stimme für Videos wählen", rolleBlatt: "🎖️ Rolle/Amt",
   anbBlatt: "📰 Anbieter – Neues & Wartungen", // 2.842.0 KC-CLUB-ANBIETER-NEUES
-  gtBlatt: "🌱 Mein Garten", gtTuete: "🎁 Samentütchen", gtClub: "🏡 Club-Garten", // KC-CLUB-SAMEN (#84)
+  gtBlatt: "🌱 Mein Garten", gtTuete: "🎁 Samentütchen", gtClub: "🏡 Club-Garten", gtRezept: "📖 Kräuter-Rezept", // KC-CLUB-SAMEN (#84) · KC-CLUB-GARTEN-ERNTE
   bueKatalogBlatt: "🛒 Büro-Katalog", // 2.840.0 KC-CLUB-BUERO-EINRICHTEN
   rundeBlatt: "🔗 Feste Gruppe bilden", rzBlatt: "📖 Club-Rezeptbuch", sbBlatt: "🤔 Das kenne ich noch nicht", sbListeBlatt: "📋 Das kannst du sagen", sbPersonBlatt: "🎙️ Sprache: mit wem?",
   sbtBlatt: "🎓 Sprach-Training", scAbBlatt: "🚫 Schulung absagen", scBlatt: "🎓 Schulungen", scChronikBlatt: "📜 Schulung: Ablauf", scFestBlatt: "📅 Festen Termin geben",
