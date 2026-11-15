@@ -7,6 +7,16 @@ Fund Hansi 15.11. („App ist schon wieder langsam … woran liegt es?“): Nich
 3. **Klüger prüfen:** neue Funktion `kc_db_mirror_stat_sig` (Dateinummer + Einfüge/Änderungs/Lösch-Zähler, nur service_role). Der Spiegel-Arbeiter überspringt die teure Prüfsumme nur, wenn sich die Kennung seit der letzten echten Prüfsumme (höchstens 12 Std. alt) nicht geändert hat; der Nachtlauf (04 UTC) prüft immer voll. Neuer Lauf-Typ `stat_unchanged_skip`.
 Migration `20261115_kc_spiegel_schonend.sql` (keine neue Tabelle, nichts gelöscht, Rückweg in der Datei). Die Anzeige „Datenbank hat viel zu tun“ in der App bekommt die neuen Zeiten mit dem nächsten Server-Bündel.
 
+## 2.954.0 – 2026-11-15 – 📰 Club-Küche: Ostern im März, Rezept des Monats, Bastelecke, Blume des Monats, Warenkunde, Ferien und Feiertage, neue Küchenwitze
+Wünsche Hansi 15.11.2026 (ein Bündel, Einspielen 20-Uhr-Termin).
+- **Ostern im März-Heft** (Ostern 28.3.2027): Oster-Suchbild „Osterfrühstück“ und Oster-Kreuzworträtsel ins Heft 3, Fischmarkt ins Heft 4; Backstube Osterkörbchen und Bastelecke Ostereier waren schon dort.
+- **Rezept des Monats** Februar–Dezember 2027 (KC-CLUB-MAGAZIN-REZEPT-MONAT): einfache, saisonale Redaktionsrezepte, tauschbar gegen Vorschläge der Kollegen; Heft 1 unverändert.
+- **Bastelecke** in allen 24 Heften (KC-CLUB-MAGAZIN-BASTELECKE) und **Blume des Monats** auf derselben Seite (KC-CLUB-MAGAZIN-BLUME), giftige Blumen mit Warnung.
+- **Warenkunde – Produkt des Monats** auf der Seite Saisonkalender (KC-CLUB-MAGAZIN-WARENKUNDE).
+- **Ferien und Feiertage** auf der Termine-Seite (KC-CLUB-MAGAZIN-FERIEN): Schulferien aller 16 Länder (NRW oben, KMK-Ferienkalender, NRW gegengeprüft) und gesetzliche Feiertage des Monats mit Ländern.
+- **Küchenwitze:** sieben schwache durch bessere ersetzt (Heft 1 unverändert).
+- Tests in `tests/magazin-kraeuter.test.mjs` erweitert. Update-Hinweis: nur „Kleine Systemanpassung“. Rückweg: App 2.953.0.
+
 ## 2.953.0 – 2026-11-15 – 👀 Ausgeblendete Kacheln: oben nur noch ein Umschalt-Knopf (KC-CLUB-KA-KOPF-TOGGLE)
 Wunsch Hansi 15.11.: „Unter dem Kopf gibt es seit heute 2 neue Buttons (Ausgeblendet ansehen). Das soll nur ein Button sein, ein Toggle – einmal klicken schaltet, wieder klicken zurück, dann passt der auch auf schmale Handys.“
 - Neben „< Erweiterte Ansicht >“ steht nur noch **ein** runder Knopf: 👀 = nur die ausgeblendeten Kacheln zeigen, danach 🙈 (rot) = wieder verbergen. Der zweite Knopf („x ausgeblendete anzeigen“ → Anordnen) ist oben weg; unten gibt es beide Wege weiter.
