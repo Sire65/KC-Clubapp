@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.955.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.957.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -24,7 +24,7 @@ const TEILE_LISTE = {
   rechner: { einstieg: ["rechnerOeffnen"], sri: "sha384-UWrOf1EIXxhsoWWwxnLDzpzALsaxzNGXgeqoLAjVvqoQ6wbFnIGxYTkQPFpiRuQ4" }, // 2.811.0 KC-CLUB-RECHNER: Tischrechner im Büro, „rechne …“ per Sprache
   glueck: { einstieg: ["kaeferKommt", "kleeKommt"], sri: "sha384-hbPb96l3YrlvBxe1zJJfotwARA0pEPKKaDyb1BBVooEi5BCYbfYqihmMYABmlsg4" }, // KC-CLUB-MARIENKAEFER / KC-CLUB-GLUECKSKLEE (06.11.2026): 🐞 jeder 50., 🍀 jeder 25. Start
   hilfetipp: { einstieg: ["tippSenden", "tippListe"], sri: "sha384-cOxaOEtxAQP/CZRKEEryWTGLYs/TRIWVXRitip1nRotyRzYD9GRoisKEzLGKAbGF" }, // 2.835.0 KC-CLUB-HILFE-TIPPS: Clubleitung – Lösung schicken, Vorlagen, Gesendete Tipps
-  magazin: { einstieg: ["magStart", "wmProspekt", "magMenue", "magEinsenden", "magPostfach", "magMeine", "magArchiv", "magDruck"], sri: "sha384-d/6yU/TMF5+jyonS0fQHH9QV185pNBWAjVIJtkgCPTz/EfVNx+qdmhYMZBK+oP+z" }, // KC-CLUB-MAGAZIN-GERUEST: Club-Küche und Weihnachtsmarkt-Prospekt (Gerüst, blättern)
+  magazin: { einstieg: ["magStart", "wmProspekt", "magMenue", "magEinsenden", "magPostfach", "magMeine", "magArchiv", "magDruck"], sri: "sha384-OiXZsCLJbex0QfLSH0KITIziZhWhBosxXRmJMUu4apSNCQUD29gIUsW7PsOGabCK" }, // KC-CLUB-MAGAZIN-GERUEST: Club-Küche und Weihnachtsmarkt-Prospekt (Gerüst, blättern)
   strom: { einstieg: ["stromBlatt", "stromZeichnen"], sri: "sha384-dNcc30G8i65eI40hbgDTGIIBdKAE/KdpRichStzNk1mt1gGPNa+DYvNq03rjI4M/" }, // 2.799.0 KC-CLUB-STROM-UEBERSICHT: Admin „🔋 Stromverbrauch“ (nur beim Öffnen)
   anbieter: { einstieg: ["anbStart"], sri: "sha384-P5YH+VJ7JvIqD3Aj7m229epWr/Qh32v5T1bHLTneKzD1mvcFbAjsObnettv63rNh" }, // 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78): Admin-Kachel „📰 Anbieter“ (nur beim Öffnen)
   istzeit: { einstieg: ["irOeffnen", "irAenderungen"], sri: "sha384-LzIjOhEBd8XATuT8V19PFecWXSkWfEIIs+lWADFW+NrmCLfIl4LwmECdGwvhZbp7" }, // KC-CLUB-IST-RUECKFRAGE: „🗓️ Meine Ist-Zeiten“ nach dem Dienst (nur beim Öffnen)
@@ -9879,11 +9879,11 @@ const ZUGANG_AKTIONEN = {
     "push_pruefen", "geraete_liste", "geraet_entfernen", "andere_geraete_abmelden", "push_abmelden", "push_test", "neues_geraet_antwort"],
   aushilfe: ["mein_dienst", "dienstwunsch_laden", "dienstwunsch_speichern", "dienst_gruss", "dienste", "dienst_freigabe", "meine_eingaben",
     "eingaben_bestaetigen", "wunschbogen_mailen", "eingaben_ablegen", "fotos_neueste", "fotos_liste", "foto_oeffnen",
-    "schulung_meine", "schulung_antwort",
+    "schulung_meine", "schulung_antwort", "gericht_zutat_setzen", "gericht_antwort",
     "sondereinsatz_zusage", "stunden_melden", "mein_ausweis", "dienst_stand", "dienst_buchen", "dienst_korrigieren", "dienst_tausch_liste", "dienst_tausch_anbieten", "dienst_tausch_aktion", "dp_einzelplan", "ist_offen", "ist_antworten", "ist_feedback"], // 2.590.0 KC-CLUB-DIENST-STEMPEL; 2.606.0 KC-CLUB-DIENST-TAUSCH
 };
 const ZUGANG_KACHELN = { basis: ["termine", "kommunikation", "sos", "spiele", "status", "einstellungen", "hilfezentrum", "twinkey", "erklaer", "update", "sicherheit", "feedback", "test"],
-  aushilfe: ["mein_dienst", "meindienst", "dienstwunsch", "fotos", "schulungen", "ausweis"] };
+  aushilfe: ["mein_dienst", "meindienst", "dienstwunsch", "fotos", "schulungen", "ausweis", "gericht"] }; // gericht: KC-CLUB-GEMEINSCHAFTSGERICHT (Hansi: „alle bekommen die Frage“)
 const zugang = () => (ICH?.zugang === "gast" || ICH?.zugang === "aushilfe" ? ICH.zugang : "mitglied");
 const zugangKachel = (id) => zugang() === "mitglied" || ZUGANG_KACHELN.basis.includes(id) || (zugang() === "aushilfe" && ZUGANG_KACHELN.aushilfe.includes(id));
 const zugangAktion = (a) => zugang() === "mitglied" || ZUGANG_AKTIONEN.basis.includes(a) || (zugang() === "aushilfe" && ZUGANG_AKTIONEN.aushilfe.includes(a));
@@ -12955,14 +12955,21 @@ const AK_TUERCHEN = [ // 2.869.0 KC-CLUB-ADVENT-2026: Tag 1–24; art: naschen |
 ];
 const AK_ARTEN = { naschen: ["🍬", "Nascherei"], basteln: ["✂️", "Basteln"], deko: ["🕯️", "Deko"], riegel: ["🍫", "Überraschung"], einladung: ["☕", "Einladung"] };
 const AK_REIHE = [7, 15, 1, 22, 10, 3, 18, 12, 24, 5, 20, 9, 2, 14, 17, 6, 11, 23, 4, 19, 13, 8, 16, 21]; // feste, gemischte Anordnung der Türchen
-const akHeute = (d = new Date()) => d.getMonth() === 11 ? Math.min(d.getDate(), 24) : 0; // 0 = nicht im Dezember; 25.–31.12.: alle offen
-const akKey = (d = new Date()) => "kc_club_advent_" + d.getFullYear();
+// KC-CLUB-ADVENT-SERVERUHR (Wunsch Hansi 15.11.2026: „Jedes Türchen darf nur am Tag geöffnet werden, nicht schon vorher – im Nachhinein erlaubt … mit Server-Uhr
+// absichern“): Tag nach der Uhr des Servers in deutscher Zeit – ein vorgestelltes Handy-Datum öffnet kein Türchen früher. Der Versatz kommt einmal beim Start
+// (Antwort „init“ bringt serverJetzt); ohne Server-Zeit (offline, Notbetrieb) wie bisher die Handy-Uhr. Der Server prüft die Preis-Türchen zusätzlich selbst.
+let UHR_VERSATZ = null;
+function uhrAbgleich(j) { const s = Number(j?.serverJetzt); if (Number.isFinite(s) && s > 1.7e12) UHR_VERSATZ = s - Date.now(); }
+const akJetzt = () => new Date(Date.now() + (UHR_VERSATZ ?? 0));
+const akBerlin = (d) => { const [j, m, t] = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Berlin", year: "numeric", month: "2-digit", day: "2-digit" }).format(d).split("-").map(Number); return { j, m, t }; };
+const akHeute = (d = akJetzt()) => { const b = akBerlin(d); return b.m === 12 ? Math.min(b.t, 24) : 0; }; // 0 = nicht im Dezember; 25.–31.12.: alle offen
+const akKey = (d = akJetzt()) => "kc_club_advent_" + akBerlin(d).j;
 function akOffen() { try { const l = JSON.parse(localStorage.getItem(akKey()) || "[]"); return Array.isArray(l) ? l.filter((n) => Number.isInteger(n) && n >= 1 && n <= 24) : []; } catch { return []; } }
 const akAn = () => einst("advent", true);
 // 2.482.0 KC-CLUB-ADVENT-UEBERRASCHUNG (Wunsch Hansi „Nimm den Adventskalender aus der Info – das ist eine Überraschung“): vor dem 1. Dezember
 // sehen Mitglieder ihn nirgends (Hilfe, „Neu in der App“, ⚙️ Effekte); ab Dezember wie gehabt. Admins sehen ihn immer (zum Prüfen).
 // 2.869.0 KC-CLUB-ADVENT-2026 (Hansi: „keine Kalender für Kinder und Gäste“): nur Mitglieder – Gäste und Aushilfen sehen ihn nie.
-const akSichtbar = () => zugang() === "mitglied" && (!!ICH?.admin || new Date().getMonth() === 11);
+const akSichtbar = () => zugang() === "mitglied" && (!!ICH?.admin || akBerlin(akJetzt()).m === 12); // KC-CLUB-ADVENT-SERVERUHR
 function akSichtbarSetzen() { const z = $("setAdventZeile"); if (z) z.classList.toggle("versteckt", !akSichtbar()); }
 const akVorschau = () => !akHeute() && !!ICH?.admin; // Admin außerhalb Dezember: alle Türchen zum Ansehen
 function akZeigen() {
@@ -14331,6 +14338,196 @@ const WU_BEREICHE = ["Club-App", "Kasse", "PC-Manager", "Money Butler", "Dienstp
 const WU_STATUS = { offen: "🆕 offen", in_arbeit: "🔧 Claude arbeitet daran", rueckfrage: "❓ Rückfrage", erledigt: "✅ erledigt", zurueckgestellt: "⏸ zurückgestellt" };
 KACHELN.admin.unshift({ id: "ad-ablagekorb", sym: "📥", t: "Ablagekorb", nur: () => !!ICH?.admin, aktion: "ablkZeigen()", u: "Geteilte Fotos und Dokumente bearbeiten", klasse: () => "ad ad-app" }); // 2.511.0 KC-CLUB-ABLAGEKORB
 KACHELN.admin.unshift({ id: "ad-startnachricht", sym: "📣", t: "Startnachricht", nur: () => !!ICH?.admin, aktion: "snStart()", u: "An alle, Gruppe oder Personen – mit Lesebestätigung", klasse: () => "ad ad-app" }); // 2.482.0 KC-CLUB-STARTNACHRICHT
+// ---------- KC-CLUB-GEMEINSCHAFTSGERICHT (Wunschliste #94, Antworten Hansi 15.11.2026: „Viele Köche verderben den Brei – bei uns nicht“) ----------
+// Hansi startet eine Runde ohne festen Termin (Titel, Einsendezeitraum, 1 oder 2 Zutaten je Person). Alle (Mitglieder und Aushilfen) werden beim
+// App-Start gefragt (INIT.gericht) – Liste nach Warengruppen mit Suche oder „✏️ Eigene Zutat“ (Hansi gibt eigene frei). Jeder sieht nur seine eigenen
+// Zutaten, Hansi alle mit Namen. Danach Rezept aus dem Rezeptbuch (Treffer nach Zutaten) oder dort neu anlegen → PDF auf dem Kopfbogen mit
+// „(Name)“ hinter jeder Zutat → an alle (Push + E-Mail mit PDF).
+KACHELN.admin.unshift({ id: "ad-gericht", sym: "🍲", t: "Gemeinschaftsgericht", nur: () => !!ICH?.admin, aktion: "ggAdmin()", u: "Runde starten, alle Zutaten sehen, Rezept als PDF an alle", klasse: () => "ad ad-app" });
+KACHELN.verein.push({ id: "gericht", sym: "🍲", t: "Gemeinschaftsgericht", nur: () => frei("gemeinschaftsgericht") && !!INIT?.gericht?.runde, aktion: "grFrage(true)", u: () => (nurTest("gemeinschaftsgericht") ? "🔒 nur für dich (Test) · " : "") + grKurz(), zahl: () => (INIT?.gericht?.runde && !grMeine().length ? 1 : 0) });
+const GR_ZUTATEN = {
+  "🥩 Fleisch & Geflügel": ["Hähnchen", "Pute", "Ente", "Rind", "Kalb", "Schwein", "Lamm", "Wild", "Hackfleisch", "Speck", "Schinken", "Chorizo", "Leber"],
+  "🐟 Fisch & Meeresfrüchte": ["Lachs", "Kabeljau", "Thunfisch", "Forelle", "Garnelen", "Muscheln", "Tintenfisch", "Hering", "Sardellen"],
+  "🥕 Gemüse": ["Kartoffeln", "Möhren", "Zwiebeln", "Knoblauch", "Lauch", "Paprika", "Tomaten", "Zucchini", "Aubergine", "Kürbis", "Spinat", "Brokkoli", "Blumenkohl", "Rosenkohl", "Grünkohl", "Rotkohl", "Spitzkohl", "Sellerie", "Fenchel", "Rote Bete", "Pilze", "Erbsen", "Bohnen", "Mais", "Süßkartoffel", "Pastinake", "Spargel", "Chili"],
+  "🍎 Obst": ["Äpfel", "Birnen", "Zitrone", "Limette", "Orange", "Mango", "Ananas", "Pflaumen", "Kirschen", "Beeren", "Datteln", "Feigen", "Rosinen", "Banane", "Kokos"],
+  "🥜 Nüsse & Kerne": ["Walnüsse", "Haselnüsse", "Mandeln", "Cashewkerne", "Pinienkerne", "Erdnüsse", "Pistazien", "Sesam", "Kürbiskerne", "Sonnenblumenkerne"],
+  "🌾 Getreide, Nudeln & Hülsenfrüchte": ["Reis", "Nudeln", "Couscous", "Bulgur", "Quinoa", "Graupen", "Linsen", "Kichererbsen", "Weiße Bohnen", "Kidneybohnen", "Polenta", "Brot"],
+  "🧀 Milch, Käse & Ei": ["Sahne", "Schmand", "Crème fraîche", "Joghurt", "Butter", "Parmesan", "Mozzarella", "Feta", "Gouda", "Bergkäse", "Ziegenkäse", "Frischkäse", "Eier"],
+  "🌶️ Gewürze": ["Curry", "Paprikapulver", "Kreuzkümmel", "Koriander", "Kurkuma", "Zimt", "Muskat", "Nelken", "Sternanis", "Ingwer", "Pfeffer", "Chiliflocken", "Kardamom", "Lorbeer", "Wacholder", "Senf", "Vanille", "Garam Masala", "Ras el-Hanout", "Safran"],
+  "🌿 Kräuter": ["Petersilie", "Schnittlauch", "Dill", "Basilikum", "Thymian", "Rosmarin", "Oregano", "Majoran", "Salbei", "Minze", "Koriandergrün", "Estragon", "Liebstöckel", "Bärlauch"],
+  "🍷 Würzen & Flüssiges": ["Weißwein", "Rotwein", "Bier", "Brühe", "Kokosmilch", "Sojasoße", "Honig", "Ahornsirup", "Essig", "Olivenöl", "Tomatenmark", "Worcestersoße", "Meerrettich"],
+};
+const GGR = { wahl: [], suche: "" }, GRA = { d: null, rezept: null }; // GGR: GR ist schon die Gruppen-Bearbeitung
+const grMeine = () => (INIT?.gericht?.meine || []).filter((z) => z.freigabe !== "abgelehnt");
+const grDatum = (iso) => (iso ? `${String(iso).slice(8, 10)}.${String(iso).slice(5, 7)}.` : "");
+const grKurz = () => { const g = INIT?.gericht; if (!g?.runde) return ""; const m = grMeine(); return m.length ? `Deine Wahl: ${m.map((z) => z.zutat).join(", ")}` : `Welche Zutat gibst du dazu? Bis ${grDatum(g.runde.bis)}`; };
+const grSetzen = (r) => { if (r && "runde" in r) INIT.gericht = r.runde ? { runde: r.runde, meine: r.meine || [], nein: !!r.nein, spaeterBis: r.spaeterBis || null } : null; };
+// beim Start (nach 6 s, nur Startseite, kein anderes Fenster offen): fragen, solange nichts eingereicht, nicht „Diesmal nicht“ und nicht „Später“ – oder eine Zutat abgelehnt ist
+function grPruefen() {
+  const g = INIT?.gericht; if (!g?.runde || g.nein || document.hidden || aktuelleAnsicht !== "start" || document.querySelector(FENSTER_OFFEN)) return;
+  if (g.spaeterBis && new Date(g.spaeterBis) > new Date()) return;
+  const meine = g.meine || []; if (meine.length && !meine.some((z) => z.freigabe === "abgelehnt")) return;
+  grFrage(false);
+}
+function grFrage(vonHand) {
+  const g = INIT?.gericht; if (!g?.runde) return melde("Gerade läuft kein Gemeinschaftsgericht.");
+  GGR.wahl = grMeine().map((z) => ({ zutat: z.zutat, gruppe: z.gruppe || null, eigen: !!z.eigen })); GGR.suche = "";
+  const abgelehnt = (g.meine || []).filter((z) => z.freigabe === "abgelehnt"), zwei = g.runde.je > 1;
+  blattAuf("grBlatt", `<h3 style="margin:0">🍲 ${esc(g.runde.titel)}</h3>
+    <p style="margin:6px 0">Viele Köche verderben den Brei – <b>bei uns nicht!</b> ${zwei ? "Welche <b>zwei</b> Zutaten, Gewürze oder Kräuter gibst" : "Welche Zutat, welches Gewürz oder Kraut gibst"} du in unser Gemeinschaftsgericht?</p>
+    <p class="hinweis" style="margin:0 0 8px">Einsenden bis ${grDatum(g.runde.bis)} · die anderen sehen deine Wahl nicht · das fertige Rezept bekommen alle als PDF.</p>
+    ${abgelehnt.map((z) => `<div class="karte gr-abgelehnt">🔁 „${esc(z.zutat)}“ passt leider nicht${z.grund ? ": " + esc(z.grund) : ""} – bitte wähle eine andere.</div>`).join("")}
+    <div id="grWahl" class="gr-wahl" aria-live="polite"></div>
+    <input id="grSuche" class="gr-suche" type="search" placeholder="🔍 Zutat suchen …" autocomplete="off" oninput="GGR.suche=this.value;ggListe()">
+    <div id="ggListe" class="gr-liste"></div>
+    <div class="gr-eigen"><input id="grEigen" maxlength="60" placeholder="✏️ Eigene Zutat, z. B. Stierhoden" autocomplete="off" onkeydown="if(event.key==='Enter')grEigen()"><button type="button" class="knopf klein" onclick="grEigen()" aria-label="Eigene Zutat übernehmen">➕</button></div>
+    <p class="hinweis" style="margin:2px 0 8px">Eigene Zutaten schaut sich ${esc(adminName())} kurz an.</p>
+    <div class="knoepfe"><button class="knopf haupt" id="grLos" onclick="grSenden()">✅ Speichern</button>
+      ${vonHand ? `<button class="knopf" onclick="fensterZu($('grBlatt'))">Schließen</button>` : `<button class="knopf" onclick="grAntwort('spaeter')">⏰ Später</button><button class="knopf" onclick="grAntwort('nein')">🙅 Diesmal nicht</button>`}</div>`);
+  grWahlZeigen(); ggListe();
+}
+function grWahlZeigen() {
+  const el = $("grWahl"), n = INIT?.gericht?.runde?.je || 1; if (!el) return;
+  el.innerHTML = GGR.wahl.length ? GGR.wahl.map((z, i) => `<span class="gr-gewaehlt">${esc(z.zutat)}${z.eigen ? " ✏️" : ""}<button type="button" aria-label="${esc(z.zutat)} entfernen" onclick="GGR.wahl.splice(${i},1);grWahlZeigen();ggListe()">✕</button></span>`).join("")
+    + (GGR.wahl.length < n ? `<span class="hinweis">noch ${n - GGR.wahl.length} frei</span>` : "") : `<span class="hinweis">Noch nichts gewählt – unten antippen oder eintippen.</span>`;
+  const k = $("grLos"); if (k) k.disabled = !GGR.wahl.length;
+}
+function ggListe() { // gg…: grListe/grAdmin gibt es schon (Gruppen-Bearbeitung)
+  const el = $("ggListe"); if (!el) return;
+  const q = (GGR.suche || "").trim().toLowerCase(), gew = new Set(GGR.wahl.map((z) => z.zutat));
+  el.innerHTML = Object.entries(GR_ZUTATEN).map(([gruppe, liste]) => { const l = liste.filter((t) => !q || t.toLowerCase().includes(q)); if (!l.length) return "";
+    return `<details${q ? " open" : ""}><summary>${gruppe} <small>(${l.length})</small></summary><div class="hl-chips">${l.map((t) => `<button type="button" class="chip${gew.has(t) ? " an" : ""}" onclick="grNehmen(${jsArg(t)}, ${jsArg(gruppe)})">${esc(t)}</button>`).join("")}</div></details>`; }).join("")
+    || `<p class="hinweis">Nichts gefunden – unten als eigene Zutat eintragen.</p>`;
+}
+function grNehmen(t, gruppe, eigen = false) {
+  const n = INIT?.gericht?.runde?.je || 1, i = GGR.wahl.findIndex((z) => z.zutat.toLowerCase() === t.toLowerCase());
+  if (i >= 0) GGR.wahl.splice(i, 1); else { if (GGR.wahl.length >= n) GGR.wahl.shift(); GGR.wahl.push({ zutat: t, gruppe, eigen }); }
+  grWahlZeigen(); ggListe();
+}
+function grEigen() {
+  const t = ($("grEigen")?.value || "").replace(/\s+/g, " ").trim(); if (!t) return melde("Bitte eine Zutat eintippen.");
+  const aus = Object.entries(GR_ZUTATEN).find(([, l]) => l.some((x) => x.toLowerCase() === t.toLowerCase())); // steht sie in der Liste, gilt sie als Listen-Zutat
+  $("grEigen").value = ""; grNehmen(aus ? aus[1].find((x) => x.toLowerCase() === t.toLowerCase()) : t, aus ? aus[0] : null, !aus);
+}
+async function grSenden() {
+  const g = INIT?.gericht; if (!g?.runde || !GGR.wahl.length) return;
+  const k = $("grLos"); if (k) k.disabled = true;
+  try { const r = await api("gericht_zutat_setzen", { runde: g.runde.id, zutaten: GGR.wahl.map((z) => ({ zutat: z.zutat, gruppe: z.gruppe, eigen: z.eigen })) }, { warten: true });
+    grSetzen(r); fensterZu($("grBlatt")); kachelnZeigen();
+    melde(`🍲 Danke! ${GGR.wahl.length > 1 ? "Deine Zutaten sind" : "Deine Zutat ist"} dabei: ${GGR.wahl.map((z) => z.zutat).join(", ")}${GGR.wahl.some((z) => z.eigen) ? ` – ${adminName()} schaut sie sich noch kurz an` : ""}. Ändern geht bis ${grDatum(g.runde.bis)} über die Kachel 🍲.`);
+  } catch (e) { if (k) k.disabled = false; meldeFehler(e); }
+}
+async function grAntwort(wahl) {
+  const g = INIT?.gericht; if (!g?.runde) return; fensterZu($("grBlatt"));
+  try { grSetzen(await api("gericht_antwort", { runde: g.runde.id, wahl }, { still: true })); } catch {}
+  melde(wahl === "nein" ? "🙅 Alles klar – diesmal ohne dich. Über die Kachel 🍲 kannst du doch noch mitmachen." : "⏰ Ich frage dich später noch einmal.");
+}
+// --- Admin: Runde, alle Zutaten mit Namen, eigene Zutaten freigeben, Rezept finden, PDF an alle ---
+async function ggAdmin(runde) {
+  blattAuf("grAdminBlatt", '<p class="hinweis">⏳ Wird geladen …</p>');
+  try { GRA.d = await api("gericht_admin", runde ? { runde } : {}); GRA.rezept = null; grAdminZeigen(); } catch (e) { $("grAdminBlatt")?.remove(); meldeFehler(e); }
+}
+function grAdminZeigen() {
+  const el = document.querySelector("#grAdminBlatt .blatt-innen"); if (!el || !GRA.d) return;
+  const d = GRA.d, r = d.runde, laeuft = r?.status === "sammeln", zt = d.zutaten || [];
+  const zeile = (z) => `<li class="gr-a-z${z.freigabe === "abgelehnt" ? " aus" : ""}"><span><b>${esc(z.zutat)}</b>${z.eigen ? " ✏️" : ""} <span class="hinweis">– ${esc(z.name)}${z.gruppe ? " · " + esc(z.gruppe) : ""}</span></span>
+    ${z.freigabe === "pruefen" ? `<span class="gr-a-k"><button class="knopf klein haupt" onclick="grZutatPruefen(${jsArg(z.id)}, true)">✅ Passt</button><button class="knopf klein" onclick="grZutatPruefen(${jsArg(z.id)}, false)">🔁 Andere bitte</button></span>` : z.freigabe === "abgelehnt" ? '<span class="hinweis">🔁 um andere gebeten</span>' : ""}</li>`;
+  const zustand = !r ? "" : laeuft ? (r.bis < d.heute ? "⏹️ Einsendezeit vorbei" : r.von > d.heute ? "⏳ beginnt am " + grDatum(r.von) : "🟢 läuft") : r.status === "versendet" ? "📨 verschickt" : "";
+  el.innerHTML = `<h3 style="margin:0">🍲 Gemeinschaftsgericht</h3>
+    ${d.frei === false ? `<div class="karte gr-abgelehnt" style="margin:6px 0">🔒 <b>Noch nicht freigegeben</b> – gefragt wirst nur du, „Als PDF an alle senden“ geht als Test nur an dich (die Runde bleibt offen). Für alle: Verwaltung → Freigaben → „🍲 Gemeinschaftsgericht“ → ✅ Für alle frei.</div>` : ""}
+    ${r ? `<p class="hinweis" style="margin:2px 0 8px"><b>${esc(r.titel)}</b> · Einsenden ${grDatum(r.von)}–${grDatum(r.bis)} · ${r.je_person === 2 ? "2 Zutaten" : "1 Zutat"} je Person · ${zustand}</p>
+      ${d.stand ? `<p style="margin:0 0 6px">📥 <b>${d.stand.eingereicht}</b> von ${d.stand.alle} haben eingereicht${d.stand.nein ? ` · 🙅 ${d.stand.nein}× diesmal nicht` : ""}</p>` : ""}
+      <ul class="gr-a-liste">${zt.length ? zt.map(zeile).join("") : '<li class="hinweis">Noch keine Zutaten.</li>'}</ul>
+      ${laeuft ? `<div class="knoepfe"><button class="knopf haupt" onclick="grRezepte()">🔎 Rezept finden & verschicken</button><button class="knopf" onclick="grRundeForm(true)">✏️ Runde ändern</button><button class="knopf" onclick="grAbbrechen()">🗑️ Runde abbrechen</button></div>` : ""}
+      <div id="grRezeptBereich"></div>` : '<p class="hinweis">Noch keine Runde gestartet.</p>'}
+    ${!laeuft ? '<div class="knoepfe"><button class="knopf haupt" onclick="grRundeForm(false)">➕ Neue Runde starten</button></div>' : ""}
+    ${(d.runden || []).length > 1 ? `<details style="margin-top:8px"><summary>Alle Runden</summary><div class="knoepfe">${d.runden.map((x) => `<button class="knopf klein" onclick="ggAdmin(${jsArg(x.id)})">${x.status === "versendet" ? "📨" : "🟢"} ${esc(x.titel)}</button>`).join("")}</div></details>` : ""}
+    <div class="knoepfe"><button class="knopf" onclick="$('grAdminBlatt').remove()">Schließen</button></div>`;
+}
+function grRundeForm(aendern) {
+  const el = document.querySelector("#grAdminBlatt .blatt-innen"); if (!el) return;
+  const r = aendern ? GRA.d.runde : null, heute = GRA.d.heute;
+  el.innerHTML = `<h3 style="margin:0">🍲 ${r ? "Runde ändern" : "Neue Runde starten"}</h3>
+    <label class="feld">Titel<input id="grTitel" maxlength="80" value="${esc(r?.titel || "Unser Gemeinschaftsgericht")}"></label>
+    <label class="feld">Einsenden ab<input id="grVon" type="date" value="${esc(r?.von || heute)}"></label>
+    <label class="feld">Einsenden bis<input id="grBis" type="date" value="${esc(r?.bis || "")}"></label>
+    <div class="feld"><b>Zutaten je Person</b><div class="umschalter" id="grJe"><button type="button" data-je="1" class="${(r?.je_person || 1) === 1 ? "an" : ""}" onclick="grJe(1)">1 Zutat</button><button type="button" data-je="2" class="${r?.je_person === 2 ? "an" : ""}" onclick="grJe(2)">2 Zutaten</button></div></div>
+    <p class="hinweis">Ab dem ersten Tag fragt die App alle (Mitglieder und Aushilfen) beim Öffnen. Die Zutaten der anderen sieht nur du. 2 Tage vor Ende kommt eine Erinnerung an alle, die noch nichts eingereicht haben.</p>
+    <div class="knoepfe"><button class="knopf haupt" onclick="grRundeSpeichern(${r ? jsArg(r.id) : "null"})">${r ? "💾 Speichern" : "🍲 Runde starten"}</button><button class="knopf" onclick="grAdminZeigen()">Zurück</button></div>`;
+}
+function grJe(n) { document.querySelectorAll("#grJe [data-je]").forEach((b) => b.classList.toggle("an", Number(b.dataset.je) === n)); }
+async function grRundeSpeichern(id) {
+  const je = Number(document.querySelector("#grJe .an")?.dataset.je || 1);
+  if (!$("grBis").value) return melde("Bitte das Ende des Einsendezeitraums wählen.");
+  try { GRA.d = await api("gericht_runde_speichern", { id, titel: $("grTitel").value, von: $("grVon").value, bis: $("grBis").value, je }, { warten: true }); grAdminZeigen();
+    melde(id ? "💾 Runde gespeichert" : "🍲 Runde gestartet – ab dem ersten Tag fragt die App alle beim Öffnen"); } catch (e) { meldeFehler(e); }
+}
+async function grAbbrechen() {
+  const r = GRA.d?.runde; if (!r || !(await frage(`🗑️ Runde „${r.titel}“ abbrechen? Die Frage verschwindet bei allen, die Zutaten bleiben gespeichert.`, { ja: "Ja, abbrechen", nein: "Nein" }))) return;
+  try { GRA.d = await api("gericht_runde_abbrechen", { runde: r.id }, { warten: true }); grAdminZeigen(); melde("🗑️ Runde abgebrochen"); } catch (e) { meldeFehler(e); }
+}
+async function grZutatPruefen(id, frei) {
+  let grund = "";
+  if (!frei) { grund = await eingabe("Kurzer Hinweis an das Mitglied (freiwillig):", "Bitte wähle eine andere Zutat."); if (grund === null) return; }
+  try { GRA.d = await api("gericht_zutat_pruefen", { id, frei, grund, runde: GRA.d?.runde?.id }, { warten: true }); grAdminZeigen(); melde(frei ? "✅ Zutat freigegeben" : "🔁 Das Mitglied wird um eine andere Zutat gebeten"); } catch (e) { meldeFehler(e); }
+}
+async function grRezepte() {
+  const b = $("grRezeptBereich"); if (!b) return; b.innerHTML = '<p class="hinweis">⏳ Suche im Rezeptbuch …</p>';
+  try { const d = await api("gericht_rezepte", { runde: GRA.d.runde.id }); GRA.d = { ...GRA.d, ...d }; const n = new Set((d.zutaten || []).filter((z) => z.freigabe !== "abgelehnt").map((z) => z.zutat.toLowerCase())).size;
+    b.innerHTML = `<h4 style="margin:10px 0 4px">📖 Passende Rezepte aus dem Rezeptbuch</h4>
+      ${d.treffer.length ? d.treffer.map((r) => `<button class="knopf gr-treffer" onclick="grRezeptWahl(${jsArg(r.id)})"><b>${esc(r.titel)}</b><small>${r.treffer} von ${n} Zutaten</small></button>`).join("") : '<p class="hinweis">Kein Rezept enthält eure Zutaten – lege eins im Rezeptbuch an (z. B. mit Hilfe von Claude) und such dann noch einmal.</p>'}
+      <label class="feld">Oder ein anderes Rezept wählen<select onchange="if(this.value)grRezeptWahl(this.value)"><option value="">– Rezept wählen –</option>${(d.rezepte || []).map((r) => `<option value="${esc(r.id)}">${esc(r.titel)}</option>`).join("")}</select></label>
+      <div class="knoepfe"><button class="knopf" onclick="rzStart()">➕ Neues Rezept im Rezeptbuch anlegen</button><button class="knopf" onclick="grRezepte()">🔄 Neu suchen</button></div>`;
+  } catch (e) { b.innerHTML = ""; meldeFehler(e); }
+}
+async function grRezeptWahl(id) {
+  const b = $("grRezeptBereich"); if (!b) return;
+  try { const d = await api("gericht_rezepte", { runde: GRA.d.runde.id, rezept: id }); GRA.rezept = d.rezept; GRA.d = { ...GRA.d, zutaten: d.zutaten, stand: d.stand };
+    const r = d.rezept, offen = GRA.d.runde.bis >= GRA.d.heute;
+    b.innerHTML = `<div class="karte gr-gewaehlt-rezept"><b>📖 ${esc(r.titel)}</b><div class="hinweis">${(r.zutaten || []).length} Zutaten${r.portionen ? ` · ${r.portionen} Portionen` : ""}${r.foto ? " · mit Foto" : ""}</div>
+      ${offen ? `<p class="hinweis">⏳ Die Einsendezeit läuft noch bis ${grDatum(GRA.d.runde.bis)} – du kannst trotzdem schon jetzt verschicken.</p>` : ""}
+      <div class="knoepfe"><button class="knopf" onclick="druckStarten('gericht', ${jsArg(GRA.d.runde.id)})">🖨️ Vorschau / Drucken</button><button class="knopf haupt" id="grVersandKnopf" onclick="grVersenden()">📨 Als PDF an alle senden</button><button class="knopf" onclick="grRezepte()">← Anderes Rezept</button></div></div>`;
+  } catch (e) { meldeFehler(e); }
+}
+async function grVersenden() {
+  const d = GRA.d, r = GRA.rezept; if (!d?.runde || !r) return;
+  const offen = d.runde.bis >= d.heute, warten = (d.zutaten || []).filter((z) => z.freigabe === "pruefen").length;
+  if (!(await frage(d.frei === false ? `🧪 Test: „${r.titel}“ als PDF nur an dich schicken (Push und E-Mail)? Die Runde bleibt offen – freigegeben geht es an alle.` : `📨 „${r.titel}“ als PDF an alle (${d.stand?.alle ?? "alle"}) schicken – per Push und E-Mail?${offen ? `\n\nAchtung: Die Einsendezeit läuft noch bis ${grDatum(d.runde.bis)}.` : ""}${warten ? `\n\n✏️ ${warten} eigene Zutat${warten > 1 ? "en warten" : " wartet"} noch auf deine Freigabe – ${warten > 1 ? "sie stehen" : "sie steht"} trotzdem mit im Rezept.` : ""}`, { ja: "Ja, senden", nein: "Abbrechen" }))) return;
+  const k = $("grVersandKnopf"); if (k) { k.disabled = true; k.textContent = "⏳ PDF wird erstellt …"; }
+  try {
+    DRUCK = { art: "gericht", param: d.runde.id }; let pdf = null;
+    if (await druckSeiteBauen()) { const name = `Gemeinschaftsgericht_${r.titel}`.replace(/[^\wäöüÄÖÜß.-]+/g, "_").slice(0, 60) + ".pdf";
+      pdf = (await anlageHochladen(new File([await druckPdfBlob()], name, { type: "application/pdf" })))?.id || null; }
+    if (!pdf) throw new Error("Das PDF konnte nicht erstellt werden – bitte noch einmal.");
+    const x = await api("gericht_versenden", { runde: d.runde.id, rezept: r.id, pdf, vorzeitig: offen }, { warten: true });
+    if (x.test) { melde(`🧪 Test-Versand nur an dich${x.mitPdf ? " – mit PDF" : ""}. Die Runde bleibt offen.`); if (k) { k.disabled = false; k.textContent = "📨 Als PDF an alle senden"; } return; }
+    melde(`📨 Das Rezept ist an ${x.an} unterwegs${x.mitPdf ? " – mit PDF" : ""}`); await ggAdmin(d.runde.id);
+  } catch (e) { if (k) { k.disabled = false; k.textContent = "📨 Als PDF an alle senden"; } meldeFehler(e); }
+}
+// DRUCKARTEN.gericht: Kopfbogen (Logo, Weinrot, Fußzeile) kommt aus der Druckvorschau; hinter jeder Zutat „(Name)“, wer sie ausgesucht hat
+const grNorm = (t) => String(t ?? "").toLowerCase().normalize("NFKD").replace(/[̀-ͯ]/g, "").replace(/ß/g, "ss").replace(/[^a-z0-9]+/g, " ").trim();
+function grZuordnen(rezeptZutaten, eingereicht) {
+  const zt = (eingereicht || []).filter((z) => z.freigabe !== "abgelehnt"), benutzt = new Set();
+  const zeilen = (rezeptZutaten || []).map((z) => { const n = grNorm(z.n);
+    const von = zt.filter((e) => { const g = grNorm(e.zutat); return g && n && (n.includes(g) || g.includes(n)); });
+    von.forEach((e) => benutzt.add(e)); return { z, wer: [...new Set(von.map((e) => e.vorname || e.name))] }; });
+  return { zeilen, rest: zt.filter((e) => !benutzt.has(e)) };
+}
+async function grDruck() {
+  const r = GRA.rezept, d = GRA.d; if (!r || !d?.runde) { melde("Bitte zuerst ein Rezept wählen."); return null; }
+  const { zeilen, rest } = grZuordnen(r.zutaten, d.zutaten), anzahl = (d.zutaten || []).filter((z) => z.freigabe !== "abgelehnt").length;
+  let foto = "";
+  if (r.foto) try { const u = (await api("anlage_url", { id: r.foto })).url; const b = await (await fetch(u, { signal: zeitSignal(20000) })).blob();
+    foto = await new Promise((ok) => { const fr = new FileReader(); fr.onload = () => ok(fr.result); fr.onerror = () => ok(""); fr.readAsDataURL(b); }); } catch {}
+  const h = (t) => `<h2 style="font-size:4.6mm;margin:5mm 0 2mm;border-bottom:2px solid #741521;padding-bottom:1mm">${t}</h2>`;
+  const html = `<p style="font-size:3.8mm;margin:0 0 3mm">Viele Köche verderben den Brei – <b>bei uns nicht!</b> Aus ${anzahl} Zutaten, die ihr ausgesucht habt, ist dieses Rezept entstanden.</p>
+    ${foto ? `<img src="${foto}" alt="" style="display:block;max-width:100%;max-height:70mm;margin:0 auto 3mm;border-radius:2mm;object-fit:cover">` : ""}
+    ${r.portionen || r.dauer ? `<div style="font-size:3.5mm;color:#555">${r.portionen ? `Für ${r.portionen} Portionen` : ""}${r.portionen && r.dauer ? " · " : ""}${r.dauer ? `ca. ${r.dauer} Minuten` : ""}</div>` : ""}
+    ${h("Zutaten")}<ul style="font-size:3.8mm;margin:0;padding-left:5mm;line-height:1.55">${zeilen.map((x) => `<li>${esc(rzZutatText(x.z, 1))}${x.wer.length ? ` <b style="color:#741521">(${esc(x.wer.join(", "))})</b>` : ""}</li>`).join("")}</ul>
+    ${rest.length ? `<p style="font-size:3.5mm;margin:2mm 0 0"><b>Außerdem ausgesucht:</b> ${rest.map((e) => `${esc(e.zutat)} <span style="color:#741521">(${esc(e.vorname || e.name)})</span>`).join(", ")}</p>` : ""}
+    ${h("Zubereitung")}<div style="font-size:3.8mm;white-space:pre-wrap;line-height:1.45">${esc(r.zubereitung || "")}</div>`;
+  return { titel: r.titel, unter: d.runde.titel, rechts: "Gemeinschaftsgericht", html, fuss: "Gemeinschaftsgericht" };
+}
 KACHELN.mein.push({ id: "startnachricht", sym: "📣", t: "Startnachricht", u: "Nachricht mit Lesebestätigung", aktion: "snStart()", nur: () => !ICH?.admin && !!INIT?.startnachrichtDarf }); // nur, wenn für Clubsprecher/Kassenwart freigeschaltet
 KACHELN.admin.unshift({ id: "ad-wuensche", sym: "📝", t: "Wünsche an Claude", nur: () => !!ICH?.admin, aktion: "wuStart()",
   u: () => { const l = WU.liste; if (!l) return "Vorschläge, Fehler, Ideen"; const r = l.filter((x) => x.status === "rueckfrage").length, o = l.filter((x) => ["offen", "in_arbeit"].includes(x.status)).length; return r ? `❓ ${r} Rückfrage${r === 1 ? "" : "n"} · ${o} offen` : `${o} offen`; },
@@ -17727,7 +17924,7 @@ async function neuLadenRoh(vonHand) {
   const initAnfrage = api("init", { fotosSeit: kzSeit("fotos"), dienstSeit: kzSeit("dienste") }, { warten: !!vonHand }); initAnfrage.catch(() => {}); // Fehler behandelt unten das await
   if (!INIT) sofortStart(); // KC-CLUB-SOFORTSTART (2.113.0): gespeicherten Stand sofort zeigen, frisch laden im Hintergrund
   try {
-    INIT = await initAnfrage; if (window.KCFP?.schlaeft) return; /* 2.394.0 Fenster inzwischen geleert */ if (!START_MESS.initBis) { START_MESS.initAb = tInit; START_MESS.initBis = performance.now(); } /* KC-CLUB-KACHEL-ZAHLEN */ ICH = INIT.ich; einstOffenAnwenden(); /* 2.6.1: noch laufende Speicherungen nicht überschreiben */ adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); inkognitoZeigen(); einwZeigen(aktuelleAnsicht); schluesselSichern(KEY); /* KC-CLUB-SCHLUESSEL-SICHERN */ if (document.body.classList.contains("rg-ohne-admin")) document.body.classList.remove("ist-admin"); /* KC-CLUB-ERKLAERVIDEOS-ROLLEN: im Video für alle bleibt Admin aus */ stKnopf(); /* KC-CLUB-STUDIO */ cfUebernehmen(INIT?.einstellungen?.chat_farben); /* KC-CLUB-CHAT-FARBEN */ // KC-CLUB-KOPF-EINFACH
+    INIT = await initAnfrage; if (window.KCFP?.schlaeft) return; uhrAbgleich(INIT); /* KC-CLUB-ADVENT-SERVERUHR */ /* 2.394.0 Fenster inzwischen geleert */ if (!START_MESS.initBis) { START_MESS.initAb = tInit; START_MESS.initBis = performance.now(); } /* KC-CLUB-KACHEL-ZAHLEN */ ICH = INIT.ich; einstOffenAnwenden(); /* 2.6.1: noch laufende Speicherungen nicht überschreiben */ adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); inkognitoZeigen(); einwZeigen(aktuelleAnsicht); schluesselSichern(KEY); /* KC-CLUB-SCHLUESSEL-SICHERN */ if (document.body.classList.contains("rg-ohne-admin")) document.body.classList.remove("ist-admin"); /* KC-CLUB-ERKLAERVIDEOS-ROLLEN: im Video für alle bleibt Admin aus */ stKnopf(); /* KC-CLUB-STUDIO */ cfUebernehmen(INIT?.einstellungen?.chat_farben); /* KC-CLUB-CHAT-FARBEN */ // KC-CLUB-KOPF-EINFACH
     alarmPruefen(); /* KC-CLUB-NOTFALL-MELDUNG */ try { expressPruefen(); } catch {} /* 2.362.0 KC-CLUB-EXPRESS */ setTimeout(() => { try { irLaden(); } catch {} }, 3000); /* KC-CLUB-IST-RUECKFRAGE */ setTimeout(() => { try { abStandZeigen(INIT?.ab); } catch {} }, 2500); /* 2.568.0 KC-CLUB-ANRUFBEANTWORTER */ try { dsLageSetzen(INIT?.dienstStempel); } catch {} /* 2.590.0 KC-CLUB-DIENST-STEMPEL */ try { rundKarteZeichnen(); } catch {} /* 2.762.0 KC-CLUB-RUNDER-TISCH */ setTimeout(() => { try { snPruefen(); } catch {} }, 1500); /* 2.482.0 KC-CLUB-STARTNACHRICHT */ document.body.classList.toggle("sos-frei", sosDarf()); /* KC-CLUB-SOS-FREIGABE */ fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
     if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln);
     if ($("setLiveTippen")) $("setLiveTippen").checked = liveTippen();
@@ -31231,6 +31428,7 @@ const DRUCKARTEN = {
   buchungsliste: { ablegen: { register: ["Kasse", "Erstattungen", "Sonstiges"], stichworte: "Erstattung, Buchungsliste, Kasse" }, bauen: () => eblDruck() }, // KC-CLUB-ERSTATTUNG-BUCHUNGEN
   besprechung: { ablegen: { register: ["Besprechungen", "Protokolle", "Sonstiges"], stichworte: "Besprechung, Tagesordnung, Terminanfrage" }, bauen: (o, id) => taBesprechungDruck(id) }, // KC-CLUB-TA-TAGESORDNUNG
   taprotokoll: { ablegen: { register: ["Besprechungen", "Protokolle", "Sonstiges"], stichworte: "Besprechung, Protokoll, Terminanfrage" }, bauen: (o, id) => taPrDruck(id) }, // KC-CLUB-TA-PROTOKOLL
+  gericht: { ablegen: { register: ["Rezepte", "Sonstiges"], stichworte: "Gemeinschaftsgericht, Rezept" }, bauen: () => grDruck() }, // KC-CLUB-GEMEINSCHAFTSGERICHT
   magazin: { ablegen: { register: ["Club-Magazin", "Club-Küche", "Sonstiges"], stichworte: "Club-Küche, Magazin" }, bauen: (o, p) => magDruck(p) }, // KC-CLUB-MAGAZIN-ARCHIV: ganze Ausgabe drucken/PDF/senden/ablegen
   fitness: { bauen: () => fiDruck() }, // KC-CLUB-FITNESS (2.55.0) // KC-CLUB-REZEPTBUCH (2.23.83)
   kmabrechnung: { titel: "🖨️ km-Abrechnung drucken", optionen: () => druckKmOptionen(), bauen: () => druckKmAbrechnung() }, // KC-CLUB-KM-ABRECHNUNG (2.25.3)
@@ -34972,7 +35170,7 @@ const FENSTER_NAMEN = {
   smHinweisBlatt: "🎓 Du bist zur Schulung eingeladen", smVBlatt: "💬 Kein Termin passt", snBlatt: "📣 Startnachricht", sosInfo: "🆘 Meine SOS-Angaben", spAn: "💬 An wen?",
   spEinlBlatt: "🎲 Spiel-Einladung", spHerausBlatt: "🎲 Herausfordern", spLiveBlatt: "🎲 Spiel-Herausforderung", spTerminBlatt: "📅 Termin für die Partie", sperreBlatt: "🔒 Personen sperren",
   sprForm: "💬 Eigener Spruch", sprungBlatt: "🔘 Knopf in die Nachricht", spurFrageBlatt: "🟢 Frage: Wege ansehen?", statusBlatt: "🙂 Mein Status", studioBlatt: "🎬 Studio",
-  svBlatt: "⚙️ Sitzungs-Vorgaben", taAeBlatt: "✏️ Terminanfrage ändern", taPrBlatt: "📝 Besprechungs-Protokoll schreiben", taPrLesen: "📝 Besprechungs-Protokoll lesen", taGvBlatt: "🔄 Andere Zeit vorschlagen", taHinweisBlatt: "📨 Hinweis: Terminanfragen", taVkBlatt: "🔄 Gegenvorschlag", tdtBlatt: "💡 Tipp des Tages",
+  svBlatt: "⚙️ Sitzungs-Vorgaben", taAeBlatt: "✏️ Terminanfrage ändern", taPrBlatt: "📝 Besprechungs-Protokoll schreiben", taPrLesen: "📝 Besprechungs-Protokoll lesen", taGvBlatt: "🔄 Andere Zeit vorschlagen", taHinweisBlatt: "📨 Hinweis: Terminanfragen", grBlatt: "🍲 Gemeinschaftsgericht: deine Zutat", grAdminBlatt: "🍲 Gemeinschaftsgericht (Admin)",taVkBlatt: "🔄 Gegenvorschlag", tdtBlatt: "💡 Tipp des Tages",
   teilenBlatt: "📥 Mit Köcheclub geteilt", themaFrage: "✅ Zusage: Thema/Mitbringen", mtBlatt: "💡 Ein Tipp für dich", twBlatt: "🧑‍🍳 Frag Twinkey", twOffenBlatt: "📥 Fragen an Twinkey",
   uaAdminBlatt: "🙋 Unterstützungs-Anfragen", ustBlatt: "🤝 Wie viel Unterstützung möchtest du?", verbindungBlatt: "📡 Verbindung", verlassenBlatt: "👋 Hinweis beim Verlassen", verpasstBlatt: "👋 Verpasstes Anklopfen",
   versandBlatt: "📤 Wie verschicken?", vfAuswahlBlatt: "👥 Auswahl: an wen", vfVorlageBlatt: "📄 Vorlage übernehmen", vorschlagBearb: "✏️ Vorschlag bearbeiten", vorschlagInfo: "💡 Vorschlag ansehen",
@@ -36481,6 +36679,7 @@ async function gastStart(token) {
     if (!h || h === "#") setTimeout(() => ekHinweisPruefen(), 3000); // KC-CLUB-EINGANG-HINWEIS: viel im Eingangskorb?
     if ((!h || h === "#") && (buSchreiben() || (buDarf() && (ICH?.vorstand || ICH?.admin)))) setTimeout(() => buAufgabePruefen(), 4000); // 2.750.0 KC-CLUB-SITZUNG-AUFGABE-START: nächste Aufgabe für die Sitzung (2.797.0 Stufe 4: nur die Clubleitung lädt dafür das Büro-Teil)
     if (!h || h === "#") setTimeout(() => taHinweisPruefen(), 5000);
+    if (!h || h === "#") setTimeout(() => { try { grPruefen(); } catch {} }, 6500); // KC-CLUB-GEMEINSCHAFTSGERICHT: Frage nach der Zutat
     if (!h || h === "#") setTimeout(() => bwEinladungPruefen(), 15000); // 2.314.0 KC-CLUB-BEWEGUNG-EINLADUNG
     if (!h || h === "#") setTimeout(() => nuVorschlagPruefen(), 25000); // 2.418.0 KC-CLUB-KACHEL-VORSCHLAG (nach der Einladung, nie darüber)
     fensterStart(); // KC-CLUB-ZWEI-FENSTER

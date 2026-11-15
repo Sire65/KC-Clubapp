@@ -1,6 +1,6 @@
 # Änderungen
 
-## 2.955.0 – 2026-11-16 – 📖 Hilfe, Erklär-Videos, Lupe und Twinkey neu · 🎬 zwei Erklärfilme neu (Wunschliste #92) · 👀 Knopf auch bei 390 px
+## 2.957.0 – 2026-11-16 – 📖 Hilfe, Erklär-Videos, Lupe und Twinkey neu · 🎬 zwei Erklärfilme neu (Wunschliste #92) · 👀 Knopf auch bei 390 px
 ### 📖 Hilfe, Erklär-Videos, Lupe und Twinkey passend zur neuesten Version (KC-CLUB-HILFE-2955, Wunschliste #92)
 Wunsch Hansi 15.11.: „Alle Hilfetexte, Video-Filme, Lupe, Twinkey an die neueste Version anpassen“ – „Ja alles neu aufbauen, damit es passt“ (auch die Admin-Funktionen).
 - **Hilfetexte korrigiert:** „Wie geht der Kopf auf und zu?“ (ein runder Knopf statt ⌃/⌃⌃) · „Kacheln ausblenden und wieder holen“ (👀 Nur ausgeblendete zeigen, runder 👀/🙈-Knopf oben) · „Der Eingangskorb im Büro“ (📄 Antrag als PDF ansehen, ✅ Als erstattet markieren … mit Rückfrage) · „Adventskalender“ (6.12. Schoko-Nikolaus, 20.12. Kinderriegel mit „🎁 Ja, den nehme ich“, 13.12. Mandarinen-Licht) · „Mein Garten“ (20 Pflanzen, Kräuterernte mit Rezepten) · „Erklär-Videos mit Ton“ (über 60 Videos und Filme statt fünf genannter) · „Kurz erklärt: Bildschirmfoto“ (Knöpfe wie im Programm).
@@ -19,13 +19,13 @@ Wunsch Hansi 15.11.: „Ja alles neu aufbauen, damit es passt“ – beide Filme
 - **🧹 Deine App – so, wie du sie willst** (`film/app-selbst-einrichten.mp4?v=6`, ca. 3½ Min.): Ansichten, Reiter, Kacheln anordnen und ausblenden, Zahl am Reiter, **neu:** der runde **👀/🙈-Knopf** oben neben „< Erweiterte Ansicht >“ (2.953.0) und wieder einblenden, Kachelgröße, Kacheln umdrehen, **Kopf in vier Stufen** mit dem runden Knopf, Startmeldungen aus, weitere Erklär-Videos.
 - Vorschaubilder neu (`film/kopf-vorschau.webp`, `film/app-einrichten-vorschau.webp`). Gleiche Kennungen `kopffilm`/`ansichtfilm` – wer die Filme schon gesehen hat, bekommt sie nicht erneut beim Start angeboten.
 - Quellen erstmals in der Club-App: `tools/film/` (Drehbuch, Texte, Sprecher, Anleitung zum Neu-Erzeugen in `tools/film/README.md`); Browser-Läufe mit Netzsperre und Abschirmung (KC-TESTS-OHNE-ECHTSERVER).
-- Keine Datenbank-, keine Server-Änderung. Rückweg: App 2.954.0 (alte Filmdateien aus Git).
+- Keine Datenbank-, keine Server-Änderung. Rückweg: App 2.956.0 (alte Filmdateien aus Git).
 - Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
 ### 👀 Knopf oben bleibt auch bei 390 px (KC-CLUB-KA-KOPF-TOGGLE)
 - Fund beim Filmdreh: Bei 390 px Breite brach „Schnellzugriff < Erweiterte Ansicht >“ erst durch den 👀-Knopf auf zwei Zeilen um – die Platzprüfung blendete ihn dann aus. Jetzt sind zwei Zeilen in Ordnung (wie bei 360 px ohnehin); weg ist er nur noch bei einer dritten Zeile oder wenn er den QR-Knopf überdecken würde. Geprüft im abgeschirmten Browser bei 320, 360, 375, 390 und 412 px. Test `tests/kopf-ecke.test.mjs` erweitert.
-- Rückweg: App 2.954.0. Nur die App (keine Datenbank-, keine Server-Änderung). Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+- Rückweg: App 2.956.0. Nur die App (keine Datenbank-, keine Server-Änderung). Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
 
-## 2.954.0 – 2026-11-15 – ↔️ Gegenvorschlag bei Themen (KC-CLUB-GEGENVORSCHLAG, Wunschliste #93) · 🔴 „… ist offline“ nach 1 Minute (KC-CLUB-OFFLINE-SCHNELL) · Server 2.954.0
+## 2.956.0 – 2026-11-15 – ↔️ Gegenvorschlag bei Themen (KC-CLUB-GEGENVORSCHLAG, Wunschliste #93) · 🔴 „… ist offline“ nach 1 Minute (KC-CLUB-OFFLINE-SCHNELL) · Server 2.956.0
 ### ↔️ Gegenvorschlag
 Wunschliste #93, Hansi 15.11.: „An der Stelle einen Taster einbauen ‚Gegenvorschlag einreichen‘ … damit die Mitglieder über 2 Vorschläge abstimmen können“ – Antworten: bis zu 3 (A, B, C), jedes Mitglied darf, keine Push an die Unterstützer, Knopf heißt „Gegenvorschlag“.
 - Auf jeder offenen Themen-Karte „↔️ Gegenvorschlag“ (bis 3 Vorschläge je Thema). Das Formular zeigt „Gegenvorschlag zu: …“; der Termin ist derselbe wie beim ersten.
@@ -42,8 +42,42 @@ Wunsch Hansi 15.11.: „Ich hätte gerne schneller die Push, wenn jemand die App
 - Die App meldet das Weglegen aber sofort („weg“, zusammen mit der direkten Leitung). Jetzt wartet der Server danach **1 Minute** und schickt die Meldung, wenn das Mitglied nicht wieder da ist. Kurz in eine andere App wechseln und zurückkommen löst nichts aus. Die Zeit in der Meldung ist der Zeitpunkt des Verlassens.
 - Gleiche Empfänger und Regeln wie bisher (Einstellung, Ruhezeit, unsichtbar/inkognito, keine Testkonten). Der 5-Minuten-Lauf bleibt für Geräte, deren „weg“ nicht ankommt (Akku leer, kein Netz). Nichts geht doppelt raus (Vermerk je Sitzung + gleicher Schlüssel).
 - Kosten: nur wenn jemand die App weglegt, 1 Lesen + ggf. 1 Schreiben + der Push.
-- Test: `tests/offline-push.test.mjs` erweitert (Ablauf nachgespielt). Rückweg Server: 2.953.0 (dort war es noch nicht eingespielt) bzw. 2.950.0.
-- Rückweg App: 2.953.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+- Test: `tests/offline-push.test.mjs` erweitert (Ablauf nachgespielt). Rückweg Server: 2.955.0.
+- Rückweg App: 2.955.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+## 2.955.0 – 2026-11-15 – 🍲 Gemeinschaftsgericht · 🔒 Adventskalender nach der Uhr des Servers (KC-CLUB-GEMEINSCHAFTSGERICHT, KC-CLUB-ADVENT-SERVERUHR) · Server 2.955.0 + Datenbank
+Wunsch Hansi 15.11.: „Jedes Türchen darf nur am Tag geöffnet werden, nicht schon vorher. Im Nachhinein ist es erlaubt“ – „Ja, mit Server-Uhr absichern“.
+- Bisher richtete sich der Kalender nach dem Datum im Handy – wer es vorstellte, konnte Türchen früher ansehen. Jetzt schickt der Server beim App-Start seine Uhr mit (`serverJetzt`), die App rechnet den Tag daraus in **deutscher Zeit** (auch Mitternacht stimmt). Vor- oder zurückgestellte Handys bekommen den richtigen Tag.
+- Regeln unverändert: nur das Türchen von heute, frühere jederzeit, ab 25.12. alle; vor Dezember sehen Mitglieder den Kalender nicht; Admin-Vorschau nur außerhalb des Dezembers. Preis-Türchen prüft der Server wie bisher zusätzlich selbst.
+- Ohne Verbindung (offline/Notbetrieb) gilt wie bisher die Handy-Uhr.
+- Test: `tests/advent-serveruhr.test.mjs`.
+
+**🍲 Gemeinschaftsgericht (Wunschliste #94, Antworten Hansi 15.11.: „Viele Köche verderben den Brei – bei uns nicht“)**
+- **Admin-Kachel „🍲 Gemeinschaftsgericht“:** Runde starten ohne festen Termin – Titel (z. B. „im Februar“), Einsendezeitraum von–bis, **1 oder 2 Zutaten je Person**. Ändern oder abbrechen jederzeit.
+- **Alle (Mitglieder und Aushilfen, keine Gäste) werden beim App-Start gefragt:** „Welche Zutat, welches Gewürz oder Kraut gibst du in unser Gemeinschaftsgericht?“ – Liste nach 10 Warengruppen (rund 150 Zutaten) mit Suche oder **„✏️ Eigene Zutat“** (z. B. Stierhoden). Knöpfe ✅ Speichern · ⏰ Später (fragt beim nächsten Mal wieder) · 🙅 Diesmal nicht. Kachel „🍲 Gemeinschaftsgericht“ im Club-Register, solange die Runde läuft – dort kann man die Wahl bis zum Ende ändern. **Jeder sieht nur seine eigenen Zutaten.**
+- **Hansi sieht alle Zutaten laufend mit Namen** und wie viele schon eingereicht haben. Eigene Zutaten: „✅ Passt“ oder „🔁 Andere bitte“ (mit Hinweis – das Mitglied bekommt einen Push und wird beim nächsten Start neu gefragt).
+- **Erinnerung 2 Tage vor Ende** (Push, genau einmal) an alle, die noch nichts eingereicht und nicht „Diesmal nicht“ gesagt haben.
+- **Rezept:** „🔎 Rezept finden & verschicken“ sucht im Rezeptbuch die Rezepte mit den meisten eingereichten Zutaten (Treffer „3 von 5 Zutaten“); passt keins → neues Rezept im Rezeptbuch anlegen (Hansi oder mit Claude) und auswählen. Vorschau/Drucken möglich.
+- **PDF auf dem Kopfbogen an alle (Push + E-Mail mit Anhang):** Foto des Rezepts, Portionen/Dauer, **Zutaten mit Mengen und „(Name)“, wer sie ausgesucht hat**, „Außerdem ausgesucht“ für Zutaten, die nicht im Rezept stehen, Zubereitung. Ablegen im Archiv wie bei anderen Ausdrucken.
+- Datenbank: `supabase/migrations/20261115_kc_club_gemeinschaftsgericht.sql` (zwei Tabellen, nur Club-Server, gespiegelt und gesichert). Fehlt sie noch, startet die App normal ohne Gemeinschaftsgericht. Test: `tests/gemeinschaftsgericht.test.mjs`; im abgeschirmten Browser geprüft (Frage, Admin, PDF-Inhalt).
+- **Noch nicht freigegeben (Hansi 15.11.: „Ja, aber noch nicht freigegeben“):** neue Freigabe „🍲 Gemeinschaftsgericht“, Standard **🔒 Nur für mich (Test)** – dann wird nur Hansi gefragt, es gehen keine Erinnerungen raus, und „Als PDF an alle senden“ schickt als Test nur an Hansi (die Runde bleibt offen). Für alle: Verwaltung → Freigaben → „🍲 Gemeinschaftsgericht“ → ✅ Für alle frei.
+- Rückweg: App 2.954.0, Server 2.950.0 (Tabellen dürfen bleiben).
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+## Spiegelung schonend – 2026-11-15 (KC-SPIEGEL-SCHONEND) · App unverändert
+Fund Hansi 15.11. („App ist schon wieder langsam … woran liegt es?“): Nicht das WLAN und nicht die App – die Supabase-Datenbank (kostenloser Tarif, kleiner Rechner) brach um 16:16 UTC (17:16 Uhr) mitten in der Spiegel-Welle nach Neon ab und startete neu (1,5 Min. weg, davor bis 9 s je Anfrage). Die langsamsten Viertelstunden der letzten 24 Std. lagen beide in Spiegel-Wellen (11:15 und 17:15 Uhr); das kurze Stocken am 12.11. 23:16 und 14.11. 11:16 ebenfalls (jeweils Minute :16).
+1. **Entzerrt:** 1 Paket je Minute statt 3; Welle :11–:40 statt :11–:22 (`kc_neon_low_compute_cycle`, `kc_internal.kc_db_mirror_welle_senden`).
+2. **Andere Zeiten:** Spiegelung 04, 13, 22 UTC (05, 14, 23 Uhr) statt 04, 10, 16, 22 – weg von 11 und 17 Uhr. Abgeglichen mit Neon-Nachtsicherung 00:40, FRA-Sicherung 01–03, Aufräumen 03:05–03:50, Backup-Prüfung 06:30, Einspiel-Fenstern (10:45–12:00 / 18:45–20:00 UTC). Wächter-Fenster rechnet sich aus dem Zeitplan (9 Std. + 30 Min.); der externe GitHub-Wächter nutzt jetzt dasselbe Fenster statt fester 390 Min.; das Nachholen erkennt die längere Welle (60-Min.-Fenster, 10 Std. zurück, erst nach :40). Einspiel-Sperre (`tools/einspielen-ruhe.sh`) und AGENTS.md auf die neuen Zeiten.
+3. **Klüger prüfen:** neue Funktion `kc_db_mirror_stat_sig` (Dateinummer + Einfüge/Änderungs/Lösch-Zähler, nur service_role). Der Spiegel-Arbeiter überspringt die teure Prüfsumme nur, wenn sich die Kennung seit der letzten echten Prüfsumme (höchstens 12 Std. alt) nicht geändert hat; der Nachtlauf (04 UTC) prüft immer voll. Neuer Lauf-Typ `stat_unchanged_skip`.
+Migration `20261115_kc_spiegel_schonend.sql` (keine neue Tabelle, nichts gelöscht, Rückweg in der Datei). Die Anzeige „Datenbank hat viel zu tun“ in der App bekommt die neuen Zeiten mit dem nächsten Server-Bündel.
+
+## 2.954.0 – 2026-11-15 – 📰 Club-Küche: Ostern im März, Rezept des Monats, Bastelecke, Blume des Monats, Warenkunde, Ferien und Feiertage, neue Küchenwitze
+Wünsche Hansi 15.11.2026 (ein Bündel, Einspielen 20-Uhr-Termin).
+- **Ostern im März-Heft** (Ostern 28.3.2027): Oster-Suchbild „Osterfrühstück“ und Oster-Kreuzworträtsel ins Heft 3, Fischmarkt ins Heft 4; Backstube Osterkörbchen und Bastelecke Ostereier waren schon dort.
+- **Rezept des Monats** Februar–Dezember 2027 (KC-CLUB-MAGAZIN-REZEPT-MONAT): einfache, saisonale Redaktionsrezepte, tauschbar gegen Vorschläge der Kollegen; Heft 1 unverändert.
+- **Bastelecke** in allen 24 Heften (KC-CLUB-MAGAZIN-BASTELECKE) und **Blume des Monats** auf derselben Seite (KC-CLUB-MAGAZIN-BLUME), giftige Blumen mit Warnung.
+- **Warenkunde – Produkt des Monats** auf der Seite Saisonkalender (KC-CLUB-MAGAZIN-WARENKUNDE).
+- **Ferien und Feiertage** auf der Termine-Seite (KC-CLUB-MAGAZIN-FERIEN): Schulferien aller 16 Länder (NRW oben, KMK-Ferienkalender, NRW gegengeprüft) und gesetzliche Feiertage des Monats mit Ländern.
+- **Küchenwitze:** sieben schwache durch bessere ersetzt (Heft 1 unverändert).
+- Tests in `tests/magazin-kraeuter.test.mjs` erweitert. Update-Hinweis: nur „Kleine Systemanpassung“. Rückweg: App 2.953.0.
 
 ## 2.953.0 – 2026-11-15 – 👀 Ausgeblendete Kacheln: oben nur noch ein Umschalt-Knopf (KC-CLUB-KA-KOPF-TOGGLE)
 Wunsch Hansi 15.11.: „Unter dem Kopf gibt es seit heute 2 neue Buttons (Ausgeblendet ansehen). Das soll nur ein Button sein, ein Toggle – einmal klicken schaltet, wieder klicken zurück, dann passt der auch auf schmale Handys.“
