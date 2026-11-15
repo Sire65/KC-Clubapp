@@ -194,7 +194,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.950.0";
+const SERVER_VERSION = "2.953.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -1379,7 +1379,27 @@ async function wegSet(ids: string[]): Promise<Set<string>> {
 }
 async function wegMerken(pid: string) {
   const { data } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", pid).eq("schluessel", "online_seit").maybeSingle();
-  await db.from("kc_club_person_einstellung").upsert({ person_id: pid, schluessel: "online_seit", wert: { ...(data?.wert || {}), weg: jetzt() }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
+  const weg = jetzt();
+  await db.from("kc_club_person_einstellung").upsert({ person_id: pid, schluessel: "online_seit", wert: { ...(data?.wert || {}), weg }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
+  return weg;
+}
+// ---------- KC-CLUB-OFFLINE-SCHNELL (Wunsch Hansi 15.11.2026 „Ich hätte gerne schneller die Push, wenn jemand die App verlassen hat – es gibt doch die direkte Leitung“) ----------
+// Bisher kam „🔴 X ist offline“ nur aus dem 5-Minuten-Lauf (offlinePushLauf): 150 s + 3 Min. Wartezeit + bis zu 5 Min. Takt = 5½–10½ Min. nach dem Verlassen.
+// Die App meldet das Weglegen aber sofort („weg“, zusammen mit der direkten Leitung rtAnwesenheit(false)). Jetzt wartet der Server nach „weg“ OFFLINE_WEG_MS
+// im Hintergrund und schickt die Meldung, wenn das Mitglied seitdem nicht wieder sichtbar war (istWeg, gleicher weg-Zeitpunkt, gleiche Sitzung) – also etwa
+// 1 Minute nach dem Verlassen. Kurz in eine andere App wechseln und zurückkommen löst nichts aus. Gleiche Regeln/Empfänger wie bisher; der 5-Minuten-Lauf
+// bleibt für Geräte, deren „weg“ nicht ankommt (Akku leer, kein Netz). Doppelt geht nichts raus: Vermerk „offline“ je Sitzung + gleicher Schlüssel club-offline:<pid>:<seit>.
+// Kosten: nur wenn jemand die App weglegt – 1 Lesen + ggf. 1 Schreiben + der Push.
+const OFFLINE_WEG_MS = 60000;
+async function offlineNachWeg(pid: string, weg: string) {
+  await new Promise((r) => setTimeout(r, OFFLINE_WEG_MS));
+  const { data } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", pid).eq("schluessel", "online_seit").maybeSingle();
+  const w = data?.wert;
+  if (!w?.seit || w.weg !== weg || !istWeg(w) || w.offline === w.seit) return; // wieder da, neu weggelegt (eigener Lauf) oder schon gemeldet
+  const { data: ok } = await db.from("kc_club_person_einstellung").update({ wert: { ...w, offline: w.seit } })
+    .eq("person_id", pid).eq("schluessel", "online_seit").eq("wert->>weg", weg).eq("wert->>seit", w.seit).select("person_id");
+  if (!ok?.length) return;
+  await offlinePushMelden(pid, w.seit, weg); // „bis“ = Zeitpunkt des Verlassens
 }
 // KC-CLUB-ONLINE-JEDE-ANFRAGE (09.11.2026, Fund Hansi „Anne ist drin, wird aber nirgends angezeigt“): „online“ hing bisher NUR an der eigenen
 // Online-Meldung der App. Kam die nicht an (Anne, Karla) oder kam sie zu selten (seit 2.846.0 alle 2 Min., im Sparmodus ×3 = 6 Min. – der Server
@@ -16149,7 +16169,11 @@ Köcheclub-App`,
 
       // ----- Online & Anklopfen (KC-CLUB-ONLINE) -----
       case "weg": { // KC-CLUB-ONLINE-ECHT: App wurde weggelegt (in den Hintergrund oder geschlossen) – sofort nicht mehr online
-        if (!ich.nurLesen) await wegMerken(ich.person_id);
+        if (!ich.nurLesen) {
+          const weg = await wegMerken(ich.person_id);
+          // KC-CLUB-OFFLINE-SCHNELL: „🔴 … ist offline“ etwa 1 Minute nach dem Verlassen statt aus dem 5-Minuten-Lauf (im Hintergrund, Antwort sofort)
+          if (!ich.person_id.startsWith("KC-P-TEST")) nebenbei(offlineNachWeg(ich.person_id, weg).catch((e) => console.error("offline schnell", String(e))));
+        }
         return json({ ok: true });
       }
       case "online": {

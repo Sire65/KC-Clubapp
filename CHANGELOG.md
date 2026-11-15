@@ -1,5 +1,13 @@
 # Änderungen
 
+## Server 2.953.0 – 2026-11-15 – 🔴 „… ist offline“ schon etwa 1 Minute nach dem Verlassen (KC-CLUB-OFFLINE-SCHNELL)
+Wunsch Hansi 15.11.: „Ich hätte gerne schneller die Push, wenn jemand die App verlassen hat – es gibt doch die direkte Leitung.“
+- Bisher kam „🔴 X ist offline“ nur aus dem 5-Minuten-Lauf – 5½ bis 10½ Minuten nach dem Verlassen.
+- Die App meldet das Weglegen aber sofort („weg“, zusammen mit der direkten Leitung). Jetzt wartet der Server danach **1 Minute** und schickt die Meldung, wenn das Mitglied nicht wieder da ist. Kurz in eine andere App wechseln und zurückkommen löst nichts aus. Die Zeit in der Meldung ist der Zeitpunkt des Verlassens.
+- Gleiche Empfänger und Regeln wie bisher (Einstellung, Ruhezeit, unsichtbar/inkognito, keine Testkonten). Der 5-Minuten-Lauf bleibt für Geräte, deren „weg“ nicht ankommt (Akku leer, kein Netz). Nichts geht doppelt raus (Vermerk je Sitzung + gleicher Schlüssel).
+- Kosten: nur wenn jemand die App weglegt, 1 Lesen + ggf. 1 Schreiben + der Push.
+- Test: `tests/offline-push.test.mjs` erweitert (Ablauf nachgespielt). Rückweg: Server 2.950.0. Nur der Server – die App bleibt 2.953.0 (kein Neustart bei den Mitgliedern).
+
 ## 2.953.0 – 2026-11-15 – 👀 Ausgeblendete Kacheln: oben nur noch ein Umschalt-Knopf (KC-CLUB-KA-KOPF-TOGGLE)
 Wunsch Hansi 15.11.: „Unter dem Kopf gibt es seit heute 2 neue Buttons (Ausgeblendet ansehen). Das soll nur ein Button sein, ein Toggle – einmal klicken schaltet, wieder klicken zurück, dann passt der auch auf schmale Handys.“
 - Neben „< Erweiterte Ansicht >“ steht nur noch **ein** runder Knopf: 👀 = nur die ausgeblendeten Kacheln zeigen, danach 🙈 (rot) = wieder verbergen. Der zweite Knopf („x ausgeblendete anzeigen“ → Anordnen) ist oben weg; unten gibt es beide Wege weiter.
