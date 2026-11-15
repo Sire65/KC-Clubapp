@@ -493,6 +493,7 @@ function gerichtRundeGemerkt(): Promise<any> {
 }
 async function gerichtFuerMich(ich: Ich) {
   if (ich.zugang !== "mitglied" && ich.zugang !== "aushilfe") return null;
+  if (!ich.admin && (await freigaben()).gemeinschaftsgericht !== "alle") return null; // noch nicht freigegeben → nur der Admin wird gefragt
   const r = await gerichtRundeGemerkt(); if (!r) return null;
   const [{ data: z }, { data: e }] = await Promise.all([
     db.from("kc_club_gericht_zutat").select("nr,zutat,gruppe,eigen,freigabe,grund").eq("runde_id", r.id).eq("person_id", ich.person_id).order("nr"),
@@ -509,6 +510,7 @@ async function gerichtEmpfaenger(): Promise<string[]> { // alle aktiven außer G
 // 2 Tage vor Ende (9–20 Uhr deutscher Zeit): einmal an alle, die noch nichts eingereicht und nicht „Diesmal nicht“ gesagt haben
 async function gerichtErinnerung() {
   const h = berlinStunde(new Date()); if (h < 9 || h > 20) return;
+  if ((await freigaben()).gemeinschaftsgericht !== "alle") return; // Test: keine Erinnerung an alle
   const ziel = tagDazu(berlinTag(new Date()), 2);
   const { data: rs } = await db.from("kc_club_gericht_runde").select("id,titel,bis,je_person").eq("status", "sammeln").eq("bis", ziel).is("erinnert_am", null).limit(3);
   for (const r of rs ?? []) {
@@ -5419,6 +5421,7 @@ async function adminIds(): Promise<string[]> {
 // KC-CLUB-FREIGABE (2.23.86, Wunsch Hansi): neue Funktionen erst „nur Admin (Test)“, dann für alle. Standard gilt, solange der Admin nichts gewählt hat.
 const FUNKTIONEN: Record<string, { t: string; u: string; standard: "alle" | "admin" }> = {
   rezepte: { t: "📖 Rezeptbuch", u: "Club-Rezepte, Portionen umrechnen, Einkaufsliste", standard: "admin" },
+  gemeinschaftsgericht: { t: "🍲 Gemeinschaftsgericht", u: "Zutat beim App-Start einreichen, Rezept als PDF an alle – solange „nur für mich“: nur der Admin wird gefragt, Versand nur an ihn", standard: "admin" }, // KC-CLUB-GEMEINSCHAFTSGERICHT (Hansi 15.11.: „noch nicht freigegeben“)
   fitness: { t: "🏋️ Fit bleiben", u: "Übungen mit Twinkey, eigene Auswertung", standard: "admin" }, // KC-CLUB-FITNESS (2.55.0)
   ist_rueckfrage: { t: "✅ Ist-Zeiten nach dem Dienst bestätigen", u: "Rückfrage nach jedem Dienst: übernehmen, ändern, nicht da – Abgleich mit Kasse und DP2", standard: "admin" }, // KC-CLUB-IST-RUECKFRAGE
   avatar: { t: "🧑‍🍳 Mein Bild (40 Koch-Figuren)", u: "Figur statt Buchstaben", standard: "alle" },
@@ -18466,6 +18469,7 @@ Köcheclub Werne`,
       // ----- KC-CLUB-GEMEINSCHAFTSGERICHT: einreichen / später / diesmal nicht (Mitglieder und Aushilfen) -----
       case "gericht_zutat_setzen": case "gericht_antwort": {
         if (ich.zugang !== "mitglied" && ich.zugang !== "aushilfe") throw new Fehler("Das Gemeinschaftsgericht ist für Mitglieder und Aushilfen.", 403);
+        await nurWennFrei("gemeinschaftsgericht", ich, "Das Gemeinschaftsgericht");
         const r = await gerichtRundeAktiv();
         if (!r || r.id !== String(p.runde || "")) throw new Fehler("Die Einsendezeit ist vorbei – danke!", 409);
         if (a === "gericht_antwort") {
@@ -18544,7 +18548,11 @@ Köcheclub Werne`,
             const { data: att } = await db.from("kc_communication_attachments").select("id,object_path").eq("id", pdf).maybeSingle();
             if (!att || !String(att.object_path).startsWith(`club/${ich.person_id}/`)) throw new Fehler("Das PDF wurde nicht gefunden – bitte neu erstellen.", 403);
             const mAnl = await mailAnlagen([pdf]);
-            const ziel = alle;
+            const test = (await freigaben()).gemeinschaftsgericht !== "alle", ziel = test ? [ich.person_id] : alle; // noch nicht freigegeben → nur an den Admin
+            if (test) { await sendenGewaehlt("club_nachricht", ziel, ["push", "email"], { titel: `🍲 (Test) Gemeinschaftsgericht: ${r.titel}`, kurz: "Test – nur an dich, die Runde bleibt offen.",
+              betreff: `Köcheclub Werne – (Test) Gemeinschaftsgericht: ${r.titel}`, text: `Test-Versand nur an dich (Freigabe „🍲 Gemeinschaftsgericht“ steht noch auf „nur für mich“). Die Runde bleibt offen.`, url: APP_URL,
+              ...(mAnl.length ? { attachmentIds: mAnl.map((x) => x.id) } : {}) }, `club-gericht-test:${runde.id}:${pdf}`);
+              return json({ ok: true, an: 1, test: true, mitPdf: mAnl.length > 0 }); }
             const text = `Hallo,\n\nunser Gemeinschaftsgericht steht fest: ${r.titel}!\n\nAus euren Zutaten (${zutaten.length} eingereicht) ist dieses Rezept entstanden – im Anhang als PDF mit allen Zutaten, wer sie ausgesucht hat, und der Zubereitung. Es steht auch im Rezeptbuch der App.\n\nViele Grüße\n${ich.name}`;
             const versand = await sendenGewaehlt("club_nachricht", ziel, ["push", "email"], { titel: `🍲 Unser Gemeinschaftsgericht: ${r.titel}`, kurz: "Aus euren Zutaten ist ein Rezept geworden – das PDF ist in deiner E-Mail.",
               betreff: `Köcheclub Werne – Unser Gemeinschaftsgericht: ${r.titel}`, text, url: APP_URL, ...(mAnl.length ? { attachmentIds: mAnl.map((x) => x.id) } : {}) }, `club-gericht:${runde.id}`);
@@ -18553,7 +18561,7 @@ Köcheclub Werne`,
             return json({ ok: true, an: ziel.length, mitPdf: mAnl.length > 0, versand });
           }
         }
-        return json({ ok: true, heute, runden: runden ?? [], runde, zutaten, stand, treffer, rezepte });
+        return json({ ok: true, heute, frei: (await freigaben()).gemeinschaftsgericht === "alle", runden: runden ?? [], runde, zutaten, stand, treffer, rezepte });
       }
       // ----- Sitzungsprotokolle (KC-CLUB-PROTOKOLLE) -----
       case "protokolle_liste": {

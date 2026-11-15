@@ -15,6 +15,7 @@ Wunsch Hansi 15.11.: „Jedes Türchen darf nur am Tag geöffnet werden, nicht s
 - **Rezept:** „🔎 Rezept finden & verschicken“ sucht im Rezeptbuch die Rezepte mit den meisten eingereichten Zutaten (Treffer „3 von 5 Zutaten“); passt keins → neues Rezept im Rezeptbuch anlegen (Hansi oder mit Claude) und auswählen. Vorschau/Drucken möglich.
 - **PDF auf dem Kopfbogen an alle (Push + E-Mail mit Anhang):** Foto des Rezepts, Portionen/Dauer, **Zutaten mit Mengen und „(Name)“, wer sie ausgesucht hat**, „Außerdem ausgesucht“ für Zutaten, die nicht im Rezept stehen, Zubereitung. Ablegen im Archiv wie bei anderen Ausdrucken.
 - Datenbank: `supabase/migrations/20261115_kc_club_gemeinschaftsgericht.sql` (zwei Tabellen, nur Club-Server, gespiegelt und gesichert). Fehlt sie noch, startet die App normal ohne Gemeinschaftsgericht. Test: `tests/gemeinschaftsgericht.test.mjs`; im abgeschirmten Browser geprüft (Frage, Admin, PDF-Inhalt).
+- **Noch nicht freigegeben (Hansi 15.11.: „Ja, aber noch nicht freigegeben“):** neue Freigabe „🍲 Gemeinschaftsgericht“, Standard **🔒 Nur für mich (Test)** – dann wird nur Hansi gefragt, es gehen keine Erinnerungen raus, und „Als PDF an alle senden“ schickt als Test nur an Hansi (die Runde bleibt offen). Für alle: Verwaltung → Freigaben → „🍲 Gemeinschaftsgericht“ → ✅ Für alle frei.
 - Rückweg: App 2.953.0, Server 2.950.0 (Tabellen dürfen bleiben).
 - Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
 
