@@ -62,3 +62,11 @@ console.log("magazin-ferien: ok");
   assert.ok(/Blume des Monats: Christrose/.test(b.magBlume(1)) && !/Blütezeit:<\/b> Blütezeit/.test(b.magBlume(10)));
   assert.ok(/r\.id === "hobby"\) inhalt \+= magBlume\(nr\)/.test(teil), "Einbau Bastelecke"); }
 console.log("magazin-bastelecke: ok");
+// KC-CLUB-MAGAZIN-REZEPT-MONAT (15.11.2026): Rezept des Monats für Februar–Dezember 2027 (Redaktion, tauschbar); Heft 1 bleibt Hansis Rezept aus dem Rezeptbuch
+{ const a = new Function("esc", teil.slice(teil.indexOf("const MAG_START"), teil.indexOf("// Bausteine für die Heftseiten")) + "; return MAG_AUSGABEN;")((t) => String(t));
+  assert.ok(a[1].rezept.id && a[1].rezept.vonName === "Hansi", "Heft 1 unverändert");
+  const titel = new Set();
+  for (let n = 2; n <= 12; n++) { const r = a[n].rezept; assert.ok(r && !r.id && r.vonName === "Redaktion" && r.portionen && r.dauer <= 60 && r.zutaten.length >= 6 && r.zubereitung.split("\n").length === 5 && r.zubereitung.length < 2000, `Heft ${n}: Rezept des Monats`); titel.add(r.titel); }
+  assert.equal(titel.size, 11); assert.equal(a[10].rezept.titel, "Westfälisches Blindhuhn");
+  assert.ok(teil.includes("Ihr habt ein Lieblingsrezept für diesen Monat?"), "ohne Rezeptbuch-Eintrag kein „Steht auch im Rezeptbuch“"); }
+console.log("magazin-rezept-monat: ok");
