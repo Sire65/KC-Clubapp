@@ -34,4 +34,7 @@ assert.ok(/source_hash:sh,target_hash:th,stat_sig:aktSig,fp_at:aktFpAt/.test(w),
 { const n = lies("supabase/migrations/20261115_kc_spiegel_schonend_neustart.sql");
   assert.ok(/concat_ws\(':', floor\(extract\(epoch from pg_postmaster_start_time\(\)\)\)::bigint, pg_relation_filenode/.test(n), "Startzeit der Datenbank in der Kennung");
   assert.ok(/revoke all on function public\.kc_db_mirror_stat_sig\(text\) from public, anon, authenticated;\s*grant execute on function public\.kc_db_mirror_stat_sig\(text\) to service_role;/.test(n), "Rechte bleiben eng"); }
+// App-Hinweis „Datenbank hat viel zu tun“ kennt dieselben Zeiten
+{ const srv = lies("supabase/functions/kc-club/index.ts");
+  assert.ok(/art: "spiegel", [^\n]*std: \[4, 13, 22\], von: 10, bis: 45 \}/.test(srv), "SCHWER_ZEITEN Spiegelung 04/13/22 UTC :10–:45"); }
 console.log("spiegel-schonend: ok");

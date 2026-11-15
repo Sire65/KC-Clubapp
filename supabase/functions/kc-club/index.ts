@@ -178,7 +178,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 // Registry der planmäßigen schweren Arbeiten (Uhrzeiten UTC wie die Zeitpläne in cron.job) – ohne zusätzliche Datenbank-Abfrage, die App bekommt sie beim Start mit.
 const SCHWER_ZEITEN = [
   { art: "notpaket", was: "das Notfall-Paket gebaut", min: [9, 24, 39, 54], dauer: 2 },          // kc-club-notpaket-15min (ca. 30 s, mit Puffer)
-  { art: "spiegel", was: "die Sicherheitskopie (Spiegelung) erstellt", std: [4, 10, 16, 22], von: 10, bis: 30 }, // kc-neon-low-compute-cycle + kc-db-mirror-welle
+  { art: "spiegel", was: "die Sicherheitskopie (Spiegelung) erstellt", std: [4, 13, 22], von: 10, bis: 45 }, // kc-neon-low-compute-cycle + kc-db-mirror-welle (KC-SPIEGEL-SCHONEND 15.11.2026: 04/13/22 UTC, Welle :11–:40 + Puffer)
   { art: "sicherung", was: "die nächtliche Sicherung gemacht", std: [1], von: 20, bis: 60 },    // kc-club-fra-sicherung (gemessen 01:26–01:56)
   { art: "aufraeumen", was: "nachts aufgeräumt", std: [3], von: 5, bis: 55 },                     // kc-…-aufraeumen / -rollup / -retention (03:05–03:50)
 ];
@@ -194,7 +194,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.956.0";
+const SERVER_VERSION = "2.957.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -2331,6 +2331,12 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
     .filter(([id, d]) => KA_ID.test(id) && typeof d === "string" && !isNaN(Date.parse(d))).slice(0, 40).map(([id, d]) => [id, new Date(String(d)).toISOString()])) }),
   // KC-CLUB-ONLINE-PUSH (1.57.0): Admin bekommt eine Push, wenn ein Mitglied online kommt (Standard: an)
   online_push: (w) => ({ an: w?.an !== false }),
+  // 2.953.0 KC-CLUB-AENDERUNG-ERBITTEN (Wunsch Hansi 15.11.2026, Fall Christina „neue Handynummer“): der Admin bittet um eine Änderungsmeldung
+  // (Handy, Anschrift …) – beim Start kommt die Bitte mit „✏️ Sofort erledigen“. Das Mitglied darf die Liste nur kürzen („hat sich nichts geändert“).
+  aenderung_bitte: (w) => ({ arten: [...new Set((Array.isArray(w?.arten) ? w.arten : []).map(String))].filter((id) => AENDERUNG.arten.some((a) => a.id === id && !(a as any).aus)).slice(0, 6),
+    notiz: txt(w?.notiz, 200) || null, von: txt(w?.von, 40) || null, am: w?.am && !isNaN(Date.parse(String(w.am))) ? new Date(String(w.am)).toISOString() : null }),
+  // 2.953.0 KC-CLUB-ONLINE-FRAGE (Wunsch Hansi 15.11.2026): „Später“ bei der Frage „Meldung, wenn jemand online kommt?“ – bis wann nicht wieder fragen
+  online_frage: (w) => ({ bis: w?.bis && !isNaN(Date.parse(String(w.bis))) ? new Date(String(w.bis)).toISOString() : null }),
   // KC-CLUB-ZULETZT-DA (1.20.0): anderen zeigen, wann ich zuletzt in der App war (Standard: an, gegenseitig wie WhatsApp)
   zuletzt: (w) => ({ zeigen: w?.zeigen !== false }),
   // KC-CLUB-BRIEFBOGEN (1.26.0): eigene Absenderzeile/Fußzeile und Unterschrift je Person (Clubleitung)
@@ -16543,6 +16549,20 @@ Köcheclub-App`,
       // KC-CLUB-ANSAGE-VORGABE (2.173.0, Wunsch Hansi „bei Marianne einschalten: Info, wenn jemand online kommt oder rausgeht“):
       // Ansagen sind eine Einstellung je Gerät – der Admin hinterlegt eine Vorgabe, die App des Mitglieds übernimmt sie beim nächsten
       // Öffnen einmal (je Gerät) und sagt es dem Mitglied; danach kann es jederzeit selbst wieder ändern. Nur online/verlassen.
+      // 2.953.0 KC-CLUB-AENDERUNG-ERBITTEN (Wunsch Hansi 15.11.2026): beim Mitglied um eine Änderungsmeldung bitten (leere Liste = Bitte zurücknehmen)
+      case "aenderung_erbitten": {
+        nurAdmin(ich);
+        const an = String(p.an || "");
+        if (an === ich.person_id || !(await aktiveMitglieder()).some((m) => m.person_id === an)) throw new Fehler("Mitglied nicht gefunden.", 404);
+        const wert = EINSTELLUNGEN.aenderung_bitte({ arten: p.arten, notiz: p.notiz, von: ich.vorname || "Admin", am: jetzt() }) as { arten: string[] };
+        const { error } = wert.arten.length
+          ? await db.from("kc_club_person_einstellung").upsert({ person_id: an, schluessel: "aenderung_bitte", wert, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" })
+          : await db.from("kc_club_person_einstellung").delete().eq("person_id", an).eq("schluessel", "aenderung_bitte");
+        if (error) throw new Fehler("Die Bitte konnte nicht gespeichert werden.", 500);
+        await protokoll(ich.person_id, "aenderung_erbeten", { an, arten: wert.arten });
+        return json({ ok: true, arten: wert.arten });
+      }
+
       case "ansage_vorgabe_setzen": {
         nurAdmin(ich);
         const an = String(p.an || "");
@@ -17547,6 +17567,13 @@ Köcheclub-App`,
         const { data: voll } = await db.from("kc_club_aenderungen").select("*").eq("id", a.id).single();
         const ablage = voll ? await aeAblegen(ich, voll, "Meldung") : null;
         await protokoll(ich.person_id, "aenderung_gemeldet", { meldung: a.id, art: art.id, empfaenger: empfaenger.length, anAlle, ablage });
+        // 2.953.0 KC-CLUB-AENDERUNG-ERBITTEN: erbetene Meldung ist da → aus der Bitte streichen (ist sie leer, entfällt die Start-Nachricht)
+        try {
+          const { data: bi } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "aenderung_bitte").maybeSingle();
+          const rest = (bi?.wert?.arten ?? []).filter((x: string) => x !== art.id);
+          if (bi && rest.length) await db.from("kc_club_person_einstellung").update({ wert: { ...bi.wert, arten: rest }, geaendert_am: jetzt() }).eq("person_id", ich.person_id).eq("schluessel", "aenderung_bitte");
+          else if (bi) await db.from("kc_club_person_einstellung").delete().eq("person_id", ich.person_id).eq("schluessel", "aenderung_bitte");
+        } catch (e) { console.warn("aenderung_bitte", String(e)); }
         const leute = await personen(empfaenger);
         return json({ ok: true, id: a.id, an: empfaenger.map((id) => vorname(leute.get(id) ?? null) || id), alle: alle?.gesendet ?? null, auto: !!art.auto, abgelegt: !!ablage?.persoenlich });
       }

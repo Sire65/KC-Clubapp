@@ -18,7 +18,8 @@ const { schwerLage, schwerOder } = new Function("INIT", code + "\nreturn { schwe
 const t = (hh, mm, ss = 0) => new Date(Date.UTC(2026, 10, 2, hh, mm, ss));
 assert.deepEqual(schwerLage(SCHWER_ZEITEN, t(12, 24, 30)), { was: "das Notfall-Paket gebaut", rest: 2 });
 assert.equal(schwerLage(SCHWER_ZEITEN, t(12, 26)), null, "nach dem Paket wieder normal");
-assert.equal(schwerLage(SCHWER_ZEITEN, t(16, 20)).rest, 10, "Spiegelung bis :30");
+assert.equal(schwerLage(SCHWER_ZEITEN, t(13, 20)).rest, 25, "Spiegelung bis :45 (KC-SPIEGEL-SCHONEND)");
+assert.equal(schwerLage(SCHWER_ZEITEN, t(16, 20)), null, "16 UTC keine Spiegelung mehr");
 assert.equal(schwerLage(SCHWER_ZEITEN, t(1, 59, 30)).rest, 1, "nie 0 Minuten");
 assert.equal(schwerLage(SCHWER_ZEITEN, t(3, 30)).was, "nachts aufgeräumt");
 assert.equal(schwerLage(SCHWER_ZEITEN, t(12, 0)), null, "sonst kein Hinweis");
