@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.953.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.954.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -18745,7 +18745,7 @@ async function vorschlaegeLaden() {
     VORSCHLAG_MAP = new Map(vorschlaege.map((v) => [v.id, v]));
     VS_PAKETE = vsPakete(vorschlaege); // 2.555.0 KC-CLUB-ABSTIMMUNG-PAKET
     const offenesInfo = document.getElementById("vorschlagInfo");
-    if (offenesInfo) offenesInfo.dataset.paket ? vorschlagPaketInfo(offenesInfo.dataset.paket) : vorschlagInfo(offenesInfo.dataset.id); // offenes Info-Fenster auffrischen
+    if (offenesInfo) offenesInfo.dataset.paket ? vorschlagPaketInfo(offenesInfo.dataset.paket) : offenesInfo.dataset.gegen ? vorschlagGegenInfo(offenesInfo.dataset.gegen) : vorschlagInfo(offenesInfo.dataset.id); // offenes Info-Fenster auffrischen
     buEingangAuffrischen(); // KC-CLUB-BUERO-EINGANG
     // Abstimmungen mit mehreren Fragen erscheinen als eine Kachel (bei der ersten Frage); offen, solange noch eine Frage offen ist
     const paketOffen = (v) => VS_PAKETE.get(v.paket.id).some((x) => x.status === "offen");
@@ -18756,7 +18756,7 @@ async function vorschlaegeLaden() {
       (abst.length ? `<div class="abschnitt"><h3>🗳️ Abstimmungen</h3></div><div class="mini-kacheln">${abst.map(vorschlagKachel).join("")}</div>` : "")
       + (spenden.length ? `<div class="abschnitt"><h3>💝 Spendenprojekte für die nächste Sitzung</h3></div><div class="mini-kacheln">${spenden.map(spendeKachel).join("")}</div>` : "")
       + `<div class="abschnitt"><h3>💡 Themen für die nächste Sitzung</h3></div>`
-      + (themen.length ? `<div class="mini-kacheln">${themen.map(vorschlagKachel).join("")}</div>` : '<div class="karte hinweis">Noch keine Themen. Tippe oben auf „＋ Neu“, um etwas vorzuschlagen.</div>')
+      + (themen.length ? `<div class="mini-kacheln">${vsGegenKacheln(themen)}</div>` : '<div class="karte hinweis">Noch keine Themen. Tippe oben auf „＋ Neu“, um etwas vorzuschlagen.</div>') // KC-CLUB-GEGENVORSCHLAG
       + vsErledigtHtml(fertig);
     klappenMerken($("vorschlagListe")); // 2.833.0: Auf/Zu der Erledigt-Bereiche wird gemerkt (wie überall)
   } catch (e) { meldeFehler(e); ladeFehlerStand("vorschlagListe", e, "vorschlaegeLaden()"); }
@@ -18813,6 +18813,7 @@ function vorschlagKarte(v) {
     v.darfBearbeiten ? `<button class="knopf klein" onclick="vorschlagBearbeiten('${v.id}')">✏️ Bearbeiten</button>` : "", // KC-CLUB-VORSCHLAG-BEARBEITEN
     v.darfZurueckziehen ? `<button class="knopf klein" onclick="vorschlagStatus('${v.id}','zurueckgezogen')">Zurückziehen</button>` : "",
     v.darfLoeschen ? `<button class="knopf klein" onclick="vorschlagLoeschen('${v.id}')">🗑️ Löschen</button>` : "",
+    offen && v.art === "thema" && vsGegenGruppe(v).length < GEGEN_MAX ? `<button class="knopf klein" onclick="vorschlagGegen('${esc(v.id)}')">↔️ Gegenvorschlag</button>` : "", // KC-CLUB-GEGENVORSCHLAG
     `<button class="knopf klein" onclick="einmal(this, () => vorschlagInOrdner('${esc(v.id)}'))">🗄️ In Ordner</button>`, // 2.820.0 KC-CLUB-VORSCHLAG-ORDNER
     v.behandeltIn ? `<button class="knopf klein" onclick="$('vorschlagInfo')?.remove();protokollOeffnen('${esc(v.behandeltIn)}')">📄 Im Protokoll</button>` : "", // 2.833.0 KC-CLUB-VORSCHLAG-ERLEDIGT
   ].join("");
@@ -18923,8 +18924,49 @@ function vorschlagInfo(id) {
   const v = VORSCHLAG_MAP.get(id);
   if (!v) { document.getElementById("vorschlagInfo")?.remove(); return; }
   if (v.paket?.id && VS_PAKETE.has(v.paket.id)) return vorschlagPaketInfo(v.paket.id); // 2.555.0: Frage einer Abstimmung mit mehreren Fragen → ganze Abstimmung
+  if (vsGegenGruppe(v).length > 1) return vorschlagGegenInfo(vsGegenKey(v)); // KC-CLUB-GEGENVORSCHLAG: alle Vorschläge zum Thema zusammen
   const f = blattAuf("vorschlagInfo", `<div class="info-gross">${vorschlagKarte(v)}</div><button class="knopf" style="text-align:center" onclick="$('vorschlagInfo').remove()">Schließen</button>`);
   f.dataset.id = id;
+}
+// ---------- KC-CLUB-GEGENVORSCHLAG (Wunschliste #93, Hansi 15.11.2026: „Gegenvorschlag einreichen … damit die Mitglieder über 2 Vorschläge abstimmen“ –
+// bis zu 3 (A, B, C), jedes Mitglied darf, keine Push an die Unterstützer, Knopf „Gegenvorschlag“) ----------
+// Gruppe = offene Themen mit gleichem Schlüssel (gegenZu des Servers, sonst eigene id). Ab 2 offenen: eine Kachel „A oder B?“, ein Blatt mit allen Karten;
+// unterstützen kann man nur einen (der Server nimmt die Stimme bei den anderen weg). Zieht einer zurück, ist der andere wieder ein normaler Vorschlag.
+const GEGEN_MAX = 3, GEGEN_BUCHST = ["A", "B", "C"];
+let VF_GEGEN = null;
+const vsGegenKey = (v) => String(v?.gegenZu || v?.id || "");
+function vsGegenGruppe(v) {
+  if (!v || v.art !== "thema" || v.status !== "offen") return v ? [v] : [];
+  const k = vsGegenKey(v), g = [...VORSCHLAG_MAP.values()].filter((x) => x.art === "thema" && x.status === "offen" && vsGegenKey(x) === k);
+  return g.sort((a, b) => String(a.erstellt_am).localeCompare(String(b.erstellt_am)));
+}
+function vsGegenKacheln(themen) {
+  const schon = new Set();
+  return themen.map((v) => {
+    const g = vsGegenGruppe(v); if (g.length < 2) return vorschlagKachel(v);
+    const k = vsGegenKey(v); if (schon.has(k)) return ""; schon.add(k);
+    const mein = g.findIndex((x) => x.meine);
+    return `<button class="mini-kachel vs-gegen-kachel" onclick="vorschlagGegenInfo('${esc(k)}')"><span class="mk-sym">↔️</span>
+      <span class="mk-titel">${g.map((x, i) => `<b>${GEGEN_BUCHST[i]}</b> ${esc(x.titel)}`).join('<small class="vs-oder"> oder </small>')}</span>
+      <span class="mk-von">${g.length} Vorschläge zum gleichen Thema</span>
+      <span class="mk-unter">${g.map((x, i) => `${GEGEN_BUCHST[i]}: 👍 ${x.ergebnis?.[0]?.anzahl || 0}`).join(" · ")}</span>
+      ${mein >= 0 ? `<span class="marke gruen">✔ Du bist für ${GEGEN_BUCHST[mein]}</span>` : '<span class="marke gelb">👉 Welcher ist dir lieber?</span>'}</button>`;
+  }).join("");
+}
+function vorschlagGegenInfo(k) {
+  const erster = [...VORSCHLAG_MAP.values()].find((x) => x.art === "thema" && x.status === "offen" && vsGegenKey(x) === k); // erster kann zurückgezogen sein
+  const g = erster ? vsGegenGruppe(erster) : [];
+  if (g.length < 2) return g[0] ? vorschlagInfo(g[0].id) : document.getElementById("vorschlagInfo")?.remove();
+  const f = blattAuf("vorschlagInfo", `<div class="info-gross"><h3 style="margin:0 0 4px">↔️ ${g.length} Vorschläge zum gleichen Thema</h3>
+    <p class="hinweis" style="margin:0 0 8px">Du kannst <b>einen</b> davon unterstützen. Tippst du auf einen anderen, wandert deine Stimme dorthin.</p>
+    <div class="vs-gegen">${g.map((x, i) => `<div class="vs-gegen-teil"><span class="vs-gegen-buchst">${GEGEN_BUCHST[i]}</span>${vorschlagKarte(x)}</div>`).join("")}</div></div>
+    <button class="knopf" style="text-align:center" onclick="$('vorschlagInfo').remove()">Schließen</button>`);
+  delete f.dataset.id; f.dataset.gegen = k;
+}
+function vorschlagGegen(id) {
+  const v = VORSCHLAG_MAP.get(id); if (!v) return;
+  $("vorschlagInfo")?.remove();
+  vorschlagForm("thema", undefined, v.id); // der Server sucht daraus den ersten der Gruppe
 }
 // ---------- 2.555.0 KC-CLUB-ABSTIMMUNG-PAKET (Wunsch Hansi „Abstimmung mit Überschrift – Technik, Bilderrechner, Abrechnung – und mehreren Fragen“) ----------
 // Eine Abstimmung mit Überschrift, Bereichen (z. B. Technik) und mehreren Fragen. Jede Frage ist eine normale Abstimmung mit eigenen Antworten;
@@ -19263,8 +19305,10 @@ function vfVorlageNehmen(v) {
   melde("📄 Vorlage übernommen – bitte prüfen und dann „Abstimmung starten“");
 }
 function vfPkWeg(i, j) { VF_PK[i].fragen.splice(j, 1); if (!VF_PK[i].fragen.length) VF_PK.splice(i, 1); vfPkZeigen(); }
-function vorschlagForm(art, paket) {
+function vorschlagForm(art, paket, gegen) {
   vfArt = art || "thema";
+  VF_GEGEN = vfArt === "thema" && gegen ? gegen : null; // KC-CLUB-GEGENVORSCHLAG: zu welchem Thema (Gruppe)
+  const gz = VF_GEGEN ? VORSCHLAG_MAP.get(VF_GEGEN) : null;
   if (vfArt === "abstimmung" && paket !== undefined) vfPaket = !!paket;
   if (vfArt === "abstimmung" && vfPaket && !VF_PK.length) VF_PK = [{ name: "", fragen: [vfPkFrage()] }];
   const pk = vfArt === "abstimmung" && vfPaket;
@@ -19272,13 +19316,14 @@ function vorschlagForm(art, paket) {
   if (vfArt === "spende") VF_SP = [{ empfaenger: VORSCHLAG_SPENDEN.empfaenger[0] || "", betrag: 0 }];
   const t0 = (VS_ZIEL && VORSCHLAG_TREFFEN.some((t) => t.id === VS_ZIEL) ? VS_ZIEL : VORSCHLAG_TREFFEN[0]?.id) || ""; // 1.24.1: nach Zusage die zugesagte Sitzung vorwählen
   $("vorschlagNeuKnopf")?.classList.remove("vs-puls");
-  $("vorschlagForm").innerHTML = `<h3>Neuer Vorschlag</h3>
-    <div class="artwahl drei"><button class="knopf ${vfArt === "thema" ? "haupt" : ""}" onclick="vorschlagForm('thema')">💡 Thema</button><button class="knopf ${vfArt === "spende" ? "haupt" : ""}" onclick="vorschlagForm('spende')">💝 Spende</button>${ICH.vorstand ? `<button class="knopf ${vfArt === "abstimmung" ? "haupt" : ""}" onclick="vorschlagForm('abstimmung')">🗳️ Abstimmung</button>` : ""}</div>
+  $("vorschlagForm").innerHTML = `<h3>${gz ? "↔️ Gegenvorschlag" : "Neuer Vorschlag"}</h3>
+    ${gz ? `<div class="karte vs-gegen-zu">Gegenvorschlag zu: <b>${vsGegenGruppe(gz).map((x) => "„" + esc(x.titel) + "“").join(" und ")}</b><br><small class="hinweis">Die Mitglieder können danach einen der Vorschläge unterstützen. Der Termin ist derselbe.</small></div>` : ""}
+    <div class="artwahl drei${gz ? " versteckt" : ""}"><button class="knopf ${vfArt === "thema" ? "haupt" : ""}" onclick="vorschlagForm('thema')">💡 Thema</button><button class="knopf ${vfArt === "spende" ? "haupt" : ""}" onclick="vorschlagForm('spende')">💝 Spende</button>${ICH.vorstand ? `<button class="knopf ${vfArt === "abstimmung" ? "haupt" : ""}" onclick="vorschlagForm('abstimmung')">🗳️ Abstimmung</button>` : ""}</div>
     ${vfArt === "spende" ? `<p class="hinweis" style="margin:8px 0 0">Ein oder mehrere Spendenprojekte für die nächste Sitzung – einfach antippen.</p><div id="vfSpenden"></div>` : ""}
     ${vfArt === "abstimmung" ? `<div class="hl-chips" id="vfPaketWahl" style="margin-top:8px"><button type="button" class="chip${pk ? "" : " an"}" onclick="vorschlagForm('abstimmung', false)">❓ Eine Frage</button><button type="button" class="chip${pk ? " an" : ""}" onclick="vorschlagForm('abstimmung', true)">📋 Mehrere Fragen mit Überschrift</button><button type="button" class="chip" onclick="vfVorlagen()">📄 Vorlage</button></div>` : ""}
     <label class="feld">${pk ? "Überschrift" : vfArt === "abstimmung" ? "Frage" : vfArt === "spende" ? "Überschrift (freiwillig – sonst automatisch)" : "Thema"}<input id="vfTitel" maxlength="150" placeholder="${pk ? "z. B. Technik, Bilderrechner, Abrechnung" : vfArt === "abstimmung" ? "z. B. Sollen wir im Mai ein Grillfest machen?" : vfArt === "spende" ? "z. B. Spenden aus dem Weihnachtsmarkt" : "z. B. Grillfest im Mai"}"></label>
     <label class="feld">Beschreibung (freiwillig)<textarea id="vfBeschr" rows="3"></textarea></label>
-    <label class="feld">Für welchen Termin?<select id="vfTreffen" onchange="vfSchlussZeigen()"><option value="">– allgemein –</option>${vsTerminOptionen(VORSCHLAG_TREFFEN, t0, null)}</select></label>
+    <label class="feld${gz ? " versteckt" : ""}">Für welchen Termin?<select id="vfTreffen" onchange="vfSchlussZeigen()"><option value="">– allgemein –</option>${vsTerminOptionen(VORSCHLAG_TREFFEN, t0, null)}</select></label>
     <p class="hinweis versteckt" id="vfSchluss" style="margin:-4px 0 8px"></p>
     ${pk ? '<div class="feld"><b>Bereiche und Fragen</b><div id="vfPaket"></div></div>' : vfArt === "abstimmung" ? '<label class="feld">Antworten (eine pro Zeile)<textarea id="vfOptionen" rows="3">Ja\nNein\nEnthaltung</textarea></label>' : ""}
     ${vfArt === "abstimmung" ? `
@@ -19339,6 +19384,7 @@ async function zielAuswahl(titel, ids, fertig) {
 }
 async function vorschlagSpeichern(knopf) {
   const daten = { art: vfArt, titel: $("vfTitel").value, beschreibung: $("vfBeschr").value, ...vsTerminWert($("vfTreffen").value), benachrichtigen: $("vfInfo").checked };
+  if (VF_GEGEN && vfArt === "thema") { daten.gegen_zu = VF_GEGEN; daten.treffen_id = null; delete daten.sitzung_nr; } // KC-CLUB-GEGENVORSCHLAG: Termin übernimmt der Server vom ersten
   if (vfArt === "spende") {
     daten.spenden = VF_SP.map((x) => ({ empfaenger: String(x.empfaenger || "").trim(), betrag: Number(x.betrag) || 0 }));
     const fehlt = daten.spenden.find((x) => !x.empfaenger || !(x.betrag > 0));
@@ -19373,6 +19419,7 @@ async function vorschlagSpeichern(knopf) {
       const r = await api(pk ? "abstimmungspaket_speichern" : "vorschlag_speichern", daten);
       oaLeeren("vf"); $("vorschlagForm").classList.add("versteckt");
       if (pk) VF_PK = [];
+      if (daten.gegen_zu) { VF_GEGEN = null; melde("↔️ Gegenvorschlag gespeichert – die Mitglieder können jetzt einen der Vorschläge unterstützen"); await vorschlaegeLaden(); const z = VORSCHLAG_MAP.get(daten.gegen_zu); return z ? vorschlagGegenInfo(vsGegenKey(z)) : undefined; } // KC-CLUB-GEGENVORSCHLAG
       melde(r.dringend ? "❗ Dringend eingereicht – Clubsprecher, Kassenwart oder Admin entscheiden" : r.verschoben ? `📅 Anmeldeschluss vorbei – dein Vorschlag kommt auf ${r.verschoben}`
         : r.versand ? `Gespeichert – ${r.versand.gesendet} benachrichtigt` : "Gespeichert"); vorschlaegeLaden();
     } catch (e) { meldeFehler(e); }

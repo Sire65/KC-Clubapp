@@ -1,12 +1,24 @@
 # Änderungen
 
-## Server 2.953.0 – 2026-11-15 – 🔴 „… ist offline“ schon etwa 1 Minute nach dem Verlassen (KC-CLUB-OFFLINE-SCHNELL)
+## 2.954.0 – 2026-11-15 – ↔️ Gegenvorschlag bei Themen (KC-CLUB-GEGENVORSCHLAG, Wunschliste #93) · 🔴 „… ist offline“ nach 1 Minute (KC-CLUB-OFFLINE-SCHNELL) · Server 2.954.0
+### ↔️ Gegenvorschlag
+Wunschliste #93, Hansi 15.11.: „An der Stelle einen Taster einbauen ‚Gegenvorschlag einreichen‘ … damit die Mitglieder über 2 Vorschläge abstimmen können“ – Antworten: bis zu 3 (A, B, C), jedes Mitglied darf, keine Push an die Unterstützer, Knopf heißt „Gegenvorschlag“.
+- Auf jeder offenen Themen-Karte „↔️ Gegenvorschlag“ (bis 3 Vorschläge je Thema). Das Formular zeigt „Gegenvorschlag zu: …“; der Termin ist derselbe wie beim ersten.
+- In der Liste steht die Gruppe als **eine** Kachel „A … oder B …“ mit 👍 je Vorschlag und „👉 Welcher ist dir lieber?“ bzw. „✔ Du bist für B“. Antippen öffnet alle nebeneinander (Handy untereinander).
+- Jedes Mitglied unterstützt **einen** davon – tippt es auf einen anderen, wandert die Stimme (Server nimmt sie beim anderen weg).
+- Benachrichtigt wird wie bei jedem Themenvorschlag nur die Clubleitung („↔️ Gegenvorschlag“), nicht die Unterstützer.
+- Tagesordnung: die Gruppe wird **ein** Punkt „↔️ A: … (👍 3) oder B: … (👍 2)“. Nach dem Protokoll gilt „behandelt“/„vertagt“ für alle der Gruppe.
+- Zieht einer zurück, bleibt der Rest (B und C bzw. ein normaler Vorschlag). Kein Gegenvorschlag zu Abstimmungen und Spenden.
+- Datenbank: neue Spalte `gegen_zu` an der Vorschlags-Tabelle (Migration 20261115_kc_club_vorschlag_gegen.sql, Probelauf grün).
+- Test: neu `tests/gegenvorschlag.test.mjs`; abgeschirmter Browser-Lauf mit Testdaten (Kachel, Blatt, Unterstützen, Gegenvorschlag C, kein vierter).
+### 🔴 „… ist offline“ schon etwa 1 Minute nach dem Verlassen
 Wunsch Hansi 15.11.: „Ich hätte gerne schneller die Push, wenn jemand die App verlassen hat – es gibt doch die direkte Leitung.“
 - Bisher kam „🔴 X ist offline“ nur aus dem 5-Minuten-Lauf – 5½ bis 10½ Minuten nach dem Verlassen.
 - Die App meldet das Weglegen aber sofort („weg“, zusammen mit der direkten Leitung). Jetzt wartet der Server danach **1 Minute** und schickt die Meldung, wenn das Mitglied nicht wieder da ist. Kurz in eine andere App wechseln und zurückkommen löst nichts aus. Die Zeit in der Meldung ist der Zeitpunkt des Verlassens.
 - Gleiche Empfänger und Regeln wie bisher (Einstellung, Ruhezeit, unsichtbar/inkognito, keine Testkonten). Der 5-Minuten-Lauf bleibt für Geräte, deren „weg“ nicht ankommt (Akku leer, kein Netz). Nichts geht doppelt raus (Vermerk je Sitzung + gleicher Schlüssel).
 - Kosten: nur wenn jemand die App weglegt, 1 Lesen + ggf. 1 Schreiben + der Push.
-- Test: `tests/offline-push.test.mjs` erweitert (Ablauf nachgespielt). Rückweg: Server 2.950.0. Nur der Server – die App bleibt 2.953.0 (kein Neustart bei den Mitgliedern).
+- Test: `tests/offline-push.test.mjs` erweitert (Ablauf nachgespielt). Rückweg Server: 2.953.0 (dort war es noch nicht eingespielt) bzw. 2.950.0.
+- Rückweg App: 2.953.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
 
 ## 2.953.0 – 2026-11-15 – 👀 Ausgeblendete Kacheln: oben nur noch ein Umschalt-Knopf (KC-CLUB-KA-KOPF-TOGGLE)
 Wunsch Hansi 15.11.: „Unter dem Kopf gibt es seit heute 2 neue Buttons (Ausgeblendet ansehen). Das soll nur ein Button sein, ein Toggle – einmal klicken schaltet, wieder klicken zurück, dann passt der auch auf schmale Handys.“
