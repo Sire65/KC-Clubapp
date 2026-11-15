@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.952.0 – 2026-11-15 – 📸 Bildschirmfoto auch mit modernen Farben (KC-CLUB-BILDSCHIRMFOTO-OKLAB)
+Fund Hansi 15.11.: Beim Anhängen eines Bildschirmfotos im Chat kam bei einem Mitglied „Attempting to parse an unsupported color function \"oklab\"“. Die Bildschirmfoto-Bibliothek (html2canvas 1.4.1) kennt nur alte Farbangaben; neuere Browser liefern Mischfarben als `oklab(…)`/`oklch(…)` statt `color(srgb …)` – bisher wurde nur letzteres umgerechnet. Jetzt lässt die App jede moderne Farbangabe (color, oklab, oklch, lab, lch, hwb) vom Browser selbst auf einen 1-Pixel-Malgrund malen und setzt im Abbild das Ergebnis als rgba ein – auch für die Grundfarbe (`backgroundColor`). Gilt für 📸 Bildschirmfoto, das Live-Bild der Fernhilfe (Festhalten und Bild beim Mitglied) und die PDF-Erstellung im Büro. Neuer abgeschirmter Browser-Test `tests/bildschirmfoto-farben.browser.mjs` (im Testlauf neben dem Rundgang).
+
 ## 2.951.0 – 2026-11-15 – 💶 Erstattung im Eingang: „📄 Antrag als PDF“ statt „✅ Erstattet“ als grüner Knopf (KC-CLUB-ERSTATTUNG-SICHER)
 Fund Hansi 15.11.: „Frank hat eine Erstattung angefordert. Ich wollte sie mir per PDF ansehen, jetzt ist schon erstattet abgehakt.“
 - Geprüft: Franks Antrag war **nicht** erstattet (Datenbank „eingereicht“, keine Nachricht an Frank). Im Eingang war aber „✅ Erstattet“ der grüne Knopf direkt unter „Öffnen“ – ein Tipp darauf öffnete schon das Fenster „✅ Erstattung …“, das wie erledigt aussah.
