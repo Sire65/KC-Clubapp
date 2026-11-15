@@ -11105,7 +11105,7 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
 // KC-CORE-NOTFALL-LESEN (13.10.2026): verschlüsselte Neon-Sicherung ohne Supabase lesen – wöchentliche Probe, Wiederherstellen nur mit JA
 {
   const s = lies("tools/notfall/sicherung-lesen.mjs"), w = lies(".github/workflows/notfall-sicherung-lesen.yml");
-  assert.ok(/name: "AES-GCM", iv: b64\(p\.iv\)/.test(s) && /crypto\.subtle\.digest\("SHA-256"/.test(s), "gleiche Entschlüsselung wie kc-db-backup-verify-v2");
+  assert.ok(/name: "AES-GCM", iv: b64\(p\.iv\)/.test(s) && /crypto\.subtle\.digest\("SHA-256"/.test(s) && /additionalData: new TextEncoder\(\)\.encode\("kc-backup\|gzip"\)/.test(s), "gleiche Entschlüsselung wie kc-db-backup-verify-v2 (auch gepackt)");
   assert.ok(/if \(!BESTAETIGT\) throw new Error\("Wiederherstellen nur mit bestaetigen = JA"\)/.test(s), "Wiederherstellen nur mit JA");
   assert.ok(/"notfall_" \+ new Date\(\)/.test(s) && !/(insert into|create table|drop table|delete from|update) public\./i.test(s), "schreibt nie nach public");
   assert.ok(!/(merke|console\.(log|error))\([^)]*\b(text|arr|klar|payload|GEHEIM|URL_NEON)\b(?!\.length)/.test(s.replace(/arr\.length/g, "")), "keine Inhalte oder Geheimnisse im öffentlichen Protokoll");
@@ -12459,7 +12459,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 // KICC-F-107 Quelle: Backup-Arbeiter liegt als Quelle im Repo (Stand Deploy Version 20, übernommen 20.10.2026; kein automatisches Hochladen)
 {
   const bw = lies("supabase/functions/kc-db-backup-worker/index.ts");
-  assert.ok(/"X-KC-Function-Version":"20"/.test(bw), "Backup-Arbeiter: Stand Version 20");
+  assert.ok(/"X-KC-Function-Version":"22"/.test(bw), "Backup-Arbeiter: Stand Version 22 (KC-SICHERUNG-PACKEN, 15.11.2026)");
   assert.ok(/!await sicherGleich\(token,String\(expected\)\)/.test(bw) && /token\.length<32/.test(bw), "Backup-Arbeiter: Token zeitkonstant geprüft");
   assert.ok(/encryptPayload\(payload,String\(backupKey\)\)/.test(bw) && /rejectUnauthorized:true/.test(bw), "Backup-Arbeiter: verschlüsselt, TLS geprüft");
   assert.ok(!/postgres(ql)?:\/\/|eyJ[A-Za-z0-9_-]{20,}|sk_[A-Za-z0-9]{16,}/.test(bw), "Backup-Arbeiter: keine Verbindungsdaten oder Schlüssel im Quelltext");
