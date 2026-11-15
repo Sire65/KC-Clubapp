@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.951.0 – 2026-11-15 – 💶 Erstattung im Eingang: „📄 Antrag als PDF“ statt „✅ Erstattet“ als grüner Knopf (KC-CLUB-ERSTATTUNG-SICHER)
+Fund Hansi 15.11.: „Frank hat eine Erstattung angefordert. Ich wollte sie mir per PDF ansehen, jetzt ist schon erstattet abgehakt.“
+- Geprüft: Franks Antrag war **nicht** erstattet (Datenbank „eingereicht“, keine Nachricht an Frank). Im Eingang war aber „✅ Erstattet“ der grüne Knopf direkt unter „Öffnen“ – ein Tipp darauf öffnete schon das Fenster „✅ Erstattung …“, das wie erledigt aussah.
+- Jetzt: im Eingang ist **„📄 Antrag als PDF ansehen“** der grüne Knopf. „✅ Als erstattet markieren …“ ist ein normaler Knopf (auch im Antrag selbst).
+- Die Rückfrage heißt „… als erstattet markieren?“ und sagt gelb hinterlegt: **„Noch nicht erstattet.“** Gespeichert wird erst mit „💵 Bar ausgezahlt“ oder „🏦 Wird überwiesen“; „↩️ Abbrechen – noch nicht erstattet“.
+- Test: neu `tests/erstattung-sicher.test.mjs`. Rückweg: App 2.950.0. Nur die App.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.950.0 – 2026-11-15 – 🖼️ Roman: 35 neue Zeichnungen · 🌱 Garten: Kräuterernte mit Rezepten und bunte Blumen · 🥐 Backstube und Bastelecke · Server 2.950.0
 Wünsche Hansi 13.–15.11.2026 (ein Bündel, Einspielen 12-Uhr-Termin).
 - **Roman „Hinter dem Pass“ (KC-CLUB-MAGAZIN-STAFFEL-2-BILDER):** 35 geprüfte Bleistift-Zeichnungen (ChatGPT, Graustufen-WebP < 200 KB) – jede Folge beider Staffeln hat jetzt mindestens 3 Bilder.
