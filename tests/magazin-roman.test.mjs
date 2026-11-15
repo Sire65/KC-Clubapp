@@ -218,9 +218,13 @@ console.log("magazin-roman Antworten Hansi: ok");
 { const r = MAG_AUSGABEN[20].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
   assert.deepEqual(r.bilder.map((b) => b.wo + " " + b.datei), ["absatz:21 magazin/roman/s2-08-01-scheunenkueche.webp", "absatz:46 magazin/roman/s2-08-03-mike-hilft.webp", "absatz:71 magazin/roman/s2-08-02-timo.webp"]); assert.equal(p[20], "„Zwanzig.“"); assert.ok(p[45].startsWith("Am Kindertisch, der dem Herd am nächsten stand") && p[45].includes("Löschdecke"), "Mike-hilft-Bild"); assert.ok(p[70].includes("setzten sich damit auf eine Bank an der Rathausmauer"), "Timo-Bild an der Bank");
   for (const b of r.bilder) assert.ok(b.da && b.alt.startsWith("Bleistiftskizze: ") && fs.statSync(new URL("../" + b.datei, import.meta.url)).size < 200000, b.datei); assert.ok(magHeftHtml("roman", r).includes("Skizzen by KI")); }
+// Heft 22 (15.11.2026): Zeichnung „Ein Pass, zwei Köpfe“ (Benefizabend)
+{ const r = MAG_AUSGABEN[22].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
+  assert.deepEqual(r.bilder.map((b) => b.wo + " " + b.datei), ["absatz:84 magazin/roman/s2-10-02-ein-pass-zwei-koepfe.webp"]); assert.ok(p[83].includes("Verena hob eine Augenbraue in Richtung Jonas."));
+  for (const b of r.bilder) assert.ok(b.da && b.alt.startsWith("Bleistiftskizze: ") && fs.statSync(new URL("../" + b.datei, import.meta.url)).size < 200000, b.datei); assert.ok(magHeftHtml("roman", r).includes("Skizzen by KI")); }
 // Heft 23 (14.11.2026): Zeichnung „Martinsgans“ hinter dem Knuspern der Gänse
 { const r = MAG_AUSGABEN[23].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
-  assert.deepEqual(r.bilder.map((b) => b.wo + " " + b.datei), ["absatz:25 magazin/roman/s2-11-01-martinsgans.webp"]); assert.ok(p[24].startsWith("Leon schob die ersten Bleche wieder in den Ofen"));
+  assert.deepEqual(r.bilder.map((b) => b.wo + " " + b.datei), ["absatz:25 magazin/roman/s2-11-01-martinsgans.webp", "absatz:76 magazin/roman/s2-11-04-die-wohnung.webp"]); assert.ok(p[24].startsWith("Leon schob die ersten Bleche wieder in den Ofen")); assert.ok(p[75].includes("Jonas drehte jeden Knopf am Herd einmal auf und zu."));
   for (const b of r.bilder) assert.ok(b.da && b.alt.startsWith("Bleistiftskizze: ") && fs.statSync(new URL("../" + b.datei, import.meta.url)).size < 200000, b.datei); assert.ok(magHeftHtml("roman", r).includes("Skizzen by KI")); }
 // Heft 24 (14.11.2026): Zeichnungen „Ein Spiegel“ (Ralle hinter Emmas Stuhl), „Neun Uhr“ (die sechs Blätter) und „Unter der Lichterkette“ (der Ring)
 { const r = MAG_AUSGABEN[24].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
