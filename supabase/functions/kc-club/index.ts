@@ -178,7 +178,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 // Registry der planmäßigen schweren Arbeiten (Uhrzeiten UTC wie die Zeitpläne in cron.job) – ohne zusätzliche Datenbank-Abfrage, die App bekommt sie beim Start mit.
 const SCHWER_ZEITEN = [
   { art: "notpaket", was: "das Notfall-Paket gebaut", min: [9, 24, 39, 54], dauer: 2 },          // kc-club-notpaket-15min (ca. 30 s, mit Puffer)
-  { art: "spiegel", was: "die Sicherheitskopie (Spiegelung) erstellt", std: [4, 10, 16, 22], von: 10, bis: 30 }, // kc-neon-low-compute-cycle + kc-db-mirror-welle
+  { art: "spiegel", was: "die Sicherheitskopie (Spiegelung) erstellt", std: [4, 13, 22], von: 10, bis: 45 }, // kc-neon-low-compute-cycle + kc-db-mirror-welle (KC-SPIEGEL-SCHONEND 15.11.2026: 04/13/22 UTC, Welle :11–:40 + Puffer)
   { art: "sicherung", was: "die nächtliche Sicherung gemacht", std: [1], von: 20, bis: 60 },    // kc-club-fra-sicherung (gemessen 01:26–01:56)
   { art: "aufraeumen", was: "nachts aufgeräumt", std: [3], von: 5, bis: 55 },                     // kc-…-aufraeumen / -rollup / -retention (03:05–03:50)
 ];
@@ -194,7 +194,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.955.0";
+const SERVER_VERSION = "2.957.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -1431,7 +1431,27 @@ async function wegSet(ids: string[]): Promise<Set<string>> {
 }
 async function wegMerken(pid: string) {
   const { data } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", pid).eq("schluessel", "online_seit").maybeSingle();
-  await db.from("kc_club_person_einstellung").upsert({ person_id: pid, schluessel: "online_seit", wert: { ...(data?.wert || {}), weg: jetzt() }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
+  const weg = jetzt();
+  await db.from("kc_club_person_einstellung").upsert({ person_id: pid, schluessel: "online_seit", wert: { ...(data?.wert || {}), weg }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
+  return weg;
+}
+// ---------- KC-CLUB-OFFLINE-SCHNELL (Wunsch Hansi 15.11.2026 „Ich hätte gerne schneller die Push, wenn jemand die App verlassen hat – es gibt doch die direkte Leitung“) ----------
+// Bisher kam „🔴 X ist offline“ nur aus dem 5-Minuten-Lauf (offlinePushLauf): 150 s + 3 Min. Wartezeit + bis zu 5 Min. Takt = 5½–10½ Min. nach dem Verlassen.
+// Die App meldet das Weglegen aber sofort („weg“, zusammen mit der direkten Leitung rtAnwesenheit(false)). Jetzt wartet der Server nach „weg“ OFFLINE_WEG_MS
+// im Hintergrund und schickt die Meldung, wenn das Mitglied seitdem nicht wieder sichtbar war (istWeg, gleicher weg-Zeitpunkt, gleiche Sitzung) – also etwa
+// 1 Minute nach dem Verlassen. Kurz in eine andere App wechseln und zurückkommen löst nichts aus. Gleiche Regeln/Empfänger wie bisher; der 5-Minuten-Lauf
+// bleibt für Geräte, deren „weg“ nicht ankommt (Akku leer, kein Netz). Doppelt geht nichts raus: Vermerk „offline“ je Sitzung + gleicher Schlüssel club-offline:<pid>:<seit>.
+// Kosten: nur wenn jemand die App weglegt – 1 Lesen + ggf. 1 Schreiben + der Push.
+const OFFLINE_WEG_MS = 60000;
+async function offlineNachWeg(pid: string, weg: string) {
+  await new Promise((r) => setTimeout(r, OFFLINE_WEG_MS));
+  const { data } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", pid).eq("schluessel", "online_seit").maybeSingle();
+  const w = data?.wert;
+  if (!w?.seit || w.weg !== weg || !istWeg(w) || w.offline === w.seit) return; // wieder da, neu weggelegt (eigener Lauf) oder schon gemeldet
+  const { data: ok } = await db.from("kc_club_person_einstellung").update({ wert: { ...w, offline: w.seit } })
+    .eq("person_id", pid).eq("schluessel", "online_seit").eq("wert->>weg", weg).eq("wert->>seit", w.seit).select("person_id");
+  if (!ok?.length) return;
+  await offlinePushMelden(pid, w.seit, weg); // „bis“ = Zeitpunkt des Verlassens
 }
 // KC-CLUB-ONLINE-JEDE-ANFRAGE (09.11.2026, Fund Hansi „Anne ist drin, wird aber nirgends angezeigt“): „online“ hing bisher NUR an der eigenen
 // Online-Meldung der App. Kam die nicht an (Anne, Karla) oder kam sie zu selten (seit 2.846.0 alle 2 Min., im Sparmodus ×3 = 6 Min. – der Server
@@ -2311,6 +2331,12 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
     .filter(([id, d]) => KA_ID.test(id) && typeof d === "string" && !isNaN(Date.parse(d))).slice(0, 40).map(([id, d]) => [id, new Date(String(d)).toISOString()])) }),
   // KC-CLUB-ONLINE-PUSH (1.57.0): Admin bekommt eine Push, wenn ein Mitglied online kommt (Standard: an)
   online_push: (w) => ({ an: w?.an !== false }),
+  // 2.953.0 KC-CLUB-AENDERUNG-ERBITTEN (Wunsch Hansi 15.11.2026, Fall Christina „neue Handynummer“): der Admin bittet um eine Änderungsmeldung
+  // (Handy, Anschrift …) – beim Start kommt die Bitte mit „✏️ Sofort erledigen“. Das Mitglied darf die Liste nur kürzen („hat sich nichts geändert“).
+  aenderung_bitte: (w) => ({ arten: [...new Set((Array.isArray(w?.arten) ? w.arten : []).map(String))].filter((id) => AENDERUNG.arten.some((a) => a.id === id && !(a as any).aus)).slice(0, 6),
+    notiz: txt(w?.notiz, 200) || null, von: txt(w?.von, 40) || null, am: w?.am && !isNaN(Date.parse(String(w.am))) ? new Date(String(w.am)).toISOString() : null }),
+  // 2.953.0 KC-CLUB-ONLINE-FRAGE (Wunsch Hansi 15.11.2026): „Später“ bei der Frage „Meldung, wenn jemand online kommt?“ – bis wann nicht wieder fragen
+  online_frage: (w) => ({ bis: w?.bis && !isNaN(Date.parse(String(w.bis))) ? new Date(String(w.bis)).toISOString() : null }),
   // KC-CLUB-ZULETZT-DA (1.20.0): anderen zeigen, wann ich zuletzt in der App war (Standard: an, gegenseitig wie WhatsApp)
   zuletzt: (w) => ({ zeigen: w?.zeigen !== false }),
   // KC-CLUB-BRIEFBOGEN (1.26.0): eigene Absenderzeile/Fußzeile und Unterschrift je Person (Clubleitung)
@@ -6355,6 +6381,7 @@ async function vorschlaegeListe(ich: Ich) {
     return {
       id: v.id, art: v.art, titel: v.titel, beschreibung: v.beschreibung, optionen: unterstuetzbar(v.art) ? [] : v.optionen, geheim: v.geheim, anlagen: anl.get(v.id) ?? [],
       paket: v.paket ?? null, // 2.555.0 KC-CLUB-ABSTIMMUNG-PAKET
+      gegenZu: v.gegen_zu ?? null, // KC-CLUB-GEGENVORSCHLAG: erster Vorschlag der Gruppe
       ...(v.art === "spende" ? { spenden: v.spenden ?? [], summe: spendenSumme(v.spenden) } : {}),
       status: v.status, frist: v.frist, erstellt_am: v.erstellt_am, abgeschlossen_am: v.abgeschlossen_am,
       von: { person_id: v.erstellt_von, name: leute.get(v.erstellt_von)?.display_name || v.erstellt_von, vorname: vorname(leute.get(v.erstellt_von) ?? null) || null }, // 2.692.0 KC-CLUB-VORSCHLAG-VON: Rufname für „Vorschlag von Hansi“
@@ -6418,6 +6445,45 @@ const SPENDEN_VORSCHLAEGE = ["Kinderhospiz Lünen/Werne"];
 const SPENDEN_BETRAEGE = [50, 100, 250, 500, 1000];
 const SPENDE_MAX = 100000;
 const unterstuetzbar = (art: string) => art === "thema" || art === "spende";
+// ---------- KC-CLUB-GEGENVORSCHLAG (Wunschliste #93, Hansi 15.11.2026: „Gegenvorschlag einreichen … damit die Mitglieder über 2 Vorschläge abstimmen“ –
+// bis zu 3 (A, B, C), jedes Mitglied darf, keine Push an die Unterstützer, Knopf „Gegenvorschlag“) ----------
+// Gruppe = erster Vorschlag (A, gegen_zu leer) + alle mit gegen_zu = A. Nur offene Themen zählen; jedes Mitglied unterstützt höchstens einen der Gruppe.
+const GEGEN_MAX = 3;
+async function gegenGruppePruefen(art: string, zuId: string) {
+  if (art !== "thema") throw new Fehler("Einen Gegenvorschlag gibt es nur zu Themen.");
+  const { data: z } = await db.from("kc_club_vorschlaege").select("id,art,status,titel,gegen_zu,treffen_id,sitzung_nr,sitzung_ab").eq("id", zuId).maybeSingle();
+  if (!z || z.art !== "thema" || z.status !== "offen") throw new Fehler("Zu diesem Vorschlag geht kein Gegenvorschlag (mehr) – er ist erledigt oder zurückgezogen.", 409);
+  const wurzel = (z.gegen_zu || z.id) as string;
+  const gruppe = await gegenGruppeOffen(wurzel);
+  if (gruppe.length >= GEGEN_MAX) throw new Fehler(`Zu diesem Thema gibt es schon ${GEGEN_MAX} Vorschläge – mehr gehen nicht.`, 409);
+  const erster = gruppe.find((x: any) => x.id === wurzel) ?? z;
+  return { wurzel, z, wurzelTitel: String(erster.titel || z.titel) };
+}
+async function gegenErweitern(ids: string[]): Promise<string[]> {
+  if (!ids.length) return ids;
+  const { data: a } = await db.from("kc_club_vorschlaege").select("id,gegen_zu").in("id", ids);
+  const wurzeln = [...new Set((a ?? []).map((x: any) => String(x.gegen_zu || x.id)))];
+  const { data: b } = await db.from("kc_club_vorschlaege").select("id").in("gegen_zu", wurzeln).eq("status", "offen");
+  return [...new Set([...ids, ...wurzeln, ...(b ?? []).map((x: any) => String(x.id))])];
+}
+// Tagesordnung: offene Themen einer Gruppe werden EIN Punkt „↔️ A: … (👍 3) oder B: … (👍 2)“ (am Platz des ersten)
+function gegenTops(liste: any[]) {
+  const key = (v: any) => (v.art === "thema" && v.status === "offen" ? String(v.gegen || v.id) : "");
+  const n = new Map<string, any[]>();
+  for (const v of liste) { const k = key(v); if (k) n.set(k, [...(n.get(k) ?? []), v]); }
+  const raus: any[] = [], fertig = new Set<string>();
+  for (const v of liste) {
+    const g = n.get(key(v));
+    if (!g || g.length < 2) { raus.push({ t: v.text, art: "vorschlag", id: v.id }); continue; }
+    if (fertig.has(key(v))) continue; fertig.add(key(v));
+    raus.push({ t: "↔️ " + g.map((x, i) => `${"ABC"[i] ?? i + 1}: ${x.text} (👍 ${x.unterstuetzt})`).join(" oder "), art: "vorschlag", id: g[0].id });
+  }
+  return raus;
+}
+async function gegenGruppeOffen(wurzel: string) {
+  const { data } = await db.from("kc_club_vorschlaege").select("id,titel").or(`id.eq.${wurzel},gegen_zu.eq.${wurzel}`).eq("art", "thema").eq("status", "offen");
+  return data ?? [];
+}
 const euroRund = (n: number) => new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: Number.isInteger(n) ? 0 : 2 }).format(n);
 const spendenSumme = (s: any[]) => (s ?? []).reduce((x: number, y: any) => x + Number(y.betrag || 0), 0);
 function spendenPruefen(roh: unknown) {
@@ -7239,7 +7305,7 @@ async function bueroSitzung(ich: Ich, tid: string) {
     const { data: st } = await db.from("kc_club_stimmen").select("vorschlag_id").in("vorschlag_id", (vs ?? []).map((v: any) => v.id));
     (st ?? []).forEach((s: any) => unterst.set(s.vorschlag_id, (unterst.get(s.vorschlag_id) ?? 0) + 1));
   }
-  const vorschlaege: any[] = (vs ?? []).map((v: any) => ({ id: v.id, art: v.art, titel: v.titel, text: topVorschlag(v), fuerDiese: v.treffen_id === tid && v.dringend?.stand !== "offen", dringend: v.dringend?.stand ?? null, status: v.status, unterstuetzt: unterst.get(v.id) ?? 0,
+  const vorschlaege: any[] = (vs ?? []).map((v: any) => ({ id: v.id, art: v.art, titel: v.titel, text: topVorschlag(v), fuerDiese: v.treffen_id === tid && v.dringend?.stand !== "offen", dringend: v.dringend?.stand ?? null, status: v.status, unterstuetzt: unterst.get(v.id) ?? 0, gegen: v.gegen_zu ?? null,
     von: vorname(leute.get(v.erstellt_von) ?? null) || null })); // 2.692.0 KC-CLUB-VORSCHLAG-VON: „Vorschlag von Dieter“ in der Tagesordnung
   // Vorschlag für die Anmerkung: Stand des letzten Protokolls
   let anmerkungVorschlag = "";
@@ -7255,7 +7321,7 @@ async function bueroSitzung(ich: Ich, tid: string) {
   const gedenken = totNamen.length ? [{ t: `Gedenken an ${totNamen.join(", ")} (Schweigeminute)`, art: "fest" }] : [];
   // 2.802.0 KC-CLUB-PROTOKOLL-VERTAGT: im letzten Protokoll vertagte Punkte stehen als „Offen aus dem letzten Protokoll“ gleich nach den festen Punkten
   const vertagt = ((letzt as any)?.vertagt ?? []).map((x: string) => ({ t: `${VERTAGT_VORSATZ}${String(x).replace(new RegExp("^" + VERTAGT_VORSATZ), "")}`, art: "fest" }));
-  const standardTop = [{ t: BUERO_TOP_VORNE[0], art: "fest" }, ...gedenken, ...BUERO_TOP_VORNE.slice(1).map((x) => ({ t: x, art: "fest" })), ...vertagt, ...vorschlaege.filter((v) => v.fuerDiese).map((v) => ({ t: v.text, art: "vorschlag", id: v.id })), ...BUERO_TOP_HINTEN.map((x) => ({ t: x, art: "fest" }))];
+  const standardTop = [{ t: BUERO_TOP_VORNE[0], art: "fest" }, ...gedenken, ...BUERO_TOP_VORNE.slice(1).map((x) => ({ t: x, art: "fest" })), ...vertagt, ...gegenTops(vorschlaege.filter((v) => v.fuerDiese)), ...BUERO_TOP_HINTEN.map((x) => ({ t: x, art: "fest" }))];
   return {
     treffen: { id: t.id, titel: t.titel, beginn: t.beginn, ort: t.ort },
     mitglieder: mitglieder.map((m) => ({ person_id: m.person_id, name: m.display_name, antwort: ant.get(m.person_id)?.antwort ?? null, notiz: ant.get(m.person_id)?.notiz ?? null,
@@ -7495,7 +7561,8 @@ async function vorschlaegeBehandelt(ich: Ich, pr: any) {
   const norm = (x: unknown) => String(x ?? "").toLowerCase().replace(/\s+/g, " ").trim(), vertagt = (pr.vertagt ?? []).map(norm);
   const tops = ((prep?.tagesordnung ?? []) as any[]).filter((x: any) => x?.art === "vorschlag" && x?.id);
   const ist = (x: any) => vertagt.some((v: string) => v === norm(x.t) || v.startsWith(norm(x.t)));
-  const fertig = tops.filter((x) => !ist(x)).map((x) => String(x.id)), weiter = tops.filter(ist).map((x) => String(x.id));
+  // KC-CLUB-GEGENVORSCHLAG: ein TOP „A oder B?“ steht für die ganze Gruppe – behandelt/vertagt gilt für alle offenen der Gruppe
+  const fertig = await gegenErweitern(tops.filter((x) => !ist(x)).map((x) => String(x.id))), weiter = await gegenErweitern(tops.filter(ist).map((x) => String(x.id)));
   if (fertig.length) await db.from("kc_club_vorschlaege").update({ status: "abgeschlossen", abgeschlossen_am: jetzt(), abgeschlossen_von: ich.person_id, behandelt_in: pr.id })
     .in("id", fertig).eq("art", "thema").eq("status", "offen");
   if (weiter.length) await db.from("kc_club_vorschlaege").update({ treffen_id: null }).in("id", weiter).eq("art", "thema").eq("status", "offen");
@@ -11284,9 +11351,11 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         }
         const frist = abstimmungFrist(p.frist);
         const { zielIds, zielText } = art === "abstimmung" ? await abstimmungZiel(p, ich) : { zielIds: null, zielText: null };
+        // KC-CLUB-GEGENVORSCHLAG (Wunschliste #93): zu einem offenen Thema – bis zu GEGEN_MAX in einer Gruppe, jedes Mitglied darf; Termin wie der erste
+        const gegen = p.gegen_zu ? await gegenGruppePruefen(art, String(p.gegen_zu)) : null;
         // 2.694.0 KC-CLUB-ANMELDESCHLUSS: nach dem Anmeldeschluss (2.751.0: Sitzungs-Vorgaben, Standard 4 Tage vorher 17 Uhr) → ❗ dringend (Leitung entscheidet) oder auf die Sitzung danach
         let schluss: { dringend: any; danach: { felder: any; text: string } | null; sitzung: any } = { dringend: null, danach: null, sitzung: null };
-        if (art !== "abstimmung" && p.treffen_id) {
+        if (art !== "abstimmung" && p.treffen_id && !gegen) {
           const { data: ts } = await db.from("kc_club_treffen").select("id,titel,beginn,art").eq("id", String(p.treffen_id)).maybeSingle();
           if (ts && ts.art === "treffen" && schlussVorbei(ts.beginn)) schluss = p.dringend === true ? { dringend: { stand: "offen", am: jetzt(), fuer: ts.id }, danach: null, sitzung: ts }
             : { dringend: null, danach: await sitzungDanach(ts), sitzung: ts };
@@ -11296,6 +11365,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           treffen_id: p.treffen_id ? String(p.treffen_id) : null, frist: art === "abstimmung" && frist ? frist.toISOString() : null, erstellt_von: ich.person_id,
           ...(!p.treffen_id && sitzungNrPruefen(p.sitzung_nr) ? { sitzung_nr: sitzungNrPruefen(p.sitzung_nr), sitzung_ab: jetzt() } : {}), // 2.527.0 KC-CLUB-VORSCHLAG-SPAETER
           ...(schluss.danach ? schluss.danach.felder : {}), ...(schluss.dringend ? { dringend: schluss.dringend } : {}),
+          ...(gegen ? { gegen_zu: gegen.wurzel, treffen_id: gegen.z.treffen_id ?? null, sitzung_nr: gegen.z.sitzung_nr ?? null, sitzung_ab: gegen.z.sitzung_ab ?? null } : {}), // KC-CLUB-GEGENVORSCHLAG
         }).select().single();
         if (error || !v) throw new Fehler("Speichern fehlgeschlagen.", 500);
         await objAnlagenSetzen(ich, "vorschlag", v.id, p.anlagen); // 2.448.0 KC-CLUB-OBJEKT-ANLAGEN (z. B. Skizze, Flyer des Spendenempfängers)
@@ -11316,6 +11386,11 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             betreff: `Köcheclub Werne – Abstimmung: ${titel}`,
             text: `Hallo,\n\nes gibt eine neue Abstimmung${v.geheim ? " (geheim)" : ""}${zielText ? ` (nur für: ${zielText})` : ""}:\n\n🗳️ ${titel}${v.beschreibung ? "\n\n" + v.beschreibung : ""}\n\nAntworten: ${optionen.join(" / ")}${fristText ? "\n" + fristText.trim() : ""}\n\nAbstimmen in der Köcheclub-App: ${APP_URL}#vorschlaege\n\nViele Grüße\nKöcheclub Werne`,
             url: APP_URL + "#vorschlaege",
+          } : gegen ? { // KC-CLUB-GEGENVORSCHLAG: nur an die Leitung wie jeder Themenvorschlag – keine Push an die Unterstützer (Hansi 15.11.)
+            titel: "↔️ Gegenvorschlag", kurz: `${ich.name}: ${titel} – zu „${gegen.wurzelTitel}“`,
+            betreff: `Köcheclub Werne – Gegenvorschlag: ${titel}`,
+            text: `Hallo,\n\n${ich.name} macht einen Gegenvorschlag zu „${gegen.wurzelTitel}“:\n\n↔️ ${titel}${v.beschreibung ? "\n\n" + v.beschreibung : ""}\n\nDie Mitglieder können jetzt einen der Vorschläge unterstützen.\n\nAnsehen in der Köcheclub-App: ${APP_URL}#vorschlaege\n\nViele Grüße\nKöcheclub Werne`,
+            url: APP_URL + "#vorschlaege",
           } : {
             titel: spenden ? "💝 Spendenvorschlag" : "💡 Themenvorschlag", kurz: `${ich.name}: ${titel}`,
             betreff: `Köcheclub Werne – neuer ${spenden ? "Spendenvorschlag" : "Themenvorschlag"}: ${titel}`,
@@ -11323,7 +11398,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             url: APP_URL + "#vorschlaege",
           }, `club-vorschlag:${v.id}`);
         }
-        await protokoll(ich.person_id, "vorschlag_angelegt", { vorschlag: v.id, art, geheim: v.geheim, versand, ...(spenden ? { spenden: spenden.length, summe: spendenSumme(spenden) } : {}), ...(schluss.sitzung ? { schluss: schluss.dringend ? "dringend" : "danach" } : {}) });
+        await protokoll(ich.person_id, "vorschlag_angelegt", { vorschlag: v.id, art, geheim: v.geheim, versand, ...(gegen ? { gegen_zu: gegen.wurzel } : {}), ...(spenden ? { spenden: spenden.length, summe: spendenSumme(spenden) } : {}), ...(schluss.sitzung ? { schluss: schluss.dringend ? "dringend" : "danach" } : {}) });
         return json({ ok: true, id: v.id, versand, ...(schluss.sitzung ? { dringend: !!schluss.dringend, verschoben: schluss.danach?.text ?? null } : {}) });
       }
       // 2.694.0 KC-CLUB-ANMELDESCHLUSS: dringender Vorschlag – Clubsprecher, Kassenwart oder Admin entscheidet (wer zuerst tippt)
@@ -11436,6 +11511,11 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           const { error: se } = p.wahl ? await db.from("kc_club_stimmen").upsert({ vorschlag_id: v.id, person_id: ich.person_id, wahl: "dafuer", geaendert_am: jetzt() })
             : await db.from("kc_club_stimmen").delete().eq("vorschlag_id", v.id).eq("person_id", ich.person_id);
           if (se) throw new Fehler("Stimme konnte nicht gespeichert werden – bitte gleich noch einmal versuchen.", 500); // nie mehr still verlieren
+          // KC-CLUB-GEGENVORSCHLAG: nur einen der Gruppe unterstützen – die Stimme wandert (bei den anderen offenen der Gruppe fällt sie weg)
+          if (p.wahl && v.art === "thema") {
+            const andere = (await gegenGruppeOffen((v.gegen_zu || v.id) as string)).map((x: any) => x.id).filter((id: string) => id !== v.id);
+            if (andere.length) await db.from("kc_club_stimmen").delete().eq("person_id", ich.person_id).in("vorschlag_id", andere);
+          }
         } else if (v.paket?.freitext) {
           // 2.609.0 KC-CLUB-ABSTIMMUNG-FREITEXT: eingetippte Antwort (höchstens 100 Zeichen); leer = Antwort zurücknehmen; nie geheim
           if (v.geheim) throw new Fehler("Bei geheimen Abstimmungen gibt es keine freien Antworten.", 409);
@@ -16204,7 +16284,11 @@ Köcheclub-App`,
 
       // ----- Online & Anklopfen (KC-CLUB-ONLINE) -----
       case "weg": { // KC-CLUB-ONLINE-ECHT: App wurde weggelegt (in den Hintergrund oder geschlossen) – sofort nicht mehr online
-        if (!ich.nurLesen) await wegMerken(ich.person_id);
+        if (!ich.nurLesen) {
+          const weg = await wegMerken(ich.person_id);
+          // KC-CLUB-OFFLINE-SCHNELL: „🔴 … ist offline“ etwa 1 Minute nach dem Verlassen statt aus dem 5-Minuten-Lauf (im Hintergrund, Antwort sofort)
+          if (!ich.person_id.startsWith("KC-P-TEST")) nebenbei(offlineNachWeg(ich.person_id, weg).catch((e) => console.error("offline schnell", String(e))));
+        }
         return json({ ok: true });
       }
       case "online": {
@@ -16465,6 +16549,20 @@ Köcheclub-App`,
       // KC-CLUB-ANSAGE-VORGABE (2.173.0, Wunsch Hansi „bei Marianne einschalten: Info, wenn jemand online kommt oder rausgeht“):
       // Ansagen sind eine Einstellung je Gerät – der Admin hinterlegt eine Vorgabe, die App des Mitglieds übernimmt sie beim nächsten
       // Öffnen einmal (je Gerät) und sagt es dem Mitglied; danach kann es jederzeit selbst wieder ändern. Nur online/verlassen.
+      // 2.953.0 KC-CLUB-AENDERUNG-ERBITTEN (Wunsch Hansi 15.11.2026): beim Mitglied um eine Änderungsmeldung bitten (leere Liste = Bitte zurücknehmen)
+      case "aenderung_erbitten": {
+        nurAdmin(ich);
+        const an = String(p.an || "");
+        if (an === ich.person_id || !(await aktiveMitglieder()).some((m) => m.person_id === an)) throw new Fehler("Mitglied nicht gefunden.", 404);
+        const wert = EINSTELLUNGEN.aenderung_bitte({ arten: p.arten, notiz: p.notiz, von: ich.vorname || "Admin", am: jetzt() }) as { arten: string[] };
+        const { error } = wert.arten.length
+          ? await db.from("kc_club_person_einstellung").upsert({ person_id: an, schluessel: "aenderung_bitte", wert, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" })
+          : await db.from("kc_club_person_einstellung").delete().eq("person_id", an).eq("schluessel", "aenderung_bitte");
+        if (error) throw new Fehler("Die Bitte konnte nicht gespeichert werden.", 500);
+        await protokoll(ich.person_id, "aenderung_erbeten", { an, arten: wert.arten });
+        return json({ ok: true, arten: wert.arten });
+      }
+
       case "ansage_vorgabe_setzen": {
         nurAdmin(ich);
         const an = String(p.an || "");
@@ -17469,6 +17567,13 @@ Köcheclub-App`,
         const { data: voll } = await db.from("kc_club_aenderungen").select("*").eq("id", a.id).single();
         const ablage = voll ? await aeAblegen(ich, voll, "Meldung") : null;
         await protokoll(ich.person_id, "aenderung_gemeldet", { meldung: a.id, art: art.id, empfaenger: empfaenger.length, anAlle, ablage });
+        // 2.953.0 KC-CLUB-AENDERUNG-ERBITTEN: erbetene Meldung ist da → aus der Bitte streichen (ist sie leer, entfällt die Start-Nachricht)
+        try {
+          const { data: bi } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "aenderung_bitte").maybeSingle();
+          const rest = (bi?.wert?.arten ?? []).filter((x: string) => x !== art.id);
+          if (bi && rest.length) await db.from("kc_club_person_einstellung").update({ wert: { ...bi.wert, arten: rest }, geaendert_am: jetzt() }).eq("person_id", ich.person_id).eq("schluessel", "aenderung_bitte");
+          else if (bi) await db.from("kc_club_person_einstellung").delete().eq("person_id", ich.person_id).eq("schluessel", "aenderung_bitte");
+        } catch (e) { console.warn("aenderung_bitte", String(e)); }
         const leute = await personen(empfaenger);
         return json({ ok: true, id: a.id, an: empfaenger.map((id) => vorname(leute.get(id) ?? null) || id), alle: alle?.gesendet ?? null, auto: !!art.auto, abgelegt: !!ablage?.persoenlich });
       }

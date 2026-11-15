@@ -22,7 +22,7 @@ assert.ok(/return \{ on: new Set\(ids\.filter\(\(id\) => [^\n]*&& !istWeg\(einst
 assert.ok(server.includes('if (!weitere.includes("online_seit")) weitere = [...weitere, "online_seit"];'), "online_seit wird immer mitgelesen");
 assert.ok(server.includes("&& !weg.has(id))); // KC-CLUB-ONLINE-ECHT"), "onlineJetzt (z. B. „an alle Online“)");
 assert.ok(server.includes("return new Set(drin.filter((id) => !weg.has(id)));"), "Push wieder, wenn die App weggelegt ist");
-assert.ok(/case "weg": \{[^}]*if \(!ich\.nurLesen\) await wegMerken\(ich\.person_id\);\s*return json\(\{ ok: true \}\);/.test(server), "Aktion „weg“");
+assert.ok(/case "weg": \{[^}]*if \(!ich\.nurLesen\) \{\s*const weg = await wegMerken\(ich\.person_id\);[\s\S]{0,400}?\}\s*return json\(\{ ok: true \}\);/.test(server), "Aktion „weg“ (2.953.0 KC-CLUB-OFFLINE-SCHNELL: stößt dazu die Offline-Meldung an)");
 const merken = server.slice(server.indexOf("async function onlineSeitMerken("), server.indexOf("// KC-CLUB-PUSH-NUR-OFFLINE"));
 assert.ok(merken.includes("if (w > 0 && jetztMs - w < ONLINE_WEG_TOLERANZ_MS) return;") && merken.includes("|| warWeg; // nach „weg“ beginnt eine neue Sitzung"), "verspäteter Ping hebt „weg“ nicht auf, neuer sichtbarer Ping schon");
 assert.ok(/const ONLINE_WEG_TOLERANZ_MS = 3000;/.test(server) && /const ONLINE_SEK = 150,/.test(server), "Zeiten");

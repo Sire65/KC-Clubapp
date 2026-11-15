@@ -62,4 +62,13 @@ assert.ok(/await nurWennFrei\("gemeinschaftsgericht", ich, "Das Gemeinschaftsger
 assert.ok(/if \(\(await freigaben\(\)\)\.gemeinschaftsgericht !== "alle"\) return; \/\/ Test: keine Erinnerung an alle/.test(er), "Test: keine Erinnerung");
 assert.ok(/ziel = test \? \[ich\.person_id\] : alle/.test(adm) && /return json\(\{ ok: true, an: 1, test: true/.test(adm), "Test: Versand nur an den Admin, Runde bleibt offen");
 assert.ok(/nur: \(\) => frei\("gemeinschaftsgericht"\) && !!INIT\?\.gericht\?\.runde/.test(app) && /nurTest\("gemeinschaftsgericht"\) \? "🔒 nur für dich \(Test\) · "/.test(app), "Kachel nur mit Freigabe, Test-Hinweis");
+// 6. Fund Hansi 15.11. („Habe den Titel eingetragen, geht aber nicht“): Kennungen dürfen nicht schon in index.html stehen (grTitel = Gruppen-Bearbeitung)
+{
+  const html = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const teil = app.slice(app.indexOf("// ---------- KC-CLUB-GEMEINSCHAFTSGERICHT"), app.indexOf("async function grDruck()"));
+  const ids = [...teil.matchAll(/id="([A-Za-z][\w-]*)"/g)].map((m) => m[1]);
+  assert.ok(ids.length >= 8, "Kennungen gefunden");
+  for (const id of ids) assert.ok(!html.includes(`id="${id}"`), `Kennung ${id} gibt es schon in index.html`);
+  assert.ok(/const f = \(id\) => document\.querySelector\(`#grAdminBlatt #\$\{id\}`\);/.test(teil) && /titel: f\("ggTitel"\)\.value/.test(teil), "Titel aus dem Blatt lesen");
+}
 console.log("✅ gemeinschaftsgericht: alle Prüfungen bestanden");

@@ -73,6 +73,8 @@ jobs:
       - run: node tests/alter-link-klar.test.mjs
       - run: node tests/update-hinweis.test.mjs
       - run: node tests/sicherung-packen.test.mjs
+      - run: node tests/online-frage.test.mjs
+      - run: node tests/aenderung-erbitten.test.mjs
       - run: node tests/spiegel-schonend.test.mjs
       - run: node tests/online-jede-anfrage.test.mjs
       - run: node tests/schreibtisch.test.mjs
@@ -96,6 +98,7 @@ jobs:
       - run: node tests/buero-fein.test.mjs
       - run: node tests/pinnwand-nie-auto.test.mjs
       - run: node tests/offline-push.test.mjs
+      - run: node tests/gegenvorschlag.test.mjs
       - run: node tests/install-einladung.test.mjs
       - run: node tests/install-stand.test.mjs
       # KC-CLUB-FA-NEU (2.855.0)

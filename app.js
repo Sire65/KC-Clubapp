@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.955.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.958.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -14352,20 +14352,20 @@ function grFrage(vonHand) {
     <p style="margin:6px 0">Viele Köche verderben den Brei – <b>bei uns nicht!</b> ${zwei ? "Welche <b>zwei</b> Zutaten, Gewürze oder Kräuter gibst" : "Welche Zutat, welches Gewürz oder Kraut gibst"} du in unser Gemeinschaftsgericht?</p>
     <p class="hinweis" style="margin:0 0 8px">Einsenden bis ${grDatum(g.runde.bis)} · die anderen sehen deine Wahl nicht · das fertige Rezept bekommen alle als PDF.</p>
     ${abgelehnt.map((z) => `<div class="karte gr-abgelehnt">🔁 „${esc(z.zutat)}“ passt leider nicht${z.grund ? ": " + esc(z.grund) : ""} – bitte wähle eine andere.</div>`).join("")}
-    <div id="grWahl" class="gr-wahl" aria-live="polite"></div>
-    <input id="grSuche" class="gr-suche" type="search" placeholder="🔍 Zutat suchen …" autocomplete="off" oninput="GGR.suche=this.value;ggListe()">
+    <div id="ggWahl" class="gr-wahl" aria-live="polite"></div>
+    <input id="ggSuche" class="gr-suche" type="search" placeholder="🔍 Zutat suchen …" autocomplete="off" oninput="GGR.suche=this.value;ggListe()">
     <div id="ggListe" class="gr-liste"></div>
-    <div class="gr-eigen"><input id="grEigen" maxlength="60" placeholder="✏️ Eigene Zutat, z. B. Stierhoden" autocomplete="off" onkeydown="if(event.key==='Enter')grEigen()"><button type="button" class="knopf klein" onclick="grEigen()" aria-label="Eigene Zutat übernehmen">➕</button></div>
+    <div class="gr-eigen"><input id="ggEigenFeld" maxlength="60" placeholder="✏️ Eigene Zutat, z. B. Stierhoden" autocomplete="off" onkeydown="if(event.key==='Enter')grEigen()"><button type="button" class="knopf klein" onclick="grEigen()" aria-label="Eigene Zutat übernehmen">➕</button></div>
     <p class="hinweis" style="margin:2px 0 8px">Eigene Zutaten schaut sich ${esc(adminName())} kurz an.</p>
-    <div class="knoepfe"><button class="knopf haupt" id="grLos" onclick="grSenden()">✅ Speichern</button>
+    <div class="knoepfe"><button class="knopf haupt" id="ggLos" onclick="grSenden()">✅ Speichern</button>
       ${vonHand ? `<button class="knopf" onclick="fensterZu($('grBlatt'))">Schließen</button>` : `<button class="knopf" onclick="grAntwort('spaeter')">⏰ Später</button><button class="knopf" onclick="grAntwort('nein')">🙅 Diesmal nicht</button>`}</div>`);
   grWahlZeigen(); ggListe();
 }
 function grWahlZeigen() {
-  const el = $("grWahl"), n = INIT?.gericht?.runde?.je || 1; if (!el) return;
+  const el = $("ggWahl"), n = INIT?.gericht?.runde?.je || 1; if (!el) return; // gg…-Kennungen: grTitel/grSuche gibt es schon (Gruppen-Bearbeitung, Fund Hansi 15.11.)
   el.innerHTML = GGR.wahl.length ? GGR.wahl.map((z, i) => `<span class="gr-gewaehlt">${esc(z.zutat)}${z.eigen ? " ✏️" : ""}<button type="button" aria-label="${esc(z.zutat)} entfernen" onclick="GGR.wahl.splice(${i},1);grWahlZeigen();ggListe()">✕</button></span>`).join("")
     + (GGR.wahl.length < n ? `<span class="hinweis">noch ${n - GGR.wahl.length} frei</span>` : "") : `<span class="hinweis">Noch nichts gewählt – unten antippen oder eintippen.</span>`;
-  const k = $("grLos"); if (k) k.disabled = !GGR.wahl.length;
+  const k = $("ggLos"); if (k) k.disabled = !GGR.wahl.length;
 }
 function ggListe() { // gg…: grListe/grAdmin gibt es schon (Gruppen-Bearbeitung)
   const el = $("ggListe"); if (!el) return;
@@ -14380,13 +14380,13 @@ function grNehmen(t, gruppe, eigen = false) {
   grWahlZeigen(); ggListe();
 }
 function grEigen() {
-  const t = ($("grEigen")?.value || "").replace(/\s+/g, " ").trim(); if (!t) return melde("Bitte eine Zutat eintippen.");
+  const t = ($("ggEigenFeld")?.value || "").replace(/\s+/g, " ").trim(); if (!t) return melde("Bitte eine Zutat eintippen.");
   const aus = Object.entries(GR_ZUTATEN).find(([, l]) => l.some((x) => x.toLowerCase() === t.toLowerCase())); // steht sie in der Liste, gilt sie als Listen-Zutat
-  $("grEigen").value = ""; grNehmen(aus ? aus[1].find((x) => x.toLowerCase() === t.toLowerCase()) : t, aus ? aus[0] : null, !aus);
+  $("ggEigenFeld").value = ""; grNehmen(aus ? aus[1].find((x) => x.toLowerCase() === t.toLowerCase()) : t, aus ? aus[0] : null, !aus);
 }
 async function grSenden() {
   const g = INIT?.gericht; if (!g?.runde || !GGR.wahl.length) return;
-  const k = $("grLos"); if (k) k.disabled = true;
+  const k = $("ggLos"); if (k) k.disabled = true;
   try { const r = await api("gericht_zutat_setzen", { runde: g.runde.id, zutaten: GGR.wahl.map((z) => ({ zutat: z.zutat, gruppe: z.gruppe, eigen: z.eigen })) }, { warten: true });
     grSetzen(r); fensterZu($("grBlatt")); kachelnZeigen();
     melde(`🍲 Danke! ${GGR.wahl.length > 1 ? "Deine Zutaten sind" : "Deine Zutat ist"} dabei: ${GGR.wahl.map((z) => z.zutat).join(", ")}${GGR.wahl.some((z) => z.eigen) ? ` – ${adminName()} schaut sie sich noch kurz an` : ""}. Ändern geht bis ${grDatum(g.runde.bis)} über die Kachel 🍲.`);
@@ -14423,18 +14423,20 @@ function grRundeForm(aendern) {
   const el = document.querySelector("#grAdminBlatt .blatt-innen"); if (!el) return;
   const r = aendern ? GRA.d.runde : null, heute = GRA.d.heute;
   el.innerHTML = `<h3 style="margin:0">🍲 ${r ? "Runde ändern" : "Neue Runde starten"}</h3>
-    <label class="feld">Titel<input id="grTitel" maxlength="80" value="${esc(r?.titel || "Unser Gemeinschaftsgericht")}"></label>
-    <label class="feld">Einsenden ab<input id="grVon" type="date" value="${esc(r?.von || heute)}"></label>
-    <label class="feld">Einsenden bis<input id="grBis" type="date" value="${esc(r?.bis || "")}"></label>
-    <div class="feld"><b>Zutaten je Person</b><div class="umschalter" id="grJe"><button type="button" data-je="1" class="${(r?.je_person || 1) === 1 ? "an" : ""}" onclick="grJe(1)">1 Zutat</button><button type="button" data-je="2" class="${r?.je_person === 2 ? "an" : ""}" onclick="grJe(2)">2 Zutaten</button></div></div>
+    <label class="feld">Titel<input id="ggTitel" maxlength="80" value="${esc(r?.titel || "Unser Gemeinschaftsgericht")}"></label>
+    <label class="feld">Einsenden ab<input id="ggVon" type="date" value="${esc(r?.von || heute)}"></label>
+    <label class="feld">Einsenden bis<input id="ggBis" type="date" value="${esc(r?.bis || "")}"></label>
+    <div class="feld"><b>Zutaten je Person</b><div class="umschalter" id="ggJe"><button type="button" data-je="1" class="${(r?.je_person || 1) === 1 ? "an" : ""}" onclick="grJe(1)">1 Zutat</button><button type="button" data-je="2" class="${r?.je_person === 2 ? "an" : ""}" onclick="grJe(2)">2 Zutaten</button></div></div>
     <p class="hinweis">Ab dem ersten Tag fragt die App alle (Mitglieder und Aushilfen) beim Öffnen. Die Zutaten der anderen sieht nur du. 2 Tage vor Ende kommt eine Erinnerung an alle, die noch nichts eingereicht haben.</p>
     <div class="knoepfe"><button class="knopf haupt" onclick="grRundeSpeichern(${r ? jsArg(r.id) : "null"})">${r ? "💾 Speichern" : "🍲 Runde starten"}</button><button class="knopf" onclick="grAdminZeigen()">Zurück</button></div>`;
 }
-function grJe(n) { document.querySelectorAll("#grJe [data-je]").forEach((b) => b.classList.toggle("an", Number(b.dataset.je) === n)); }
+function grJe(n) { document.querySelectorAll("#ggJe [data-je]").forEach((b) => b.classList.toggle("an", Number(b.dataset.je) === n)); }
 async function grRundeSpeichern(id) {
-  const je = Number(document.querySelector("#grJe .an")?.dataset.je || 1);
-  if (!$("grBis").value) return melde("Bitte das Ende des Einsendezeitraums wählen.");
-  try { GRA.d = await api("gericht_runde_speichern", { id, titel: $("grTitel").value, von: $("grVon").value, bis: $("grBis").value, je }, { warten: true }); grAdminZeigen();
+  // Fund Hansi 15.11. („Habe den Titel eingetragen, geht aber nicht“): grTitel gab es schon (Gruppen-Bearbeitung, unsichtbar, leer) – jetzt ggTitel …, nur im Blatt gesucht
+  const f = (id) => document.querySelector(`#grAdminBlatt #${id}`);
+  const je = Number(document.querySelector("#ggJe .an")?.dataset.je || 1);
+  if (!f("ggBis")?.value) return melde("Bitte das Ende des Einsendezeitraums wählen.");
+  try { GRA.d = await api("gericht_runde_speichern", { id, titel: f("ggTitel").value, von: f("ggVon").value, bis: f("ggBis").value, je }, { warten: true }); grAdminZeigen();
     melde(id ? "💾 Runde gespeichert" : "🍲 Runde gestartet – ab dem ersten Tag fragt die App alle beim Öffnen"); } catch (e) { meldeFehler(e); }
 }
 async function grAbbrechen() {
@@ -17911,7 +17913,7 @@ async function neuLadenRoh(vonHand) {
     if (!ONL.timer) nachUpdatePruefen(begruesst);
     if (!ONL.timer) { onlinePing(); onlineTakt(); pushAktivPruefen(); herzStarten(); const a = /#anklopfen=([0-9a-f-]{36})/.exec(START_HASH || ""); if (a) anklopfenAusLink(a[1]); const c = /#anruf=([0-9a-f-]{36})/.exec(START_HASH || ""); if (c) { ONL.erledigt.add("r" + c[1]); anrufEingehend(c[1]); } }
     if (!PW.startGeprueft) { PW.startGeprueft = true; pwStart(begruesst); }
-    if (!SH_START.geprueft) { SH_START.geprueft = true; setTimeout(startHinweisPruefen, 2500); setTimeout(filmHinweisPruefen, 4000); setTimeout(eingangHinweisPruefen, 5000); setTimeout(neuesGeraetFragen, 6000); setTimeout(gartenTagPruefen, 8000); setTimeout(() => lsPruefen(true), 1500); } // KC-CLUB-START-HINWEIS · 2.726.0 neues Gerät + Liegen-Schutz
+    if (!SH_START.geprueft) { SH_START.geprueft = true; setTimeout(startHinweisPruefen, 2500); setTimeout(filmHinweisPruefen, 4000); setTimeout(eingangHinweisPruefen, 5000); setTimeout(neuesGeraetFragen, 6000); setTimeout(gartenTagPruefen, 8000); setTimeout(aeBittePruefen, 9000); /* 2.953.0 KC-CLUB-AENDERUNG-ERBITTEN */ setTimeout(() => lsPruefen(true), 1500); } // KC-CLUB-START-HINWEIS · 2.726.0 neues Gerät + Liegen-Schutz
     if (!begruesst) ustPruefen(); // KC-CLUB-UNTERSTUETZUNG (2.85.0): einmal fragen, wie viel Hilfe gewünscht ist
     designUebernehmen(INIT.einstellungen?.design); infoFelderAktualisieren(); infoStartUebernehmen(INIT.einstellungen?.infofeld); ansichtInfo();
     VB.wartung = INIT.wartung || null; VB.server = INIT.server || null; vbCommSetzen(INIT.communicator || null);
@@ -18942,7 +18944,7 @@ async function vorschlaegeLaden() {
     VORSCHLAG_MAP = new Map(vorschlaege.map((v) => [v.id, v]));
     VS_PAKETE = vsPakete(vorschlaege); // 2.555.0 KC-CLUB-ABSTIMMUNG-PAKET
     const offenesInfo = document.getElementById("vorschlagInfo");
-    if (offenesInfo) offenesInfo.dataset.paket ? vorschlagPaketInfo(offenesInfo.dataset.paket) : vorschlagInfo(offenesInfo.dataset.id); // offenes Info-Fenster auffrischen
+    if (offenesInfo) offenesInfo.dataset.paket ? vorschlagPaketInfo(offenesInfo.dataset.paket) : offenesInfo.dataset.gegen ? vorschlagGegenInfo(offenesInfo.dataset.gegen) : vorschlagInfo(offenesInfo.dataset.id); // offenes Info-Fenster auffrischen
     buEingangAuffrischen(); // KC-CLUB-BUERO-EINGANG
     // Abstimmungen mit mehreren Fragen erscheinen als eine Kachel (bei der ersten Frage); offen, solange noch eine Frage offen ist
     const paketOffen = (v) => VS_PAKETE.get(v.paket.id).some((x) => x.status === "offen");
@@ -18953,7 +18955,7 @@ async function vorschlaegeLaden() {
       (abst.length ? `<div class="abschnitt"><h3>🗳️ Abstimmungen</h3></div><div class="mini-kacheln">${abst.map(vorschlagKachel).join("")}</div>` : "")
       + (spenden.length ? `<div class="abschnitt"><h3>💝 Spendenprojekte für die nächste Sitzung</h3></div><div class="mini-kacheln">${spenden.map(spendeKachel).join("")}</div>` : "")
       + `<div class="abschnitt"><h3>💡 Themen für die nächste Sitzung</h3></div>`
-      + (themen.length ? `<div class="mini-kacheln">${themen.map(vorschlagKachel).join("")}</div>` : '<div class="karte hinweis">Noch keine Themen. Tippe oben auf „＋ Neu“, um etwas vorzuschlagen.</div>')
+      + (themen.length ? `<div class="mini-kacheln">${vsGegenKacheln(themen)}</div>` : '<div class="karte hinweis">Noch keine Themen. Tippe oben auf „＋ Neu“, um etwas vorzuschlagen.</div>') // KC-CLUB-GEGENVORSCHLAG
       + vsErledigtHtml(fertig);
     klappenMerken($("vorschlagListe")); // 2.833.0: Auf/Zu der Erledigt-Bereiche wird gemerkt (wie überall)
   } catch (e) { meldeFehler(e); ladeFehlerStand("vorschlagListe", e, "vorschlaegeLaden()"); }
@@ -19010,6 +19012,7 @@ function vorschlagKarte(v) {
     v.darfBearbeiten ? `<button class="knopf klein" onclick="vorschlagBearbeiten('${v.id}')">✏️ Bearbeiten</button>` : "", // KC-CLUB-VORSCHLAG-BEARBEITEN
     v.darfZurueckziehen ? `<button class="knopf klein" onclick="vorschlagStatus('${v.id}','zurueckgezogen')">Zurückziehen</button>` : "",
     v.darfLoeschen ? `<button class="knopf klein" onclick="vorschlagLoeschen('${v.id}')">🗑️ Löschen</button>` : "",
+    offen && v.art === "thema" && vsGegenGruppe(v).length < GEGEN_MAX ? `<button class="knopf klein" onclick="vorschlagGegen('${esc(v.id)}')">↔️ Gegenvorschlag</button>` : "", // KC-CLUB-GEGENVORSCHLAG
     `<button class="knopf klein" onclick="einmal(this, () => vorschlagInOrdner('${esc(v.id)}'))">🗄️ In Ordner</button>`, // 2.820.0 KC-CLUB-VORSCHLAG-ORDNER
     v.behandeltIn ? `<button class="knopf klein" onclick="$('vorschlagInfo')?.remove();protokollOeffnen('${esc(v.behandeltIn)}')">📄 Im Protokoll</button>` : "", // 2.833.0 KC-CLUB-VORSCHLAG-ERLEDIGT
   ].join("");
@@ -19120,8 +19123,49 @@ function vorschlagInfo(id) {
   const v = VORSCHLAG_MAP.get(id);
   if (!v) { document.getElementById("vorschlagInfo")?.remove(); return; }
   if (v.paket?.id && VS_PAKETE.has(v.paket.id)) return vorschlagPaketInfo(v.paket.id); // 2.555.0: Frage einer Abstimmung mit mehreren Fragen → ganze Abstimmung
+  if (vsGegenGruppe(v).length > 1) return vorschlagGegenInfo(vsGegenKey(v)); // KC-CLUB-GEGENVORSCHLAG: alle Vorschläge zum Thema zusammen
   const f = blattAuf("vorschlagInfo", `<div class="info-gross">${vorschlagKarte(v)}</div><button class="knopf" style="text-align:center" onclick="$('vorschlagInfo').remove()">Schließen</button>`);
   f.dataset.id = id;
+}
+// ---------- KC-CLUB-GEGENVORSCHLAG (Wunschliste #93, Hansi 15.11.2026: „Gegenvorschlag einreichen … damit die Mitglieder über 2 Vorschläge abstimmen“ –
+// bis zu 3 (A, B, C), jedes Mitglied darf, keine Push an die Unterstützer, Knopf „Gegenvorschlag“) ----------
+// Gruppe = offene Themen mit gleichem Schlüssel (gegenZu des Servers, sonst eigene id). Ab 2 offenen: eine Kachel „A oder B?“, ein Blatt mit allen Karten;
+// unterstützen kann man nur einen (der Server nimmt die Stimme bei den anderen weg). Zieht einer zurück, ist der andere wieder ein normaler Vorschlag.
+const GEGEN_MAX = 3, GEGEN_BUCHST = ["A", "B", "C"];
+let VF_GEGEN = null;
+const vsGegenKey = (v) => String(v?.gegenZu || v?.id || "");
+function vsGegenGruppe(v) {
+  if (!v || v.art !== "thema" || v.status !== "offen") return v ? [v] : [];
+  const k = vsGegenKey(v), g = [...VORSCHLAG_MAP.values()].filter((x) => x.art === "thema" && x.status === "offen" && vsGegenKey(x) === k);
+  return g.sort((a, b) => String(a.erstellt_am).localeCompare(String(b.erstellt_am)));
+}
+function vsGegenKacheln(themen) {
+  const schon = new Set();
+  return themen.map((v) => {
+    const g = vsGegenGruppe(v); if (g.length < 2) return vorschlagKachel(v);
+    const k = vsGegenKey(v); if (schon.has(k)) return ""; schon.add(k);
+    const mein = g.findIndex((x) => x.meine);
+    return `<button class="mini-kachel vs-gegen-kachel" onclick="vorschlagGegenInfo('${esc(k)}')"><span class="mk-sym">↔️</span>
+      <span class="mk-titel">${g.map((x, i) => `<b>${GEGEN_BUCHST[i]}</b> ${esc(x.titel)}`).join('<small class="vs-oder"> oder </small>')}</span>
+      <span class="mk-von">${g.length} Vorschläge zum gleichen Thema</span>
+      <span class="mk-unter">${g.map((x, i) => `${GEGEN_BUCHST[i]}: 👍 ${x.ergebnis?.[0]?.anzahl || 0}`).join(" · ")}</span>
+      ${mein >= 0 ? `<span class="marke gruen">✔ Du bist für ${GEGEN_BUCHST[mein]}</span>` : '<span class="marke gelb">👉 Welcher ist dir lieber?</span>'}</button>`;
+  }).join("");
+}
+function vorschlagGegenInfo(k) {
+  const erster = [...VORSCHLAG_MAP.values()].find((x) => x.art === "thema" && x.status === "offen" && vsGegenKey(x) === k); // erster kann zurückgezogen sein
+  const g = erster ? vsGegenGruppe(erster) : [];
+  if (g.length < 2) return g[0] ? vorschlagInfo(g[0].id) : document.getElementById("vorschlagInfo")?.remove();
+  const f = blattAuf("vorschlagInfo", `<div class="info-gross"><h3 style="margin:0 0 4px">↔️ ${g.length} Vorschläge zum gleichen Thema</h3>
+    <p class="hinweis" style="margin:0 0 8px">Du kannst <b>einen</b> davon unterstützen. Tippst du auf einen anderen, wandert deine Stimme dorthin.</p>
+    <div class="vs-gegen">${g.map((x, i) => `<div class="vs-gegen-teil"><span class="vs-gegen-buchst">${GEGEN_BUCHST[i]}</span>${vorschlagKarte(x)}</div>`).join("")}</div></div>
+    <button class="knopf" style="text-align:center" onclick="$('vorschlagInfo').remove()">Schließen</button>`);
+  delete f.dataset.id; f.dataset.gegen = k;
+}
+function vorschlagGegen(id) {
+  const v = VORSCHLAG_MAP.get(id); if (!v) return;
+  $("vorschlagInfo")?.remove();
+  vorschlagForm("thema", undefined, v.id); // der Server sucht daraus den ersten der Gruppe
 }
 // ---------- 2.555.0 KC-CLUB-ABSTIMMUNG-PAKET (Wunsch Hansi „Abstimmung mit Überschrift – Technik, Bilderrechner, Abrechnung – und mehreren Fragen“) ----------
 // Eine Abstimmung mit Überschrift, Bereichen (z. B. Technik) und mehreren Fragen. Jede Frage ist eine normale Abstimmung mit eigenen Antworten;
@@ -19460,8 +19504,10 @@ function vfVorlageNehmen(v) {
   melde("📄 Vorlage übernommen – bitte prüfen und dann „Abstimmung starten“");
 }
 function vfPkWeg(i, j) { VF_PK[i].fragen.splice(j, 1); if (!VF_PK[i].fragen.length) VF_PK.splice(i, 1); vfPkZeigen(); }
-function vorschlagForm(art, paket) {
+function vorschlagForm(art, paket, gegen) {
   vfArt = art || "thema";
+  VF_GEGEN = vfArt === "thema" && gegen ? gegen : null; // KC-CLUB-GEGENVORSCHLAG: zu welchem Thema (Gruppe)
+  const gz = VF_GEGEN ? VORSCHLAG_MAP.get(VF_GEGEN) : null;
   if (vfArt === "abstimmung" && paket !== undefined) vfPaket = !!paket;
   if (vfArt === "abstimmung" && vfPaket && !VF_PK.length) VF_PK = [{ name: "", fragen: [vfPkFrage()] }];
   const pk = vfArt === "abstimmung" && vfPaket;
@@ -19469,13 +19515,14 @@ function vorschlagForm(art, paket) {
   if (vfArt === "spende") VF_SP = [{ empfaenger: VORSCHLAG_SPENDEN.empfaenger[0] || "", betrag: 0 }];
   const t0 = (VS_ZIEL && VORSCHLAG_TREFFEN.some((t) => t.id === VS_ZIEL) ? VS_ZIEL : VORSCHLAG_TREFFEN[0]?.id) || ""; // 1.24.1: nach Zusage die zugesagte Sitzung vorwählen
   $("vorschlagNeuKnopf")?.classList.remove("vs-puls");
-  $("vorschlagForm").innerHTML = `<h3>Neuer Vorschlag</h3>
-    <div class="artwahl drei"><button class="knopf ${vfArt === "thema" ? "haupt" : ""}" onclick="vorschlagForm('thema')">💡 Thema</button><button class="knopf ${vfArt === "spende" ? "haupt" : ""}" onclick="vorschlagForm('spende')">💝 Spende</button>${ICH.vorstand ? `<button class="knopf ${vfArt === "abstimmung" ? "haupt" : ""}" onclick="vorschlagForm('abstimmung')">🗳️ Abstimmung</button>` : ""}</div>
+  $("vorschlagForm").innerHTML = `<h3>${gz ? "↔️ Gegenvorschlag" : "Neuer Vorschlag"}</h3>
+    ${gz ? `<div class="karte vs-gegen-zu">Gegenvorschlag zu: <b>${vsGegenGruppe(gz).map((x) => "„" + esc(x.titel) + "“").join(" und ")}</b><br><small class="hinweis">Die Mitglieder können danach einen der Vorschläge unterstützen. Der Termin ist derselbe.</small></div>` : ""}
+    <div class="artwahl drei${gz ? " versteckt" : ""}"><button class="knopf ${vfArt === "thema" ? "haupt" : ""}" onclick="vorschlagForm('thema')">💡 Thema</button><button class="knopf ${vfArt === "spende" ? "haupt" : ""}" onclick="vorschlagForm('spende')">💝 Spende</button>${ICH.vorstand ? `<button class="knopf ${vfArt === "abstimmung" ? "haupt" : ""}" onclick="vorschlagForm('abstimmung')">🗳️ Abstimmung</button>` : ""}</div>
     ${vfArt === "spende" ? `<p class="hinweis" style="margin:8px 0 0">Ein oder mehrere Spendenprojekte für die nächste Sitzung – einfach antippen.</p><div id="vfSpenden"></div>` : ""}
     ${vfArt === "abstimmung" ? `<div class="hl-chips" id="vfPaketWahl" style="margin-top:8px"><button type="button" class="chip${pk ? "" : " an"}" onclick="vorschlagForm('abstimmung', false)">❓ Eine Frage</button><button type="button" class="chip${pk ? " an" : ""}" onclick="vorschlagForm('abstimmung', true)">📋 Mehrere Fragen mit Überschrift</button><button type="button" class="chip" onclick="vfVorlagen()">📄 Vorlage</button></div>` : ""}
     <label class="feld">${pk ? "Überschrift" : vfArt === "abstimmung" ? "Frage" : vfArt === "spende" ? "Überschrift (freiwillig – sonst automatisch)" : "Thema"}<input id="vfTitel" maxlength="150" placeholder="${pk ? "z. B. Technik, Bilderrechner, Abrechnung" : vfArt === "abstimmung" ? "z. B. Sollen wir im Mai ein Grillfest machen?" : vfArt === "spende" ? "z. B. Spenden aus dem Weihnachtsmarkt" : "z. B. Grillfest im Mai"}"></label>
     <label class="feld">Beschreibung (freiwillig)<textarea id="vfBeschr" rows="3"></textarea></label>
-    <label class="feld">Für welchen Termin?<select id="vfTreffen" onchange="vfSchlussZeigen()"><option value="">– allgemein –</option>${vsTerminOptionen(VORSCHLAG_TREFFEN, t0, null)}</select></label>
+    <label class="feld${gz ? " versteckt" : ""}">Für welchen Termin?<select id="vfTreffen" onchange="vfSchlussZeigen()"><option value="">– allgemein –</option>${vsTerminOptionen(VORSCHLAG_TREFFEN, t0, null)}</select></label>
     <p class="hinweis versteckt" id="vfSchluss" style="margin:-4px 0 8px"></p>
     ${pk ? '<div class="feld"><b>Bereiche und Fragen</b><div id="vfPaket"></div></div>' : vfArt === "abstimmung" ? '<label class="feld">Antworten (eine pro Zeile)<textarea id="vfOptionen" rows="3">Ja\nNein\nEnthaltung</textarea></label>' : ""}
     ${vfArt === "abstimmung" ? `
@@ -19536,6 +19583,7 @@ async function zielAuswahl(titel, ids, fertig) {
 }
 async function vorschlagSpeichern(knopf) {
   const daten = { art: vfArt, titel: $("vfTitel").value, beschreibung: $("vfBeschr").value, ...vsTerminWert($("vfTreffen").value), benachrichtigen: $("vfInfo").checked };
+  if (VF_GEGEN && vfArt === "thema") { daten.gegen_zu = VF_GEGEN; daten.treffen_id = null; delete daten.sitzung_nr; } // KC-CLUB-GEGENVORSCHLAG: Termin übernimmt der Server vom ersten
   if (vfArt === "spende") {
     daten.spenden = VF_SP.map((x) => ({ empfaenger: String(x.empfaenger || "").trim(), betrag: Number(x.betrag) || 0 }));
     const fehlt = daten.spenden.find((x) => !x.empfaenger || !(x.betrag > 0));
@@ -19570,6 +19618,7 @@ async function vorschlagSpeichern(knopf) {
       const r = await api(pk ? "abstimmungspaket_speichern" : "vorschlag_speichern", daten);
       oaLeeren("vf"); $("vorschlagForm").classList.add("versteckt");
       if (pk) VF_PK = [];
+      if (daten.gegen_zu) { VF_GEGEN = null; melde("↔️ Gegenvorschlag gespeichert – die Mitglieder können jetzt einen der Vorschläge unterstützen"); await vorschlaegeLaden(); const z = VORSCHLAG_MAP.get(daten.gegen_zu); return z ? vorschlagGegenInfo(vsGegenKey(z)) : undefined; } // KC-CLUB-GEGENVORSCHLAG
       melde(r.dringend ? "❗ Dringend eingereicht – Clubsprecher, Kassenwart oder Admin entscheiden" : r.verschoben ? `📅 Anmeldeschluss vorbei – dein Vorschlag kommt auf ${r.verschoben}`
         : r.versand ? `Gespeichert – ${r.versand.gesendet} benachrichtigt` : "Gespeichert"); vorschlaegeLaden();
     } catch (e) { meldeFehler(e); }
@@ -29734,9 +29783,51 @@ function aeWert(art, w) {
   if (art === "kleidung") return [w.kochjacke && "Kochjacke " + w.kochjacke, w.kochhose && "Kochhose " + w.kochhose].filter(Boolean).join(" · ") || "–";
   return Object.values(w).filter(Boolean).join(" · ") || "–";
 }
-async function aeStart() {
+async function aeStart(vorwahl) {
   blattAuf("aeBlatt", '<h3 style="margin:0">✏️ Meine Daten haben sich geändert</h3><p class="hinweis">⏳ Wird geladen …</p>');
-  try { AE.d = await api("aenderung_start", {}); AE.art = null; aeZeichnen(); } catch (e) { $("aeBlatt")?.remove(); meldeFehler(e); }
+  try { AE.d = await api("aenderung_start", {}); AE.art = typeof vorwahl === "string" && AE.d.arten.some((a) => a.id === vorwahl && !a.aus) ? vorwahl : null; aeZeichnen(); } // 2.953.0: direkt zur erbetenen Art
+  catch (e) { $("aeBlatt")?.remove(); meldeFehler(e); }
+}
+// ---------- 2.953.0 KC-CLUB-AENDERUNG-ERBITTEN (Wunsch Hansi 15.11.2026, Fall Christina „neue Handynummer“) ----------
+// Admin: beim Mitglied „✏️ Änderung erbitten“ (Handy, Anschrift …). Mitglied: beim nächsten Start (wenn nichts anderes offen ist) die Bitte mit
+// „✏️ Sofort erledigen“ (öffnet gleich das passende Formular), „⏰ Später“ (morgen wieder) und „Hat sich nichts geändert“ (Bitte erledigt).
+// Ist die Meldung abgeschickt, streicht der Server die Bitte von selbst. Werte stehen nie in der Bitte – nur, WAS gemeldet werden soll.
+// [Art, Zeichen, Knopf beim Admin, Satzteil beim Mitglied („bitte melde …“)]
+const AE_BITTE_ARTEN = [["handy", "📱", "Neue Handynummer", "deine neue Handynummer"], ["anschrift", "🏠", "Neue Anschrift", "deine neue Anschrift"],
+  ["festnetz", "☎️", "Neue Festnetznummer", "deine neue Festnetznummer"], ["mail", "✉️", "Neue E-Mail-Adresse", "deine neue E-Mail-Adresse"],
+  ["name", "🪪", "Neuer Name", "deinen neuen Namen"], ["notfall", "🆘", "Notfallkontakt", "deinen Notfallkontakt"]];
+async function aeErbitten(pid, vn) {
+  const f = dlgOeffnen(`<h3 class="dlg-kopf">✏️ ${esc(vn)} um eine Änderung bitten</h3>
+    <p class="dlg-text">Was soll ${esc(vn)} melden? Beim nächsten Öffnen der App kommt die Bitte mit „✏️ Sofort erledigen“.</p>
+    ${AE_BITTE_ARTEN.map(([id, s, t]) => `<label class="dlg-text" style="display:flex;gap:8px;align-items:center;margin:4px 0"><input type="checkbox" value="${id}"${id === "handy" ? " checked" : ""}> ${s} ${esc(t)}</label>`).join("")}
+    <label class="dlg-text" style="display:block;margin-top:8px">Kurzer Satz dazu (freiwillig)<input type="text" id="aeBitteNotiz" maxlength="200" placeholder="z. B. Ich habe gesehen, du hast eine neue Nummer." style="width:100%"></label>
+    <div class="dlg-knoepfe"><button class="knopf haupt" data-w="ja">✏️ Bitte schicken</button><button class="knopf" data-w="weg">Bitte zurücknehmen</button><button class="knopf" data-w="nein">Abbrechen</button></div>`, () => f.remove());
+  f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = async () => {
+    const was = b.dataset.w; if (was === "nein") return f.remove();
+    const arten = was === "weg" ? [] : [...f.querySelectorAll("input[type=checkbox]:checked")].map((x) => x.value);
+    if (was === "ja" && !arten.length) return melde("Bitte mindestens eins ankreuzen.", true);
+    try { await api("aenderung_erbitten", { an: pid, arten, notiz: f.querySelector("#aeBitteNotiz")?.value || "" }); f.remove();
+      melde(arten.length ? `✏️ ${vn} bekommt die Bitte beim nächsten Öffnen der App` : `Bitte an ${vn} zurückgenommen`); }
+    catch (e) { meldeFehler(e); }
+  }));
+}
+const AE_BITTE = { versuche: 0 };
+async function aeBittePruefen() {
+  const w = INIT?.einstellungen?.aenderung_bitte, arten = (w?.arten || []).filter((id) => AE_BITTE_ARTEN.some(([a]) => a === id));
+  if (!ICH || !arten.length) return;
+  if (document.querySelector(FENSTER_OFFEN + ", .dlg, .dlg-blatt, #rgSchicht")) { if (++AE_BITTE.versuche < 20) setTimeout(aeBittePruefen, 4000); return; } // erst wenn nichts anderes offen ist
+  const heute = heuteIso(); if (lsLesen("kc_club_ae_bitte") === heute) return; lsSetzen("kc_club_ae_bitte", heute);
+  const namen = arten.map((id) => { const a = AE_BITTE_ARTEN.find(([x]) => x === id); return `${a[1]} ${a[3]}`; });
+  const liste = namen.length === 1 ? namen[0] : `${namen.slice(0, -1).join(", ")} und ${namen[namen.length - 1]}`;
+  const f = dlgOeffnen(`<h3 class="dlg-kopf">Hallo ${esc(ICH.vorname || "")},</h3>
+    <p class="dlg-text">bitte melde ${liste} – damit im Club alles aktuell ist und dich alle erreichen.${w.notiz ? `<br><i>„${esc(w.notiz)}“</i>${w.von ? ` – ${esc(w.von)}` : ""}` : ""}</p>
+    <p class="dlg-text hinweis">Das dauert nur einen Moment: antippen, Neues eintragen, fertig.</p>
+    <div class="dlg-knoepfe"><button class="knopf haupt" data-w="jetzt">✏️ Sofort erledigen</button><button class="knopf" data-w="spaeter">⏰ Später</button><button class="knopf" data-w="nichts">Hat sich nichts geändert</button></div>`, () => f.remove());
+  f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = async () => {
+    f.remove(); const was = b.dataset.w;
+    if (was === "jetzt") return aeStart(arten[0]);
+    if (was === "nichts") { const wert = { ...w, arten: [] }; try { await api("einstellung_setzen", { schluessel: "aenderung_bitte", wert }); INIT.einstellungen.aenderung_bitte = wert; } catch {} melde("Danke für die Rückmeldung!"); }
+  }));
 }
 function aeZeichnen() {
   const d = AE.d, b = $("aeBlatt"); if (!d || !b) return;
@@ -32141,6 +32232,7 @@ function mitgliedZeigen() {
       ${ICH?.admin ? `<button class="knopf" onclick="linkTeilen('${m.person_id}')"><span class="kt-ico">🔗</span>App-Link</button><button class="knopf" onclick="einrichtungskarte('${m.person_id}')"><span class="kt-ico">🖨️</span>Einrichtungs&shy;karte</button><button class="knopf" onclick="rolleBearbeiten('${m.person_id}')"><span class="kt-ico">🎖️</span>Amt & Rechte</button><button class="knopf" onclick="ansageVorgabeSetzen('${m.person_id}', ${esc(JSON.stringify((m.name || "").split(" ")[0]))})"><span class="kt-ico">🗣️</span>Online-Ansagen einschalten</button>` : ""}
       ${(ICH?.admin || ICH?.vorstand) && !m.selbst ? `<button class="knopf" onclick="elternHandy('${esc(m.person_id)}')"><span class="kt-ico">👪</span>Eltern-Handy</button>` : ""}
       ${(ICH?.admin || ICH?.vorstand) && !m.selbst ? `<button class="knopf" onclick="mgEingang('${esc(m.person_id)}')"><span class="kt-ico">📥</span>In den Eingangskorb</button>` : ""}
+      ${ICH?.admin && !m.selbst ? `<button class="knopf" onclick="aeErbitten(${jsArg(m.person_id)}, ${jsArg(String(m.name || "").split(" ")[0])})"><span class="kt-ico">✏️</span>Änderung erbitten</button>` : ""}
       ${zeilen ? '<button class="knopf" onclick="kontaktSpeichern()"><span class="kt-ico">📇</span>Ins Telefonbuch</button>' : ""}
       ${zeilen && zugang() === "mitglied" ? '<button class="knopf" onclick="kwExtern()"><span class="kt-ico">📤</span>Kontakt weiterleiten</button>' : ""}
     </div>
@@ -32796,7 +32888,7 @@ async function pushPruefen() {
   const reg = await navigator.serviceWorker.ready; let sub = null; try { sub = await reg.pushManager.getSubscription(); } catch {}
   const r = await api("push_pruefen", { endpoint: sub?.endpoint || "", ua: navigator.userAgent });
   if (Notification.permission === "granted") {
-    if (sub && r.diesesAktiv) return; // alles in Ordnung
+    if (sub && r.diesesAktiv) return onlineFragen(r); // alles in Ordnung – 2.953.0: dann einmal fragen, ob „… ist online“ gewünscht ist
     if (sub && r.diesesBekannt) { try { await sub.unsubscribe(); } catch {} sub = null; } // vom Push-Dienst abgelehnt (410) → neu anlegen
     sub = sub || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64url(INIT.vapidPublicKey) });
     await api("push_anmelden", { subscription: sub.toJSON(), userAgent: navigator.userAgent, wieder: true });
@@ -32837,6 +32929,35 @@ function pushNeuFragen(r) {
     if (was === "ja") return pushEinschalten();
     if (was === "nein") merken({ bis: new Date(Date.now() + PUSH_NEU_NEIN_TAGE * 86400000).toISOString() });
     if (was === "nie") { merken({ nie: true }); melde("In Ordnung – einschalten kannst du Push jederzeit unter ⚙️ → 🔔 Benachrichtigungen."); }
+  }));
+}
+// 2.953.0 KC-CLUB-ONLINE-FRAGE (Wunsch Hansi 15.11.2026, statt „bei allen einschalten“): Mitglieder mit funktionierendem Push, die noch nie
+// entschieden haben, ob sie „🟢 … ist jetzt online“ bekommen wollen, werden beim Start einmal gefragt. Ja → an · Nein → aus (nie wieder gefragt)
+// · Später → in 3 Tagen wieder. Nicht für Admins (bei ihnen Standard an), nie bei „Kommunikation aus“, höchstens einmal am Tag je Gerät,
+// nicht über einem anderen offenen Fenster. Abschalten jederzeit unter ⚙️ → 🔔 Benachrichtigungen.
+const ONLINE_FRAGE_SPAETER_TAGE = 3;
+function onlineFragen(r) {
+  const e = INIT?.einstellungen || {};
+  if (!ICH || ICH.admin || r?.kommAus || e.online_push) return;
+  if (e.online_frage?.bis && Date.parse(e.online_frage.bis) > Date.now()) return;
+  const heute = heuteIso(); if (lsLesen("kc_club_online_gefragt") === heute) return;
+  if (document.querySelector(".dlg-blatt")) return; // nicht über eine andere Frage legen – morgen wieder
+  lsSetzen("kc_club_online_gefragt", heute);
+  const vn = ICH?.vorname ? " " + esc(ICH.vorname) : "";
+  const f = dlgOeffnen(`<h3 class="dlg-kopf">🟢 Melden, wenn jemand online kommt?</h3>
+    <p class="dlg-text">Hallo${vn}, möchtest du eine kurze Meldung bekommen, wenn ein Mitglied die Club-App öffnet – z. B. „🟢 Karla ist jetzt online“?
+    Dann kannst du die Person <b>direkt kontaktieren</b> bzw. <b>anklopfen</b>.</p>
+    ${ansageAn() ? "" : `<label class="dlg-text" style="display:flex;gap:8px;align-items:flex-start"><input type="checkbox" id="ofAnsage" style="margin-top:4px">
+      <span>🗣️ Bei offener App auch <b>ansagen</b> lassen – das Handy sagt dann z. B. „Karla ist jetzt online“ (nur auf diesem Gerät).</span></label>`}
+    <p class="dlg-text hinweis">Ändern kannst du das jederzeit unter ⚙️ → 🔔 Benachrichtigungen bzw. ⚙️ → 🗣️ Ansagen, Töne &amp; Tipps.</p>
+    <div class="dlg-knoepfe"><button class="knopf haupt" data-w="ja">🟢 Ja, gerne</button><button class="knopf" data-w="nein">Nein, danke</button><button class="knopf" data-w="spaeter">Später</button></div>`, () => {});
+  f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = async () => {
+    const ansage = !!f.querySelector("#ofAnsage")?.checked; // 2.953.0 (Wunsch Hansi): Ansage bei offener App gleich mit einschalten
+    f.remove(); const was = b.dataset.w;
+    if (was === "ja") { if (ansage) { ansageSchalter(true); try { ansageSchalterZeigen(); } catch {} } return onlinePushSchalter(true); }
+    if (was === "nein") { await onlinePushSchalter(false); return; }
+    const wert = { bis: new Date(Date.now() + ONLINE_FRAGE_SPAETER_TAGE * 86400000).toISOString() };
+    try { await api("einstellung_setzen", { schluessel: "online_frage", wert }); if (INIT) INIT.einstellungen = { ...(INIT.einstellungen || {}), online_frage: wert }; } catch {}
   }));
 }
 async function pushUmschalten() {
