@@ -1,5 +1,12 @@
 # Änderungen
 
+## Spiegelung schonend – 2026-11-15 (KC-SPIEGEL-SCHONEND) · App unverändert
+Fund Hansi 15.11. („App ist schon wieder langsam … woran liegt es?“): Nicht das WLAN und nicht die App – die Supabase-Datenbank (kostenloser Tarif, kleiner Rechner) brach um 16:16 UTC (17:16 Uhr) mitten in der Spiegel-Welle nach Neon ab und startete neu (1,5 Min. weg, davor bis 9 s je Anfrage). Die langsamsten Viertelstunden der letzten 24 Std. lagen beide in Spiegel-Wellen (11:15 und 17:15 Uhr); das kurze Stocken am 12.11. 23:16 und 14.11. 11:16 ebenfalls (jeweils Minute :16).
+1. **Entzerrt:** 1 Paket je Minute statt 3; Welle :11–:40 statt :11–:22 (`kc_neon_low_compute_cycle`, `kc_internal.kc_db_mirror_welle_senden`).
+2. **Andere Zeiten:** Spiegelung 04, 13, 22 UTC (05, 14, 23 Uhr) statt 04, 10, 16, 22 – weg von 11 und 17 Uhr. Abgeglichen mit Neon-Nachtsicherung 00:40, FRA-Sicherung 01–03, Aufräumen 03:05–03:50, Backup-Prüfung 06:30, Einspiel-Fenstern (10:45–12:00 / 18:45–20:00 UTC). Wächter-Fenster rechnet sich aus dem Zeitplan (9 Std. + 30 Min.); der externe GitHub-Wächter nutzt jetzt dasselbe Fenster statt fester 390 Min.; das Nachholen erkennt die längere Welle (60-Min.-Fenster, 10 Std. zurück, erst nach :40). Einspiel-Sperre (`tools/einspielen-ruhe.sh`) und AGENTS.md auf die neuen Zeiten.
+3. **Klüger prüfen:** neue Funktion `kc_db_mirror_stat_sig` (Dateinummer + Einfüge/Änderungs/Lösch-Zähler, nur service_role). Der Spiegel-Arbeiter überspringt die teure Prüfsumme nur, wenn sich die Kennung seit der letzten echten Prüfsumme (höchstens 12 Std. alt) nicht geändert hat; der Nachtlauf (04 UTC) prüft immer voll. Neuer Lauf-Typ `stat_unchanged_skip`.
+Migration `20261115_kc_spiegel_schonend.sql` (keine neue Tabelle, nichts gelöscht, Rückweg in der Datei). Die Anzeige „Datenbank hat viel zu tun“ in der App bekommt die neuen Zeiten mit dem nächsten Server-Bündel.
+
 ## 2.953.0 – 2026-11-15 – 👀 Ausgeblendete Kacheln: oben nur noch ein Umschalt-Knopf (KC-CLUB-KA-KOPF-TOGGLE)
 Wunsch Hansi 15.11.: „Unter dem Kopf gibt es seit heute 2 neue Buttons (Ausgeblendet ansehen). Das soll nur ein Button sein, ein Toggle – einmal klicken schaltet, wieder klicken zurück, dann passt der auch auf schmale Handys.“
 - Neben „< Erweiterte Ansicht >“ steht nur noch **ein** runder Knopf: 👀 = nur die ausgeblendeten Kacheln zeigen, danach 🙈 (rot) = wieder verbergen. Der zweite Knopf („x ausgeblendete anzeigen“ → Anordnen) ist oben weg; unten gibt es beide Wege weiter.

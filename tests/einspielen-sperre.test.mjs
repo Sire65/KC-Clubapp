@@ -27,7 +27,13 @@ assert.equal(lauf(["termin", "ja"], { ...ruhig, EINSPIEL_UHR: "1816" }), 1, "18:
 assert.equal(lauf(["termin", "ja"], { ...ruhig, EINSPIEL_UHR: "0905" }), 1, "09:05 → nein");
 assert.equal(lauf(["hansi", "ja"], { ...ruhig, EINSPIEL_UHR: "1816" }), 0, "Hansi sagt einspielen → ja");
 assert.equal(lauf(["hansi", "ja"], { EINSPIEL_UTC: "1716", EINSPIEL_DRIN: "3" }), 1, "3 drin → warten, dann Abbruch");
-assert.equal(lauf(["termin", "ja"], { EINSPIEL_UHR: "2000", EINSPIEL_UTC: "1615", EINSPIEL_DRIN: "0" }), 1, "Spiegelung läuft → warten");
+assert.equal(lauf(["termin", "ja"], { EINSPIEL_UHR: "2000", EINSPIEL_UTC: "1315", EINSPIEL_DRIN: "0" }), 1, "Spiegelung läuft → warten");
+// KC-SPIEGEL-SCHONEND (15.11.2026): Spiegel 04/13/22 UTC, Welle bis :40 → Sperre :05–:45; 16 UTC ist frei
+assert.equal(lauf(["termin", "ja"], { EINSPIEL_UHR: "2000", EINSPIEL_UTC: "2244", EINSPIEL_DRIN: "0" }), 1, "Welle läuft bis :40 → warten");
+assert.equal(lauf(["termin", "ja"], { EINSPIEL_UHR: "2000", EINSPIEL_UTC: "1615", EINSPIEL_DRIN: "0" }), 0, "16 UTC keine Spiegelung mehr");
+assert.ok(/case "\$h" in 4\|13\|22\)/.test(fs.readFileSync(wurzel + "tools/einspielen-ruhe.sh", "utf8")), "Sperrzeiten wie der Spiegel-Zeitplan");
+{ const mig = fs.readFileSync(wurzel + "supabase/migrations/20261115_kc_spiegel_schonend.sql", "utf8");
+  assert.ok(mig.includes("schedule => '10 4,13,22 * * *'") && mig.includes("schedule => '11-40 4,13,22 * * *'"), "Zeitplan und Sperre passen zusammen"); }
 assert.equal(lauf(["termin", "ja"], { EINSPIEL_UHR: "2000", EINSPIEL_UTC: "0150", EINSPIEL_DRIN: "0" }), 1, "FRA-Sicherung läuft → warten");
 assert.equal(lauf(["notfall", "ja"], { EINSPIEL_UHR: "1816", EINSPIEL_DRIN: "9" }), 0, "Notfall → sofort");
 assert.equal(lauf(["termin", "nein"], { EINSPIEL_UHR: "1816", EINSPIEL_DRIN: "9" }), 0, "keine neue Version → nichts abzuwarten");
