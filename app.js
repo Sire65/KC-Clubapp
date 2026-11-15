@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.953.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.954.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12930,14 +12930,21 @@ const AK_TUERCHEN = [ // 2.869.0 KC-CLUB-ADVENT-2026: Tag 1–24; art: naschen |
 ];
 const AK_ARTEN = { naschen: ["🍬", "Nascherei"], basteln: ["✂️", "Basteln"], deko: ["🕯️", "Deko"], riegel: ["🍫", "Überraschung"], einladung: ["☕", "Einladung"] };
 const AK_REIHE = [7, 15, 1, 22, 10, 3, 18, 12, 24, 5, 20, 9, 2, 14, 17, 6, 11, 23, 4, 19, 13, 8, 16, 21]; // feste, gemischte Anordnung der Türchen
-const akHeute = (d = new Date()) => d.getMonth() === 11 ? Math.min(d.getDate(), 24) : 0; // 0 = nicht im Dezember; 25.–31.12.: alle offen
-const akKey = (d = new Date()) => "kc_club_advent_" + d.getFullYear();
+// KC-CLUB-ADVENT-SERVERUHR (Wunsch Hansi 15.11.2026: „Jedes Türchen darf nur am Tag geöffnet werden, nicht schon vorher – im Nachhinein erlaubt … mit Server-Uhr
+// absichern“): Tag nach der Uhr des Servers in deutscher Zeit – ein vorgestelltes Handy-Datum öffnet kein Türchen früher. Der Versatz kommt einmal beim Start
+// (Antwort „init“ bringt serverJetzt); ohne Server-Zeit (offline, Notbetrieb) wie bisher die Handy-Uhr. Der Server prüft die Preis-Türchen zusätzlich selbst.
+let UHR_VERSATZ = null;
+function uhrAbgleich(j) { const s = Number(j?.serverJetzt); if (Number.isFinite(s) && s > 1.7e12) UHR_VERSATZ = s - Date.now(); }
+const akJetzt = () => new Date(Date.now() + (UHR_VERSATZ ?? 0));
+const akBerlin = (d) => { const [j, m, t] = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Berlin", year: "numeric", month: "2-digit", day: "2-digit" }).format(d).split("-").map(Number); return { j, m, t }; };
+const akHeute = (d = akJetzt()) => { const b = akBerlin(d); return b.m === 12 ? Math.min(b.t, 24) : 0; }; // 0 = nicht im Dezember; 25.–31.12.: alle offen
+const akKey = (d = akJetzt()) => "kc_club_advent_" + akBerlin(d).j;
 function akOffen() { try { const l = JSON.parse(localStorage.getItem(akKey()) || "[]"); return Array.isArray(l) ? l.filter((n) => Number.isInteger(n) && n >= 1 && n <= 24) : []; } catch { return []; } }
 const akAn = () => einst("advent", true);
 // 2.482.0 KC-CLUB-ADVENT-UEBERRASCHUNG (Wunsch Hansi „Nimm den Adventskalender aus der Info – das ist eine Überraschung“): vor dem 1. Dezember
 // sehen Mitglieder ihn nirgends (Hilfe, „Neu in der App“, ⚙️ Effekte); ab Dezember wie gehabt. Admins sehen ihn immer (zum Prüfen).
 // 2.869.0 KC-CLUB-ADVENT-2026 (Hansi: „keine Kalender für Kinder und Gäste“): nur Mitglieder – Gäste und Aushilfen sehen ihn nie.
-const akSichtbar = () => zugang() === "mitglied" && (!!ICH?.admin || new Date().getMonth() === 11);
+const akSichtbar = () => zugang() === "mitglied" && (!!ICH?.admin || akBerlin(akJetzt()).m === 12); // KC-CLUB-ADVENT-SERVERUHR
 function akSichtbarSetzen() { const z = $("setAdventZeile"); if (z) z.classList.toggle("versteckt", !akSichtbar()); }
 const akVorschau = () => !akHeute() && !!ICH?.admin; // Admin außerhalb Dezember: alle Türchen zum Ansehen
 function akZeigen() {
@@ -17702,7 +17709,7 @@ async function neuLadenRoh(vonHand) {
   const initAnfrage = api("init", { fotosSeit: kzSeit("fotos"), dienstSeit: kzSeit("dienste") }, { warten: !!vonHand }); initAnfrage.catch(() => {}); // Fehler behandelt unten das await
   if (!INIT) sofortStart(); // KC-CLUB-SOFORTSTART (2.113.0): gespeicherten Stand sofort zeigen, frisch laden im Hintergrund
   try {
-    INIT = await initAnfrage; if (window.KCFP?.schlaeft) return; /* 2.394.0 Fenster inzwischen geleert */ if (!START_MESS.initBis) { START_MESS.initAb = tInit; START_MESS.initBis = performance.now(); } /* KC-CLUB-KACHEL-ZAHLEN */ ICH = INIT.ich; einstOffenAnwenden(); /* 2.6.1: noch laufende Speicherungen nicht überschreiben */ adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); inkognitoZeigen(); einwZeigen(aktuelleAnsicht); schluesselSichern(KEY); /* KC-CLUB-SCHLUESSEL-SICHERN */ if (document.body.classList.contains("rg-ohne-admin")) document.body.classList.remove("ist-admin"); /* KC-CLUB-ERKLAERVIDEOS-ROLLEN: im Video für alle bleibt Admin aus */ stKnopf(); /* KC-CLUB-STUDIO */ cfUebernehmen(INIT?.einstellungen?.chat_farben); /* KC-CLUB-CHAT-FARBEN */ // KC-CLUB-KOPF-EINFACH
+    INIT = await initAnfrage; if (window.KCFP?.schlaeft) return; uhrAbgleich(INIT); /* KC-CLUB-ADVENT-SERVERUHR */ /* 2.394.0 Fenster inzwischen geleert */ if (!START_MESS.initBis) { START_MESS.initAb = tInit; START_MESS.initBis = performance.now(); } /* KC-CLUB-KACHEL-ZAHLEN */ ICH = INIT.ich; einstOffenAnwenden(); /* 2.6.1: noch laufende Speicherungen nicht überschreiben */ adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); inkognitoZeigen(); einwZeigen(aktuelleAnsicht); schluesselSichern(KEY); /* KC-CLUB-SCHLUESSEL-SICHERN */ if (document.body.classList.contains("rg-ohne-admin")) document.body.classList.remove("ist-admin"); /* KC-CLUB-ERKLAERVIDEOS-ROLLEN: im Video für alle bleibt Admin aus */ stKnopf(); /* KC-CLUB-STUDIO */ cfUebernehmen(INIT?.einstellungen?.chat_farben); /* KC-CLUB-CHAT-FARBEN */ // KC-CLUB-KOPF-EINFACH
     alarmPruefen(); /* KC-CLUB-NOTFALL-MELDUNG */ try { expressPruefen(); } catch {} /* 2.362.0 KC-CLUB-EXPRESS */ setTimeout(() => { try { irLaden(); } catch {} }, 3000); /* KC-CLUB-IST-RUECKFRAGE */ setTimeout(() => { try { abStandZeigen(INIT?.ab); } catch {} }, 2500); /* 2.568.0 KC-CLUB-ANRUFBEANTWORTER */ try { dsLageSetzen(INIT?.dienstStempel); } catch {} /* 2.590.0 KC-CLUB-DIENST-STEMPEL */ try { rundKarteZeichnen(); } catch {} /* 2.762.0 KC-CLUB-RUNDER-TISCH */ setTimeout(() => { try { snPruefen(); } catch {} }, 1500); /* 2.482.0 KC-CLUB-STARTNACHRICHT */ document.body.classList.toggle("sos-frei", sosDarf()); /* KC-CLUB-SOS-FREIGABE */ fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
     if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln);
     if ($("setLiveTippen")) $("setLiveTippen").checked = liveTippen();

@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.954.0 – 2026-11-15 – 🔒 Adventskalender nach der Uhr des Servers (KC-CLUB-ADVENT-SERVERUHR) · Server 2.954.0
+Wunsch Hansi 15.11.: „Jedes Türchen darf nur am Tag geöffnet werden, nicht schon vorher. Im Nachhinein ist es erlaubt“ – „Ja, mit Server-Uhr absichern“.
+- Bisher richtete sich der Kalender nach dem Datum im Handy – wer es vorstellte, konnte Türchen früher ansehen. Jetzt schickt der Server beim App-Start seine Uhr mit (`serverJetzt`), die App rechnet den Tag daraus in **deutscher Zeit** (auch Mitternacht stimmt). Vor- oder zurückgestellte Handys bekommen den richtigen Tag.
+- Regeln unverändert: nur das Türchen von heute, frühere jederzeit, ab 25.12. alle; vor Dezember sehen Mitglieder den Kalender nicht; Admin-Vorschau nur außerhalb des Dezembers. Preis-Türchen prüft der Server wie bisher zusätzlich selbst.
+- Ohne Verbindung (offline/Notbetrieb) gilt wie bisher die Handy-Uhr.
+- Test: `tests/advent-serveruhr.test.mjs`. Rückweg: App 2.953.0, Server 2.950.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.953.0 – 2026-11-15 – 👀 Ausgeblendete Kacheln: oben nur noch ein Umschalt-Knopf (KC-CLUB-KA-KOPF-TOGGLE)
 Wunsch Hansi 15.11.: „Unter dem Kopf gibt es seit heute 2 neue Buttons (Ausgeblendet ansehen). Das soll nur ein Button sein, ein Toggle – einmal klicken schaltet, wieder klicken zurück, dann passt der auch auf schmale Handys.“
 - Neben „< Erweiterte Ansicht >“ steht nur noch **ein** runder Knopf: 👀 = nur die ausgeblendeten Kacheln zeigen, danach 🙈 (rot) = wieder verbergen. Der zweite Knopf („x ausgeblendete anzeigen“ → Anordnen) ist oben weg; unten gibt es beide Wege weiter.
