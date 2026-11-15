@@ -14319,7 +14319,7 @@ KACHELN.admin.unshift({ id: "ad-startnachricht", sym: "📣", t: "Startnachricht
 // Zutaten, Hansi alle mit Namen. Danach Rezept aus dem Rezeptbuch (Treffer nach Zutaten) oder dort neu anlegen → PDF auf dem Kopfbogen mit
 // „(Name)“ hinter jeder Zutat → an alle (Push + E-Mail mit PDF).
 KACHELN.admin.unshift({ id: "ad-gericht", sym: "🍲", t: "Gemeinschaftsgericht", nur: () => !!ICH?.admin, aktion: "ggAdmin()", u: "Runde starten, alle Zutaten sehen, Rezept als PDF an alle", klasse: () => "ad ad-app" });
-KACHELN.verein.push({ id: "gericht", sym: "🍲", t: "Gemeinschaftsgericht", nur: () => !!INIT?.gericht?.runde, aktion: "grFrage(true)", u: () => grKurz(), zahl: () => (INIT?.gericht?.runde && !grMeine().length ? 1 : 0) });
+KACHELN.verein.push({ id: "gericht", sym: "🍲", t: "Gemeinschaftsgericht", nur: () => frei("gemeinschaftsgericht") && !!INIT?.gericht?.runde, aktion: "grFrage(true)", u: () => (nurTest("gemeinschaftsgericht") ? "🔒 nur für dich (Test) · " : "") + grKurz(), zahl: () => (INIT?.gericht?.runde && !grMeine().length ? 1 : 0) });
 const GR_ZUTATEN = {
   "🥩 Fleisch & Geflügel": ["Hähnchen", "Pute", "Ente", "Rind", "Kalb", "Schwein", "Lamm", "Wild", "Hackfleisch", "Speck", "Schinken", "Chorizo", "Leber"],
   "🐟 Fisch & Meeresfrüchte": ["Lachs", "Kabeljau", "Thunfisch", "Forelle", "Garnelen", "Muscheln", "Tintenfisch", "Hering", "Sardellen"],
@@ -14409,6 +14409,7 @@ function grAdminZeigen() {
     ${z.freigabe === "pruefen" ? `<span class="gr-a-k"><button class="knopf klein haupt" onclick="grZutatPruefen(${jsArg(z.id)}, true)">✅ Passt</button><button class="knopf klein" onclick="grZutatPruefen(${jsArg(z.id)}, false)">🔁 Andere bitte</button></span>` : z.freigabe === "abgelehnt" ? '<span class="hinweis">🔁 um andere gebeten</span>' : ""}</li>`;
   const zustand = !r ? "" : laeuft ? (r.bis < d.heute ? "⏹️ Einsendezeit vorbei" : r.von > d.heute ? "⏳ beginnt am " + grDatum(r.von) : "🟢 läuft") : r.status === "versendet" ? "📨 verschickt" : "";
   el.innerHTML = `<h3 style="margin:0">🍲 Gemeinschaftsgericht</h3>
+    ${d.frei === false ? `<div class="karte gr-abgelehnt" style="margin:6px 0">🔒 <b>Noch nicht freigegeben</b> – gefragt wirst nur du, „Als PDF an alle senden“ geht als Test nur an dich (die Runde bleibt offen). Für alle: Verwaltung → Freigaben → „🍲 Gemeinschaftsgericht“ → ✅ Für alle frei.</div>` : ""}
     ${r ? `<p class="hinweis" style="margin:2px 0 8px"><b>${esc(r.titel)}</b> · Einsenden ${grDatum(r.von)}–${grDatum(r.bis)} · ${r.je_person === 2 ? "2 Zutaten" : "1 Zutat"} je Person · ${zustand}</p>
       ${d.stand ? `<p style="margin:0 0 6px">📥 <b>${d.stand.eingereicht}</b> von ${d.stand.alle} haben eingereicht${d.stand.nein ? ` · 🙅 ${d.stand.nein}× diesmal nicht` : ""}</p>` : ""}
       <ul class="gr-a-liste">${zt.length ? zt.map(zeile).join("") : '<li class="hinweis">Noch keine Zutaten.</li>'}</ul>
@@ -14466,7 +14467,7 @@ async function grRezeptWahl(id) {
 async function grVersenden() {
   const d = GRA.d, r = GRA.rezept; if (!d?.runde || !r) return;
   const offen = d.runde.bis >= d.heute, warten = (d.zutaten || []).filter((z) => z.freigabe === "pruefen").length;
-  if (!(await frage(`📨 „${r.titel}“ als PDF an alle (${d.stand?.alle ?? "alle"}) schicken – per Push und E-Mail?${offen ? `\n\nAchtung: Die Einsendezeit läuft noch bis ${grDatum(d.runde.bis)}.` : ""}${warten ? `\n\n✏️ ${warten} eigene Zutat${warten > 1 ? "en warten" : " wartet"} noch auf deine Freigabe – ${warten > 1 ? "sie stehen" : "sie steht"} trotzdem mit im Rezept.` : ""}`, { ja: "Ja, senden", nein: "Abbrechen" }))) return;
+  if (!(await frage(d.frei === false ? `🧪 Test: „${r.titel}“ als PDF nur an dich schicken (Push und E-Mail)? Die Runde bleibt offen – freigegeben geht es an alle.` : `📨 „${r.titel}“ als PDF an alle (${d.stand?.alle ?? "alle"}) schicken – per Push und E-Mail?${offen ? `\n\nAchtung: Die Einsendezeit läuft noch bis ${grDatum(d.runde.bis)}.` : ""}${warten ? `\n\n✏️ ${warten} eigene Zutat${warten > 1 ? "en warten" : " wartet"} noch auf deine Freigabe – ${warten > 1 ? "sie stehen" : "sie steht"} trotzdem mit im Rezept.` : ""}`, { ja: "Ja, senden", nein: "Abbrechen" }))) return;
   const k = $("grVersandKnopf"); if (k) { k.disabled = true; k.textContent = "⏳ PDF wird erstellt …"; }
   try {
     DRUCK = { art: "gericht", param: d.runde.id }; let pdf = null;
@@ -14474,6 +14475,7 @@ async function grVersenden() {
       pdf = (await anlageHochladen(new File([await druckPdfBlob()], name, { type: "application/pdf" })))?.id || null; }
     if (!pdf) throw new Error("Das PDF konnte nicht erstellt werden – bitte noch einmal.");
     const x = await api("gericht_versenden", { runde: d.runde.id, rezept: r.id, pdf, vorzeitig: offen }, { warten: true });
+    if (x.test) { melde(`🧪 Test-Versand nur an dich${x.mitPdf ? " – mit PDF" : ""}. Die Runde bleibt offen.`); if (k) { k.disabled = false; k.textContent = "📨 Als PDF an alle senden"; } return; }
     melde(`📨 Das Rezept ist an ${x.an} unterwegs${x.mitPdf ? " – mit PDF" : ""}`); await ggAdmin(d.runde.id);
   } catch (e) { if (k) { k.disabled = false; k.textContent = "📨 Als PDF an alle senden"; } meldeFehler(e); }
 }

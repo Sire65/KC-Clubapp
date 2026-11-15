@@ -55,4 +55,11 @@ const { zeilen, rest } = R.grZuordnen([{ n: "Hähnchenbrust" }, { n: "Curry" }, 
 assert.deepEqual(zeilen.map((x) => x.wer), [["Thomas"], ["Anne", "Leon"], [], ["Marianne"]], "(Name) hinter der Zutat, auch mehrere");
 assert.deepEqual(rest.map((x) => x.zutat), ["Stierhoden"], "nicht im Rezept: „Außerdem ausgesucht“; abgelehnte nie");
 assert.ok(/\$\{x\.wer\.length \? ` <b style="color:#741521">\(\$\{esc\(x\.wer\.join\(", "\)\)\}\)<\/b>` : ""\}/.test(app), "Namen in Klammern im PDF");
+// 5. Hansi 15.11.: „Ja, aber noch nicht freigegeben“ – Freigabe „🍲 Gemeinschaftsgericht“, Standard nur Admin (Test)
+assert.ok(/gemeinschaftsgericht: \{ t: "🍲 Gemeinschaftsgericht", u: "[^"]+", standard: "admin" \}/.test(server), "Freigabe, Standard: nur Admin");
+assert.ok(/if \(!ich\.admin && \(await freigaben\(\)\)\.gemeinschaftsgericht !== "alle"\) return null;/.test(fm), "nicht freigegeben → nur der Admin wird gefragt");
+assert.ok(/await nurWennFrei\("gemeinschaftsgericht", ich, "Das Gemeinschaftsgericht"\);/.test(ein), "einreichen nur, wenn freigegeben (oder Admin)");
+assert.ok(/if \(\(await freigaben\(\)\)\.gemeinschaftsgericht !== "alle"\) return; \/\/ Test: keine Erinnerung an alle/.test(er), "Test: keine Erinnerung");
+assert.ok(/ziel = test \? \[ich\.person_id\] : alle/.test(adm) && /return json\(\{ ok: true, an: 1, test: true/.test(adm), "Test: Versand nur an den Admin, Runde bleibt offen");
+assert.ok(/nur: \(\) => frei\("gemeinschaftsgericht"\) && !!INIT\?\.gericht\?\.runde/.test(app) && /nurTest\("gemeinschaftsgericht"\) \? "🔒 nur für dich \(Test\) · "/.test(app), "Kachel nur mit Freigabe, Test-Hinweis");
 console.log("✅ gemeinschaftsgericht: alle Prüfungen bestanden");
