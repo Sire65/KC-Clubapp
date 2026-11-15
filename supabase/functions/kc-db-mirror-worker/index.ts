@@ -94,17 +94,34 @@ Deno.serve(async(req)=>{
     if(tc!==sc||th!==sh)return null;
     const endMs=Date.now(),durationMs=Math.max(1,endMs-startMs);
     const metrics={table,batch_id:batchId,batch_index:i+1,batch_total:batchTotal,payload_bytes:bytes,source_hash:sh,target_hash:th,hash_mode:hashMode,
-      transfer_mode:"block_delta",block_mode:bh.pk?"schluessel":"zeit",block_width:w,blocks_total:bh.blocks.length,blocks_changed:anders.length,duration_ms:durationMs,
+      transfer_mode:"block_delta",block_mode:bh.pk?"schluessel":"zeit",block_width:w,blocks_total:bh.blocks.length,blocks_changed:anders.length,duration_ms:durationMs,stat_sig:aktSig,fp_at:aktFpAt,
       ...(schema.columns_added.length?{schema_sync:schema}:{})};
     const {error:ie}=await sb.from("kc_db_mirror_runs").insert({run_type:"snapshot",status:"ok",started_at:started,finished_at:new Date(endMs).toISOString(),source_rows:Number(sc),target_rows:Number(tc),mismatch_count:0,message:`${table}: ${anders.length} of ${bh.blocks.length} blocks transferred; source and target identical`,metrics});
     if(ie)return null;
     if(bytes>0)await sb.rpc("kicc_report_program_flow",{p_program_id:"kc-db-mirror-worker",p_instance_id:batchId,p_source_id:"supabase-kc-core",p_target_id:"neon-mirror",p_flow_type:"mirror",p_event_count:1,p_byte_count:bytes,p_status:"OK",p_measured_at:new Date(endMs).toISOString()});
     return {table,status:"ok",source_rows:sc,target_rows:tc,hash_match:true,payload_bytes:bytes,transfer_mode:"block_delta",blocks_changed:anders.length,blocks_total:bh.blocks.length,duration_ms:durationMs,batch_id:batchId,batch_index:i+1,batch_total:batchTotal};
   };
+  // KC-SPIEGEL-SCHONEND (15.11.2026, Datenbank brach in der Spiegel-Welle ab): Hat sich eine Tabelle laut Datenbank-Statistik seit der letzten
+  // echten Prüfsumme nicht verändert (gleiche Dateinummer + Einfüge/Änderungs/Lösch-Zähler, kc_db_mirror_stat_sig), wird die teure Prüfsumme
+  // (ganze Tabelle lesen) übersprungen – nur wenn die letzte echte Prüfsumme höchstens 12 Std. alt ist und nie im Nachtlauf (04 UTC: immer voll).
+  // Ohne Kennung (Funktion fehlt, Statistik zurückgesetzt …) wie bisher. Die Kennung reist in den Metriken mit (stat_sig, fp_at = Zeit der Prüfsumme).
+  const STAT_SKIP_MAX_MS=12*60*60*1000, statSkipErlaubt=new Date().getUTCHours()!==4;
+  let aktSig:string|null=null,aktFpAt:string|null=null;
   try{
     for(let i=0;i<requested.length;i++){
       const table=requested[i];
       const startMs=Date.now(),started=new Date(startMs).toISOString();
+      aktSig=null;aktFpAt=started;
+      try{const {data:sig,error:sigErr}=await sb.rpc("kc_db_mirror_stat_sig",{p_table_name:table});if(!sigErr&&typeof sig==="string"&&sig)aktSig=sig}catch{/* ohne Kennung wie bisher */}
+      if(aktSig&&statSkipErlaubt){
+        const {data:lo,error:loErr}=await sb.from("kc_db_mirror_runs").select("source_rows,target_rows,metrics").eq("run_type","snapshot").eq("status","ok").eq("metrics->>table",table).order("started_at",{ascending:false}).limit(1).maybeSingle();
+        const lm:any=lo?.metrics||{},fpAt=Date.parse(String(lm.fp_at||""));
+        if(!loErr&&lo&&lm.stat_sig===aktSig&&lm.source_hash&&lm.hash_mode&&Number.isFinite(fpAt)&&Date.now()-fpAt<STAT_SKIP_MAX_MS){
+          const sm={table,batch_id:batchId,batch_index:i+1,batch_total:batchTotal,source_hash:lm.source_hash,hash_mode:lm.hash_mode,transfer_mode:"stat_unchanged_skip",target_verified:false,stat_sig:aktSig,fp_at:lm.fp_at};
+          const {error:smErr}=await sb.from("kc_db_mirror_runs").insert({run_type:"snapshot",status:"ok",started_at:started,finished_at:new Date().toISOString(),source_rows:Number(lo.source_rows??0),target_rows:Number(lo.target_rows??lo.source_rows??0),mismatch_count:0,message:`${table}: unchanged since last checksum (statistics); checksum skipped`,metrics:sm});
+          if(!smErr){results.push({table,status:"skipped",reason:"stat_unchanged",batch_id:batchId,batch_index:i+1,batch_total:batchTotal});continue}
+        }
+      }
       // KICC-F-107 (18.10.2026, Supabase-Egress): erst nur den Fingerabdruck (Zeilen + Prüfsumme, ~100 Byte) holen –
       // die Daten selbst kommen nur, wenn die Tabelle sich geändert hat, und dann ohne Doppelkopie (kc_db_mirror_snapshot_text).
       const {data:fp,error:fe}=await sb.rpc("kc_db_mirror_fingerprint",{p_table_name:table});if(fe||!fp){results.push({table,status:"error",stage:"source_fingerprint"});continue}
@@ -118,7 +135,7 @@ Deno.serve(async(req)=>{
       const verificationFresh=!lastVerifiedErr&&Number.isFinite(verifiedAt)&&(Date.now()-verifiedAt)<verifyIntervalHours*60*60*1000;
       const unchanged=!lastErr&&lastOk&&String(lastOk.source_rows??"")===sc&&String((lastOk.metrics as any)?.source_hash??"")===sh&&String((lastOk.metrics as any)?.hash_mode??"")===hashMode;
       if(unchanged&&verificationFresh){
-        const skipMetrics={table,batch_id:batchId,batch_index:i+1,batch_total:batchTotal,source_hash:sh,hash_mode:hashMode,transfer_mode:"unchanged_source_skip",target_verified:false,last_target_verified_at:lastVerified.finished_at,verify_interval_hours:verifyIntervalHours};
+        const skipMetrics={table,batch_id:batchId,batch_index:i+1,batch_total:batchTotal,source_hash:sh,hash_mode:hashMode,transfer_mode:"unchanged_source_skip",target_verified:false,last_target_verified_at:lastVerified.finished_at,verify_interval_hours:verifyIntervalHours,stat_sig:aktSig,fp_at:aktFpAt};
         const {error:skipErr}=await sb.from("kc_db_mirror_runs").insert({run_type:"snapshot",status:"ok",started_at:started,finished_at:new Date().toISOString(),source_rows:Number(sc),target_rows:Number(lastOk.source_rows??sc),mismatch_count:0,message:`${table}: source unchanged; target verification still fresh`,metrics:skipMetrics});
         if(skipErr){results.push({table,status:"error",stage:"skip_audit",message:"unchanged run could not be persisted"});continue}
         results.push({table,status:"skipped",reason:"source_unchanged",source_rows:sc,source_hash:sh,last_verified_at:lastVerified.finished_at,batch_id:batchId,batch_index:i+1,batch_total:batchTotal});
@@ -129,7 +146,7 @@ Deno.serve(async(req)=>{
         try{
           const v=await getNeon().unsafe(verifySqlFor(table,`"public".${qi(table)}`));const tc=String(v[0]?.row_count??"0"),th=String(v[0]?.content_hash??"");
           if(tc===sc&&th===sh){
-            const vm={table,batch_id:batchId,batch_index:i+1,batch_total:batchTotal,source_hash:sh,target_hash:th,hash_mode:hashMode,transfer_mode:"unchanged_target_verified",payload_bytes:0};
+            const vm={table,batch_id:batchId,batch_index:i+1,batch_total:batchTotal,source_hash:sh,target_hash:th,hash_mode:hashMode,transfer_mode:"unchanged_target_verified",payload_bytes:0,stat_sig:aktSig,fp_at:aktFpAt};
             const {error:vErr}=await sb.from("kc_db_mirror_runs").insert({run_type:"snapshot",status:"ok",started_at:started,finished_at:new Date().toISOString(),source_rows:Number(sc),target_rows:Number(tc),mismatch_count:0,message:`${table}: source unchanged; target re-verified in Neon`,metrics:vm});
             if(!vErr){results.push({table,status:"skipped",reason:"source_unchanged_target_verified",source_rows:sc,source_hash:sh,batch_id:batchId,batch_index:i+1,batch_total:batchTotal});continue}
           }
@@ -149,7 +166,7 @@ Deno.serve(async(req)=>{
         const schema=await schemaAbgleich(table);if(schema.created||schema.columns_added.length||schema.type_mismatch.length||schema.not_added_privacy.length)(runningMetrics as any).schema_sync=schema;
         await getNeon().begin(async tx=>{if(table==="kc_core_organizations"){if(sc!=="0")await tx.unsafe(`insert into ${q}(org_id,name,active,created_at,updated_at) select x.org_id,x.name,x.active,x.created_at,x.updated_at from jsonb_populate_recordset(null::${q},(($1::jsonb #>> '{}')::jsonb)) x on conflict(org_id) do update set name=excluded.name,active=excluded.active,created_at=excluded.created_at,updated_at=excluded.updated_at`,[payload])}else{await tx.unsafe(`delete from ${q}`);if(sc!=="0")await tx.unsafe(`insert into ${q} overriding system value select x.* from jsonb_populate_recordset(null::${q},(($1::jsonb #>> '{}')::jsonb)) x`,[payload])}});
         const v=await getNeon().unsafe(verifySqlFor(table,q));const tc=String(v[0]?.row_count??"0"),th=String(v[0]?.content_hash??""),ok=sc===tc&&sh===th,endMs=Date.now(),durationMs=Math.max(1,endMs-startMs),bps=Math.round(bytes/(durationMs/1000));
-        const metrics={...runningMetrics,source_hash:sh,target_hash:th,duration_ms:durationMs,bytes_per_second:bps,kilobytes_per_second:Number((bps/1024).toFixed(2)),megabytes_per_second:Number((bps/1048576).toFixed(4))};
+        const metrics={...runningMetrics,source_hash:sh,target_hash:th,stat_sig:aktSig,fp_at:aktFpAt,duration_ms:durationMs,bytes_per_second:bps,kilobytes_per_second:Number((bps/1024).toFixed(2)),megabytes_per_second:Number((bps/1048576).toFixed(4))};
         const finalRow={status:ok?"ok":"warning",finished_at:new Date(endMs).toISOString(),target_rows:Number(tc),mismatch_count:ok?0:1,message:ok?`${table}: source and target identical`:`${table}: verification mismatch`,metrics};
         if(runId)await sb.from("kc_db_mirror_runs").update(finalRow).eq("id",runId);else await sb.from("kc_db_mirror_runs").insert({run_type:"snapshot",started_at:started,source_rows:Number(sc),...finalRow});if(ok&&bytes>0){const {error:flowErr}=await sb.rpc("kicc_report_program_flow",{p_program_id:"kc-db-mirror-worker",p_instance_id:batchId,p_source_id:"supabase-kc-core",p_target_id:"neon-mirror",p_flow_type:"mirror",p_event_count:1,p_byte_count:bytes,p_status:"OK",p_measured_at:new Date(endMs).toISOString()});if(flowErr)results.push({table,status:"warning",stage:"flow_telemetry",message:"mirror succeeded but flow telemetry failed",batch_id:batchId,batch_index:i+1,batch_total:batchTotal})}results.push({table,status:ok?"ok":"warning",source_rows:sc,target_rows:tc,hash_match:sh===th,payload_bytes:bytes,duration_ms:durationMs,bytes_per_second:bps,batch_id:batchId,batch_index:i+1,batch_total:batchTotal});
       }catch(e){const m=e instanceof Error?e.message:String(e),finalRow={status:"error",finished_at:new Date().toISOString(),mismatch_count:1,message:`${table}: mirror failed`,metrics:{...runningMetrics,error:m.slice(0,1000)}};if(runId)await sb.from("kc_db_mirror_runs").update(finalRow).eq("id",runId);else await sb.from("kc_db_mirror_runs").insert({run_type:"snapshot",started_at:started,source_rows:Number(sc),...finalRow});results.push({table,status:"error",stage:"target_write",message:m,batch_id:batchId,batch_index:i+1,batch_total:batchTotal})}

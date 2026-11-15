@@ -72,7 +72,8 @@ direkt vor dem Wartungsfenster, also kurz bevor die Version bei den Mitgliedern 
 Die eigene Prüfung jeder Sitzung vor dem Push bleibt:
 
 1. **Nicht während Spiegelung/Datensicherung** (Zeiten UTC; Berlin Winter +1, Sommer +2):
-   - Neon-Spiegel: **4:05–4:30, 10:05–10:30, 16:05–16:30, 22:05–22:30** (Anstoß :10, Welle :11–:22),
+   - Neon-Spiegel: **4:05–4:45, 13:05–13:45, 22:05–22:45** (Anstoß :10, Welle :11–:40, 1 Paket je Minute – seit 15.11.2026 KC-SPIEGEL-SCHONEND,
+     vorher 4/10/16/22 UTC: die Datenbank brach am 15.11. um 16:16 UTC mitten in der Welle ab),
    - Neon-Nachtsicherung: **0:35–1:00**, FRA-Sicherung: **1:00–3:00**.
    Fällt ein Termin hinein (z. B. Sommerzeit: 20 Uhr Berlin = 18 UTC – passt; Winter 17 Uhr Berlin = 16 UTC – nicht), danach einspielen.
 2. **Nicht, wenn mehr als 2 Mitglieder in der App sind:**

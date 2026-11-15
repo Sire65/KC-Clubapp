@@ -54,10 +54,10 @@ else
   echo "Letzte andere Version vor $m Min. – Abstand eingehalten."
 fi
 
-im_fenster() { # Spiegel :05–:30 um 4/10/16/22 UTC, Neon-Nachtsicherung 0:35–1:00, FRA-Sicherung 1:00–3:00
+im_fenster() { # Spiegel :05–:45 um 4/13/22 UTC (seit 15.11.2026), Neon-Nachtsicherung 0:35–1:00, FRA-Sicherung 1:00–3:00
   local u=$((10#${EINSPIEL_UTC:-$(date -u +%H%M)})) h m
   h=$((u / 100)); m=$((u % 100))
-  case "$h" in 4|10|16|22) [ "$m" -ge 5 ] && [ "$m" -le 30 ] && return 0;; esac
+  case "$h" in 4|13|22) [ "$m" -ge 5 ] && [ "$m" -le 45 ] && return 0;; esac # KC-SPIEGEL-SCHONEND (15.11.2026): Spiegel 04/13/22 UTC, Welle :11–:40
   [ "$u" -ge 35 ] && [ "$u" -lt 300 ] && return 0
   return 1
 }
