@@ -32654,11 +32654,14 @@ function onlineFragen(r) {
   const f = dlgOeffnen(`<h3 class="dlg-kopf">🟢 Melden, wenn jemand online kommt?</h3>
     <p class="dlg-text">Hallo${vn}, möchtest du eine kurze Meldung bekommen, wenn ein Mitglied die Club-App öffnet – z. B. „🟢 Karla ist jetzt online“?
     Dann kannst du die Person <b>direkt kontaktieren</b> bzw. <b>anklopfen</b>.</p>
-    <p class="dlg-text hinweis">Ändern kannst du das jederzeit unter ⚙️ → 🔔 Benachrichtigungen.</p>
+    ${ansageAn() ? "" : `<label class="dlg-text" style="display:flex;gap:8px;align-items:flex-start"><input type="checkbox" id="ofAnsage" style="margin-top:4px">
+      <span>🗣️ Bei offener App auch <b>ansagen</b> lassen – das Handy sagt dann z. B. „Karla ist jetzt online“ (nur auf diesem Gerät).</span></label>`}
+    <p class="dlg-text hinweis">Ändern kannst du das jederzeit unter ⚙️ → 🔔 Benachrichtigungen bzw. ⚙️ → 🗣️ Ansagen, Töne &amp; Tipps.</p>
     <div class="dlg-knoepfe"><button class="knopf haupt" data-w="ja">🟢 Ja, gerne</button><button class="knopf" data-w="nein">Nein, danke</button><button class="knopf" data-w="spaeter">Später</button></div>`, () => {});
   f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = async () => {
+    const ansage = !!f.querySelector("#ofAnsage")?.checked; // 2.953.0 (Wunsch Hansi): Ansage bei offener App gleich mit einschalten
     f.remove(); const was = b.dataset.w;
-    if (was === "ja") return onlinePushSchalter(true);
+    if (was === "ja") { if (ansage) { ansageSchalter(true); try { ansageSchalterZeigen(); } catch {} } return onlinePushSchalter(true); }
     if (was === "nein") { await onlinePushSchalter(false); return; }
     const wert = { bis: new Date(Date.now() + ONLINE_FRAGE_SPAETER_TAGE * 86400000).toISOString() };
     try { await api("einstellung_setzen", { schluessel: "online_frage", wert }); if (INIT) INIT.einstellungen = { ...(INIT.einstellungen || {}), online_frage: wert }; } catch {}

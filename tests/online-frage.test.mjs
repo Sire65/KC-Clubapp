@@ -12,7 +12,10 @@ assert.ok(/if \(!ICH \|\| ICH\.admin \|\| r\?\.kommAus \|\| e\.online_push\) ret
 assert.ok(/lsLesen\("kc_club_online_gefragt"\) === heute/.test(fn) && /document\.querySelector\("\.dlg-blatt"\)/.test(fn), "höchstens einmal am Tag, nicht über einer anderen Frage");
 for (const t of ["🟢 Melden, wenn jemand online kommt?", "„🟢 Karla ist jetzt online“", "<b>direkt kontaktieren</b> bzw. <b>anklopfen</b>", "⚙️ → 🔔 Benachrichtigungen", "Ja, gerne", "Nein, danke", "Später"])
   assert.ok(fn.includes(t), `Text fehlt: ${t}`);
-assert.ok(/if \(was === "ja"\) return onlinePushSchalter\(true\);/.test(fn) && /if \(was === "nein"\) \{ await onlinePushSchalter\(false\); return; \}/.test(fn), "Ja/Nein setzen die bestehende Einstellung");
+assert.ok(/if \(was === "ja"\) \{ if \(ansage\) \{ ansageSchalter\(true\);[^\n]*return onlinePushSchalter\(true\); \}/.test(fn) && /if \(was === "nein"\) \{ await onlinePushSchalter\(false\); return; \}/.test(fn), "Ja/Nein setzen die bestehende Einstellung");
+// Erweiterung (Wunsch Hansi): Ansage bei offener App gleich mit anbieten – nur wenn sie auf diesem Gerät noch aus ist, Standard nicht angehakt
+assert.ok(/\$\{ansageAn\(\) \? "" : `<label[^`]*<input type="checkbox" id="ofAnsage"/.test(fn) && !/id="ofAnsage" checked/.test(fn), "Ansage als Haken, nicht vorab gesetzt");
+assert.ok(fn.includes("auch <b>ansagen</b> lassen") && fn.includes("⚙️ → 🗣️ Ansagen, Töne &amp; Tipps"), "Hinweis auf die Ansage");
 assert.ok(/schluessel: "online_frage"/.test(fn) && /ONLINE_FRAGE_SPAETER_TAGE = 3;/.test(app), "Später → in 3 Tagen wieder");
 assert.ok(/online_frage: \(w\) => \(\{ bis: /.test(server), "Server kennt die Einstellung online_frage");
 // Empfängerregel unverändert: Nicht-Admins nur, wenn sie selbst „an“ gewählt haben
