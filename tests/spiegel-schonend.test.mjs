@@ -30,4 +30,8 @@ assert.ok(/catch\{\/\* ohne Kennung wie bisher \*\/\}/.test(w), "ohne Funktion/K
 for (const m of ["transfer_mode:\"unchanged_source_skip\"", "transfer_mode:\"unchanged_target_verified\"", "transfer_mode:\"block_delta\""])
   assert.ok(new RegExp(m.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "[^\\n]*stat_sig:aktSig,fp_at:aktFpAt").test(w), `Kennung reist mit (${m})`);
 assert.ok(/source_hash:sh,target_hash:th,stat_sig:aktSig,fp_at:aktFpAt/.test(w), "auch bei voller Übertragung");
+// Nachtrag: nach einem Neustart der Datenbank (Zähler wieder 0) gilt jede alte Kennung als verändert
+{ const n = lies("supabase/migrations/20261115_kc_spiegel_schonend_neustart.sql");
+  assert.ok(/concat_ws\(':', floor\(extract\(epoch from pg_postmaster_start_time\(\)\)\)::bigint, pg_relation_filenode/.test(n), "Startzeit der Datenbank in der Kennung");
+  assert.ok(/revoke all on function public\.kc_db_mirror_stat_sig\(text\) from public, anon, authenticated;\s*grant execute on function public\.kc_db_mirror_stat_sig\(text\) to service_role;/.test(n), "Rechte bleiben eng"); }
 console.log("spiegel-schonend: ok");
