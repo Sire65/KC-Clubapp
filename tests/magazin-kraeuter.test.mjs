@@ -29,8 +29,44 @@ console.log("magazin-kraeuter: ok");
   assert.ok(a[16].termine_fest.some((x) => /Ostern/.test(x.text) && /16\./.test(x.wann)), "Ostern 2028 am 16. April");
   // KC-CLUB-MAGAZIN-BACKSTUBE (15.11.2026): Januar Feenküsse, Februar Mohn-Aprikosen-Herzen, Dezember Karamell-Schoko-Herzen – eigene Fassung ohne fremde Fotos
   assert.equal(a[1].backstube.titel, "Feenküsse"); assert.equal(a[2].backstube.titel, "Mohn-Aprikosen-Herzen"); assert.equal(a[12].backstube.titel, "Karamell-Schoko-Herzen"); assert.equal(a[4].backstube.titel, "Hausfreunde"); assert.equal(a[3].backstube.titel, "Osterkörbchen"); assert.ok(a[3].backstube.bild && fs.statSync(new URL("../" + a[3].backstube.bild, import.meta.url)).size < 200000, "März: Osterkörbchen mit Bild");
+  // Ostern 2027 am 28. März (Wunsch Hansi 15.11.2026): Oster-Suchbild und Oster-Kreuzworträtsel im März-Heft, Fischmarkt im April
+  assert.ok(a[3].raetsel.fehlerbild.a.startsWith("magazin/raetsel/nr03-osterfruehstueck") && a[3].raetsel.kreuzwort.titel === "Rund ums Osterfrühstück" && a[4].raetsel.fehlerbild.a.startsWith("magazin/raetsel/nr04-fischmarkt"), "Ostern im März-Heft");
   assert.ok(a[3].hobby.titel.includes("Ostereier") && a[3].hobby.schritte.length === 6 && a[3].hobby.schnell.ideen.length === 3 && a[3].hobby.zeigtHer, "März: Oster-Bastelecke");
   assert.ok(a[12].backstube.bild === "magazin/backstube/nr12-karamell-schoko-herzen.webp" && a[12].backstube.bildNachweis === "Bild: KI-generiert" && fs.statSync(new URL("../" + a[12].backstube.bild, import.meta.url)).size < 200000, "Dezember: KI-Bild mit Nachweis");
   assert.ok(a[2].backstube.bild === "magazin/backstube/nr02-mohn-aprikosen-herzen.webp" && a[2].backstube.bildNachweis === "Bild: KI-generiert" && fs.statSync(new URL("../" + a[2].backstube.bild, import.meta.url)).size < 200000, "Februar: KI-Bild mit Nachweis");
   for (const n of [2, 12]) { const b = a[n].backstube; assert.ok(!b.foto && !b.id && b.zutaten.length === 3 && b.schritte.length >= 6 && b.tipp && b.fakten.length === 4, `Heft ${n}: Backstube vollständig`); } }
 console.log("magazin-vorbau: ok");
+// KC-CLUB-MAGAZIN-WARENKUNDE (15.11.2026): Produkt des Monats in allen 24 Heften, auf der Seite „Saisonkalender“ unter dem Kraut des Monats
+{ const w = new Function("esc", teil.slice(teil.indexOf("const MAG_WARENKUNDE"), teil.indexOf("const MAG = {")) + "; return { MAG_WARENKUNDE, magWare };")((t) => String(t));
+  assert.equal(w.MAG_WARENKUNDE.length, 24); assert.equal(new Set(w.MAG_WARENKUNDE.map((x) => x.n)).size, 24, "jedes Produkt nur einmal");
+  for (const x of w.MAG_WARENKUNDE) for (const f of ["n", "sym", "saison", "einkauf", "lagern", "kueche", "profi", "wissen"]) assert.ok(x[f] && x[f].length > 0, `${x.n}: ${f}`);
+  assert.ok(/Produkt des Monats: Grünkohl/.test(w.magWare(1)) && /Produkt des Monats: Spargel/.test(w.magWare(5)) && /Produkt des Monats: Rotkohl/.test(w.magWare(24)));
+  assert.ok(/r\.id === "saison"\) inhalt \+= magKraut\(nr\) \+ magWare\(nr\)/.test(teil), "Einbau im Saisonkalender"); }
+console.log("magazin-warenkunde: ok");
+// KC-CLUB-MAGAZIN-FERIEN (15.11.2026): Schulferien aller Länder (NRW oben) und Feiertage im Heftmonat – KMK-Ferienkalender
+{ const f = new Function("esc", "MAG_MONATE", "fTagDp", teil.slice(teil.indexOf("// KC-CLUB-MAGAZIN-FERIEN"), teil.indexOf("// KC-CLUB-MAGAZIN-TERMINE (11.11.2026)")) + "; return { MAG_LAENDER, MAG_FERIEN, MAG_FEIERTAGE, magFerienHtml };")((t) => String(t), ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"], new Intl.DateTimeFormat("de-DE", { weekday: "short", day: "numeric", month: "long", timeZone: "UTC" }));
+  assert.equal(Object.keys(f.MAG_LAENDER).length, 16); assert.ok(Object.keys(f.MAG_LAENDER).every((l) => f.MAG_FERIEN[l]?.length >= 5), "Ferien für alle 16 Länder");
+  assert.ok(f.MAG_FERIEN.NW.some(([n, v, b]) => /Oster/.test(n) && v === "2027-03-22" && b === "2027-04-03") && f.MAG_FERIEN.NW.some(([n, v]) => /Sommer/.test(n) && v === "2027-07-19"), "NRW 2027 laut Schulministerium");
+  const juli = f.magFerienHtml(2027, 7); assert.ok(/^[\s\S]*?<tbody><tr class="mag-nrw"><th>Nordrhein-Westfalen<\/th>/.test(juli), "NRW steht oben");
+  assert.ok(f.MAG_FEIERTAGE.some(([t, n, l]) => t === "2027-05-27" && n === "Fronleichnam" && l.includes("NW")) && f.magFerienHtml(2027, 5).includes("Fronleichnam"), "Fronleichnam 2027 (27. Mai) mit NRW");
+  assert.ok(/inhalt \+= magFerienHtml\(MAG\.jahr, MAG\.monat\)/.test(teil), "Einbau auf der Termine-Seite"); }
+console.log("magazin-ferien: ok");
+// KC-CLUB-MAGAZIN-BASTELECKE + KC-CLUB-MAGAZIN-BLUME (15.11.2026): jede Ausgabe eine Bastelecke zum Monat, Blume des Monats auf derselben Seite
+{ const a = new Function("esc", teil.slice(teil.indexOf("const MAG_START"), teil.indexOf("// Bausteine für die Heftseiten")) + "; return MAG_AUSGABEN;")((t) => String(t));
+  const titel = new Set();
+  for (let n = 1; n <= 24; n++) { const h = a[n].hobby; assert.ok(h && h.titel && h.material.length >= 5 && h.schritte.length >= 5 && h.schnell.ideen.length === 3, `Heft ${n}: Bastelecke`); titel.add(h.titel); }
+  assert.equal(titel.size, 24, "jedes Bastelthema nur einmal");
+  const b = new Function("esc", teil.slice(teil.indexOf("const MAG_BLUMEN"), teil.indexOf("const MAG_WARENKUNDE")) + "; return { MAG_BLUMEN, magBlume };")((t) => String(t));
+  assert.equal(b.MAG_BLUMEN.length, 24); assert.equal(new Set(b.MAG_BLUMEN.map((x) => x.l)).size, 24);
+  const hz = b.MAG_BLUMEN.find((x) => x.n === "Herbstzeitlose"); assert.ok(/giftig/i.test(hz.kueche) && /Bärlauch/.test(hz.kueche), "Warnung Herbstzeitlose/Bärlauch");
+  assert.ok(/Blume des Monats: Christrose/.test(b.magBlume(1)) && !/Blütezeit:<\/b> Blütezeit/.test(b.magBlume(10)));
+  assert.ok(/r\.id === "hobby"\) inhalt \+= magBlume\(nr\)/.test(teil), "Einbau Bastelecke"); }
+console.log("magazin-bastelecke: ok");
+// KC-CLUB-MAGAZIN-REZEPT-MONAT (15.11.2026): Rezept des Monats für Februar–Dezember 2027 (Redaktion, tauschbar); Heft 1 bleibt Hansis Rezept aus dem Rezeptbuch
+{ const a = new Function("esc", teil.slice(teil.indexOf("const MAG_START"), teil.indexOf("// Bausteine für die Heftseiten")) + "; return MAG_AUSGABEN;")((t) => String(t));
+  assert.ok(a[1].rezept.id && a[1].rezept.vonName === "Hansi", "Heft 1 unverändert");
+  const titel = new Set();
+  for (let n = 2; n <= 12; n++) { const r = a[n].rezept; assert.ok(r && !r.id && r.vonName === "Redaktion" && r.portionen && r.dauer <= 60 && r.zutaten.length >= 6 && r.zubereitung.split("\n").length === 5 && r.zubereitung.length < 2000, `Heft ${n}: Rezept des Monats`); titel.add(r.titel); }
+  assert.equal(titel.size, 11); assert.equal(a[10].rezept.titel, "Westfälisches Blindhuhn");
+  assert.ok(teil.includes("Ihr habt ein Lieblingsrezept für diesen Monat?"), "ohne Rezeptbuch-Eintrag kein „Steht auch im Rezeptbuch“"); }
+console.log("magazin-rezept-monat: ok");

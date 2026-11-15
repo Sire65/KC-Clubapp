@@ -178,7 +178,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 // Registry der planmäßigen schweren Arbeiten (Uhrzeiten UTC wie die Zeitpläne in cron.job) – ohne zusätzliche Datenbank-Abfrage, die App bekommt sie beim Start mit.
 const SCHWER_ZEITEN = [
   { art: "notpaket", was: "das Notfall-Paket gebaut", min: [9, 24, 39, 54], dauer: 2 },          // kc-club-notpaket-15min (ca. 30 s, mit Puffer)
-  { art: "spiegel", was: "die Sicherheitskopie (Spiegelung) erstellt", std: [4, 10, 16, 22], von: 10, bis: 30 }, // kc-neon-low-compute-cycle + kc-db-mirror-welle
+  { art: "spiegel", was: "die Sicherheitskopie (Spiegelung) erstellt", std: [4, 13, 22], von: 10, bis: 45 }, // kc-neon-low-compute-cycle + kc-db-mirror-welle (KC-SPIEGEL-SCHONEND 15.11.2026: 04/13/22 UTC, Welle :11–:40 + Puffer)
   { art: "sicherung", was: "die nächtliche Sicherung gemacht", std: [1], von: 20, bis: 60 },    // kc-club-fra-sicherung (gemessen 01:26–01:56)
   { art: "aufraeumen", was: "nachts aufgeräumt", std: [3], von: 5, bis: 55 },                     // kc-…-aufraeumen / -rollup / -retention (03:05–03:50)
 ];
@@ -194,7 +194,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.953.0";
+const SERVER_VERSION = "2.955.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------

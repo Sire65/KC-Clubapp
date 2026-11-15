@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.953.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.955.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -24,7 +24,7 @@ const TEILE_LISTE = {
   rechner: { einstieg: ["rechnerOeffnen"], sri: "sha384-UWrOf1EIXxhsoWWwxnLDzpzALsaxzNGXgeqoLAjVvqoQ6wbFnIGxYTkQPFpiRuQ4" }, // 2.811.0 KC-CLUB-RECHNER: Tischrechner im Büro, „rechne …“ per Sprache
   glueck: { einstieg: ["kaeferKommt", "kleeKommt"], sri: "sha384-hbPb96l3YrlvBxe1zJJfotwARA0pEPKKaDyb1BBVooEi5BCYbfYqihmMYABmlsg4" }, // KC-CLUB-MARIENKAEFER / KC-CLUB-GLUECKSKLEE (06.11.2026): 🐞 jeder 50., 🍀 jeder 25. Start
   hilfetipp: { einstieg: ["tippSenden", "tippListe"], sri: "sha384-cOxaOEtxAQP/CZRKEEryWTGLYs/TRIWVXRitip1nRotyRzYD9GRoisKEzLGKAbGF" }, // 2.835.0 KC-CLUB-HILFE-TIPPS: Clubleitung – Lösung schicken, Vorlagen, Gesendete Tipps
-  magazin: { einstieg: ["magStart", "wmProspekt", "magMenue", "magEinsenden", "magPostfach", "magMeine", "magArchiv", "magDruck"], sri: "sha384-d/6yU/TMF5+jyonS0fQHH9QV185pNBWAjVIJtkgCPTz/EfVNx+qdmhYMZBK+oP+z" }, // KC-CLUB-MAGAZIN-GERUEST: Club-Küche und Weihnachtsmarkt-Prospekt (Gerüst, blättern)
+  magazin: { einstieg: ["magStart", "wmProspekt", "magMenue", "magEinsenden", "magPostfach", "magMeine", "magArchiv", "magDruck"], sri: "sha384-OiXZsCLJbex0QfLSH0KITIziZhWhBosxXRmJMUu4apSNCQUD29gIUsW7PsOGabCK" }, // KC-CLUB-MAGAZIN-GERUEST: Club-Küche und Weihnachtsmarkt-Prospekt (Gerüst, blättern)
   strom: { einstieg: ["stromBlatt", "stromZeichnen"], sri: "sha384-dNcc30G8i65eI40hbgDTGIIBdKAE/KdpRichStzNk1mt1gGPNa+DYvNq03rjI4M/" }, // 2.799.0 KC-CLUB-STROM-UEBERSICHT: Admin „🔋 Stromverbrauch“ (nur beim Öffnen)
   anbieter: { einstieg: ["anbStart"], sri: "sha384-P5YH+VJ7JvIqD3Aj7m229epWr/Qh32v5T1bHLTneKzD1mvcFbAjsObnettv63rNh" }, // 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78): Admin-Kachel „📰 Anbieter“ (nur beim Öffnen)
   istzeit: { einstieg: ["irOeffnen", "irAenderungen"], sri: "sha384-LzIjOhEBd8XATuT8V19PFecWXSkWfEIIs+lWADFW+NrmCLfIl4LwmECdGwvhZbp7" }, // KC-CLUB-IST-RUECKFRAGE: „🗓️ Meine Ist-Zeiten“ nach dem Dienst (nur beim Öffnen)
@@ -8808,7 +8808,9 @@ function kaKopfPasst() {
   const k = $("kaKopfKnoepfe"), a = k?.closest(".abschnitt"); if (!k || !a) return;
   k.classList.remove("kk-eng"); a.classList.remove("kk-knapp"); if (!k.innerHTML || getComputedStyle(k).display === "none") return;
   const h = a.querySelector("h3"), m = $("versionMarke");
-  const eng = () => (h && h.getBoundingClientRect().height > 44) || (m && m.offsetWidth && k.getBoundingClientRect().right > m.getBoundingClientRect().left - 4);
+  // KC-CLUB-KA-KOPF-TOGGLE: Grundhöhe ohne Knopf messen – bricht die Zeile auf schmalen Handys schon von selbst um, zählt nur, ob der Knopf sie höher macht
+  k.classList.add("kk-eng"); const grund = h ? h.getBoundingClientRect().height : 0; k.classList.remove("kk-eng");
+  const eng = () => (h && h.getBoundingClientRect().height > Math.max(44, grund + 2)) || (m && m.offsetWidth && k.getBoundingClientRect().right > m.getBoundingClientRect().left + 1); // KC-CLUB-KA-KOPF-TOGGLE: nur echtes Überlappen zählt (die Zeile ordnet sie nebeneinander)
   if (!eng()) return;
   a.classList.add("kk-knapp"); // erst: beim QR-Knopf nur das Symbol (spart ≈ 25 px)
   if (eng()) { a.classList.remove("kk-knapp"); k.classList.add("kk-eng"); } // passt trotzdem nicht → Knöpfe oben weg (unten gibt es sie immer)
@@ -12161,8 +12163,9 @@ function kachelnZeigen() {
   const kopfK = $("kaKopfKnoepfe");
   // 15.11. (Hansi „ohne Text, nur Knopf“): nur Symbol – Erklärung im Hinweis beim Draufhalten und für Vorlesen; nur wenn wirklich welche ausgeblendet sind
   const kkn = (f, sym, t, an = false) => `<button type="button" class="ka-kopf-k${an ? " an" : ""}" onclick="${f}" title="${t}" aria-label="${t}">${sym}</button>`;
+  // KC-CLUB-KA-KOPF-TOGGLE (15.11.2026, Hansi „nur ein Button, ein Toggle – einmal klicken schaltet, wieder klicken zurück, dann passt er auch auf schmale Handys“)
   if (kopfK) kopfK.innerHTML = nurAus ? kkn("kaNurAus(false)", "🙈", "Ausgeblendete wieder verbergen", true)
-    : ausN ? kkn("kaNurAus(true)", "👀", `Nur ausgeblendete zeigen (${ausN})`) + kkn("kaBearbeiten(true)", "🙈", `${ausN} ausgeblendete Kachel${ausN > 1 ? "n" : ""} – anzeigen`) : "";
+    : ausN ? kkn("kaNurAus(true)", "👀", `Nur ausgeblendete zeigen (${ausN})`) : "";
   kaKopfPasst();
   $("raster").classList.toggle("nur-aus", nurAus);
   $("raster").innerHTML = (nurAus ? kaSortiert(reg).filter((k) => KA.aus.includes(k.id)) : kacheln(reg)).map((k, i) => {

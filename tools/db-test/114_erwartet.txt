@@ -1,0 +1,3 @@
+gruppe=2
+bestehende_leer=t
+a_geloescht_b_frei=t

@@ -3725,8 +3725,8 @@
   /* KC-CLUB-ANSICHT-NAME (0.66.0): hinter „Schnellzugriff“ klein und farbig, welche Ansicht gerade aktiv ist.
      2.23.16 (Wunsch Hansi): etwas größer (.66 → .82rem); erweitert „< … >“ (nach außen), einfach „> … <“ (nach innen) statt Klammern */
   /* KC-CLUB-KA-KOPF (Wunsch Hansi 15.11.2026): neben „Erweiterte Ansicht“ zwei kleine Knöpfe für ausgeblendete Kacheln – nur breit (Tablet/PC), nicht in der einfachen Ansicht */
-  /* 15.11. (Hansi „ohne Text, nur Knopf“ + „auf breiten Handys auch“): runde Symbol-Knöpfe, ab 400 px Breite */
-  .ka-kopf { display: none; } @media (min-width: 400px) { body:not(.einfach) .ka-kopf:not(:empty):not(.kk-eng) { display: flex; gap: 6px; margin: 0 auto 0 8px; flex: none; } }
+  /* 15.11. (Hansi „ohne Text, nur Knopf“ + „auf breiten Handys auch“): runde Symbol-Knöpfe; KC-CLUB-KA-KOPF-TOGGLE: nur noch ein Umschalt-Knopf, auch auf schmalen Handys */
+  .ka-kopf { display: none; } body:not(.einfach) .ka-kopf:not(:empty):not(.kk-eng) { display: flex; gap: 6px; margin: 0 auto 0 8px; flex: none; } /* KC-CLUB-KA-KOPF-TOGGLE: ein Knopf – auch auf schmalen Handys */
   .ka-kopf-k { border: none; border-radius: 50%; width: 34px; height: 34px; padding: 0; display: grid; place-items: center; background: var(--karte2); color: inherit; font-size: 1.05rem; line-height: 1; cursor: pointer; }
   @media (max-width: 599px) { .ka-kopf { gap: 4px !important; margin-left: 4px !important; } .ka-kopf-k { width: 26px; height: 26px; font-size: .85rem; } }
   .abschnitt.kk-knapp .qr-wort { display: none; } /* Handy: kleiner; passt es nicht in die Zeile, blendet kaKopfPasst() sie aus (kk-eng) */
@@ -5455,7 +5455,7 @@
   .mag-inhalt button { width: 100%; display: grid; grid-template-columns: 34px 1fr auto; gap: 8px; align-items: center; text-align: left; background: none; border: none; border-bottom: 1px dotted #c9b8a6; padding: 8px 2px; font: inherit; color: inherit; cursor: pointer; }
   .mag-inhalt small { display: block; color: #7a6a5f; font: .8rem system-ui, sans-serif; } .mag-sym { font-size: 1.3rem; text-align: center; } .mag-seitenzahl { font: 700 .9rem system-ui, sans-serif; color: #741521; }
   .mag-saison { display: grid; grid-template-columns: auto 1fr; gap: 8px 12px; } .mag-saison dt { font-weight: 700; } .mag-saison dd { margin: 0; }
-  .mag-termine { padding-left: 1.1em; line-height: 1.6; } .mag-rezept h3 { margin: 8px 0 2px; color: #741521; } .mag-rezept h4 { margin: 10px 0 2px; } .mag-foto { width: 100%; max-height: 220px; object-fit: cover; border-radius: 8px; }
+  .mag-termine { padding-left: 1.1em; line-height: 1.6; } .mag-ferien { width: 100%; border-collapse: collapse; font-size: .86em; margin: 4px 0 8px; } .mag-ferien th, .mag-ferien td { text-align: left; vertical-align: top; padding: 3px 6px; border-bottom: 1px solid #0001; } .mag-ferien th { font-weight: 600; width: 42%; } .mag-ferien .mag-nrw { background: #74152114; } .mag-ferien .mag-nrw th { color: #741521; } /* KC-CLUB-MAGAZIN-FERIEN */ .mag-rezept h3 { margin: 8px 0 2px; color: #741521; } .mag-rezept h4 { margin: 10px 0 2px; } .mag-foto { width: 100%; max-height: 220px; object-fit: cover; border-radius: 8px; }
   @media (max-width: 480px) { .mag-impressum { grid-template-columns: minmax(0, 1fr); gap: 2px 0; } .mag-impressum dd { margin-bottom: 8px; } }
   .mag-impressum { display: grid; grid-template-columns: minmax(0, 11.5em) minmax(0, 1fr); gap: 8px 12px; font-family: system-ui, sans-serif; font-size: .92rem; } .mag-impressum dt { font-weight: 700; color: #741521; overflow-wrap: normal; hyphens: auto; -webkit-hyphens: auto; } .mag-impressum dd { margin: 0; }
   /* KC-CLUB-MAGAZIN-NR1: Heftseiten wie in einer Zeitschrift – Spalten, farbige Kästen, Bonzettel für den Witz, Faktenleiste, Bildraster */
@@ -7050,7 +7050,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.953.0" data-v="2.953.0"></script>
+<script src="app.js?v=2.955.0" data-v="2.955.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>
