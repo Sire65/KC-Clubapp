@@ -194,7 +194,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.947.0";
+const SERVER_VERSION = "2.950.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -5397,7 +5397,9 @@ async function freigaben(): Promise<Record<string, "alle" | "admin">> {
 // höchstens ein Aufruf „garten_tag“ je Tag und Gerät, sonst nur beim Öffnen des Gartens. Die Pflanze geht nie ein (ohne Wasser nur halb so schnell).
 // Club-Garten: nur Pflanzen, die das Mitglied selbst freigegeben hat (Frage nach dem ersten Säen). Freigabe „garten“, Standard nur Admin.
 const GARTEN_ARTEN: Record<string, number> = { // Art → Tage bis zur vollen Pracht (gleich halten mit GT_ARTEN in teile/garten.js)
-  rose: 21, sonnenblume: 21, tulpe: 21, basilikum: 21, rosmarin: 21, schnittlauch: 21, lavendel: 35, johannisbeere: 35, hortensie: 35, apfel: 56, zitrone: 56, olive: 56,
+  rose: 21, sonnenblume: 21, tulpe: 21, mohn: 21, kornblume: 21, ringelblume: 21, margerite: 21, dahlie: 28, // KC-CLUB-GARTEN-BUNT (15.11.2026)
+  basilikum: 21, rosmarin: 21, schnittlauch: 21, petersilie: 28, dill: 35, kresse: 7, // KC-CLUB-GARTEN-ERNTE (15.11.2026)
+  lavendel: 35, johannisbeere: 35, hortensie: 35, apfel: 56, zitrone: 56, olive: 56,
 };
 const GARTEN_TATEN: Record<string, string> = { rezept: "Erstes eigenes Rezept im Rezeptbuch", magazin: "Erster Beitrag für die Club-Küche" }; // je Tat einmal ein Samen
 const GARTEN_SCHWELLEN = [7, 25, 50, 100, 200, 365];

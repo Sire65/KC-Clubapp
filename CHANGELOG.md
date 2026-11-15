@@ -1,5 +1,18 @@
 # Änderungen
 
+## 2.950.0 – 2026-11-15 – 🖼️ Roman: 35 neue Zeichnungen · 🌱 Garten: Kräuterernte mit Rezepten und bunte Blumen · 🥐 Backstube und Bastelecke · Server 2.950.0
+Wünsche Hansi 13.–15.11.2026 (ein Bündel, Einspielen 12-Uhr-Termin).
+- **Roman „Hinter dem Pass“ (KC-CLUB-MAGAZIN-STAFFEL-2-BILDER):** 35 geprüfte Bleistift-Zeichnungen (ChatGPT, Graustufen-WebP < 200 KB) – jede Folge beider Staffeln hat jetzt mindestens 3 Bilder.
+  Staffel 1: Paul mit dem Brot, Kartoffeltaler, Getränkelager (F2) · Mike am Gemüseposten, Notaufnahme (F4) · Das Salz (F5) · Timos Probierlöffel (F6) · Videogespräch mit Schuster (F8) · Jemand am Fenster (F9) · Ein ungewohnter Platz, Vor der Bäckerei (F10).
+  Staffel 2: Mikes erster Tag, Bischofsmütze, Forelle für Tisch neun, Ralle am Teich (F1) · Lena hilft (F2) · Der falsche Kritiker, Salz im Schuppen (F3) · Die Kommissarin (F5) · Pättken, Kartoffelwasser, Gewitter (F7) · Scheunenküche, Mike hilft, Timo (F8) · Mike und die Kamera, Emmas Beet, Timo am Herd (F9) · Der Sack, Ein Pass – zwei Köpfe, Riesenrad (F10) · Martinsgans, Räucherforelle, Wohnung am Kirchhof, Dreißig Jahre (F11) · Ein Spiegel, Neun Uhr, Grünkohl, Unter der Lichterkette (F12).
+  Kleine Textanpassungen passend zu den Bildern (z. B. Gaststube statt Büro in S2-F5, Emma sitzt am Beet, Stockenten am Teich).
+- **Mein Garten (KC-CLUB-GARTEN-ERNTE, KC-CLUB-GARTEN-BUNT; Konzept docs/KONZEPT_CLUBGARTEN_KRAEUTERERNTE.md):** neue Kräuter Petersilie, Dill, Gartenkresse; neue Blumen Mohn, Kornblume, Ringelblume, Margerite, Dahlie.
+  Reife Kräuter melden sich einmal je Pflanze beim Öffnen („Rezept ansehen“ · „Später“, Sammelhinweis bei mehreren); Rezeptkarte dauerhaft an der reifen Pflanze; sechs Rezepte in der App, keine Abfrage, kein Push.
+  „Dein Basilikum“ statt „Deine Basilikum“. Server: neue Pflanzenarten. Freigabe „Mein Garten“ unverändert (nur Admin). Test `tests/garten-ernte.test.mjs`.
+- **Club-Küche Backstube:** Februar Mohn-Aprikosen-Herzen, März Osterkörbchen, April Hausfreunde, Dezember Karamell-Schoko-Herzen (eigene Rezeptfassungen; Bilder KI-generiert mit Vermerk, sonst „Foto folgt“).
+- **Club-Küche Bastelecke März:** Ostereier mit Blätterabdruck, gefärbt mit Zwiebelschalen, plus drei schnelle Deko-Ideen.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“. Rückweg: App 2.949.0, Server 2.947.0.
+
 ## 2.949.0 – 2026-11-15 – 🎅 Adventskalender: echter Schoko-Nikolaus am 6.12. (KC-CLUB-ADVENT-NIKOLAUS-FOTO)
 Wunsch Hansi 15.11.: „Der Schoko-Weihnachtsmann ist freigestellt … Bau ihn in den Adventskalender ein am 06.12.“
 - Türchen 6 (Überraschung „Ein Mini-Schoko-Nikolaus für dich!“) zeigt jetzt Hansis freigestelltes Foto statt des gezeichneten Riegels – schwebt mit leichtem Schatten herein (ruhig bei „Bewegung reduzieren“). `advent/schoko-nikolaus.webp`, 324 × 520, ≈ 52 KB, durchsichtiger Hintergrund.

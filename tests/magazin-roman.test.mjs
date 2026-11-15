@@ -48,7 +48,9 @@ assert.ok(alles2.includes("„Du kannst nicht so tun, als hätte es uns beide ni
 assert.ok(r2.bisher.length > 40 && r2.ende.includes("**Folge 3 – Alte Geschichten**"));
 const out2 = magHeftHtml("roman", r2);
 assert.ok(out2.includes('class="mag-roman-bisher"') && out2.includes('class="mag-roman-untertitel"') && (out2.match(/mag-roman-pause/g) || []).length === 5);
-assert.equal(r2.bilder.length, 3); assert.ok(r2.bilder.every((b) => !b.da && /^magazin\/roman\/f2-/.test(b.datei)) && !/<img/.test(out2), "Folge 2: noch keine Zeichnungen → Bildplatz, kein kaputtes Bild");
+assert.equal(r2.bilder.length, 3); assert.ok(r2.bilder.every((b) => /^magazin\/roman\/f2-/.test(b.datei)) && (out2.match(/<img /g) || []).length === 3 && r2.bilder.every((b) => b.da), "Folge 2: alle drei Zeichnungen da (14.11.2026)");
+assert.ok(r2.bilder[1].da && r2.text.filter(([a]) => a === "p")[+r2.bilder[1].wo.slice(7) - 1][1].startsWith("In den nächsten Minuten arbeiteten sie beinahe ohne Worte."), "Folge 2: Kartoffeltaler an der Stelle");
+assert.ok(r2.bilder[0].da && r2.bilder[0].wo === "absatz:48" && r2.text.filter(([a]) => a === "p")[47][1].startsWith("Während Lena in die Umkleide verschwand"), "Folge 2: Paul mit dem Brot hinter der Begrüßung");
 for (const k of [".mag-roman-bisher ", ".mag-roman-pause ", ".mag-roman-untertitel "]) assert.ok(html.includes(k), "CSS " + k);
 // Folge 3 in Heft 3 (Entwurf): vollständig nach folgen/03-alte-geschichten.md, Bildplätze statt fehlender Zeichnungen
 { const r = MAG_AUSGABEN[3].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
@@ -70,8 +72,8 @@ for (const k of [".mag-roman-bisher ", ".mag-roman-pause ", ".mag-roman-untertit
   assert.ok(!JSON.stringify(r).includes("<!--") && r.bilder.length === 3 && r.bilder.every((b) => b.datei.startsWith("magazin/roman/f4-") && b.alt.startsWith("Bleistiftskizze: ")));
   assert.ok(!/Kuss/.test(r.bilder.map((b) => b.alt).join(" ")), "Bildtexte verraten nichts");
   // KC-CLUB-MAGAZIN-ZEICHNUNGEN (08.11.2026): nur der Bahnübergang ist eingesetzt; Gemüseposten (Jonas/Mike nicht nach Figurenreferenz) und Klinik (Küchenleute im Hintergrund) zurückgehalten
-  assert.deepEqual(r.bilder.map((b) => b.da), [false, true, false]);
-  const o = magHeftHtml("roman", r); assert.ok((o.match(/<img /g) || []).length === 1 && (o.match(/mag-roman-bild/g) || []).length === 3); }
+  assert.ok(r.bilder.length === 3 && r.bilder.every((b) => b.da), "Folge 4: alle drei Zeichnungen da (Nachtrag 15.11.2026)");
+  const o = magHeftHtml("roman", r); assert.ok((o.match(/<img /g) || []).length === 3 && (o.match(/mag-roman-bild/g) || []).length === 3); }
 // Folge 5 in Heft 5 (Mai 2027, Entwurf): vollständig nach folgen/05-die-rote-marzipanrose.md, Bildplätze statt fehlender Zeichnungen
 const r5 = MAG_AUSGABEN[5].roman;
 assert.equal(MAG_AUSGABEN[5].erscheint, "2027-05-01"); assert.equal(r5.folge, 5); assert.equal(r5.von, 12); assert.equal(r5.titel, "Die rote Marzipanrose"); assert.equal(r5.untertitel, "Was ein Wort anrichten kann");
@@ -85,8 +87,8 @@ assert.ok(r5.bisher.length > 40 && r5.vorspann.length > 40);
 assert.deepEqual(r5.ende.slice(0, 2), ["**Fortsetzung in der nächsten Ausgabe**", "**Folge 6 – Die Kündigung**"]);
 assert.ok(!JSON.stringify(r5).includes("<!--") && !/BILD \d/.test(JSON.stringify(r5)), "Bildhinweise der Vorlage nicht als Lesetext");
 const out5 = magHeftHtml("roman", r5);
-assert.equal(r5.bilder.length, 2); assert.ok(r5.bilder.every((b) => b.da && /^magazin\/roman\/f5-/.test(b.datei) && b.alt.startsWith("Bleistiftskizze: ")) && (out5.match(/<img /g) || []).length === 2, "Folge 5: beide Zeichnungen");
-assert.ok(out5.includes('class="mag-roman-bisher"') && (out5.match(/mag-roman-bild/g) || []).length === 2);
+assert.equal(r5.bilder.length, 3); assert.ok(r5.bilder.every((b) => b.da && /^magazin\/roman\/f5-/.test(b.datei) && b.alt.startsWith("Bleistiftskizze: ")) && (out5.match(/<img /g) || []).length === 3, "Folge 5: drei Zeichnungen (Salz 15.11.2026)");
+assert.ok(out5.includes('class="mag-roman-bisher"') && (out5.match(/mag-roman-bild/g) || []).length === 3);
 // alle eingesetzten Zeichnungen aller Hefte: Datei da, klein, Graustufen-WebP; Figurenreferenz/Kontaktbogen nie im Programm
 for (const [nr, h] of Object.entries(MAG_AUSGABEN)) for (const b of (h.roman?.bilder || []).filter((x) => x.da)) {
   const f = new URL("../" + b.datei, import.meta.url), st = fs.statSync(f), kopf = fs.readFileSync(f).subarray(0, 12).toString("latin1");
@@ -99,9 +101,9 @@ assert.ok(!fs.readdirSync(new URL("../magazin/roman/", import.meta.url)).some((n
   assert.equal(p.length, 211, "Folge 6 nicht gekürzt: Absätze"); assert.equal(p.join(" ").split(/\s+/).length, 3763, "Folge 6 nicht gekürzt: Wortzahl des Lesetexts");
   assert.equal(p[0], "Matthias Voss wartete."); assert.equal(p.at(-1), "„Herr Voss liegt im Krankenhaus.“");
   assert.ok(r.bisher && r.ende[0] === "**Fortsetzung in der nächsten Ausgabe**" && r.ende[1] === "**Folge 7 – Am Limit: Die Küche ohne Chef**");
-  assert.ok(!JSON.stringify(r).includes("<!--") && r.bilder.length === 2 && r.bilder.every((b) => b.datei.startsWith("magazin/roman/f6-") && b.alt.startsWith("Bleistiftskizze: ")));
+  assert.ok(!JSON.stringify(r).includes("<!--") && r.bilder.length === 3 && r.bilder.every((b) => b.datei.startsWith("magazin/roman/f6-") && b.alt.startsWith("Bleistiftskizze: ")));
   for (const b of r.bilder) { const st = fs.statSync(new URL("../" + b.datei, import.meta.url)); assert.ok(b.da && st.size > 5000 && st.size < 200000, "Bild vorhanden und klein: " + b.datei); }
-  const o = magHeftHtml("roman", r); assert.ok((o.match(/<img /g) || []).length === 2 && o.includes('loading="lazy"'), "Folge 6: beide Zeichnungen eingesetzt"); }
+  const o = magHeftHtml("roman", r); assert.ok((o.match(/<img /g) || []).length === 3 && o.includes('loading="lazy"'), "Folge 6: drei Zeichnungen eingesetzt"); }
 // Folge 7 in Heft 7 (Entwurf): vollständig nach folgen/07-am-limit-die-kueche-ohne-chef.md
 { const r = MAG_AUSGABEN[7].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
   assert.equal(MAG_AUSGABEN[7].erscheint, "2027-07-01"); assert.equal(r.folge, 7); assert.equal(r.titel, "Am Limit: Die Küche ohne Chef"); assert.equal(r.untertitel, "Ein Wochenende, das keiner vergessen wird");
@@ -121,7 +123,7 @@ assert.ok(!fs.readdirSync(new URL("../magazin/roman/", import.meta.url)).some((n
   assert.ok(r.bisher && r.ende[0] === "**Fortsetzung in der nächsten Ausgabe**" && r.ende[1] === "**Folge 9 – Auf Messers Schneide**");
   assert.ok(!JSON.stringify(r).includes("<!--") && r.bilder.length === 3 && r.bilder.every((b) => b.datei.startsWith("magazin/roman/f8-") && b.alt.startsWith("Bleistiftskizze: ")));
   // 08-01 und 08-03 eingesetzt; 08-02 (Videogespräch) zurückgehalten: Jonas dort mit dunklen Locken statt sandblond (Figurenvorgabe)
-  assert.deepEqual(r.bilder.map((b) => b.da), [true, false, true], "Folge 8: Verena und Abfahrt da, Schuster-Bild zurückgehalten"); for (const b of r.bilder.filter((x) => x.da)) { const st = fs.statSync(new URL("../" + b.datei, import.meta.url)); assert.ok(st.size > 5000 && st.size < 200000, "Bild vorhanden und klein: " + b.datei); } const o = magHeftHtml("roman", r); assert.ok((o.match(/<img /g) || []).length === 2 && (o.match(/mag-roman-bild/g) || []).length === 3); }
+  assert.ok(r.bilder.length === 3 && r.bilder.every((b) => b.da), "Folge 8: alle drei da – Schuster-Bild mit sandblondem Jonas (15.11.2026)"); for (const b of r.bilder.filter((x) => x.da)) { const st = fs.statSync(new URL("../" + b.datei, import.meta.url)); assert.ok(st.size > 5000 && st.size < 200000, "Bild vorhanden und klein: " + b.datei); } const o = magHeftHtml("roman", r); assert.ok((o.match(/<img /g) || []).length === 3 && (o.match(/mag-roman-bild/g) || []).length === 3); }
 // Folge 6: Timo ist kein überführter Dieb – gekündigt wird wegen dokumentierter Pflichtverletzungen
 assert.ok(MAG_AUSGABEN[6].roman.text.some(([, x]) => x.includes("Wir können Ihnen keinen Diebstahl nachweisen")), "Folge 6 ohne Diebstahlsbehauptung");
 // Folge 9 in Heft 9 (September 2027, Entwurf): vollständig nach folgen/09-auf-messers-schneide.md, Bildplätze statt fehlender Zeichnungen
@@ -132,9 +134,9 @@ assert.ok(MAG_AUSGABEN[6].roman.text.some(([, x]) => x.includes("Wir können Ihn
   assert.equal(p[0], "„Du siehst aus, als hättest du die Nacht durchgearbeitet.“"); assert.equal(p.at(-1), "Sophie steckte das Telefon ein und drehte sich um. Zwei Schritte hinter ihr stand Paul Brinkmann, eine Hand am Lenker seines Fahrrads. Wie lange er schon dort stand, wusste sie nicht. Er sah nicht durch die Scheibe, sondern auf die Tasche, in der ihr Telefon steckte, und dann in ihr Gesicht, bis sie den Blick senkte. „Mittwoch“, sagte er leise, mehr zu sich selbst als zu ihr. Dann schob er das Rad an ihr vorbei über den dunklen Markt, ohne sich umzudrehen.");
   assert.ok(r.bisher && r.ende[0] === "**Fortsetzung in der nächsten Ausgabe**" && r.ende[1] === "**Folge 10 – Gerüchte und Gezeiten**");
   assert.ok(p.some((t) => t.includes("Zander")) && !p.some((t) => t.includes("Rehrücken")), "Wettbewerbsgericht Zander, kein Rehrücken");
-  assert.ok(!JSON.stringify(r).includes("<!--") && r.bilder.length === 2 && r.bilder.every((b) => b.da && b.datei.startsWith("magazin/roman/f9-") && b.alt.startsWith("Bleistiftskizze: "))); for (const b of r.bilder.filter((x) => x.da)) { const st = fs.statSync(new URL("../" + b.datei, import.meta.url)); assert.ok(st.size > 5000 && st.size < 200000, "Bild vorhanden und klein: " + b.datei); }
-  assert.deepEqual(r.bilder.map((b) => b.wo), ["h:Fünf Uhr morgens", "h:Neunzig Minuten"], "Bildstellen laut Einbauanweisung");
-  const o = magHeftHtml("roman", r); assert.ok((o.match(/<img /g) || []).length === 2, "Folge 9: beide Zeichnungen"); }
+  assert.ok(!JSON.stringify(r).includes("<!--") && r.bilder.length === 3 && r.bilder.every((b) => b.da && b.datei.startsWith("magazin/roman/f9-") && b.alt.startsWith("Bleistiftskizze: "))); for (const b of r.bilder.filter((x) => x.da)) { const st = fs.statSync(new URL("../" + b.datei, import.meta.url)); assert.ok(st.size > 5000 && st.size < 200000, "Bild vorhanden und klein: " + b.datei); }
+  assert.deepEqual(r.bilder.map((b) => b.wo), ["h:Fünf Uhr morgens", "h:Neunzig Minuten", "absatz:294"], "Bildstellen laut Einbauanweisung");
+  const o = magHeftHtml("roman", r); assert.ok((o.match(/<img /g) || []).length === 3, "Folge 9: drei Zeichnungen"); }
 // Folge 10 in Heft 10 (Oktober 2027, Entwurf): vollständig nach folgen/10-geruechte-und-gezeiten.md, beide Zeichnungen
 { const r = MAG_AUSGABEN[10].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
   assert.equal(MAG_AUSGABEN[10].erscheint, "2027-10-01"); assert.equal(r.folge, 10); assert.equal(r.titel, "Gerüchte und Gezeiten"); assert.equal(r.untertitel, "Der Preis eines Traums");
@@ -142,11 +144,11 @@ assert.ok(MAG_AUSGABEN[6].roman.text.some(([, x]) => x.includes("Wir können Ihn
   assert.equal(p.length, 203, "Folge 10 nicht gekürzt: Absätze"); assert.equal(p.join(" ").split(/\s+/).length, 3997, "Folge 10 nicht gekürzt: Wortzahl des Lesetexts");
   assert.equal(p[0], "„Na, war die Pasta gut?“"); assert.equal(p.at(-1), "„Dann“, sagte er leise, „kann ich Ihnen nicht versprechen, dass wir die Alte Mühle offen halten können.“");
   assert.ok(r.bisher && r.ende[0] === "**Fortsetzung in der nächsten Ausgabe**" && r.ende[1] === "**Folge 11 – Zwischen den Ufern**");
-  assert.ok(!JSON.stringify(r).includes("<!--") && r.bilder.length === 2 && r.bilder.every((b) => b.da && b.alt.startsWith("Bleistiftskizze: ")));
-  assert.deepEqual(r.bilder.map((b) => b.wo), ["h:Eine andere Perspektive", "h:Kino ohne Hintergedanken"], "Bildstellen laut Einbauanweisung");
+  assert.ok(!JSON.stringify(r).includes("<!--") && r.bilder.length === 4 && r.bilder.every((b) => b.da && b.alt.startsWith("Bleistiftskizze: ")));
+  assert.deepEqual(r.bilder.map((b) => b.wo), ["absatz:93", "h:Eine andere Perspektive", "h:Kino ohne Hintergedanken", "absatz:153"], "Bildstellen laut Einbauanweisung + Nachtrag 15.11.2026");
   for (const b of r.bilder) { const st = fs.statSync(new URL("../" + b.datei, import.meta.url)); assert.ok(st.size > 5000 && st.size < 200000, "Bild vorhanden und klein: " + b.datei); }
-  assert.equal(r.bilder[1].datei, MAG_AUSGABEN[5].roman.bilder.find((b) => b.wo === "h:Die Rose").datei, "Erinnerungsbild = dieselbe Datei wie in Folge 5");
-  const o = magHeftHtml("roman", r); assert.ok((o.match(/<img /g) || []).length === 2); }
+  assert.equal(r.bilder[2].datei, MAG_AUSGABEN[5].roman.bilder.find((b) => b.wo === "h:Die Rose").datei, "Erinnerungsbild = dieselbe Datei wie in Folge 5");
+  const o = magHeftHtml("roman", r); assert.ok((o.match(/<img /g) || []).length === 4); }
 // Folge 11 in Heft 11 (November 2027, Entwurf): vollständig nach folgen/11-zwischen-den-ufern.md, drei Zeichnungen
 { const r = MAG_AUSGABEN[11].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t), h = r.text.filter(([a]) => a === "h").map(([, t]) => t);
   assert.equal(MAG_AUSGABEN[11].erscheint, "2027-11-01"); assert.equal(r.folge, 11); assert.equal(r.titel, "Zwischen den Ufern"); assert.equal(r.untertitel, "Wenn Bleiben nicht dasselbe ist wie Festhalten");
@@ -207,7 +209,7 @@ console.log("magazin-roman Staffel 1 sanft: ok");
 console.log("magazin-roman Antworten Hansi: ok");
 // KC-CLUB-MAGAZIN-STAFFEL-2-BILDER (11.11.2026, Wunsch Hansi „Bau die fertigen Bilder schon mit ein“): geprüfte Zeichnungen Staffel 2, Graustufen-WebP
 { const b14 = MAG_AUSGABEN[14].roman.bilder, b15 = MAG_AUSGABEN[15].roman.bilder;
-  assert.deepEqual(b14.map((b) => b.wo), ["absatz:1", "h:Vierzig Kilo", "absatz:94"]); assert.ok(MAG_AUSGABEN[14].roman.text.filter(([a]) => a === "p")[93][1].startsWith("Nina rannte."), "Bild „Lena hilft“ hinter dem Absatz mit dem Griff"); assert.deepEqual(b15.map((b) => b.wo), ["absatz:27", "absatz:86"]); assert.ok(MAG_AUSGABEN[15].roman.text.filter(([a]) => a === "p")[85][1].startsWith("Durch das Fenster der Schwingtür sah Lena den Mann essen"), "Kritiker-Bild hinter dem Blick durchs Türfenster");
+  assert.deepEqual(b14.map((b) => b.wo), ["absatz:1", "h:Vierzig Kilo", "absatz:94"]); assert.ok(MAG_AUSGABEN[14].roman.text.filter(([a]) => a === "p")[93][1].startsWith("Nina rannte."), "Bild „Lena hilft“ hinter dem Absatz mit dem Griff"); assert.deepEqual(b15.map((b) => b.wo), ["absatz:8", "absatz:27", "absatz:86"]); assert.ok(MAG_AUSGABEN[15].roman.text.filter(([a]) => a === "p")[85][1].startsWith("Durch das Fenster der Schwingtür sah Lena den Mann essen"), "Kritiker-Bild hinter dem Blick durchs Türfenster");
   assert.ok(MAG_AUSGABEN[15].roman.text.filter(([a]) => a === "p")[26][1].startsWith("Sie stellte die Tonne ab"), "Schaum-Bild hinter dem Foto-Absatz");
   for (const b of [...b14, ...b15]) { assert.ok(b.da && /^magazin\/roman\/s2-0[23]-/.test(b.datei) && b.alt.startsWith("Bleistiftskizze: "));
     const st = fs.statSync(new URL("../" + b.datei, import.meta.url)); assert.ok(st.size > 5000 && st.size < 200000, "klein: " + b.datei); }
@@ -216,9 +218,22 @@ console.log("magazin-roman Antworten Hansi: ok");
 { const r = MAG_AUSGABEN[20].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
   assert.deepEqual(r.bilder.map((b) => b.wo + " " + b.datei), ["absatz:21 magazin/roman/s2-08-01-scheunenkueche.webp", "absatz:46 magazin/roman/s2-08-03-mike-hilft.webp", "absatz:71 magazin/roman/s2-08-02-timo.webp"]); assert.equal(p[20], "„Zwanzig.“"); assert.ok(p[45].startsWith("Am Kindertisch, der dem Herd am nächsten stand") && p[45].includes("Löschdecke"), "Mike-hilft-Bild"); assert.ok(p[70].includes("setzten sich damit auf eine Bank an der Rathausmauer"), "Timo-Bild an der Bank");
   for (const b of r.bilder) assert.ok(b.da && b.alt.startsWith("Bleistiftskizze: ") && fs.statSync(new URL("../" + b.datei, import.meta.url)).size < 200000, b.datei); assert.ok(magHeftHtml("roman", r).includes("Skizzen by KI")); }
-// Heft 21 (13.11.2026): Zeichnung „Mike und die Kamera“ hinter dem gefangenen Tablett
+// Heft 22 (15.11.2026): Zeichnung „Ein Pass, zwei Köpfe“ (Benefizabend)
+{ const r = MAG_AUSGABEN[22].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
+  assert.deepEqual(r.bilder.map((b) => b.wo + " " + b.datei), ["absatz:6 magazin/roman/s2-10-01-der-sack.webp", "absatz:84 magazin/roman/s2-10-02-ein-pass-zwei-koepfe.webp", "absatz:107 magazin/roman/s2-10-03-riesenrad.webp"]); assert.ok(p[83].includes("Verena hob eine Augenbraue in Richtung Jonas."));
+  for (const b of r.bilder) assert.ok(b.da && b.alt.startsWith("Bleistiftskizze: ") && fs.statSync(new URL("../" + b.datei, import.meta.url)).size < 200000, b.datei); assert.ok(magHeftHtml("roman", r).includes("Skizzen by KI")); }
+// Heft 23 (14.11.2026): Zeichnung „Martinsgans“ hinter dem Knuspern der Gänse
+{ const r = MAG_AUSGABEN[23].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
+  assert.deepEqual(r.bilder.map((b) => b.wo + " " + b.datei), ["absatz:11 magazin/roman/s2-11-02-raeucherforelle.webp", "absatz:25 magazin/roman/s2-11-01-martinsgans.webp", "absatz:76 magazin/roman/s2-11-04-die-wohnung.webp", "absatz:89 magazin/roman/s2-11-03-dreissig-jahre.webp"]); assert.ok(p[24].startsWith("Leon schob die ersten Bleche wieder in den Ofen")); assert.ok(p[75].includes("Jonas drehte jeden Knopf am Herd einmal auf und zu."));
+  for (const b of r.bilder) assert.ok(b.da && b.alt.startsWith("Bleistiftskizze: ") && fs.statSync(new URL("../" + b.datei, import.meta.url)).size < 200000, b.datei); assert.ok(magHeftHtml("roman", r).includes("Skizzen by KI")); }
+// Heft 24 (14.11.2026): Zeichnungen „Ein Spiegel“ (Ralle hinter Emmas Stuhl), „Neun Uhr“ (die sechs Blätter) und „Unter der Lichterkette“ (der Ring)
+{ const r = MAG_AUSGABEN[24].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
+  assert.deepEqual(r.bilder.map((b) => b.wo + " " + b.datei), ["absatz:46 magazin/roman/s2-12-01-ein-spiegel.webp", "absatz:111 magazin/roman/s2-12-02-neun-uhr.webp", "absatz:155 magazin/roman/s2-12-03-gruenkohl.webp", "absatz:168 magazin/roman/s2-12-04-unter-der-lichterkette.webp"]); assert.ok(p[110].startsWith("Sechs Blätter. Es war kaum etwas darunter"));
+  assert.equal(p[45], "Ralle war an den Tisch getreten. Er stand hinter Emmas Stuhl, die Hände auf der Lehne."); assert.ok(p[167].startsWith("Er steckte ihr den Ring an, beim zweiten Versuch"));
+  for (const b of r.bilder) assert.ok(b.da && b.alt.startsWith("Bleistiftskizze: ") && fs.statSync(new URL("../" + b.datei, import.meta.url)).size < 200000, b.datei); assert.ok(magHeftHtml("roman", r).includes("Skizzen by KI")); }
+// Heft 21 (13./14.11.2026): Zeichnungen „Mike und die Kamera“ (gefangenes Tablett) „Emmas Beet“ (Schulklasse im Kräutergarten) und „Timo am Herd“ (Saucen-Abend)
 { const r = MAG_AUSGABEN[21].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
-  assert.deepEqual(r.bilder.map((b) => b.wo + " " + b.datei), ["absatz:44 magazin/roman/s2-09-01-mike-und-die-kamera.webp"]); assert.ok(p[43].startsWith("Mike fing sich. Das Tablett schwankte"));
+  assert.deepEqual(r.bilder.map((b) => b.wo + " " + b.datei), ["absatz:44 magazin/roman/s2-09-01-mike-und-die-kamera.webp", "absatz:86 magazin/roman/s2-09-02-emmas-beet.webp", "absatz:99 magazin/roman/s2-09-03-timo-am-herd.webp"]); assert.ok(p[98].startsWith("Abends stand Voss am Pass, wie er früher dort gestanden hatte.")); assert.ok(p[43].startsWith("Mike fing sich. Das Tablett schwankte")); assert.ok(p[85].startsWith("Emma saß am Rand, auf der Steinkante eines Beets."));
   for (const b of r.bilder) assert.ok(b.da && b.alt.startsWith("Bleistiftskizze: ") && fs.statSync(new URL("../" + b.datei, import.meta.url)).size < 200000, b.datei); assert.ok(magHeftHtml("roman", r).includes("Skizzen by KI")); }
 // Heft 13 (12.11.2026): Zeichnungen „Mikes erster Tag“ (Schalottenkiste) und „Bischofsmütze“ und „Forelle für Tisch neun“ (je ein neuer Absatz dazu, Bilder von Hansi)
 { const r = MAG_AUSGABEN[13].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
@@ -229,7 +244,7 @@ console.log("magazin-roman Antworten Hansi: ok");
   assert.deepEqual(r.bilder.map((b) => b.wo), ["h:Sechzig kleine Fische", "absatz:46", "absatz:69", "h:Herr Akın"]); assert.equal(p[68], "Ralle hob immer alles auf."); assert.ok(p[45].startsWith("Die Kinder hatten die Telefone") && !p.some((t) => /zwei halbwüchsigen Söhnen|Die Söhne hatten/.test(t)), "Folge 4: Bild Ostern bei Kerzenlicht, Familie mit Junge und Mädchen");
   for (const b of r.bilder) { const st = fs.statSync(new URL("../" + b.datei, import.meta.url)); assert.ok(st.size > 5000 && st.size < 200000, b.datei); } assert.ok(p.some((t) => t.includes("dann hockte Lena sich unten ans Ufer"))); }
 { const r = MAG_AUSGABEN[17].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
-  assert.deepEqual(r.bilder.map((b) => b.wo), ["absatz:28", "absatz:95"]); assert.ok(p[94].startsWith("Am Montag bestand sie.")); assert.ok(p[27].startsWith("Dann stand er auf") && p[25].startsWith("Lena setzte sich neben ihn") && p.includes("Ralle sah nicht hin. Nach einer Weile sagte er: „Zwanzig Jahre hab ich die gefüttert.“"), "Folge 5: neuer Absatz Mauer am Teich, Bild dahinter");
+  assert.deepEqual(r.bilder.map((b) => b.wo), ["absatz:28", "absatz:44", "absatz:95"]); assert.ok(p[43].startsWith("Lena saß am Fenstertisch, Brandt ihr gegenüber"), "Bild „Die Kommissarin“ (14.11.2026)"); assert.ok(p[94].startsWith("Am Montag bestand sie.")); assert.ok(p[27].startsWith("Dann stand er auf") && p[25].startsWith("Lena setzte sich neben ihn") && p.includes("Ralle sah nicht hin. Nach einer Weile sagte er: „Zwanzig Jahre hab ich die gefüttert.“"), "Folge 5: neuer Absatz Mauer am Teich, Bild dahinter");
   const st = fs.statSync(new URL("../" + r.bilder[0].datei, import.meta.url)); assert.ok(st.size > 5000 && st.size < 200000); }
 { const r = MAG_AUSGABEN[18].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
   assert.deepEqual(r.bilder.map((b) => b.wo), ["absatz:21", "absatz:34", "absatz:88"]); assert.ok(p[87].startsWith("Henrik legte ihr den Arm") && p[20].startsWith("Zur Belohnung schickte Jonas ihn an den Nebenposten")); assert.equal(p[33], "Lena hatte Ralle noch nie lachen sehen. Nicht so.");
