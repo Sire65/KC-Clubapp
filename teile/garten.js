@@ -5,23 +5,55 @@
 // Sparsam: höchstens ein Aufruf „garten_tag“ je Tag und Gerät (beim Start), sonst nur beim Säen/Pflegen/Club-Garten. Wachstum rechnet die App selbst
 // (gtWachs = gleiche Rechnung wie gartenWachs auf dem Server). Alle Bilder sind hier gezeichnet (SVG), keine Bilder aus dem Netz.
 // Nach jeder Änderung: node tools/teile-pruefsumme.mjs
-const GT_ARTEN = [ // Registry (gleich halten mit GARTEN_ARTEN im Server): neue Pflanze = neuer Eintrag + Zeichnung in gtSvg
-  { id: "rose", t: "Rose", sym: "🌹", gruppe: "blumen", tage: 21, fertig: "blüht", farbe: "#c62845" },
-  { id: "sonnenblume", t: "Sonnenblume", sym: "🌻", gruppe: "blumen", tage: 21, fertig: "blüht", farbe: "#f2b705" },
-  { id: "tulpe", t: "Tulpe", sym: "🌷", gruppe: "blumen", tage: 21, fertig: "blüht", farbe: "#e2557f" },
-  { id: "basilikum", t: "Basilikum", sym: "🌿", gruppe: "kraeuter", tage: 21, fertig: "ist erntereif", farbe: "#3f9b3a" },
-  { id: "rosmarin", t: "Rosmarin", sym: "🌿", gruppe: "kraeuter", tage: 21, fertig: "ist erntereif", farbe: "#5f7f5a" },
-  { id: "schnittlauch", t: "Schnittlauch", sym: "🌱", gruppe: "kraeuter", tage: 21, fertig: "blüht", farbe: "#9b59b6" },
-  { id: "lavendel", t: "Lavendel", sym: "💜", gruppe: "straeucher", tage: 35, fertig: "blüht", farbe: "#8e6cc9" },
-  { id: "johannisbeere", t: "Johannisbeere", sym: "🍒", gruppe: "straeucher", tage: 35, fertig: "trägt Beeren", farbe: "#c0392b" },
-  { id: "hortensie", t: "Hortensie", sym: "💠", gruppe: "straeucher", tage: 35, fertig: "blüht", farbe: "#5b8fd6" },
-  { id: "apfel", t: "Apfelbaum", sym: "🍎", gruppe: "baeume", tage: 56, fertig: "trägt Äpfel", farbe: "#d6312f" },
-  { id: "zitrone", t: "Zitronenbaum", sym: "🍋", gruppe: "baeume", tage: 56, fertig: "trägt Zitronen", farbe: "#f4d03f" },
-  { id: "olive", t: "Olivenbaum", sym: "🫒", gruppe: "baeume", tage: 56, fertig: "trägt Oliven", farbe: "#4b5320" },
+const GT_ARTEN = [ // Registry (gleich halten mit GARTEN_ARTEN im Server): neue Pflanze = neuer Eintrag + Zeichnung in gtSvg; dein = „Dein“/„Deine“ für die Hinweise
+  { id: "rose", t: "Rose", sym: "🌹", gruppe: "blumen", tage: 21, fertig: "blüht", farbe: "#c62845", dein: "Deine" },
+  { id: "sonnenblume", t: "Sonnenblume", sym: "🌻", gruppe: "blumen", tage: 21, fertig: "blüht", farbe: "#f2b705", dein: "Deine" },
+  { id: "tulpe", t: "Tulpe", sym: "🌷", gruppe: "blumen", tage: 21, fertig: "blüht", farbe: "#e2557f", dein: "Deine" },
+  // KC-CLUB-GARTEN-BUNT (Wunsch Hansi 15.11.2026 „Auch Blumen, damit der Garten bunt wird“)
+  { id: "mohn", t: "Mohn", sym: "🌺", gruppe: "blumen", tage: 21, fertig: "blüht", farbe: "#d7262b", dein: "Dein" },
+  { id: "kornblume", t: "Kornblume", sym: "💙", gruppe: "blumen", tage: 21, fertig: "blüht", farbe: "#3f6fd6", dein: "Deine" },
+  { id: "ringelblume", t: "Ringelblume", sym: "🧡", gruppe: "blumen", tage: 21, fertig: "blüht", farbe: "#f08a1c", dein: "Deine" },
+  { id: "margerite", t: "Margerite", sym: "🌼", gruppe: "blumen", tage: 21, fertig: "blüht", farbe: "#ffffff", dein: "Deine" },
+  { id: "dahlie", t: "Dahlie", sym: "🌸", gruppe: "blumen", tage: 28, fertig: "blüht", farbe: "#d6458f", dein: "Deine" },
+  { id: "basilikum", t: "Basilikum", sym: "🌿", gruppe: "kraeuter", tage: 21, fertig: "ist erntereif", farbe: "#3f9b3a", dein: "Dein" },
+  { id: "rosmarin", t: "Rosmarin", sym: "🌿", gruppe: "kraeuter", tage: 21, fertig: "ist erntereif", farbe: "#5f7f5a", dein: "Dein" },
+  { id: "schnittlauch", t: "Schnittlauch", sym: "🌱", gruppe: "kraeuter", tage: 21, fertig: "ist erntereif und blüht", farbe: "#9b59b6", dein: "Dein" },
+  // KC-CLUB-GARTEN-ERNTE (Konzept docs/KONZEPT_CLUBGARTEN_KRAEUTERERNTE.md, Freigabe Hansi 15.11.2026): drei neue Kräuter
+  { id: "petersilie", t: "Petersilie", sym: "🌿", gruppe: "kraeuter", tage: 28, fertig: "ist erntereif", farbe: "#2f8a3a", dein: "Deine" },
+  { id: "dill", t: "Dill", sym: "🌿", gruppe: "kraeuter", tage: 35, fertig: "ist erntereif", farbe: "#6aa84f", dein: "Dein" },
+  { id: "kresse", t: "Gartenkresse", sym: "🌱", gruppe: "kraeuter", tage: 7, fertig: "ist erntereif", farbe: "#7cb342", dein: "Deine" },
+  { id: "lavendel", t: "Lavendel", sym: "💜", gruppe: "straeucher", tage: 35, fertig: "blüht", farbe: "#8e6cc9", dein: "Dein" },
+  { id: "johannisbeere", t: "Johannisbeere", sym: "🍒", gruppe: "straeucher", tage: 35, fertig: "trägt Beeren", farbe: "#c0392b", dein: "Deine" },
+  { id: "hortensie", t: "Hortensie", sym: "💠", gruppe: "straeucher", tage: 35, fertig: "blüht", farbe: "#5b8fd6", dein: "Deine" },
+  { id: "apfel", t: "Apfelbaum", sym: "🍎", gruppe: "baeume", tage: 56, fertig: "trägt Äpfel", farbe: "#d6312f", dein: "Dein" },
+  { id: "zitrone", t: "Zitronenbaum", sym: "🍋", gruppe: "baeume", tage: 56, fertig: "trägt Zitronen", farbe: "#f4d03f", dein: "Dein" },
+  { id: "olive", t: "Olivenbaum", sym: "🫒", gruppe: "baeume", tage: 56, fertig: "trägt Oliven", farbe: "#4b5320", dein: "Dein" },
 ];
 const GT_GRUPPEN = [["blumen", "🌸 Blumen"], ["kraeuter", "🌿 Kräuter"], ["straeucher", "🫐 Sträucher"], ["baeume", "🌳 Bäume"]];
 const GT_STUFEN = ["Keimling", "kleine Pflanze", "halb gewachsen", "fast fertig"];
-const GT_WASSER_TAGE = 3, GT_DUENGER_TAGE = 21, GT_CACHE = "kc_club_garten", GT_STUFE_MERK = "kc_club_garten_stufen";
+const GT_WASSER_TAGE = 3, GT_DUENGER_TAGE = 21, GT_CACHE = "kc_club_garten", GT_STUFE_MERK = "kc_club_garten_stufen", GT_REIF_MERK = "kc_club_garten_reif";
+// KC-CLUB-GARTEN-ERNTE: ein festes Rezept je Kraut (Vorlagen docs/KRAEUTERGARTEN_REZEPTE.md) – liegt in der App, keine Datenbank, keine Abfrage
+const GT_REZEPTE = {
+  basilikum: { t: "Basilikum-Pinienkern-Pesto", lust: "ein frisches Basilikum-Pesto", fuer: "Für 2 Portionen Pasta",
+    zutaten: ["30 g Basilikumblätter", "15 g Pinienkerne", "25 g Parmesan, fein gerieben", "½ kleine Knoblauchzehe", "40–50 ml mildes Olivenöl", "Salz nach Geschmack"],
+    schritte: ["Basilikum waschen und gut trocken tupfen. Pinienkerne ohne Fett leicht anrösten und abkühlen lassen.", "Basilikum, Pinienkerne und Knoblauch mit 40 ml Öl kurz mixen oder mörsern. Parmesan unterrühren, bei Bedarf etwas Öl ergänzen und abschmecken.", "Für Pasta das Pesto mit 1–2 EL Nudelwasser glattrühren und abseits der Herdplatte unter die heißen Nudeln mischen."],
+    dazu: "Schmeckt auch auf Tomatenbrot." },
+  rosmarin: { t: "Zitronen-Rosmarin-Quark", lust: "einen Zitronen-Rosmarin-Quark zu Ofenkartoffeln", fuer: "Für 2 Portionen als Beilage",
+    zutaten: ["250 g Quark", "2 EL Naturjoghurt", "etwa ½ TL sehr fein gehackte frische Rosmarinnadeln", "etwas Abrieb einer Bio-Zitrone", "Salz und Pfeffer"],
+    schritte: ["Quark und Joghurt glatt rühren.", "Rosmarin und Zitronenabrieb unterrühren. Mit Salz und Pfeffer abschmecken."], dazu: "Dazu passen knusprige Ofenkartoffeln." },
+  schnittlauch: { t: "Schnittlauch-Radieschen-Quark", lust: "einen Schnittlauch-Radieschen-Quark", fuer: "Für 2 Portionen als Beilage",
+    zutaten: ["250 g Quark", "2 EL Naturjoghurt", "2 EL fein geschnittener Schnittlauch", "2 Radieschen, fein gewürfelt", "Salz und Pfeffer"],
+    schritte: ["Quark und Joghurt cremig rühren.", "Schnittlauch und Radieschen unterheben und abschmecken. Ein paar Schnittlauchröllchen für obenauf zurückhalten."], dazu: "Dazu passen Pellkartoffeln oder Schwarzbrot." },
+  petersilie: { t: "Petersilien-Walnuss-Pesto", lust: "ein Petersilien-Walnuss-Pesto", fuer: "Für 2 Portionen Pasta oder als Würze für Ofengemüse",
+    zutaten: ["30 g glatte Petersilie, Blätter und dünne Stiele", "20 g Walnüsse", "25 g Parmesan, fein gerieben", "40–50 ml mildes Olivenöl oder Rapsöl", "1–2 TL Zitronensaft", "Salz und Pfeffer nach Geschmack"],
+    schritte: ["Petersilie waschen und gut trocknen. Die Walnüsse ohne Fett anrösten und abkühlen lassen.", "Petersilie und Walnüsse zunächst mit 40 ml Öl grob mixen. Parmesan und Zitronensaft unterrühren, bei Bedarf etwas Öl ergänzen und abschmecken."], dazu: "Dazu passen Ofengemüse, Grillkartoffeln oder Pasta." },
+  dill: { t: "Dill-Zitronen-Quark", lust: "einen Dill-Zitronen-Quark", fuer: "Für 2 Portionen als Beilage",
+    zutaten: ["250 g Quark", "2 EL Naturjoghurt", "2 EL fein geschnittener Dill", "1 TL Zitronensaft und etwas Abrieb einer Bio-Zitrone", "Salz und Pfeffer"],
+    schritte: ["Quark mit Joghurt, Zitronensaft und Zitronenabrieb verrühren.", "Dill unterheben und mit Salz und Pfeffer abschmecken."], dazu: "Dazu passen Gurke, Ofenkartoffeln oder gebratener Fisch." },
+  kresse: { t: "Kresse-Senf-Quark", lust: "einen Kresse-Senf-Quark aufs Schwarzbrot", fuer: "Für 1–2 Scheiben Schwarzbrot",
+    zutaten: ["100 g Quark", "1 EL Naturjoghurt", "1 EL frisch abgeschnittene Gartenkresse", "½ TL mittelscharfer Senf", "Salz nach Geschmack"],
+    schritte: ["Quark, Joghurt und Senf glatt rühren.", "Kresse unterheben und abschmecken. Auf Schwarzbrot streichen und etwas Kresse darüberstreuen."], dazu: "" },
+};
 const GT = { g: null, versatz: 0, club: null, clubZeit: 0 };
 const gtArt = (id) => GT_ARTEN.find((a) => a.id === id);
 const gtJetzt = () => Date.now() + GT.versatz;
@@ -42,6 +74,10 @@ function gtLage(p, auto, jetztMs = gtJetzt()) {
     text: stufe === 4 ? a.fertig : GT_STUFEN[stufe] };
 }
 // ---------- Zeichnungen (SVG, 100 × 110): Schale unten, Pflanze wächst je Stufe ----------
+// Blüten der neuen Blumen (KC-CLUB-GARTEN-BUNT): [Blätter, rx, ry, Abstand, [Mitte r, Farbe], innerer Kranz [n, rx, ry, Farbe, Abstand]]
+const GT_BLUETE = { mohn: [4, 7, 8, 7, [3.2, "#222"]], kornblume: [9, 2.4, 7.5, 7, [2.6, "#27408b"]], ringelblume: [14, 2.6, 6.5, 6.5, [3.6, "#b5651d"]],
+  margerite: [12, 2.4, 7, 7.5, [3.6, "#f4c20d"]], dahlie: [10, 3.4, 8, 7.5, [2.6, "#a8326b"], [8, 2.4, 5, "#f08bbd", 4]] };
+const gtKranz = (n, rx, ry, f, cy, abst, extra = "") => [...Array(n)].map((_, i) => `<ellipse cx="50" cy="${cy - abst}" rx="${rx}" ry="${ry}" fill="${f}"${extra} transform="rotate(${(i * 360) / n} 50 ${cy})"/>`).join("");
 function gtSvg(art, stufe, haengt = false, klein = false) {
   const a = gtArt(art) || GT_ARTEN[0], gr = "#4f8a4b", dk = "#3a6e37", h = [12, 26, 40, 54, 64][stufe] || 12, y0 = 84;
   const blatt = (x, y, dx, r = 7, f = gr) => `<ellipse cx="${x + dx}" cy="${y}" rx="${r}" ry="${r / 2.2}" fill="${f}" transform="rotate(${dx < 0 ? 25 : -25} ${x + dx} ${y})"/>`;
@@ -55,6 +91,10 @@ function gtSvg(art, stufe, haengt = false, klein = false) {
     if (stufe === 4) {
       if (art === "sonnenblume") p += [...Array(12)].map((_, i) => `<ellipse cx="50" cy="${ky - 11}" rx="3.2" ry="8" fill="${a.farbe}" transform="rotate(${i * 30} 50 ${ky - 3})"/>`).join("") + `<circle cx="50" cy="${ky - 3}" r="6" fill="#6b3e1d"/>`;
       else if (art === "tulpe") p += `<path d="M42 ${ky - 14} L45 ${ky - 4} Q50 ${ky + 2} 55 ${ky - 4} L58 ${ky - 14} L54 ${ky - 9} L50 ${ky - 16} L46 ${ky - 9} Z" fill="${a.farbe}"/>`;
+      else if (GT_BLUETE[art]) { const [n, rx, ry, abst, mitte, innen] = GT_BLUETE[art], cy = ky - 6;
+        p += gtKranz(n, rx, ry, a.farbe, cy, abst, art === "margerite" ? ' stroke="#c9c9c9" stroke-width=".7"' : "");
+        if (innen) p += gtKranz(innen[0], innen[1], innen[2], innen[3], cy, innen[4]);
+        p += `<circle cx="50" cy="${cy}" r="${mitte[0]}" fill="${mitte[1]}"/>`; }
       else p += `<circle cx="50" cy="${ky - 6}" r="9" fill="${a.farbe}"/><path d="M45 ${ky - 6} Q50 ${ky - 13} 55 ${ky - 6} Q50 ${ky - 1} 45 ${ky - 6}" fill="#8e1b30" opacity=".55"/><circle cx="50" cy="${ky - 6}" r="2.6" fill="#8e1b30" opacity=".7"/>`;
     }
   } else if (a.gruppe === "kraeuter") {
@@ -63,6 +103,9 @@ function gtSvg(art, stufe, haengt = false, klein = false) {
       const x = 50 + (i - (n - 1) / 2) * 8, hh = h * (0.75 + (i % 2) * 0.25);
       if (art === "schnittlauch") p += `<path d="M${x} ${y0} Q${x + (i % 2 ? 3 : -3)} ${y0 - hh / 2} ${x + (i % 2 ? 2 : -2)} ${y0 - hh}" stroke="#4e9a45" stroke-width="2.2" fill="none" stroke-linecap="round"/>` + (stufe === 4 && i % 2 === 0 ? `<circle cx="${x + (i % 2 ? 2 : -2)}" cy="${y0 - hh - 3}" r="4.2" fill="${a.farbe}"/>` : "");
       else if (art === "rosmarin") p += stiel(x, hh) + [...Array(Math.max(2, Math.round(hh / 7)))].map((_, j) => `<path d="M${x} ${y0 - 5 - j * 6} l${j % 2 ? 5 : -5} -3" stroke="${a.farbe}" stroke-width="1.8" stroke-linecap="round"/>`).join("") + (stufe === 4 && i === 1 ? `<circle cx="${x}" cy="${y0 - hh - 2}" r="2.2" fill="#8fa8e0"/>` : "");
+      else if (art === "petersilie") p += stiel(x, hh) + blatt(x, y0 - hh * 0.6, i % 2 ? 5 : -5, 6, a.farbe) + [-6, 0, 6].map((d) => blatt(x, y0 - hh - 2, d, 5, a.farbe)).join("");
+      else if (art === "dill") p += `<path d="M${x} ${y0} L${x} ${y0 - hh}" stroke="#5b8f3c" stroke-width="1.6"/>` + [...Array(Math.max(2, Math.round(hh / 6)))].map((_, j) => `<path d="M${x} ${y0 - 6 - j * 5.5} l-6 -4 M${x} ${y0 - 6 - j * 5.5} l6 -4 M${x} ${y0 - 8 - j * 5.5} l-3 -5 M${x} ${y0 - 8 - j * 5.5} l3 -5" stroke="${a.farbe}" stroke-width="1" stroke-linecap="round"/>`).join("");
+      else if (art === "kresse") p += [-3, 3].map((d) => `<path d="M${x + d / 2} ${y0} L${x + d} ${y0 - hh * 0.55}" stroke="#9ccc65" stroke-width="1.4"/><ellipse cx="${x + d - 2}" cy="${y0 - hh * 0.55 - 1}" rx="2.6" ry="1.7" fill="${a.farbe}"/><ellipse cx="${x + d + 2}" cy="${y0 - hh * 0.55 - 1}" rx="2.6" ry="1.7" fill="${a.farbe}"/>`).join("");
       else p += stiel(x, hh) + blatt(x, y0 - hh * 0.55, -5, 7, a.farbe) + blatt(x, y0 - hh * 0.85, 5, 7.5, a.farbe) + `<ellipse cx="${x}" cy="${y0 - hh - 2}" rx="4" ry="5" fill="${a.farbe}"/>`;
     }
   } else if (a.gruppe === "straeucher") {
@@ -102,19 +145,51 @@ async function gartenTag() {
   lagen.forEach(([p, l]) => (neu[p.id] = l.stufe));
   try { localStorage.setItem(GT_STUFE_MERK, JSON.stringify(neu)); } catch {}
   const gewachsen = lagen.find(([p, l]) => alt[p.id] !== undefined && l.stufe > alt[p.id]), durst = lagen.find(([, l]) => l.durst), gedueng = lagen.find(([, l]) => l.autoGeduengt);
+  if (gtReifeHinweis(g, lagen)) return; // KC-CLUB-GARTEN-ERNTE: Reife hat Vorrang
   if (g.offen > 0) return gtHinweis(`🎁 ${g.tage >= 7 ? `Du bist jetzt ${g.tage} Tage dabei` : "Danke fürs Mitmachen"} – dafür gibt es ${g.offen === 1 ? "ein Samentütchen" : g.offen + " Samentütchen"}. Öffnen?`, "🎁 Öffnen", () => gartenStart(true));
-  if (gewachsen) { const [p, l] = gewachsen; return gtHinweis(`${l.a.sym} Deine ${l.a.t} ${l.stufe === 4 ? l.a.fertig : "ist gewachsen – jetzt " + l.text}. Möchtest du sie ansehen?`, "🌱 Ansehen", () => gartenStart()); }
-  if (durst) { const [, l] = durst; return gtHinweis(`💧 Deine ${l.a.t} hat Durst.`, "💧 Gießen", () => gartenStart()); }
-  if (gedueng) { const [, l] = gedueng; return gtHinweis(`${l.a.sym} Deine ${l.a.t} wurde heute gedüngt. Möchtest du sie ansehen?`, "🌱 Ansehen", () => gartenStart()); }
+  if (gewachsen) { const [p, l] = gewachsen; return gtHinweis(`${l.a.sym} ${l.a.dein} ${l.a.t} ${l.stufe === 4 ? l.a.fertig : "ist gewachsen – jetzt " + l.text}. Möchtest du nachsehen?`, "🌱 Ansehen", () => gartenStart()); }
+  if (durst) { const [, l] = durst; return gtHinweis(`💧 ${l.a.dein} ${l.a.t} hat Durst.`, "💧 Gießen", () => gartenStart()); }
+  if (gedueng) { const [, l] = gedueng; return gtHinweis(`${l.a.sym} ${l.a.dein} ${l.a.t} wurde heute gedüngt. Möchtest du nachsehen?`, "🌱 Ansehen", () => gartenStart()); }
 }
-function gtHinweis(text, knopf, fn, versuch = 0) {
+function gtHinweis(text, knopf, fn, versuch = 0, gezeigt = null) {
   // nie über ein offenes Fenster: dann bis zu 10 × alle 6 s nochmal schauen (z. B. nach dem Film-Hinweis beim Start), sonst entfällt er heute
-  if (document.querySelector(FENSTER_OFFEN + ", .dlg, #rgSchicht") || aktuelleAnsicht !== "start") { if (versuch < 10) setTimeout(() => gtHinweis(text, knopf, fn, versuch + 1), 6000); return; }
+  if (document.querySelector(FENSTER_OFFEN + ", .dlg, #rgSchicht") || aktuelleAnsicht !== "start") { if (versuch < 10) setTimeout(() => gtHinweis(text, knopf, fn, versuch + 1, gezeigt), 6000); return; }
   document.getElementById("gtHinweis")?.remove(); gtStil();
   const d = document.createElement("div"); d.id = "gtHinweis"; d.className = "gt-hinweis"; d.setAttribute("role", "status");
   d.innerHTML = `<span>${esc(text)}</span><button type="button" class="knopf klein haupt">${esc(knopf)}</button><button type="button" class="gt-zu" aria-label="Schließen">✕</button>`;
   const [ja, zu] = d.querySelectorAll("button"); ja.onclick = () => { d.remove(); fn(); }; zu.onclick = () => d.remove();
+  if (gezeigt) { const sp = document.createElement("button"); sp.type = "button"; sp.className = "knopf klein"; sp.textContent = "Später"; sp.onclick = () => d.remove(); zu.before(sp); }
   document.body.appendChild(d); setTimeout(() => d.remove(), 15000);
+  if (gezeigt) gezeigt(); // erst jetzt gilt er als gezeigt (wartet er auf ein offenes Fenster, noch nicht)
+}
+// KC-CLUB-GARTEN-ERNTE: reife Kräuter je Pflanze nur einmal je Gerät melden – auch nach Urlaub nur ein Sammelhinweis; „Später“ wiederholt nichts
+function gtReifeHinweis(g, lagen = g.pflanzen.map((p) => [p, gtLage(p, g.automatik)])) {
+  let gemeldet = []; try { gemeldet = JSON.parse(localStorage.getItem(GT_REIF_MERK) || "[]"); } catch {}
+  const reif = lagen.filter(([p, l]) => l.a.gruppe === "kraeuter" && l.stufe === 4 && GT_REZEPTE[p.art] && !gemeldet.includes(p.id));
+  if (!reif.length) return false;
+  const merken = () => { try { localStorage.setItem(GT_REIF_MERK, JSON.stringify([...gemeldet, ...reif.map(([p]) => p.id)].slice(-60))); } catch {} };
+  if (reif.length === 1) { const [p, l] = reif[0];
+    gtHinweis(`🌿 ${l.a.dein} ${l.a.t} ist erntereif! Lust auf ${GT_REZEPTE[p.art].lust}?`, "📖 Rezept ansehen", () => gtRezept(p.art), 0, merken);
+  } else { const namen = reif.map(([, l]) => `${l.a.dein.toLowerCase()} ${l.a.t}`), liste = namen.slice(0, -1).join(", ") + " und " + namen[namen.length - 1];
+    gtHinweis(`🌿 ${liste.charAt(0).toUpperCase() + liste.slice(1)} sind erntereif. Die passenden Rezepte warten auf dich.`, "📖 Rezepte ansehen", () => gtRezeptAuswahl(reif.map(([p]) => p.art)), 0, merken); }
+  return true;
+}
+// Start, wenn der Tag heute schon gezählt ist: ohne Abfrage nur aus dem Zwischenspeicher prüfen, ob ein Kraut reif geworden ist
+async function gartenReif() { const c = gtAusSpeicher(); if (c?.g?.pflanzen?.length) gtReifeHinweis(c.g); }
+// Rezeptkarte – nimmt der Pflanze nichts weg (die Ernte in der App ist ein Spielstand)
+function gtRezept(art) {
+  const r = GT_REZEPTE[art], a = gtArt(art); if (!r || !a) return; gtStil();
+  blattAuf("gtRezept", `<h3 style="margin:0">📖 ${esc(r.t)}</h3><p class="hinweis" style="margin:4px 0 8px">${a.sym} Aus deinem Garten: ${esc(a.t)} · ${esc(r.fuer)}</p>
+    <div class="gt-rezept"><h4>Zutaten</h4><ul>${r.zutaten.map((z) => `<li>${esc(z)}</li>`).join("")}</ul>
+    <h4>Zubereitung</h4><ol>${r.schritte.map((z) => `<li>${esc(z)}</li>`).join("")}</ol>${r.dazu ? `<p><b>${esc(r.dazu)}</b></p>` : ""}</div>
+    <p class="hinweis">Wenig geerntet? Ein kleiner Quark gelingt schon mit 100 g Quark, 1 EL Naturjoghurt und etwa 1 EL frisch geschnittenen Kräutern${art === "rosmarin" ? " – bei Rosmarin nur eine Prise" : ""}. Deine Pflanze bleibt im Garten – zum Kochen nimmst du echte Kräuter.</p>
+    <div class="knoepfe"><button class="knopf haupt" onclick="fensterZu($('gtRezept'))">Schließen</button></div>`);
+}
+function gtRezeptAuswahl(arten) {
+  gtStil();
+  blattAuf("gtRezept", `<h3 style="margin:0">🌿 Erntereif in deinem Garten</h3><p class="hinweis" style="margin:4px 0 8px">Welches Rezept möchtest du ansehen?</p>
+    <div class="gt-wahl">${arten.map((art) => { const a = gtArt(art), r = GT_REZEPTE[art]; return `<button type="button" class="gt-wahl-k" onclick="gtRezept('${art}')">${gtSvg(art, 4)}<b>${a.sym} ${esc(a.t)}</b><small>${esc(r.t)}</small></button>`; }).join("")}</div>
+    <div class="knoepfe"><button class="knopf haupt" onclick="fensterZu($('gtRezept'))">Schließen</button></div>`);
 }
 // ---------- Garten-Blatt ----------
 async function gartenStart(tuetchen = false) {
@@ -128,6 +203,7 @@ function gtZeigen() {
   const karte = (p) => { const l = gtLage(p, g.automatik), pz = Math.round(l.anteil * 100);
     return `<div class="gt-karte${l.durst ? " gt-durst" : ""}">${gtSvg(p.art, l.stufe, l.haengt)}<b>${l.a.sym} ${esc(l.a.t)}</b><small>${esc(l.text)}${l.stufe < 4 ? ` · ${pz} %` : ""}</small>
       <div class="gt-balken"><i style="width:${pz}%"></i></div>
+      ${l.stufe === 4 && GT_REZEPTE[p.art] ? `<button type="button" class="knopf klein haupt gt-rezept-knopf" onclick="gtRezept('${esc(p.art)}')">📖 Rezept ansehen</button>` : ""}
       ${g.automatik ? '<small class="gt-auto">🤖 Gärtner kümmert sich</small>' : `<div class="gt-pflege">
         <button type="button" class="knopf klein${l.durst ? " haupt" : ""}" onclick="einmal(this, () => gtPflege('${esc(p.id)}', 'giessen'))">💧 Gießen</button>
         ${l.duengen ? `<button type="button" class="knopf klein" onclick="einmal(this, () => gtPflege('${esc(p.id)}', 'duengen'))">🧪 Düngen</button>` : ""}</div>
@@ -228,6 +304,7 @@ function gtStil() {
 .gt-tropfen{opacity:0;animation:gtFall .6s ease-in 3 both}@keyframes gtFall{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(46px)}}
 .gt-samen{opacity:0;animation:gtSamen .9s ease-in both}@keyframes gtSamen{0%{opacity:1;transform:translateY(-14px)}100%{opacity:1;transform:translateY(42px)}}
 .gt-erde{animation:gtNass 1s ease 1.4s both}@keyframes gtNass{to{fill:#4a2f1c}}
+.gt-rezept h4{margin:8px 0 4px}.gt-rezept ul,.gt-rezept ol{margin:0 0 6px;padding-left:1.3em}.gt-rezept li{margin:2px 0}.gt-rezept-knopf{margin-top:4px}
 .gt-spross{opacity:0;transform-origin:50px 84px;animation:gtSpross 1.2s ease-out 3.4s both}@keyframes gtSpross{0%{opacity:0;transform:scaleY(.1)}100%{opacity:1;transform:none}}`;
   document.head.appendChild(s);
 }

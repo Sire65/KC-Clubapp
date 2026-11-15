@@ -118,6 +118,7 @@ jobs:
       - run: node tests/heft-pc-druck.test.mjs
       - run: node tests/kopf-ecke.test.mjs
       - run: node tests/advent-nikolaus-foto.test.mjs
+      - run: node tests/advent-serveruhr.test.mjs
       - run: node tests/anfrage-gegenvorschlag.test.mjs
       - run: node tests/netz-balken.test.mjs
       - run: node tests/muenze-gesicht.test.mjs
@@ -152,6 +153,7 @@ jobs:
       - run: node tests/uhr-x.test.mjs
       - run: node tests/kachel-nurtest.test.mjs
       - run: node tests/garten.test.mjs
+      - run: node tests/garten-ernte.test.mjs
       - run: node tests/klappe-gleich.test.mjs
       - run: node tests/pinnwand-nadeln.test.mjs
       - run: node tests/pinnwand-admin-mehr.test.mjs
@@ -182,6 +184,7 @@ jobs:
       - run: node tests/video-stimme-stumm.test.mjs
       - run: node tests/advent-2026.test.mjs
       - run: node tests/advent-preise.test.mjs
+      - run: node tests/erstattung-sicher.test.mjs
       - run: node tests/teilen-eigen.test.mjs
       - run: node tests/clubabend-anwesend.test.mjs
       - run: node tests/sitzung-schritte.test.mjs
@@ -241,3 +244,4 @@ jobs:
       - run: npm install --no-save --no-package-lock playwright@1.49.1
       - run: npx playwright install --with-deps chromium
       - run: node tests/rundgang.browser.mjs
+      - run: node tests/bildschirmfoto-farben.browser.mjs

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.949.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.954.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -19,18 +19,18 @@ const TEILE_LISTE = {
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-NDuho5dgDL13uhtcTY8d0cGESAWhk+B+5qyWyvBuOxPgmADzmvY9YFCcwWM0s+kx" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
   spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-df8Lw0oCMMrnIIB7cpSpJ2Q2SKgIao/dXXHLrjtixnNByKoeFvC3pVc6zGaNCcVw" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
   tischlive: { einstieg: ["tlStart", "tlStopp", "tlZeichnen", "tlPlatz", "tlRegeln"], sri: "sha384-RCmsKY+DTRfsCMRHkJVG2UJlySANNdHxnEdMps4tkL9kgf8DC5O/b1jMcwVeY3XB" }, // 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: Ton, Kamera, Bildschirm, Unterlagen zeigen am Tisch
-  buero: { einstieg: ["ersBuchOeffnen", "eblDruck", "buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-yAwGCyLlT2Kuwu6bV41eSa+i3aIeE29efY0w5UNXpxY8I64pQi+7fYS6/kRpzEqf" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
+  buero: { einstieg: ["ersBuchOeffnen", "eblDruck", "buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-tE5A+f4O0Djk0PhewuYKxCOIyEWwaMG+OUQ/X9WYy9qySw881LPaUL9UHrZLa2lv" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
   hilfe: { einstieg: ["twFrageStart", "twOffenStart", "sucheAuf", "suSucheKnopf"], sri: "sha384-qPS9/H66zIS2QeGHqQQs5CFqN4+XZns2HL1FnQYWzUWbVrYpK/BLZN111UDmKbRH" }, // Stufe 5: Hilfe-Werkzeuge (Frag Twinkey, Mitglied fragen, Schnellsuche) – beim ersten Antippen
   rechner: { einstieg: ["rechnerOeffnen"], sri: "sha384-UWrOf1EIXxhsoWWwxnLDzpzALsaxzNGXgeqoLAjVvqoQ6wbFnIGxYTkQPFpiRuQ4" }, // 2.811.0 KC-CLUB-RECHNER: Tischrechner im Büro, „rechne …“ per Sprache
   glueck: { einstieg: ["kaeferKommt", "kleeKommt"], sri: "sha384-hbPb96l3YrlvBxe1zJJfotwARA0pEPKKaDyb1BBVooEi5BCYbfYqihmMYABmlsg4" }, // KC-CLUB-MARIENKAEFER / KC-CLUB-GLUECKSKLEE (06.11.2026): 🐞 jeder 50., 🍀 jeder 25. Start
   hilfetipp: { einstieg: ["tippSenden", "tippListe"], sri: "sha384-cOxaOEtxAQP/CZRKEEryWTGLYs/TRIWVXRitip1nRotyRzYD9GRoisKEzLGKAbGF" }, // 2.835.0 KC-CLUB-HILFE-TIPPS: Clubleitung – Lösung schicken, Vorlagen, Gesendete Tipps
-  magazin: { einstieg: ["magStart", "wmProspekt", "magMenue", "magEinsenden", "magPostfach", "magMeine", "magArchiv", "magDruck"], sri: "sha384-JD8GI6+Otg4ZF4lYnnKXDR8kl7/ahkcoRPcuGPZf7XUUrkT1MCgOfLerpfo9KiKg" }, // KC-CLUB-MAGAZIN-GERUEST: Club-Küche und Weihnachtsmarkt-Prospekt (Gerüst, blättern)
+  magazin: { einstieg: ["magStart", "wmProspekt", "magMenue", "magEinsenden", "magPostfach", "magMeine", "magArchiv", "magDruck"], sri: "sha384-d/6yU/TMF5+jyonS0fQHH9QV185pNBWAjVIJtkgCPTz/EfVNx+qdmhYMZBK+oP+z" }, // KC-CLUB-MAGAZIN-GERUEST: Club-Küche und Weihnachtsmarkt-Prospekt (Gerüst, blättern)
   strom: { einstieg: ["stromBlatt", "stromZeichnen"], sri: "sha384-dNcc30G8i65eI40hbgDTGIIBdKAE/KdpRichStzNk1mt1gGPNa+DYvNq03rjI4M/" }, // 2.799.0 KC-CLUB-STROM-UEBERSICHT: Admin „🔋 Stromverbrauch“ (nur beim Öffnen)
   anbieter: { einstieg: ["anbStart"], sri: "sha384-P5YH+VJ7JvIqD3Aj7m229epWr/Qh32v5T1bHLTneKzD1mvcFbAjsObnettv63rNh" }, // 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78): Admin-Kachel „📰 Anbieter“ (nur beim Öffnen)
   istzeit: { einstieg: ["irOeffnen", "irAenderungen"], sri: "sha384-LzIjOhEBd8XATuT8V19PFecWXSkWfEIIs+lWADFW+NrmCLfIl4LwmECdGwvhZbp7" }, // KC-CLUB-IST-RUECKFRAGE: „🗓️ Meine Ist-Zeiten“ nach dem Dienst (nur beim Öffnen)
   nutzperson: { einstieg: ["npStart", "npAlle"], sri: "sha384-Z+v9oW3/Vp/DObApKnj6423OFyD/mLKqkI6+rUmBzRUYABaoE9X1rnta/qubtMEX" }, // KC-CLUB-NUTZUNG-PERSON: „📊 Meine Nutzung“ / „📊 Nutzung je Mitglied“ (nur beim Öffnen)
   nutzung: { einstieg: ["nuStart"], sri: "sha384-V8qj7CYfmmydkhppRZkaB/XjF0ATARL/4dwYcdXMeRUQ+cFMm2ijWGLzZIt1uha/" }, // 2.829.0 KC-CLUB-NUTZUNG-ALLE: „📈 So nutzen wir die App“ für alle (nur beim Öffnen)
-  garten: { einstieg: ["gartenStart", "gartenTag"], sri: "sha384-6aJ7BC8onHSBkTJfke0PZ2xpqNkKve2zPAKRfEciPgMowI960w0UXsF+SgwXCHMm" }, // KC-CLUB-SAMEN (#84): „🌱 Mein Garten“ – nur beim Öffnen und einmal am Tag beim Start
+  garten: { einstieg: ["gartenStart", "gartenTag", "gartenReif"], sri: "sha384-/ydTNoIDsiedFVIAayJkP6bgrCAPv+fa7q5ktl5nts9bsSIypSeVNedb6aiUIVx/" }, // KC-CLUB-SAMEN (#84): „🌱 Mein Garten“ – nur beim Öffnen und einmal am Tag beim Start
   probe: { einstieg: ["teilProbe"], sri: "sha384-11uzQ0U/9pY4FZjTqOq5jlmzO0XsA4hQVrV8iqqTT7Jp9y3/VSG/gTIggGmcZud8" }, // Probe für den Nachlade-Weg (Klick-Rundgang, Sicherheits-Check)
 };
 const TEILE_STAND = {};
@@ -1934,7 +1934,7 @@ const EINWEISUNG = [
   { id: "b-abstimmung", blatt: true, sym: "📊", t: "Kurze Abstimmung", x: "Frage eintragen (vorgeschlagen ist „Wer kommt?“) und die Antworten anpassen – mit <b>＋ Antwort</b> kommen weitere dazu. Haken bei <b>Mehrere Antworten erlauben</b>, wenn man mehr als eins wählen darf. <b>📤 Abstimmung senden</b> stellt sie in den Chat." },
   { id: "b-ek-ablage", blatt: true, sym: "🗄️", t: "Ablegen im Archiv", x: "<b>Häkchen</b> bei einem oder mehreren Ordnern setzen – z. B. Club-Ordner, Ordner des Mitglieds oder dein eigener. Die App merkt sich deine Wahl. Wurde es schon einmal abgelegt, kommt eine neue Fassung dazu.", nur: () => !!ICH?.buero },
   { id: "b-ek-dienstzeiten", blatt: true, sym: "📅", t: "Gemeldete Dienstzeiten", x: "Hier siehst du, wann das Mitglied Dienst machen kann – mit Stand und Fassung. Eingeplant wird im <b>Dienstplan-Programm (DP2)</b>. <b>👁️ Zur Kenntnis genommen</b> nimmt es aus dem Eingang (meldet das Mitglied etwas Neues, kommt es wieder), <b>🗄️ Ablegen</b> legt es ins Archiv.", nur: () => !!ICH?.buero },
-  { id: "b-ek-erstattung", blatt: true, sym: "💶", t: "Erstattung bearbeiten", x: "Oben stehen die Auslagen mit Datum und Betrag und wie das Geld gewünscht ist (bar oder Überweisung). <b>✅ Erstattet</b>, wenn das Geld raus ist – das Mitglied bekommt Bescheid. <b>✖ Ablehnen</b> fragt nach dem Grund. Belege kamen zusätzlich per Mail.", nur: () => !!ICH?.buero },
+  { id: "b-ek-erstattung", blatt: true, sym: "💶", t: "Erstattung bearbeiten", x: "Oben stehen die Auslagen mit Datum und Betrag und wie das Geld gewünscht ist (bar oder Überweisung). <b>📄 Antrag als PDF</b> zeigt den Antrag zum Ansehen oder Drucken – dabei ändert sich nichts. <b>✅ Als erstattet markieren …</b>, wenn das Geld raus ist: die App fragt noch einmal (bar oder Überweisung), erst dann bekommt das Mitglied Bescheid. <b>✖ Ablehnen</b> fragt nach dem Grund. Belege kamen zusätzlich per Mail.", nur: () => !!ICH?.buero },
   { id: "b-fa-album-wahl", blatt: true, sym: "📸", t: "In ein Album legen", x: "<b>Album antippen</b> – die ausgewählten Fotos kommen dort hinein. Mit <b>＋ Neues Album</b> legst du gleich ein neues an." },
   { id: "b-fa-album", blatt: true, sym: "📸", t: "Album anlegen oder ändern", x: "<b>Name</b> und <b>Jahr</b> eintragen und wählen, wer das Album sieht: <b>🔒 nur du</b> oder <b>👥 alle Mitglieder</b>. Bei einem bestehenden Album kannst du ein Foto als <b>Deckblatt</b> antippen." },
   { id: "b-fl-angaben", blatt: true, sym: "✏️", t: "Angaben zu Freud &amp; Leid", x: "Hier ergänzt oder änderst du <b>Notiz, Termin mit Uhrzeit, Ort</b> und <b>Betrag</b> (z. B. für ein Geschenk) zu diesem Anlass. <b>Speichern</b> übernimmt es.", nur: () => !!ICH?.buero },
@@ -8808,7 +8808,9 @@ function kaKopfPasst() {
   const k = $("kaKopfKnoepfe"), a = k?.closest(".abschnitt"); if (!k || !a) return;
   k.classList.remove("kk-eng"); a.classList.remove("kk-knapp"); if (!k.innerHTML || getComputedStyle(k).display === "none") return;
   const h = a.querySelector("h3"), m = $("versionMarke");
-  const eng = () => (h && h.getBoundingClientRect().height > 44) || (m && m.offsetWidth && k.getBoundingClientRect().right > m.getBoundingClientRect().left - 4);
+  // KC-CLUB-KA-KOPF-TOGGLE: Grundhöhe ohne Knopf messen – bricht die Zeile auf schmalen Handys schon von selbst um, zählt nur, ob der Knopf sie höher macht
+  k.classList.add("kk-eng"); const grund = h ? h.getBoundingClientRect().height : 0; k.classList.remove("kk-eng");
+  const eng = () => (h && h.getBoundingClientRect().height > Math.max(44, grund + 2)) || (m && m.offsetWidth && k.getBoundingClientRect().right > m.getBoundingClientRect().left + 1); // KC-CLUB-KA-KOPF-TOGGLE: nur echtes Überlappen zählt (die Zeile ordnet sie nebeneinander)
   if (!eng()) return;
   a.classList.add("kk-knapp"); // erst: beim QR-Knopf nur das Symbol (spart ≈ 25 px)
   if (eng()) { a.classList.remove("kk-knapp"); k.classList.add("kk-eng"); } // passt trotzdem nicht → Knöpfe oben weg (unten gibt es sie immer)
@@ -12120,7 +12122,9 @@ function gartenKurz() {
   return g.pflanzen?.length ? `${g.pflanzen.length} Pflanze${g.pflanzen.length === 1 ? "" : "n"} · ${g.tage} Tage dabei` : `${g.tage} Tage dabei`;
 }
 function gartenTagPruefen() {
-  if (!ICH || zugang() !== "mitglied" || !frei("garten") || gartenSpeicher()?.tag === heuteIso()) return;
+  if (!ICH || zugang() !== "mitglied" || !frei("garten")) return;
+  // KC-CLUB-GARTEN-ERNTE: heute schon gezählt → ohne Abfrage nur prüfen, ob ein Kraut reif geworden ist (nur wenn Pflanzen da sind)
+  if (gartenSpeicher()?.tag === heuteIso()) { if (gartenSpeicher()?.g?.pflanzen?.length) gartenReif().catch(() => {}); return; }
   gartenTag().catch(() => {}); // still – im schlechtesten Fall morgen wieder
 }
 function kachelnZeigen() {
@@ -12159,8 +12163,9 @@ function kachelnZeigen() {
   const kopfK = $("kaKopfKnoepfe");
   // 15.11. (Hansi „ohne Text, nur Knopf“): nur Symbol – Erklärung im Hinweis beim Draufhalten und für Vorlesen; nur wenn wirklich welche ausgeblendet sind
   const kkn = (f, sym, t, an = false) => `<button type="button" class="ka-kopf-k${an ? " an" : ""}" onclick="${f}" title="${t}" aria-label="${t}">${sym}</button>`;
+  // KC-CLUB-KA-KOPF-TOGGLE (15.11.2026, Hansi „nur ein Button, ein Toggle – einmal klicken schaltet, wieder klicken zurück, dann passt er auch auf schmale Handys“)
   if (kopfK) kopfK.innerHTML = nurAus ? kkn("kaNurAus(false)", "🙈", "Ausgeblendete wieder verbergen", true)
-    : ausN ? kkn("kaNurAus(true)", "👀", `Nur ausgeblendete zeigen (${ausN})`) + kkn("kaBearbeiten(true)", "🙈", `${ausN} ausgeblendete Kachel${ausN > 1 ? "n" : ""} – anzeigen`) : "";
+    : ausN ? kkn("kaNurAus(true)", "👀", `Nur ausgeblendete zeigen (${ausN})`) : "";
   kaKopfPasst();
   $("raster").classList.toggle("nur-aus", nurAus);
   $("raster").innerHTML = (nurAus ? kaSortiert(reg).filter((k) => KA.aus.includes(k.id)) : kacheln(reg)).map((k, i) => {
@@ -12925,14 +12930,21 @@ const AK_TUERCHEN = [ // 2.869.0 KC-CLUB-ADVENT-2026: Tag 1–24; art: naschen |
 ];
 const AK_ARTEN = { naschen: ["🍬", "Nascherei"], basteln: ["✂️", "Basteln"], deko: ["🕯️", "Deko"], riegel: ["🍫", "Überraschung"], einladung: ["☕", "Einladung"] };
 const AK_REIHE = [7, 15, 1, 22, 10, 3, 18, 12, 24, 5, 20, 9, 2, 14, 17, 6, 11, 23, 4, 19, 13, 8, 16, 21]; // feste, gemischte Anordnung der Türchen
-const akHeute = (d = new Date()) => d.getMonth() === 11 ? Math.min(d.getDate(), 24) : 0; // 0 = nicht im Dezember; 25.–31.12.: alle offen
-const akKey = (d = new Date()) => "kc_club_advent_" + d.getFullYear();
+// KC-CLUB-ADVENT-SERVERUHR (Wunsch Hansi 15.11.2026: „Jedes Türchen darf nur am Tag geöffnet werden, nicht schon vorher – im Nachhinein erlaubt … mit Server-Uhr
+// absichern“): Tag nach der Uhr des Servers in deutscher Zeit – ein vorgestelltes Handy-Datum öffnet kein Türchen früher. Der Versatz kommt einmal beim Start
+// (Antwort „init“ bringt serverJetzt); ohne Server-Zeit (offline, Notbetrieb) wie bisher die Handy-Uhr. Der Server prüft die Preis-Türchen zusätzlich selbst.
+let UHR_VERSATZ = null;
+function uhrAbgleich(j) { const s = Number(j?.serverJetzt); if (Number.isFinite(s) && s > 1.7e12) UHR_VERSATZ = s - Date.now(); }
+const akJetzt = () => new Date(Date.now() + (UHR_VERSATZ ?? 0));
+const akBerlin = (d) => { const [j, m, t] = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Berlin", year: "numeric", month: "2-digit", day: "2-digit" }).format(d).split("-").map(Number); return { j, m, t }; };
+const akHeute = (d = akJetzt()) => { const b = akBerlin(d); return b.m === 12 ? Math.min(b.t, 24) : 0; }; // 0 = nicht im Dezember; 25.–31.12.: alle offen
+const akKey = (d = akJetzt()) => "kc_club_advent_" + akBerlin(d).j;
 function akOffen() { try { const l = JSON.parse(localStorage.getItem(akKey()) || "[]"); return Array.isArray(l) ? l.filter((n) => Number.isInteger(n) && n >= 1 && n <= 24) : []; } catch { return []; } }
 const akAn = () => einst("advent", true);
 // 2.482.0 KC-CLUB-ADVENT-UEBERRASCHUNG (Wunsch Hansi „Nimm den Adventskalender aus der Info – das ist eine Überraschung“): vor dem 1. Dezember
 // sehen Mitglieder ihn nirgends (Hilfe, „Neu in der App“, ⚙️ Effekte); ab Dezember wie gehabt. Admins sehen ihn immer (zum Prüfen).
 // 2.869.0 KC-CLUB-ADVENT-2026 (Hansi: „keine Kalender für Kinder und Gäste“): nur Mitglieder – Gäste und Aushilfen sehen ihn nie.
-const akSichtbar = () => zugang() === "mitglied" && (!!ICH?.admin || new Date().getMonth() === 11);
+const akSichtbar = () => zugang() === "mitglied" && (!!ICH?.admin || akBerlin(akJetzt()).m === 12); // KC-CLUB-ADVENT-SERVERUHR
 function akSichtbarSetzen() { const z = $("setAdventZeile"); if (z) z.classList.toggle("versteckt", !akSichtbar()); }
 const akVorschau = () => !akHeute() && !!ICH?.admin; // Admin außerhalb Dezember: alle Türchen zum Ansehen
 function akZeigen() {
@@ -17697,7 +17709,7 @@ async function neuLadenRoh(vonHand) {
   const initAnfrage = api("init", { fotosSeit: kzSeit("fotos"), dienstSeit: kzSeit("dienste") }, { warten: !!vonHand }); initAnfrage.catch(() => {}); // Fehler behandelt unten das await
   if (!INIT) sofortStart(); // KC-CLUB-SOFORTSTART (2.113.0): gespeicherten Stand sofort zeigen, frisch laden im Hintergrund
   try {
-    INIT = await initAnfrage; if (window.KCFP?.schlaeft) return; /* 2.394.0 Fenster inzwischen geleert */ if (!START_MESS.initBis) { START_MESS.initAb = tInit; START_MESS.initBis = performance.now(); } /* KC-CLUB-KACHEL-ZAHLEN */ ICH = INIT.ich; einstOffenAnwenden(); /* 2.6.1: noch laufende Speicherungen nicht überschreiben */ adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); inkognitoZeigen(); einwZeigen(aktuelleAnsicht); schluesselSichern(KEY); /* KC-CLUB-SCHLUESSEL-SICHERN */ if (document.body.classList.contains("rg-ohne-admin")) document.body.classList.remove("ist-admin"); /* KC-CLUB-ERKLAERVIDEOS-ROLLEN: im Video für alle bleibt Admin aus */ stKnopf(); /* KC-CLUB-STUDIO */ cfUebernehmen(INIT?.einstellungen?.chat_farben); /* KC-CLUB-CHAT-FARBEN */ // KC-CLUB-KOPF-EINFACH
+    INIT = await initAnfrage; if (window.KCFP?.schlaeft) return; uhrAbgleich(INIT); /* KC-CLUB-ADVENT-SERVERUHR */ /* 2.394.0 Fenster inzwischen geleert */ if (!START_MESS.initBis) { START_MESS.initAb = tInit; START_MESS.initBis = performance.now(); } /* KC-CLUB-KACHEL-ZAHLEN */ ICH = INIT.ich; einstOffenAnwenden(); /* 2.6.1: noch laufende Speicherungen nicht überschreiben */ adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); inkognitoZeigen(); einwZeigen(aktuelleAnsicht); schluesselSichern(KEY); /* KC-CLUB-SCHLUESSEL-SICHERN */ if (document.body.classList.contains("rg-ohne-admin")) document.body.classList.remove("ist-admin"); /* KC-CLUB-ERKLAERVIDEOS-ROLLEN: im Video für alle bleibt Admin aus */ stKnopf(); /* KC-CLUB-STUDIO */ cfUebernehmen(INIT?.einstellungen?.chat_farben); /* KC-CLUB-CHAT-FARBEN */ // KC-CLUB-KOPF-EINFACH
     alarmPruefen(); /* KC-CLUB-NOTFALL-MELDUNG */ try { expressPruefen(); } catch {} /* 2.362.0 KC-CLUB-EXPRESS */ setTimeout(() => { try { irLaden(); } catch {} }, 3000); /* KC-CLUB-IST-RUECKFRAGE */ setTimeout(() => { try { abStandZeigen(INIT?.ab); } catch {} }, 2500); /* 2.568.0 KC-CLUB-ANRUFBEANTWORTER */ try { dsLageSetzen(INIT?.dienstStempel); } catch {} /* 2.590.0 KC-CLUB-DIENST-STEMPEL */ try { rundKarteZeichnen(); } catch {} /* 2.762.0 KC-CLUB-RUNDER-TISCH */ setTimeout(() => { try { snPruefen(); } catch {} }, 1500); /* 2.482.0 KC-CLUB-STARTNACHRICHT */ document.body.classList.toggle("sos-frei", sosDarf()); /* KC-CLUB-SOS-FREIGABE */ fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
     if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln);
     if ($("setLiveTippen")) $("setLiveTippen").checked = liveTippen();
@@ -25600,7 +25612,7 @@ async function bfAusloesen() {
   try {
     await bfBibliothek();
     a.style.visibility = "hidden";
-    const bg = getComputedStyle(document.body).backgroundColor;
+    const bg = bfRgba(getComputedStyle(document.body).backgroundColor); // 2.952.0: auch die Grundfarbe kann „oklab(…)“ sein
     const c = await window.html2canvas(document.body, {
       x: scrollX, y: scrollY, width: innerWidth, height: innerHeight, windowWidth: innerWidth, windowHeight: innerHeight,
       scale: Math.min(2, devicePixelRatio || 1), useCORS: true, logging: false, backgroundColor: bg,
@@ -25615,17 +25627,32 @@ async function bfAusloesen() {
     bfVorschau();
   } catch (e) { if (a) a.style.visibility = ""; melde(e.message || "Bildschirmfoto hat nicht geklappt.", true); }
 }
-// Der Browser rechnet Mischfarben (color-mix) in „color(srgb …)“ um – das kennt die Bibliothek nicht. Im Abbild (nur in der
-// Kopie, die Seite selbst bleibt unverändert) werden solche Werte in rgba() umgeschrieben; Deko-Pseudoelemente entfallen.
-const bfRgba = (v) => String(v).replace(/color\(srgb\s+([\d.e-]+)\s+([\d.e-]+)\s+([\d.e-]+)(?:\s*\/\s*([\d.e-]+%?))?\)/g, (_, r, g, b, a) =>
-  `rgba(${Math.round(r * 255)}, ${Math.round(g * 255)}, ${Math.round(b * 255)}, ${a === undefined ? 1 : a.endsWith("%") ? parseFloat(a) / 100 : a})`);
+// Der Browser rechnet Mischfarben (color-mix) in „color(srgb …)“ um, neuere Browser auch in „oklab(…)“/„oklch(…)“ – das kennt die
+// Bibliothek nicht („Attempting to parse an unsupported color function …“). Im Abbild (nur in der Kopie, die Seite selbst bleibt
+// unverändert) werden solche Werte in rgba() umgeschrieben; Deko-Pseudoelemente entfallen.
+// 2.952.0 KC-CLUB-BILDSCHIRMFOTO-OKLAB (Fund Hansi 15.11.2026: Foto anhängen → Fehlermeldung „oklab“): jede moderne Farbangabe
+// (color, oklab, oklch, lab, lch, hwb) lässt der Browser selbst auf einen 1-Pixel-Malgrund malen und liest das Ergebnis als rgba zurück.
+const BF_MODERN = /\b(?:color|oklab|oklch|lab|lch|hwb)\((?:[^()]|\([^()]*\))*\)/g, BF_FARB_MERK = new Map();
+function bfFarbeRgba(f) {
+  if (BF_FARB_MERK.has(f)) return BF_FARB_MERK.get(f);
+  let out = "rgba(0, 0, 0, 0)";
+  try {
+    const c = document.createElement("canvas"); c.width = c.height = 1; const x = c.getContext("2d", { willReadFrequently: true });
+    x.clearRect(0, 0, 1, 1); x.fillStyle = "rgba(0, 0, 0, 0)"; x.fillStyle = f; x.fillRect(0, 0, 1, 1);
+    const [r, g, b, a] = x.getImageData(0, 0, 1, 1).data; out = `rgba(${r}, ${g}, ${b}, ${Math.round((a / 255) * 1000) / 1000})`;
+  } catch {}
+  if (BF_FARB_MERK.size < 500) BF_FARB_MERK.set(f, out);
+  return out;
+}
+const bfRgba = (v) => String(v).replace(BF_MODERN, (m) => bfFarbeRgba(m));
+const bfModern = (v) => { BF_MODERN.lastIndex = 0; const ja = BF_MODERN.test(v); BF_MODERN.lastIndex = 0; return ja; };
 const BF_FARBFELDER = ["color", "background-color", "background-image", "border-top-color", "border-right-color", "border-bottom-color", "border-left-color", "outline-color", "box-shadow", "text-shadow", "text-decoration-color", "fill", "stroke", "caret-color", "column-rule-color"];
 function bfKlonGlaetten(d) {
   const st = d.createElement("style"); st.textContent = ".kachel::after{background:none!important}.warten{display:none!important}*{box-shadow:none!important}"; d.head.appendChild(st);
   const win = d.defaultView || window;
   for (const el of d.querySelectorAll("*")) {
     const cs = win.getComputedStyle(el);
-    for (const f of BF_FARBFELDER) { const v = cs.getPropertyValue(f); if (v && v.includes("color(")) el.style.setProperty(f, bfRgba(v), "important"); }
+    for (const f of BF_FARBFELDER) { const v = cs.getPropertyValue(f); if (v && bfModern(v)) el.style.setProperty(f, bfRgba(v), "important"); }
   }
 }
 function bfVorschau() {
@@ -34854,7 +34881,7 @@ const FENSTER_NAMEN = {
   diktatBlatt: "✍️ Diktieren", druckBlatt: "🖨️ Drucken", dsBlatt: "🗓️ Dienstplan", dsOrteBlatt: "📍 Dienst-Orte", dsWerBlatt: "👥 Wer ist heute im Dienst",
   rundBlatt: "🪑 Runder Tisch", rundNeuBlatt: "🪑 Zum Runden Tisch einladen", rundTischBlatt: "🪑 Am Runden Tisch", rundTascheBlatt: "💼 Tasche für den Runden Tisch", rundArchivBlatt: "🗄️ Tasche: aus dem Archiv", // 2.762.0 KC-CLUB-RUNDER-TISCH
   dtBlatt: "🗓️ Dienst-Tausch", dvBlatt: "📊 Dienstzeiten-Übersicht", dwSperreBlatt: "💡 Sperrzeit nicht nötig", egBlatt: "📥 Mein Eingangskorb", eingangBlatt: "📥 In den Eingangskorb eines Mitglieds",
-  einlBlatt: "📥 Dokument einlesen", ekAblageBlatt: "🗄️ Eingangskorb: ablegen", ekDwBlatt: "📅 Dienstzeiten", ekErstBlatt: "💶 Erstattung", ekHinweisBlatt: "📥 Hinweis: Eingangskorb",
+  einlBlatt: "📥 Dokument einlesen", ekAblageBlatt: "🗄️ Eingangskorb: ablegen", ekDwBlatt: "📅 Dienstzeiten", ekErstBlatt: "💶 Erstattung", ekErstOkBlatt: "✅ Erstattung als erstattet markieren?", ekHinweisBlatt: "📥 Hinweis: Eingangskorb",
   ekNachBlatt: "🔎 Nachverfolgen", elternBlatt: "👪 Eltern-Handy", entwicklerBlatt: "👨‍💻 Über den Entwickler", erBlatt: "✅ Alles eingerichtet", ibBlatt: "🖼️ Installieren mit Bildern", erinBlatt: "🔔 Erinnerung für dich",
   erkBlatt: "💡 Vorschlag aus der Nachricht", ersBesBlatt: "🎓 Fahrten aus Besuchen", ersCsvBlatt: "📊 Erstattungen für Excel", eblBlatt: "📒 Buchungsliste", esTafelBlatt: "📤 Tafel sichern", ewBlatt: "🧭 Einstellungen erklärt",
   expressBlatt: "🏎️ Express-Sendung", externBlatt: "🌐 Externer Inhalt", faAlbenKorb: "🗑️ Gelöschte Alben", faAlbumBlatt: "📸 Foto in welches Album?", faAlbumForm: "📸 Album anlegen/ändern",
@@ -34871,7 +34898,7 @@ const FENSTER_NAMEN = {
   onlineBlatt: "🟢 Gerade online", personenBlatt: "👉 Wer?", prBlatt: "🧪 Probephase", pwTeilBlatt: "📌 Zettel abnehmen", rcAngebotBlatt: "🧳 Reise-Checkliste angeboten",
   rcBlatt: "🧳 Meine Reise-Checkliste", rgAuswBlatt: "📊 Auswertung der Erklär-Videos", rgListeBlatt: "🎬 Erklär-Videos (Liste)", rgsBlatt: "🗣️ Stimme für Videos wählen", rolleBlatt: "🎖️ Rolle/Amt",
   anbBlatt: "📰 Anbieter – Neues & Wartungen", // 2.842.0 KC-CLUB-ANBIETER-NEUES
-  gtBlatt: "🌱 Mein Garten", gtTuete: "🎁 Samentütchen", gtClub: "🏡 Club-Garten", // KC-CLUB-SAMEN (#84)
+  gtBlatt: "🌱 Mein Garten", gtTuete: "🎁 Samentütchen", gtClub: "🏡 Club-Garten", gtRezept: "📖 Kräuter-Rezept", // KC-CLUB-SAMEN (#84) · KC-CLUB-GARTEN-ERNTE
   bueKatalogBlatt: "🛒 Büro-Katalog", // 2.840.0 KC-CLUB-BUERO-EINRICHTEN
   rundeBlatt: "🔗 Feste Gruppe bilden", rzBlatt: "📖 Club-Rezeptbuch", sbBlatt: "🤔 Das kenne ich noch nicht", sbListeBlatt: "📋 Das kannst du sagen", sbPersonBlatt: "🎙️ Sprache: mit wem?",
   sbtBlatt: "🎓 Sprach-Training", scAbBlatt: "🚫 Schulung absagen", scBlatt: "🎓 Schulungen", scChronikBlatt: "📜 Schulung: Ablauf", scFestBlatt: "📅 Festen Termin geben",
@@ -35258,7 +35285,7 @@ async function stFesthalten() {
   try {
     await bfBibliothek();
     const w = STD.frame?.w || 400, h = STD.frame?.h || 700;
-    const c = await window.html2canvas(doc.documentElement, { x: 0, y: doc.defaultView.scrollY, width: w, height: h, windowWidth: w, windowHeight: h, scale: 1, useCORS: true, logging: false, backgroundColor: getComputedStyle(doc.body).backgroundColor });
+    const c = await window.html2canvas(doc.documentElement, { x: 0, y: doc.defaultView.scrollY, width: w, height: h, windowWidth: w, windowHeight: h, scale: 1, useCORS: true, logging: false, backgroundColor: bfRgba(getComputedStyle(doc.body).backgroundColor), onclone: bfKlonGlaetten }); // 2.952.0: moderne Farben glätten
     stFotoNeu(c.toDataURL("image/jpeg", 0.8)); melde("📸 Festgehalten – unten antippen zum Speichern");
   } catch (e) { melde("📸 Festhalten ging gerade nicht – bitte nochmal.", true); }
 }
@@ -35485,7 +35512,7 @@ const MSCH = { id: null, uhr: null, bis: 0, laeuft: false, wer: "" };
 async function ssBildMachen() {
   await bfBibliothek();
   const c = await window.html2canvas(document.body, { x: scrollX, y: scrollY, width: innerWidth, height: innerHeight, windowWidth: innerWidth, windowHeight: innerHeight,
-    scale: 1, useCORS: true, logging: false, backgroundColor: getComputedStyle(document.body).backgroundColor,
+    scale: 1, useCORS: true, logging: false, backgroundColor: bfRgba(getComputedStyle(document.body).backgroundColor),
     ignoreElements: (el) => !!el.classList?.contains("meldung") || el.id === "ssLiveLeiste", onclone: bfKlonGlaetten });
   const f = Math.min(1, 900 / c.width), k = document.createElement("canvas"); k.width = Math.round(c.width * f); k.height = Math.round(c.height * f);
   k.getContext("2d").drawImage(c, 0, 0, k.width, k.height);

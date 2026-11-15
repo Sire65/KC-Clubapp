@@ -15,7 +15,7 @@ assert.ok(wApp(p, t0 + 365 * T, false, 3) > wApp(p, t0 + 30 * T, false, 3), "ohn
 // 2) Registry: gleiche Arten und Tage in App und Server; 12 Pflanzen in 4 Gruppen
 const artenSrv = Object.fromEntries([...srv.match(/const GARTEN_ARTEN[^{]*\{([^}]*)\}/)[1].matchAll(/(\w+): (\d+)/g)].map((m) => [m[1], Number(m[2])]));
 const artenApp = Object.fromEntries([...gt.matchAll(/\{ id: "(\w+)", t: "[^"]+", sym: "[^"]+", gruppe: "\w+", tage: (\d+)/g)].map((m) => [m[1], Number(m[2])]));
-assert.deepEqual(artenApp, artenSrv, "GT_ARTEN = GARTEN_ARTEN"); assert.equal(Object.keys(artenApp).length, 12);
+assert.deepEqual(artenApp, artenSrv, "GT_ARTEN = GARTEN_ARTEN"); assert.equal(Object.keys(artenApp).length, 20); // 15.11.2026: +5 Blumen, +3 Kräuter
 // 3) Samen-Schwellen 7/25/50/100/200/365, danach je 365; höchstens 3 nachträglich
 const schw = JSON.parse(srv.match(/const GARTEN_SCHWELLEN = (\[[^\]]*\])/)[1]); assert.deepEqual(schw, [7, 25, 50, 100, 200, 365]);
 const bis = new Function("GARTEN_SCHWELLEN", "return " + srv.match(/const gartenSchwellenBis = (\(tage: number\) => [^;]*);/)[1].replace(": number", ""))(schw);
@@ -25,7 +25,7 @@ assert.ok(/GARTEN_NACHTRAG_MAX = 3/.test(srv) && /geoeffnet: Math\.max\(0, garte
 assert.ok(/gartenTat\(ich\.person_id, "rezept"\)/.test(srv) && /gartenTat\(ich\.person_id, "magazin"\)/.test(srv), "Haken an Rezept und Magazin");
 // 5) Sparsam: eine Zeile je Person, Tag zählen höchstens einmal je Tag und Gerät, kein Push
 assert.ok(/person_id text primary key/.test(mig) && /enable row level security/.test(mig) && /revoke all on public\.kc_club_garten from public, anon, authenticated/.test(mig), "eine Zeile je Person, RLS, keine Rechte für anon");
-assert.ok(/gartenSpeicher\(\)\?\.tag === heuteIso\(\)\) return;/.test(app), "Start: nur wenn heute noch nicht gezählt");
+assert.ok(/if \(gartenSpeicher\(\)\?\.tag === heuteIso\(\)\) \{ if \(gartenSpeicher\(\)\?\.g\?\.pflanzen\?\.length\) gartenReif\(\)\.catch\(\(\) => \{\}\); return; \}/.test(app), "Start: heute schon gezählt → nur Reife aus dem Speicher, keine Abfrage");
 assert.ok(/if \(!g\.letzter_tag \|\| g\.letzter_tag < heute\)/.test(srv), "Server zählt jeden Tag nur einmal");
 assert.ok(!/senden\(|pushSenden|webpush/i.test(gt) && !/garten[^\n]*senden\(/.test(srv.match(/KC-CLUB-SAMEN \(#84\): „Mein Garten“ – je Aufruf[\s\S]*?case "rezept_bewerten"/)[0]), "kein Push (Antwort Hansi 4)");
 assert.ok(/GT\.club \|\| Date\.now\(\) - GT\.clubZeit > 600000/.test(gt), "Club-Garten 10 Min. gemerkt");
@@ -35,5 +35,5 @@ assert.ok(/\{ id: "garten", sym: "🌱", t: "Mein Garten",[^\n]*nur: \(\) => fre
 assert.ok(/\.from\("kc_club_garten"\)\.select\("person_id,pflanzen,automatik"\)\.eq\("club", true\)/.test(srv), "Club-Garten nur freigegebene");
 assert.ok(/if \(!GT\.g\.clubGefragt\)/.test(gt), "nach dem Säen fragen (Antwort Hansi 5)");
 // 7) Teil-Liste und Service Worker kennen „garten“
-assert.ok(/garten: \{ einstieg: \["gartenStart", "gartenTag"\], sri: "sha384-/.test(app) && /garten: "[\w-]{16}"/.test(fs.readFileSync("sw.js", "utf8")));
+assert.ok(/garten: \{ einstieg: \["gartenStart", "gartenTag", "gartenReif"\], sri: "sha384-/.test(app) && /garten: "[\w-]{16}"/.test(fs.readFileSync("sw.js", "utf8")));
 console.log("garten: ok");

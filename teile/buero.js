@@ -1697,7 +1697,9 @@ function ekPosten(P) {
     P.push({ wer: x.name, datum: x.erstellt_am, sym: "💶", gruppe: "Erstattung – bitte bearbeiten", titel: `${x.name}: ${euro(x.summe)}`,
       unter: `${zeitKurz(x.erstellt_am)} · ${x.positionen.length} Position${x.positionen.length === 1 ? "" : "en"} · ${x.auszahlung === "bar" ? "bar" : "Überweisung"}${x.kenntnis.length ? " · 👁️ " + x.kenntnis.join(", ") : ""}`,
       auf: `ekErstInfo('${x.id}')`, ordner: ["🗄️", "Archiv", "arStart()"],
-      schnell: [...(x.kenntnisIch ? [] : [["👁️ Zur Kenntnis genommen", `ekKenntnis('erstattung','${x.id}')`]]), ["✅ Erstattet", `ekErstattet('${x.id}')`, true],
+      // 2.951.0 KC-CLUB-ERSTATTUNG-SICHER (Fund Hansi 15.11.: „wollte mir den Antrag per PDF ansehen, jetzt ist schon erstattet abgehakt“): oben steht
+      // „📄 Antrag als PDF ansehen“ (grün); „Als erstattet markieren …“ ist ein normaler Knopf und fragt immer noch einmal nach.
+      schnell: [["📄 Antrag als PDF ansehen", `ekErstBlatt('${x.id}')`, true], ...(x.kenntnisIch ? [] : [["👁️ Zur Kenntnis genommen", `ekKenntnis('erstattung','${x.id}')`]]), ["✅ Als erstattet markieren …", `ekErstattet('${x.id}')`],
         ["✖ Ablehnen", `ekErstAblehnen('${x.id}')`], ["🗄️ Ablegen …", `ekAblage('erstattung','${x.id}')`]] });
   // KC-CLUB-ERSTATTUNG-SONDER (2.419.0): offene Kautionen und abzugebende Papierbelege – auch nach der Erstattung
   for (const x of k.nachverfolgen || [])
@@ -1727,7 +1729,7 @@ function ekErstInfo(id) {
     <p class="hinweis">Belege und Aufstellung kamen zusätzlich per Mail.</p>
     <div style="display:grid;gap:8px">${x.kenntnisIch ? "" : `<button class="knopf" data-fn="ekKenntnis('erstattung','${x.id}')">👁️ Zur Kenntnis genommen</button>`}
       <button class="knopf" data-fn="ekErstBlatt('${x.id}')">📄 Antrag als PDF / Drucken</button>
-      <button class="knopf haupt" data-fn="ekErstattet('${x.id}')">✅ Erstattet</button><button class="knopf" data-fn="ekErstAblehnen('${x.id}')">✖ Ablehnen</button>
+      <button class="knopf" data-fn="ekErstattet('${x.id}')">✅ Als erstattet markieren …</button><button class="knopf" data-fn="ekErstAblehnen('${x.id}')">✖ Ablehnen</button>
       <button class="knopf" data-fn="ekAblage('erstattung','${x.id}')">🗄️ Ablegen …</button><button class="knopf" data-fn="">Schließen</button></div>`);
   f.querySelectorAll("[data-fn]").forEach((b) => (b.onclick = () => { f.remove(); if (b.dataset.fn) new Function(b.dataset.fn)(); }));
 }
@@ -1735,11 +1737,12 @@ function ekErstBlatt(id) { const x = ekErst(id); if (x) erstAnsehen(erstDaten({ 
 function ekErstattet(id) {
   const x = ekErst(id); if (!x) return;
   const bar = x.auszahlung === "bar", vor = esc(x.name.split(" ")[0]);
-  const f = blattAuf("ekErstBlatt", `<h3 style="margin-top:0">✅ Erstattung ${esc(x.name)}: ${euro(x.summe)}</h3>
-    <p class="hinweis">Gewünscht: ${bar ? "bar" : "per Überweisung"} · ${vor} bekommt Bescheid (Push + Mail).</p>
+  const f = blattAuf("ekErstOkBlatt", `<h3 style="margin-top:0">Erstattung ${esc(x.name)}: ${euro(x.summe)} – als erstattet markieren?</h3>
+    <p class="ers-noch"><b>Noch nicht erstattet.</b> Erst wenn du unten „💵 Bar ausgezahlt“ oder „🏦 Wird überwiesen“ tippst, wird der Antrag als erstattet gespeichert und ${vor} bekommt Bescheid (Push + Mail).</p>
+    <p class="hinweis">Gewünscht: ${bar ? "bar" : "per Überweisung"}.</p>
     <label class="feld">Kurze Nachricht an ${vor} (freiwillig)<input id="ekAntw" maxlength="500" placeholder="z. B. Danke fürs Fahren!"></label>
     <div style="display:grid;gap:8px">${(bar ? ["bar", "ueberweisung"] : ["ueberweisung", "bar"]).map((w, i) => `<button class="knopf${i ? "" : " haupt"}" data-w="${w}">${w === "bar" ? "💵 Bar ausgezahlt" : "🏦 Wird überwiesen"}</button>`).join("")}
-      <button class="knopf" data-w="">Abbrechen</button></div>`);
+      <button class="knopf" data-w="">↩️ Abbrechen – noch nicht erstattet</button></div>`);
   f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => { const w = b.dataset.w, antwort = f.querySelector("#ekAntw").value; f.remove(); if (w) ekErledigen(id, "erstattet", w, antwort); }));
 }
 async function ekErstAblehnen(id) {
