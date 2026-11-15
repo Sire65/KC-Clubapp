@@ -29,5 +29,6 @@ console.log("magazin-kraeuter: ok");
   assert.ok(a[16].termine_fest.some((x) => /Ostern/.test(x.text) && /16\./.test(x.wann)), "Ostern 2028 am 16. April");
   // KC-CLUB-MAGAZIN-BACKSTUBE (15.11.2026): Januar Feenküsse, Februar Mohn-Aprikosen-Herzen, Dezember Karamell-Schoko-Herzen – eigene Fassung ohne fremde Fotos
   assert.equal(a[1].backstube.titel, "Feenküsse"); assert.equal(a[2].backstube.titel, "Mohn-Aprikosen-Herzen"); assert.equal(a[12].backstube.titel, "Karamell-Schoko-Herzen");
+  assert.ok(a[12].backstube.bild === "magazin/backstube/nr12-karamell-schoko-herzen.webp" && a[12].backstube.bildNachweis === "Bild: KI-generiert" && fs.statSync(new URL("../" + a[12].backstube.bild, import.meta.url)).size < 200000, "Dezember: KI-Bild mit Nachweis");
   for (const n of [2, 12]) { const b = a[n].backstube; assert.ok(!b.foto && !b.id && b.zutaten.length === 3 && b.schritte.length >= 6 && b.tipp && b.fakten.length === 4, `Heft ${n}: Backstube vollständig`); } }
 console.log("magazin-vorbau: ok");
