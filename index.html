@@ -3720,8 +3720,11 @@
   /* KC-CLUB-ANSICHT-NAME (0.66.0): hinter „Schnellzugriff“ klein und farbig, welche Ansicht gerade aktiv ist.
      2.23.16 (Wunsch Hansi): etwas größer (.66 → .82rem); erweitert „< … >“ (nach außen), einfach „> … <“ (nach innen) statt Klammern */
   /* KC-CLUB-KA-KOPF (Wunsch Hansi 15.11.2026): neben „Erweiterte Ansicht“ zwei kleine Knöpfe für ausgeblendete Kacheln – nur breit (Tablet/PC), nicht in der einfachen Ansicht */
-  .ka-kopf { display: none; } @media (min-width: 600px) { body:not(.einfach) .ka-kopf:not(:empty) { display: flex; gap: 6px; margin: 0 auto 0 12px; flex-wrap: wrap; } }
-  .ka-kopf-k { border: none; border-radius: 999px; padding: 6px 12px; background: var(--karte2); color: inherit; font: inherit; font-size: .8rem; font-weight: 700; cursor: pointer; white-space: nowrap; }
+  /* 15.11. (Hansi „ohne Text, nur Knopf“ + „auf breiten Handys auch“): runde Symbol-Knöpfe, ab 400 px Breite */
+  .ka-kopf { display: none; } @media (min-width: 400px) { body:not(.einfach) .ka-kopf:not(:empty):not(.kk-eng) { display: flex; gap: 6px; margin: 0 auto 0 8px; flex: none; } }
+  .ka-kopf-k { border: none; border-radius: 50%; width: 34px; height: 34px; padding: 0; display: grid; place-items: center; background: var(--karte2); color: inherit; font-size: 1.05rem; line-height: 1; cursor: pointer; }
+  @media (max-width: 599px) { .ka-kopf { gap: 4px !important; margin-left: 4px !important; } .ka-kopf-k { width: 26px; height: 26px; font-size: .85rem; } }
+  .abschnitt.kk-knapp .qr-wort { display: none; } /* Handy: kleiner; passt es nicht in die Zeile, blendet kaKopfPasst() sie aus (kk-eng) */
   .ka-kopf-k.an { background: var(--rot); color: #fff; } .ka-kopf-k:active { filter: brightness(.92); }
   .ansichtname { font-size: .82rem; font-weight: 700; margin-left: 2px; vertical-align: middle; white-space: nowrap; border: none; background: none; padding: 6px 2px; font-family: inherit; cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; }
   #versionMarke { white-space: nowrap; flex: none; display: inline-flex; align-items: center; gap: 4px; }

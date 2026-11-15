@@ -5048,7 +5048,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   const f = html.slice(html.indexOf("function kachelnZeigen()"), html.indexOf("// ---------- KC-CLUB-INFOFELD (0.42.0)"));
   assert.ok(/if \(!ausN\) KA_NUR_AUS = false;/.test(f) && !/gibt es keine/.test(f), "schaltet sich ohne ausgeblendete ab, kein Leer-Hinweis");
-  assert.ok(/: ausN \? `<button class="knopf ka-nuraus"/.test(f) && /` : "";\n  \$\("raster"\)\.classList\.toggle\("nur-aus"/.test(f), "ausN = 0 → leer");
+  assert.ok(/: ausN \? `<button class="knopf ka-nuraus"/.test(f) && /` : "";\n  (\/\/ KC-CLUB-KA-KOPF[\s\S]*?: "";\n  kaKopfPasst\(\);\n  )?\$\("raster"\)\.classList\.toggle\("nur-aus"/.test(f), "ausN = 0 → leer");
 }
 // 2.38.0 KC-CLUB-AVATAR-KNOEPFE-OBEN (Wunsch Hansi): „Selbst zusammenstellen“ + Selfie/Galerie/Datei rechts neben dem Bild, mit Trennlinie
 {

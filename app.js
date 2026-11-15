@@ -8802,7 +8802,18 @@ function kopfEckeAnordnen() {
   const rechts = parseFloat(getComputedStyle(b).right) || 18;
   s.style.right = Math.max(98, Math.ceil(rechts + b.offsetWidth + 8)) + "px";
 }
-addEventListener("resize", () => { try { kopfEckeAnordnen(); } catch {} }, { passive: true });
+// KC-CLUB-KA-KOPF (15.11.2026, Hansi „auf breiten Handys auch einblenden“): die Symbol-Knöpfe neben „Erweiterte Ansicht“ nur, wenn sie in DIE Zeile passen –
+// bricht „Schnellzugriff < Erweiterte Ansicht >“ dadurch um oder stoßen sie an den QR-Knopf, bleiben sie weg (kk-eng); die Knöpfe unten gibt es immer.
+function kaKopfPasst() {
+  const k = $("kaKopfKnoepfe"), a = k?.closest(".abschnitt"); if (!k || !a) return;
+  k.classList.remove("kk-eng"); a.classList.remove("kk-knapp"); if (!k.innerHTML || getComputedStyle(k).display === "none") return;
+  const h = a.querySelector("h3"), m = $("versionMarke");
+  const eng = () => (h && h.getBoundingClientRect().height > 44) || (m && m.offsetWidth && k.getBoundingClientRect().right > m.getBoundingClientRect().left - 4);
+  if (!eng()) return;
+  a.classList.add("kk-knapp"); // erst: beim QR-Knopf nur das Symbol (spart ≈ 25 px)
+  if (eng()) { a.classList.remove("kk-knapp"); k.classList.add("kk-eng"); } // passt trotzdem nicht → Knöpfe oben weg (unten gibt es sie immer)
+}
+addEventListener("resize", () => { try { kopfEckeAnordnen(); kaKopfPasst(); } catch {} }, { passive: true });
 function netzSymbolZeigen() {
   try { const na = netzArtJetzt(); netzBalkenZeigen(na.art, netzQualitaet()); } catch {} // KC-CLUB-NETZ-BALKEN
   const b = $("naNetz"); if (!b) return;
@@ -12146,8 +12157,11 @@ function kachelnZeigen() {
   // KC-CLUB-KA-KOPF (Wunsch Hansi 15.11.2026: „Auf dem Tablet ist neben ‚Erweiterte Ansicht‘ rechts noch Platz – 2 Buttons mit Icons: nur ausgeblendete anzeigen
   // und x ausgeblendete anzeigen, so wie es unten dafür schon Buttons gibt“): dieselben zwei Knöpfe klein oben im Kopf „Schnellzugriff“ – nur breit (CSS ab 600 px)
   const kopfK = $("kaKopfKnoepfe");
-  if (kopfK) kopfK.innerHTML = nurAus ? `<button type="button" class="ka-kopf-k an" onclick="kaNurAus(false)" title="Ausgeblendete wieder verbergen">🙈 Wieder verbergen</button>`
-    : ausN ? `<button type="button" class="ka-kopf-k" onclick="kaNurAus(true)" title="Nur die ausgeblendeten Kacheln zeigen">👀 Nur ausgeblendete (${ausN})</button><button type="button" class="ka-kopf-k" onclick="kaBearbeiten(true)" title="Ausgeblendete Kacheln anzeigen und wieder einblenden">🙈 ${ausN} ausgeblendete</button>` : "";
+  // 15.11. (Hansi „ohne Text, nur Knopf“): nur Symbol – Erklärung im Hinweis beim Draufhalten und für Vorlesen; nur wenn wirklich welche ausgeblendet sind
+  const kkn = (f, sym, t, an = false) => `<button type="button" class="ka-kopf-k${an ? " an" : ""}" onclick="${f}" title="${t}" aria-label="${t}">${sym}</button>`;
+  if (kopfK) kopfK.innerHTML = nurAus ? kkn("kaNurAus(false)", "🙈", "Ausgeblendete wieder verbergen", true)
+    : ausN ? kkn("kaNurAus(true)", "👀", `Nur ausgeblendete zeigen (${ausN})`) + kkn("kaBearbeiten(true)", "🙈", `${ausN} ausgeblendete Kachel${ausN > 1 ? "n" : ""} – anzeigen`) : "";
+  kaKopfPasst();
   $("raster").classList.toggle("nur-aus", nurAus);
   $("raster").innerHTML = (nurAus ? kaSortiert(reg).filter((k) => KA.aus.includes(k.id)) : kacheln(reg)).map((k, i) => {
     const z = k.zahl ? k.zahl() : 0;
@@ -32820,7 +32834,8 @@ const AUSWEIS_SYM = '<svg class="qr-sym" viewBox="0 0 16 16" aria-hidden="true">
 function versionMarkeTipp() { if (NEUE_VERSION) updateKachel(); else ausweisZeigen(); }
 function versionAnzeigen() {
   const vm = $("versionMarke");
-  if (NEUE_VERSION) vm.textContent = `🆕 v${NEUE_VERSION}`; else vm.innerHTML = `${AUSWEIS_SYM} QR`;
+  if (NEUE_VERSION) vm.textContent = `🆕 v${NEUE_VERSION}`; else vm.innerHTML = `${AUSWEIS_SYM}<span class="qr-wort"> QR</span>`; // KC-CLUB-KA-KOPF: „QR“ fällt weg, wenn es eng wird
+  try { kaKopfPasst(); } catch {}
   vm.title = NEUE_VERSION ? "Update prüfen" : "Mein Ausweis-QR für Kasse & Stechuhr"; vm.setAttribute("aria-label", vm.title);
   $("versionMarke").classList.toggle("gelb", !!NEUE_VERSION);
   // KC-CLUB-KOPF-ORDNUNG (2.24.17, Wunsch Hansi): Versionsnummer klein unter der Kochmütze, bei Update gelb mit 🆕
