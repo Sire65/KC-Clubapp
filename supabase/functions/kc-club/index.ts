@@ -194,7 +194,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.950.0";
+const SERVER_VERSION = "2.955.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -474,6 +474,58 @@ const jetzt = () => new Date().toISOString();
 const fTag = new Intl.DateTimeFormat("de-DE", { timeZone: TZ, weekday: "short", day: "2-digit", month: "2-digit" });
 const fTagLang = new Intl.DateTimeFormat("de-DE", { timeZone: TZ, weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" });
 const fZeit = new Intl.DateTimeFormat("de-DE", { timeZone: TZ, hour: "2-digit", minute: "2-digit" });
+// ---------- KC-CLUB-GEMEINSCHAFTSGERICHT (Wunschliste #94, Antworten Hansi 15.11.2026) ----------
+// Hansi startet eine Runde (Titel, Einsendezeitraum, 1 oder 2 Zutaten je Person). Alle außer Gästen werden beim Start gefragt (init → „gericht“),
+// sehen nur ihre eigenen Zutaten; Hansi sieht alle. Danach Rezept aus dem Rezeptbuch wählen (Treffer nach Zutaten) oder neu anlegen; das PDF
+// (Kopfbogen, Zutaten mit „(Name)“) baut die App, der Server verschickt es an alle per Push und E-Mail (mit Anhang). Erinnerung 2 Tage vor Ende.
+const GERICHT_ZUTAT_RE = /^[\p{L}\p{N} .,'’&()\/+%-]{1,60}$/u;
+const gerichtNorm = (t: unknown) => String(t ?? "").toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/ß/g, "ss").replace(/[^a-z0-9]+/g, " ").trim();
+async function gerichtRundeAktiv(): Promise<any | null> {
+  const heute = berlinTag(new Date());
+  const { data, error } = await db.from("kc_club_gericht_runde").select("id,titel,von,bis,je_person").eq("status", "sammeln").lte("von", heute).gte("bis", heute).order("bis").limit(1);
+  if (error) throw new Error("gericht runde: " + error.message);
+  return data?.[0] ?? null;
+}
+let GR_MERK: { t: number; v: Promise<any> } | null = null; // je Server-Instanz 60 s – beim Start fragt sonst jedes Gerät die Runde neu ab
+function gerichtRundeGemerkt(): Promise<any> {
+  if (!GR_MERK || Date.now() - GR_MERK.t > 60000) GR_MERK = { t: Date.now(), v: gerichtRundeAktiv().catch(() => null) };
+  return GR_MERK.v;
+}
+async function gerichtFuerMich(ich: Ich) {
+  if (ich.zugang !== "mitglied" && ich.zugang !== "aushilfe") return null;
+  if (!ich.admin && (await freigaben()).gemeinschaftsgericht !== "alle") return null; // noch nicht freigegeben → nur der Admin wird gefragt
+  const r = await gerichtRundeGemerkt(); if (!r) return null;
+  const [{ data: z }, { data: e }] = await Promise.all([
+    db.from("kc_club_gericht_zutat").select("nr,zutat,gruppe,eigen,freigabe,grund").eq("runde_id", r.id).eq("person_id", ich.person_id).order("nr"),
+    db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "gericht").maybeSingle()]);
+  const w: any = (e?.wert as any)?.runde === r.id ? e!.wert : {};
+  return { runde: { id: r.id, titel: r.titel, bis: r.bis, je: r.je_person }, meine: z ?? [], nein: w.nein === true, spaeterBis: w.spaeter_bis ?? null };
+}
+async function gerichtEmpfaenger(): Promise<string[]> { // alle aktiven außer Gästen (Hansi: „Alle bekommen die Frage, alle das Rezept“)
+  const [leute, { data: r, error }] = await Promise.all([aktiveMitglieder(), db.from("kc_club_rollen").select("person_id,zugang,ist_admin").eq("zugang", "gast")]);
+  if (error) throw new Fehler("Die Empfängerliste ist gerade nicht lesbar – bitte gleich noch einmal.", 503);
+  const gast = new Set((r ?? []).filter((x: any) => !x.ist_admin).map((x: any) => String(x.person_id)));
+  return leute.map((x) => x.person_id).filter((id) => !gast.has(id));
+}
+// 2 Tage vor Ende (9–20 Uhr deutscher Zeit): einmal an alle, die noch nichts eingereicht und nicht „Diesmal nicht“ gesagt haben
+async function gerichtErinnerung() {
+  const h = berlinStunde(new Date()); if (h < 9 || h > 20) return;
+  if ((await freigaben()).gemeinschaftsgericht !== "alle") return; // Test: keine Erinnerung an alle
+  const ziel = tagDazu(berlinTag(new Date()), 2);
+  const { data: rs } = await db.from("kc_club_gericht_runde").select("id,titel,bis,je_person").eq("status", "sammeln").eq("bis", ziel).is("erinnert_am", null).limit(3);
+  for (const r of rs ?? []) {
+    const { data: ok } = await db.from("kc_club_gericht_runde").update({ erinnert_am: jetzt() }).eq("id", r.id).is("erinnert_am", null).select("id");
+    if (!ok?.length) continue; // erst merken, dann senden – nie doppelt
+    const [alle, { data: z }, { data: nein }] = await Promise.all([gerichtEmpfaenger(),
+      db.from("kc_club_gericht_zutat").select("person_id").eq("runde_id", r.id),
+      db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "gericht").eq("wert->>runde", r.id)]);
+    const fertig = new Set([...(z ?? []).map((x: any) => x.person_id), ...(nein ?? []).filter((x: any) => x.wert?.nein === true).map((x: any) => x.person_id)]);
+    const an = alle.filter((id) => !fertig.has(id)); if (!an.length) continue;
+    await sendenGewaehlt("club_erinnerung", an, ["push"], { titel: `🍲 Noch 2 Tage: ${r.titel}`, kurz: `Welche Zutat gibst du in unser Gemeinschaftsgericht? Einsenden bis ${r.bis.slice(8, 10)}.${r.bis.slice(5, 7)}.`,
+      betreff: `Köcheclub Werne – ${r.titel}`, text: `Welche Zutat gibst du in unser Gemeinschaftsgericht? Einsenden bis ${r.bis.slice(8, 10)}.${r.bis.slice(5, 7)}. – einfach die App öffnen.`, url: APP_URL }, `club-gericht-erinnerung:${r.id}`);
+    await protokoll(null, "gericht_erinnert", { runde: r.id, an: an.length });
+  }
+}
 // 2.947.0 KC-CLUB-ADVENT-PREISE: Preis-Türchen (Tag → Preis); muss zu ADVENT_PREISE/AK_TUERCHEN in der App passen (Test advent-preise)
 const ADVENT_PREISE: Record<number, string> = { 6: "Mini-Schoko-Nikolaus", 20: "Kinderriegel" };
 const berlinTag = (d: Date) => new Intl.DateTimeFormat("sv-SE", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
@@ -4292,7 +4344,7 @@ const ZUGANG_AKTIONEN: Record<"basis" | "aushilfe", readonly string[]> = {
     "push_pruefen", "geraete_liste", "geraet_entfernen", "andere_geraete_abmelden", "push_abmelden", "push_test", "neues_geraet_antwort"],
   aushilfe: ["mein_dienst", "dienstwunsch_laden", "dienstwunsch_speichern", "dienst_gruss", "dienste", "dienst_freigabe", "meine_eingaben",
     "eingaben_bestaetigen", "wunschbogen_mailen", "eingaben_ablegen", "fotos_neueste", "fotos_liste", "foto_oeffnen",
-    "schulung_meine", "schulung_antwort",
+    "schulung_meine", "schulung_antwort", "gericht_zutat_setzen", "gericht_antwort",
     "sondereinsatz_zusage", "stunden_melden", "mein_ausweis", "dienst_stand", "dienst_buchen", "dienst_korrigieren", "dienst_tausch_liste", "dienst_tausch_anbieten", "dienst_tausch_aktion", "dp_einzelplan", "ist_offen", "ist_antworten", "ist_feedback"], // 2.590.0: Aushilfen dürfen sich auch anmelden (Hansi 22.10.); 2.606.0: und Dienste tauschen
 };
 const ZUGANG_ERLAUBT = { gast: new Set(ZUGANG_AKTIONEN.basis), aushilfe: new Set([...ZUGANG_AKTIONEN.basis, ...ZUGANG_AKTIONEN.aushilfe]), tischgast: new Set<string>(TISCHGAST_AKTIONEN) };
@@ -5369,6 +5421,7 @@ async function adminIds(): Promise<string[]> {
 // KC-CLUB-FREIGABE (2.23.86, Wunsch Hansi): neue Funktionen erst „nur Admin (Test)“, dann für alle. Standard gilt, solange der Admin nichts gewählt hat.
 const FUNKTIONEN: Record<string, { t: string; u: string; standard: "alle" | "admin" }> = {
   rezepte: { t: "📖 Rezeptbuch", u: "Club-Rezepte, Portionen umrechnen, Einkaufsliste", standard: "admin" },
+  gemeinschaftsgericht: { t: "🍲 Gemeinschaftsgericht", u: "Zutat beim App-Start einreichen, Rezept als PDF an alle – solange „nur für mich“: nur der Admin wird gefragt, Versand nur an ihn", standard: "admin" }, // KC-CLUB-GEMEINSCHAFTSGERICHT (Hansi 15.11.: „noch nicht freigegeben“)
   fitness: { t: "🏋️ Fit bleiben", u: "Übungen mit Twinkey, eigene Auswertung", standard: "admin" }, // KC-CLUB-FITNESS (2.55.0)
   ist_rueckfrage: { t: "✅ Ist-Zeiten nach dem Dienst bestätigen", u: "Rückfrage nach jedem Dienst: übernehmen, ändern, nicht da – Abgleich mit Kasse und DP2", standard: "admin" }, // KC-CLUB-IST-RUECKFRAGE
   avatar: { t: "🧑‍🍳 Mein Bild (40 Koch-Figuren)", u: "Figur statt Buchstaben", standard: "alle" },
@@ -9643,6 +9696,7 @@ const kcAnfrage = async (req: Request): Promise<Response> => {
       await gastgeberStandLauf().catch((e) => console.error("gastgeber stand", String(e))); // KC-CLUB-GASTGEBER-STAND (2.238.0)
       if (stuendlich) await antwortErinnerung2T().catch((e) => console.error("antwort 2t", String(e))); // KC-CLUB-ANTWORT-ERINNERUNG-2T (2.240.0)
       if (stuendlich) await fristErinnerung().catch((e) => console.error("frist erinnerung", String(e))); // 2.883.0 KC-CLUB-FRIST-ERINNERUNG
+      if (stuendlich) await gerichtErinnerung().catch((e) => console.error("gericht erinnerung", String(e))); // KC-CLUB-GEMEINSCHAFTSGERICHT
       if (stuendlich && berlinStunde(new Date()) === 3) { const { error } = await db.rpc("kc_club_nutzung_person_verdichten"); if (error) console.error("nutzung verdichten", error.message); } // KC-CLUB-NUTZUNG-PERSON: älter als 1 Jahr → Monate
       if (stuendlich) await wichtigUngelesenMelden().catch((e) => console.error("wichtig ungelesen", String(e))); // KC-CLUB-WICHTIG-UNGELESEN (2.287.0)
       await archivKopieLauf().catch((e) => archivKopieStand("fehler", String((e as any)?.message || e), {})); // KC-CLUB-ARCHIV-KOPIE (2.232.0): nur nachts 2–5 Uhr
@@ -10357,6 +10411,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           return (tu ?? []).filter((x: any) => !beantwortet.has(x.id)).map((x: any) => ({ id: x.id, titel: x.titel }));
         })();
         const pAnfragen = offeneTerminanfragen(ich).catch((e) => { console.error("anfragen offen", String(e)); return []; }); // 2.389.0 KC-CLUB-TERMINANFRAGE-SICHTBAR
+        const pGericht = gerichtFuerMich(ich).catch((e) => { console.error("gericht", String(e)); return null; }); // KC-CLUB-GEMEINSCHAFTSGERICHT
         // 2.432.0 KC-CLUB-EINGANGSKORB: Dokumente, die andere in meinen Ordner gelegt haben und die noch auf mich warten
         const pAb = abStandHolen(ich.person_id).catch(() => null); // 2.568.0 KC-CLUB-ANRUFBEANTWORTER
         const pDs = dsDarf(ich).then((ok) => (ok ? dsLage(ich) : null)).catch(() => null); // 2.590.0 KC-CLUB-DIENST-STEMPEL (nur wenn freigegeben)
@@ -10521,7 +10576,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const express = await pExpress;
         const dienstwunschFehlt = await pDwFehlt; // KC-CLUB-DW-LAUFBAND
         const neuesGeraet = await siGeraetPruefen(ich, req).catch(() => null); // 2.726.0 KC-CLUB-NEUES-GERAET
-        return json({ meinGeburtstag, alarm, express, dienstwunschFehlt, schwerZeiten: SCHWER_ZEITEN, /* 2.806.0 KC-CLUB-DB-VIEL-ZU-TUN */ startnachrichtDarf: await pSnDarf, kz, hilfeTipps: await pTipps, /* 2.835.0 KC-CLUB-HILFE-TIPPS */ studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, neuesGeraet, meinGeraet: siGeraetKlasse(req.headers.get("user-agent")), /* 2.726.0 KC-CLUB-NEUES-GERAET */ ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtClub: ich.zugang === "tischgast" ? null : await rtClubKanal().catch(() => null), /* KC-CLUB-ANWESENHEIT */ rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, rezeptThema: await pRzThema, themenNaechste: await pThemenN, sitzungVorgaben: SV, /* 2.751.0 KC-CLUB-SITZUNG-VORGABEN */ naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, ablagekorb: await pAblk, clubjahr: await pCj, wartung, communicator, notfall: nf ?? null, einstellungen, rose, /* KC-CLUB-ROSE */ vertretung: await pVertretung, /* KC-CLUB-VERTRETUNG */ freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, protokollNeu, protokollPruefen, /* 2.818.0 KC-CLUB-PROTOKOLL-PRUEFUNG */ naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw, ab: await pAb, dienstStempel: await pDs, runderTisch: await pTisch, /* 2.762.0 KC-CLUB-RUNDER-TISCH */
+        return json({ meinGeburtstag, alarm, express, dienstwunschFehlt, schwerZeiten: SCHWER_ZEITEN, serverJetzt: Date.now(), /* KC-CLUB-ADVENT-SERVERUHR: Uhr des Servers für den Adventskalender */ gericht: await pGericht, /* KC-CLUB-GEMEINSCHAFTSGERICHT */ /* 2.806.0 KC-CLUB-DB-VIEL-ZU-TUN */ startnachrichtDarf: await pSnDarf, kz, hilfeTipps: await pTipps, /* 2.835.0 KC-CLUB-HILFE-TIPPS */ studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, neuesGeraet, meinGeraet: siGeraetKlasse(req.headers.get("user-agent")), /* 2.726.0 KC-CLUB-NEUES-GERAET */ ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtClub: ich.zugang === "tischgast" ? null : await rtClubKanal().catch(() => null), /* KC-CLUB-ANWESENHEIT */ rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, rezeptThema: await pRzThema, themenNaechste: await pThemenN, sitzungVorgaben: SV, /* 2.751.0 KC-CLUB-SITZUNG-VORGABEN */ naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, ablagekorb: await pAblk, clubjahr: await pCj, wartung, communicator, notfall: nf ?? null, einstellungen, rose, /* KC-CLUB-ROSE */ vertretung: await pVertretung, /* KC-CLUB-VERTRETUNG */ freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, protokollNeu, protokollPruefen, /* 2.818.0 KC-CLUB-PROTOKOLL-PRUEFUNG */ naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw, ab: await pAb, dienstStempel: await pDs, runderTisch: await pTisch, /* 2.762.0 KC-CLUB-RUNDER-TISCH */
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
             ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen,
             // KC-CLUB-GERAETE-TIPP: wohin der Link ginge – nur teilweise (z. B. „h…@web.de“)
@@ -18411,6 +18466,103 @@ Köcheclub Werne`,
         return json({ reisen, geburtstage, veranstaltungen, privat });
       }
 
+      // ----- KC-CLUB-GEMEINSCHAFTSGERICHT: einreichen / später / diesmal nicht (Mitglieder und Aushilfen) -----
+      case "gericht_zutat_setzen": case "gericht_antwort": {
+        if (ich.zugang !== "mitglied" && ich.zugang !== "aushilfe") throw new Fehler("Das Gemeinschaftsgericht ist für Mitglieder und Aushilfen.", 403);
+        await nurWennFrei("gemeinschaftsgericht", ich, "Das Gemeinschaftsgericht");
+        const r = await gerichtRundeAktiv();
+        if (!r || r.id !== String(p.runde || "")) throw new Fehler("Die Einsendezeit ist vorbei – danke!", 409);
+        if (a === "gericht_antwort") {
+          const wahl = String(p.wahl || "");
+          if (!["spaeter", "nein", "wieder"].includes(wahl)) throw new Fehler("Unbekannte Antwort.");
+          const wert = { runde: r.id, nein: wahl === "nein", ...(wahl === "spaeter" ? { spaeter_bis: new Date(Date.now() + 20 * 3600000).toISOString() } : {}) };
+          await db.from("kc_club_person_einstellung").upsert({ person_id: ich.person_id, schluessel: "gericht", wert, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
+          return json({ ok: true, ...(await gerichtFuerMich(ich)) });
+        }
+        const liste = (Array.isArray(p.zutaten) ? p.zutaten : []).slice(0, 2).map((x: any) => ({ zutat: String(x?.zutat ?? "").replace(/\s+/g, " ").trim(), gruppe: x?.gruppe ? txt(x.gruppe, 40) : null, eigen: x?.eigen === true }));
+        if (!liste.length || liste.length > r.je_person) throw new Fehler(r.je_person === 1 ? "Bitte genau eine Zutat wählen." : "Bitte eine oder zwei Zutaten wählen.");
+        for (const z of liste) if (!GERICHT_ZUTAT_RE.test(z.zutat)) throw new Fehler("Bitte die Zutat nur mit Buchstaben und Zahlen schreiben (höchstens 60 Zeichen).");
+        const { data: alt } = await db.from("kc_club_gericht_zutat").select("nr,zutat,freigabe").eq("runde_id", r.id).eq("person_id", ich.person_id);
+        const zeilen = liste.map((z: any, i: number) => { const war = (alt ?? []).find((x: any) => x.nr === i + 1);
+          const gleich = war && gerichtNorm(war.zutat) === gerichtNorm(z.zutat);
+          return { runde_id: r.id, person_id: ich.person_id, nr: i + 1, zutat: z.zutat, gruppe: z.gruppe, eigen: z.eigen, freigabe: z.eigen ? (gleich && war.freigabe !== "abgelehnt" ? war.freigabe : "pruefen") : "frei", grund: null, geaendert_am: jetzt() }; });
+        const { error } = await db.from("kc_club_gericht_zutat").upsert(zeilen, { onConflict: "runde_id,person_id,nr" });
+        if (error) throw new Fehler("Das hat gerade nicht geklappt – bitte gleich noch einmal.", 503);
+        if (liste.length < 2) await db.from("kc_club_gericht_zutat").delete().eq("runde_id", r.id).eq("person_id", ich.person_id).gt("nr", liste.length);
+        await db.from("kc_club_person_einstellung").delete().eq("person_id", ich.person_id).eq("schluessel", "gericht"); // „später/nein“ ist erledigt
+        return json({ ok: true, ...(await gerichtFuerMich(ich)) });
+      }
+      // ----- KC-CLUB-GEMEINSCHAFTSGERICHT: Admin (Runde, alle Zutaten mit Namen, Freigabe eigener Zutaten, Rezept-Treffer, Versand) -----
+      case "gericht_admin": case "gericht_runde_speichern": case "gericht_runde_abbrechen": case "gericht_zutat_pruefen": case "gericht_rezepte": case "gericht_versenden": {
+        if (!ich.admin) throw new Fehler("Nur für den Admin.", 403);
+        const heute = berlinTag(new Date());
+        if (a === "gericht_runde_speichern") {
+          const titel = txt(p.titel, 80), von = String(p.von || heute), bis = String(p.bis || ""), je = Number(p.je) === 2 ? 2 : 1;
+          if (titel.length < 2) throw new Fehler("Bitte einen Titel eingeben, z. B. „Gemeinschaftsgericht im Februar“.");
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(von) || !/^\d{4}-\d{2}-\d{2}$/.test(bis) || bis < von || bis < heute) throw new Fehler("Bitte einen gültigen Einsendezeitraum wählen (Ende nicht in der Vergangenheit).");
+          if (tagDazu(von, 120) < bis) throw new Fehler("Der Einsendezeitraum darf höchstens 120 Tage lang sein.");
+          const id = p.id ? String(p.id) : null;
+          const { data: andere } = await db.from("kc_club_gericht_runde").select("id").eq("status", "sammeln").lte("von", bis).gte("bis", von);
+          if ((andere ?? []).some((x: any) => x.id !== id)) throw new Fehler("In diesem Zeitraum läuft schon eine Runde.", 409);
+          const zeile = { titel, von, bis, je_person: je };
+          const { error } = id ? await db.from("kc_club_gericht_runde").update(zeile).eq("id", id).eq("status", "sammeln")
+            : await db.from("kc_club_gericht_runde").insert({ ...zeile, erstellt_von: ich.person_id });
+          if (error) throw new Fehler("Die Runde konnte nicht gespeichert werden.", 500);
+          GR_MERK = null; await protokoll(ich.person_id, "gericht_runde", { titel, von, bis, je, neu: !id });
+        }
+        if (a === "gericht_runde_abbrechen") {
+          await db.from("kc_club_gericht_runde").update({ status: "abgebrochen" }).eq("id", String(p.runde || "")).eq("status", "sammeln"); GR_MERK = null;
+        }
+        if (a === "gericht_zutat_pruefen") {
+          const frei = p.frei === true, grund = frei ? null : txt(p.grund, 200) || "Bitte wähle eine andere Zutat.";
+          const { data: z } = await db.from("kc_club_gericht_zutat").update({ freigabe: frei ? "frei" : "abgelehnt", grund, geaendert_am: jetzt() }).eq("id", String(p.id || "")).select("person_id,zutat,runde_id").maybeSingle();
+          if (!z) throw new Fehler("Zutat nicht gefunden.", 404);
+          if (!frei) await sendenGewaehlt("club_nachricht", [z.person_id], ["push"], { titel: "🍲 Bitte eine andere Zutat", kurz: `„${z.zutat}“ passt leider nicht: ${grund}`, betreff: "Köcheclub Werne – Gemeinschaftsgericht",
+            text: `„${z.zutat}“ passt leider nicht ins Gemeinschaftsgericht: ${grund}\n\nBitte öffne die App und wähle eine andere Zutat.`, url: APP_URL }, `club-gericht-abgelehnt:${p.id}`);
+        }
+        // Runden (neueste zuerst) + gewählte/aktuelle Runde mit allen Zutaten und Namen
+        const { data: runden } = await db.from("kc_club_gericht_runde").select("id,titel,von,bis,je_person,status,rezept_id,versendet_am,erinnert_am").neq("status", "abgebrochen").order("von", { ascending: false }).limit(12);
+        const rid = String(p.runde || "") || (runden ?? [])[0]?.id || "";
+        const runde = (runden ?? []).find((x: any) => x.id === rid) ?? null;
+        const [{ data: zt }, { data: nein }, alle] = runde ? await Promise.all([
+          db.from("kc_club_gericht_zutat").select("id,person_id,nr,zutat,gruppe,eigen,freigabe,grund,geaendert_am").eq("runde_id", runde.id).order("geaendert_am"),
+          db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "gericht").eq("wert->>runde", runde.id),
+          gerichtEmpfaenger()]) : [{ data: [] }, { data: [] }, [] as string[]];
+        const leute = await personen([...new Set([...(zt ?? []).map((x: any) => x.person_id)])]);
+        const zutaten = (zt ?? []).map((x: any) => ({ ...x, name: leute.get(x.person_id)?.display_name || "Mitglied", vorname: vorname(leute.get(x.person_id)) || "" }));
+        const stand = runde ? { alle: alle.length, eingereicht: new Set(zutaten.map((x: any) => x.person_id)).size, nein: (nein ?? []).filter((x: any) => x.wert?.nein === true).length } : null;
+        let treffer: any[] = [], rezepte: any[] = [];
+        if (a === "gericht_rezepte" || a === "gericht_versenden") {
+          const { data: rz } = await db.from("kc_club_rezepte").select("id,titel,kategorie,portionen,zutaten,zubereitung,dauer,foto").is("geloescht_am", null).order("titel").limit(1000);
+          const gewuenscht = [...new Set(zutaten.filter((x: any) => x.freigabe !== "abgelehnt").map((x: any) => gerichtNorm(x.zutat)).filter(Boolean))];
+          const passt = (r: any) => gewuenscht.filter((g) => (Array.isArray(r.zutaten) ? r.zutaten : []).some((z: any) => { const n = gerichtNorm(z?.n); return !!n && (n.includes(g) || g.includes(n)); }));
+          rezepte = (rz ?? []).map((r: any) => ({ id: r.id, titel: r.titel, kategorie: r.kategorie, treffer: passt(r).length }));
+          treffer = [...rezepte].filter((r) => r.treffer > 0).sort((x, y) => y.treffer - x.treffer || x.titel.localeCompare(y.titel)).slice(0, 5);
+          if (a === "gericht_rezepte" && p.rezept) { const r = (rz ?? []).find((x: any) => x.id === String(p.rezept)); if (!r) throw new Fehler("Rezept nicht gefunden.", 404);
+            return json({ ok: true, runde, zutaten, stand, rezept: r, gewuenscht: gewuenscht.length }); }
+          if (a === "gericht_versenden") {
+            if (!runde || runde.status !== "sammeln") throw new Fehler("Diese Runde ist schon verschickt oder beendet.", 409);
+            if (runde.bis >= heute && p.vorzeitig !== true) throw new Fehler(`Die Einsendezeit läuft noch bis ${runde.bis.slice(8, 10)}.${runde.bis.slice(5, 7)}.`, 409);
+            const r = (rz ?? []).find((x: any) => x.id === String(p.rezept || "")); if (!r) throw new Fehler("Bitte zuerst ein Rezept wählen.", 400);
+            const pdf = String(p.pdf || "");
+            const { data: att } = await db.from("kc_communication_attachments").select("id,object_path").eq("id", pdf).maybeSingle();
+            if (!att || !String(att.object_path).startsWith(`club/${ich.person_id}/`)) throw new Fehler("Das PDF wurde nicht gefunden – bitte neu erstellen.", 403);
+            const mAnl = await mailAnlagen([pdf]);
+            const test = (await freigaben()).gemeinschaftsgericht !== "alle", ziel = test ? [ich.person_id] : alle; // noch nicht freigegeben → nur an den Admin
+            if (test) { await sendenGewaehlt("club_nachricht", ziel, ["push", "email"], { titel: `🍲 (Test) Gemeinschaftsgericht: ${r.titel}`, kurz: "Test – nur an dich, die Runde bleibt offen.",
+              betreff: `Köcheclub Werne – (Test) Gemeinschaftsgericht: ${r.titel}`, text: `Test-Versand nur an dich (Freigabe „🍲 Gemeinschaftsgericht“ steht noch auf „nur für mich“). Die Runde bleibt offen.`, url: APP_URL,
+              ...(mAnl.length ? { attachmentIds: mAnl.map((x) => x.id) } : {}) }, `club-gericht-test:${runde.id}:${pdf}`);
+              return json({ ok: true, an: 1, test: true, mitPdf: mAnl.length > 0 }); }
+            const text = `Hallo,\n\nunser Gemeinschaftsgericht steht fest: ${r.titel}!\n\nAus euren Zutaten (${zutaten.length} eingereicht) ist dieses Rezept entstanden – im Anhang als PDF mit allen Zutaten, wer sie ausgesucht hat, und der Zubereitung. Es steht auch im Rezeptbuch der App.\n\nViele Grüße\n${ich.name}`;
+            const versand = await sendenGewaehlt("club_nachricht", ziel, ["push", "email"], { titel: `🍲 Unser Gemeinschaftsgericht: ${r.titel}`, kurz: "Aus euren Zutaten ist ein Rezept geworden – das PDF ist in deiner E-Mail.",
+              betreff: `Köcheclub Werne – Unser Gemeinschaftsgericht: ${r.titel}`, text, url: APP_URL, ...(mAnl.length ? { attachmentIds: mAnl.map((x) => x.id) } : {}) }, `club-gericht:${runde.id}`);
+            await db.from("kc_club_gericht_runde").update({ status: "versendet", rezept_id: r.id, pdf, versendet_am: jetzt() }).eq("id", runde.id).eq("status", "sammeln");
+            GR_MERK = null; await protokoll(ich.person_id, "gericht_versendet", { runde: runde.id, rezept: r.id, an: ziel.length, mitPdf: mAnl.length > 0 });
+            return json({ ok: true, an: ziel.length, mitPdf: mAnl.length > 0, versand });
+          }
+        }
+        return json({ ok: true, heute, frei: (await freigaben()).gemeinschaftsgericht === "alle", runden: runden ?? [], runde, zutaten, stand, treffer, rezepte });
+      }
       // ----- Sitzungsprotokolle (KC-CLUB-PROTOKOLLE) -----
       case "protokolle_liste": {
         nurProtokolle(ich);

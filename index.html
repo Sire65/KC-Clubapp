@@ -3731,6 +3731,17 @@
   @media (max-width: 599px) { .ka-kopf { gap: 4px !important; margin-left: 4px !important; } .ka-kopf-k { width: 26px; height: 26px; font-size: .85rem; } }
   .abschnitt.kk-knapp .qr-wort { display: none; } /* Handy: kleiner; passt es nicht in die Zeile, blendet kaKopfPasst() sie aus (kk-eng) */
   .ka-kopf-k.an { background: var(--rot); color: #fff; } .ka-kopf-k:active { filter: brightness(.92); }
+  /* KC-CLUB-GEMEINSCHAFTSGERICHT (Wunschliste #94): Zutat wählen (Liste nach Warengruppen, Suche, eigene Zutat) und Admin-Übersicht */
+  .gr-wahl { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-height: 34px; margin: 0 0 8px; }
+  .gr-gewaehlt { display: inline-flex; align-items: center; gap: 4px; background: var(--rot); color: #fff; border-radius: 999px; padding: 5px 6px 5px 12px; font-weight: 700; }
+  .gr-gewaehlt button { border: none; background: rgba(255,255,255,.25); color: #fff; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; }
+  .gr-suche { width: 100%; box-sizing: border-box; margin: 0 0 6px; }
+  .gr-liste details { margin: 0 0 4px; } .gr-liste summary { font-weight: 700; padding: 6px 2px; cursor: pointer; } .gr-liste .hl-chips { margin: 4px 0 6px; }
+  .gr-eigen { display: flex; gap: 6px; margin-top: 8px; } .gr-eigen input { flex: 1; min-width: 0; }
+  .gr-abgelehnt { margin: 0 0 8px; border-left: 4px solid #d9a21b; }
+  .gr-a-liste { list-style: none; margin: 0 0 8px; padding: 0; } .gr-a-z { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px; padding: 6px 0; border-bottom: 1px solid var(--linie, rgba(0,0,0,.08)); }
+  .gr-a-z.aus b { text-decoration: line-through; opacity: .6; } .gr-a-k { display: flex; gap: 6px; }
+  .gr-treffer { display: flex; flex-direction: column; align-items: flex-start; width: 100%; margin: 0 0 6px; text-align: left; } .gr-treffer small { opacity: .75; }
   .ansichtname { font-size: .82rem; font-weight: 700; margin-left: 2px; vertical-align: middle; white-space: nowrap; border: none; background: none; padding: 6px 2px; font-family: inherit; cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; }
   #versionMarke { white-space: nowrap; flex: none; display: inline-flex; align-items: center; gap: 4px; }
   #versionMarke .qr-sym { width: 15px; height: 15px; }
@@ -7050,7 +7061,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.954.0" data-v="2.954.0"></script>
+<script src="app.js?v=2.955.0" data-v="2.955.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>
