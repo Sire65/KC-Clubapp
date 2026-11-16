@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.963.0 – 2026-11-16 – 🗄️ „➕ Neues Register …“ auch an allen anderen Ablage-Stellen (KC-CLUB-ABLAGE-NEU-UEBERALL, Wunschliste #95)
+Wunsch Hansi 16.11.: „Durchsuche den Code, ob so was an anderen Stellen auch sinnvoll ist, auch für alle Mitglieder frei geben.“
+- Gefunden und nachgerüstet – überall, wo man im Archiv ein Register auswählt: **📥 Dokument ablegen / ✏️ ändern** (im Archiv), **📋 Kopieren / ➡️ Verschieben nach …**, **Eingang: Dokument annehmen („… ablegen“)** und **🆘 Notfallpass → In mein Archiv kopieren**. Dazu wie in 2.961.0 das Fenster „Wohin damit?“.
+- **Für alle Mitglieder** im eigenen Ordner; in Club-Ordnern wie bisher nur für die Archiv-Pflege (Clubsprecher, Admin) – das prüft auch der Server. Beim Einreichen in einen Club-Ordner oder in den Ordner eines anderen erscheint der Eintrag nicht.
+- Ein gemeinsamer Baustein (`regNeuAnhaengen`) statt Kopien. Keine Serveränderung.
+- Test: `tests/ablage-neu.test.mjs` erweitert. Rückweg: App 2.962.0. Nur die App.
+- Update-Hinweis für Mitglieder: „🗄️ Beim Ablegen kannst du jetzt überall gleich ein neues Register anlegen.“
 ## 2.962.0 – 2026-11-16 – 🗓️ Dienstzeiten-Übersicht: wer für den Dienstplan ausfällt, erscheint dort nicht mehr (KC-CLUB-DV-AUSNAHMEN)
 Fund Hansi 16.11.: „In der grafischen Übersicht taucht Karla noch mit ihren Wünschen auf – sie fällt aber aus.“
 - Die Dienstzeiten-Übersicht (Server `dienst_uebersicht`) lässt alle aus, die im Register `kc_club_dienst_ausnahmen` stehen – für Leitung und Mitglieder. Ihre eigenen Angaben bleiben gespeichert; wird der Eintrag gelöscht, erscheinen sie wieder.

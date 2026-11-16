@@ -15,3 +15,14 @@ const ord = app.slice(app.indexOf("async function arOrdnerNeuAnlegen("), app.ind
 assert.ok(/if \(!d\?\.darf\) return null;/.test(ord) && /art: "sonstiges", jahr, titel/.test(ord), "neuer Club-Ordner nur Archiv-Pflege");
 assert.ok(app.includes("<b>„➕ Neues Register …“</b>"), "Hilfe erklärt es");
 console.log("ablage-neu: alle Prüfungen bestanden");
+// 2.963.0 KC-CLUB-ABLAGE-NEU-UEBERALL: dasselbe „➕ Neues Register …“ an allen Register-Auswahlen des Archivs, für jedes Mitglied im eigenen Ordner
+{
+  assert.ok(/const arRegNeuErlaubt = \(o, d\) => !!o && \(\(o\.besitzer && o\.eigen\) \|\| \(!o\.besitzer && !!d\?\.darf\)\);/.test(app), "erlaubt: eigener Ordner (alle) oder Club-Ordner (Archiv-Pflege)");
+  const h = app.slice(app.indexOf("function regNeuAnhaengen("), app.indexOf("// Neuer Club-Ordner (nur Archiv-Pflege)"));
+  assert.ok(/if \(!arRegNeuErlaubt\(o, d\)\) \{ da\?\.remove\(\); return; \}/.test(h) && /await arRegisterNeuAnlegen\(ord, dat\)/.test(h), "gemeinsamer Baustein");
+  for (const [stelle, re] of [["Notfallpass ins Archiv", /regNeuAnhaengen\(\$\("nfpArReg"\)/], ["Kopieren/Verschieben", /regNeuAnhaengen\(\$\("arZielReg"\)/],
+    ["Dokument ablegen/ändern", /function arDokRegNeu\(oid\) \{ regNeuAnhaengen\(\$\("arDokReg"\)/], ["Eingang annehmen", /regNeuAnhaengen\(f\.querySelector\("#awReg"\)/]])
+    assert.ok(re.test(app), "➕ Neues Register: " + stelle);
+  assert.ok(/if \(!hinein && !einreichen\) arDokRegNeu\(o\.id\);/.test(app), "nicht beim Einreichen in fremde/Club-Ordner");
+  console.log("ablage-neu (überall): ok");
+}

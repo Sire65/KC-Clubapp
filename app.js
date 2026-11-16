@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.962.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.963.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -23828,6 +23828,7 @@ function nfpArRegister() {
   const reg = o.register?.length ? o.register : (NFP_AR.register || ["Sonstiges"]);
   const vor = NFP_ARCHIV_REGISTER_VORSCHLAG.find((r) => reg.includes(r)) || reg[0];
   $("nfpArReg").innerHTML = reg.map((r) => `<option${r === vor ? " selected" : ""}>${esc(r)}</option>`).join("");
+  regNeuAnhaengen($("nfpArReg"), () => nfpEigeneOrdner(NFP_AR).find((x) => x.id === $("nfpArOrdner")?.value), () => NFP_AR); // 2.963.0
   const schon = (NFP_AR.dokumente || []).filter((x) => x.ordner_id === o.id && /notfallpass/i.test(x.titel || "")).length;
   $("nfpArSchon").textContent = schon ? `ℹ️ In diesem Ordner liegt schon ${schon === 1 ? "ein Notfallpass" : schon + " Notfallpässe"}. Der alte bleibt liegen – du kannst ihn im Archiv löschen.` : "";
 }
@@ -34383,6 +34384,7 @@ function arDokForm(id) {
     <div class="knoepfe"><button class="knopf haupt" onclick="einmal(this, () => arDokSpeichern('${x?.id || ""}'))">${x ? "Speichern" : "📥 Ablegen"}</button>
       ${x ? `<button class="knopf" onclick="arDokLoeschen('${x.id}')">🗑️ Löschen</button>` : ""}<button class="knopf" onclick="arBlattZu()">Abbrechen</button></div>
     ${x ? `<div class="knoepfe ar-ziel-knoepfe"><button class="knopf" onclick="arZielBlatt('${x.id}','kopieren')">📋 Kopieren nach …</button><button class="knopf" onclick="arZielBlatt('${x.id}','verschieben')">➡️ Verschieben nach …</button></div>` : ""}`);
+  if (!hinein && !einreichen) arDokRegNeu(o.id); // 2.963.0 KC-CLUB-ABLAGE-NEU-UEBERALL
 }
 // ---------- KC-CLUB-ARCHIV-KOPIEREN (2.59.0, Wunsch Hansi): „Kopieren / Verschieben nach Ordner x“ mit Vorschlag ----------
 // Vorschlag aus einer Registry (Stichwort im Titel → Ordner/Register), sonst das zuletzt gewählte Ziel. Auswahl statt Freitext.
@@ -34620,6 +34622,7 @@ function arZielRegister(reg) {
   const o = AR.daten?.ordner.find((y) => y.id === $("arZielOrdner")?.value); if (!o) return;
   const liste = o.register.length ? o.register : ["Sonstiges"], w = liste.includes(reg) ? reg : liste[0];
   $("arZielReg").innerHTML = liste.map((r) => `<option${r === w ? " selected" : ""}>${esc(r)}</option>`).join("");
+  regNeuAnhaengen($("arZielReg"), () => AR.daten?.ordner.find((y) => y.id === $("arZielOrdner")?.value), () => AR.daten); // 2.963.0
 }
 async function arZielAusfuehren() {
   const z = AR_ZIEL; if (!z) return;
@@ -34636,7 +34639,9 @@ async function arZielAusfuehren() {
 function arDokOrdnerWechsel(oid) {
   const o = AR.daten.ordner.find((y) => y.id === oid); if (!o) return;
   $("arDokReg").innerHTML = (o.register.length ? o.register : ["Sonstiges"]).map((r) => `<option>${esc(r)}</option>`).join("");
+  arDokRegNeu(o.id);
 }
+function arDokRegNeu(oid) { regNeuAnhaengen($("arDokReg"), () => AR.daten?.ordner.find((y) => y.id === ($("arDokOrdner")?.value || oid)), () => AR.daten); } // 2.963.0
 async function arDateiGewaehlt(input) {
   const roh = input.files?.[0]; input.value = ""; if (!roh) return;
   $("arDateiName").textContent = "⏳ wird vorbereitet …";
@@ -34790,11 +34795,30 @@ async function arRegisterNeuAnlegen(o, d) {
   try {
     await api("archiv_ordner_speichern", o.besitzer ? { id: o.id, register: neu, farbe: o.farbe } : { id: o.id, art: o.art, jahr: o.jahr, titel: o.titel, farbe: o.farbe, register: neu, nur_vorstand: !!o.nur_vorstand, einreichen: !!o.einreichen }, { warten: true });
     const frisch = (await api("archiv_liste", {}, { warten: true }).catch(() => null))?.ordner?.find((x) => x.id === o.id);
-    o.register = frisch?.register?.length ? frisch.register : neu;
-    if (typeof AR !== "undefined") AR.daten = null;
+    o.register = frisch?.register?.length > reg.length ? frisch.register : neu; // ältere Antwort (z. B. aus dem Puffer) → unsere Liste
+    if (typeof AR !== "undefined" && AR.daten && AR.daten !== d) AR.daten = null; // im Archiv selbst ist o schon aktualisiert
     const echt = o.register.find((r) => !reg.includes(r)) || name; // der Server kann den Namen vereinheitlichen (z. B. Einzahl → Mehrzahl)
     melde(`➕ Register „${echt}“ angelegt`); return echt;
   } catch (e) { meldeFehler(e); return null; }
+}
+// 2.963.0 KC-CLUB-ABLAGE-NEU-UEBERALL (Hansi 16.11.2026: „Durchsuche den Code, ob so was an anderen Stellen auch sinnvoll ist, auch für alle Mitglieder“):
+// derselbe „➕ Neues Register …“-Eintrag für jede Register-Auswahl des Archivs. Erlaubt im eigenen Ordner (jedes Mitglied) und in Club-Ordnern für die
+// Archiv-Pflege (wie der Server); sonst erscheint der Eintrag nicht. ordnerFn() = aktuell gewählter Ordner, datenFn() = Antwort von archiv_liste.
+const arRegNeuErlaubt = (o, d) => !!o && ((o.besitzer && o.eigen) || (!o.besitzer && !!d?.darf));
+function regNeuAnhaengen(sel, ordnerFn, datenFn) {
+  if (!sel) return;
+  const o = ordnerFn(), d = datenFn(), da = [...sel.options].find((x) => x.value === AR_NEU);
+  if (!arRegNeuErlaubt(o, d)) { da?.remove(); return; }
+  if (!da) sel.insertAdjacentHTML("beforeend", `<option value="${AR_NEU}">➕ Neues Register …</option>`);
+  if (sel.value !== AR_NEU) sel.dataset.vorher = sel.value;
+  if (sel.dataset.regNeu) return; sel.dataset.regNeu = "1";
+  sel.addEventListener("change", async () => {
+    if (sel.value !== AR_NEU) { sel.dataset.vorher = sel.value; return; }
+    const ord = ordnerFn(), dat = datenFn(), name = arRegNeuErlaubt(ord, dat) ? await arRegisterNeuAnlegen(ord, dat) : null;
+    const liste = ord?.register?.length ? ord.register : (dat?.register || ["Sonstiges"]), wahl = name || sel.dataset.vorher || liste[0];
+    sel.innerHTML = liste.map((r) => `<option${r === wahl ? " selected" : ""}>${esc(r)}</option>`).join("");
+    regNeuAnhaengen(sel, ordnerFn, datenFn);
+  });
 }
 // Neuer Club-Ordner (nur Archiv-Pflege) – Art „Sonstiges“, Jahr der Ablage, Register „Sonstiges“ (weitere mit „➕ Neues Register …“)
 async function arOrdnerNeuAnlegen(d, jahr) {
@@ -35014,7 +35038,9 @@ function arWohin(x, o, fertig) { // fertig: KC-CLUB-EINGANG-DURCHGEHEN (2.741.0)
     <label class="feld">Register<select id="awReg">${regOpt(o.id, x.register)}</select></label>
     <p class="hinweis" id="awBuero" style="margin:0">${bueroHinweis(o.id)}</p>
     <div class="dlg-knoepfe"><button class="knopf haupt" id="awJa">🗄️ Hier ablegen</button><button class="knopf" onclick="$('arWohinBlatt').remove()">Abbrechen</button></div>`);
-  f.querySelector("#awOrdner").onchange = (e) => { f.querySelector("#awReg").innerHTML = regOpt(e.target.value, f.querySelector("#awReg").value || x.register); f.querySelector("#awBuero").textContent = bueroHinweis(e.target.value); };
+  const awNeu = () => regNeuAnhaengen(f.querySelector("#awReg"), () => alle.find((y) => y.id === f.querySelector("#awOrdner").value), () => AR.daten); // 2.963.0
+  f.querySelector("#awOrdner").onchange = (e) => { f.querySelector("#awReg").innerHTML = regOpt(e.target.value, f.querySelector("#awReg").value || x.register); f.querySelector("#awBuero").textContent = bueroHinweis(e.target.value); awNeu(); };
+  awNeu();
   f.querySelector("#awJa").onclick = async (e) => {
     e.target.disabled = true;
     const ordner_id = f.querySelector("#awOrdner").value, register = f.querySelector("#awReg").value;
