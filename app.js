@@ -22015,7 +22015,7 @@ function chatMerkAlle() {
 function chatMerken(id, u) {
   if (!id || !u || !Array.isArray(u.nachrichten) || !KEY || !ICH) return;
   const m = chatMerkAlle(); m.delete(id);
-  m.set(id, { zeit: Date.now(), u: { ...u, nachrichten: u.nachrichten.slice(-CHAT_MERK_NACHR), tippt: [], entwurf: [], spricht: [], diktiert: [] } });
+  m.set(id, { zeit: Date.now(), voll: u.nachrichten.length <= CHAT_MERK_NACHR, u: { ...u, nachrichten: u.nachrichten.slice(-CHAT_MERK_NACHR), tippt: [], entwurf: [], spricht: [], diktiert: [] } }); // voll: KC-CLUB-CHAT-WIEDER – nur ein vollständiger Merker darf das Laden ersetzen
   while (m.size > CHAT_MERK_ANZAHL) m.delete(m.keys().next().value);
   clearTimeout(chatMerken.t);
   chatMerken.t = setTimeout(() => { // gebündelt schreiben; zu groß → älteste Chats weglassen
@@ -22045,12 +22045,20 @@ async function chatOeffnen(id, ausHistorie) {
   const offenId = chatId;
   // 2.578.0 KC-CLUB-CHAT-SOFORT: gemerkten Stand sofort zeigen, dann wie bisher frisch laden (Vergleichsstand bleibt wie ohne Merker)
   const merk = CHAT?.id !== id ? chatAusMerk(id) : null;
-  if (merk) { const s0 = chatStand, i0 = NA.idStand; await chatLaden(true, merk); chatStand = s0; NA.idStand = i0; }
-  await chatLaden(true);
+  if (merk) {
+    const s0 = chatStand, i0 = NA.idStand; await chatLaden(true, merk);
+    // KC-CLUB-CHAT-WIEDER (16.11.2026, Wunsch Hansi „schnell, auch wenn mehrere drin sind – nicht immer alles lesen“): wurde der Chat in den letzten
+    // CHAT_VOLL_MS ganz geladen und hat sich sein Fingerabdruck seitdem nicht geändert (keine neue Nachricht, Reaktion, Lesestand …), nur den
+    // Fingerabdruck fragen (1 Abfrage) statt den ganzen Chat (~30). „Gelesen“ stimmt dann schon – es gibt nichts Neues. Sonst wie bisher ganz laden.
+    let gleich = false;
+    if (merk.voll && merk.u?.stand && Date.now() - merk.zeit < CHAT_VOLL_MS) try { const r = await api("unterhaltung_stand", { id }); gleich = chatId === offenId && !!r?.stand && r.stand === merk.u.stand; } catch { /* lieber ganz laden */ }
+    if (gleich) { CHAT_VOLL_AM = merk.zeit; $("chatTeilnehmer").textContent = CHAT_TN_NORMAL; } // bestätigt aktuell → Hinweis „wird aktualisiert“ weg; der Takt lädt spätestens CHAT_VOLL_MS nach dem letzten vollen Laden wieder ganz
+    else { chatStand = s0; NA.idStand = i0; await chatLaden(true); }
+  } else await chatLaden(true);
   clearInterval(chatTimer); if (chatId === offenId && aktuelleAnsicht === "chat") chatTimer = setInterval(chatTakt, CHAT_TAKT_MS); // 1.97.0: nie zwei Takte
   $("liveHinweis").classList.toggle("versteckt", !liveTippen() || !ONL.zeigen);
 }
-let chatStand = "";
+let chatStand = "", CHAT_TN_NORMAL = "";
 async function chatLaden(scrollen, merk) {
   if (!chatId) return;
   try {
@@ -22072,6 +22080,7 @@ async function chatLaden(scrollen, merk) {
     let st = "";
     if (andere.length === 1) { const m = MITGLIEDER?.find((x) => x.person_id === andere[0].person_id); if (m?.status) st = statusText(m.status); }
     $("chatTeilnehmer").textContent = !andere.length ? "Nur du (Test-Unterhaltung)" : u.gruppe ? `🔗 Feste Gruppe · ${andere.length + 1} Mitglieder: Du, ${andere.map((x) => x.name.split(" ")[0]).join(", ")} ›` : andere.length > 1 ? "Runde (keine feste Gruppe) · Mit: " + andere.map((x) => x.name).join(", ") : u.betreff ? "Mit: " + andere.map((x) => x.name).join(", ") : [zuletztText(u.partnerDa), st].filter(Boolean).join(" · "); // 1.20.0: zuletzt da
+    CHAT_TN_NORMAL = $("chatTeilnehmer").textContent; // KC-CLUB-CHAT-WIEDER: gilt wieder, wenn der Merker als aktuell bestätigt ist
     if (merk) $("chatTeilnehmer").textContent = `🔄 Stand von ${fZeit.format(new Date(merk.zeit))} Uhr – wird aktualisiert …`; // Regel 11: nicht als aktuell zeigen
     else if (u.tippt?.length && andere.length === 1) $("chatTeilnehmer").textContent = "✍️ schreibt …";
     else if (u.diktiert?.length && andere.length === 1) $("chatTeilnehmer").textContent = "🗣️ diktiert …"; // 2.529.0
