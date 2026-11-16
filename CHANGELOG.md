@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.966.0 – 2026-11-16 – 🧊 Hänger: Ursache wird gemessen · 📖 Fehlerkatalog mit Fehler-ID, Ursache und Lösung (KC-CLUB-HAENGER-URSACHE, KC-CLUB-FEHLERKATALOG) · Server 2.966.0
+Wunsch Hansi 16.11. nach dem Alarm „Klaus: App reagierte 27 s nicht“: „Hänger-Meldung genauer machen, damit der User weiß, woran es liegt. Am besten auf Dauer eine Tabelle anlegen mit Fehler-ID, Fehlername, Ursache, Lösung.“
+- **Neue Tabelle `kc_club_fehler_katalog`** (Migration `20261116_kc_club_fehler_katalog.sql`): je Fehlerart eine Zeile mit Fehler-ID (KC-F-001 …), Symbol, Name, Ursache, Lösung und dem Text für das Mitglied. Hansi kann die Texte dort ändern – spätere Migrationen überschreiben sie nicht. Nur der Club-Server liest sie.
+- **Hänger mit Ursache:** Die App misst jetzt, ob sie in der Lücke selbst gerechnet hat (Chrome/Edge melden lange Aufgaben). KC-F-101 = die App hat zu lange gerechnet (Fehler der App), KC-F-102 = das Gerät hat ihr keine Zeit gegeben (andere Programme, Updates, Virenscanner), KC-F-103 = Arbeitsspeicher fast voll, KC-F-104 = Fenster war im Hintergrund (kein Fehler – keine Meldung, kein Alarm), KC-F-100 = Browser kann es nicht messen (Firefox/Safari). Mitgeschickt werden nur Zahlen (Fenster aktiv, Rechenzeit der App, Speicher in %, Gerätespeicher, Kerne).
+- **Das Mitglied sieht ein Fenster** (Wunsch Hansi: „Beim User muss ein Fenster erscheinen“) mit Name, Ursache, Lösung und Fehler-ID statt „Die App hat kurz gehangen“, z. B. „🖥️ Gerät war ausgelastet – Ursache: … – Lösung: andere Programme schließen und das Gerät ab und zu neu starten – Fehler-ID KC-F-102“. Höchstens 1× in 10 Minuten.
+- **Admin:** Fehlerprotokoll zeigt je Eintrag Fehler-ID, Ursache, Lösung und die Messwerte; neuer Knopf „📖 Fehlerkatalog“ mit allen Fehlern – **gezählt** (Wunsch Hansi: „wie oft ein Fehler vorkommt, um Ursache und Lösung zu finden“): je Fehler-ID wie oft und bei wie vielen Personen im gewählten Zeitraum, die häufigsten oben. Die Alarm-Mail enthält Fehler-ID, Ursache und Lösung.
+- Test `tests/fehlerkatalog.test.mjs`. Update-Hinweis: nur „Kleine Systemanpassung“. Rückweg: App/Server 2.965.0/2.964.0 (die Tabelle stört nicht).
+
 ## 2.965.0 – 2026-11-16 – 💐 Genesungskarte mit Blumenstrauß direkt in den Chat (KC-CLUB-GENESUNGSKARTE)
 Wunsch Hansi 16.11.: „Gute Besserung direkt in ihren Chat reinstellen – nicht als Brief auf Briefkopf, sondern als Genesungskarte mit z. B. Blumenstrauß.“
 - Neue Karte, in der App gemalt: bunter **Blumenstrauß** mit Schleife, „**Gute Besserung, Vorname!**“, ein kurzer Satz (3 zur Wahl), unten das weinrote Band mit **Kochmütze und „Köcheclub Werne“** (Corporate Design). Kein Grund und keine Krankheit auf der Karte.

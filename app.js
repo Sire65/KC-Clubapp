@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.965.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.966.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -7968,15 +7968,66 @@ window.addEventListener("unhandledrejection", (ev) => { const r = ev?.reason, t 
   // (ein echter Hänger dieser Länge würde vom Browser beendet) – kein Eintrag, keine Meldung. Wieder-da-Ereignisse setzen den Takt zurück.
   const wiederDa = () => { sichtbarSeit = Date.now(); letzt = Date.now(); };
   ["pageshow", "focus", "resume"].forEach((t) => (t === "resume" ? document : window).addEventListener(t, wiederDa));
+  // 2.964.0 KC-CLUB-HAENGER-URSACHE (Wunsch Hansi 16.11. nach Klaus „27 s“: „Hänger-Meldung genauer machen, damit der User weiß, woran es liegt“):
+  // Lange Aufgaben der App selbst meldet der Browser (PerformanceObserver „longtask“, Chrome/Edge). Rechnete die App in der Lücke selbst → KC-F-101
+  // (Fehler der App). Rechnete sie NICHT, hat das Gerät ihr keine Zeit gegeben → KC-F-102; Speicher fast voll → KC-F-103; anderes Fenster aktiv →
+  // KC-F-104 (kein Fehler, kein Alarm, keine Meldung). Ohne Messmöglichkeit (Firefox/Safari) bleibt es KC-F-100. Texte: Fehlerkatalog (kc_club_fehler_katalog).
+  const lang = [], messbar = (() => { try { return !!PerformanceObserver.supportedEntryTypes?.includes("longtask"); } catch { return false; } })();
+  if (messbar) try { new PerformanceObserver((l) => { for (const e of l.getEntries()) lang.push({ von: performance.timeOrigin + e.startTime, ms: e.duration }); if (lang.length > 30) lang.splice(0, lang.length - 30); }).observe({ type: "longtask" }); } catch {}
+  let fokusVorher = true;
+  const ursacheVon = (von, bis, luecke, fokus) => {
+    const appMs = lang.reduce((s, x) => s + Math.max(0, Math.min(bis, x.von + x.ms) - Math.max(von, x.von)), 0);
+    const m = performance.memory, voll = m?.jsHeapSizeLimit ? m.usedJSHeapSize / m.jsHeapSizeLimit : 0;
+    const ursache = messbar && appMs >= luecke * 0.5 ? "haenger_app" : voll > 0.85 ? "haenger_speicher" : !fokus ? "haenger_hintergrund" : messbar ? "haenger_geraet" : "haenger";
+    return { ursache, appMs: Math.round(appMs), fokus, speicherPct: voll ? Math.round(voll * 100) : undefined, speicherMB: m?.usedJSHeapSize ? Math.round(m.usedJSHeapSize / 1048576) : undefined,
+      geraetGB: navigator.deviceMemory || undefined, kerne: navigator.hardwareConcurrency || undefined, messbar };
+  };
   setInterval(() => {
-    const jetzt = Date.now(), luecke = jetzt - letzt - 1000; letzt = jetzt;
+    const jetzt = Date.now(), luecke = jetzt - letzt - 1000, von = letzt, fokus = fokusVorher; letzt = jetzt;
+    try { fokusVorher = document.hasFocus(); } catch {}
     if (luecke > 60000) { sichtbarSeit = jetzt; return; } // eingefroren (Pause), kein Hänger
     if (luecke > 5000 && !document.hidden && jetzt - sichtbarSeit > luecke + 1500) {
-      try { window.KCFP?.neu("haenger", { text: `App reagierte ${Math.round(luecke / 1000)} s nicht`, ms: Math.round(luecke), spar: !!SPAR?.an }); } catch {}
-      if (luecke > 10000) try { melde("Die App hat kurz gehangen – sie läuft wieder. Ist gemeldet."); } catch {}
+      setTimeout(() => { // die Meldung über lange Aufgaben kommt erst kurz nach deren Ende
+        const u = ursacheVon(von, jetzt, luecke, fokus), k = fehlerKatalogEintrag(u.ursache), s = Math.round(luecke / 1000);
+        try { window.KCFP?.neu("haenger", { text: `App reagierte ${s} s nicht – ${k.name} (${k.fehler_id})`, ms: Math.round(luecke), spar: !!SPAR?.an, fehler_id: k.fehler_id, ...u }); } catch {}
+        if (luecke > 10000 && u.ursache !== "haenger_hintergrund") fehlerFenster(k, `Die App hat ${s} Sekunden lang nicht reagiert – sie läuft wieder.`);
+      }, 400);
     }
   }, 1000);
 })();
+// KC-CLUB-FEHLERKATALOG (16.11.2026): Fehler-ID, Name und Text für das Mitglied. Quelle ist die Tabelle kc_club_fehler_katalog (Hansi kann sie ändern),
+// geholt beim ersten Bedarf und auf dem Gerät gemerkt; bis dahin (oder offline) gelten die eingebauten Texte unten (gleiche IDs wie die Migration).
+// Wunsch Hansi 16.11.: „Beim User muss ein Fenster erscheinen – Fehler-ID, Name, Ursache, Lösung“ (fehlerFenster, höchstens 1× in 10 Minuten).
+let FEHLER_FENSTER_ZULETZT = 0;
+function fehlerFenster(k, vorweg) {
+  if (Date.now() - FEHLER_FENSTER_ZULETZT < 600000 || !k?.mitglied_text) return;
+  FEHLER_FENSTER_ZULETZT = Date.now();
+  try {
+    blattAuf("fkBlatt", `<h3 style="margin:0">${esc(k.symbol || "⚠️")} ${esc(k.name)}</h3>${vorweg ? `<p style="margin:8px 0">${esc(vorweg)}</p>` : ""}
+      ${k.ursache ? `<p style="margin:8px 0"><b>Ursache:</b> ${esc(k.ursache)}</p>` : ""}<p style="margin:8px 0"><b>Lösung:</b> ${esc(k.mitglied_text)}</p>
+      <p class="hinweis" style="margin:8px 0">Fehler-ID: <b>${esc(k.fehler_id || "–")}</b> · ist schon gemeldet. Bei Fragen diese Nummer an ${esc(typeof adminName === "function" ? adminName() : "Hansi")} sagen.</p>
+      <div class="knoepfe"><button class="knopf haupt" onclick="fensterZu($('fkBlatt'))">OK, verstanden</button></div>`).style.zIndex = "2300";
+  } catch { try { melde(`${k.symbol || "⚠️"} ${k.name}: ${k.mitglied_text}`); } catch {} }
+}
+const FEHLER_KATALOG_EINGEBAUT = {
+  haenger: { fehler_id: "KC-F-100", symbol: "🧊", name: "App hat gehangen (Ursache nicht messbar)", ursache: "Dieser Browser kann nicht messen, ob die App oder das Gerät schuld war.", mitglied_text: "Die App hat kurz gehangen und läuft wieder. Falls das öfter passiert: andere Programme schließen oder das Gerät neu starten." },
+  haenger_app: { fehler_id: "KC-F-101", symbol: "🧊", name: "App hat selbst zu lange gerechnet", ursache: "Die App war mit einer großen Aufgabe beschäftigt und konnte so lange nicht reagieren.", mitglied_text: "Die App hatte gerade sehr viel zu rechnen. Das ist ein Fehler der App und schon gemeldet – du musst nichts tun." },
+  haenger_geraet: { fehler_id: "KC-F-102", symbol: "🖥️", name: "Gerät war ausgelastet", ursache: "Dein Gerät hat der App einige Sekunden lang keine Rechenzeit gegeben – meist andere Programme, Updates oder der Virenscanner.", mitglied_text: "Dein Gerät war gerade stark ausgelastet (andere Programme, Updates oder Virenscanner) – nicht die App. Tipp: andere Programme schließen und das Gerät ab und zu neu starten." },
+  haenger_speicher: { fehler_id: "KC-F-103", symbol: "🧠", name: "Arbeitsspeicher fast voll", ursache: "Der Browser hatte kaum noch freien Speicher und musste aufräumen.", mitglied_text: "Der Speicher deines Geräts war fast voll. Tipp: andere Browser-Tabs und Programme schließen und die App neu laden." },
+  haenger_hintergrund: { fehler_id: "KC-F-104", symbol: "🪟", name: "Fenster war im Hintergrund", mitglied_text: null },
+};
+let FEHLER_KATALOG = null;
+try { FEHLER_KATALOG = JSON.parse(localStorage.getItem("kcFehlerKatalog") || "null"); } catch {}
+let FEHLER_KATALOG_HOLT = false;
+function fehlerKatalogEintrag(schluessel) {
+  const aus = (FEHLER_KATALOG?.liste || []).find((k) => k.schluessel === schluessel);
+  if ((!FEHLER_KATALOG || Date.now() - (FEHLER_KATALOG.t || 0) > 86400000) && !FEHLER_KATALOG_HOLT && typeof api === "function" && typeof INIT !== "undefined" && INIT) { // höchstens 1× am Tag nachsehen
+    FEHLER_KATALOG_HOLT = true;
+    api("fehler_katalog", {}).then((r) => { if (Array.isArray(r?.katalog)) { FEHLER_KATALOG = { t: Date.now(), liste: r.katalog }; try { localStorage.setItem("kcFehlerKatalog", JSON.stringify(FEHLER_KATALOG)); } catch {} } })
+      .catch(() => {}).finally(() => { FEHLER_KATALOG_HOLT = false; });
+  }
+  return { ...(FEHLER_KATALOG_EINGEBAUT[schluessel] || { fehler_id: "", symbol: "•", name: schluessel, mitglied_text: null }), ...(aus || {}) };
+}
 function meldeFehler(e) {
   const t = String(e?.message ?? e ?? "Unbekannter Fehler");
   if (istProgFehler(e, t)) { progFehlerMelden(e, t); return melde(JS_FEHLER_TEXT, true); } // 2.481.0: gleiche Erkennung wie fehlerText
@@ -9874,7 +9925,7 @@ const ZUGANG_AKTIONEN = {
     "spiel_holen", "spiel_herausfordern", "spiel_antwort", "spiel_zug", "spiel_aufgeben", "spiel_revanche", "raetsel_stand", "raetsel_ergebnis",
     "status_setzen", "einstellung_setzen", "benachrichtigung_setzen", "meine_daten", "avatar_bilder", "avatar_verlauf", "avatar_foto_setzen", "sprache_woerter",
     "sprache_lernen", "sprache_training", "sprache_training_reset", "sprache_vergessen", "sprache_unbekannt", "twinkey_daten", "twinkey_frage",
-    "twinkey_gelesen", "fehler_melden", "hilfe_anfordern", "feedback_meins", "feedback_senden", "feedback_neu", "vorfuehren_antwort", "vorfuehren_holen",
+    "twinkey_gelesen", "fehler_melden", "fehler_katalog", "hilfe_anfordern", "feedback_meins", "feedback_senden", "feedback_neu", "vorfuehren_antwort", "vorfuehren_holen",
     "vorfuehren_senden", "vorfuehren_ende", "vorfuehren_bild", "schnappschuss_antwort", "schnappschuss_bild", "schnappschuss_ende", "fernbedienung_melden", "push_anmelden",
     "push_pruefen", "geraete_liste", "geraet_entfernen", "andere_geraete_abmelden", "push_abmelden", "push_test", "neues_geraet_antwort"],
   aushilfe: ["mein_dienst", "dienstwunsch_laden", "dienstwunsch_speichern", "dienst_gruss", "dienste", "dienst_freigabe", "meine_eingaben",
@@ -35423,7 +35474,7 @@ const FENSTER_NAMEN = {
   adbBlatt: "📒 Adressbuch", akPreisBlatt: "📋 Adventskalender – wer bekommt was", adbFormBlatt: "📒 Adresse melden/ändern", adminBlatt: "🛠️ Verwaltungsfenster", akBlatt: "🎄 Adventskalender", alarmBlatt: "🚨 Notfall-Meldung",
   alarmVorschau: "🚨 Notfall-Probe", ampelInfo: "🚦 Die Ampel", angebotInfo: "🎁 Angebot ansehen", anlAnsehBlatt: "📎 Anhang", anlBlatt: "📄 Anhang",
   anlLinkBlatt: "📄 Anhang (Link)", anlageBlatt: "📎 Anlage hinzufügen", ansichtBlatt: "👓 Ansicht wählen", arMenue: "🗄️ Archiv: Dokument", arWegBlatt: "🗑️ Dokument entfernen",
-  arWohinBlatt: "🗄️ Dokument ablegen", asBlatt: "⚠️ Die App läuft nicht rund", atArchivBlatt: "🗄️ Aus dem Archiv dazulegen", schArchivBlatt: "🖨️ Druckpaket: aus dem Archiv", tlArchivBlatt: "🔴 Live: Unterlage aus dem Archiv", atBlatt: "💼 Aktentasche packen", atDruckBlatt: "🖨️ Was soll gedruckt werden?",
+  arWohinBlatt: "🗄️ Dokument ablegen", asBlatt: "⚠️ Die App läuft nicht rund", fkBlatt: "🧊 Fehler mit Ursache und Lösung",atArchivBlatt: "🗄️ Aus dem Archiv dazulegen", schArchivBlatt: "🖨️ Druckpaket: aus dem Archiv", tlArchivBlatt: "🔴 Live: Unterlage aus dem Archiv", atBlatt: "💼 Aktentasche packen", atDruckBlatt: "🖨️ Was soll gedruckt werden?",
   atDruckSchrittBlatt: "🖨️ Drucken Schritt für Schritt", atFreiBlatt: "📤 Freigeben – in den Eingangskorb", prInfoBlatt: "📣 Protokoll: Info an Mitglieder", stromBlatt: "🔋 Stromverbrauch", rechnerBlatt: "🧮 Tischrechner", magMenueBlatt: "📰 Club-Küche", magArchivBlatt: "📚 Alle Ausgaben der Club-Küche", magHeftBlatt: "📖 Club-Küche als Heft drucken", magEinBlatt: "✉️ Beitrag für die Club-Küche", magMeineBlatt: "📬 Meine Beiträge", magPostBlatt: "📥 Redaktions-Postfach", installStandBlatt: "📲 Wer nutzt die App wie?", tippBlatt: "💡 Tipp", tippMeineBlatt: "💡 Meine Tipps", tippSendBlatt: "💡 Lösung schicken", tippListeBlatt: "💡 Gesendete Tipps", tippAnlBlatt: "📚 Anleitung dazulegen", anleitungBlatt: "📚 Anleitungen", anleitungWgBlatt: "📤 Anleitung weitergeben", atListe: "💼 Aktentasche: Inhalt", atMenue: "💼 Aktentasche: Unterlage", avBlatt: "🧑‍🍳 Mein Bild",
   avGrossBlatt: "🧑‍🍳 Mein Bild groß", avKombiBlatt: "ⓘ Wie viele Figuren möglich sind", avbBlatt: "🧩 Figur zusammenstellen", avfBlatt: "📷 Dein Foto", begruessungBlatt: "👋 Begrüßung",
   bestandInfo: "📦 Bestand ansehen", bfBlatt: "📸 Dein Bildschirmfoto", boInfo: "🔁 Börse: ansehen", bsBlatt: "📝 Bericht", buAufgabeBlatt: "🗓️ Sitzungs-Aufgabe (Frage beim Start)",
@@ -36829,7 +36880,7 @@ const FP_ARTEN = {
   zugang_angefordert: ["✉️", "Neuen Link angefordert", ""],
 };
 function fpArtVon(aktion) { return String(aktion).replace(/^fehler_anonym_/, "").replace(/^fehler_/, ""); }
-let FP_ADMIN = { tage: 2, person: "", info: false }; // 2.310.2 KC-CLUB-FP-RUHIG: ⚪ Info (Messwerte, Updates) erst auf Wunsch zeigen
+let FP_ADMIN = { tage: 2, person: "", info: false, katalog: [] }; // 2.310.2 KC-CLUB-FP-RUHIG: ⚪ Info (Messwerte, Updates) erst auf Wunsch zeigen
 // KC-CLUB-FP-UEBERWACHUNG (1.58.0): Einstufung kommt vom Server (eine Regel), hier nur das Zeichen
 const FP_STUFE_ZEICHEN = { schwer: "🔴", hinweis: "🟡", info: "⚪" };
 async function fpLeeren(anzahl, schwer) {
@@ -36837,17 +36888,33 @@ async function fpLeeren(anzahl, schwer) {
   try { const r = await api("fehlerprotokoll_leeren", {}, { warten: true }); melde(`🗑️ Protokoll geleert – ${r.geloescht} Einträge (Sicherung angelegt)`); if (!$("adminBlatt").classList.contains("versteckt")) fpAdmin(); }
   catch (e) { meldeFehler(e); }
 }
+// KC-CLUB-FEHLERKATALOG: alle Fehler mit ID, Ursache und Lösung (Tabelle kc_club_fehler_katalog)
+function fpKatalog() {
+  $("adminBlattInhalt").innerHTML = `<h3 style="margin:0">📖 Fehlerkatalog</h3><p class="hinweis" style="margin:0">Jeder Fehler mit Fehler-ID, Ursache und Lösung. 💬 = das sieht das Mitglied beim Fehler.</p>
+    <div class="knoepfe"><button class="knopf klein" onclick="fpAdmin()">‹ Fehlerprotokoll</button></div>
+    <p class="hinweis" style="margin:0">Häufigkeit in den letzten ${FP_ADMIN.tage === 1 ? "24 Std." : FP_ADMIN.tage + " Tagen"} (Zeitraum im Fehlerprotokoll wählen) – die häufigsten oben.</p>
+    ${[...(FP_ADMIN.katalog || [])].sort((a, b) => (FP_ADMIN.zaehl?.get(b.schluessel)?.n || 0) - (FP_ADMIN.zaehl?.get(a.schluessel)?.n || 0)).map((k) => { const z = FP_ADMIN.zaehl?.get(k.schluessel);
+      return `<div class="fp-zeile${z ? "" : " hinweis"}"><b>${esc(k.symbol)} ${esc(k.fehler_id)} · ${esc(k.name)}</b> ${z ? `<span style="color:var(--textRot, #c62828)">· ${z.n}× bei ${z.leute.size || 1} ${z.leute.size === 1 ? "Person" : "Personen"} (${esc([...z.leute].slice(0, 4).join(", "))})</span>` : "· 0×"}<div class="hinweis">Ursache: ${esc(k.ursache)}</div><div class="hinweis" style="font-style:italic">→ Lösung: ${esc(k.loesung)}</div>${k.mitglied_text ? `<div class="hinweis">💬 ${esc(k.mitglied_text)}</div>` : ""}</div>`; }).join("")}`;
+}
 async function fpAdmin(tage) {
   if (tage) FP_ADMIN.tage = tage;
   let r; try { r = await api("fehlerprotokoll", { tage: FP_ADMIN.tage }, { warten: true }); } catch (e) { return meldeFehler(e); }
   const nurStarts = (x) => x.aktion === "diagnose_start";
   const gruppen = new Map();
   for (const x of r.eintraege) { const k = x.name || `anonym ${x.details?.geraet || ""}`; if (!gruppen.has(k)) gruppen.set(k, []); gruppen.get(k).push(x); }
-  const zeile = (x) => { const art = fpArtVon(x.aktion), d = x.details || {};
+  // KC-CLUB-FEHLERKATALOG (16.11.2026): Fehler-ID, Ursache und Lösung aus kc_club_fehler_katalog (bei Hängern je gemessener Ursache)
+  const kat = new Map((r.katalog || []).map((k) => [k.schluessel, k])); FP_ADMIN.katalog = r.katalog || [];
+  // Wunsch Hansi 16.11.: „zählen, wie oft ein Fehler vorkommt, um Ursache und Lösung zu finden“ – je Fehler-ID im gewählten Zeitraum (Mitglieder getrennt)
+  FP_ADMIN.zaehl = new Map();
+  for (const x of r.eintraege) { const a = fpArtVon(x.aktion), s = a === "haenger" && x.details?.ursache ? x.details.ursache : a;
+    if (!kat.has(s)) continue; const z = FP_ADMIN.zaehl.get(s) || { n: 0, leute: new Set(), letzte: x.zeit }; z.n++; if (x.name) z.leute.add(x.name); FP_ADMIN.zaehl.set(s, z); }
+  const zeile = (x) => { const art = fpArtVon(x.aktion), d = x.details || {}, k = kat.get(art === "haenger" && d.ursache ? d.ursache : art);
     // 2.95.0 KC-CLUB-FP-SAFARI-GRAU: „Script error.“ ohne Fundstelle = Meldung des Browsers, kein Fehler der App
-    const [sym, name, tun] = art === "skript" && x.stufe === "info" ? ["🧭", "Browser-Meldung", "kommt vom Browser selbst (z. B. Safari-Teilen-Menü) – kein Fehler der App, nichts zu tun"] : FP_ARTEN[art] || ["•", art, ""];
-    const info = [d.text, d.aktion ? "bei „" + d.aktion + "“" : "", d.browser, d.system, d.start ? "läuft als " + d.start : "", d.version ? "v" + d.version : "", d.datei ? d.datei + ":" + d.zeile : ""].filter(Boolean).join(" · ");
-    return `<div class="fp-zeile${x.stufe === "schwer" || art === "hilferuf" ? " fp-rot" : ""}"><span class="hinweis">${esc(fKurz.format(new Date(x.zeit)) + " " + fZeit.format(new Date(x.zeit)))}</span> ${FP_STUFE_ZEICHEN[x.stufe] || ""} ${sym} <b>${esc(name)}</b>${info ? `<div class="hinweis">${esc(info)}</div>` : ""}${tun ? `<div class="hinweis" style="font-style:italic">→ ${esc(tun)}</div>` : ""}</div>`; };
+    const [sym, name, tun] = art === "skript" && x.stufe === "info" ? ["🧭", "Browser-Meldung", "kommt vom Browser selbst (z. B. Safari-Teilen-Menü) – kein Fehler der App, nichts zu tun"]
+      : k ? [k.symbol, `${k.name} · ${k.fehler_id}`, ""] : FP_ARTEN[art] || ["•", art, ""];
+    const mess = art === "haenger" && d.ursache ? [d.fokus === false ? "Fenster nicht aktiv" : "", Number.isFinite(d.appMs) ? `App rechnete ${Math.round(d.appMs / 100) / 10} s` : "", d.speicherPct ? `Speicher ${d.speicherPct} %` : "", d.geraetGB ? `Gerät ${d.geraetGB} GB` : "", d.kerne ? `${d.kerne} Kerne` : ""].filter(Boolean).join(", ") : "";
+    const info = [d.text, d.sicht ? "Bereich " + d.sicht : "", mess, d.aktion ? "bei „" + d.aktion + "“" : "", d.browser, d.system, d.start ? "läuft als " + d.start : "", d.version ? "v" + d.version : "", d.datei ? d.datei + ":" + d.zeile : ""].filter(Boolean).join(" · ");
+    return `<div class="fp-zeile${x.stufe === "schwer" || art === "hilferuf" ? " fp-rot" : ""}"><span class="hinweis">${esc(fKurz.format(new Date(x.zeit)) + " " + fZeit.format(new Date(x.zeit)))}</span> ${FP_STUFE_ZEICHEN[x.stufe] || ""} ${sym} <b>${esc(name)}</b>${info ? `<div class="hinweis">${esc(info)}</div>` : ""}${k ? `<div class="hinweis">Ursache: ${esc(k.ursache)}</div><div class="hinweis" style="font-style:italic">→ ${esc(k.loesung)}</div>` : tun ? `<div class="hinweis" style="font-style:italic">→ ${esc(tun)}</div>` : ""}</div>`; };
   const karten = [...gruppen.entries()].map(([name, liste]) => { const probleme = liste.filter((x) => x.stufe ? x.stufe !== "info" : !nurStarts(x) && !/umgebung|hinweis|update_getippt|link_kopiert/.test(x.aktion));
     const zeigen = FP_ADMIN.info ? liste : probleme, still = liste.length - zeigen.length;
     // KC-CLUB-RC-PRUEFUNG (20.10.2026): Rot über var(--textRot) – im Dunkelmodus lesbar
@@ -36856,7 +36923,7 @@ async function fpAdmin(tage) {
     <p class="hinweis" style="margin:0">Alles, was bei den Mitgliedern beim Starten oder Bedienen schiefging – mit Gerät, Browser und Version. Nur Technik, keine Inhalte.</p>
     ${r.gesamt ? `<div class="fp-gesamt"><span>Im Protokoll: <b>${r.gesamt.anzahl}</b> Einträge – 🔴 ${r.gesamt.schwer} schwerwiegend · 🟡 ${r.gesamt.hinweis} Hinweise · ⚪ ${r.gesamt.info} Info</span>${r.gesamt.anzahl ? `<button class="knopf klein" onclick="fpLeeren(${r.gesamt.anzahl}, ${r.gesamt.schwer})">🗑️ Protokoll leeren</button>` : ""}</div>
     <p class="hinweis" style="margin:0;font-size:.8rem">🔴 schwerwiegend = Push an dich · Ab ${r.voll || 300} Einträgen fragt die Tagesinfo, ob geleert werden soll.</p>` : ""}
-    <div class="knoepfe">${[1, 2, 7, 14].map((t) => `<button class="knopf klein${FP_ADMIN.tage === t ? " haupt" : ""}" onclick="fpAdmin(${t})">${t === 1 ? "24 Std." : t + " Tage"}</button>`).join("")}<button class="knopf klein${FP_ADMIN.info ? " haupt" : ""}" onclick="FP_ADMIN.info=!FP_ADMIN.info;fpAdmin()">${FP_ADMIN.info ? "⚪ Info ausblenden" : "⚪ Info zeigen"}</button>${INFO_DATEN.admin?.r ? `<button class="knopf klein" onclick="adminBlatt()">‹ Admin-Zentrale</button>` : ""}</div>
+    <div class="knoepfe">${[1, 2, 7, 14].map((t) => `<button class="knopf klein${FP_ADMIN.tage === t ? " haupt" : ""}" onclick="fpAdmin(${t})">${t === 1 ? "24 Std." : t + " Tage"}</button>`).join("")}<button class="knopf klein${FP_ADMIN.info ? " haupt" : ""}" onclick="FP_ADMIN.info=!FP_ADMIN.info;fpAdmin()">${FP_ADMIN.info ? "⚪ Info ausblenden" : "⚪ Info zeigen"}</button>${FP_ADMIN.katalog.length ? `<button class="knopf klein" onclick="fpKatalog()">📖 Fehlerkatalog</button>` : ""}${INFO_DATEN.admin?.r ? `<button class="knopf klein" onclick="adminBlatt()">‹ Admin-Zentrale</button>` : ""}</div>
     ${karten || '<p class="hinweis">Keine Einträge in diesem Zeitraum.</p>'}`;
   $("adminBlatt").classList.remove("versteckt");
 }
