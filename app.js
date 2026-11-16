@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.969.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.970.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -24438,7 +24438,7 @@ async function waLieberVorbereiten() {
     const d = await api("mitglied_details", { person_id: m.person_id }, { still: true }); if (d.kontakt?.handy) WA_NR[m.person_id] = waNummer(d.kontakt.handy); } catch {}
 }
 function waLieberJetzt(text) {
-  if (!text || !einst("waAuto", true) || VN.an || EXPRESS || anlagen.length || (typeof WE !== "undefined" && WE.ids?.length)) return;
+  if (!text || WA_HOLEN.aus || !einst("waAuto", true) || VN.an || EXPRESS || anlagen.length || (typeof WE !== "undefined" && WE.ids?.length)) return;
   const m = waLieberPartner(), n = m && WA_NR[m.person_id]; if (!n) return;
   const t = encodeURIComponent(`${text}\n\n– ${ICH.vorname} (Köcheclub-App)`);
   melde(`🟢 ${m.vorname || m.name} liest lieber WhatsApp – dort steht der Text schon drin, nur noch Senden. (Geht auch in die Club-App.)`);
@@ -24456,6 +24456,50 @@ async function waLieberAdmin(pid) { // Admin für ein Mitglied
   try { await api("wa_lieber_setzen", { person_id: pid, an }, { warten: true }); if (m?.wege) m.wege.waLieber = an;
     melde(an ? `📱 ${m?.vorname || "Das Mitglied"} liest jetzt „lieber WhatsApp“${m?.wege?.whatsapp ? "" : " – aber es ist keine WhatsApp-Nummer freigegeben, dann passiert nichts"}` : `📱 ${m?.vorname || "Das Mitglied"}: wieder nur Club-App`);
     if (typeof mitgliedZeigen === "function" && MD?.person_id === pid) mitgliedZeigen(); } catch (e) { meldeFehler(e); }
+}
+// ---------- KC-CLUB-WA-HOLEN (Wunsch Hansi 16.11.2026: „Wie kriegen wir WhatsApp-Nachrichten in die Club-App – direkt oder über Umwege?“ → Weg 2 „Teilen/Einfügen“, „Ja“):
+// 1. In WhatsApp kopierte Nachrichten werden beim normalen Einfügen ins Schreibfeld (lange drücken → Einfügen) erkannt und aufbereitet – wie mit dem 📋-Knopf.
+// 2. Mit Köcheclub geteilter TEXT (ohne Dateien) fragt „💬 In den Chat mit Marianne (eindeutiger Name) / in einen Club-Chat / 📥 Ablagekorb“.
+// Übernommener Text öffnet beim Senden nicht wieder WhatsApp (WA_HOLEN.aus). Nichts geht ungefragt raus – gesendet wird erst mit ➤. Der Server bekommt nichts Neues.
+// Erkennen und Aufbereiten macht der vorhandene Baustein waAufbereiten (KC-CLUB-WA-EINFUEGEN 1.36.0: Nummern weg, „Vorname (hh:mm): Text“).
+const WA_HOLEN = { aus: false };
+function waMitgliedZuName(namen) { // nur bei eindeutigem Treffer (Kontaktname im Handy ≈ Vorname oder ganzer Name)
+  const kl = (s) => String(s || "").toLowerCase().normalize("NFKD").replace(/[̀-ͯ]/g, "").trim();
+  const ich = ICH?.person_id, treffer = new Set();
+  for (const n of namen || []) { const k = kl(n), erst = k.split(/\s+/)[0];
+    const voll = (MITGLIEDER || []).filter((m) => m.person_id !== ich && kl(m.name) === k);
+    const vor = (MITGLIEDER || []).filter((m) => m.person_id !== ich && kl(m.vorname) && kl(m.vorname) === erst);
+    const x = voll.length === 1 ? voll : vor.length === 1 ? vor : []; if (x.length) treffer.add(x[0]); }
+  return treffer.size === 1 ? [...treffer][0] : null;
+}
+function waEinfuegenAuto(e) { // normales Einfügen (lange drücken → Einfügen) ins Schreibfeld – nur WhatsApp-Text wird umgewandelt
+  const roh = e?.clipboardData?.getData("text/plain"), w = roh && waAufbereiten(roh); if (!w?.wa) return;
+  e.preventDefault(); const t = $("text"), a = t.selectionStart ?? t.value.length, b = t.selectionEnd ?? a;
+  t.value = t.value.slice(0, a) + w.text + t.value.slice(b); t.selectionStart = t.selectionEnd = a + w.text.length;
+  WA_HOLEN.aus = true; t.dispatchEvent(new Event("input"));
+  melde(`📋 ${w.anzahl > 1 ? w.anzahl + " WhatsApp-Nachrichten" : "WhatsApp-Nachricht"} übernommen – Nummern entfernt. Prüfen und mit ➤ senden.`);
+}
+async function waTeilenWahl(text) {
+  if (!MITGLIEDER) await mitgliederHolen().catch(() => {});
+  const w = waAufbereiten(text), m = w.wa ? waMitgliedZuName(w.namen) : null;
+  TEILEN = { text: w.wa ? w.text : text, dateien: [], wa: true };
+  blattAuf("teilenBlatt", `<h3 style="margin-top:0">📥 Text mit Köcheclub geteilt</h3>${einwHtml("b-teilen")}
+    <div class="karte" style="margin:0 0 8px;white-space:pre-wrap;max-height:30vh;overflow:auto">${esc(TEILEN.text.slice(0, 1500))}${TEILEN.text.length > 1500 ? " …" : ""}</div>
+    ${w.wa ? '<p class="hinweis" style="margin:0 0 8px">📱 Das ist aus WhatsApp – Namen und Uhrzeit sind dabei, Handynummern entfernt.</p>' : ""}
+    <div class="knoepfe" style="flex-direction:column;align-items:stretch">
+      ${m ? `<button class="knopf haupt" onclick="waTeilenAn('${esc(m.person_id)}')">💬 In den Chat mit ${esc(m.vorname || m.name)}</button>` : ""}
+      <button class="knopf${m ? "" : " haupt"}" onclick="teilenChatWahl()">💬 In einen Club-Chat …</button>
+      <button class="knopf" onclick="waTeilenKorb()">📥 In den Ablagekorb</button>
+      <button class="knopf" onclick="document.getElementById('teilenBlatt').remove();TEILEN=null">Abbrechen</button></div>`);
+}
+async function waTeilenAn(pid) {
+  document.getElementById("teilenBlatt")?.remove(); const t = TEILEN; TEILEN = null; if (!t) return;
+  await direkt(pid); textVorbelegen(t.text); WA_HOLEN.aus = true; $("text")?.dispatchEvent(new Event("input")); $("text")?.focus();
+  melde("📥 Eingefügt – prüfen und mit ➤ senden");
+}
+async function waTeilenKorb() {
+  document.getElementById("teilenBlatt")?.remove(); const t = TEILEN; TEILEN = null; if (!t) return;
+  if (!(await ablkAblegen(t.text, [], ""))) teilenWahl(t.text, []);
 }
 async function whatsappWeitergeben(text, ids) {
   const nachricht = `${text}\n\n– ${ICH.vorname} (Köcheclub-App)`;
@@ -25186,7 +25230,7 @@ async function senden() {
   emoUmschalten(false); // KC-CLUB-EMOJI
   let text = $("text").value.trim();
   if (!text && !anlagen.length) return;
-  waLieberJetzt(text); // KC-CLUB-WA-LIEBER: im selben Antippen (sonst blockiert das Handy den Sprung zu WhatsApp) – die Nachricht geht trotzdem in die Club-App
+  waLieberJetzt(text); WA_HOLEN.aus = false; // KC-CLUB-WA-LIEBER: im selben Antippen (sonst blockiert das Handy den Sprung zu WhatsApp) – die Nachricht geht trotzdem in die Club-App
   if (!(await sensibelGaesteOk(text))) return; // KC-CLUB-SENSIBEL-GAESTE (2.78.0)
   await inkoChatFrage(chatId ? "c:" + chatId : "neu"); // 2.153.0 KC-CLUB-INKOGNITO-CHAT: auch beim Schreiben in einem schon offenen Chat (einmal je Chat)
   VW.nurApp = false;
@@ -25331,6 +25375,7 @@ async function geteiltEmpfangen() {
   if (!dateien.length && !text && Array.isArray(info.felder) && !info.felder.length) return melde("📭 Das Handy hat beim Teilen keine Datei mitgeschickt (kommt z. B. bei größeren Dateien vor). Bitte die Datei in der Club-App im Chat über 📎 anhängen – das geht bis 8 MB.", true); // 2.526.0 KC-CLUB-TEILEN-LEER · 2.535.0: kein falscher Grund mehr (PDFs kamen am 20.10. an, nur eine größere nicht)
   if (dateien.length && info.fehler) melde("⚠️ Nicht alle Dateien passten in den Zwischenspeicher – die übrigen kommen an.", true);
   if (!dateien.length && !text) return melde("Es ist nichts angekommen. Fotos, PDFs und Office-Dateien gehen sofort; andere Dateitypen nimmt die Club-App an, sobald das Handy sie aktualisiert hat (meist nach dem nächsten Start, spätestens nach einem Tag).", true); // 2.514.0
+  if (!dateien.length && text) return waTeilenWahl(text); // KC-CLUB-WA-HOLEN: nur Text (z. B. aus WhatsApp) → selbst wählen: Chat oder Ablagekorb
   if (await ablkAblegen(text, dateien, info.titel)) return; // 2.511.0 KC-CLUB-ABLAGEKORB: zuerst in den Korb
   teilenWahl(text, dateien); // Korb nicht erreichbar (z. B. Gast/Aushilfe oder alter Server) → wie bisher selbst wählen
 }
@@ -25614,6 +25659,7 @@ async function teilenInChat(id) {
     try { const r = await anlageHochladen(d); Object.assign(e, { id: r.id, name: r.name, laedt: false }); } catch (err) { anlagen.splice(anlagen.indexOf(e), 1); melde(err.message, true); }
     chipsZeigen();
   }
+  if (t.wa) WA_HOLEN.aus = true; // KC-CLUB-WA-HOLEN: nicht wieder zu WhatsApp
   TEILEN = null; melde("📥 Eingefügt – prüfen und mit ➤ senden");
 }
 function teilenArchiv() {
@@ -26234,16 +26280,17 @@ function waAufbereiten(roh) {
   const nachr = []; let frei = [];
   for (const z of zeilen) {
     const a = z.match(kopf1), b = a ? null : z.match(kopf2);
-    if (a || b) { nachr.push({ von: name(a ? a[2] : b[3]), zeit: (a ? a[1] : b[2]).match(/\d{1,2}:\d{2}/)?.[0] || "", text: [a ? a[3] : b[4]] }); }
+    if (a || b) { nachr.push({ roh: (a ? a[2] : b[3]).replace(/^~\s*/, "").trim(), von: name(a ? a[2] : b[3]), zeit: (a ? a[1] : b[2]).match(/\d{1,2}:\d{2}/)?.[0] || "", text: [a ? a[3] : b[4]] }); }
     else if (nachr.length) nachr[nachr.length - 1].text.push(z);
     else frei.push(z);
   }
   if (!nachr.length) return { text: waOhneNummer(frei.join("\n").trim()), anzahl: frei.join("").trim() ? 1 : 0 };
   const teile = nachr.map((x) => `${x.von}${x.zeit ? ` (${x.zeit})` : ""}: ${waOhneNummer(x.text.join("\n").trim())}`);
-  return { text: "📋 Aus WhatsApp:\n" + teile.join("\n"), anzahl: nachr.length };
+  return { text: "📋 Aus WhatsApp:\n" + teile.join("\n"), anzahl: nachr.length, wa: true, namen: [...new Set(nachr.map((x) => x.roh))] }; // KC-CLUB-WA-HOLEN: wa/namen
 }
 function waEinsetzen(roh) {
   const e = waAufbereiten(roh); if (!e.text) return melde("Da war nichts zum Einfügen – bitte in WhatsApp zuerst „Kopieren“ tippen.", true);
+  WA_HOLEN.aus = true; // KC-CLUB-WA-HOLEN: beim Senden nicht wieder WhatsApp öffnen
   const f = $("text"); f.value = (f.value.trim() ? f.value.trimEnd() + "\n" : "") + e.text;
   f.style.height = "auto"; f.style.height = f.scrollHeight + "px"; entwurfMerken(); entwurfMarkeZeigen(); f.focus();
   melde(`📋 ${e.anzahl > 1 ? e.anzahl + " Nachrichten" : "Text"} eingefügt – Nummern entfernt. Bitte kurz prüfen und mit ➤ senden.`);
