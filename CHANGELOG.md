@@ -1,6 +1,6 @@
 # Änderungen
 
-## 2.966.0 – 2026-11-16 – ✕ Mitglied aus Terminanfrage herausnehmen · 🟢 Online-Laufschrift langsamer mit Zoom · 🖨️ Fußzeile nie allein · Server 2.966.0
+## 2.968.0 – 2026-11-16 – ✕ Mitglied aus Terminanfrage herausnehmen · 🟢 Online-Laufschrift langsamer mit Zoom · 🖨️ Fußzeile nie allein · Server 2.968.0
 ### ✕ Mitglied aus einer Terminanfrage herausnehmen (KC-CLUB-TA-HERAUSNEHMEN)
 Wunsch Hansi 16.11.: „Nimm Karla auch raus aus der Terminbestätigung für nächsten Montag – in Zukunft muss ich das als Admin auch können, damit nicht immer die KI ran muss.“
 - In der Antwortliste jeder Terminanfrage steht hinter jedem Namen ein kleines rotes **✕** – für den, der angefragt hat, und für den Admin (auch bei Anfragen anderer). Rückfrage, dann ist die Person still heraus (keine Nachricht, keine Erinnerungen mehr). Der letzte Empfänger bleibt – dafür gibt es „🚫 Absagen“.
@@ -13,7 +13,23 @@ Funde Hansi (Buchungsliste für den Kassenwart): Fußzeile allein auf Seite 2, D
 - Der PDF-Seitenumbruch schneidet früher, wenn für die nächste Seite nur ein kleiner Rest bliebe – die Fußzeile nimmt immer Zeilen mit (vorher bei 18/19/41/42 Zeilen nur die Fußzeile, bei 39/40 eine leere Seite). Gilt für alle Ausdrucke; auch beim Drucken aus dem Browser.
 - Buchungsliste: Datum nur noch einmal („Stand: …“ unter dem Titel).
 - Test neu `tests/druck-fuss.test.mjs`, Browser-Prüfung `tools/hilfe/druck-fuss-browser.mjs` (abgeschirmt, 10–60 Zeilen).
-- Rückweg: App 2.965.0, Server 2.964.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+- Rückweg: App und Server 2.967.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+## 2.967.0 – 2026-11-16 – 💐 Genesungskarten mit 6 Motiven und eigenem Text · 👥 gemeinsame Karte vom ganzen Club (KC-CLUB-GENESUNGSKARTEN, KC-CLUB-GK-GEMEINSAM, Wunschliste #96) · Server 2.967.0 + Datenbank
+Antworten Hansi 16.11.: „1 ja mit Sonne, 2 ja, 3 Köcheclub, 4 ja, 5 später“ – dann: „Baue noch die gemeinsame Karte.“
+- **Sechs Motive**, alle in der App gezeichnet: 💐 Blumenstrauß · 🐭 Maus unter der Decke mit Tee · 🐰 Kaninchen mit Blume · 🧸 Bär mit Herz-Ballon · 🍲 Suppentopf mit Kochmütze · ☀️ Sonne mit Regenbogen. Motiv antippen oder auf der Karte wischen.
+- **Überschrift** zur Wahl („Gute Besserung, …!“ · „Werde schnell gesund, …!“ · „Wir denken an dich, …!“), **Text** aus 2 Vorschlägen je Motiv oder **✏️ eigener Text** (bis 120 Zeichen – Zeilen und Schriftgröße passt die App an), **Absender** „Dein Köcheclub“ (Standard), „… und der ganze Club“, „Von …“ oder eigener. Für alle Mitglieder.
+- **👥 Gemeinsame Karte** (Clubleitung): im Karten-Fenster „Als gemeinsame Karte starten“ → alle Mitglieder außer der beschenkten Person bekommen eine Push und unterschreiben 2 Tage lang mit einem Tipp (Unterschrift zurücknehmen geht auch). Die Karte zeigt dann das Motiv etwas kleiner und darunter „Es grüßen dich:“ mit allen Vornamen. Wer gestartet hat (oder der Admin) legt sie mit „💬 Jetzt in …s Chat legen“ in den Chat → ➤. Die beschenkte Person sieht vorher nichts.
+- Auf keiner Karte steht ein Grund (keine Gesundheitsdaten). Datenbank: `kc_club_gk_gemeinsam` (Motiv, Überschrift, Text, Absender, bis wann) und `kc_club_gk_unterschrift` – RLS an, keine Browser-Rechte, gespiegelt und gesichert. Server: `gk_gemeinsam_start`, `gk_gemeinsam_liste`, `gk_unterschreiben`, `gk_gemeinsam_ende`.
+- Test: `tests/genesungskarte.test.mjs` neu gefasst. Rückweg: App + Server 2.966.0 (Tabellen bleiben, stören nicht).
+- Update-Hinweis für Mitglieder: „💐 Gute-Besserung-Karten jetzt mit Maus, Kaninchen, Bär, Suppentopf und Sonne – und eigenem Text.“
+
+## 2.966.0 – 2026-11-16 – 🧊 Hänger: Ursache wird gemessen · 📖 Fehlerkatalog mit Fehler-ID, Ursache und Lösung (KC-CLUB-HAENGER-URSACHE, KC-CLUB-FEHLERKATALOG) · Server 2.966.0
+Wunsch Hansi 16.11. nach dem Alarm „Klaus: App reagierte 27 s nicht“: „Hänger-Meldung genauer machen, damit der User weiß, woran es liegt. Am besten auf Dauer eine Tabelle anlegen mit Fehler-ID, Fehlername, Ursache, Lösung.“
+- **Neue Tabelle `kc_club_fehler_katalog`** (Migration `20261116_kc_club_fehler_katalog.sql`): je Fehlerart eine Zeile mit Fehler-ID (KC-F-001 …), Symbol, Name, Ursache, Lösung und dem Text für das Mitglied. Hansi kann die Texte dort ändern – spätere Migrationen überschreiben sie nicht. Nur der Club-Server liest sie.
+- **Hänger mit Ursache:** Die App misst jetzt, ob sie in der Lücke selbst gerechnet hat (Chrome/Edge melden lange Aufgaben). KC-F-101 = die App hat zu lange gerechnet (Fehler der App), KC-F-102 = das Gerät hat ihr keine Zeit gegeben (andere Programme, Updates, Virenscanner), KC-F-103 = Arbeitsspeicher fast voll, KC-F-104 = Fenster war im Hintergrund (kein Fehler – keine Meldung, kein Alarm), KC-F-100 = Browser kann es nicht messen (Firefox/Safari). Mitgeschickt werden nur Zahlen (Fenster aktiv, Rechenzeit der App, Speicher in %, Gerätespeicher, Kerne).
+- **Das Mitglied sieht ein Fenster** (Wunsch Hansi: „Beim User muss ein Fenster erscheinen“) mit Name, Ursache, Lösung und Fehler-ID statt „Die App hat kurz gehangen“, z. B. „🖥️ Gerät war ausgelastet – Ursache: … – Lösung: andere Programme schließen und das Gerät ab und zu neu starten – Fehler-ID KC-F-102“. Höchstens 1× in 10 Minuten.
+- **Admin:** Fehlerprotokoll zeigt je Eintrag Fehler-ID, Ursache, Lösung und die Messwerte; neuer Knopf „📖 Fehlerkatalog“ mit allen Fehlern – **gezählt** (Wunsch Hansi: „wie oft ein Fehler vorkommt, um Ursache und Lösung zu finden“): je Fehler-ID wie oft und bei wie vielen Personen im gewählten Zeitraum, die häufigsten oben. Die Alarm-Mail enthält Fehler-ID, Ursache und Lösung.
+- Test `tests/fehlerkatalog.test.mjs`. Update-Hinweis: nur „Kleine Systemanpassung“. Rückweg: App/Server 2.965.0/2.964.0 (die Tabelle stört nicht).
 
 ## 2.965.0 – 2026-11-16 – 💐 Genesungskarte mit Blumenstrauß direkt in den Chat (KC-CLUB-GENESUNGSKARTE)
 Wunsch Hansi 16.11.: „Gute Besserung direkt in ihren Chat reinstellen – nicht als Brief auf Briefkopf, sondern als Genesungskarte mit z. B. Blumenstrauß.“
