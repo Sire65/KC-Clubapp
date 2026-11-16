@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.969.0 – 2026-11-17 – 📱 „Liest lieber WhatsApp“ – beim Senden öffnet sich WhatsApp von selbst (KC-CLUB-WA-LIEBER) · Server 2.969.0
+Wunsch Hansi 16.11.: „Wenn ich z. B. Marianne eine Nachricht in der Club-App schreibe, dass er automatisch die gleiche auch in WhatsApp … und ich nur noch auf Senden klicke“ – „Nicht für jede Nachricht … zu viele Knöpfe … einige nutzen lieber WhatsApp als die Club-App“ – „Gleich für alle“.
+- Neue Einstellung **„📱 Ich lese lieber WhatsApp“** (⚙️, Standard aus) – setzt das Mitglied selbst oder der Admin auf der Mitgliedsseite („📱 Liest lieber WhatsApp?“).
+- Schreibt man so jemandem im **Einzelchat**, geht die Nachricht wie immer in die Club-App, und **im selben Antippen von „Senden“ öffnet sich WhatsApp** im Chat mit ihm/ihr, der Text steht schon drin – nur noch Senden. Kein neuer Knopf. Nur mit freigegebener WhatsApp-Nummer, nur Text (nicht mit Anlagen, nicht verschlüsselt, nicht Express), nicht in Gruppen (dort bleibt der WA-Knopf).
+- Für Absender abschaltbar: ⚙️ „🟢 WhatsApp automatisch öffnen“ (Standard an, je Gerät). Der Club-Server speichert dafür nichts zusätzlich – das Handy gibt den Text direkt an WhatsApp. Test: `tests/wa-lieber.test.mjs`. Rückweg: App/Server 2.968.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.968.0 – 2026-11-16 – ✕ Mitglied aus Terminanfrage herausnehmen · 🟢 Online-Laufschrift langsamer mit Zoom · 🖨️ Fußzeile nie allein · Server 2.968.0
 ### ✕ Mitglied aus einer Terminanfrage herausnehmen (KC-CLUB-TA-HERAUSNEHMEN)
 Wunsch Hansi 16.11.: „Nimm Karla auch raus aus der Terminbestätigung für nächsten Montag – in Zukunft muss ich das als Admin auch können, damit nicht immer die KI ran muss.“

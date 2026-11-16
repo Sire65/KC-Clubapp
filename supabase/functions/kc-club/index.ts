@@ -194,7 +194,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.968.0";
+const SERVER_VERSION = "2.969.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -2364,6 +2364,8 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
   fristen: (w) => fristWahl(w),
   // KC-CLUB-KONTAKT-EXTERN (Wunsch Hansi 09.11.2026): „Meine Kontaktdaten dürfen an Personen außerhalb des Clubs weitergegeben werden“ – Standard aus
   kontakt_extern: (w) => ({ an: w?.an === true }),
+  // KC-CLUB-WA-LIEBER (Wunsch Hansi 16.11.2026: „einige nutzen lieber WhatsApp als die Club-App“): ich lese lieber WhatsApp – Standard aus
+  wa_lieber: (w) => ({ an: w?.an === true }),
   ruhezeit: (w) => {
     const zeit = (x: unknown, std: string) => /^([01]\d|2[0-3]):[0-5]\d$/.test(String(x)) ? String(x) : std;
     return { an: w?.an === true, von: zeit(w?.von, "22:00"), bis: zeit(w?.bis, "07:00"), erwaehnung: w?.erwaehnung !== false };
@@ -10674,7 +10676,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // 2.593.0 KC-CLUB-GLEICHZEITIG (Wunsch Hansi „bündeln statt einzeln nacheinander – sorgfältig und vorsichtig“): die folgenden Lesungen
         // hängen nicht voneinander ab (nur an „leute“ aus dem ersten Block) – sie laufen jetzt gleichzeitig statt in ~6 Schritten nacheinander.
         // Gleiche Abfragen, gleiche Regeln, gleiches Ergebnis; nur „online jetzt“ wartet weiter auf meine eigene Sichtbarkeit.
-        const [{ data: mitgl }, { data: avs }, ichZeigeMap, zd, zeigen, inko, probe, ohneKommListen, adminLesen] = await Promise.all([
+        const [{ data: mitgl }, { data: avs }, ichZeigeMap, zd, zeigen, inko, probe, ohneKommListen, adminLesen, { data: wal }] = await Promise.all([
           db.from("kc_core_club_memberships").select("person_id,membership_type,membership_status").eq("org_id", ORG),
           db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "avatar"),
           onlineZeigenMap([ich.person_id]),
@@ -10687,7 +10689,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             db.from("kc_communication_requests").select("recipient_refs,channel,status,created_at").eq("source_program", "kc-club").in("status", COMM_FEHLER).gte("created_at", new Date(Date.now() - 7 * 86400000).toISOString()).limit(500),
             db.from("kc_communication_requests").select("recipient_refs,channel,created_at").eq("source_program", "kc-club").in("status", COMM_OK).gte("created_at", new Date(Date.now() - 7 * 86400000).toISOString()).order("created_at", { ascending: false }).limit(2000),
           ]) : Promise.resolve(null),
+          db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "wa_lieber"), // KC-CLUB-WA-LIEBER
         ]);
+        const waLieber = new Set((wal ?? []).filter((x: any) => x.wert?.an === true).map((x: any) => x.person_id));
         // KC-CLUB-SENSIBEL-GAESTE (2.78.0, Wunsch Hansi): wer ist KEIN ordentliches Mitglied (Gast, ausgetreten, ohne Eintrag)?
         // Ohne lesbaren Eintrag gilt jemand als Nicht-Mitglied – unbekannt wird nie als „Mitglied“ (OK) gezeigt.
         const ordentlich = new Set((mitgl ?? []).filter((x: any) => x.membership_type === "regular" && x.membership_status === "active").map((x: any) => x.person_id));
@@ -10741,7 +10745,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             status: st.get(m.person_id) ?? null, online: on.has(m.person_id) && m.person_id !== ich.person_id, zuletztDa: zd.get(m.person_id) ?? null,
             verborgen: m.person_id !== ich.person_id && (!ichZeige || zeigen.get(m.person_id) === false),
             heute: ichZeige && ((zeigen.get(m.person_id) !== false && !inko.has(m.person_id)) || m.person_id === ich.person_id) && !!(z.get(m.person_id) as any)?.zuletzt_gesehen && tag((z.get(m.person_id) as any).zuletzt_gesehen) === heute,
-            wege: { push: ps.has(m.person_id), mail: !!m.email, whatsapp: hatTel.has(m.person_id) && (ich.admin || m.person_id === ich.person_id || (ich.kontakte && handyFrei.has(m.person_id))) },
+            wege: { push: ps.has(m.person_id), mail: !!m.email, whatsapp: hatTel.has(m.person_id) && (ich.admin || m.person_id === ich.person_id || (ich.kontakte && handyFrei.has(m.person_id))),
+              waLieber: waLieber.has(m.person_id) }, // KC-CLUB-WA-LIEBER: liest lieber WhatsApp (die App öffnet beim Senden WhatsApp – nur wenn „whatsapp“ erlaubt ist)
             // für alle nur grob: in den letzten 14 Tagen in der App gewesen (genaue Zeit nur für den Admin)
             aktiv: !(inko.has(m.person_id) && m.person_id !== ich.person_id) && !!(z.get(m.person_id) as any)?.zuletzt_gesehen && Date.now() - new Date((z.get(m.person_id) as any).zuletzt_gesehen).getTime() < 14 * 86400000,
             ...(ich.admin ? { zugang: (r.get(m.person_id) as any)?.zugang === "passiv" ? "passiv" : zugangAus(r.get(m.person_id)), kontakte: (r.get(m.person_id) as any)?.kontakte_sehen !== false, protokolle: (r.get(m.person_id) as any)?.protokolle_lesen !== false, app: !!(z.get(m.person_id) as any)?.aktiv, zuletzt: inko.has(m.person_id) && m.person_id !== ich.person_id ? null : (z.get(m.person_id) as any)?.zuletzt_gesehen ?? null, push: ps.has(m.person_id), mail: !!m.email, fehler: fehler.get(m.person_id) ?? null,
@@ -18658,6 +18663,16 @@ Köcheclub Werne`,
         return json({ reisen, geburtstage, veranstaltungen, privat });
       }
 
+      // KC-CLUB-WA-LIEBER: der Admin setzt „liest lieber WhatsApp“ für ein Mitglied (für alle, die selten in die Einstellungen schauen)
+      case "wa_lieber_setzen": {
+        nurAdmin(ich);
+        const pid = String(p.person_id || ""), an = p.an === true;
+        if (!/^KC-P-[A-Z0-9-]{1,40}$/.test(pid)) throw new Fehler("Ungültig.");
+        const { error } = await db.from("kc_club_person_einstellung").upsert({ person_id: pid, schluessel: "wa_lieber", wert: { an }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
+        if (error) throw new Fehler("Das hat gerade nicht geklappt.", 503);
+        await protokoll(ich.person_id, "wa_lieber_gesetzt", { fuer: pid, an });
+        return json({ ok: true, an });
+      }
       // KC-CLUB-PULS (Wunsch Hansi 16.11.2026): Aussteuerungsanzeige im Kopf (nur Admin) – Zählerstände der Club-App, die App rechnet „pro Sekunde“
       case "betrieb_puls": {
         nurAdmin(ich);

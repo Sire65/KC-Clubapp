@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.968.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.969.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -22035,7 +22035,7 @@ async function chatLaden(scrollen, merk) {
     if (merk && CHAT?.id === fuer) return; // frische Antwort war schneller – nichts Älteres drüberzeichnen
     if (!merk) chatMerken(fuer, u);
     if (VN.an && VN.chat !== fuer) vnUmschalten(false); // 2.529.0 KC-CLUB-VN-RUECKFRAGE: Schloss gilt nur im Chat, in dem es eingeschaltet wurde
-    CHAT = u; if (!merk) CHAT_VOLL_AM = Date.now(); setTimeout(owZeigen, 0); setTimeout(gpZeigen, 0); slAnzeigen(); // 2.362.0 KC-CLUB-SPAETER-SENDEN: eigene geplante Nachrichten unten // KC-CLUB-SELBSTLOESCHEN // KC-CLUB-OFFLINE: vorgemerkte Nachrichten unten zeigen
+    CHAT = u; if (!merk) CHAT_VOLL_AM = Date.now(); setTimeout(owZeigen, 0); setTimeout(gpZeigen, 0); slAnzeigen(); setTimeout(waLieberVorbereiten, 0); /* KC-CLUB-WA-LIEBER */ // 2.362.0 KC-CLUB-SPAETER-SENDEN: eigene geplante Nachrichten unten // KC-CLUB-SELBSTLOESCHEN // KC-CLUB-OFFLINE: vorgemerkte Nachrichten unten zeigen
     const andere = u.teilnehmer.filter((x) => x.person_id !== ICH.person_id);
     // KC-CLUB-CHAT-KOPF-BILD (2.24.19): Bild vorn (Person: Avatar/Kreis; Gruppe: Symbol mit 🔗; Runde: gestrichelt), Titel ohne doppeltes Symbol
     $("chatTitel").textContent = (u.gruppe ? u.gruppe.name : u.betreff || andere.map((x) => x.name).join(", ")) + (stummAn(chatId) ? " 🔕" : "");
@@ -24420,6 +24420,43 @@ async function waSenden() {
   else if (IST_IOS) location.href = `whatsapp://send?text=${t}`;
   else window.open(web, "_blank", "noopener"); // PC: neuer Tab, die App bleibt offen
 }
+// ---------- KC-CLUB-WA-LIEBER (Wunsch Hansi 16.11.2026: „Wenn ich z. B. Marianne eine Nachricht in der Club-App schreibe, soll er automatisch die gleiche
+// auch in WhatsApp … ich nur noch auf Senden klicke“ – „nicht für jede Nachricht … zu viele Knöpfe … einige nutzen lieber die WhatsApp-App“ – „gleich für alle“):
+// Wer „📱 Ich lese lieber WhatsApp“ eingestellt hat (selbst unter ⚙️ oder vom Admin auf der Mitgliedsseite), bekommt Nachrichten im EINZELCHAT wie bisher
+// in der Club-App – und beim Absender öffnet sich im selben Antippen von „Senden“ WhatsApp im Chat mit ihr/ihm, Text schon drin, nur noch Senden.
+// Kein neuer Knopf. Nur Einzelchats, nur Text (ohne Anlagen, nicht verschlüsselt, nicht Express), nur mit freigegebener WhatsApp-Nummer (wege.whatsapp).
+// Die Nummer wird beim Öffnen des Chats vorab geholt – das Antippen von Senden muss WhatsApp sofort öffnen können. Abschaltbar: ⚙️ „WhatsApp automatisch öffnen“.
+const WA_NR = {};
+function waLieberPartner() {
+  if (!chatId || CHAT?.id !== chatId || CHAT.gruppe) return null;
+  const andere = (CHAT.teilnehmer || []).filter((t) => t.person_id !== ICH?.person_id); if (andere.length !== 1) return null;
+  const m = MITGLIEDER?.find((x) => x.person_id === andere[0].person_id);
+  return m?.wege?.whatsapp && m.wege.waLieber ? m : null;
+}
+async function waLieberVorbereiten() {
+  try { if (!MITGLIEDER) await mitgliederHolen(); const m = waLieberPartner(); if (!m || WA_NR[m.person_id]) return;
+    const d = await api("mitglied_details", { person_id: m.person_id }, { still: true }); if (d.kontakt?.handy) WA_NR[m.person_id] = waNummer(d.kontakt.handy); } catch {}
+}
+function waLieberJetzt(text) {
+  if (!text || !einst("waAuto", true) || VN.an || EXPRESS || anlagen.length || (typeof WE !== "undefined" && WE.ids?.length)) return;
+  const m = waLieberPartner(), n = m && WA_NR[m.person_id]; if (!n) return;
+  const t = encodeURIComponent(`${text}\n\n– ${ICH.vorname} (Köcheclub-App)`);
+  melde(`🟢 ${m.vorname || m.name} liest lieber WhatsApp – dort steht der Text schon drin, nur noch Senden. (Geht auch in die Club-App.)`);
+  try { if (IST_ANDROID) location.href = `intent://send?phone=${n}&text=${t}#Intent;scheme=whatsapp;S.browser_fallback_url=${encodeURIComponent(`https://wa.me/${n}?text=${t}`)};end`;
+    else if (IST_IOS) location.href = `whatsapp://send?phone=${n}&text=${t}`;
+    else window.open(`https://wa.me/${n}?text=${t}`, "_blank", "noopener"); } catch {}
+}
+async function waLieberSetzen(an) { // eigene Einstellung
+  try { const r = await api("einstellung_setzen", { schluessel: "wa_lieber", wert: { an } }); INIT.einstellungen = { ...(INIT.einstellungen || {}), wa_lieber: r.wert };
+    melde(an ? "📱 Wer dir im Einzelchat schreibt, bekommt beim Senden gleich WhatsApp geöffnet – du bekommst es dann dort." : "Nachrichten an dich bleiben in der Club-App (wie bisher)."); }
+  catch (e) { meldeFehler(e); if ($("setWaLieber")) $("setWaLieber").checked = !an; }
+}
+async function waLieberAdmin(pid) { // Admin für ein Mitglied
+  const m = MITGLIEDER?.find((x) => x.person_id === pid), an = !m?.wege?.waLieber;
+  try { await api("wa_lieber_setzen", { person_id: pid, an }, { warten: true }); if (m?.wege) m.wege.waLieber = an;
+    melde(an ? `📱 ${m?.vorname || "Das Mitglied"} liest jetzt „lieber WhatsApp“${m?.wege?.whatsapp ? "" : " – aber es ist keine WhatsApp-Nummer freigegeben, dann passiert nichts"}` : `📱 ${m?.vorname || "Das Mitglied"}: wieder nur Club-App`);
+    if (typeof mitgliedZeigen === "function" && MD?.person_id === pid) mitgliedZeigen(); } catch (e) { meldeFehler(e); }
+}
 async function whatsappWeitergeben(text, ids) {
   const nachricht = `${text}\n\n– ${ICH.vorname} (Köcheclub-App)`;
   if (ids.length > 1) return waMehrere(nachricht, ids); // 2.637.0 KC-CLUB-WA-MEHRERE
@@ -25149,6 +25186,7 @@ async function senden() {
   emoUmschalten(false); // KC-CLUB-EMOJI
   let text = $("text").value.trim();
   if (!text && !anlagen.length) return;
+  waLieberJetzt(text); // KC-CLUB-WA-LIEBER: im selben Antippen (sonst blockiert das Handy den Sprung zu WhatsApp) – die Nachricht geht trotzdem in die Club-App
   if (!(await sensibelGaesteOk(text))) return; // KC-CLUB-SENSIBEL-GAESTE (2.78.0)
   await inkoChatFrage(chatId ? "c:" + chatId : "neu"); // 2.153.0 KC-CLUB-INKOGNITO-CHAT: auch beim Schreiben in einem schon offenen Chat (einmal je Chat)
   VW.nurApp = false;
@@ -32409,6 +32447,7 @@ function mitgliedZeigen() {
       ${stDarf("zeigen") && !m.selbst ? `<button class="knopf" onclick="vfStart('${m.person_id}')"><span class="kt-ico">📺</span>Live zeigen</button>` : ""}
       ${ICH?.admin ? `<button class="knopf" onclick="linkTeilen('${m.person_id}')"><span class="kt-ico">🔗</span>App-Link</button><button class="knopf" onclick="einrichtungskarte('${m.person_id}')"><span class="kt-ico">🖨️</span>Einrichtungs&shy;karte</button><button class="knopf" onclick="rolleBearbeiten('${m.person_id}')"><span class="kt-ico">🎖️</span>Amt & Rechte</button><button class="knopf" onclick="ansageVorgabeSetzen('${m.person_id}', ${esc(JSON.stringify((m.name || "").split(" ")[0]))})"><span class="kt-ico">🗣️</span>Online-Ansagen einschalten</button>` : ""}
       ${(ICH?.admin || ICH?.vorstand) && !m.selbst ? `<button class="knopf" onclick="elternHandy('${esc(m.person_id)}')"><span class="kt-ico">👪</span>Eltern-Handy</button>` : ""}
+      ${ICH?.admin && !m.selbst ? `<button class="knopf" onclick="waLieberAdmin('${esc(m.person_id)}')"><span class="kt-ico">📱</span>${MITGLIEDER?.find((x) => x.person_id === m.person_id)?.wege?.waLieber ? "Liest lieber WhatsApp ✓" : "Liest lieber WhatsApp?"}</button>` : ""}
       ${(ICH?.admin || ICH?.vorstand) && !m.selbst ? `<button class="knopf" onclick="mgEingang('${esc(m.person_id)}')"><span class="kt-ico">📥</span>In den Eingangskorb</button>` : ""}
       ${ICH?.admin && !m.selbst ? `<button class="knopf" onclick="aeErbitten(${jsArg(m.person_id)}, ${jsArg(String(m.name || "").split(" ")[0])})"><span class="kt-ico">✏️</span>Änderung erbitten</button>` : ""}
       ${zeilen ? '<button class="knopf" onclick="kontaktSpeichern()"><span class="kt-ico">📇</span>Ins Telefonbuch</button>' : ""}
@@ -32617,6 +32656,8 @@ async function kontaktExternSetzen(an) { // KC-CLUB-KONTAKT-EXTERN
 }
 function kontaktSchalterZeigen() {
   if ($("setKontaktExtern")) $("setKontaktExtern").checked = INIT?.einstellungen?.kontakt_extern?.an === true; // KC-CLUB-KONTAKT-EXTERN
+  if ($("setWaLieber")) $("setWaLieber").checked = INIT?.einstellungen?.wa_lieber?.an === true; // KC-CLUB-WA-LIEBER
+  if ($("setWaAuto")) $("setWaAuto").checked = einst("waAuto", true);
   const kf = INIT?.kontaktFreigabe || {};
   for (const f of ["handy", "festnetz", "mail", "adresse"]) { const s = $("setKontakt_" + f); if (s) s.checked = !!kf[f]; }
 }
