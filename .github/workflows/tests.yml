@@ -73,6 +73,8 @@ jobs:
       - run: node tests/alter-link-klar.test.mjs
       - run: node tests/update-hinweis.test.mjs
       - run: node tests/sicherung-packen.test.mjs
+      - run: node tests/online-frage.test.mjs
+      - run: node tests/aenderung-erbitten.test.mjs
       - run: node tests/spiegel-schonend.test.mjs
       - run: node tests/online-jede-anfrage.test.mjs
       - run: node tests/schreibtisch.test.mjs

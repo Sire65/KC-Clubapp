@@ -39,6 +39,9 @@ assert.ok(app.includes('data-klappe="pr_jahr_${esc(j)}"') && app.includes('docum
 assert.ok(lies(".github/workflows/tests.yml").includes("node tests/wunschliste-november.test.mjs"), "läuft in der CI");
 // 2.947.0 KC-CLUB-MG-PUSH-ZEICHEN (Wunschliste #91, Hansi 15.11.2026 „A“): 🔔/🔕 auf den Mitglieder-Kacheln nur für Admin und Clubleitung
 { const k = app.slice(app.indexOf("function mgKachelnHtml("), app.indexOf("let MG_GRUPPEN"));
-  assert.ok(/const push = \(ICH\.admin \|\| ICH\.vorstand\) && m\.wege \?/.test(k) && /\$\{was\}\$\{push\}/.test(k), "Push-Zeichen nur für Admin/Clubleitung");
+  // Hansi 16.11.2026: für alle sichtbar, unten bei den Knöpfen (💬 📞 …)
+  assert.ok(/const push = m\.wege \?/.test(k) && /\$\{mgAnrufKnoepfe\(m\)\}\$\{push\}<\/span>/.test(k) && !/\$\{was\}\$\{push\}/.test(k), "Push-Zeichen für alle, unten bei den Knöpfen");
+  assert.ok(/class="knopf klein mg-push/.test(k) && /onclick="mgPushInfo\('\$\{m\.person_id\}'\)"/.test(k) && /function mgPushInfo\(pid\)/.test(app), "antippen erklärt das Zeichen");
+  assert.ok(/⚪ noch nie in der App · 🔔 Push an · 🔕 kein Push/.test(k), "Legende für alle");
   assert.ok(/m\.wege\.push \? "🔔" : "🔕"/.test(k), "🔔 an, 🔕 aus"); }
 console.log("wunschliste-november: ok");

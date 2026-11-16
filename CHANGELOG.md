@@ -1,6 +1,6 @@
 # Änderungen
 
-## 2.957.0 – 2026-11-16 – 📖 Hilfe, Erklär-Videos, Lupe und Twinkey neu · 🎬 zwei Erklärfilme neu (Wunschliste #92) · 👀 Knopf auch bei 390 px
+## 2.960.0 – 2026-11-16 – 📖 Hilfe, Erklär-Videos, Lupe und Twinkey neu · 🎬 zwei Erklärfilme neu (Wunschliste #92) · 👀 Knopf auch bei 390 px
 ### 📖 Hilfe, Erklär-Videos, Lupe und Twinkey passend zur neuesten Version (KC-CLUB-HILFE-2955, Wunschliste #92)
 Wunsch Hansi 15.11.: „Alle Hilfetexte, Video-Filme, Lupe, Twinkey an die neueste Version anpassen“ – „Ja alles neu aufbauen, damit es passt“ (auch die Admin-Funktionen).
 - **Hilfetexte korrigiert:** „Wie geht der Kopf auf und zu?“ (ein runder Knopf statt ⌃/⌃⌃) · „Kacheln ausblenden und wieder holen“ (👀 Nur ausgeblendete zeigen, runder 👀/🙈-Knopf oben) · „Der Eingangskorb im Büro“ (📄 Antrag als PDF ansehen, ✅ Als erstattet markieren … mit Rückfrage) · „Adventskalender“ (6.12. Schoko-Nikolaus, 20.12. Kinderriegel mit „🎁 Ja, den nehme ich“, 13.12. Mandarinen-Licht) · „Mein Garten“ (20 Pflanzen, Kräuterernte mit Rezepten) · „Erklär-Videos mit Ton“ (über 60 Videos und Filme statt fünf genannter) · „Kurz erklärt: Bildschirmfoto“ (Knöpfe wie im Programm).
@@ -19,11 +19,31 @@ Wunsch Hansi 15.11.: „Ja alles neu aufbauen, damit es passt“ – beide Filme
 - **🧹 Deine App – so, wie du sie willst** (`film/app-selbst-einrichten.mp4?v=6`, ca. 3½ Min.): Ansichten, Reiter, Kacheln anordnen und ausblenden, Zahl am Reiter, **neu:** der runde **👀/🙈-Knopf** oben neben „< Erweiterte Ansicht >“ (2.953.0) und wieder einblenden, Kachelgröße, Kacheln umdrehen, **Kopf in vier Stufen** mit dem runden Knopf, Startmeldungen aus, weitere Erklär-Videos.
 - Vorschaubilder neu (`film/kopf-vorschau.webp`, `film/app-einrichten-vorschau.webp`). Gleiche Kennungen `kopffilm`/`ansichtfilm` – wer die Filme schon gesehen hat, bekommt sie nicht erneut beim Start angeboten.
 - Quellen erstmals in der Club-App: `tools/film/` (Drehbuch, Texte, Sprecher, Anleitung zum Neu-Erzeugen in `tools/film/README.md`); Browser-Läufe mit Netzsperre und Abschirmung (KC-TESTS-OHNE-ECHTSERVER).
-- Keine Datenbank-, keine Server-Änderung. Rückweg: App 2.956.0 (alte Filmdateien aus Git).
+- Keine Datenbank-, keine Server-Änderung. Rückweg: App 2.959.0 (alte Filmdateien aus Git).
 - Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
 ### 👀 Knopf oben bleibt auch bei 390 px (KC-CLUB-KA-KOPF-TOGGLE)
 - Fund beim Filmdreh: Bei 390 px Breite brach „Schnellzugriff < Erweiterte Ansicht >“ erst durch den 👀-Knopf auf zwei Zeilen um – die Platzprüfung blendete ihn dann aus. Jetzt sind zwei Zeilen in Ordnung (wie bei 360 px ohnehin); weg ist er nur noch bei einer dritten Zeile oder wenn er den QR-Knopf überdecken würde. Geprüft im abgeschirmten Browser bei 320, 360, 375, 390 und 412 px. Test `tests/kopf-ecke.test.mjs` erweitert.
-- Rückweg: App 2.956.0. Nur die App (keine Datenbank-, keine Server-Änderung). Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+- Rückweg: App 2.959.0. Nur die App (keine Datenbank-, keine Server-Änderung). Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+## 2.959.0 – 2026-11-16 – 🍲 Gemeinschaftsgericht: „Neue Runde starten“ nimmt den Titel wieder an (KC-CLUB-GEMEINSCHAFTSGERICHT)
+Fund Hansi 15.11. 23:00: „Habe den Titel eingetragen, geht aber nicht“ – Meldung „Bitte einen Titel eingeben“.
+- Das Titelfeld hieß intern `grTitel` – die Kennung gibt es schon im (unsichtbaren) Fenster „Gruppe bearbeiten“, die App las dieses leere Feld. Jetzt eigene Kennungen (`ggTitel`, `ggVon`, `ggBis`, `ggJe`, `ggWahl`, `ggSuche`, `ggEigenFeld`, `ggLos`) und gelesen wird nur im Fenster der Runde. Die Runde „Gemeinsam essen“ (15.–28.11.) hatte Claude am 15.11. in Hansis Auftrag direkt angelegt.
+- Test `tests/gemeinschaftsgericht.test.mjs` prüft jetzt, dass keine Kennung des Gemeinschaftsgerichts schon in index.html steht. Nur die App.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+## 2.958.0 – 2026-11-16 – 🔔/🔕 auf den Mitglieder-Kacheln für alle, unten bei den Knöpfen (KC-CLUB-MG-PUSH-ZEICHEN, Wunschliste #91)
+Antwort Hansi 16.11.: „So lassen (Liste) und in den Kacheln die Anzeige auch für alle freigeben, aber das Zeichen passt evtl. noch unten zu den anderen Buttons.“
+- Das Push-Zeichen auf den Mitglieder-Kacheln sehen jetzt **alle** (wie die Wege-Zeichen 🔔 ✉️ WA in der Listen-Ansicht, die bleiben unverändert).
+- Es steht nicht mehr oben links, sondern **unten als kleiner Knopf** neben 💬 / 📞. Antippen sagt in einem Satz: „🔔 Anne hat Push eingeschaltet …“ bzw. „🔕 … nicht eingeschaltet …“. Die Legende über den Kacheln nennt 🔔/🔕 für alle.
+- Keine neuen Daten: der Server liefert den Push-Stand schon bisher an alle (Listen-Ansicht).
+- Test: `tests/wunschliste-november.test.mjs` angepasst. Rückweg: App 2.957.0. Nur die App.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+## 2.957.0 – 2026-11-15 – 🟢 Einmal fragen: Meldung, wenn jemand online kommt? · ✏️ Änderung erbitten (KC-CLUB-ONLINE-FRAGE, KC-CLUB-AENDERUNG-ERBITTEN)
+**✏️ Änderung erbitten** (Wunsch Hansi, Fall Christina „neue Handynummer – mit Sofort-Taste, immer automatisch, wenn klar ist, dass jemand etwas Neues hat, z. B. Adresse“): Beim Mitglied gibt es für den Admin den Knopf „✏️ Änderung erbitten“ (Handynummer, Anschrift, Festnetz, E-Mail, Name, Notfallkontakt; optional ein kurzer Satz). Beim nächsten Start – sobald nichts anderes offen ist, höchstens einmal am Tag – kommt: „Hallo Christina, bitte melde 📱 deine neue Handynummer – damit im Club alles aktuell ist …“ mit **✏️ Sofort erledigen** (öffnet gleich das passende Änderungsformular), **⏰ Später** (morgen wieder) und **Hat sich nichts geändert**. Ist die Meldung abgeschickt, streicht der Server die Bitte von selbst; „Bitte zurücknehmen“ beim Admin löscht sie. Neue Einstellung `aenderung_bitte` (nur Arten, nie Werte), Aktion `aenderung_erbitten` (nur Admin). Test `tests/aenderung-erbitten.test.mjs`.
+
+
+Wunsch Hansi („Möglichkeit 2 umsetzen … Dann kannst du die Person direkt kontaktieren bzw. anklopfen“) statt „bei allen einschalten“ (wären ~7 Meldungen am Tag je Mitglied gewesen). Mitglieder, bei denen Push auf dem Gerät läuft und die noch nie entschieden haben, sehen beim Start einmal: „🟢 Melden, wenn jemand online kommt? … z. B. ‚🟢 Karla ist jetzt online‘? Dann kannst du die Person direkt kontaktieren bzw. anklopfen.“ – **Ja, gerne** (an) · **Nein, danke** (aus, nie wieder gefragt) · **Später** (in 3 Tagen wieder, neue Einstellung `online_frage`). Ist die Sprachansage auf dem Gerät noch aus, gibt es dazu einen (nicht vorab gesetzten) Haken „🗣️ Bei offener App auch ansagen lassen“ – mit „Ja, gerne“ wird sie dann auf diesem Gerät mit eingeschaltet; der Hinweis nennt beide Einstellungen. Nicht für Admins (dort Standard an), nie bei „Kommunikation aus“, höchstens einmal am Tag je Gerät und nie über einer anderen Frage. Niemand bekommt die Meldung ungefragt. Test `tests/online-frage.test.mjs`.
+- **Hinweis „Datenbank hat viel zu tun“** kennt die neuen Spiegel-Zeiten (KC-SPIEGEL-SCHONEND): 05/14/23 Uhr (04/13/22 UTC), :10–:45 statt 04/10/16/22 :10–:30 (`SCHWER_ZEITEN` im Server, Tests `db-viel-zu-tun`, `spiegel-schonend`).
 
 ## 2.956.0 – 2026-11-15 – ↔️ Gegenvorschlag bei Themen (KC-CLUB-GEGENVORSCHLAG, Wunschliste #93) · 🔴 „… ist offline“ nach 1 Minute (KC-CLUB-OFFLINE-SCHNELL) · Server 2.956.0
 ### ↔️ Gegenvorschlag
