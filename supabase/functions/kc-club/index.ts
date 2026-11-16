@@ -11079,6 +11079,23 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         await protokoll(ich.person_id, "terminanfrage_geaendert", { anfrage: a.id, neue_zeilen: neu.length, informiert: empfaenger, versand });
         return json({ ok: true, neu: neu.length, informiert: empfaenger, versand });
       }
+      // KC-CLUB-TA-HERAUSNEHMEN (16.11.2026, Wunsch Hansi „nimm Karla raus aus der Terminbestätigung … in Zukunft muss ich das als Admin auch können,
+      // damit nicht immer die KI ran muss“): ein Mitglied aus einer Terminanfrage herausnehmen – wer angefragt hat oder der Admin (z. B. krank).
+      // Still (keine Nachricht an den Herausgenommenen); der letzte Empfänger bleibt – dann „Absagen“. Protokoll ohne Inhalte.
+      case "terminanfrage_empfaenger_entfernen": {
+        const { data: a } = await db.from("kc_club_terminanfragen").select("id,erstellt_von,status,anlass").eq("id", String(p.id || "")).maybeSingle();
+        if (!a) throw new Fehler("Anfrage nicht gefunden.", 404);
+        if (a.erstellt_von !== ich.person_id && !ich.admin) throw new Fehler("Herausnehmen kann, wer angefragt hat, oder der Admin.", 403);
+        if (a.status === "abgesagt") throw new Fehler("Die Anfrage ist abgesagt.", 409);
+        const pid = String(p.person_id || "");
+        const { data: em } = await db.from("kc_club_terminanfrage_empfaenger").select("person_id").eq("anfrage_id", a.id);
+        if (!(em ?? []).some((e: any) => e.person_id === pid)) throw new Fehler("Diese Person ist nicht (mehr) in der Anfrage.", 404);
+        if ((em ?? []).length <= 1) throw new Fehler("Das ist der letzte Empfänger – bitte stattdessen „🚫 Absagen“.", 409);
+        const { error } = await db.from("kc_club_terminanfrage_empfaenger").delete().eq("anfrage_id", a.id).eq("person_id", pid);
+        if (error) throw new Fehler("Speichern fehlgeschlagen.", 500);
+        await protokoll(ich.person_id, "terminanfrage_empfaenger_entfernt", { anfrage: a.id, person: pid, als: a.erstellt_von === ich.person_id ? "anfragender" : "admin" });
+        return json({ ok: true, name: (await personen([pid])).get(pid)?.display_name || pid });
+      }
 
       // KC-CLUB-TA-PROTOKOLL (13.11.2026, Wunsch Hansi „wie wird aus dem Termin mit Klaus und der Tagesordnung ein Protokoll?“ – „Ja bauen“):
       // wer angefragt hat, schreibt zur Besprechung ein Protokoll (je TOP Ergebnis, Wer?, Bis wann?; Anwesend, Sonstiges, nächster Termin),

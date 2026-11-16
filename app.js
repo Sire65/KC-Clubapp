@@ -27873,12 +27873,19 @@ async function taLaden() {
   if (TA.markiert) { const k = document.getElementById("ta-" + TA.markiert); if (k) { k.classList.add("ta-markiert"); k.scrollIntoView({ behavior: "smooth", block: "center" }); } TA.markiert = null; }
 }
 function taZeigen(id) { TA.markiert = id; termineArt = "liste"; if (aktuelleAnsicht === "termine") treffenLaden(); else zeige("termine"); }
+// KC-CLUB-TA-HERAUSNEHMEN (16.11.2026, Wunsch Hansi „nimm Karla raus aus der Terminbestätigung … in Zukunft muss ich das als Admin auch können“):
+// ✕ hinter dem Namen – wer angefragt hat oder der Admin nimmt ein Mitglied heraus (z. B. krank). Still, ohne Nachricht an die Person.
+async function taHerausnehmen(id, pid) {
+  const a = TA.liste.find((x) => x.id === id), e = a?.empfaenger.find((x) => x.person_id === pid); if (!a || !e) return;
+  if (!(await frage(`${e.name} aus „${a.anlass}“ herausnehmen?\n\n${e.name.split(" ")[0]} steht dann nicht mehr in der Anfrage und bekommt keine Erinnerungen mehr dazu. Es geht keine Nachricht an ${e.name.split(" ")[0]}.`, { ja: "✕ Herausnehmen", nein: "Abbrechen" }))) return;
+  try { const r = await api("terminanfrage_empfaenger_entfernen", { id, person_id: pid }); melde(`✕ ${r.name || e.name} ist aus der Anfrage heraus`); TA.markiert = id; await taLaden(); } catch (err) { meldeFehler(err); }
+}
 function taKarte(a) {
   const n = (w) => a.empfaenger.filter((e) => e.antwort === w).length, offen = a.empfaenger.filter((e) => !e.antwort).length;
   const ab = a.status === "abgesagt";
   const k = (w) => `<button class="knopf klein${a.meine === w ? " haupt" : ""}" onclick="taAntwort('${a.id}', '${a.meine === w ? "keine" : w}')">${TA_ANTW[w]}</button>`;
   const wer = a.empfaenger.map((e) => { const st = taStatus(a, e);
-    return `<div class="ta-wer"><span class="ta-st ta-st-${st.k}">${st.sym} ${st.t}</span> ${esc(e.name)}${e.notiz ? ` <span class="hinweis">– „${esc(e.notiz)}“</span>` : ""}
+    return `<div class="ta-wer"><span class="ta-st ta-st-${st.k}">${st.sym} ${st.t}</span> ${esc(e.name)}${e.notiz ? ` <span class="hinweis">– „${esc(e.notiz)}“</span>` : ""}${(a.vonMir || ICH?.admin) && !ab && a.empfaenger.length > 1 ? ` <button type="button" class="ta-raus" title="${esc(e.name)} aus der Anfrage herausnehmen" aria-label="${esc(e.name)} aus der Anfrage herausnehmen" onclick="taHerausnehmen('${a.id}','${esc(e.person_id)}')">✕</button>` : ""}
       ${a.vonMir && !ab && e.vorschlag ? `<div class="knoepfe ta-vk"><button class="knopf haupt klein" onclick="taVorschlagBlatt('${a.id}','${esc(e.person_id)}','ja')">✅ Neue Zeit annehmen</button><button class="knopf klein" onclick="taVorschlagBlatt('${a.id}','${esc(e.person_id)}','vorbehalt')">🤔 Unter Vorbehalt</button><button class="knopf klein" onclick="taVorschlagBlatt('${a.id}','${esc(e.person_id)}','nein')">❌ Passt nicht</button></div>` : ""}</div>`; }).join("");
   const einer = a.vonMir && a.empfaenger.length === 1 ? taStatus(a, a.empfaenger[0]) : null;
   return `<div class="karte" id="ta-${a.id}" style="border-left:6px solid var(--gold)${ab ? ";opacity:.65" : ""}">
