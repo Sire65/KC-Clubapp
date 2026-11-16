@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.960.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.961.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1924,7 +1924,7 @@ const EINWEISUNG = [
     })[AE.art] || "Trag unten die <b>neue Angabe</b> ein.") + " Dann <b>„📨 Änderung melden“</b> antippen – wer die Meldung bekommt, steht unten. <b>„← Zurück“</b> führt zur Auswahl." },
   // 2.23.15 (Wunsch Hansi „alle Unterpunkte mit Karte“): Arbeitsfenster mit eigener „Kurz erklärt“-Karte. Kleine Info-/Rückfrage-
   // fenster und Fenster, die selbst schon erklären (Diktat, Einrichten, Code, Mikrofon-Hilfe, Server-Störung), bleiben ohne.
-  { id: "b-ablage", blatt: true, sym: "🗄️", t: "In dein Archiv ablegen", x: "Hier legst du etwas in deinen eigenen <b>Archiv-Ordner</b>: Ordner und, wenn es passt, ein Register antippen. Deinen Ordner siehst nur du – und wem du ihn selbst freigibst." },
+  { id: "b-ablage", blatt: true, sym: "🗄️", t: "In dein Archiv ablegen", x: "Hier legst du etwas in deinen eigenen <b>Archiv-Ordner</b>: Ordner und, wenn es passt, ein Register antippen. Passt keins, wähle ganz unten <b>„➕ Neues Register …“</b> – dann liegt nicht alles in „Sonstiges“. Wer das Club-Archiv pflegt, kann dort auch <b>„➕ Neuer Ordner …“</b> anlegen. Deinen Ordner siehst nur du – und wem du ihn selbst freigibst." },
   { id: "b-bildschirmfoto", blatt: true, sym: "📸", t: "Bildschirmfoto", x: "Mit dem Finger <b>einkreisen</b> oder Pfeile malen, wo das Problem ist – die <b>Stiftfarbe</b> wählst du mit den Farbpunkten unter dem Bild (↩️ Rückgängig, 🧽 Alles weg). Dann <b>💬 In einen Chat schicken</b> (kommst du aus einem Chat: <b>💬 In den Chat mit …</b>), <b>🆘 Als Problem an …</b> schicken, <b>🗄️ In mein Archiv</b> legen oder <b>💾 Aufs Handy speichern / teilen</b>. <b>📸 Neues Foto</b> macht ein neues Bild." },
   { id: "b-bu-drucker", blatt: true, sym: "🖨️", t: "Drucken im Büro", x: "Wähle, was gedruckt werden soll – z. B. die <b>Sitzungs-Vorlage</b> mit Schreiblinien, die <b>Mitgliederliste</b> oder die <b>Termine</b>. Es öffnet sich die Druckansicht; dort druckst du oder speicherst als PDF.", nur: () => !!ICH?.buero },
   { id: "b-bu-eingang", blatt: true, sym: "📥", t: "Eintrag im Eingangskorb", x: "Ein Eintrag aus dem Eingang, z. B. eine Erstattung oder gemeldete Dienstzeiten. <b>✏️ Öffnen &amp; bearbeiten</b> zeigt alles; die Knöpfe darunter erledigen es gleich. Er bleibt im Eingang, bis er erledigt ist – alle drei der Clubleitung sehen ihn.", nur: () => !!ICH?.buero },
@@ -34728,15 +34728,15 @@ async function archivAblageFragen(art, { titel, datum, hinweis, dateien, frage, 
   // 2.101.0: eigene Ordner haben keine eigene Registerliste (es gelten die Standard-Register) → mitgeben, sonst schlägt arVorschlag sie nie vor
   const ordner = [...nfpEigeneOrdner(d).map((o) => o.register?.length ? o : { ...o, register: d.register || ["Sonstiges"] }), ...verein]; if (!ordner.length) return false;
   const jahr = Number(String(datum || heuteIso()).slice(0, 4)), vs = arVorschlag(titel, ordner), vor = vs?.o || ordner.find((o) => o.besitzer && o.jahr === jahr) || ordner[0];
-  ABL = { a, d, titel, datum: datum || heuteIso(), dateien, danach, beiNein, vorReg: vs?.r, vs, ja }; // 2.511.0: beiNein = statt danach, wenn „Nein“ (Ablagekorb bleibt dann offen)
+  ABL = { a, d, titel, datum: datum || heuteIso(), dateien, danach, beiNein, vorReg: vs?.r, vs, ja, ordner, ordnerVor: vor.id }; // 2.511.0: beiNein = statt danach, wenn „Nein“ (Ablagekorb bleibt dann offen)
   const vsName = vs ? (vs.o.besitzer ? "Mein Ordner " + vs.o.jahr : vs.o.titel + " " + vs.o.jahr) : "";
   // 2.80.0 KC-CLUB-ABLAGE-VORSCHLAG: der Vorschlag steht als Frage oben („Soll ich … in den Ordner … im Register … ablegen?“)
   blattAuf("ablageBlatt", `${einwHtml("b-ablage")}<h3 style="margin-top:0">🗄️ ${esc(vs ? "Wohin damit? Mein Vorschlag" : frage || "Auch in deinen Archiv-Ordner legen?")}</h3>
     <p style="margin:0 0 8px">${a.sym} <b>${esc(titel)}</b>${hinweis ? `<br><span class="hinweis">${esc(hinweis)}</span>` : ""}</p>
     ${vs ? `<div class="karte abl-vorschlag">💡 Soll ich das in den Ordner <b>„${esc(vsName)}“</b>${vs.o.nur_vorstand ? " 🔒" : ""} im Register <b>„${esc(vs.r)}“</b> ablegen?<div class="hinweis" style="margin-top:2px">${esc(vs.grund)}</div></div>
       <p class="hinweis" style="margin:6px 0 2px">Oder einen anderen Platz wählen:</p>` : ""}
-    <label class="feld">Ordner<select id="ablOrdner" onchange="ablRegister()">${ordner.map((o) => `<option value="${esc(o.id)}"${o.id === vor.id ? " selected" : ""}>${o.besitzer ? `👤 Mein Ordner ${esc(String(o.jahr))}` : `🗄️ ${esc(arName(o))}${o.nur_vorstand ? " 🔒" : ""}`}</option>`).join("")}</select></label>
-    <label class="feld">Register<select id="ablReg" onchange="ablKnopf()"></select></label>
+    <label class="feld">Ordner<select id="ablOrdner" onchange="ablOrdnerWahl()">${ablOrdnerOptionen(ordner, vor.id)}</select></label>
+    <label class="feld">Register<select id="ablReg" onchange="ablRegWahl()"></select></label>
     ${wahl ? `<label class="schalter"><span>${esc(wahl.text)}</span><input type="checkbox" id="ablWahl"${wahl.an !== false ? " checked" : ""}></label>` : ""}
     <p class="hinweis" id="ablSicht">🔒 Deinen Ordner siehst nur du (und wem du ihn selbst freigibst).</p>
     <button class="knopf haupt" id="ablJa" style="text-align:center" onclick="einmal(this, ablAblegen)">🗄️ ${esc(ja || "Ja, ablegen")}</button>
@@ -34750,8 +34750,63 @@ function ablRegister() {
   const o = (ABL?.d?.ordner || []).find((x) => x.id === $("ablOrdner")?.value); if (!o) return;
   const reg = o.register?.length ? o.register : (ABL.d.register || ["Sonstiges"]), vor = (reg.includes(ABL.vorReg) ? ABL.vorReg : null) || ABL.a.register.find((r) => reg.includes(r)) || reg[0];
   if ($("ablSicht")) $("ablSicht").textContent = o.besitzer ? "🔒 Deinen Ordner siehst nur du (und wem du ihn selbst freigibst)." : o.nur_vorstand ? "🔒 Club-Ordner – sehen nur Clubsprecher, Kassenwart und Admin." : "🗄️ Club-Ordner – alle Mitglieder können ihn sehen.";
-  $("ablReg").innerHTML = reg.map((r) => `<option${r === vor ? " selected" : ""}>${esc(r)}</option>`).join("");
-  ablKnopf();
+  $("ablReg").innerHTML = reg.map((r) => `<option${r === vor ? " selected" : ""}>${esc(r)}</option>`).join("") + `<option value="${AR_NEU}">➕ Neues Register …</option>`;
+  ABL.regVor = $("ablReg").value; ablKnopf();
+}
+// 2.961.0 KC-CLUB-ABLAGE-NEU (Wunschliste #95, Hansi 16.11.2026: „die Möglichkeit schaffen, einen anderen Ordner mit + Neu oder ein neues Register mit
+// Register + Neu anzulegen – dann kann man besser ablegen, als wenn alles in Sonstiges liegt“): am Ende der Auswahl „➕ Neues Register …“ (jeder, im
+// gewählten Ordner – eigener Ordner oder Club-Ordner, den man pflegen darf) und „➕ Neuer Ordner …“ (nur wer das Club-Archiv pflegt: Clubsprecher, Admin;
+// den eigenen Ordner gibt es je Jahr genau einmal). Kein neuer Serverweg: archiv_ordner_speichern wie im Archiv selbst (Rechte prüft der Server).
+const AR_NEU = "__neu__";
+function ablOrdnerOptionen(ordner, wahl) {
+  return ordner.map((o) => `<option value="${esc(o.id)}"${o.id === wahl ? " selected" : ""}>${o.besitzer ? `👤 Mein Ordner ${esc(String(o.jahr))}` : `🗄️ ${esc(arName(o))}${o.nur_vorstand ? " 🔒" : ""}`}</option>`).join("")
+    + (ABL?.d?.darf ? `<option value="${AR_NEU}">➕ Neuer Ordner …</option>` : "");
+}
+async function ablOrdnerWahl() {
+  const w = $("ablOrdner"); if (!w || !ABL) return;
+  if (w.value !== AR_NEU) { ABL.ordnerVor = w.value; return ablRegister(); }
+  const o = await arOrdnerNeuAnlegen(ABL.d, Number(String(ABL.datum).slice(0, 4)));
+  if (!$("ablOrdner") || !ABL) return;
+  if (o) { ABL.d.ordner = [...(ABL.d.ordner || []), o]; ABL.ordner = [...ABL.ordner, o]; ABL.ordnerVor = o.id; }
+  $("ablOrdner").innerHTML = ablOrdnerOptionen(ABL.ordner, ABL.ordnerVor); ablRegister();
+}
+async function ablRegWahl() {
+  const w = $("ablReg"); if (!w || !ABL) return;
+  if (w.value !== AR_NEU) { ABL.regVor = w.value; return ablKnopf(); }
+  const o = (ABL.d.ordner || []).find((x) => x.id === $("ablOrdner")?.value);
+  const neu = o ? await arRegisterNeuAnlegen(o, ABL.d) : null;
+  if (!$("ablReg") || !ABL) return;
+  if (neu) ABL.vorReg = neu; else ABL.vorReg = ABL.regVor;
+  ablRegister();
+}
+// Register im Ordner o dazu („Sonstiges“ bleibt das letzte, KC-CLUB-REGISTER-EINHEITLICH). Gibt den Namen zurück, wie der Server ihn speichert – oder null.
+async function arRegisterNeuAnlegen(o, d) {
+  const reg = o.register?.length ? o.register : (d.register || ["Sonstiges"]);
+  if (reg.filter((r) => !r.includes(AR_TRENN)).length >= 12) { melde("In diesem Ordner sind schon 12 Register – mehr geht nicht. Bitte ein vorhandenes wählen.", true); return null; }
+  const roh = await eingabe(`➕ Neues Register im Ordner „${o.besitzer ? "Mein Ordner " + o.jahr : arName(o)}“\nWie soll es heißen?`, "", { vorschlaege: ["Urkunden", "Rechnungen", "Kochkurse", "Reisen", "Fotos"].filter((v) => !reg.includes(v)).slice(0, 4), ja: "➕ Anlegen" });
+  const name = String(roh || "").replace(/\s+/g, " ").trim().slice(0, 30); if (!name) return null;
+  const da = reg.find((r) => r.toLowerCase() === name.toLowerCase()); if (da) { melde(`Das Register „${da}“ gibt es schon – ich nehme es.`); return da; }
+  const so = reg.indexOf("Sonstiges"), neu = so >= 0 ? [...reg.slice(0, so), name, ...reg.slice(so)] : [...reg, name];
+  try {
+    await api("archiv_ordner_speichern", o.besitzer ? { id: o.id, register: neu, farbe: o.farbe } : { id: o.id, art: o.art, jahr: o.jahr, titel: o.titel, farbe: o.farbe, register: neu, nur_vorstand: !!o.nur_vorstand, einreichen: !!o.einreichen }, { warten: true });
+    const frisch = (await api("archiv_liste", {}, { warten: true }).catch(() => null))?.ordner?.find((x) => x.id === o.id);
+    o.register = frisch?.register?.length ? frisch.register : neu;
+    if (typeof AR !== "undefined") AR.daten = null;
+    const echt = o.register.find((r) => !reg.includes(r)) || name; // der Server kann den Namen vereinheitlichen (z. B. Einzahl → Mehrzahl)
+    melde(`➕ Register „${echt}“ angelegt`); return echt;
+  } catch (e) { meldeFehler(e); return null; }
+}
+// Neuer Club-Ordner (nur Archiv-Pflege) – Art „Sonstiges“, Jahr der Ablage, Register „Sonstiges“ (weitere mit „➕ Neues Register …“)
+async function arOrdnerNeuAnlegen(d, jahr) {
+  if (!d?.darf) return null;
+  const roh = await eingabe(`➕ Neuer Club-Ordner (${jahr})\nWie soll er heißen? Alle Mitglieder können ihn im Archiv sehen.`, "", { vorschlaege: ["Kochkurse", "Veranstaltungen", "Ausflüge"], ja: "➕ Ordner anlegen" });
+  const titel = String(roh || "").replace(/\s+/g, " ").trim().slice(0, 60); if (!titel) return null;
+  try {
+    const r = await api("archiv_ordner_speichern", { art: "sonstiges", jahr, titel, farbe: 1, register: ["Sonstiges"], nur_vorstand: false }, { warten: true });
+    if (typeof AR !== "undefined") AR.daten = null;
+    melde(`➕ Ordner „${titel}“ angelegt`);
+    return { id: r.id, art: "sonstiges", jahr, titel, farbe: 1, register: ["Sonstiges"], nur_vorstand: false, einreichen: false };
+  } catch (e) { meldeFehler(e); return null; }
 }
 // 2.80.0: Knopf sagt, wohin – „Ja, dort ablegen“ beim Vorschlag, sonst das gewählte Ziel
 function ablKnopf() {
@@ -34762,6 +34817,7 @@ function ablKnopf() {
 async function ablAblegen() {
   if (!ABL) return;
   const ordner_id = $("ablOrdner").value, register = $("ablReg").value, { a, danach } = ABL, wahlAn = !!$("ablWahl")?.checked;
+  if (ordner_id === AR_NEU || register === AR_NEU) return melde("Bitte zuerst einen Ordner und ein Register wählen.", true);
   let ok = 0, fehler = "", uebersprungen = 0;
   try {
     for (const f of await ABL.dateien(wahlAn)) {

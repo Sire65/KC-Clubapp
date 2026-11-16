@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.961.0 – 2026-11-16 – 🗄️ „Wohin damit?“: ➕ Neues Register und ➕ Neuer Ordner direkt beim Ablegen (KC-CLUB-ABLAGE-NEU, Wunschliste #95)
+Wunsch Hansi 16.11.: „Die Möglichkeit schaffen, einen anderen Ordner mit + Neu oder ein neues Register mit Register + Neu anzulegen – dann kann man Dateien besser ablegen, als wenn alles in Sonstiges liegt.“
+- Im Fenster „🗄️ Wohin damit? / Auch in deinen Archiv-Ordner legen?“ steht in der Register-Auswahl ganz unten **„➕ Neues Register …“**: Name eingeben (oder Vorschlag antippen) → das Register entsteht im gewählten Ordner vor „Sonstiges“ und ist gleich ausgewählt. Für jeden im eigenen Ordner; in Club-Ordnern nur, wer das Archiv pflegt (prüft der Server). Höchstens 12 Register je Ordner; gibt es den Namen schon, wird das vorhandene genommen.
+- In der Ordner-Auswahl steht für Clubsprecher und Admin **„➕ Neuer Ordner …“** (Club-Ordner, Jahr der Ablage, für alle sichtbar). Den eigenen Ordner gibt es je Jahr genau einmal – darum für Mitglieder kein neuer Ordner.
+- Kein neuer Serverweg: `archiv_ordner_speichern` wie im Archiv selbst. Hilfe „In dein Archiv ablegen“ ergänzt.
+- Test: neu `tests/ablage-neu.test.mjs`. Rückweg: App 2.960.0. Nur die App.
+- Update-Hinweis für Mitglieder: „🗄️ Beim Ablegen kannst du jetzt gleich ein neues Register anlegen.“
+
 ## 2.960.0 – 2026-11-16 – 📖 Hilfe, Erklär-Videos, Lupe und Twinkey neu · 🎬 zwei Erklärfilme neu (Wunschliste #92) · 👀 Knopf auch bei 390 px
 ### 📖 Hilfe, Erklär-Videos, Lupe und Twinkey passend zur neuesten Version (KC-CLUB-HILFE-2955, Wunschliste #92)
 Wunsch Hansi 15.11.: „Alle Hilfetexte, Video-Filme, Lupe, Twinkey an die neueste Version anpassen“ – „Ja alles neu aufbauen, damit es passt“ (auch die Admin-Funktionen).
