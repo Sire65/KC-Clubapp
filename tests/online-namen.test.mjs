@@ -33,7 +33,7 @@ assert.ok(mitGs.indexOf("G1") < mitGs.indexOf("Klaus"), "Gespräche vorne");
 // eingebunden im mittleren Feld; der Zoom des Feldes lässt Tipps auf Namen durch; Laufschrift ruht bei Sparmodus/Bewegung reduzieren
 assert.match(app, /<b class="mini-zeile">\$\{INIT\?\.mitgliederAnzahl \|\| "–"\}\$\{ONL\.zeigen \? onlineZahlHtml\(\) : ""\}<\/b>\$\{onlineNamenHtml\(\)\}<span>Mitglieder/);
 assert.match(app, /const innen = e\.target\.closest\("button, a, input, select, textarea, label, summary, \.on-name"\)/);
-assert.match(html, /html\.spar \.mini \.on-lauf \.on-band \{ animation: none !important; \}/);
-assert.match(html, /@media \(prefers-reduced-motion: reduce\) \{ \.mini \.on-lauf/);
+assert.match(html, /html\.spar \.mini \.on-namen\.on-lauf \.on-band \{ animation-duration: var\(--on-dauer, 9s\) !important;/); // 2.964.0 KC-CLUB-ONLINE-LAUF-HANDY: läuft auch im Sparmodus
+assert.match(html, /@media \(prefers-reduced-motion: reduce\) \{ \.mini \.on-namen\.on-lauf/); // 2.964.0: langsamer statt still
 assert.ok(fs.readFileSync(new URL("../.github/workflows/tests.yml", import.meta.url), "utf8").includes("node tests/online-namen.test.mjs"), "läuft in der CI");
 console.log("online-namen: ok");

@@ -1,13 +1,36 @@
 # Änderungen
 
-## 2.964.0 – 2026-11-16 – 🧊 Hänger: Ursache wird gemessen · 📖 Fehlerkatalog mit Fehler-ID, Ursache und Lösung (KC-CLUB-HAENGER-URSACHE, KC-CLUB-FEHLERKATALOG) · Server 2.964.0
+## 2.966.0 – 2026-11-16 – 🧊 Hänger: Ursache wird gemessen · 📖 Fehlerkatalog mit Fehler-ID, Ursache und Lösung (KC-CLUB-HAENGER-URSACHE, KC-CLUB-FEHLERKATALOG) · Server 2.966.0
 Wunsch Hansi 16.11. nach dem Alarm „Klaus: App reagierte 27 s nicht“: „Hänger-Meldung genauer machen, damit der User weiß, woran es liegt. Am besten auf Dauer eine Tabelle anlegen mit Fehler-ID, Fehlername, Ursache, Lösung.“
 - **Neue Tabelle `kc_club_fehler_katalog`** (Migration `20261116_kc_club_fehler_katalog.sql`): je Fehlerart eine Zeile mit Fehler-ID (KC-F-001 …), Symbol, Name, Ursache, Lösung und dem Text für das Mitglied. Hansi kann die Texte dort ändern – spätere Migrationen überschreiben sie nicht. Nur der Club-Server liest sie.
 - **Hänger mit Ursache:** Die App misst jetzt, ob sie in der Lücke selbst gerechnet hat (Chrome/Edge melden lange Aufgaben). KC-F-101 = die App hat zu lange gerechnet (Fehler der App), KC-F-102 = das Gerät hat ihr keine Zeit gegeben (andere Programme, Updates, Virenscanner), KC-F-103 = Arbeitsspeicher fast voll, KC-F-104 = Fenster war im Hintergrund (kein Fehler – keine Meldung, kein Alarm), KC-F-100 = Browser kann es nicht messen (Firefox/Safari). Mitgeschickt werden nur Zahlen (Fenster aktiv, Rechenzeit der App, Speicher in %, Gerätespeicher, Kerne).
 - **Das Mitglied sieht ein Fenster** (Wunsch Hansi: „Beim User muss ein Fenster erscheinen“) mit Name, Ursache, Lösung und Fehler-ID statt „Die App hat kurz gehangen“, z. B. „🖥️ Gerät war ausgelastet – Ursache: … – Lösung: andere Programme schließen und das Gerät ab und zu neu starten – Fehler-ID KC-F-102“. Höchstens 1× in 10 Minuten.
 - **Admin:** Fehlerprotokoll zeigt je Eintrag Fehler-ID, Ursache, Lösung und die Messwerte; neuer Knopf „📖 Fehlerkatalog“ mit allen Fehlern – **gezählt** (Wunsch Hansi: „wie oft ein Fehler vorkommt, um Ursache und Lösung zu finden“): je Fehler-ID wie oft und bei wie vielen Personen im gewählten Zeitraum, die häufigsten oben. Die Alarm-Mail enthält Fehler-ID, Ursache und Lösung.
-- Test `tests/fehlerkatalog.test.mjs`. Update-Hinweis: nur „Kleine Systemanpassung“. Rückweg: App/Server 2.963.0 (die Tabelle stört nicht).
+- Test `tests/fehlerkatalog.test.mjs`. Update-Hinweis: nur „Kleine Systemanpassung“. Rückweg: App/Server 2.965.0/2.964.0 (die Tabelle stört nicht).
 
+## 2.965.0 – 2026-11-16 – 💐 Genesungskarte mit Blumenstrauß direkt in den Chat (KC-CLUB-GENESUNGSKARTE)
+Wunsch Hansi 16.11.: „Gute Besserung direkt in ihren Chat reinstellen – nicht als Brief auf Briefkopf, sondern als Genesungskarte mit z. B. Blumenstrauß.“
+- Neue Karte, in der App gemalt: bunter **Blumenstrauß** mit Schleife, „**Gute Besserung, Vorname!**“, ein kurzer Satz (3 zur Wahl), unten das weinrote Band mit **Kochmütze und „Köcheclub Werne“** (Corporate Design). Kein Grund und keine Krankheit auf der Karte.
+- **„💬 In Karlas Chat legen“**: die Karte kommt als Bild in den Chat mit der Person, ein Satz ist vorgeschrieben – eigene Worte dazu, dann ➤ (gesendet wird erst mit ➤, wie beim Gratulieren).
+- Wo: **Büro → Freud & Leid** bei „Krankheit“ / „Unfall“ (Kachel „💐 Genesungskarte in den Chat“) und **bei jedem Mitglied** (Knopf „💐 Gute-Besserung-Karte“) – für alle Mitglieder.
+- Kein fremder Dienst, keine neuen Daten. Test: neu `tests/genesungskarte.test.mjs`. Rückweg: App 2.964.0. Nur die App.
+- Update-Hinweis für Mitglieder: „💐 Neu: Gute-Besserung-Karte mit Blumenstrauß – beim Mitglied antippen.“
+
+## 2.964.0 – 2026-11-16 – 🎚️ Datenverkehr-Säulen im Kopf (Admin) · 🟢 Laufschrift der Online-Mitglieder auch am Handy (KC-CLUB-PULS, KC-CLUB-ONLINE-LAUF-HANDY) · Server 2.964.0 + Datenbank – [Hansi: einspielen]
+Fund Hansi 16.11.: „Am Handy keine Laufschrift bei den Online-Mitgliedern. Am PC klappt es.“
+- **Antippen hielt sie für immer an:** Anhalten war an „Maus darüber“ gebunden – am Handy bleibt dieser Zustand nach dem ersten Antippen hängen. Jetzt: am Handy nur anhalten, solange der Finger drauf ist; „Maus darüber“ nur noch auf Geräten mit Maus.
+- **Sparmodus:** die Laufschrift stand still (der Sparmodus schaltet sich am Handy z. B. nach zwei langsamen Starts selbst ein). Jetzt läuft sie auch dort – es ist nur eine Verschiebung, kostet praktisch nichts.
+- **„Bewegung reduzieren“ am Gerät:** halb so schnell statt still (wie die Kochmütze).
+- Geprüft im abgeschirmten Browser mit Handy-Einstellungen (normal, Sparmodus, Bewegung reduzieren – vorher stand sie in allen drei Fällen nach dem Antippen bzw. ganz). Test: `tests/online-lauf-handy.test.mjs`. Nur die App.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+
+**🎚️ Datenverkehr-Anzeige wie am Mischpult (KC-CLUB-PULS, Wunsch Hansi 16.11.: „In der Musik gibt es so Anzeigen aus LED, die ausschlagen … grün, gelb, rot … in die Kopfzeile beim Admin“ – „Statusleisten senkrecht, nur Club-App messen, ja abschaltbar unter Zahnrad bei Admin“)**
+- Neben den LEDs in der Statusleiste zwei senkrechte LED-Säulen (nur Admin): **L** = Lesen (Seiten, Chats, Fotos holen), **S** = Schreiben (Nachrichten, Zusagen, Uploads) – je 8 Stufen (5 grün, 2 gelb, 1 rot), logarithmisch, die Spitze der letzten Messungen leuchtet nach. Antippen: großes Fenster mit Werten je Sekunde, wie viele in der App sind, und Verlaufskurve.
+- Gemessen wird nur die Club-App: Abfragen des Club-Servers auf Club-Tabellen aus den Zählern, die die Datenbank ohnehin führt (`pg_stat_statements`) – nichts wird zusätzlich gespeichert, keine Inhalte, keine Namen; die Anzeige zählt sich selbst nicht mit. Alle 4 s, nur solange die Startseite sichtbar ist.
+- Abschaltbar: ⚙️ → „🎚️ Datenverkehr-Anzeige im Kopf“ (nur beim Admin, Standard an).
+- 🐢 Sparmodus (Fund Hansi: „ab und an wird an der Stelle die Schildkröte angezeigt“): mit den Säulen passte die Schildkröte nicht mehr in die Leiste – sie sitzt dann klein unten an den Säulen, im Fenster steht der Grund.
+- Datenbank: `supabase/migrations/20261116_kc_club_puls.sql` (nur lesend, nur Club-Server). Fehlt sie, zeigt die Anzeige einfach nichts. Tests: `tests/puls.test.mjs`. Im abgeschirmten Browser geprüft (Ausschlag, Fenster, 360/390/412 px mit Sparmodus).
 ## 2.963.0 – 2026-11-16 – 🗄️ „➕ Neues Register …“ auch an allen anderen Ablage-Stellen (KC-CLUB-ABLAGE-NEU-UEBERALL, Wunschliste #95)
 Wunsch Hansi 16.11.: „Durchsuche den Code, ob so was an anderen Stellen auch sinnvoll ist, auch für alle Mitglieder frei geben.“
 - Gefunden und nachgerüstet – überall, wo man im Archiv ein Register auswählt: **📥 Dokument ablegen / ✏️ ändern** (im Archiv), **📋 Kopieren / ➡️ Verschieben nach …**, **Eingang: Dokument annehmen („… ablegen“)** und **🆘 Notfallpass → In mein Archiv kopieren**. Dazu wie in 2.961.0 das Fenster „Wohin damit?“.

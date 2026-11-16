@@ -22,7 +22,7 @@ assert.equal((server.match(/managerMitglieder\(\)/g) || []).length, 6, "5 Lesest
 assert.equal((server.match(/eq\("section_key", AKTIONEN_QUELLE\.mitglieder\)/g) || []).length, 1, "volles Lesen nur noch als Rückfall");
 const mm = server.slice(server.indexOf("async function managerMitglieder()"), server.indexOf("async function aktionenLesen("));
 assert.ok(/catch \{ \/\* Rückfall unten \*\/ \}/.test(mm) && /return await db\.from\(AKTIONEN_QUELLE\.tabelle\)\.select\("payload"\)/.test(mm), "Rückfall");
-assert.ok(/"kc_club_manager_mitglieder_kurz", "kc_club_comm_paket_kurz"\]\);/.test(server), "nur lesend → Puffer bleibt (Notfall-Paket)");
+assert.ok(/"kc_club_manager_mitglieder_kurz", "kc_club_comm_paket_kurz"(, "kc_club_puls")?\]\);/.test(server), "nur lesend → Puffer bleibt (Notfall-Paket)");
 const pk = server.slice(server.indexOf("async function commLesenPaket("), server.indexOf("function commZahlenNorm("));
 assert.ok(pk.indexOf('rpc("kc_club_comm_paket_kurz"') < pk.indexOf('rpc("kc_club_comm_paket"'), "erst kurz, dann bisheriges Paket");
 assert.ok(/if \(!pk\) return commLesenEinzeln\(seit7, seit24\);/.test(server), "dann einzeln");

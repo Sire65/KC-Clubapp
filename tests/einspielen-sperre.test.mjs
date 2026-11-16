@@ -54,4 +54,7 @@ for (const [n, y] of [["Seite", seite], ["Server", srv]]) assert.ok(/titel="\$\{
 assert.ok(/KC-EINSPIELEN-SPERRE/.test(agents) && /\[Hansi: einspielen\]/.test(agents) && /\[Notfall\]/.test(agents), "Regel in AGENTS.md");
 // 2.917.0 KC-CLUB-RUNDGANG-PFLICHT (Hansi 11.11.2026): veröffentlicht wird nur nach grünem Klick-Rundgang
 assert.ok(/\n  rundgang:\n[\s\S]*?node tests\/rundgang\.browser\.mjs/.test(seite) && /\n  bauen:\n    needs: \[tests, rundgang\]/.test(seite), "Rundgang ist Pflicht vor dem Bauen");
+// KC-EINSPIELEN-LIVE-VERGLEICH (16.11.2026): ein Doku-Push darf keine noch wartende App-Version außerhalb des Termins mitnehmen
+{ const wf = fs.readFileSync(new URL("../.github/workflows/seite-veroeffentlichen.yml", import.meta.url), "utf8");
+  assert.ok(/if \[ "\$neu" = nein \]; then[\s\S]{0,400}github\.io\/\$\{GITHUB_REPOSITORY#\*\/\}\/version\.json[\s\S]{0,200}if \[ -z "\$online" \] \|\| \[ "\$online" != "\$hier" \]; then[^\n]*neu=ja/.test(wf), "Vergleich mit der Version, die online läuft"); }
 console.log("einspielen-sperre: alle Prüfungen bestanden");
