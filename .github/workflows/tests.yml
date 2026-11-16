@@ -124,6 +124,7 @@ jobs:
       - run: node tests/advent-nikolaus-foto.test.mjs
       - run: node tests/advent-serveruhr.test.mjs
       - run: node tests/gemeinschaftsgericht.test.mjs
+      - run: node tests/online-lauf-handy.test.mjs
       - run: node tests/anfrage-gegenvorschlag.test.mjs
       - run: node tests/netz-balken.test.mjs
       - run: node tests/muenze-gesicht.test.mjs
@@ -190,6 +191,7 @@ jobs:
       - run: node tests/advent-2026.test.mjs
       - run: node tests/advent-preise.test.mjs
       - run: node tests/erstattung-sicher.test.mjs
+      - run: node tests/ablage-neu.test.mjs
       - run: node tests/teilen-eigen.test.mjs
       - run: node tests/clubabend-anwesend.test.mjs
       - run: node tests/sitzung-schritte.test.mjs
@@ -216,6 +218,7 @@ jobs:
       - run: node tests/fee-blase.test.mjs
       - run: node tests/kom-symbole.test.mjs
       - run: node tests/hilfe-passend.test.mjs
+      - run: node tests/hilfe-2955.test.mjs
       - run: node tests/spur-wieder.test.mjs
       - run: node tests/einspielen-fenster.test.mjs
       - run: node tests/einspielen-sperre.test.mjs

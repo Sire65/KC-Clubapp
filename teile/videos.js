@@ -170,6 +170,9 @@ const RG_VORSCHLAG = [
   { v: "vorschlaege", vor: () => { if ($("vfTitel") && !$("vfTitel").value) $("vfTitel").value = "Grillabend im Mai"; }, sel: [rgFeld("vfTitel")], puls: ["#vfTitel", "#vfBeschr"], t: "✏️ Thema", x: "Dann das Thema, zum Beispiel Grillabend im Mai – und wenn du magst, eine Beschreibung darunter." },
   { v: "vorschlaege", sel: [rgFeld("vfTreffen")], t: "📅 Für welchen Termin?", x: "Hier wählst du, auf welcher Sitzung darüber gesprochen werden soll – oder allgemein." },
   { v: "vorschlaege", sel: [rgFeld("vfInfo")], puls: ["#vfInfo", () => $("vorschlagForm")?.querySelector(".knopf.haupt[onclick^='vorschlagSpeichern']")], t: "📨 Abschicken", x: "Clubsprecher und Kassenwart bekommen Bescheid. Mit Vorschlagen schickst du ihn ab – ich schicke hier nichts ab." },
+  // 2.955.0 KC-CLUB-HILFE-2955 (KC-CLUB-GEGENVORSCHLAG, 2.954.0): nur erklärt – Beispiel-Vorschläge gibt es im Video nicht
+  { v: "vorschlaege", vor: () => $("vorschlagForm")?.classList.add("versteckt"), sel: ["#v-vorschlaege .kopf2"], t: "↔️ Gegenvorschlag",
+    x: "Hast du zu einem Thema eine andere Idee, tippst du beim Vorschlag auf Gegenvorschlag. Bis zu drei Vorschläge gehören dann zusammen, A, B und C. Du unterstützt nur einen davon – tippst du auf einen anderen, wandert deine Stimme mit. Auf der Tagesordnung ist das ein einziger Punkt." },
   { v: "vorschlaege", vor: () => $("vorschlagForm")?.classList.add("versteckt"), t: "✅ Fertig", x: "Die anderen sehen deinen Vorschlag und können abstimmen. So einfach bringst du deine Ideen in den Club." },
 ];
 // KC-CLUB-ERKLAERVIDEOS-ROLLEN (2.245.0, Wunsch Hansi „nichts von Admin-Funktionen erklären oder zeigen; eigene Videos für die Clubleitung
@@ -481,6 +484,10 @@ const RG_OBERFLAECHE = [
   { v: "start", nur: () => !einfach(), vor: () => { rgKopf("ganz"); rgAnordnen(false); rgAusDemo(true); }, sel: ["#kaAusHinweis"], mussSel: true, t: "👀 Verborgene anzeigen",
     x: "Sind Kacheln verborgen, steht das unter den Kacheln. Mit Nur ausgeblendete zeigen holst du sie zum Benutzen hervor – und mit dem Knopf verschwinden sie wieder.",
     live: async (L) => { await L.tipp("#kaAusHinweis .ka-nuraus"); kaNurAus(true); L.ziel(); await L.warte(2200); await L.tipp("#kaAusHinweis .ka-nuraus.an"); kaNurAus(false); } },
+  // 2.955.0 KC-CLUB-HILFE-2955 (KC-CLUB-KA-KOPF-TOGGLE, 2.953.0): derselbe Umschalter oben neben „< Erweiterte Ansicht >“ – nur wenn er dort Platz hat (sonst Station auslassen)
+  { v: "start", nur: () => !einfach(), vor: () => { rgKopf("ganz"); rgAnordnen(false); kaNurAus(false); rgAusDemo(true); scrollTo(0, 0); }, sel: ["#kaKopfKnoepfe .ka-kopf-k"], puls: ["#kaKopfKnoepfe .ka-kopf-k"], mussSel: true, t: "👀 Der runde Knopf oben",
+    x: "Das geht auch oben: Neben Erweiterte Ansicht steht dann ein kleiner runder Knopf mit den Augen. Einmal tippen zeigt nur die ausgeblendeten Kacheln, der Knopf wird rot mit dem Äffchen. Nochmal tippen – und sie sind wieder verborgen.",
+    live: async (L) => { await L.tipp("#kaKopfKnoepfe .ka-kopf-k"); kaNurAus(true); L.ziel(); await L.warte(2200); await L.tipp("#kaKopfKnoepfe .ka-kopf-k.an"); kaNurAus(false); } },
   // 2.274.0 KC-CLUB-VIDEO-ZAHLEN (Wunsch Hansi): die Zahlen hinten am Register (z. B. 10/12) und auf den Kacheln erklären.
   // Gesprochen wird „10 von 12“ – „10/12“ läsen manche Stimmen als Datum vor.
   { v: "start", nur: () => !einfach(), vor: () => { rgKopf("ganz"); rgAnordnen(false); kaNurAus(false); rgAusDemo(true); }, sel: ["#register button.an"], puls: ["#register button.an .anz"], mussSel: true, t: "🔢 Die Zahl am Register",
@@ -511,7 +518,7 @@ const RG_OBERFLAECHE = [
     live: async (L) => { await L.warte(1500); if (!einfach() && REGISTER.some(([r]) => r === "mein")) { if (reg !== "mein") { await L.tipp('#register button[data-r="mein"]'); rgRegister("mein"); await L.warte(900); L.ziel(); await L.warte(400); } await L.tipp(rgKachel("einstellungen")); }
       else await L.tipp(`#fuss [onclick="zeige('einstellungen')"]`); zeige("einstellungen", true); scrollTo(0, 0); L.ziel(); await L.warte(2500); } },
   { v: "start", vor: () => { rgKopf(); rgAnordnen(false); }, t: "✅ Fertig", x: () => einfach() ? "Das war's: Kopf einrollen und Kacheln anordnen. In der erweiterten Ansicht kannst du noch viel mehr – schau dir das Video dort noch einmal an. Probier es einfach aus!"
-    : "Das war's: Kopf einrollen, blättern, Kacheln verschieben, verbergen und umdrehen, die Zahlen verstehen, Register anordnen und wischen. So gestaltest du dir deine Wunsch-Oberfläche – probier es einfach aus!" },
+    : "Das war's: Kopf einrollen, blättern, Kacheln verschieben, verbergen, wieder hervorholen und umdrehen, die Zahlen verstehen, Register anordnen und wischen. So gestaltest du dir deine Wunsch-Oberfläche – probier es einfach aus!" },
 ];
 // KC-CLUB-ERKLAERVIDEOS-5 (2.269.0, Wunsch Hansi „prüfen, ob noch Schulungsvideos fehlen, und weiter erstellen“): Mein Dienst & Dienstplan,
 // Mein Status, Protokolle & Dokumente, Meine Daten & Änderungen melden. Nur vorgeführt – nichts gespeichert, gemeldet oder als gelesen markiert;
@@ -710,7 +717,8 @@ const RG_SPEZIAL = [
     x: "Rechts oben der Mond- und Sonnen-Knopf: Jeder Tipp schaltet reihum. A heißt Automatik – abends wird die App von selbst dunkel. T heißt immer Tag, N immer Nacht. Das kleine Schild am Knopf zeigt, was gerade gilt." },
   { v: "start", nur: () => !einfach(), vor: () => rgKopf("offen"), demo: { nacht: true }, sel: ["#v-start .hero"], t: "🌙 So sieht Nacht aus",
     x: "So sieht die App bei Nacht aus – angenehm für die Augen im Dunkeln. Ich schalte gleich wieder zurück; deine Einstellung bleibt, wie sie ist.", live: async (L) => { await L.tipp("#modusKnopf"); } },
-  rgOb("⌃ Halb einrollen"), rgOb("⌃⌃ Ganz einrollen"), rgOb("‹ › Pfeile links und rechts"),
+  // 2.955.0 KC-CLUB-HILFE-2955: seit 2.915/2.916 ein Knopf mit vier Stufen – die alten Stationen „⌃ Halb einrollen“/„⌃⌃ Ganz einrollen“ gibt es nicht mehr
+  rgOb("⌃ Der Knopf oben"), rgOb("⌃ Einmal tippen: Felder weg"), rgOb("⌃ Nochmal: Laufschrift weg"), rgOb("⌃ Und nochmal: ganz – dann wieder auf"), rgOb("‹ › Pfeile links und rechts"),
   { v: "start", nur: () => !einfach(), vor: () => { rgKopf("offen"); rgInfo(); }, sel: ["#heroInfo"], mussSel: true, t: "« » Ganz an den Anfang oder ans Ende",
     x: "Unter den einfachen Pfeilen sitzt jeweils ein Doppelpfeil. Damit springst du sofort zur ersten oder zur letzten Karte im Info-Feld.",
     live: async (L) => { await L.tipp("#heroInfo .ipfeil.rechts.sprung"); infoSpringen(1); L.ziel(); await L.warte(2000); await L.tipp("#heroInfo .ipfeil.links.sprung"); infoSpringen(-1); L.ziel(); } },
@@ -901,7 +909,7 @@ const RG_EFFEKTE = [
     live: async (L) => { for (const art of ["jalousie", "wirbel", "walze", "blasen", "magnet", "pfanne"]) { await L.tipp(`#register button[data-r="${reg}"]`); regEffekt(1, art); await L.warte(1500); } } },
   // 2.508.0 KC-CLUB-HILFE-NACHTRAG-3: Kopf-Effekte und Geburtstags-Vogel – nur vorgeführt (kopfRolloFahren mit festem Effekt), die Einstellung bleibt
   { v: "start", nur: () => fxAn(), vor: () => rgKopf("offen"), sel: ["#v-start .hero"], t: "🎪 Der Kopf geht auf und zu",
-    x: "Oben am Kopf rollst du ihn mit den Pfeilen ein – normal wie eine Jalousie. Du kannst aber auch etwas anderes wählen: einen weinroten Theatervorhang, eine silberne Servierglocke oder die Holzklappe einer Marktbude. Schau mal.",
+    x: "Mit dem runden Knopf oben am Kopf rollst du ihn ein – normal wie eine Jalousie. Du kannst aber auch etwas anderes wählen: einen weinroten Theatervorhang, eine silberne Servierglocke oder die Holzklappe einer Marktbude. Schau mal.",
     live: async (L) => { for (const e of ["theater", "glocke", "bude"]) { await kopfRolloFahren("ganz", e); await L.warte(500); await kopfRolloFahren("offen", e); await L.warte(700); } } },
   { v: "start", nur: () => fxAn(), vor: () => rgKopf("offen"), sel: ["#v-start .hero"], t: "🎁 Geburtstag im Kopf",
     x: "Hat jemand aus dem Club Geburtstag, kommt ein Vogel mit einem Geschenk. Unten platzt das Paket – ein Blumenstrauß springt heraus, und bunt steht da: Happy Birthday.",
@@ -2055,10 +2063,25 @@ function rgTerminfindenReiheLoeschen() {
   RG.zurueck.push(() => { $("ptLoeschFenster")?.remove(); PT.vorkommen = alt; });
 }
 const rgTerminfindenWahlKnopf = (re) => () => [...document.querySelectorAll("#neuWahlBlatt .wahl button")].find((b) => re.test(b.textContent)) || null;
+// 2.955.0 KC-CLUB-HILFE-2955: Beispiel-Besprechung (eigene Anfrage an Klaus mit Punkten in der Notiz) für Tagesordnung und Protokoll.
+// Nur Anzeige im eigenen, inerten Kasten: das Häkchen „Als Tagesordnung übernehmen“ wird nur auf dem Bildschirm gesetzt (nichts im Gerät gemerkt),
+// das Protokoll ist ein Beispiel (status „gesendet“) – es wird nichts geschrieben, gesendet oder gedruckt.
+const rgTerminfindenBesprechung = (mitProtokoll) => ({
+  id: "rg-tf-bespr", vonMir: true, status: "offen", anlass: "Besprechung Weihnachtsmarkt", beginn: new Date(Math.ceil((Date.now() + 3600000) / 1800000) * 1800000).toISOString(), ende: null, // in gut einer Stunde – dann gibt es schon „📝 Protokoll schreiben“ ort: "Clubraum",
+  notiz: "1. Dienstplan Weihnachtsmarkt\n2. Einkauf Getränke\n3. Verschiedenes", frist: null, von: { name: ICH?.name || "", vorname: ICH?.vorname || "" }, erinnerung: null,
+  empfaenger: [{ person_id: "rg-tf-a", name: "Klaus", vorname: "Klaus", antwort: "ja" }], protokoll: mitProtokoll ? { status: "gesendet" } : null,
+});
+function rgTerminfindenBespr(stufe) { // stufe: "to" = Tagesordnung aufgeklappt · "prot" = Protokoll verschickt
+  const a = rgTerminfindenBesprechung(stufe === "prot");
+  const k = rgTerminfindenKasten("rgTfBespr", "terminanfragen", `<details class="karte tm-klappe" open><summary>📨 Terminanfragen – Beispiel</summary>${taKarte(a)}</details>`);
+  if (!k) return;
+  k.querySelectorAll('.erin-zeile, .ta-kal-alt, [onclick^="taKalender"]').forEach((e) => e.remove());
+  if (stufe === "to") { const h = k.querySelector(".ta-to-schalter input"), z = k.querySelector("#taTo-rg-tf-bespr"); if (h) h.checked = true; if (z) z.innerHTML = taToListeHtml(a); }
+}
 
 const RG_TERMINFINDEN = [
   { v: "termine", vor: () => rgTerminfindenListe(), sel: ["#v-termine .kopf2"], t: "👋 Termin mit anderen ausmachen",
-    x: "In diesem Video zeige ich dir, wie du mit anderen einen Termin ausmachst: eine Terminanfrage stellen, sehen, wie sie steht, auf einen Gegenvorschlag antworten, einen Tag finden, der allen passt – und Termine, die immer wiederkommen. Keine Sorge: Ich sende und speichere nichts." },
+    x: "In diesem Video zeige ich dir, wie du mit anderen einen Termin ausmachst: eine Terminanfrage stellen, sehen, wie sie steht, sie ergänzen, auf einen Gegenvorschlag antworten, daraus eine Besprechung mit Tagesordnung und Protokoll machen, einen Tag finden, der allen passt – und Termine, die immer wiederkommen. Keine Sorge: Ich sende und speichere nichts." },
   { v: "termine", tippVor: "#neuTreffenKnopf", vor: () => { rgTerminfindenListe(); termineNeuWahl(); $("neuWahlBlatt")?.classList.add("rg-zeigen"); RG.zurueck.push(() => $("neuWahlBlatt")?.remove()); },
     nach: () => $("neuWahlBlatt")?.remove(), sel: ["#neuWahlBlatt .wahl"], puls: [rgTerminfindenWahlKnopf(/Terminanfrage/)], t: "📨 Plus Neu, dann Terminanfrage",
     x: "Oben rechts tippst du auf Plus Neu und wählst Terminanfrage. Damit fragst du einzelne Mitglieder, mehrere oder eine ganze Gruppe, ob sie Zeit haben – statt lange hin und her zu schreiben." },
@@ -2071,11 +2094,18 @@ const RG_TERMINFINDEN = [
   { v: "termine", vor: () => rgTerminfindenForm(), sel: [() => $("taOrtWahl")?.closest(".feld"), "#terminanfrageForm"],
     puls: ["#taFrist", "#taOrtWahl", "#taNotiz"], t: "⏳ Antwort bis, Ort und Notiz",
     x: "Bei Antwort bis legst du fest, bis wann die anderen antworten sollen. Dazu der Ort und eine Notiz, wenn du magst – zum Beispiel: Bitte Einkaufstaschen mitbringen." },
+  // 2.955.0 KC-CLUB-HILFE-2955 (KC-CLUB-ANFRAGE-GEGENVORSCHLAG, 2.903.0)
+  { v: "termine", vor: () => rgTerminfindenForm(), sel: [() => $("taGegenvorschlag")?.closest("label"), "#terminanfrageForm"], puls: ["#taGegenvorschlag"], t: "🔄 Gegenvorschlag erlauben?",
+    x: "Darunter das Häkchen Gegenvorschlag erlauben. Ist es an, dürfen die anderen eine andere Zeit vorschlagen. Machst du es aus, steht die Zeit fest – dann antworten alle nur mit Ja, Vielleicht oder Nein." },
   { v: "termine", vor: () => rgTerminfindenForm(), sel: [rgOn("taSenden", ".knoepfe")], puls: [rgOn("taSenden"), () => $("terminanfrageForm")?.querySelector(".knoepfe .knopf:not(.haupt)")], t: "📨 Anfrage senden",
     x: "Mit Anfrage senden geht sie los, und alle Gefragten bekommen Bescheid. Mit Abbrechen machst du das Formular wieder zu. Ich sende hier nichts – das Beispiel verschwindet gleich wieder." },
   { v: "termine", vor: () => { rgTerminfindenFormZu(); rgTerminfindenAnfragen("meine"); }, sel: ["#ta-rg-tf-meine"],
     puls: ["#rgTfAnfragen .ta-st", () => $("rgTfAnfragen")?.querySelector('[onclick^="taAbsagen"]')], t: "📊 Wie steht meine Anfrage?",
     x: "Deine Anfrage steht dann oben in Termine – mit Anfrage an. Bei jedem steht der Stand: angefragt, gelesen, bestätigt, vielleicht oder abgelehnt. Kommt bis zur Frist keine Antwort, steht dort abgelaufen. Mit Absagen nimmst du die ganze Anfrage zurück." },
+  // 2.955.0 KC-CLUB-HILFE-2955 (KC-CLUB-TA-AENDERN, 2.934.0)
+  { v: "termine", vor: () => { rgTerminfindenFormZu(); rgTerminfindenAnfragen("meine"); }, sel: [() => $("rgTfAnfragen")?.querySelector('[onclick^="taAendern"]')?.closest(".knoepfe"), "#ta-rg-tf-meine"],
+    puls: [() => $("rgTfAnfragen")?.querySelector('[onclick^="taAendern"]')], t: "✏️ Ändern / ergänzen",
+    x: "Fällt dir später noch etwas ein, tippst du bei deiner Anfrage auf Ändern ergänzen. Anlass, Ort und Notiz kannst du ändern – die Zeit bleibt. Auf Wunsch bekommen die Angefragten Bescheid, welche Punkte neu dazugekommen sind." },
   { v: "termine", vor: () => { rgTerminfindenFormZu(); rgTerminfindenAnfragen("beide"); }, sel: ["#ta-rg-tf-fremd"],
     puls: ["#ta-rg-tf-fremd .ta-antw button", '#ta-rg-tf-fremd [onclick^="taGegenvorschlag"]'], t: "🙋 Wenn du gefragt wirst",
     x: "Wirst du selbst angefragt, antwortest du mit Ja, Vielleicht oder Nein. Nochmal auf deine Antwort tippen nimmt sie zurück. Passt die Zeit nicht, tippst du auf Andere Zeit vorschlagen." },
@@ -2087,7 +2117,15 @@ const RG_TERMINFINDEN = [
     x: "Unter Vorbehalt heißt: Ja, die neue Zeit passt – aber es hängt noch an etwas." },
   { v: "termine", vor: () => { rgTerminfindenAnfragen("meine"); rgTerminfindenVorbehalt(); }, nach: () => $("taVkBlatt")?.remove(), sel: ["#taVkLabel"], puls: ["#taVkText", "#taVkOk"], t: "✍️ Woran hängt es?",
     x: "Schreib kurz dazu, woran es noch hängt – zum Beispiel: falls ich rechtzeitig von der Arbeit wegkomme. Mit Senden sieht der andere es sofort. Ich sende hier nichts." },
-  { v: "termine", vor: () => { $("taVkBlatt")?.remove(); $("rgTfAnfragen")?.remove(); rgTerminfindenUmfrage(); }, sel: [rgTerminfindenUmfrageZiel], puls: [() => rgTerminfindenUmfrageZiel()?.querySelector("summary")], t: "🗓️ Einen Tag finden, der allen passt",
+  // 2.955.0 KC-CLUB-HILFE-2955 (KC-CLUB-TA-TAGESORDNUNG, 2.932.0/2.933.0/2.937.0)
+  { v: "termine", vor: () => { $("taVkBlatt")?.remove(); $("rgTfAnfragen")?.remove(); rgTerminfindenBespr("to"); }, sel: ["#rgTfBespr .ta-to", "#ta-rg-tf-bespr"],
+    puls: ["#rgTfBespr .ta-to-schalter", '#rgTfBespr [onclick^="druckStarten"]'], t: "📋 Als Tagesordnung übernehmen",
+    x: "Wird aus der Anfrage eine Besprechung, hakst du Als Tagesordnung übernehmen an. Die Punkte aus der Notiz stehen dann einzeln da – jeder mit eigenem Häkchen, und du kannst weitere dazuschreiben. Mit Besprechungsvorlage druckst du ein Blatt im Club-Design mit Linien zum Mitschreiben." },
+  // 2.955.0 KC-CLUB-HILFE-2955 (KC-CLUB-TA-PROTOKOLL, 2.943.0 · KC-CLUB-TA-PROTOKOLL-PDF, 2.946.0)
+  { v: "termine", vor: () => { $("rgTfAnfragen")?.remove(); rgTerminfindenBespr("prot"); }, sel: [() => $("rgTfBespr")?.querySelector('[onclick^="taProtokoll"]')?.closest(".knoepfe"), "#ta-rg-tf-bespr"],
+    puls: ['#rgTfBespr [onclick^="taProtokoll("]', '#rgTfBespr [onclick^="taProtokollLesen"]'], t: "📝 Protokoll schreiben",
+    x: "Kurz vor der Besprechung erscheint Protokoll schreiben. Die Punkte der Tagesordnung sind schon drin – je Punkt schreibst du das Ergebnis, wer es macht und bis wann. Beim Senden macht die App daraus ein PDF auf dem Club-Briefkopf, auf Wunsch mit einer Kopie der E-Mail an dich. Danach steht hier Protokoll verschickt – und mit So sieht Klaus es siehst du genau, was bei ihm ankommt." },
+  { v: "termine", vor: () => { $("taVkBlatt")?.remove(); $("rgTfAnfragen")?.remove(); $("rgTfBespr")?.remove(); rgTerminfindenUmfrage(); }, sel: [rgTerminfindenUmfrageZiel], puls: [() => rgTerminfindenUmfrageZiel()?.querySelector("summary")], t: "🗓️ Einen Tag finden, der allen passt",
     x: () => (ICH?.vorstand
       ? "Sucht ihr einen gemeinsamen Tag, schlägt die Clubleitung mehrere Termine zur Auswahl vor – wie du sie anlegst, zeigt das Video für die Clubleitung. Alle finden sie hier in Termine unter Terminfindung und kreuzen an, was bei ihnen geht."
       : "Sucht ihr einen gemeinsamen Tag, schlägt die Clubleitung mehrere Termine zur Auswahl vor. Du findest sie hier in Termine unter Terminfindung.") },
@@ -2105,7 +2143,7 @@ const RG_TERMINFINDEN = [
     puls: ["#ptLoeschFenster .blatt-innen .knopf"], t: "🗑️ Nur diesen Termin oder die ganze Reihe?",
     x: "Löschst du später einen Termin aus einer Reihe, fragt die App: Nur den Termin an diesem Tag – oder die ganze Reihe. Mit Abbrechen bleibt alles, wie es ist. Ich lösche hier nichts." },
   { v: "termine", vor: () => { $("ptLoeschFenster")?.remove(); $("treffenForm")?.classList.add("versteckt"); }, sel: ["#neuTreffenKnopf"], t: "✅ Fertig",
-    x: "Das war's: Mit Plus Neu und Terminanfrage fragst du andere, oben siehst du, wie die Anfrage steht, und auf einen Gegenvorschlag antwortest du mit Annehmen, Unter Vorbehalt oder Passt nicht. Bei der Terminfindung kreuzt du an, was passt – und Termine, die immer wiederkommen, trägst du nur einmal ein." },
+    x: "Das war's: Mit Plus Neu und Terminanfrage fragst du andere, oben siehst du, wie die Anfrage steht, mit Ändern ergänzt du sie, und auf einen Gegenvorschlag antwortest du mit Annehmen, Unter Vorbehalt oder Passt nicht. Aus einer Besprechung werden Tagesordnung und Protokoll. Bei der Terminfindung kreuzt du an, was passt – und Termine, die immer wiederkommen, trägst du nur einmal ein." },
 ];
 
 // ---------- 2.348.0 KC-CLUB-VIDEO-TODO (Wunsch Hansi „für alle Themen Videos – logisch aufgebaut, gut erklärt“) ----------

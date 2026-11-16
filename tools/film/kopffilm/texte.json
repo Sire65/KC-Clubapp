@@ -1,0 +1,143 @@
+{
+ "titel": "Der Kopf der Club-App",
+ "unter": "Der Kopf der Club-App",
+ "datei": "kopf-der-app.mp4",
+ "vorschau": "kopf-vorschau.webp",
+ "vorschauSzene": "rand#2",
+ "ansicht": "erweitert",
+ "crf": 24,
+ "szenen": [
+  {
+   "id": "titel",
+   "art": "titel",
+   "min": 7,
+   "titel": "Der Kopf<br>der Club-App",
+   "dauer": "ca. 3½ Minuten",
+   "zeilen": [
+    "🧭 deine erste Infozentrale",
+    "🎛️ … und du steuerst eine Menge"
+   ],
+   "text": "Der Kopf der Club-App, in etwa dreieinhalb Minuten erklärt. Er ist deine erste Infozentrale, wenn du die App aufrufst – und steuern kannst du darüber eine Menge."
+  },
+  {
+   "id": "aufbau",
+   "etikett": "🧩 Vier Teile",
+   "text": "Er besteht aus vier Teilen: der Kopfzeile mit Logo und Knöpfen, der Statusleiste mit den Lämpchen, dem Info-Feld zum Blättern und den gelben Punkten darunter."
+  },
+  {
+   "id": "kopfzeile",
+   "etikett": "Logo · Mond · Kreispfeil",
+   "text": "Tippst du auf das Logo, kommst du zur Internetseite des Clubs. Mit dem Mond schaltest du zwischen Tag, Nacht und Automatik. Der Kreispfeil daneben lädt alles neu."
+  },
+  {
+   "id": "rand",
+   "etikett": "Ganz oben am Rand",
+   "text": "Ganz oben am Rand sitzen drei Helfer: der runde Knopf mit vier Punkten, die Flagge und der Verbindungs-Balken."
+  },
+  {
+   "id": "knopf",
+   "etikett": "⌃ Der runde Knopf",
+   "text": "Der runde Knopf fährt den Kopf in vier Schritten ein, wenn du mehr Platz brauchst. Die Punkte zeigen die Stufe – vier helle Punkte heißt: ganz offen."
+  },
+  {
+   "id": "stufe1",
+   "etikett": "1× tippen · drei Felder weg",
+   "text": "Einmal tippen: Die drei Felder mit Nachrichten, Mitgliedern und Clubtreffen verschwinden. Drei Punkte sind noch hell."
+  },
+  {
+   "id": "stufe2",
+   "etikett": "2× tippen · Laufschrift weg",
+   "text": "Zweimal: Jetzt ist auch die Info-Laufschrift weg. Die Statusleiste mit den Lämpchen bleibt."
+  },
+  {
+   "id": "stufe3",
+   "etikett": "3× tippen · Statusleiste weg",
+   "text": "Dreimal: Auch die Statusleiste geht weg. Nur die Kopfzeile bleibt, und der Pfeil zeigt nach unten."
+  },
+  {
+   "id": "stufe4",
+   "etikett": "4× tippen · alles wieder da",
+   "text": "Beim vierten Tippen ist alles wieder da. Lange drücken klappt den Kopf sofort auf. Und kommt etwas Neues, leuchtet der Knopf."
+  },
+  {
+   "id": "netz",
+   "etikett": "📶 Verbindungs-Balken",
+   "text": "Rechts zeigt der Verbindungs-Balken, wie gut deine Verbindung ist: grün gut, gelb mäßig, rot schwach. Antippen zeigt die Einzelheiten."
+  },
+  {
+   "id": "flagge",
+   "etikett": "🇩🇪 Deutsch · 🇬🇧 English",
+   "text": "Die Flagge schaltet die Bedienung auf Englisch: Knöpfe, Leisten und die Begrüßung. Nachrichten und Termine bleiben deutsch. Noch einmal tippen – wieder Deutsch."
+  },
+  {
+   "id": "status",
+   "etikett": "🟢 Status-Knopf",
+   "text": "Mit dem Statusknopf zeigst du, ob du verfügbar, beschäftigt oder im Urlaub bist. Die Lämpchen rechts zeigen die Verbindung – grün heißt: alles in Ordnung."
+  },
+  {
+   "id": "treffen",
+   "etikett": "1 · Treffen und drei Felder",
+   "text": "In der ersten Karte läuft oben dein nächstes Treffen. Darunter drei Felder: neue Nachrichten, die Mitglieder und die Tage bis zum Clubtreffen. Antippen führt dich direkt hin."
+  },
+  {
+   "id": "blaettern",
+   "etikett": "‹ › eine Karte weiter",
+   "text": "Mit den Pfeilen links und rechts blätterst du eine Karte weiter. Der Doppelpfeil springt sofort zur ersten oder letzten Karte. Wischen geht auch."
+  },
+  {
+   "id": "punkte",
+   "etikett": "🟡 Punkte zeigen, wo du bist",
+   "text": "Die gelben Punkte darunter zeigen, auf welcher Karte du bist. Tippst du einen Punkt an, springst du direkt dorthin."
+  },
+  {
+   "id": "schnellstart",
+   "etikett": "⚡ Schnellstart",
+   "text": "Im Schnellstart erreichst du das Wichtigste mit einem Tipp: Schreiben, Termin, Zettel, Foto, Standort, Suchen und SOS. Mit dem Stift wählst du deine Symbole aus."
+  },
+  {
+   "id": "wetter",
+   "etikett": "🌦️ Wetter",
+   "text": "Das Wetter für Werne: Einen Tag antippen zeigt diesen Tag. Länger festhalten zeigt die Einzelheiten – Wind, Böen und Regen."
+  },
+  {
+   "id": "fuerdich",
+   "etikett": "🔔 Für dich – zu erledigen",
+   "text": "„Für dich“ zeigt, was zu erledigen ist: neue Nachrichten, Zusagen, Abstimmungen oder dein nächster Dienst. Eine Zeile antippen, und du bist da."
+  },
+  {
+   "id": "demnaechst",
+   "etikett": "📅 Demnächst",
+   "text": "Bei „Demnächst“ stehen die Termine der nächsten Wochen. Antippen öffnet den Tag im Kalender."
+  },
+  {
+   "id": "fotos",
+   "etikett": "📷 Neueste Fotos",
+   "text": "Hier siehst du die neuesten Fotos aus dem Album. Antippen, und das Foto öffnet sich groß. Darunter kommst du zu allen Fotos."
+  },
+  {
+   "id": "zentrale",
+   "etikett": "📡 Kommunikationszentrale",
+   "text": "Die Kommunikationszentrale: Oben wählst du, an wen – alle, wer online ist, oder eine Auswahl. Dann anrufen, Video, anklopfen, Chat oder Standort – auf Wunsch auch per Push, E-Mail oder WhatsApp."
+  },
+  {
+   "id": "startkarte",
+   "etikett": "🪧 Startkarte wählen",
+   "text": "Welche Karte beim Start zuerst kommt, stellst du unter „Mehr“ ein, bei „Info-Feld oben beim Start“."
+  },
+  {
+   "id": "szenen",
+   "etikett": "🍂 Szenen im Kopf",
+   "text": "Zum Auflockern gibt es Szenen im Kopf: Herbstlaub, Schnee mit Schneemann, Blumen im Frühling und mehr. Du stellst sie unter „Mehr“ bei „Effekte“ ein."
+  },
+  {
+   "id": "eselsohr",
+   "etikett": "📄 Eselsohr: doppelt tippen",
+   "text": "Unten rechts ist ein Eselsohr: doppelt tippen, und der Kopf dreht sich um – Diashow, Tafel, Uhr und mehr. Dazu gibt es das Video „Die Rückseite“."
+  },
+  {
+   "id": "schluss",
+   "etikett": "🎬 Technik → Erklär-Videos",
+   "text": "In der einfachen Ansicht siehst du nur die erste Karte. Alle Erklär-Videos findest du unter Technik. Viel Spaß mit deiner Club-App!"
+  }
+ ]
+}

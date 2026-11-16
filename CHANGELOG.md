@@ -1,5 +1,58 @@
 # Änderungen
 
+## 2.964.0 – 2026-11-16 – 🟢 Laufschrift der Online-Mitglieder läuft auch am Handy (KC-CLUB-ONLINE-LAUF-HANDY)
+Fund Hansi 16.11.: „Am Handy keine Laufschrift bei den Online-Mitgliedern. Am PC klappt es.“
+- **Antippen hielt sie für immer an:** Anhalten war an „Maus darüber“ gebunden – am Handy bleibt dieser Zustand nach dem ersten Antippen hängen. Jetzt: am Handy nur anhalten, solange der Finger drauf ist; „Maus darüber“ nur noch auf Geräten mit Maus.
+- **Sparmodus:** die Laufschrift stand still (der Sparmodus schaltet sich am Handy z. B. nach zwei langsamen Starts selbst ein). Jetzt läuft sie auch dort – es ist nur eine Verschiebung, kostet praktisch nichts.
+- **„Bewegung reduzieren“ am Gerät:** halb so schnell statt still (wie die Kochmütze).
+- Geprüft im abgeschirmten Browser mit Handy-Einstellungen (normal, Sparmodus, Bewegung reduzieren – vorher stand sie in allen drei Fällen nach dem Antippen bzw. ganz). Test: `tests/online-lauf-handy.test.mjs`. Nur die App.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+## 2.963.0 – 2026-11-16 – 🗄️ „➕ Neues Register …“ auch an allen anderen Ablage-Stellen (KC-CLUB-ABLAGE-NEU-UEBERALL, Wunschliste #95)
+Wunsch Hansi 16.11.: „Durchsuche den Code, ob so was an anderen Stellen auch sinnvoll ist, auch für alle Mitglieder frei geben.“
+- Gefunden und nachgerüstet – überall, wo man im Archiv ein Register auswählt: **📥 Dokument ablegen / ✏️ ändern** (im Archiv), **📋 Kopieren / ➡️ Verschieben nach …**, **Eingang: Dokument annehmen („… ablegen“)** und **🆘 Notfallpass → In mein Archiv kopieren**. Dazu wie in 2.961.0 das Fenster „Wohin damit?“.
+- **Für alle Mitglieder** im eigenen Ordner; in Club-Ordnern wie bisher nur für die Archiv-Pflege (Clubsprecher, Admin) – das prüft auch der Server. Beim Einreichen in einen Club-Ordner oder in den Ordner eines anderen erscheint der Eintrag nicht.
+- Ein gemeinsamer Baustein (`regNeuAnhaengen`) statt Kopien. Keine Serveränderung.
+- Test: `tests/ablage-neu.test.mjs` erweitert. Rückweg: App 2.962.0. Nur die App.
+- Update-Hinweis für Mitglieder: „🗄️ Beim Ablegen kannst du jetzt überall gleich ein neues Register anlegen.“
+## 2.962.0 – 2026-11-16 – 🗓️ Dienstzeiten-Übersicht: wer für den Dienstplan ausfällt, erscheint dort nicht mehr (KC-CLUB-DV-AUSNAHMEN)
+Fund Hansi 16.11.: „In der grafischen Übersicht taucht Karla noch mit ihren Wünschen auf – sie fällt aber aus.“
+- Die Dienstzeiten-Übersicht (Server `dienst_uebersicht`) lässt alle aus, die im Register `kc_club_dienst_ausnahmen` stehen – für Leitung und Mitglieder. Ihre eigenen Angaben bleiben gespeichert; wird der Eintrag gelöscht, erscheinen sie wieder.
+- Karla ist dort seit 16.11. eingetragen (Daten, sofort wirksam für „fehlt noch“ und Erinnerungen); im Dienstplan war sie schon „aus“.
+- Test: Block in `tests/app-vertrag.test.mjs`. Rückweg: Server 2.957.0. Nur der Server (App-Version nur mitgezogen).
+
+## 2.961.0 – 2026-11-16 – 🗄️ „Wohin damit?“: ➕ Neues Register und ➕ Neuer Ordner direkt beim Ablegen (KC-CLUB-ABLAGE-NEU, Wunschliste #95)
+Wunsch Hansi 16.11.: „Die Möglichkeit schaffen, einen anderen Ordner mit + Neu oder ein neues Register mit Register + Neu anzulegen – dann kann man Dateien besser ablegen, als wenn alles in Sonstiges liegt.“
+- Im Fenster „🗄️ Wohin damit? / Auch in deinen Archiv-Ordner legen?“ steht in der Register-Auswahl ganz unten **„➕ Neues Register …“**: Name eingeben (oder Vorschlag antippen) → das Register entsteht im gewählten Ordner vor „Sonstiges“ und ist gleich ausgewählt. Für jeden im eigenen Ordner; in Club-Ordnern nur, wer das Archiv pflegt (prüft der Server). Höchstens 12 Register je Ordner; gibt es den Namen schon, wird das vorhandene genommen.
+- In der Ordner-Auswahl steht für Clubsprecher und Admin **„➕ Neuer Ordner …“** (Club-Ordner, Jahr der Ablage, für alle sichtbar). Den eigenen Ordner gibt es je Jahr genau einmal – darum für Mitglieder kein neuer Ordner.
+- Kein neuer Serverweg: `archiv_ordner_speichern` wie im Archiv selbst. Hilfe „In dein Archiv ablegen“ ergänzt.
+- Test: neu `tests/ablage-neu.test.mjs`. Rückweg: App 2.960.0. Nur die App.
+- Update-Hinweis für Mitglieder: „🗄️ Beim Ablegen kannst du jetzt gleich ein neues Register anlegen.“
+
+## 2.960.0 – 2026-11-16 – 📖 Hilfe, Erklär-Videos, Lupe und Twinkey neu · 🎬 zwei Erklärfilme neu (Wunschliste #92) · 👀 Knopf auch bei 390 px
+### 📖 Hilfe, Erklär-Videos, Lupe und Twinkey passend zur neuesten Version (KC-CLUB-HILFE-2955, Wunschliste #92)
+Wunsch Hansi 15.11.: „Alle Hilfetexte, Video-Filme, Lupe, Twinkey an die neueste Version anpassen“ – „Ja alles neu aufbauen, damit es passt“ (auch die Admin-Funktionen).
+- **Hilfetexte korrigiert:** „Wie geht der Kopf auf und zu?“ (ein runder Knopf statt ⌃/⌃⌃) · „Kacheln ausblenden und wieder holen“ (👀 Nur ausgeblendete zeigen, runder 👀/🙈-Knopf oben) · „Der Eingangskorb im Büro“ (📄 Antrag als PDF ansehen, ✅ Als erstattet markieren … mit Rückfrage) · „Adventskalender“ (6.12. Schoko-Nikolaus, 20.12. Kinderriegel mit „🎁 Ja, den nehme ich“, 13.12. Mandarinen-Licht) · „Mein Garten“ (20 Pflanzen, Kräuterernte mit Rezepten) · „Erklär-Videos mit Ton“ (über 60 Videos und Filme statt fünf genannter) · „Kurz erklärt: Bildschirmfoto“ (Knöpfe wie im Programm).
+- **Neue Hilfetexte (🆕):** Kopf einfahren – ein Knopf, vier Stufen · 👀/🙈 ausgeblendete Kacheln mit einem Tipp · Deutsch oder English (Flagge) · Verbindungs-Balken oben rechts · Erinnerung vor Fristen · „🔴 … ist offline“ schon nach etwa 1 Minute · Terminanfrage ändern/ergänzen · Tagesordnung und Besprechungsvorlage · Besprechungs-Protokoll als PDF auf dem Briefkopf (📧 Kopie an mich, 👁️ So sieht … es) · ↔️ Gegenvorschlag zu einem Thema.
+- **Neu für Clubleitung/Admin (nur mit der Rolle sichtbar):** 📒 Buchungsliste der Erstattungen · 🏷️ Preisetiketten · 📋 Einsatzplan je Tag · 🎄 Advent „Wer bekommt was“ · 👣 Dienst-Vorgänge in den Wegen der Mitglieder.
+- **Erklär-Videos:** „Versteckte Helfer“ zeigt wieder den Kopf (die alten Stationen „⌃ Halb/⌃⌃ Ganz einrollen“ gab es nicht mehr – sie fielen still weg) · „Oberfläche nach Wunsch“ mit dem runden 👀/🙈-Knopf oben (nur wenn er Platz hat) · „Effekte & Wetter“: Knopf statt Pfeile · „Termin ausmachen & Tag finden“ mit 🔄 Gegenvorschlag erlauben, ✏️ Ändern/ergänzen, 📋 Tagesordnung und 📝 Protokoll (Beispiel-Besprechung, nichts gespeichert oder gesendet) · „Vorschlag einreichen“ mit ↔️ Gegenvorschlag. Neue Fassungen (Bewertungen getrennt): Oberfläche 4, Versteckte Helfer 2, Termin 2, Vorschlag 2, Effekte 4.
+- **Lupe:** neue Treffer für Kopf einfahren, 👀/🙈, Sprache/Flagge, Verbindungs-Balken, Fristen-Erinnerung, Offline-Meldung, Kontakt an Personen außerhalb des Clubs, Terminanfrage ändern/Tagesordnung/Protokoll, Gegenvorschlag (Terminanfrage und Thema); für Clubleitung/Admin Buchungsliste, Preisetiketten, Einsatzplan, Advent-Liste, Dienst-Wege.
+- **Twinkey:** 15 neue Fragen und Antworten zu denselben Themen (Clubleitungs-Fragen nur mit Rolle), neue Wortgruppen (englisch/Flagge, einrollen, Frist, Gegenvorschlag, Tagesordnung, ausgeblendet, Balken, offline) und passende Videos zu den neuen Hilfen.
+- **Einstellung „📲 Push, wenn sich jemand an- und abmeldet“:** Erklärtext sagt jetzt „etwa 1 Minute, nachdem er die App verlassen hat“ (auch auf Englisch).
+- Geprüft im abgeschirmten Browser (nur Testdaten, Netzsperre): alle neuen Video-Stationen finden ihr Ziel (320 und 412 px), Beispiele verschwinden wieder, nichts wird im Gerät gemerkt. Test: neu `tests/hilfe-2955.test.mjs`.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“. Nur die App (keine Datenbank-, keine Server-Änderung).
+### 🎬 Zwei Erklärfilme neu aufgebaut: „Der Kopf der Club-App“ und „Deine App – so, wie du sie willst“ (KC-CLUB-FILME-NEU)
+Wunsch Hansi 15.11.: „Ja alles neu aufbauen, damit es passt“ – beide Filme zeigten noch die alten Pfeile ⌃ / ⌃⌃ zum Einrollen des Kopfes.
+- **Bilder jetzt aus der echten App** (Stand 2.954.0, abgeschirmter Browser, nur erfundene Beispieldaten „Hans Test“ …), gleiche Form wie bisher: Hochformat 1080×1920, Sprecher (Thorsten), Untertitel, Etikett über dem Handy, Finger und gelbe Rahmen.
+- **🧭 Der Kopf der Club-App** (`film/kopf-der-app.mp4?v=3`, ca. 3½ Min.): Aufbau, Logo/Mond/Kreispfeil, **neu:** die drei Helfer ganz oben – der **runde Knopf mit vier Punkten** (1× drei Felder weg, 2× Info-Laufschrift weg, 3× Statusleiste weg, 4× alles wieder da, lange drücken = sofort auf, leuchtet bei Neuem), der **Verbindungs-Balken** und die **Flagge Deutsch/English**; danach wie bisher Status und Lämpchen, erste Karte, Blättern, gelbe Punkte, Schnellstart, Wetter, Für dich, Demnächst, Fotos, Kommunikationszentrale, Startkarte, Szenen im Kopf, Eselsohr.
+- **🧹 Deine App – so, wie du sie willst** (`film/app-selbst-einrichten.mp4?v=6`, ca. 3½ Min.): Ansichten, Reiter, Kacheln anordnen und ausblenden, Zahl am Reiter, **neu:** der runde **👀/🙈-Knopf** oben neben „< Erweiterte Ansicht >“ (2.953.0) und wieder einblenden, Kachelgröße, Kacheln umdrehen, **Kopf in vier Stufen** mit dem runden Knopf, Startmeldungen aus, weitere Erklär-Videos.
+- Vorschaubilder neu (`film/kopf-vorschau.webp`, `film/app-einrichten-vorschau.webp`). Gleiche Kennungen `kopffilm`/`ansichtfilm` – wer die Filme schon gesehen hat, bekommt sie nicht erneut beim Start angeboten.
+- Quellen erstmals in der Club-App: `tools/film/` (Drehbuch, Texte, Sprecher, Anleitung zum Neu-Erzeugen in `tools/film/README.md`); Browser-Läufe mit Netzsperre und Abschirmung (KC-TESTS-OHNE-ECHTSERVER).
+- Keine Datenbank-, keine Server-Änderung. Rückweg: App 2.959.0 (alte Filmdateien aus Git).
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+### 👀 Knopf oben bleibt auch bei 390 px (KC-CLUB-KA-KOPF-TOGGLE)
+- Fund beim Filmdreh: Bei 390 px Breite brach „Schnellzugriff < Erweiterte Ansicht >“ erst durch den 👀-Knopf auf zwei Zeilen um – die Platzprüfung blendete ihn dann aus. Jetzt sind zwei Zeilen in Ordnung (wie bei 360 px ohnehin); weg ist er nur noch bei einer dritten Zeile oder wenn er den QR-Knopf überdecken würde. Geprüft im abgeschirmten Browser bei 320, 360, 375, 390 und 412 px. Test `tests/kopf-ecke.test.mjs` erweitert.
+- Rückweg: App 2.959.0. Nur die App (keine Datenbank-, keine Server-Änderung). Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
 ## 2.959.0 – 2026-11-16 – 🍲 Gemeinschaftsgericht: „Neue Runde starten“ nimmt den Titel wieder an (KC-CLUB-GEMEINSCHAFTSGERICHT)
 Fund Hansi 15.11. 23:00: „Habe den Titel eingetragen, geht aber nicht“ – Meldung „Bitte einen Titel eingeben“.
 - Das Titelfeld hieß intern `grTitel` – die Kennung gibt es schon im (unsichtbaren) Fenster „Gruppe bearbeiten“, die App las dieses leere Feld. Jetzt eigene Kennungen (`ggTitel`, `ggVon`, `ggBis`, `ggJe`, `ggWahl`, `ggSuche`, `ggEigenFeld`, `ggLos`) und gelesen wird nur im Fenster der Runde. Die Runde „Gemeinsam essen“ (15.–28.11.) hatte Claude am 15.11. in Hansis Auftrag direkt angelegt.
