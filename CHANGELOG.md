@@ -1,9 +1,17 @@
 # Änderungen
 
-## 2.958.0 – 2026-11-16 – 🍲 Gemeinschaftsgericht: „Neue Runde starten“ nimmt den Titel wieder an (KC-CLUB-GEMEINSCHAFTSGERICHT)
+## 2.959.0 – 2026-11-16 – 🍲 Gemeinschaftsgericht: „Neue Runde starten“ nimmt den Titel wieder an (KC-CLUB-GEMEINSCHAFTSGERICHT)
 Fund Hansi 15.11. 23:00: „Habe den Titel eingetragen, geht aber nicht“ – Meldung „Bitte einen Titel eingeben“.
-- Das Titelfeld hieß intern `grTitel` – die Kennung gibt es schon im (unsichtbaren) Fenster „Gruppe bearbeiten“, die App las dieses leere Feld. Jetzt eigene Kennungen (`ggTitel`, `ggVon`, `ggBis`, `ggJe`, `ggWahl`, `ggSuche`, `ggEigenFeld`, `ggLos`) und gelesen wird nur im Fenster der Runde.
+- Das Titelfeld hieß intern `grTitel` – die Kennung gibt es schon im (unsichtbaren) Fenster „Gruppe bearbeiten“, die App las dieses leere Feld. Jetzt eigene Kennungen (`ggTitel`, `ggVon`, `ggBis`, `ggJe`, `ggWahl`, `ggSuche`, `ggEigenFeld`, `ggLos`) und gelesen wird nur im Fenster der Runde. Die Runde „Gemeinsam essen“ (15.–28.11.) hatte Claude am 15.11. in Hansis Auftrag direkt angelegt.
 - Test `tests/gemeinschaftsgericht.test.mjs` prüft jetzt, dass keine Kennung des Gemeinschaftsgerichts schon in index.html steht. Nur die App.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+## 2.958.0 – 2026-11-16 – 🔔/🔕 auf den Mitglieder-Kacheln für alle, unten bei den Knöpfen (KC-CLUB-MG-PUSH-ZEICHEN, Wunschliste #91)
+Antwort Hansi 16.11.: „So lassen (Liste) und in den Kacheln die Anzeige auch für alle freigeben, aber das Zeichen passt evtl. noch unten zu den anderen Buttons.“
+- Das Push-Zeichen auf den Mitglieder-Kacheln sehen jetzt **alle** (wie die Wege-Zeichen 🔔 ✉️ WA in der Listen-Ansicht, die bleiben unverändert).
+- Es steht nicht mehr oben links, sondern **unten als kleiner Knopf** neben 💬 / 📞. Antippen sagt in einem Satz: „🔔 Anne hat Push eingeschaltet …“ bzw. „🔕 … nicht eingeschaltet …“. Die Legende über den Kacheln nennt 🔔/🔕 für alle.
+- Keine neuen Daten: der Server liefert den Push-Stand schon bisher an alle (Listen-Ansicht).
+- Test: `tests/wunschliste-november.test.mjs` angepasst. Rückweg: App 2.957.0. Nur die App.
 - Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
 
 ## 2.957.0 – 2026-11-15 – 🟢 Einmal fragen: Meldung, wenn jemand online kommt? · ✏️ Änderung erbitten (KC-CLUB-ONLINE-FRAGE, KC-CLUB-AENDERUNG-ERBITTEN)
