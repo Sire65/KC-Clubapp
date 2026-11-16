@@ -91,6 +91,14 @@ jobs:
           if [ -n "$VORHER" ] && [ "$VORHER" != "0000000000000000000000000000000000000000" ] && git fetch -q --no-tags --depth=1 origin "$VORHER" 2>/dev/null; then
             git diff --quiet "$VORHER" HEAD -- version.json && neu=nein
           fi
+          # KC-EINSPIELEN-LIVE-VERGLEICH (Fund 16.11.2026: 2.963.0 wartete auf 20 Uhr, ein reiner Doku-Push um 16:03 hat sie trotzdem mitgenommen):
+          # „keine neue Version“ gilt nur, wenn online schon genau diese version.json läuft. Sonst wartet auch ein Doku-Push auf den Termin.
+          # Ist die Seite nicht abrufbar, zählt es als neue Version (sichere Seite: lieber warten als außerhalb des Termins einspielen).
+          if [ "$neu" = nein ]; then
+            hier=$(jq -r .version version.json 2>/dev/null)
+            online=$(curl -sS -m 20 "https://${GITHUB_REPOSITORY_OWNER,,}.github.io/${GITHUB_REPOSITORY#*/}/version.json?t=$(date +%s)" | jq -r .version 2>/dev/null)
+            if [ -z "$online" ] || [ "$online" != "$hier" ]; then echo "Online läuft ${online:-?}, hier ist $hier – zählt als neue Version."; neu=ja; fi
+          fi
           tools/einspielen-ruhe.sh "$art" "$neu"
       # 2.736.0 KC-CLUB-EINSPIELEN-FENSTER: wer die App genau jetzt startet, sieht „Kurze Wartung“ (nie ein Abbruch des Ablaufs)
       - name: Wartungsfenster an
