@@ -1,5 +1,20 @@
 # Änderungen
 
+## 2.964.0 – 2026-11-16 – 🎚️ Datenverkehr-Säulen im Kopf (Admin) · 🟢 Laufschrift der Online-Mitglieder auch am Handy (KC-CLUB-PULS, KC-CLUB-ONLINE-LAUF-HANDY) · Server 2.964.0 + Datenbank – [Hansi: einspielen]
+Fund Hansi 16.11.: „Am Handy keine Laufschrift bei den Online-Mitgliedern. Am PC klappt es.“
+- **Antippen hielt sie für immer an:** Anhalten war an „Maus darüber“ gebunden – am Handy bleibt dieser Zustand nach dem ersten Antippen hängen. Jetzt: am Handy nur anhalten, solange der Finger drauf ist; „Maus darüber“ nur noch auf Geräten mit Maus.
+- **Sparmodus:** die Laufschrift stand still (der Sparmodus schaltet sich am Handy z. B. nach zwei langsamen Starts selbst ein). Jetzt läuft sie auch dort – es ist nur eine Verschiebung, kostet praktisch nichts.
+- **„Bewegung reduzieren“ am Gerät:** halb so schnell statt still (wie die Kochmütze).
+- Geprüft im abgeschirmten Browser mit Handy-Einstellungen (normal, Sparmodus, Bewegung reduzieren – vorher stand sie in allen drei Fällen nach dem Antippen bzw. ganz). Test: `tests/online-lauf-handy.test.mjs`. Nur die App.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+
+**🎚️ Datenverkehr-Anzeige wie am Mischpult (KC-CLUB-PULS, Wunsch Hansi 16.11.: „In der Musik gibt es so Anzeigen aus LED, die ausschlagen … grün, gelb, rot … in die Kopfzeile beim Admin“ – „Statusleisten senkrecht, nur Club-App messen, ja abschaltbar unter Zahnrad bei Admin“)**
+- Neben den LEDs in der Statusleiste zwei senkrechte LED-Säulen (nur Admin): **L** = Lesen (Seiten, Chats, Fotos holen), **S** = Schreiben (Nachrichten, Zusagen, Uploads) – je 8 Stufen (5 grün, 2 gelb, 1 rot), logarithmisch, die Spitze der letzten Messungen leuchtet nach. Antippen: großes Fenster mit Werten je Sekunde, wie viele in der App sind, und Verlaufskurve.
+- Gemessen wird nur die Club-App: Abfragen des Club-Servers auf Club-Tabellen aus den Zählern, die die Datenbank ohnehin führt (`pg_stat_statements`) – nichts wird zusätzlich gespeichert, keine Inhalte, keine Namen; die Anzeige zählt sich selbst nicht mit. Alle 4 s, nur solange die Startseite sichtbar ist.
+- Abschaltbar: ⚙️ → „🎚️ Datenverkehr-Anzeige im Kopf“ (nur beim Admin, Standard an).
+- 🐢 Sparmodus (Fund Hansi: „ab und an wird an der Stelle die Schildkröte angezeigt“): mit den Säulen passte die Schildkröte nicht mehr in die Leiste – sie sitzt dann klein unten an den Säulen, im Fenster steht der Grund.
+- Datenbank: `supabase/migrations/20261116_kc_club_puls.sql` (nur lesend, nur Club-Server). Fehlt sie, zeigt die Anzeige einfach nichts. Tests: `tests/puls.test.mjs`. Im abgeschirmten Browser geprüft (Ausschlag, Fenster, 360/390/412 px mit Sparmodus).
 ## 2.963.0 – 2026-11-16 – 🗄️ „➕ Neues Register …“ auch an allen anderen Ablage-Stellen (KC-CLUB-ABLAGE-NEU-UEBERALL, Wunschliste #95)
 Wunsch Hansi 16.11.: „Durchsuche den Code, ob so was an anderen Stellen auch sinnvoll ist, auch für alle Mitglieder frei geben.“
 - Gefunden und nachgerüstet – überall, wo man im Archiv ein Register auswählt: **📥 Dokument ablegen / ✏️ ändern** (im Archiv), **📋 Kopieren / ➡️ Verschieben nach …**, **Eingang: Dokument annehmen („… ablegen“)** und **🆘 Notfallpass → In mein Archiv kopieren**. Dazu wie in 2.961.0 das Fenster „Wohin damit?“.

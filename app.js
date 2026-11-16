@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.963.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.964.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1173,7 +1173,7 @@ function anwendenDesign() {
   const MODUS_ZEICHEN = { auto: ["A", "Automatik"], tag: ["T", "Immer Tag"], nacht: ["N", "Immer Nacht"] }, mz = MODUS_ZEICHEN[DS.modus] || MODUS_ZEICHEN.auto;
   if ($("modusKnopf")) { $("modusKnopf").innerHTML = `${nacht ? "☀️" : "🌙"}<span class="modusbuchstabe" aria-hidden="true">${mz[0]}</span>`;
     $("modusKnopf").title = `Tag/Nacht umschalten – eingestellt: ${mz[1]}`; $("modusKnopf").setAttribute("aria-label", `Tag/Nacht umschalten, eingestellt: ${mz[1]}`); }
-  jzWahlZeigen(); jzDekoWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setFerien").checked = einst("ferien", true); ferienLaenderZeigen(); /* 2.484.0 KC-CLUB-FERIEN */ $("setGross").checked = $("setGrossE").checked = einst("gross", false); szAnzeigeEinstellung(); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setKuckuck")) $("setKuckuck").checked = einst("kuckuck", true); suWahlZeigen(); kopfEffektEinstellungen(); schattenEinstellungen(); kachelEckenAnwenden(); vwVorwahlEinstellungen(); /* KC-CLUB-KOPF-EFFEKTE */ tippTonZeigen(); /* KC-CLUB-TIPP-GERAEUSCH */ if ($("setGbVogel")) $("setGbVogel").checked = gbvAn(); /* KC-CLUB-GEBURTSTAG-VOGEL */ if ($("setAdventGesteck")) $("setAdventGesteck").checked = agAn(); /* 2.572.0 KC-CLUB-ADVENTSGESTECK */ if ($("setFee")) $("setFee").checked = einst("fee", true); for (const k of ["kaefer", "klee"]) { const c = $("set" + k[0].toUpperCase() + k.slice(1)); if (c) c.checked = einst(k, true); } /* KC-CLUB-MARIENKAEFER, KC-CLUB-GLUECKSKLEE */ ["kachelStart", "kachelWelle", "kachelWackeln", "kachelAbschied"].forEach((k) => { const c = $("set_" + k); if (c) c.checked = einst(k, true); }); /* 2.566.0 KC-CLUB-KACHEL-EXTRAS */ if ($("setAdvent")) $("setAdvent").checked = akAn(); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); for (const [id, k] of [["setNetzSymbol", "netzSymbol"], ["setNetzBalken", "netzBalken"], ["setNetzBlinken", "netzBlinken"], ["setChatEinklappen", "chatEinklappen"], ["setChatKW", "chatKW"], ["setKomSym", "komSym"]]) if ($(id)) $(id).checked = einst(k, true); if ($("setUhGlied")) $("setUhGlied").value = uhGlied(); /* 2.720.0 KC-CLUB-NACHRICHTEN-GLIEDERUNG */ pinAnzeige(); /* 2.726.0 KC-CLUB-LIEGEN-SCHUTZ */ // 2.429.0 if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu2", false); $("setTon").checked = einst("ton", true);
+  jzWahlZeigen(); jzDekoWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setFerien").checked = einst("ferien", true); ferienLaenderZeigen(); /* 2.484.0 KC-CLUB-FERIEN */ $("setGross").checked = $("setGrossE").checked = einst("gross", false); szAnzeigeEinstellung(); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setKuckuck")) $("setKuckuck").checked = einst("kuckuck", true); suWahlZeigen(); kopfEffektEinstellungen(); schattenEinstellungen(); kachelEckenAnwenden(); vwVorwahlEinstellungen(); /* KC-CLUB-KOPF-EFFEKTE */ tippTonZeigen(); /* KC-CLUB-TIPP-GERAEUSCH */ if ($("setGbVogel")) $("setGbVogel").checked = gbvAn(); /* KC-CLUB-GEBURTSTAG-VOGEL */ if ($("setAdventGesteck")) $("setAdventGesteck").checked = agAn(); /* 2.572.0 KC-CLUB-ADVENTSGESTECK */ if ($("setFee")) $("setFee").checked = einst("fee", true); for (const k of ["kaefer", "klee"]) { const c = $("set" + k[0].toUpperCase() + k.slice(1)); if (c) c.checked = einst(k, true); } /* KC-CLUB-MARIENKAEFER, KC-CLUB-GLUECKSKLEE */ ["kachelStart", "kachelWelle", "kachelWackeln", "kachelAbschied"].forEach((k) => { const c = $("set_" + k); if (c) c.checked = einst(k, true); }); /* 2.566.0 KC-CLUB-KACHEL-EXTRAS */ if ($("setAdvent")) $("setAdvent").checked = akAn(); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); for (const [id, k] of [["setNetzSymbol", "netzSymbol"], ["setNetzBalken", "netzBalken"], ["setPuls", "puls"], ["setNetzBlinken", "netzBlinken"], ["setChatEinklappen", "chatEinklappen"], ["setChatKW", "chatKW"], ["setKomSym", "komSym"]]) if ($(id)) $(id).checked = einst(k, true); if ($("setUhGlied")) $("setUhGlied").value = uhGlied(); /* 2.720.0 KC-CLUB-NACHRICHTEN-GLIEDERUNG */ pinAnzeige(); /* 2.726.0 KC-CLUB-LIEGEN-SCHUTZ */ // 2.429.0 if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu2", false); $("setTon").checked = einst("ton", true);
   designWahlZeigen();
   try { $("setEselsohr").checked = esAn(); $("setBwEinladung").checked = !bwEinStand().aus; $("setKachelVorschlag").checked = !nuStand().aus; kaAuswahlZeigen(); } catch (e) { /* 2.314.0: vor dem Aufbau der Rückseite noch nicht da */ }
   try { themaSchriftAnwenden(); } catch {} // 2.333.0 KC-CLUB-THEMEN-SCHRIFT
@@ -14338,6 +14338,61 @@ const WU_BEREICHE = ["Club-App", "Kasse", "PC-Manager", "Money Butler", "Dienstp
 const WU_STATUS = { offen: "🆕 offen", in_arbeit: "🔧 Claude arbeitet daran", rueckfrage: "❓ Rückfrage", erledigt: "✅ erledigt", zurueckgestellt: "⏸ zurückgestellt" };
 KACHELN.admin.unshift({ id: "ad-ablagekorb", sym: "📥", t: "Ablagekorb", nur: () => !!ICH?.admin, aktion: "ablkZeigen()", u: "Geteilte Fotos und Dokumente bearbeiten", klasse: () => "ad ad-app" }); // 2.511.0 KC-CLUB-ABLAGEKORB
 KACHELN.admin.unshift({ id: "ad-startnachricht", sym: "📣", t: "Startnachricht", nur: () => !!ICH?.admin, aktion: "snStart()", u: "An alle, Gruppe oder Personen – mit Lesebestätigung", klasse: () => "ad ad-app" }); // 2.482.0 KC-CLUB-STARTNACHRICHT
+// ---------- KC-CLUB-PULS (Wunsch Hansi 16.11.2026: „In der Musik gibt es so Anzeigen aus LED, die ausschlagen, je lauter … grün, gelb, rot … in die
+// Kopfzeile beim Admin … den Datenverkehr anzeigen“; „Statusleisten senkrecht, nur Club-App messen, ja abschaltbar unter Zahnrad bei Admin“) ----------
+// Zwei senkrechte LED-Säulen neben den LEDs: L = Lesen, S = Schreiben (Abfragen des Club-Servers je Sekunde, logarithmisch). Alle 4 s nur, solange die
+// Startseite sichtbar ist; der Server liefert nur Zählerstände (pg_stat_statements, nichts gespeichert), die App rechnet die Differenz. Spitze hält ~12 s.
+const PULS = { alt: null, wert: null, timer: null, fehler: 0, verlauf: [] };
+const PULS_TAKT = 4000, PULS_SEG = 8, PULS_MAX = { lesen: 15, schreiben: 4 }; // Abfragen/s für Vollausschlag
+const pulsAn = () => !!ICH?.admin && einst("puls", true);
+const pulsStufe = (v, max) => (v > 0 ? Math.max(1, Math.min(PULS_SEG, Math.round((PULS_SEG * Math.log10(1 + v)) / Math.log10(1 + max)))) : 0);
+const pulsSaeule = (k) => `<span class="pu-saeule" data-k="${k}">${Array.from({ length: PULS_SEG }, (_, i) => `<i class="pu-seg ${i >= PULS_SEG - 1 ? "rot" : i >= PULS_SEG - 3 ? "gelb" : "gruen"}"></i>`).join("")}</span>`;
+function pulsStarten() {
+  const el = $("pulsAnzeige"), an = pulsAn(); if ($("setPulsZeile")) $("setPulsZeile").classList.toggle("versteckt", !ICH?.admin);
+  if (!el) return; el.classList.toggle("versteckt", !an); clearTimeout(PULS.timer); PULS.timer = null; if (!an) return;
+  if (!el.dataset.gebaut) { el.innerHTML = pulsSaeule("L") + pulsSaeule("S") + '<span class="pu-spar" aria-hidden="true">🐢</span>'; el.dataset.gebaut = "1"; } // 🐢 = Sparmodus (sonst kein Platz in der Leiste)
+  pulsHolen();
+}
+async function pulsHolen() {
+  clearTimeout(PULS.timer); if (!pulsAn()) return;
+  if (!document.hidden && aktuelleAnsicht === "start") {
+    try { const r = await api("betrieb_puls", {}, { still: true });
+      if (PULS.alt && r.t > PULS.alt.t) { const sek = (r.t - PULS.alt.t) / 1000;
+        PULS.wert = { lesen: Math.max(0, r.lesen - PULS.alt.lesen) / sek, schreiben: Math.max(0, r.schreiben - PULS.alt.schreiben) / sek, online: r.online, t: r.t };
+        PULS.verlauf.push(PULS.wert); if (PULS.verlauf.length > 150) PULS.verlauf.shift(); pulsZeigen(); }
+      PULS.alt = r; PULS.fehler = 0;
+    } catch { PULS.fehler++; }
+  }
+  PULS.timer = setTimeout(pulsHolen, PULS_TAKT * Math.min(6, 1 + PULS.fehler)); // Fehler → seltener fragen
+}
+function pulsSetzen(saeule, v, max) { // an = aktueller Ausschlag, spitze = höchster der letzten 3 Messungen
+  if (!saeule) return; const k = saeule.dataset.k === "L" ? "lesen" : "schreiben", n = pulsStufe(v, max);
+  const spitze = Math.max(0, ...PULS.verlauf.slice(-3).map((x) => pulsStufe(x[k], max)));
+  saeule.querySelectorAll(".pu-seg").forEach((s, i) => { s.classList.toggle("an", i < n); s.classList.toggle("spitze", i === spitze - 1 && i >= n); });
+}
+function pulsZeigen() {
+  const w = PULS.wert; if (!w) return;
+  for (const wo of ["#pulsAnzeige", "#pulsBlatt .pu-gross"]) { const el = document.querySelector(wo); if (!el) continue;
+    pulsSetzen(el.querySelector('[data-k="L"]'), w.lesen, PULS_MAX.lesen); pulsSetzen(el.querySelector('[data-k="S"]'), w.schreiben, PULS_MAX.schreiben); }
+  const t = $("pulsTexte"); if (t) t.innerHTML = `📥 Lesen <b>${w.lesen.toFixed(1)}</b>/s · 📤 Schreiben <b>${w.schreiben.toFixed(1)}</b>/s · 👥 <b>${w.online}</b> in der App`;
+  const k = $("pulsKurve"); if (k) k.innerHTML = pulsKurve();
+}
+function pulsKurve() { // Verlauf der letzten ~10 Min. (nur Messungen, solange die Startseite offen war)
+  const v = PULS.verlauf; if (v.length < 2) return "";
+  const pkt = (k, max) => v.map((x, i) => `${((i / (v.length - 1)) * 300).toFixed(1)},${(66 - (pulsStufe(x[k], max) / PULS_SEG) * 62).toFixed(1)}`).join(" ");
+  return `<svg class="pu-kurve" viewBox="0 0 300 70" preserveAspectRatio="none" aria-hidden="true"><polyline class="l" fill="none" stroke-width="2" points="${pkt("lesen", PULS_MAX.lesen)}"/><polyline class="s" fill="none" stroke-width="2" points="${pkt("schreiben", PULS_MAX.schreiben)}"/></svg>`;
+}
+function pulsBlatt() {
+  blattAuf("pulsBlatt", `<h3 style="margin:0">🎚️ Datenverkehr der Club-App</h3>
+    <p class="hinweis" style="margin:2px 0 6px">Wie am Mischpult: grün normal, gelb viel los, rot sehr viel. Gemessen wird nur die Club-App (Abfragen des Club-Servers je Sekunde) – keine Inhalte, keine Namen.</p>
+    <div class="pu-gross"><figure>${pulsSaeule("L")}<figcaption>📥 Lesen</figcaption></figure><figure>${pulsSaeule("S")}<figcaption>📤 Schreiben</figcaption></figure></div>
+    <p id="pulsTexte" style="text-align:center;margin:4px 0">⏳ Erste Messung kommt in ein paar Sekunden …</p>
+    <div id="pulsKurve"></div><p class="hinweis" style="margin:2px 0 8px">Verlauf: <span style="color:#39d353">■</span> Lesen · <span style="color:#f5a623">■</span> Schreiben – nur solange die Startseite offen war.</p>
+    ${SPAR.an ? `<div class="karte" style="margin:6px 0">🐢 <b>Sparmodus ist an</b> – ${esc(SPAR.grund)}. Die kleine Schildkröte an den Säulen zeigt das an. <button class="knopf klein" onclick="fensterZu($('pulsBlatt'));sparInfo()">Mehr dazu</button></div>` : ""}
+    <p class="hinweis">Abschalten: ⚙️ Einstellungen → „🎚️ Datenverkehr-Anzeige im Kopf“.</p>
+    <div class="knoepfe"><button class="knopf" onclick="fensterZu($('pulsBlatt'))">Schließen</button></div>`);
+  pulsZeigen();
+}
 // ---------- KC-CLUB-GEMEINSCHAFTSGERICHT (Wunschliste #94, Antworten Hansi 15.11.2026: „Viele Köche verderben den Brei – bei uns nicht“) ----------
 // Hansi startet eine Runde ohne festen Termin (Titel, Einsendezeitraum, 1 oder 2 Zutaten je Person). Alle (Mitglieder und Aushilfen) werden beim
 // App-Start gefragt (INIT.gericht) – Liste nach Warengruppen mit Suche oder „✏️ Eigene Zutat“ (Hansi gibt eigene frei). Jeder sieht nur seine eigenen
@@ -35333,7 +35388,7 @@ const FENSTER_NAMEN = {
   smHinweisBlatt: "🎓 Du bist zur Schulung eingeladen", smVBlatt: "💬 Kein Termin passt", snBlatt: "📣 Startnachricht", sosInfo: "🆘 Meine SOS-Angaben", spAn: "💬 An wen?",
   spEinlBlatt: "🎲 Spiel-Einladung", spHerausBlatt: "🎲 Herausfordern", spLiveBlatt: "🎲 Spiel-Herausforderung", spTerminBlatt: "📅 Termin für die Partie", sperreBlatt: "🔒 Personen sperren",
   sprForm: "💬 Eigener Spruch", sprungBlatt: "🔘 Knopf in die Nachricht", spurFrageBlatt: "🟢 Frage: Wege ansehen?", statusBlatt: "🙂 Mein Status", studioBlatt: "🎬 Studio",
-  svBlatt: "⚙️ Sitzungs-Vorgaben", taAeBlatt: "✏️ Terminanfrage ändern", taPrBlatt: "📝 Besprechungs-Protokoll schreiben", taPrLesen: "📝 Besprechungs-Protokoll lesen", taGvBlatt: "🔄 Andere Zeit vorschlagen", taHinweisBlatt: "📨 Hinweis: Terminanfragen", grBlatt: "🍲 Gemeinschaftsgericht: deine Zutat", grAdminBlatt: "🍲 Gemeinschaftsgericht (Admin)",taVkBlatt: "🔄 Gegenvorschlag", tdtBlatt: "💡 Tipp des Tages",
+  svBlatt: "⚙️ Sitzungs-Vorgaben", taAeBlatt: "✏️ Terminanfrage ändern", taPrBlatt: "📝 Besprechungs-Protokoll schreiben", taPrLesen: "📝 Besprechungs-Protokoll lesen", taGvBlatt: "🔄 Andere Zeit vorschlagen", taHinweisBlatt: "📨 Hinweis: Terminanfragen", grBlatt: "🍲 Gemeinschaftsgericht: deine Zutat", pulsBlatt: "🎚️ Datenverkehr der Club-App",grAdminBlatt: "🍲 Gemeinschaftsgericht (Admin)",taVkBlatt: "🔄 Gegenvorschlag", tdtBlatt: "💡 Tipp des Tages",
   teilenBlatt: "📥 Mit Köcheclub geteilt", themaFrage: "✅ Zusage: Thema/Mitbringen", mtBlatt: "💡 Ein Tipp für dich", twBlatt: "🧑‍🍳 Frag Twinkey", twOffenBlatt: "📥 Fragen an Twinkey",
   uaAdminBlatt: "🙋 Unterstützungs-Anfragen", ustBlatt: "🤝 Wie viel Unterstützung möchtest du?", verbindungBlatt: "📡 Verbindung", verlassenBlatt: "👋 Hinweis beim Verlassen", verpasstBlatt: "👋 Verpasstes Anklopfen",
   versandBlatt: "📤 Wie verschicken?", vfAuswahlBlatt: "👥 Auswahl: an wen", vfVorlageBlatt: "📄 Vorlage übernehmen", vorschlagBearb: "✏️ Vorschlag bearbeiten", vorschlagInfo: "💡 Vorschlag ansehen",
@@ -36843,6 +36898,7 @@ async function gastStart(token) {
     if ((!h || h === "#") && (buSchreiben() || (buDarf() && (ICH?.vorstand || ICH?.admin)))) setTimeout(() => buAufgabePruefen(), 4000); // 2.750.0 KC-CLUB-SITZUNG-AUFGABE-START: nächste Aufgabe für die Sitzung (2.797.0 Stufe 4: nur die Clubleitung lädt dafür das Büro-Teil)
     if (!h || h === "#") setTimeout(() => taHinweisPruefen(), 5000);
     if (!h || h === "#") setTimeout(() => { try { grPruefen(); } catch {} }, 6500); // KC-CLUB-GEMEINSCHAFTSGERICHT: Frage nach der Zutat
+    setTimeout(() => { try { pulsStarten(); } catch {} }, 3000); // KC-CLUB-PULS: Datenverkehr-Säulen (nur Admin)
     if (!h || h === "#") setTimeout(() => bwEinladungPruefen(), 15000); // 2.314.0 KC-CLUB-BEWEGUNG-EINLADUNG
     if (!h || h === "#") setTimeout(() => nuVorschlagPruefen(), 25000); // 2.418.0 KC-CLUB-KACHEL-VORSCHLAG (nach der Einladung, nie darüber)
     fensterStart(); // KC-CLUB-ZWEI-FENSTER
