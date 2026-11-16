@@ -194,6 +194,7 @@ jobs:
       - run: node tests/advent-preise.test.mjs
       - run: node tests/erstattung-sicher.test.mjs
       - run: node tests/ablage-neu.test.mjs
+      - run: node tests/genesungskarte.test.mjs
       - run: node tests/teilen-eigen.test.mjs
       - run: node tests/clubabend-anwesend.test.mjs
       - run: node tests/sitzung-schritte.test.mjs

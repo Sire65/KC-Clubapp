@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.964.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.965.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -19,7 +19,7 @@ const TEILE_LISTE = {
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-NDuho5dgDL13uhtcTY8d0cGESAWhk+B+5qyWyvBuOxPgmADzmvY9YFCcwWM0s+kx" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
   spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-df8Lw0oCMMrnIIB7cpSpJ2Q2SKgIao/dXXHLrjtixnNByKoeFvC3pVc6zGaNCcVw" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
   tischlive: { einstieg: ["tlStart", "tlStopp", "tlZeichnen", "tlPlatz", "tlRegeln"], sri: "sha384-RCmsKY+DTRfsCMRHkJVG2UJlySANNdHxnEdMps4tkL9kgf8DC5O/b1jMcwVeY3XB" }, // 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: Ton, Kamera, Bildschirm, Unterlagen zeigen am Tisch
-  buero: { einstieg: ["ersBuchOeffnen", "eblDruck", "buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-tE5A+f4O0Djk0PhewuYKxCOIyEWwaMG+OUQ/X9WYy9qySw881LPaUL9UHrZLa2lv" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
+  buero: { einstieg: ["ersBuchOeffnen", "eblDruck", "buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-XB8HyNQyS6as/WJFBaPJ1cEoaCJByVySSFFJGiXW8W8vo4hMoGNrURKrVKGvb+P0" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
   hilfe: { einstieg: ["twFrageStart", "twOffenStart", "sucheAuf", "suSucheKnopf"], sri: "sha384-8A9k87FgeesMgEQxdePUURmcrnJZlfcnIRqlk/8h42RENJYJnKZt0p0zkpCJ6zmH" }, // Stufe 5: Hilfe-Werkzeuge (Frag Twinkey, Mitglied fragen, Schnellsuche) – beim ersten Antippen
   rechner: { einstieg: ["rechnerOeffnen"], sri: "sha384-UWrOf1EIXxhsoWWwxnLDzpzALsaxzNGXgeqoLAjVvqoQ6wbFnIGxYTkQPFpiRuQ4" }, // 2.811.0 KC-CLUB-RECHNER: Tischrechner im Büro, „rechne …“ per Sprache
   glueck: { einstieg: ["kaeferKommt", "kleeKommt"], sri: "sha384-hbPb96l3YrlvBxe1zJJfotwARA0pEPKKaDyb1BBVooEi5BCYbfYqihmMYABmlsg4" }, // KC-CLUB-MARIENKAEFER / KC-CLUB-GLUECKSKLEE (06.11.2026): 🐞 jeder 50., 🍀 jeder 25. Start
@@ -32315,6 +32315,7 @@ function mitgliedZeigen() {
       ${!m.selbst && !ONL.ids.has(m.person_id) ? mgKlopfKnopf(m, "knopf breit", (st) => `<span class="kt-ico">👋</span>Anklopfen – ${st === "verborgen" ? "zeigt nicht, wann online" : st === "ich" ? "du zeigst nicht, wann du online bist" : "gerade nicht online"}`) : ""}
       ${!m.selbst && !ONL.ids.has(m.person_id) ? `<p class="hinweis breit" style="margin:4px 0">📞 🎥 Anrufen und Video gehen, sobald ${esc(String(m.name || "").split(" ")[0])} die App offen hat (🟢 online).</p>` : ""}
       ${m.selbst ? "" : `<button class="knopf ${ONL.ids.has(m.person_id) ? "" : "haupt"}" onclick="direkt('${m.person_id}')"><span class="kt-ico">💬</span>Nachricht in der App${m.chatAnzahl ? `<small class="md-zahl">${m.chatAnzahl} ${m.chatAnzahl === 1 ? "Nachricht" : "Nachrichten"}</small>` : ""}</button><div id="mdSpiel" hidden></div>`}
+      ${m.selbst ? "" : `<button class="knopf" onclick="genesungsKarte('${m.person_id}')"><span class="kt-ico">💐</span>Gute-Besserung-Karte</button>`}
       ${ICH?.admin ? `<button class="knopf" onclick="nachrichtenStatistik('${m.person_id}')"><span class="kt-ico">📊</span>Statistik</button>` : ""}
       ${stDarf("zeigen") && !m.selbst ? `<button class="knopf" onclick="vfStart('${m.person_id}')"><span class="kt-ico">📺</span>Live zeigen</button>` : ""}
       ${ICH?.admin ? `<button class="knopf" onclick="linkTeilen('${m.person_id}')"><span class="kt-ico">🔗</span>App-Link</button><button class="knopf" onclick="einrichtungskarte('${m.person_id}')"><span class="kt-ico">🖨️</span>Einrichtungs&shy;karte</button><button class="knopf" onclick="rolleBearbeiten('${m.person_id}')"><span class="kt-ico">🎖️</span>Amt & Rechte</button><button class="knopf" onclick="ansageVorgabeSetzen('${m.person_id}', ${esc(JSON.stringify((m.name || "").split(" ")[0]))})"><span class="kt-ico">🗣️</span>Online-Ansagen einschalten</button>` : ""}
@@ -32544,6 +32545,77 @@ async function gratulieren(pid, ohneFrage) {
   await direkt(pid);
   textVorbelegen(`Alles Gute zum Geburtstag, ${m.vorname}! 🎂🥳`);
   $("text").focus();
+}
+// 2.965.0 KC-CLUB-GENESUNGSKARTE (Wunsch Hansi 16.11.2026: „Gute Besserung direkt in ihren Chat reinstellen … nicht als Brief auf Briefkopf, sondern als
+// Genesungskarte mit z. B. Blumenstrauß“): die App malt eine Karte (Blumenstrauß, „Gute Besserung, Vorname!“, unten Kochmütze + „Köcheclub Werne“ in
+// Weinrot/Beige – KC-CD), zeigt sie zur Ansicht und legt sie mit einem Tipp als Bild in den Chat mit der Person; ➤ tippt man selbst (wie beim Gratulieren).
+// Kein Grund, keine Krankheit auf der Karte (keine Gesundheitsdaten). Alles in der App gezeichnet – kein fremder Dienst.
+const GK_TEXTE = ["Werde schnell wieder gesund –\nwir freuen uns auf dich!", "Wir denken an dich und\nwünschen dir alles Gute!", "Erhol dich gut –\ndie Küche wartet auf dich!"];
+async function gkZeichnen(vorname, satz) {
+  const B = 1080, H = 1350, c = document.createElement("canvas"); c.width = B; c.height = H; const g = c.getContext("2d");
+  const ROT = "#741521", BEIGE = "#f3e9dc";
+  g.fillStyle = BEIGE; g.fillRect(0, 0, B, H);
+  g.strokeStyle = ROT; g.lineWidth = 14; g.strokeRect(28, 28, B - 56, H - 56); g.lineWidth = 3; g.strokeRect(50, 50, B - 100, H - 100);
+  // Blumenstrauß: Stiele, Blätter, Blüten, Schleife
+  const cx = B / 2, fuss = 700;
+  const bl = [[-210, 300, "#c2185b"], [-120, 220, "#f4a3b5"], [0, 190, "#b3202c"], [120, 220, "#f7c948"], [210, 300, "#e57373"], [-60, 330, "#ffffff"], [70, 330, "#f4a3b5"], [-160, 410, "#f7c948"], [160, 410, "#c2185b"], [0, 290, "#f7c948"]];
+  g.lineCap = "round";
+  for (const [dx, y] of bl) { g.strokeStyle = "#4f7a3a"; g.lineWidth = 9; g.beginPath(); g.moveTo(cx + dx, y + 30); g.quadraticCurveTo(cx + dx * 0.4, (y + fuss) / 2, cx + dx * 0.08, fuss + 120); g.stroke(); }
+  const blatt = (x, y, w, r) => { g.save(); g.translate(x, y); g.rotate(r); g.fillStyle = "#5f8f45"; g.beginPath(); g.ellipse(0, 0, w, w * 0.38, 0, 0, Math.PI * 2); g.fill(); g.strokeStyle = "#3d6a2c"; g.lineWidth = 3; g.beginPath(); g.moveTo(-w, 0); g.lineTo(w, 0); g.stroke(); g.restore(); };
+  [[-250, 470, 70, -0.6], [250, 470, 70, 0.6], [-190, 540, 60, -0.9], [190, 540, 60, 0.9], [-90, 470, 55, -0.3], [90, 470, 55, 0.3]].forEach(([dx, y, w, r]) => blatt(cx + dx, y, w, r));
+  const bluete = (x, y, farbe, r = 62) => {
+    for (let i = 0; i < 8; i++) { const a = (i / 8) * Math.PI * 2; g.fillStyle = farbe; g.beginPath(); g.ellipse(x + Math.cos(a) * r * 0.55, y + Math.sin(a) * r * 0.55, r * 0.5, r * 0.3, a, 0, Math.PI * 2); g.fill(); }
+    g.fillStyle = farbe === "#f7c948" ? "#b5651d" : "#f7c948"; g.beginPath(); g.arc(x, y, r * 0.24, 0, Math.PI * 2); g.fill();
+  };
+  for (const [dx, y, f] of bl) bluete(cx + dx, y, f);
+  [[-260, 220], [260, 230], [-30, 120], [40, 410], [-250, 360], [255, 370]].forEach(([dx, y]) => { g.fillStyle = "#fff"; for (let i = 0; i < 5; i++) { const a = (i / 5) * Math.PI * 2; g.beginPath(); g.arc(cx + dx + Math.cos(a) * 11, y + Math.sin(a) * 11, 9, 0, Math.PI * 2); g.fill(); } g.fillStyle = "#f7c948"; g.beginPath(); g.arc(cx + dx, y, 7, 0, Math.PI * 2); g.fill(); });
+  // Manschette und Schleife
+  g.fillStyle = "#e9d6bd"; g.beginPath(); g.moveTo(cx - 150, fuss - 20); g.lineTo(cx + 150, fuss - 20); g.lineTo(cx + 60, fuss + 150); g.lineTo(cx - 60, fuss + 150); g.closePath(); g.fill();
+  g.strokeStyle = "#c9b393"; g.lineWidth = 3; g.stroke();
+  g.fillStyle = ROT; g.beginPath(); g.ellipse(cx - 55, fuss + 40, 60, 28, -0.4, 0, Math.PI * 2); g.ellipse(cx + 55, fuss + 40, 60, 28, 0.4, 0, Math.PI * 2); g.fill();
+  g.beginPath(); g.moveTo(cx - 10, fuss + 50); g.lineTo(cx - 60, fuss + 140); g.lineTo(cx - 30, fuss + 135); g.lineTo(cx, fuss + 60); g.lineTo(cx + 30, fuss + 135); g.lineTo(cx + 60, fuss + 140); g.lineTo(cx + 10, fuss + 50); g.fill();
+  g.beginPath(); g.arc(cx, fuss + 42, 20, 0, Math.PI * 2); g.fill();
+  // Text
+  g.textAlign = "center"; g.fillStyle = ROT;
+  g.font = "italic 700 96px Georgia, 'Times New Roman', serif"; g.fillText("Gute Besserung,", cx, 940);
+  const name = `${String(vorname || "").trim() || "liebe/r Freund/in"}!`; let gr = 104; do { g.font = `700 ${gr}px Georgia, 'Times New Roman', serif`; gr -= 4; } while (g.measureText(name).width > B - 200 && gr > 50);
+  g.fillText(name, cx, 1045);
+  g.fillStyle = "#4a2a20"; g.font = "400 42px Georgia, 'Times New Roman', serif";
+  String(satz || GK_TEXTE[0]).split("\n").slice(0, 2).forEach((z, i) => g.fillText(z, cx, 1105 + i * 50));
+  // Fuß: Weinrot-Band mit Kochmütze und „Köcheclub Werne“
+  g.fillStyle = ROT; g.fillRect(50, H - 160, B - 100, 110);
+  try { const img = new Image(); img.src = "kc-kochmuetze-weiss.webp"; await img.decode(); const h = 80, w = img.width * h / img.height; g.drawImage(img, cx - 250 - w / 2, H - 145, w, h); } catch {}
+  g.fillStyle = "#fff"; g.font = "700 50px Georgia, 'Times New Roman', serif"; g.fillText("Köcheclub Werne", cx + 40, H - 88);
+  return c;
+}
+let GK = null;
+async function genesungsKarte(pid) {
+  if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return meldeFehler(e); }
+  const m = MITGLIEDER.find((x) => x.person_id === pid); if (!m || pid === ICH?.person_id) return melde("Die Person ist nicht (mehr) in der Mitgliederliste.", true);
+  const vorname = m.vorname || String(m.name || "").split(" ")[0];
+  GK = { pid, vorname, satz: 0 };
+  const f = blattAuf("gkBlatt", `<h3 style="margin-top:0">💐 Genesungskarte für ${esc(vorname)}</h3>
+    <img id="gkBild" alt="Genesungskarte mit Blumenstrauß" style="width:100%;max-width:420px;display:block;margin:0 auto 8px;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.2)">
+    <div class="hl-chips" style="justify-content:center">${GK_TEXTE.map((t, i) => `<button type="button" class="chip${i ? "" : " an"}" data-satz="${i}">${esc(t.replace("\n", " "))}</button>`).join("")}</div>
+    <p class="hinweis" style="margin:6px 0">Die Karte kommt als Bild in den Chat mit ${esc(vorname)}. Ein paar eigene Worte schreibst du darunter – dann ➤.</p>
+    <div style="display:grid;gap:8px"><button type="button" class="knopf haupt" id="gkLos">💬 In ${esc(vorname)}s Chat legen</button><button type="button" class="knopf" onclick="fensterZu($('gkBlatt'))">Abbrechen</button></div>`);
+  const malen = async () => { const c = await gkZeichnen(vorname, GK_TEXTE[GK.satz]); const b = $("gkBild"); if (b) b.src = c.toDataURL("image/jpeg", 0.88); GK.canvas = c; };
+  f.querySelectorAll("[data-satz]").forEach((b) => (b.onclick = () => { GK.satz = +b.dataset.satz; f.querySelectorAll("[data-satz]").forEach((x) => x.classList.toggle("an", x === b)); malen(); }));
+  f.querySelector("#gkLos").onclick = (e) => einmal(e.target, gkInDenChat);
+  await malen();
+}
+async function gkInDenChat() {
+  if (!GK?.canvas) return;
+  const { pid, vorname } = GK;
+  try {
+    const blob = await new Promise((r) => GK.canvas.toBlob(r, "image/jpeg", 0.88));
+    const name = `Gute-Besserung-${vorname}.jpg`, r = await anlageHochladen(new File([blob], name, { type: "image/jpeg" }));
+    fensterZu($("gkBlatt")); GK = null;
+    await direkt(pid);
+    anlagen = [...anlagen.filter((a) => !a.laedt), { id: r.id, name: r.name || name, laedt: false }]; EINMAL = false; chipsZeigen();
+    textVorbelegen(`💐 Gute Besserung, ${vorname}! Werde schnell wieder gesund.`); $("text")?.dispatchEvent(new Event("input")); $("text")?.focus();
+    melde("💐 Die Karte liegt im Chat bereit – noch ein paar Worte dazu und ➤");
+  } catch (e) { meldeFehler(e); }
 }
 // KC-CLUB-EINZELCHAT (2.40.0, Wunsch Hansi): gibt es schon einen Chat nur mit dieser Person, öffnet „💬 Nachricht in der App“ ihn
 // (mit allen bisherigen Nachrichten); sonst – oder ohne Verbindung – wie bisher ein leerer Entwurf.
@@ -35362,7 +35434,7 @@ const FENSTER_NAMEN = {
   diktatBlatt: "✍️ Diktieren", druckBlatt: "🖨️ Drucken", dsBlatt: "🗓️ Dienstplan", dsOrteBlatt: "📍 Dienst-Orte", dsWerBlatt: "👥 Wer ist heute im Dienst",
   rundBlatt: "🪑 Runder Tisch", rundNeuBlatt: "🪑 Zum Runden Tisch einladen", rundTischBlatt: "🪑 Am Runden Tisch", rundTascheBlatt: "💼 Tasche für den Runden Tisch", rundArchivBlatt: "🗄️ Tasche: aus dem Archiv", // 2.762.0 KC-CLUB-RUNDER-TISCH
   dtBlatt: "🗓️ Dienst-Tausch", dvBlatt: "📊 Dienstzeiten-Übersicht", dwSperreBlatt: "💡 Sperrzeit nicht nötig", egBlatt: "📥 Mein Eingangskorb", eingangBlatt: "📥 In den Eingangskorb eines Mitglieds",
-  einlBlatt: "📥 Dokument einlesen", ekAblageBlatt: "🗄️ Eingangskorb: ablegen", ekDwBlatt: "📅 Dienstzeiten", ekErstBlatt: "💶 Erstattung", ekErstOkBlatt: "✅ Erstattung als erstattet markieren?", ekHinweisBlatt: "📥 Hinweis: Eingangskorb",
+  einlBlatt: "📥 Dokument einlesen", ekAblageBlatt: "🗄️ Eingangskorb: ablegen", ekDwBlatt: "📅 Dienstzeiten", ekErstBlatt: "💶 Erstattung", ekErstOkBlatt: "✅ Erstattung als erstattet markieren?", gkBlatt: "💐 Genesungskarte", ekHinweisBlatt: "📥 Hinweis: Eingangskorb",
   ekNachBlatt: "🔎 Nachverfolgen", elternBlatt: "👪 Eltern-Handy", entwicklerBlatt: "👨‍💻 Über den Entwickler", erBlatt: "✅ Alles eingerichtet", ibBlatt: "🖼️ Installieren mit Bildern", erinBlatt: "🔔 Erinnerung für dich",
   erkBlatt: "💡 Vorschlag aus der Nachricht", ersBesBlatt: "🎓 Fahrten aus Besuchen", ersCsvBlatt: "📊 Erstattungen für Excel", eblBlatt: "📒 Buchungsliste", esTafelBlatt: "📤 Tafel sichern", ewBlatt: "🧭 Einstellungen erklärt",
   expressBlatt: "🏎️ Express-Sendung", externBlatt: "🌐 Externer Inhalt", faAlbenKorb: "🗑️ Gelöschte Alben", faAlbumBlatt: "📸 Foto in welches Album?", faAlbumForm: "📸 Album anlegen/ändern",

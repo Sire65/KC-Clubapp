@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.965.0 – 2026-11-16 – 💐 Genesungskarte mit Blumenstrauß direkt in den Chat (KC-CLUB-GENESUNGSKARTE)
+Wunsch Hansi 16.11.: „Gute Besserung direkt in ihren Chat reinstellen – nicht als Brief auf Briefkopf, sondern als Genesungskarte mit z. B. Blumenstrauß.“
+- Neue Karte, in der App gemalt: bunter **Blumenstrauß** mit Schleife, „**Gute Besserung, Vorname!**“, ein kurzer Satz (3 zur Wahl), unten das weinrote Band mit **Kochmütze und „Köcheclub Werne“** (Corporate Design). Kein Grund und keine Krankheit auf der Karte.
+- **„💬 In Karlas Chat legen“**: die Karte kommt als Bild in den Chat mit der Person, ein Satz ist vorgeschrieben – eigene Worte dazu, dann ➤ (gesendet wird erst mit ➤, wie beim Gratulieren).
+- Wo: **Büro → Freud & Leid** bei „Krankheit“ / „Unfall“ (Kachel „💐 Genesungskarte in den Chat“) und **bei jedem Mitglied** (Knopf „💐 Gute-Besserung-Karte“) – für alle Mitglieder.
+- Kein fremder Dienst, keine neuen Daten. Test: neu `tests/genesungskarte.test.mjs`. Rückweg: App 2.964.0. Nur die App.
+- Update-Hinweis für Mitglieder: „💐 Neu: Gute-Besserung-Karte mit Blumenstrauß – beim Mitglied antippen.“
+
 ## 2.964.0 – 2026-11-16 – 🎚️ Datenverkehr-Säulen im Kopf (Admin) · 🟢 Laufschrift der Online-Mitglieder auch am Handy (KC-CLUB-PULS, KC-CLUB-ONLINE-LAUF-HANDY) · Server 2.964.0 + Datenbank – [Hansi: einspielen]
 Fund Hansi 16.11.: „Am Handy keine Laufschrift bei den Online-Mitgliedern. Am PC klappt es.“
 - **Antippen hielt sie für immer an:** Anhalten war an „Maus darüber“ gebunden – am Handy bleibt dieser Zustand nach dem ersten Antippen hängen. Jetzt: am Handy nur anhalten, solange der Finger drauf ist; „Maus darüber“ nur noch auf Geräten mit Maus.
