@@ -71,7 +71,7 @@ const dbPufferLeeren = () => { const pf = DB_PUFFER.getStore() as DbPuffer | und
 const DB_RPC_NUR_LESEN = new Set(["kc_club_rt_kanal", "kc_club_ungelesen_je_chat", "kc_communication_get_server_secret", "kc_club_kachel_zahlen", "kc_club_chat_stand",
   // 2.602.0 KC-CLUB-START-KERN: auch die Pakete sind STABLE (Postgres verbietet darin jedes Schreiben) – sie leerten bisher bei jedem Start den Puffer
   "kc_club_start_kern", "kc_club_start_paket", "kc_club_unterhaltung_paket", "kc_club_comm_paket", "kc_club_buero_paket", "kc_club_online_jetzt", "kc_club_nachricht_mahnung", "kc_club_unterhaltungen_paket",
-  "kc_club_manager_mitglieder_kurz", "kc_club_comm_paket_kurz"]); // 2.496.0: Kachel-Zahlen · 2.510.0: Chat-Fingerabdruck (beide STABLE, nur lesend)
+  "kc_club_manager_mitglieder_kurz", "kc_club_comm_paket_kurz", "kc_club_puls"]); // kc_club_puls: KC-CLUB-PULS (STABLE) // 2.496.0: Kachel-Zahlen · 2.510.0: Chat-Fingerabdruck (beide STABLE, nur lesend)
 const dbFetch: typeof fetch = (input, init) => {
   const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
   const pf = url.includes("/rest/v1/") ? DB_PUFFER.getStore() as DbPuffer | undefined : undefined;
@@ -18573,6 +18573,13 @@ Köcheclub Werne`,
         return json({ reisen, geburtstage, veranstaltungen, privat });
       }
 
+      // KC-CLUB-PULS (Wunsch Hansi 16.11.2026): Aussteuerungsanzeige im Kopf (nur Admin) – Zählerstände der Club-App, die App rechnet „pro Sekunde“
+      case "betrieb_puls": {
+        nurAdmin(ich);
+        const { data, error } = await db.rpc("kc_club_puls");
+        if (error || !data) throw new Fehler("Messwerte gerade nicht lesbar.", 503);
+        return json({ ok: true, ...(data as Record<string, unknown>) });
+      }
       // ----- KC-CLUB-GEMEINSCHAFTSGERICHT: einreichen / später / diesmal nicht (Mitglieder und Aushilfen) -----
       case "gericht_zutat_setzen": case "gericht_antwort": {
         if (ich.zugang !== "mitglied" && ich.zugang !== "aushilfe") throw new Fehler("Das Gemeinschaftsgericht ist für Mitglieder und Aushilfen.", 403);

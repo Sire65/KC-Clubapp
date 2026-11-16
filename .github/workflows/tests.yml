@@ -125,6 +125,7 @@ jobs:
       - run: node tests/advent-serveruhr.test.mjs
       - run: node tests/gemeinschaftsgericht.test.mjs
       - run: node tests/online-lauf-handy.test.mjs
+      - run: node tests/puls.test.mjs
       - run: node tests/anfrage-gegenvorschlag.test.mjs
       - run: node tests/netz-balken.test.mjs
       - run: node tests/muenze-gesicht.test.mjs
