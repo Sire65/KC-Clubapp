@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.966.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.967.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -17171,6 +17171,7 @@ function hashSprung(h) {
     else if (h === "#clubjahr") cjOeffnen(); // 2.581.0 KC-CLUB-CLUBJAHR-MOMENTE: aus der Push
     else if (h === "#standort") zeige("standort");
     else if (h === "#dienstwunsch") dwOeffnen();
+    else if (h.startsWith("#gk=")) gkGemeinsamOeffnen(decodeURIComponent(h.slice(4))); // 2.967.0 KC-CLUB-GK-GEMEINSAM: Push → unterschreiben
     else if (h === "#erstattung") KR_ZEIGE("erstattung"); // KICC-F-100 (2.419.0): Link aus „Kaution wird erstattet“
     else if (h === "#wunschbogen") wbStart(); // KC-CLUB-WUNSCHBOGEN (2.23.28)
     else if (h === "#schulung") smStart(); // KC-CLUB-SCHULUNG-MITGLIED (2.23.62)
@@ -32601,63 +32602,237 @@ async function gratulieren(pid, ohneFrage) {
 // Genesungskarte mit z. B. Blumenstrauß“): die App malt eine Karte (Blumenstrauß, „Gute Besserung, Vorname!“, unten Kochmütze + „Köcheclub Werne“ in
 // Weinrot/Beige – KC-CD), zeigt sie zur Ansicht und legt sie mit einem Tipp als Bild in den Chat mit der Person; ➤ tippt man selbst (wie beim Gratulieren).
 // Kein Grund, keine Krankheit auf der Karte (keine Gesundheitsdaten). Alles in der App gezeichnet – kein fremder Dienst.
-const GK_TEXTE = ["Werde schnell wieder gesund –\nwir freuen uns auf dich!", "Wir denken an dich und\nwünschen dir alles Gute!", "Erhol dich gut –\ndie Küche wartet auf dich!"];
-async function gkZeichnen(vorname, satz) {
-  const B = 1080, H = 1350, c = document.createElement("canvas"); c.width = B; c.height = H; const g = c.getContext("2d");
-  const ROT = "#741521", BEIGE = "#f3e9dc";
-  g.fillStyle = BEIGE; g.fillRect(0, 0, B, H);
-  g.strokeStyle = ROT; g.lineWidth = 14; g.strokeRect(28, 28, B - 56, H - 56); g.lineWidth = 3; g.strokeRect(50, 50, B - 100, H - 100);
-  // Blumenstrauß: Stiele, Blätter, Blüten, Schleife
-  const cx = B / 2, fuss = 700;
-  const bl = [[-210, 300, "#c2185b"], [-120, 220, "#f4a3b5"], [0, 190, "#b3202c"], [120, 220, "#f7c948"], [210, 300, "#e57373"], [-60, 330, "#ffffff"], [70, 330, "#f4a3b5"], [-160, 410, "#f7c948"], [160, 410, "#c2185b"], [0, 290, "#f7c948"]];
-  g.lineCap = "round";
-  for (const [dx, y] of bl) { g.strokeStyle = "#4f7a3a"; g.lineWidth = 9; g.beginPath(); g.moveTo(cx + dx, y + 30); g.quadraticCurveTo(cx + dx * 0.4, (y + fuss) / 2, cx + dx * 0.08, fuss + 120); g.stroke(); }
-  const blatt = (x, y, w, r) => { g.save(); g.translate(x, y); g.rotate(r); g.fillStyle = "#5f8f45"; g.beginPath(); g.ellipse(0, 0, w, w * 0.38, 0, 0, Math.PI * 2); g.fill(); g.strokeStyle = "#3d6a2c"; g.lineWidth = 3; g.beginPath(); g.moveTo(-w, 0); g.lineTo(w, 0); g.stroke(); g.restore(); };
-  [[-250, 470, 70, -0.6], [250, 470, 70, 0.6], [-190, 540, 60, -0.9], [190, 540, 60, 0.9], [-90, 470, 55, -0.3], [90, 470, 55, 0.3]].forEach(([dx, y, w, r]) => blatt(cx + dx, y, w, r));
-  const bluete = (x, y, farbe, r = 62) => {
-    for (let i = 0; i < 8; i++) { const a = (i / 8) * Math.PI * 2; g.fillStyle = farbe; g.beginPath(); g.ellipse(x + Math.cos(a) * r * 0.55, y + Math.sin(a) * r * 0.55, r * 0.5, r * 0.3, a, 0, Math.PI * 2); g.fill(); }
-    g.fillStyle = farbe === "#f7c948" ? "#b5651d" : "#f7c948"; g.beginPath(); g.arc(x, y, r * 0.24, 0, Math.PI * 2); g.fill();
-  };
-  for (const [dx, y, f] of bl) bluete(cx + dx, y, f);
-  [[-260, 220], [260, 230], [-30, 120], [40, 410], [-250, 360], [255, 370]].forEach(([dx, y]) => { g.fillStyle = "#fff"; for (let i = 0; i < 5; i++) { const a = (i / 5) * Math.PI * 2; g.beginPath(); g.arc(cx + dx + Math.cos(a) * 11, y + Math.sin(a) * 11, 9, 0, Math.PI * 2); g.fill(); } g.fillStyle = "#f7c948"; g.beginPath(); g.arc(cx + dx, y, 7, 0, Math.PI * 2); g.fill(); });
-  // Manschette und Schleife
-  g.fillStyle = "#e9d6bd"; g.beginPath(); g.moveTo(cx - 150, fuss - 20); g.lineTo(cx + 150, fuss - 20); g.lineTo(cx + 60, fuss + 150); g.lineTo(cx - 60, fuss + 150); g.closePath(); g.fill();
-  g.strokeStyle = "#c9b393"; g.lineWidth = 3; g.stroke();
-  g.fillStyle = ROT; g.beginPath(); g.ellipse(cx - 55, fuss + 40, 60, 28, -0.4, 0, Math.PI * 2); g.ellipse(cx + 55, fuss + 40, 60, 28, 0.4, 0, Math.PI * 2); g.fill();
-  g.beginPath(); g.moveTo(cx - 10, fuss + 50); g.lineTo(cx - 60, fuss + 140); g.lineTo(cx - 30, fuss + 135); g.lineTo(cx, fuss + 60); g.lineTo(cx + 30, fuss + 135); g.lineTo(cx + 60, fuss + 140); g.lineTo(cx + 10, fuss + 50); g.fill();
-  g.beginPath(); g.arc(cx, fuss + 42, 20, 0, Math.PI * 2); g.fill();
-  // Text
-  g.textAlign = "center"; g.fillStyle = ROT;
-  g.font = "italic 700 96px Georgia, 'Times New Roman', serif"; g.fillText("Gute Besserung,", cx, 940);
-  const name = `${String(vorname || "").trim() || "liebe/r Freund/in"}!`; let gr = 104; do { g.font = `700 ${gr}px Georgia, 'Times New Roman', serif`; gr -= 4; } while (g.measureText(name).width > B - 200 && gr > 50);
-  g.fillText(name, cx, 1045);
-  g.fillStyle = "#4a2a20"; g.font = "400 42px Georgia, 'Times New Roman', serif";
-  String(satz || GK_TEXTE[0]).split("\n").slice(0, 2).forEach((z, i) => g.fillText(z, cx, 1105 + i * 50));
-  // Fuß: Weinrot-Band mit Kochmütze und „Köcheclub Werne“
-  g.fillStyle = ROT; g.fillRect(50, H - 160, B - 100, 110);
+// 2.967.0 KC-CLUB-GENESUNGSKARTEN (Wunschliste #96, Antworten Hansi 16.11.2026: „1 ja mit Sonne, 2 ja, 3 Köcheclub, 4 ja, 5 später“): Baukasten statt einer Karte –
+// sechs Motive (💐 Blumen, 🐭 Maus, 🐰 Kaninchen, 🧸 Bär, 🍲 Suppentopf, ☀️ Sonne), Überschrift zur Wahl, Text aus Vorschlägen oder ✏️ eigener (bis 120 Zeichen,
+// Zeilen und Schriftgröße passt die App an), Absender (Standard „Dein Köcheclub“). Neues Motiv = ein Eintrag in GK_MOTIVE. Alles in der App gezeichnet.
+// Die gemeinsame Karte (alle unterschreiben) kommt später (Konzept docs/KONZEPT_GENESUNGSKARTEN.md, Stufe 2).
+const GK_ROT = "#741521", GK_BEIGE = "#f3e9dc";
+const gkKreis = (g, x, y, r, f, s) => { g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); if (f) { g.fillStyle = f; g.fill(); } if (s) { g.strokeStyle = s; g.lineWidth = 4; g.stroke(); } };
+const gkOval = (g, x, y, rx, ry, f, rot = 0) => { g.beginPath(); g.ellipse(x, y, rx, ry, rot, 0, Math.PI * 2); g.fillStyle = f; g.fill(); };
+function gkGesicht(g, x, y, d, nase, r = 14) {
+  for (const s of [-1, 1]) { gkKreis(g, x + s * d, y, r, "#2b1b14"); gkKreis(g, x + s * d + r * 0.35, y - r * 0.35, r * 0.35, "#fff"); gkOval(g, x + s * d * 1.7, y + 50, 20, 12, "rgba(240,120,140,.45)"); }
+  if (nase) gkOval(g, x, y + 42, nase[0], nase[1], nase[2]);
+  g.strokeStyle = "#2b1b14"; g.lineWidth = 5; g.lineCap = "round"; g.beginPath(); g.arc(x, y + 58, 22, 0.15 * Math.PI, 0.85 * Math.PI); g.stroke();
+}
+function gkBluete(g, x, y, f, r = 26) { for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; gkOval(g, x + Math.cos(a) * r * .6, y + Math.sin(a) * r * .6, r * .5, r * .32, f, a); } gkKreis(g, x, y, r * .28, "#f7c948"); }
+const GK_MOTIVE = [
+  { id: "strauss", sym: "💐", name: "Blumen", texte: ["Werde schnell wieder gesund – wir freuen uns auf dich!", "Erhol dich gut – die Küche wartet auf dich!"],
+    zeichnen(g, cx) {
+      // Blumenstrauß: Stiele, Blätter, Blüten, Schleife
+      const fuss = 700;
+      const bl = [[-210, 300, "#c2185b"], [-120, 220, "#f4a3b5"], [0, 190, "#b3202c"], [120, 220, "#f7c948"], [210, 300, "#e57373"], [-60, 330, "#ffffff"], [70, 330, "#f4a3b5"], [-160, 410, "#f7c948"], [160, 410, "#c2185b"], [0, 290, "#f7c948"]];
+      g.lineCap = "round";
+      for (const [dx, y] of bl) { g.strokeStyle = "#4f7a3a"; g.lineWidth = 9; g.beginPath(); g.moveTo(cx + dx, y + 30); g.quadraticCurveTo(cx + dx * 0.4, (y + fuss) / 2, cx + dx * 0.08, fuss + 120); g.stroke(); }
+      const blatt = (x, y, w, r) => { g.save(); g.translate(x, y); g.rotate(r); g.fillStyle = "#5f8f45"; g.beginPath(); g.ellipse(0, 0, w, w * 0.38, 0, 0, Math.PI * 2); g.fill(); g.strokeStyle = "#3d6a2c"; g.lineWidth = 3; g.beginPath(); g.moveTo(-w, 0); g.lineTo(w, 0); g.stroke(); g.restore(); };
+      [[-250, 470, 70, -0.6], [250, 470, 70, 0.6], [-190, 540, 60, -0.9], [190, 540, 60, 0.9], [-90, 470, 55, -0.3], [90, 470, 55, 0.3]].forEach(([dx, y, w, r]) => blatt(cx + dx, y, w, r));
+      const bluete = (x, y, farbe, r = 62) => {
+        for (let i = 0; i < 8; i++) { const a = (i / 8) * Math.PI * 2; g.fillStyle = farbe; g.beginPath(); g.ellipse(x + Math.cos(a) * r * 0.55, y + Math.sin(a) * r * 0.55, r * 0.5, r * 0.3, a, 0, Math.PI * 2); g.fill(); }
+        g.fillStyle = farbe === "#f7c948" ? "#b5651d" : "#f7c948"; g.beginPath(); g.arc(x, y, r * 0.24, 0, Math.PI * 2); g.fill();
+      };
+      for (const [dx, y, f] of bl) bluete(cx + dx, y, f);
+      [[-260, 220], [260, 230], [-30, 120], [40, 410], [-250, 360], [255, 370]].forEach(([dx, y]) => { g.fillStyle = "#fff"; for (let i = 0; i < 5; i++) { const a = (i / 5) * Math.PI * 2; g.beginPath(); g.arc(cx + dx + Math.cos(a) * 11, y + Math.sin(a) * 11, 9, 0, Math.PI * 2); g.fill(); } g.fillStyle = "#f7c948"; g.beginPath(); g.arc(cx + dx, y, 7, 0, Math.PI * 2); g.fill(); });
+      // Manschette und Schleife
+      g.fillStyle = "#e9d6bd"; g.beginPath(); g.moveTo(cx - 150, fuss - 20); g.lineTo(cx + 150, fuss - 20); g.lineTo(cx + 60, fuss + 150); g.lineTo(cx - 60, fuss + 150); g.closePath(); g.fill();
+      g.strokeStyle = "#c9b393"; g.lineWidth = 3; g.stroke();
+      g.fillStyle = GK_ROT; g.beginPath(); g.ellipse(cx - 55, fuss + 40, 60, 28, -0.4, 0, Math.PI * 2); g.ellipse(cx + 55, fuss + 40, 60, 28, 0.4, 0, Math.PI * 2); g.fill();
+      g.beginPath(); g.moveTo(cx - 10, fuss + 50); g.lineTo(cx - 60, fuss + 140); g.lineTo(cx - 30, fuss + 135); g.lineTo(cx, fuss + 60); g.lineTo(cx + 30, fuss + 135); g.lineTo(cx + 60, fuss + 140); g.lineTo(cx + 10, fuss + 50); g.fill();
+      g.beginPath(); g.arc(cx, fuss + 42, 20, 0, Math.PI * 2); g.fill();
+    } },
+  { id: "maus", sym: "🐭", name: "Maus", texte: ["Kuschel dich ein und werde schnell wieder gesund.", "Tee, Decke, Ruhe – und bald bist du wieder fit!"],
+    zeichnen(g, cx, cy) {
+      for (const s of [-1, 1]) { gkKreis(g, cx + s * 120, cy - 150, 85, "#b8b0aa"); gkKreis(g, cx + s * 120, cy - 150, 55, "#f4b6c2"); }
+      gkOval(g, cx, cy - 40, 150, 135, "#c9c2bc"); gkGesicht(g, cx, cy - 70, 50, [16, 14, "#e57b93"]);
+      g.strokeStyle = "#2b1b14"; g.lineWidth = 3; for (const s of [-1, 1]) for (const dy of [-8, 8]) { g.beginPath(); g.moveTo(cx + s * 30, cy - 20 + dy); g.lineTo(cx + s * 120, cy - 30 + dy * 2); g.stroke(); }
+      g.fillStyle = "#c2185b"; g.beginPath(); g.roundRect(cx - 220, cy + 60, 440, 130, 30); g.fill();
+      g.strokeStyle = "rgba(255,255,255,.55)"; g.lineWidth = 6; for (let i = 1; i < 5; i++) { g.beginPath(); g.moveTo(cx - 220 + i * 88, cy + 68); g.lineTo(cx - 220 + i * 88, cy + 182); g.stroke(); }
+      const tx = cx + 300, ty = cy + 80; g.fillStyle = "#fff"; g.beginPath(); g.moveTo(tx - 55, ty - 40); g.lineTo(tx + 55, ty - 40); g.lineTo(tx + 45, ty + 45); g.lineTo(tx - 45, ty + 45); g.closePath(); g.fill();
+      g.strokeStyle = GK_ROT; g.lineWidth = 5; g.stroke(); g.beginPath(); g.arc(tx + 60, ty, 22, -Math.PI / 2, Math.PI / 2); g.stroke(); gkOval(g, tx, ty - 40, 55, 10, "#b5651d");
+      g.strokeStyle = "rgba(120,120,120,.6)"; g.lineWidth = 4; for (const dx of [-20, 0, 20]) { g.beginPath(); g.moveTo(tx + dx, ty - 60); g.bezierCurveTo(tx + dx - 15, ty - 85, tx + dx + 15, ty - 100, tx + dx, ty - 125); g.stroke(); }
+      g.fillStyle = GK_ROT; g.font = "700 30px Georgia, serif"; g.textAlign = "center"; g.fillText("♥", tx, ty + 18);
+    } },
+  { id: "hase", sym: "🐰", name: "Kaninchen", texte: ["Wir denken an dich und schicken dir eine Blume.", "Hoppel bald wieder zu uns – wir vermissen dich!"],
+    zeichnen(g, cx, cy) {
+      for (const s of [-1, 1]) { gkOval(g, cx + s * 60, cy - 260, 45, 120, "#ece6df", s * 0.15); gkOval(g, cx + s * 60, cy - 255, 24, 90, "#f4b6c2", s * 0.15); }
+      gkOval(g, cx, cy + 110, 150, 120, "#ece6df"); gkOval(g, cx, cy - 70, 140, 120, "#f5f0ea"); gkGesicht(g, cx, cy - 95, 50, [14, 10, "#e57b93"]);
+      g.strokeStyle = "#4f7a3a"; g.lineWidth = 8; g.beginPath(); g.moveTo(cx + 90, cy + 140); g.lineTo(cx + 150, cy - 20); g.stroke(); gkBluete(g, cx + 152, cy - 40, "#c2185b", 40);
+      gkOval(g, cx + 80, cy + 120, 40, 30, "#f5f0ea");
+    } },
+  { id: "baer", sym: "🧸", name: "Bär", texte: ["Eine dicke Umarmung von uns allen!", "Ein Bärenkuss – damit du schnell wieder gesund wirst!"],
+    zeichnen(g, cx, cy) {
+      g.strokeStyle = "#7a5a3a"; g.lineWidth = 3; g.beginPath(); g.moveTo(cx + 150, cy + 60); g.bezierCurveTo(cx + 200, cy - 60, cx + 170, cy - 160, cx + 210, cy - 230); g.stroke();
+      const hx = cx + 210, hy = cy - 300; g.fillStyle = "#b3202c"; g.beginPath(); g.moveTo(hx, hy + 70); g.bezierCurveTo(hx - 110, hy, hx - 60, hy - 90, hx, hy - 40); g.bezierCurveTo(hx + 60, hy - 90, hx + 110, hy, hx, hy + 70); g.fill();
+      for (const s of [-1, 1]) { gkKreis(g, cx + s * 115, cy - 170, 52, "#a0703f"); gkKreis(g, cx + s * 115, cy - 170, 30, "#d9a978"); }
+      gkOval(g, cx, cy + 120, 160, 130, "#a0703f"); gkOval(g, cx, cy + 135, 95, 85, "#d9a978"); gkKreis(g, cx, cy - 70, 140, "#a8774a"); gkOval(g, cx, cy - 25, 62, 48, "#d9a978");
+      gkGesicht(g, cx, cy - 95, 52, [20, 14, "#3b2416"]); for (const s of [-1, 1]) gkKreis(g, cx + s * 150, cy + 80, 45, "#a0703f");
+    } },
+  { id: "suppe", sym: "🍲", name: "Suppentopf", texte: ["Die beste Medizin: eine Suppe vom Köcheclub!", "Wir kochen dir was Gutes – werde schnell gesund!"],
+    zeichnen(g, cx, cy) {
+      g.strokeStyle = "rgba(140,140,140,.55)"; g.lineWidth = 6; g.lineCap = "round"; for (const dx of [-80, 0, 80]) { g.beginPath(); g.moveTo(cx + dx, cy - 80); g.bezierCurveTo(cx + dx - 30, cy - 140, cx + dx + 30, cy - 180, cx + dx, cy - 240); g.stroke(); }
+      gkOval(g, cx, cy - 40, 230, 40, "#f2c14e"); for (const [dx, f] of [[-90, "#e67e22"], [-20, "#5f8f45"], [60, "#e67e22"], [120, "#f5f0ea"]]) gkKreis(g, cx + dx, cy - 45, 16, f);
+      g.fillStyle = GK_ROT; g.beginPath(); g.moveTo(cx - 240, cy - 40); g.lineTo(cx + 240, cy - 40); g.lineTo(cx + 210, cy + 170); g.quadraticCurveTo(cx, cy + 200, cx - 210, cy + 170); g.closePath(); g.fill();
+      for (const s of [-1, 1]) { g.strokeStyle = GK_ROT; g.lineWidth = 18; g.beginPath(); g.moveTo(cx + s * 235, cy + 10); g.lineTo(cx + s * 290, cy + 10); g.stroke(); }
+      g.fillStyle = "#fff"; g.font = "700 46px Georgia, serif"; g.textAlign = "center"; g.fillText("♥", cx, cy + 90);
+      for (const [dx, r] of [[-45, 40], [0, 52], [45, 40]]) gkKreis(g, cx + 150 + dx, cy - 250, r, "#fff", "#ccc");
+      g.fillStyle = "#fff"; g.fillRect(cx + 105, cy - 240, 90, 50); g.strokeStyle = "#ccc"; g.lineWidth = 4; g.strokeRect(cx + 105, cy - 240, 90, 50);
+    } },
+  { id: "sonne", sym: "☀️", name: "Sonne", texte: ["Bald scheint wieder die Sonne für dich!", "Nach dem Regen kommt die Sonne – halte durch!"],
+    zeichnen(g, cx, cy) {
+      ["#e53935", "#fb8c00", "#fdd835", "#43a047", "#1e88e5", "#8e24aa"].forEach((f, i) => { g.strokeStyle = f; g.lineWidth = 26; g.beginPath(); g.arc(cx, cy + 230, 380 - i * 26, Math.PI, 2 * Math.PI); g.stroke(); });
+      for (const [x, y, r] of [[cx - 300, cy + 200, 70], [cx - 230, cy + 215, 60], [cx + 300, cy + 200, 70], [cx + 230, cy + 215, 60]]) gkKreis(g, x, y, r, "#fff");
+      g.strokeStyle = "#f9a825"; g.lineWidth = 12; g.lineCap = "round"; for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; g.beginPath(); g.moveTo(cx + Math.cos(a) * 150, cy - 60 + Math.sin(a) * 150); g.lineTo(cx + Math.cos(a) * 200, cy - 60 + Math.sin(a) * 200); g.stroke(); }
+      gkKreis(g, cx, cy - 60, 130, "#fdd835"); gkGesicht(g, cx, cy - 95, 45, null);
+    } },
+];
+const gkTitel = (vn) => [`Gute Besserung, ${vn}!`, `Werde schnell gesund, ${vn}!`, `Wir denken an dich, ${vn}!`];
+const gkAbsender = () => { const vn = ICH?.vorname || String(ICH?.name || "").split(" ")[0] || "Hansi"; return ["Dein Köcheclub", `${vn} und der ganze Club`, `Von ${vn}`]; };
+function gkUmbruch(g, text, breite) { // Zeilen umbrechen; zu lang → Schrift kleiner (höchstens 3 Zeilen)
+  for (let gr = 46; gr >= 30; gr -= 2) {
+    g.font = `400 ${gr}px Georgia, 'Times New Roman', serif`; const zeilen = []; let z = "";
+    for (const w of String(text).split(/\s+/).filter(Boolean)) { const t = z ? z + " " + w : w; if (g.measureText(t).width > breite && z) { zeilen.push(z); z = w; } else z = t; }
+    if (z) zeilen.push(z);
+    if (zeilen.length <= 3 || gr === 30) return { gr, zeilen: zeilen.slice(0, 4) };
+  }
+}
+async function gkZeichnen(k) { // k = { motiv, titel, text, von, namen? } – namen: gemeinsame Karte (KC-CLUB-GK-GEMEINSAM), Motiv dann kleiner
+  const B = 1080, H = 1350, c = document.createElement("canvas"); c.width = B; c.height = H; const g = c.getContext("2d"), cx = B / 2;
+  const namen = (k.namen || []).filter(Boolean), mit = namen.length > 0;
+  g.fillStyle = GK_BEIGE; g.fillRect(0, 0, B, H);
+  g.strokeStyle = GK_ROT; g.lineWidth = 14; g.strokeRect(28, 28, B - 56, H - 56); g.lineWidth = 3; g.strokeRect(50, 50, B - 100, H - 100);
+  g.save(); g.lineCap = "round"; if (mit) { g.translate(cx, 90); g.scale(0.8, 0.8); g.translate(-cx, -90); } (GK_MOTIVE.find((m) => m.id === k.motiv) || GK_MOTIVE[0]).zeichnen(g, cx, 470); g.restore();
+  const yT = mit ? 680 : 935, yX = mit ? 745 : 1000;
+  g.textAlign = "center"; g.fillStyle = GK_ROT; let gr = mit ? 80 : 92; do { g.font = `italic 700 ${gr}px Georgia, 'Times New Roman', serif`; gr -= 4; } while (g.measureText(k.titel).width > B - 160 && gr > 44);
+  g.fillText(k.titel, cx, yT);
+  const u = gkUmbruch(g, k.text, B - 200); g.fillStyle = "#4a2a20"; g.font = `400 ${u.gr}px Georgia, 'Times New Roman', serif`;
+  u.zeilen.forEach((z, i) => g.fillText(z, cx, yX + i * (u.gr + 8)));
+  let y = yX + u.zeilen.length * (u.gr + 8) + (mit ? 10 : 20);
+  if (mit) { // Unterschriften: „Es grüßen dich:“ + Vornamen, Schrift wird kleiner, wenn es viele sind
+    g.fillStyle = GK_ROT; g.font = "700 38px Georgia, 'Times New Roman', serif"; g.fillText("Es grüßen dich:", cx, y + 10); y += 60;
+    let ngr = 34, zeilen = [];
+    for (ngr = 40; ngr >= 22; ngr -= 2) { g.font = `italic 400 ${ngr}px Georgia, 'Times New Roman', serif`; zeilen = []; let z = "";
+      for (const n of namen) { const t = z ? z + " · " + n : n; if (g.measureText(t).width > B - 180 && z) { zeilen.push(z); z = n; } else z = t; }
+      if (z) zeilen.push(z); if (y + zeilen.length * (ngr + 8) < 1120) break; }
+    g.fillStyle = "#4a2a20"; zeilen.slice(0, 8).forEach((z) => { g.fillText(z, cx, y); y += ngr + 8; });
+  }
+  g.fillStyle = "#4a2a20"; g.font = "italic 400 40px Georgia, 'Times New Roman', serif"; g.fillText(k.von, cx, Math.min(1172, Math.max(mit ? y + 14 : 1140, y)));
+  g.fillStyle = GK_ROT; g.fillRect(50, H - 160, B - 100, 110);
   try { const img = new Image(); img.src = "kc-kochmuetze-weiss.webp"; await img.decode(); const h = 80, w = img.width * h / img.height; g.drawImage(img, cx - 250 - w / 2, H - 145, w, h); } catch {}
   g.fillStyle = "#fff"; g.font = "700 50px Georgia, 'Times New Roman', serif"; g.fillText("Köcheclub Werne", cx + 40, H - 88);
   return c;
 }
 let GK = null;
+const GK_KEY = "kc_club_gk_wahl";
 async function genesungsKarte(pid) {
   if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return meldeFehler(e); }
   const m = MITGLIEDER.find((x) => x.person_id === pid); if (!m || pid === ICH?.person_id) return melde("Die Person ist nicht (mehr) in der Mitgliederliste.", true);
   const vorname = m.vorname || String(m.name || "").split(" ")[0];
-  GK = { pid, vorname, satz: 0 };
-  const f = blattAuf("gkBlatt", `<h3 style="margin-top:0">💐 Genesungskarte für ${esc(vorname)}</h3>
-    <img id="gkBild" alt="Genesungskarte mit Blumenstrauß" style="width:100%;max-width:420px;display:block;margin:0 auto 8px;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.2)">
-    <div class="hl-chips" style="justify-content:center">${GK_TEXTE.map((t, i) => `<button type="button" class="chip${i ? "" : " an"}" data-satz="${i}">${esc(t.replace("\n", " "))}</button>`).join("")}</div>
+  let gemerkt = {}; try { gemerkt = JSON.parse(localStorage.getItem(GK_KEY) || "{}") || {}; } catch {}
+  const motiv = GK_MOTIVE.some((x) => x.id === gemerkt.motiv) ? gemerkt.motiv : "strauss";
+  GK = { pid, vorname, motiv, titel: 0, text: 0, eigenText: "", von: 0, eigenVon: "" };
+  const f = blattAuf("gkBlatt", `<h3 style="margin-top:0">💐 Gute-Besserung-Karte für ${esc(vorname)}</h3>
+    <img id="gkBild" alt="Genesungskarte" style="width:100%;max-width:420px;display:block;margin:0 auto 8px;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.2);touch-action:pan-y">
+    <div class="hl-chips gk-motive" style="justify-content:center">${GK_MOTIVE.map((x) => `<button type="button" class="chip" data-motiv="${x.id}" aria-label="${esc(x.name)}">${x.sym} ${esc(x.name)}</button>`).join("")}</div>
+    <h4 class="gk-h">Überschrift</h4><div class="hl-chips" id="gkTitel"></div>
+    <h4 class="gk-h">Text</h4><div class="hl-chips" id="gkTexte"></div>
+    <label class="feld versteckt" id="gkEigenFeld">Dein Text (höchstens 120 Zeichen)<textarea id="gkEigen" rows="3" maxlength="120" placeholder="z. B. Liebe Karla, wir drücken dir die Daumen …"></textarea></label>
+    <h4 class="gk-h">Absender</h4><div class="hl-chips" id="gkVon"></div>
+    <label class="feld versteckt" id="gkVonFeld">Absender<input id="gkVonEigen" maxlength="40" placeholder="z. B. Deine Kochfreunde"></label>
     <p class="hinweis" style="margin:6px 0">Die Karte kommt als Bild in den Chat mit ${esc(vorname)}. Ein paar eigene Worte schreibst du darunter – dann ➤.</p>
-    <div style="display:grid;gap:8px"><button type="button" class="knopf haupt" id="gkLos">💬 In ${esc(vorname)}s Chat legen</button><button type="button" class="knopf" onclick="fensterZu($('gkBlatt'))">Abbrechen</button></div>`);
-  const malen = async () => { const c = await gkZeichnen(vorname, GK_TEXTE[GK.satz]); const b = $("gkBild"); if (b) b.src = c.toDataURL("image/jpeg", 0.88); GK.canvas = c; };
-  f.querySelectorAll("[data-satz]").forEach((b) => (b.onclick = () => { GK.satz = +b.dataset.satz; f.querySelectorAll("[data-satz]").forEach((x) => x.classList.toggle("an", x === b)); malen(); }));
+    <div style="display:grid;gap:8px"><button type="button" class="knopf haupt" id="gkLos">💬 In ${esc(vorname)}s Chat legen</button>
+      ${ICH?.admin || ICH?.vorstand ? `<button type="button" class="knopf" id="gkGemeinsam">👥 Als gemeinsame Karte starten – alle unterschreiben</button>` : ""}
+      <button type="button" class="knopf" onclick="fensterZu($('gkBlatt'))">Abbrechen</button></div>
+    <div id="gkLaeuft"></div>`);
+  gkLaeuftZeigen(pid); // 2.967.0 KC-CLUB-GK-GEMEINSAM: läuft schon eine gemeinsame Karte für diese Person?
+  let timer = 0;
+  const malen = async () => {
+    const mo = GK_MOTIVE.find((x) => x.id === GK.motiv) || GK_MOTIVE[0];
+    const text = GK.text === -1 ? (GK.eigenText.trim() || "…") : mo.texte[GK.text] || mo.texte[0];
+    const von = GK.von === -1 ? (GK.eigenVon.trim() || "Dein Köcheclub") : gkAbsender()[GK.von];
+    const c = await gkZeichnen({ motiv: mo.id, titel: gkTitel(vorname)[GK.titel], text, von });
+    const b = $("gkBild"); if (b) { b.src = c.toDataURL("image/jpeg", 0.88); b.alt = `Genesungskarte: ${mo.name}, ${gkTitel(vorname)[GK.titel]}`; } GK.canvas = c;
+  };
+  const spaeter = () => { clearTimeout(timer); timer = setTimeout(malen, 250); };
+  const chips = (id, liste, wahl, eigen) => { $(id).innerHTML = liste.map((t, i) => `<button type="button" class="chip${wahl === i ? " an" : ""}" data-i="${i}">${esc(t)}</button>`).join("") + (eigen ? `<button type="button" class="chip${wahl === -1 ? " an" : ""}" data-i="-1">✏️ ${eigen}</button>` : ""); };
+  const zeigen = () => {
+    const mo = GK_MOTIVE.find((x) => x.id === GK.motiv) || GK_MOTIVE[0];
+    f.querySelectorAll("[data-motiv]").forEach((b) => b.classList.toggle("an", b.dataset.motiv === GK.motiv));
+    chips("gkTitel", gkTitel(vorname), GK.titel); chips("gkTexte", mo.texte, GK.text, "Eigener Text"); chips("gkVon", gkAbsender(), GK.von, "Eigener");
+    $("gkEigenFeld").classList.toggle("versteckt", GK.text !== -1); $("gkVonFeld").classList.toggle("versteckt", GK.von !== -1);
+    malen();
+  };
+  f.querySelectorAll("[data-motiv]").forEach((b) => (b.onclick = () => { GK.motiv = b.dataset.motiv; if (GK.text > 0) GK.text = 0; zeigen(); }));
+  $("gkTitel").onclick = (e) => { const b = e.target.closest("[data-i]"); if (b) { GK.titel = +b.dataset.i; zeigen(); } };
+  $("gkTexte").onclick = (e) => { const b = e.target.closest("[data-i]"); if (b) { GK.text = +b.dataset.i; zeigen(); if (GK.text === -1) $("gkEigen").focus(); } };
+  $("gkVon").onclick = (e) => { const b = e.target.closest("[data-i]"); if (b) { GK.von = +b.dataset.i; zeigen(); if (GK.von === -1) $("gkVonEigen").focus(); } };
+  $("gkEigen").oninput = (e) => { GK.eigenText = e.target.value.slice(0, 120); spaeter(); };
+  $("gkVonEigen").oninput = (e) => { GK.eigenVon = e.target.value.slice(0, 40); spaeter(); };
+  // Wischen auf der Karte = nächstes / voriges Motiv
+  let x0 = null; const bild = $("gkBild");
+  bild.addEventListener("pointerdown", (e) => { x0 = e.clientX; });
+  bild.addEventListener("pointerup", (e) => { if (x0 === null) return; const dx = e.clientX - x0; x0 = null; if (Math.abs(dx) < 40) return;
+    const i = GK_MOTIVE.findIndex((x) => x.id === GK.motiv), n = GK_MOTIVE.length; GK.motiv = GK_MOTIVE[(i + (dx < 0 ? 1 : -1) + n) % n].id; if (GK.text > 0) GK.text = 0; zeigen(); });
   f.querySelector("#gkLos").onclick = (e) => einmal(e.target, gkInDenChat);
-  await malen();
+  f.querySelector("#gkGemeinsam")?.addEventListener("click", (e) => einmal(e.target, gkGemeinsamStarten));
+  zeigen();
+}
+// ---------- 2.967.0 KC-CLUB-GK-GEMEINSAM (Wunsch Hansi 16.11.2026 „Baue noch die gemeinsame Karte“): Clubleitung startet, alle bekommen eine Push und
+// unterschreiben mit einem Tipp, die beschenkte Person sieht nichts. Der Starter (oder Admin) schickt die Karte mit allen Vornamen in den Chat.
+const gkWahl = () => { // Auswahl aus dem offenen Karten-Fenster
+  const mo = GK_MOTIVE.find((x) => x.id === GK.motiv) || GK_MOTIVE[0];
+  return { motiv: mo.id, titel: GK.titel, text: GK.text === -1 ? GK.eigenText.trim() : mo.texte[GK.text] || mo.texte[0], von: GK.von === -1 ? (GK.eigenVon.trim() || "Dein Köcheclub") : gkAbsender()[GK.von] };
+};
+async function gkGemeinsamStarten() {
+  if (!GK) return; const w = gkWahl(); if (!w.text) return melde("Bitte zuerst deinen Text schreiben – oder einen Vorschlag antippen.", true);
+  if (!(await frage(`👥 Gemeinsame Karte für ${GK.vorname} starten?\n\nAlle Mitglieder (außer ${GK.vorname}) bekommen eine Push und können 2 Tage lang mit einem Tipp unterschreiben. ${GK.vorname} sieht davon nichts.\n\nDanach (oder schon früher) schickst du die Karte mit allen Namen in den Chat.`, { ja: "👥 Starten", nein: "Abbrechen" }))) return;
+  try {
+    const r = await api("gk_gemeinsam_start", { fuer: GK.pid, ...w, tage: 2 }, { warten: true });
+    fensterZu($("gkBlatt")); melde(`👥 Gestartet – ${r.empfaenger} Mitglieder bekommen Bescheid. Du hast schon unterschrieben.`);
+  } catch (e) { meldeFehler(e); }
+}
+async function gkLaeuftZeigen(pid) {
+  let d; try { d = await api("gk_gemeinsam_liste"); } catch { return; }
+  const k = (d?.karten || []).find((x) => x.fuer === pid), z = $("gkLaeuft"); if (!k || !z) return;
+  z.innerHTML = `<div class="karte" style="margin-top:10px;border:2px solid var(--rot)">👥 <b>Gemeinsame Karte für ${esc(k.fuerName)} läuft</b> – ${k.namen.length} Unterschrift${k.namen.length === 1 ? "" : "en"}.
+    <div style="margin-top:6px"><button type="button" class="knopf klein haupt" onclick="fensterZu($('gkBlatt'));gkGemeinsamOeffnen('${esc(k.id)}')">${k.darfSenden ? "👁️ Ansehen & verschicken" : k.ichDabei ? "👁️ Ansehen" : "✍️ Unterschreiben"}</button></div></div>`;
+  if (!k.darfSenden) $("gkGemeinsam")?.remove();
+}
+async function gkGemeinsamOeffnen(id) {
+  let d; try { d = await api("gk_gemeinsam_liste", {}, { warten: true }); } catch (e) { return meldeFehler(e); }
+  const k = (d?.karten || []).find((x) => x.id === id);
+  if (!k) return melde("Diese Karte ist schon verschickt – danke fürs Mitmachen! 💐");
+  const daten = { motiv: k.motiv, titel: gkTitel(k.fuerName)[k.titel] || gkTitel(k.fuerName)[0], text: k.text, von: k.von, namen: k.namen };
+  const bis = new Date(k.bis).toLocaleString("de-DE", { weekday: "short", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+  const f = blattAuf("gkGemBlatt", `<h3 style="margin-top:0">👥 Gemeinsame Karte für ${esc(k.fuerName)}</h3>
+    <p class="hinweis" style="margin:0 0 6px">Gestartet von ${esc(k.starter)} · unterschreiben bis ${esc(bis)} · ${esc(k.fuerName)} sieht die Karte erst, wenn sie kommt 🤫</p>
+    <img id="gkGemBild" alt="Gemeinsame Genesungskarte" style="width:100%;max-width:420px;display:block;margin:0 auto 8px;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.2)">
+    <p style="margin:4px 0 8px;text-align:center"><b>${k.namen.length}</b> Unterschrift${k.namen.length === 1 ? "" : "en"}${k.namen.length ? ": " + esc(k.namen.join(", ")) : ""}</p>
+    <div style="display:grid;gap:8px">
+      ${k.ichDabei ? `<button type="button" class="knopf" data-w="zurueck">↩️ Meine Unterschrift zurücknehmen</button>` : `<button type="button" class="knopf haupt" data-w="ja">✍️ Ich unterschreibe</button>`}
+      ${k.darfSenden ? `<button type="button" class="knopf ${k.ichDabei ? "haupt" : ""}" data-w="senden">💬 Jetzt in ${esc(k.fuerName)}s Chat legen</button><button type="button" class="knopf" data-w="abbrechen">🗑️ Karte abbrechen</button>` : ""}
+      <button type="button" class="knopf" data-w="">Schließen</button></div>`);
+  try { $("gkGemBild").src = (await gkZeichnen(daten)).toDataURL("image/jpeg", 0.88); } catch {}
+  f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => einmal(b, async () => {
+    const w = b.dataset.w; if (!w) return fensterZu(f);
+    try {
+      if (w === "ja" || w === "zurueck") { await api("gk_unterschreiben", { id, zurueck: w === "zurueck" }, { warten: true }); fensterZu(f); melde(w === "ja" ? "✍️ Unterschrieben – danke!" : "↩️ Unterschrift zurückgenommen"); return gkGemeinsamOeffnen(id); }
+      if (w === "abbrechen") { if (!(await frage("Die gemeinsame Karte abbrechen? Sie wird nicht verschickt."))) return; await api("gk_gemeinsam_ende", { id, abbrechen: true }, { warten: true }); fensterZu(f); return melde("🗑️ Karte abgebrochen"); }
+      if (w === "senden") {
+        if (!(await frage(`Die Karte mit ${k.namen.length} Unterschrift${k.namen.length === 1 ? "" : "en"} jetzt in ${k.fuerName}s Chat legen?\n\nDanach kann niemand mehr unterschreiben.`, { ja: "💬 Ja, jetzt", nein: "Noch warten" }))) return;
+        const c = await gkZeichnen(daten), blob = await new Promise((r) => c.toBlob(r, "image/jpeg", 0.88));
+        const name = `Gute-Besserung-${k.fuerName}.jpg`, r = await anlageHochladen(new File([blob], name, { type: "image/jpeg" }));
+        await api("gk_gemeinsam_ende", { id }, { warten: true }); fensterZu(f);
+        await direkt(k.fuer);
+        anlagen = [...anlagen.filter((a) => !a.laedt), { id: r.id, name: r.name || name, laedt: false }]; EINMAL = false; chipsZeigen();
+        textVorbelegen(`💐 Gute Besserung, ${k.fuerName}! Eine Karte vom ganzen Köcheclub – ${k.namen.length} haben unterschrieben.`); $("text")?.dispatchEvent(new Event("input")); $("text")?.focus();
+        melde("💐 Die gemeinsame Karte liegt im Chat bereit – jetzt ➤");
+      }
+    } catch (e) { meldeFehler(e); }
+  })));
 }
 async function gkInDenChat() {
   if (!GK?.canvas) return;
+  if (GK.text === -1 && !GK.eigenText.trim()) return melde("Bitte zuerst deinen Text schreiben – oder einen Vorschlag antippen.", true);
   const { pid, vorname } = GK;
+  try { localStorage.setItem(GK_KEY, JSON.stringify({ motiv: GK.motiv })); } catch {}
   try {
     const blob = await new Promise((r) => GK.canvas.toBlob(r, "image/jpeg", 0.88));
     const name = `Gute-Besserung-${vorname}.jpg`, r = await anlageHochladen(new File([blob], name, { type: "image/jpeg" }));
@@ -35485,7 +35660,7 @@ const FENSTER_NAMEN = {
   diktatBlatt: "✍️ Diktieren", druckBlatt: "🖨️ Drucken", dsBlatt: "🗓️ Dienstplan", dsOrteBlatt: "📍 Dienst-Orte", dsWerBlatt: "👥 Wer ist heute im Dienst",
   rundBlatt: "🪑 Runder Tisch", rundNeuBlatt: "🪑 Zum Runden Tisch einladen", rundTischBlatt: "🪑 Am Runden Tisch", rundTascheBlatt: "💼 Tasche für den Runden Tisch", rundArchivBlatt: "🗄️ Tasche: aus dem Archiv", // 2.762.0 KC-CLUB-RUNDER-TISCH
   dtBlatt: "🗓️ Dienst-Tausch", dvBlatt: "📊 Dienstzeiten-Übersicht", dwSperreBlatt: "💡 Sperrzeit nicht nötig", egBlatt: "📥 Mein Eingangskorb", eingangBlatt: "📥 In den Eingangskorb eines Mitglieds",
-  einlBlatt: "📥 Dokument einlesen", ekAblageBlatt: "🗄️ Eingangskorb: ablegen", ekDwBlatt: "📅 Dienstzeiten", ekErstBlatt: "💶 Erstattung", ekErstOkBlatt: "✅ Erstattung als erstattet markieren?", gkBlatt: "💐 Genesungskarte", ekHinweisBlatt: "📥 Hinweis: Eingangskorb",
+  einlBlatt: "📥 Dokument einlesen", ekAblageBlatt: "🗄️ Eingangskorb: ablegen", ekDwBlatt: "📅 Dienstzeiten", ekErstBlatt: "💶 Erstattung", ekErstOkBlatt: "✅ Erstattung als erstattet markieren?", gkBlatt: "💐 Genesungskarte", gkGemBlatt: "👥 Gemeinsame Karte", ekHinweisBlatt: "📥 Hinweis: Eingangskorb",
   ekNachBlatt: "🔎 Nachverfolgen", elternBlatt: "👪 Eltern-Handy", entwicklerBlatt: "👨‍💻 Über den Entwickler", erBlatt: "✅ Alles eingerichtet", ibBlatt: "🖼️ Installieren mit Bildern", erinBlatt: "🔔 Erinnerung für dich",
   erkBlatt: "💡 Vorschlag aus der Nachricht", ersBesBlatt: "🎓 Fahrten aus Besuchen", ersCsvBlatt: "📊 Erstattungen für Excel", eblBlatt: "📒 Buchungsliste", esTafelBlatt: "📤 Tafel sichern", ewBlatt: "🧭 Einstellungen erklärt",
   expressBlatt: "🏎️ Express-Sendung", externBlatt: "🌐 Externer Inhalt", faAlbenKorb: "🗑️ Gelöschte Alben", faAlbumBlatt: "📸 Foto in welches Album?", faAlbumForm: "📸 Album anlegen/ändern",
