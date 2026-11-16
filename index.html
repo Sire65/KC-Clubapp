@@ -3670,6 +3670,10 @@
   .mini .on-namen:not(.on-lauf) .on-band { animation: none; }
   .mini .on-namen .on-name { display: inline-block; padding: 2px 8px; border-radius: 999px; background: rgba(57,255,20,.22); box-shadow: inset 0 0 0 1px rgba(57,255,20,.55); font-size: inherit; font-weight: 800; letter-spacing: 0; text-transform: none; opacity: 1; cursor: pointer; }
   .mini .on-lauf:active .on-band, .mini .on-lauf:hover .on-band, .mini .on-lauf:focus-within .on-band { animation-play-state: paused; }
+  /* KC-CLUB-ONLINE-LAUF-ZOOM (16.11.2026): der Name in der Mitte wird bis 1,3-fach groß und kräftig grün – gut anzutippen; Platz oben/unten für den Zoom */
+  .kacheln3 .mini > span.on-namen.on-lauf { padding: 5px 0; margin: 0; }
+  .mini .on-namen .on-name { transform-origin: center; will-change: transform; position: relative; }
+  .mini .on-namen .on-name.on-vorn, .mini .on-namen.on-einer .on-name { background: rgba(57,255,20,.45); box-shadow: inset 0 0 0 2px rgba(57,255,20,.95), 0 0 8px rgba(57,255,20,.45); z-index: 1; }
   @keyframes onLauf { from { transform: translateX(0); } to { transform: translateX(-50%); } }
   html.spar .mini .on-lauf { overflow-x: auto; } html.spar .mini .on-lauf .on-band { animation: none !important; } html.spar .mini .on-name[aria-hidden] { display: none; }
   @media (prefers-reduced-motion: reduce) { .mini .on-lauf { overflow-x: auto; } .mini .on-lauf .on-band { animation: none; } .mini .on-name[aria-hidden] { display: none; } }

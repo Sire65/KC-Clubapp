@@ -17396,9 +17396,34 @@ function onlineNamenHtml() {
   const namen = (kopie) => l.map((x) => `<span class="on-name"${kopie ? ' aria-hidden="true"' : ` role="button" tabindex="0" aria-label="Chat mit ${esc(x.vorname || "Mitglied")}"`}
     onclick="event.stopPropagation();direkt('${esc(x.person_id)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();direkt('${esc(x.person_id)}')}">${esc(x.vorname || "?")}</span>`).join("");
   const gs = gsKopf(), alle = (kopie) => gs.map((g) => gsSchild(g, kopie)).join("") + namen(kopie); // KC-CLUB-GESPRAECHE: laufende Telefonate vorne
-  if (l.length + gs.length === 1) return `<span class="on-namen">${alle(false)}</span>`;
-  return `<span class="on-namen on-lauf" style="--on-dauer:${Math.max(6, (l.length + gs.length * 2) * 3)}s"><span class="on-band">${alle(false)}${alle(true)}</span></span>`;
+  if (l.length + gs.length === 1) return `<span class="on-namen on-einer">${alle(false)}</span>`;
+  // KC-CLUB-ONLINE-LAUF-ZOOM (16.11.2026, Wunsch Hansi „als Laufschrift … der im Vordergrund soll etwas aufzoomen, damit er angeklickt werden kann – langsam alle vorbei laufen“):
+  // langsamer (≈ 5 s je Name statt 3 s); onLaufZoom() vergrößert den Namen, der gerade durch die Mitte läuft
+  setTimeout(onLaufZoomStart, 0);
+  return `<span class="on-namen on-lauf" style="--on-dauer:${Math.max(10, (l.length + gs.length * 2) * 5)}s"><span class="on-band">${alle(false)}${alle(true)}</span></span>`;
 }
+// KC-CLUB-ONLINE-LAUF-ZOOM: je Bild den Abstand jedes Namens zur Feldmitte messen – in der Mitte bis 1,3-fach groß und hervorgehoben (on-vorn),
+// zum Rand hin wieder normal. Läuft nur, solange eine Online-Laufschrift sichtbar ist und die App im Vordergrund ist; Sparmodus und
+// „Bewegung reduzieren“: kein Zoom (dort steht die Laufschrift ohnehin still).
+let ON_ZOOM_LAEUFT = false;
+function onLaufZoomStart() {
+  if (ON_ZOOM_LAEUFT || document.documentElement.classList.contains("spar") || matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) return;
+  ON_ZOOM_LAEUFT = true; requestAnimationFrame(onLaufZoom);
+}
+function onLaufZoom() {
+  const felder = [...document.querySelectorAll(".mini .on-namen.on-lauf")].filter((f) => f.offsetParent);
+  if (!felder.length || document.hidden) { ON_ZOOM_LAEUFT = false; return; }
+  for (const f of felder) {
+    const r = f.getBoundingClientRect(), mitte = r.left + r.width / 2, halb = Math.max(40, r.width * 0.32);
+    for (const n of f.querySelectorAll(".on-name")) {
+      const q = n.getBoundingClientRect(), nah = Math.max(0, 1 - Math.abs(q.left + q.width / 2 - mitte) / halb);
+      n.style.transform = nah > 0 ? `scale(${(1 + 0.3 * nah).toFixed(3)})` : "";
+      n.classList.toggle("on-vorn", nah > 0.55);
+    }
+  }
+  requestAnimationFrame(onLaufZoom);
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden) onLaufZoomStart(); });
 // ---------- KC-CLUB-GESPRAECHE (Stufe 1 Telefonate, Wunsch Hansi 30.10.2026 „sehen, wer gerade mit wem spricht – anklopfen – die anderen
 // nehmen mich ins Gespräch auf“; Vorschau „Club-Netz“ abgenommen): Der Online-Abgleich liefert laufende Telefonate (nur DASS, nie was;
 // Namen nur, wenn alle Beteiligten „Gespräche zeigen“ an haben – Standard an). Antippen → Fenster mit „Anklopfen – darf ich dazukommen?“.
