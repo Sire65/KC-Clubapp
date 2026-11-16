@@ -4474,7 +4474,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 438. 2.23.87: 📞/🎥 auf der Mitglieder-Kachel (aktiv bei online) + Startseiten-Kacheln klein, 3 nebeneinander (Einstellung)
 {
   const k = html.slice(html.indexOf("function mgKachelnHtml(liste)"), html.indexOf("// KC-CLUB-MG-GRUPPEN (1.34.0"));
-  assert.ok(/\$\{mgAnrufKnoepfe\(m\)\}<\/span>/.test(k), "Kachel nutzt denselben Anruf-Baustein wie die Liste");
+  assert.ok(/\$\{mgAnrufKnoepfe\(m\)\}(\$\{push\})?<\/span>/.test(k), "Kachel nutzt denselben Anruf-Baustein wie die Liste"); // 2.958.0: 🔔/🔕 dahinter
   assert.ok(/const on = (!!m\.online|mgOn\(m\))[\s\S]{0,400}mg-aus/.test(html.slice(html.indexOf("function mgAnrufKnoepfe"))), "aktiv nur bei online, sonst blass");
   assert.ok(/\$\("raster"\)\.classList\.toggle\("klein3", reg !== "admin" && !einfach\(\) && (kachelKlein\(\)|kStufe !== "normal")\)/.test(html), "klein nur in der erweiterten Ansicht");
   assert.ok(/#raster\.klein3, #raster\.ad-raster \{ grid-template-columns: repeat\(3, minmax\(0, 1fr\)\);/.test(html), "gleiche Regeln wie das Admin-Register (kein zweites Raster)");

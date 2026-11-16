@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.958.0 – 2026-11-16 – 🔔/🔕 auf den Mitglieder-Kacheln für alle, unten bei den Knöpfen (KC-CLUB-MG-PUSH-ZEICHEN, Wunschliste #91)
+Antwort Hansi 16.11.: „So lassen (Liste) und in den Kacheln die Anzeige auch für alle freigeben, aber das Zeichen passt evtl. noch unten zu den anderen Buttons.“
+- Das Push-Zeichen auf den Mitglieder-Kacheln sehen jetzt **alle** (wie die Wege-Zeichen 🔔 ✉️ WA in der Listen-Ansicht, die bleiben unverändert).
+- Es steht nicht mehr oben links, sondern **unten als kleiner Knopf** neben 💬 / 📞. Antippen sagt in einem Satz: „🔔 Anne hat Push eingeschaltet …“ bzw. „🔕 … nicht eingeschaltet …“. Die Legende über den Kacheln nennt 🔔/🔕 für alle.
+- Keine neuen Daten: der Server liefert den Push-Stand schon bisher an alle (Listen-Ansicht).
+- Test: `tests/wunschliste-november.test.mjs` angepasst. Rückweg: App 2.957.0. Nur die App.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.957.0 – 2026-11-15 – 🟢 Einmal fragen: Meldung, wenn jemand online kommt? · ✏️ Änderung erbitten (KC-CLUB-ONLINE-FRAGE, KC-CLUB-AENDERUNG-ERBITTEN)
 **✏️ Änderung erbitten** (Wunsch Hansi, Fall Christina „neue Handynummer – mit Sofort-Taste, immer automatisch, wenn klar ist, dass jemand etwas Neues hat, z. B. Adresse“): Beim Mitglied gibt es für den Admin den Knopf „✏️ Änderung erbitten“ (Handynummer, Anschrift, Festnetz, E-Mail, Name, Notfallkontakt; optional ein kurzer Satz). Beim nächsten Start – sobald nichts anderes offen ist, höchstens einmal am Tag – kommt: „Hallo Christina, bitte melde 📱 deine neue Handynummer – damit im Club alles aktuell ist …“ mit **✏️ Sofort erledigen** (öffnet gleich das passende Änderungsformular), **⏰ Später** (morgen wieder) und **Hat sich nichts geändert**. Ist die Meldung abgeschickt, streicht der Server die Bitte von selbst; „Bitte zurücknehmen“ beim Admin löscht sie. Neue Einstellung `aenderung_bitte` (nur Arten, nie Werte), Aktion `aenderung_erbitten` (nur Admin). Test `tests/aenderung-erbitten.test.mjs`.
 
