@@ -194,7 +194,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.957.0";
+const SERVER_VERSION = "2.962.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -17855,7 +17855,10 @@ Köcheclub Werne`,
         ]);
         if (error || frFehler) throw new Fehler("Die Dienstzeiten konnten gerade nicht geladen werden.", 503); // Regel 11: unbekannt ≠ leer
         const freigegeben = new Set((fr ?? []).map((x: any) => x.person_id));
-        const liste = (rows ?? []).filter((x: any) => !String(x.person_id).startsWith("KC-P-TEST")
+        // 2.962.0 KC-CLUB-DV-AUSNAHMEN (Fund Hansi „in der grafischen Übersicht taucht Karla noch mit ihren Wünschen auf – sie hat sich den Arm gebrochen“):
+        // wer in kc_club_dienst_ausnahmen steht (fällt für den Dienstplan aus), erscheint auch hier nicht – die eigenen Angaben bleiben gespeichert
+        const aus = await dienstAusnahmen();
+        const liste = (rows ?? []).filter((x: any) => !String(x.person_id).startsWith("KC-P-TEST") && !aus.has(x.person_id)
           && (leitung || x.person_id === ich.person_id || x.share_with_colleagues === true || freigegeben.has(x.person_id)));
         const leute = await personen(liste.map((x: any) => x.person_id));
         if (!leitung) return json({ nurFreigegeben: true, veranstaltung: DW.name, personen: liste.map((x: any) => ({ id: x.id, name: leute.get(x.person_id)?.display_name || x.person_id, ich: x.person_id === ich.person_id,
@@ -17863,7 +17866,6 @@ Köcheclub Werne`,
             .map((e: any) => ({ d: e.date, s: Number(e.start), e: Number(e.end), t: e.wishType })) })) });
         // KC-CLUB-DW-FEHLT (2.222.0, Wunsch Hansi): wer hat noch nichts abgegeben (nur Einsammeln – geplant wird in DP2)
         const abgegeben = new Set(liste.map((x: any) => x.person_id));
-        const aus = await dienstAusnahmen(); // KC-CLUB-DIENST-AUSNAHMEN: nicht verfügbar → fehlt auch nicht
         const fehlen = (await aktiveMitglieder()).filter((m) => !abgegeben.has(m.person_id) && !aus.has(m.person_id)).map((m) => ({ person_id: m.person_id, name: m.display_name }));
         const erinnert = await dwZuletztErinnert();
         return json({ fehlen: fehlen.map((f) => ({ ...f, erinnert: erinnert.get(f.person_id) ?? null })), veranstaltung: DW.name, personen: liste.map((x: any) => ({ id: x.id, name: leute.get(x.person_id)?.display_name || x.person_id, revision: x.revision, status: x.status,
