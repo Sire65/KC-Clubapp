@@ -235,6 +235,7 @@ jobs:
       - run: node tests/magazin-rezept.test.mjs
       - run: node tests/blaettern-wischen.test.mjs
       - run: node tests/nt-gruss.test.mjs
+      - run: node tests/kluge-helfer.test.mjs
       - run: node tests/ungelesen-admin.test.mjs
       - run: node tests/vorladen-foto.test.mjs
       - run: node tests/dp-bereitschaft-weit.test.mjs

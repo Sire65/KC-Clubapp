@@ -4359,7 +4359,7 @@ const ZUGANG_AKTIONEN: Record<"basis" | "aushilfe", readonly string[]> = {
     "wetter", "wetter_ort_suchen", "treffen_liste", "treffen_antwort", "erinnerung_setzen", "kalender", "kalender_abo", "kalender_abo_holen", "privattermin_speichern",
     "privattermin_loeschen", "privattermine_liste", "countdowns", "terminumfragen_liste", "terminumfrage_antwort", "mitglieder", "mitglied_details",
     "unterhaltungen", "unterhaltung", "unterhaltung_stand", "tippen_stand", "tippen", "nachricht_senden", "nachricht_details", "einzelchat_finden", "express_stand", "express_angezeigt",
-    "express_antwort", "startnachricht_bestaetigen", "stadt_woche", "ferien", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "geplant_abrufen", "wecker_setzen", "wecker_loeschen", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
+    "express_antwort", "startnachricht_bestaetigen", "stadt_woche", "ferien", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "geplant_abrufen", "wecker_setzen", "wecker_loeschen", "nachricht_erinnerung_setzen", "nachricht_erinnerung_liste", "nachricht_erinnerung_loeschen", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
     "chat_selbstloeschen", "link_vorschau", "unterstuetzung_meine", "unterstuetzung_senden", "nachricht_bearbeiten", "nachricht_merken", "gemerkte_nachrichten", "chat_umfrage_stimmen", "nachricht_ausblenden",
     "unterhaltung_ausblenden", "unterhaltung_archivieren", "unterhaltung_leeren", "gruppe_verlassen", "anlage_hochladen", "anlage_url",
     "einmal_foto_ansehen", "meine_nachrichten_statistik", "mf_antwort", "mf_gelesen", "sos_kontakte", "sos_ort", "notfall_setzen", "spiele_liste",
@@ -9475,18 +9475,24 @@ async function geplantFaelligLauf() {
 // Erst belegen (status „fertig“), dann senden – zwei Läufe gleichzeitig senden nie doppelt. Den Wecker hat man selbst gestellt, er kommt
 // daher auch in der eigenen Ruhezeit. Über 2 Stunden zu spät (Zeitplaner war aus) = „verpasst“, kein Push mehr mitten in der Nacht.
 const WECKER_MAX = 10, WECKER_TAGE = 7, WECKER_SPAET_MS = 2 * 3600000;
+// KC-CLUB-KLUGE-HELFER (16.11.2026): „⏰ Erinnern“ an eine Nachricht nutzt dieselbe Tabelle (Art „nachricht“ mit Chat- und Nachrichten-Kennung).
+// Gespeichert werden nur Zeit, Kennungen und „Nachricht von <Vorname>“ – nie der Nachrichtentext. Eigene Grenze, damit Wecker frei bleiben.
+const NA_ERIN_MAX = 30, NA_ERIN_TAGE = 30, NA_ERIN_SPAET_MS = 12 * 3600000;
 async function weckerFaelligLauf() {
   const z = { gesendet: 0, fehler: 0, verpasst: 0 };
-  const { data: faellig } = await db.from("kc_club_wecker").select("id,person_id,art,faellig_um,text").eq("status", "offen").lte("faellig_um", jetzt()).order("faellig_um").limit(50);
+  const { data: faellig } = await db.from("kc_club_wecker").select("id,person_id,art,faellig_um,text,thread_id,message_id").eq("status", "offen").lte("faellig_um", jetzt()).order("faellig_um").limit(50);
   for (const w of faellig ?? []) {
-    const spaet = Date.now() - Date.parse(w.faellig_um) > WECKER_SPAET_MS;
+    // KC-CLUB-KLUGE-HELFER: „⏰ Erinnern“ an eine Nachricht – darf bis 12 Std. zu spät kommen (z. B. nach einer Störung), Wecker/Timer nur 2 Std.
+    const spaet = Date.now() - Date.parse(w.faellig_um) > (w.art === "nachricht" ? NA_ERIN_SPAET_MS : WECKER_SPAET_MS);
     const { data: belegt } = await db.from("kc_club_wecker").update({ status: spaet ? "verpasst" : "fertig", gesendet_am: jetzt() }).eq("id", w.id).eq("status", "offen").select("id");
     if (!belegt?.length || spaet) { if (belegt?.length) z.verpasst++; continue; }
     try {
-      const timer = w.art === "timer", um = fZeit.format(new Date(w.faellig_um));
+      const timer = w.art === "timer", nachricht = w.art === "nachricht", um = fZeit.format(new Date(w.faellig_um));
+      // Nachricht: im Push nur „Nachricht von …“ (steht so in text) – nie der Nachrichtentext; Antippen öffnet den Chat an der Stelle (#naerin=Chat:Nachricht)
       await sendenGewaehlt("club_erinnerung", [w.person_id], ["push"], {
-        titel: timer ? "⏲️ Zeit ist um!" : `⏰ Wecker ${um} Uhr`, kurz: txt(w.text, 120) || (timer ? "Dein Timer ist abgelaufen." : "Dein Wecker klingelt."),
-        url: `${APP_URL}#wecker`, wichtigkeit: "hoch" }, `club-wecker:${w.id}`, { notfall: true });
+        titel: nachricht ? `⏰ Erinnerung: ${txt(w.text, 80) || "Nachricht"}` : timer ? "⏲️ Zeit ist um!" : `⏰ Wecker ${um} Uhr`,
+        kurz: nachricht ? "Nachricht ansehen" : txt(w.text, 120) || (timer ? "Dein Timer ist abgelaufen." : "Dein Wecker klingelt."),
+        url: nachricht ? `${APP_URL}#naerin=${w.thread_id}:${w.message_id}` : `${APP_URL}#wecker`, wichtigkeit: nachricht ? "normal" : "hoch" }, `club-wecker:${w.id}`, { notfall: true });
       z.gesendet++;
     } catch (e) {
       await db.from("kc_club_wecker").update({ status: "fehler" }).eq("id", w.id);
@@ -14797,6 +14803,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             ...(lvMap.has(m.id) ? { link: lvMap.get(m.id) } : {}), // KC-CLUB-LINK-VORSCHAU
             anlagen: (ma ?? []).filter((x: any) => x.message_id === m.id).map((x: any) => (att ?? []).find((y: any) => y.id === x.attachment_id)).filter(Boolean)
               .map((y: any) => ({ id: y.id, name: y.file_name, mime: y.mime_type, groesse: y.size_bytes, ...(einm.has(y.id) ? { einmal: einmalInfo(y.id) } : {}) })),
+            // KC-CLUB-KLUGE-HELFER: „Noch nicht gelesen: Anne, Dieter“ – nur eigene Gruppen-Nachrichten, 2 Std. bis 3 Tage alt, nur solange jemand fehlt
+            ...(eigen && andere.length > 1 && gelesenVon.length < andere.length && Date.now() - Date.parse(m.created_at) >= 2 * 3600000 && Date.now() - Date.parse(m.created_at) <= 3 * 86400000
+              ? { nichtGelesen: andere.filter((x: any) => !(x.last_read_at && x.last_read_at >= m.created_at)).slice(0, 30).map((x: any) => ({ id: x.person_id, name: vorname(leute.get(x.person_id)) || "?" })) } : {}),
             ...(eigen ? { gelesenVon, gelesenAlle: andere.length > 0 && gelesenVon.length === andere.length, zustellung: zustellung(m.id),
               // ✓ gesendet · ✓✓ auf allen Handys angekommen · blaue ✓✓ von allen gelesen (wie WhatsApp; Gruppe: erst wenn alle)
               haken: andere.length > 0 && gelesenVon.length === andere.length ? "gelesen" : andere.length > 0 && angekommenBei(m) === andere.length ? "angekommen" : "gesendet" } : {}),
@@ -14988,6 +14997,33 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         await protokoll(ich.person_id, "geplant_geloescht", { id: data[0].id });
         return json({ ok: true });
       }
+      // ----- KC-CLUB-KLUGE-HELFER (16.11.2026): „⏰ Erinnern“ an eine Nachricht – nur in eigenen Chats, immer nur die eigenen Erinnerungen -----
+      case "nachricht_erinnerung_setzen": {
+        const um = new Date(String(p.um || ""));
+        if (isNaN(um.getTime())) throw new Fehler("Bitte eine Zeit wählen.");
+        if (um.getTime() < Date.now() + 30000) throw new Fehler("Die Zeit liegt schon in der Vergangenheit.");
+        if (um.getTime() > Date.now() + NA_ERIN_TAGE * 86400000) throw new Fehler(`Höchstens ${NA_ERIN_TAGE} Tage im Voraus.`);
+        const { data: m } = await db.from("kc_communication_messages").select("id,thread_id,sender_person_id").eq("id", String(p.id || "")).maybeSingle();
+        if (!m) throw new Fehler("Nachricht nicht gefunden.", 404);
+        await binTeilnehmer(m.thread_id, ich.person_id);
+        const von = m.sender_person_id === ich.person_id ? "dir" : vorname((await personen([m.sender_person_id])).get(m.sender_person_id)) || "jemandem";
+        // dieselbe Nachricht nur einmal: eine offene Erinnerung daran wird ersetzt
+        await db.from("kc_club_wecker").update({ status: "geloescht" }).eq("person_id", ich.person_id).eq("art", "nachricht").eq("message_id", m.id).eq("status", "offen");
+        const { count } = await db.from("kc_club_wecker").select("id", { count: "exact", head: true }).eq("person_id", ich.person_id).eq("art", "nachricht").eq("status", "offen");
+        if ((count ?? 0) >= NA_ERIN_MAX) throw new Fehler(`Höchstens ${NA_ERIN_MAX} Erinnerungen an Nachrichten gleichzeitig.`);
+        const { data: w, error } = await db.from("kc_club_wecker").insert({ person_id: ich.person_id, art: "nachricht", faellig_um: um.toISOString(), text: txt(`Nachricht von ${von}`, 120), thread_id: m.thread_id, message_id: m.id }).select("id").single();
+        if (error || !w) throw new Fehler("Konnte nicht gespeichert werden.", 500);
+        return json({ ok: true, id: w.id, um: um.toISOString() });
+      }
+      case "nachricht_erinnerung_liste": {
+        const { data } = await db.from("kc_club_wecker").select("id,faellig_um,thread_id,message_id,text").eq("person_id", ich.person_id).eq("art", "nachricht").eq("status", "offen").order("faellig_um").limit(NA_ERIN_MAX);
+        return json({ liste: (data ?? []).map((w: any) => ({ id: w.id, um: w.faellig_um, chat: w.thread_id, nachricht: w.message_id, text: w.text })) });
+      }
+      case "nachricht_erinnerung_loeschen": {
+        const id = String(p.id || "");
+        if (/^[0-9a-f-]{36}$/i.test(id)) await db.from("kc_club_wecker").update({ status: "geloescht" }).eq("id", id).eq("person_id", ich.person_id).eq("art", "nachricht").eq("status", "offen");
+        return json({ ok: true });
+      }
       // ----- 2.640.0 KC-CLUB-UHR-WECKER: Wecker/Timer für den Push stellen bzw. abstellen – immer nur die eigenen -----
       case "wecker_setzen": {
         const um = new Date(String(p.um || "")), art = p.art === "timer" ? "timer" : "wecker";
@@ -14998,7 +15034,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (p.id) { // ersetzt den eigenen (z. B. „5 Min. später“, „+1 Min.“, Pause → weiter)
           await db.from("kc_club_wecker").update({ status: "geloescht" }).eq("id", String(p.id)).eq("person_id", ich.person_id).eq("status", "offen");
         }
-        const { count } = await db.from("kc_club_wecker").select("id", { count: "exact", head: true }).eq("person_id", ich.person_id).eq("status", "offen");
+        const { count } = await db.from("kc_club_wecker").select("id", { count: "exact", head: true }).eq("person_id", ich.person_id).eq("status", "offen").neq("art", "nachricht"); // KC-CLUB-KLUGE-HELFER: Erinnerungen an Nachrichten zählen extra
         if ((count ?? 0) >= WECKER_MAX) throw new Fehler(`Höchstens ${WECKER_MAX} Wecker und Timer gleichzeitig.`);
         const { data: w, error } = await db.from("kc_club_wecker").insert({ person_id: ich.person_id, art, faellig_um: um.toISOString(), text }).select("id").single();
         if (error || !w) throw new Fehler("Konnte nicht gestellt werden.", 500);
