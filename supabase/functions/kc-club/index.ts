@@ -194,7 +194,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.964.0";
+const SERVER_VERSION = "2.969.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -2364,6 +2364,8 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
   fristen: (w) => fristWahl(w),
   // KC-CLUB-KONTAKT-EXTERN (Wunsch Hansi 09.11.2026): „Meine Kontaktdaten dürfen an Personen außerhalb des Clubs weitergegeben werden“ – Standard aus
   kontakt_extern: (w) => ({ an: w?.an === true }),
+  // KC-CLUB-WA-LIEBER (Wunsch Hansi 16.11.2026: „einige nutzen lieber WhatsApp als die Club-App“): ich lese lieber WhatsApp – Standard aus
+  wa_lieber: (w) => ({ an: w?.an === true }),
   ruhezeit: (w) => {
     const zeit = (x: unknown, std: string) => /^([01]\d|2[0-3]):[0-5]\d$/.test(String(x)) ? String(x) : std;
     return { an: w?.an === true, von: zeit(w?.von, "22:00"), bis: zeit(w?.bis, "07:00"), erwaehnung: w?.erwaehnung !== false };
@@ -4365,7 +4367,7 @@ const ZUGANG_AKTIONEN: Record<"basis" | "aushilfe", readonly string[]> = {
     "spiel_holen", "spiel_herausfordern", "spiel_antwort", "spiel_zug", "spiel_aufgeben", "spiel_revanche", "raetsel_stand", "raetsel_ergebnis",
     "status_setzen", "einstellung_setzen", "benachrichtigung_setzen", "meine_daten", "avatar_bilder", "avatar_verlauf", "avatar_foto_setzen", "sprache_woerter",
     "sprache_lernen", "sprache_training", "sprache_training_reset", "sprache_vergessen", "sprache_unbekannt", "twinkey_daten", "twinkey_frage",
-    "twinkey_gelesen", "fehler_melden", "hilfe_anfordern", "feedback_meins", "feedback_senden", "feedback_neu", "vorfuehren_antwort", "vorfuehren_holen",
+    "twinkey_gelesen", "fehler_melden", "fehler_katalog", "hilfe_anfordern", "feedback_meins", "feedback_senden", "feedback_neu", "vorfuehren_antwort", "vorfuehren_holen",
     "vorfuehren_senden", "vorfuehren_ende", "vorfuehren_bild", "schnappschuss_antwort", "schnappschuss_bild", "schnappschuss_ende", "fernbedienung_melden", "push_anmelden",
     "push_pruefen", "geraete_liste", "geraet_entfernen", "andere_geraete_abmelden", "push_abmelden", "push_test", "neues_geraet_antwort"],
   aushilfe: ["mein_dienst", "dienstwunsch_laden", "dienstwunsch_speichern", "dienst_gruss", "dienste", "dienst_freigabe", "meine_eingaben",
@@ -9232,9 +9234,21 @@ async function fehlversucheMelden(geraet: string, e: any, ua = "") {
 // Protokoll (fehler_alarm). Inhalt nur Art, Fehlertext des Programms, Bereich, Gerät und Version – nie Nachrichten oder Eingaben.
 const FA_ARTEN: Record<string, string> = { skript: "Programmfehler", gefangen: "Programmfehler (abgefangen)", instabil: "Mehrere Programmfehler kurz hintereinander",
   haenger: "App hat länger gehangen", start_kaputt: "App startet nicht", versprechen: "Programmfehler im Hintergrund" };
+// KC-CLUB-FEHLERKATALOG (16.11.2026, Wunsch Hansi „Tabelle mit Fehler-ID, Fehlername, Ursache, Lösung“): kc_club_fehler_katalog, je Art (bei Hängern
+// Art_Ursache) eine Zeile. Hansi kann die Texte in der Tabelle ändern; der Server merkt sich die Liste 10 Minuten (selten gebraucht: Fehlerprotokoll,
+// Alarm-Mail, App beim ersten Fehler). Fehlt die Tabelle, bleibt alles wie bisher (leere Liste).
+let FK_MERK: { t: number; liste: any[] } | null = null;
+async function fehlerKatalog(): Promise<any[]> {
+  if (FK_MERK && Date.now() - FK_MERK.t < 600000) return FK_MERK.liste;
+  const { data, error } = await db.from("kc_club_fehler_katalog").select("schluessel,fehler_id,symbol,name,ursache,loesung,mitglied_text").eq("aktiv", true).order("fehler_id");
+  FK_MERK = { t: Date.now(), liste: error ? (FK_MERK?.liste ?? []) : (data ?? []) };
+  return FK_MERK.liste;
+}
+// KC-CLUB-HAENGER-URSACHE: Hänger im Hintergrund-Fenster sind kein Fehler – kein Alarm
+const faHaengerErnst = (e: any) => Number(e?.ms) >= 10000 && txt(e?.ursache, 30) !== "haenger_hintergrund";
 async function fehlerAlarm(ich: Ich, liste: any[], ua: string, version: string) {
   if (/^KC-P-TEST/.test(ich.person_id)) return;
-  const ernst = liste.find((e: any) => { const a = fpArt(e?.art); return a in FA_ARTEN && a !== "versprechen" && (a !== "haenger" || Number(e?.ms) >= 10000); });
+  const ernst = liste.find((e: any) => { const a = fpArt(e?.art); return a in FA_ARTEN && a !== "versprechen" && (a !== "haenger" || faHaengerErnst(e)); });
   if (!ernst) return;
   const jetztMs = Date.now();
   const [{ count: jeMitglied }, { count: alle }] = await Promise.all([
@@ -9248,11 +9262,13 @@ async function fehlerAlarm(ich: Ich, liste: any[], ua: string, version: string) 
   const geraet = /iPhone|iPad/.test(ua) ? "iPhone/iPad" : /Android/.test(ua) ? "Android" : /Windows/.test(ua) ? "Windows" : /Mac/.test(ua) ? "Mac" : "Gerät";
   const browser = /Edg\//.test(ua) ? "Edge" : /SamsungBrowser/.test(ua) ? "Samsung Internet" : /Chrome\//.test(ua) ? "Chrome" : /Firefox\//.test(ua) ? "Firefox" : /Safari\//.test(ua) ? "Safari" : "Browser";
   const fehlertext = ohneLinks(txt(ernst.text, 220)), bereich = txt(ernst.sicht, 40);
+  const fk = (await fehlerKatalog().catch(() => [] as any[])).find((k: any) => k.schluessel === (txt(ernst.ursache, 30).toLowerCase() || art)); // KC-CLUB-FEHLERKATALOG
+  const fkText = fk ? `Fehler-ID: ${fk.fehler_id} – ${fk.name}\nUrsache: ${fk.ursache}\nLösung: ${fk.loesung}\n` : "";
   await protokoll(null, "fehler_alarm", { fuer: ich.person_id, art, version });
   await senden("club_nachricht", ziel, {
     titel: `🩺 ${was}: ${ich.name}`, kurz: `${fehlertext || was}${bereich ? " · " + bereich : ""} · ${geraet}/${browser} · v${version || "?"}`,
     betreff: `Köcheclub-App: ${was} bei ${ich.name}`,
-    text: `Hallo,\n\nbei ${ich.name} ist in der Club-App etwas schiefgelaufen.\n\nArt: ${was}\n${fehlertext ? "Fehler: " + fehlertext + "\n" : ""}${bereich ? "Bereich: " + bereich + "\n" : ""}Gerät: ${geraet} · ${browser}\nApp-Version: ${version || "?"}${weitere > 0 ? `\nWeitere Einträge in dieser Meldung: ${weitere}` : ""}\n\nDas Mitglied hat eine verständliche Meldung gesehen. Einzelheiten: Admin-Zentrale → 🩺 Fehlerprotokoll.\nWeitere Alarme zu ${ich.name} frühestens in 6 Stunden.\n${APP_URL}\n\nViele Grüße\nKöcheclub-App`,
+    text: `Hallo,\n\nbei ${ich.name} ist in der Club-App etwas schiefgelaufen.\n\nArt: ${was}\n${fehlertext ? "Fehler: " + fehlertext + "\n" : ""}${bereich ? "Bereich: " + bereich + "\n" : ""}${fkText}Gerät: ${geraet} · ${browser}\nApp-Version: ${version || "?"}${weitere > 0 ? `\nWeitere Einträge in dieser Meldung: ${weitere}` : ""}\n\nDas Mitglied hat eine verständliche Meldung gesehen. Einzelheiten: Admin-Zentrale → 🩺 Fehlerprotokoll.\nWeitere Alarme zu ${ich.name} frühestens in 6 Stunden.\n${APP_URL}\n\nViele Grüße\nKöcheclub-App`,
     url: APP_URL,
   }, `club-fehler-alarm:${ich.person_id}:${Math.floor(jetztMs / 3600000)}`);
 }
@@ -10660,7 +10676,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // 2.593.0 KC-CLUB-GLEICHZEITIG (Wunsch Hansi „bündeln statt einzeln nacheinander – sorgfältig und vorsichtig“): die folgenden Lesungen
         // hängen nicht voneinander ab (nur an „leute“ aus dem ersten Block) – sie laufen jetzt gleichzeitig statt in ~6 Schritten nacheinander.
         // Gleiche Abfragen, gleiche Regeln, gleiches Ergebnis; nur „online jetzt“ wartet weiter auf meine eigene Sichtbarkeit.
-        const [{ data: mitgl }, { data: avs }, ichZeigeMap, zd, zeigen, inko, probe, ohneKommListen, adminLesen] = await Promise.all([
+        const [{ data: mitgl }, { data: avs }, ichZeigeMap, zd, zeigen, inko, probe, ohneKommListen, adminLesen, { data: wal }] = await Promise.all([
           db.from("kc_core_club_memberships").select("person_id,membership_type,membership_status").eq("org_id", ORG),
           db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "avatar"),
           onlineZeigenMap([ich.person_id]),
@@ -10673,7 +10689,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             db.from("kc_communication_requests").select("recipient_refs,channel,status,created_at").eq("source_program", "kc-club").in("status", COMM_FEHLER).gte("created_at", new Date(Date.now() - 7 * 86400000).toISOString()).limit(500),
             db.from("kc_communication_requests").select("recipient_refs,channel,created_at").eq("source_program", "kc-club").in("status", COMM_OK).gte("created_at", new Date(Date.now() - 7 * 86400000).toISOString()).order("created_at", { ascending: false }).limit(2000),
           ]) : Promise.resolve(null),
+          db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "wa_lieber"), // KC-CLUB-WA-LIEBER
         ]);
+        const waLieber = new Set((wal ?? []).filter((x: any) => x.wert?.an === true).map((x: any) => x.person_id));
         // KC-CLUB-SENSIBEL-GAESTE (2.78.0, Wunsch Hansi): wer ist KEIN ordentliches Mitglied (Gast, ausgetreten, ohne Eintrag)?
         // Ohne lesbaren Eintrag gilt jemand als Nicht-Mitglied – unbekannt wird nie als „Mitglied“ (OK) gezeigt.
         const ordentlich = new Set((mitgl ?? []).filter((x: any) => x.membership_type === "regular" && x.membership_status === "active").map((x: any) => x.person_id));
@@ -10727,7 +10745,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             status: st.get(m.person_id) ?? null, online: on.has(m.person_id) && m.person_id !== ich.person_id, zuletztDa: zd.get(m.person_id) ?? null,
             verborgen: m.person_id !== ich.person_id && (!ichZeige || zeigen.get(m.person_id) === false),
             heute: ichZeige && ((zeigen.get(m.person_id) !== false && !inko.has(m.person_id)) || m.person_id === ich.person_id) && !!(z.get(m.person_id) as any)?.zuletzt_gesehen && tag((z.get(m.person_id) as any).zuletzt_gesehen) === heute,
-            wege: { push: ps.has(m.person_id), mail: !!m.email, whatsapp: hatTel.has(m.person_id) && (ich.admin || m.person_id === ich.person_id || (ich.kontakte && handyFrei.has(m.person_id))) },
+            wege: { push: ps.has(m.person_id), mail: !!m.email, whatsapp: hatTel.has(m.person_id) && (ich.admin || m.person_id === ich.person_id || (ich.kontakte && handyFrei.has(m.person_id))),
+              waLieber: waLieber.has(m.person_id) }, // KC-CLUB-WA-LIEBER: liest lieber WhatsApp (die App öffnet beim Senden WhatsApp – nur wenn „whatsapp“ erlaubt ist)
             // für alle nur grob: in den letzten 14 Tagen in der App gewesen (genaue Zeit nur für den Admin)
             aktiv: !(inko.has(m.person_id) && m.person_id !== ich.person_id) && !!(z.get(m.person_id) as any)?.zuletzt_gesehen && Date.now() - new Date((z.get(m.person_id) as any).zuletzt_gesehen).getTime() < 14 * 86400000,
             ...(ich.admin ? { zugang: (r.get(m.person_id) as any)?.zugang === "passiv" ? "passiv" : zugangAus(r.get(m.person_id)), kontakte: (r.get(m.person_id) as any)?.kontakte_sehen !== false, protokolle: (r.get(m.person_id) as any)?.protokolle_lesen !== false, app: !!(z.get(m.person_id) as any)?.aktiv, zuletzt: inko.has(m.person_id) && m.person_id !== ich.person_id ? null : (z.get(m.person_id) as any)?.zuletzt_gesehen ?? null, push: ps.has(m.person_id), mail: !!m.email, fehler: fehler.get(m.person_id) ?? null,
@@ -11079,6 +11098,23 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         await protokoll(ich.person_id, "terminanfrage_geaendert", { anfrage: a.id, neue_zeilen: neu.length, informiert: empfaenger, versand });
         return json({ ok: true, neu: neu.length, informiert: empfaenger, versand });
       }
+      // KC-CLUB-TA-HERAUSNEHMEN (16.11.2026, Wunsch Hansi „nimm Karla raus aus der Terminbestätigung … in Zukunft muss ich das als Admin auch können,
+      // damit nicht immer die KI ran muss“): ein Mitglied aus einer Terminanfrage herausnehmen – wer angefragt hat oder der Admin (z. B. krank).
+      // Still (keine Nachricht an den Herausgenommenen); der letzte Empfänger bleibt – dann „Absagen“. Protokoll ohne Inhalte.
+      case "terminanfrage_empfaenger_entfernen": {
+        const { data: a } = await db.from("kc_club_terminanfragen").select("id,erstellt_von,status,anlass").eq("id", String(p.id || "")).maybeSingle();
+        if (!a) throw new Fehler("Anfrage nicht gefunden.", 404);
+        if (a.erstellt_von !== ich.person_id && !ich.admin) throw new Fehler("Herausnehmen kann, wer angefragt hat, oder der Admin.", 403);
+        if (a.status === "abgesagt") throw new Fehler("Die Anfrage ist abgesagt.", 409);
+        const pid = String(p.person_id || "");
+        const { data: em } = await db.from("kc_club_terminanfrage_empfaenger").select("person_id").eq("anfrage_id", a.id);
+        if (!(em ?? []).some((e: any) => e.person_id === pid)) throw new Fehler("Diese Person ist nicht (mehr) in der Anfrage.", 404);
+        if ((em ?? []).length <= 1) throw new Fehler("Das ist der letzte Empfänger – bitte stattdessen „🚫 Absagen“.", 409);
+        const { error } = await db.from("kc_club_terminanfrage_empfaenger").delete().eq("anfrage_id", a.id).eq("person_id", pid);
+        if (error) throw new Fehler("Speichern fehlgeschlagen.", 500);
+        await protokoll(ich.person_id, "terminanfrage_empfaenger_entfernt", { anfrage: a.id, person: pid, als: a.erstellt_von === ich.person_id ? "anfragender" : "admin" });
+        return json({ ok: true, name: (await personen([pid])).get(pid)?.display_name || pid });
+      }
 
       // KC-CLUB-TA-PROTOKOLL (13.11.2026, Wunsch Hansi „wie wird aus dem Termin mit Klaus und der Tagesordnung ein Protokoll?“ – „Ja bauen“):
       // wer angefragt hat, schreibt zur Besprechung ein Protokoll (je TOP Ergebnis, Wer?, Bis wann?; Anwesend, Sonstiges, nächster Termin),
@@ -11275,6 +11311,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         return json({ ok: true, gespeichert: platz });
       }
 
+      // KC-CLUB-FEHLERKATALOG: Texte für die App (Mitglied sieht Ursache und Lösung beim Fehler) – nur Technik-Texte
+      case "fehler_katalog": return json({ katalog: (await fehlerKatalog()).map((k: any) => ({ schluessel: k.schluessel, fehler_id: k.fehler_id, symbol: k.symbol, name: k.name, ursache: k.ursache, mitglied_text: k.mitglied_text })) });
+
       case "hilfe_anfordern": {
         const { count } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("person_id", ich.person_id).eq("aktion", "hilferuf").gte("zeit", new Date(Date.now() - 3600000).toISOString());
         if ((count ?? 0) >= 3) throw new Fehler("Deine Meldung ist schon angekommen – Hansi meldet sich bei dir.", 429);
@@ -11301,7 +11340,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (p.person_id) q = q.eq("person_id", String(p.person_id));
         const { data } = await q;
         const leute = await personen((data ?? []).map((x: any) => x.person_id).filter(Boolean));
-        return json({ tage, gesamt: await fpZaehlen(), voll: FP_VOLL, eintraege: (data ?? []).map((x: any) => ({ zeit: x.zeit, person_id: x.person_id, name: x.person_id ? (leute.get(x.person_id)?.display_name || x.person_id) : null,
+        return json({ tage, gesamt: await fpZaehlen(), voll: FP_VOLL, katalog: await fehlerKatalog().catch(() => []), eintraege: (data ?? []).map((x: any) => ({ zeit: x.zeit, person_id: x.person_id, name: x.person_id ? (leute.get(x.person_id)?.display_name || x.person_id) : null,
           aktion: x.aktion, details: x.details, stufe: fpStufe(x.aktion, x.details) })) });
       }
 
@@ -12264,6 +12303,57 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       }
 
       // Mitglieder informieren (bei Leid nur nach Absprache mit der Familie) – optional mit „Wer kommt mit?“ (Abordnung)
+      // 2.967.0 KC-CLUB-GK-GEMEINSAM (Wunsch Hansi 16.11.2026 „Baue noch die gemeinsame Karte“): Clubleitung startet, alle unterschreiben mit einem Tipp,
+      // die beschenkte Person sieht nichts (weder Liste noch Push). Nur Vornamen auf der Karte. Senden in den Chat macht der Starter in der App (Bild + ➤).
+      case "gk_gemeinsam_start": case "gk_gemeinsam_liste": case "gk_unterschreiben": case "gk_gemeinsam_ende": {
+        if (ich.zugang !== "mitglied" && ich.zugang !== "aushilfe") throw new Fehler("Gemeinsame Karten gibt es nur für Mitglieder.", 403);
+        const leitung = ich.admin || ich.vorstand;
+        if (a === "gk_gemeinsam_start") {
+          if (!leitung) throw new Fehler("Eine gemeinsame Karte starten Clubsprecher, Kassenwart und Admin.", 403);
+          const fuer = String(p.fuer || ""); if (!fuer || fuer === ich.person_id) throw new Fehler("Bitte ein anderes Mitglied wählen.");
+          const motiv = /^[a-z]{2,20}$/.test(String(p.motiv || "")) ? String(p.motiv) : "strauss", titel = Math.min(5, Math.max(0, Math.round(Number(p.titel) || 0)));
+          const text = txt(p.text, 120), von = txt(p.von, 40) || "Dein Köcheclub"; if (!text) throw new Fehler("Bitte einen Text für die Karte wählen oder schreiben.");
+          const tage = Math.min(7, Math.max(1, Math.round(Number(p.tage) || 2)));
+          const leute = await personen([fuer]); if (!leute.get(fuer)) throw new Fehler("Mitglied nicht gefunden.", 404);
+          const { data: k, error } = await db.from("kc_club_gk_gemeinsam").insert({ fuer_person_id: fuer, motiv, titel, text, von, gestartet_von: ich.person_id, bis: new Date(Date.now() + tage * 86400000).toISOString() }).select("id").single();
+          if (error || !k) throw new Fehler(String(error?.code) === "23505" ? "Für dieses Mitglied läuft schon eine gemeinsame Karte." : "Die Karte konnte nicht gestartet werden.", String(error?.code) === "23505" ? 409 : 500);
+          await db.from("kc_club_gk_unterschrift").insert({ karte_id: k.id, person_id: ich.person_id });
+          const vn = vorname(leute.get(fuer)) || "einem Mitglied";
+          const ziel = (await sammelEmpfaenger()).map((m) => m.person_id).filter((id) => id !== ich.person_id && id !== fuer);
+          const versand = await sendenGewaehlt("club_nachricht", ziel, ["push"], { titel: `💐 Gemeinsame Karte für ${vn}`, kurz: `Unterschreib mit einem Tipp – ${vn} erfährt es erst, wenn die Karte kommt.`,
+            betreff: `Köcheclub Werne – gemeinsame Karte für ${vn}`, text: `Hallo,\n\nwir schicken ${vn} eine gemeinsame Gute-Besserung-Karte. Unterschreib mit einem Tipp in der App: ${APP_URL}#gk=${k.id}\n\nViele Grüße\n${ich.name}`,
+            url: `${APP_URL}#gk=${k.id}` }, `club-gk:${k.id}`).catch(() => null);
+          await protokoll(ich.person_id, "gk_gemeinsam_gestartet", { karte: k.id, empfaenger: ziel.length, versand });
+          return json({ ok: true, id: k.id, empfaenger: ziel.length });
+        }
+        if (a === "gk_unterschreiben") {
+          const { data: k } = await db.from("kc_club_gk_gemeinsam").select("id,fuer_person_id,status").eq("id", String(p.id || "")).maybeSingle();
+          if (!k || k.fuer_person_id === ich.person_id) throw new Fehler("Karte nicht gefunden.", 404);
+          if (k.status !== "offen") throw new Fehler("Die Karte ist schon verschickt.", 409);
+          if (p.zurueck === true) await db.from("kc_club_gk_unterschrift").delete().eq("karte_id", k.id).eq("person_id", ich.person_id);
+          else await db.from("kc_club_gk_unterschrift").upsert({ karte_id: k.id, person_id: ich.person_id }, { onConflict: "karte_id,person_id", ignoreDuplicates: true });
+          return json({ ok: true });
+        }
+        if (a === "gk_gemeinsam_ende") {
+          const { data: k } = await db.from("kc_club_gk_gemeinsam").select("id,gestartet_von,status").eq("id", String(p.id || "")).maybeSingle();
+          if (!k) throw new Fehler("Karte nicht gefunden.", 404);
+          if (k.gestartet_von !== ich.person_id && !ich.admin) throw new Fehler("Verschicken darf, wer die Karte gestartet hat (oder der Admin).", 403);
+          if (k.status !== "offen") throw new Fehler("Die Karte ist schon erledigt.", 409);
+          const status = p.abbrechen === true ? "abgebrochen" : "gesendet";
+          await db.from("kc_club_gk_gemeinsam").update({ status, erledigt_am: jetzt() }).eq("id", k.id).eq("status", "offen");
+          await protokoll(ich.person_id, "gk_gemeinsam_" + status, { karte: k.id });
+          return json({ ok: true, status });
+        }
+        // Liste: offene Karten – nie die für mich selbst
+        const { data: karten } = await db.from("kc_club_gk_gemeinsam").select("id,fuer_person_id,motiv,titel,text,von,gestartet_von,bis").eq("status", "offen").neq("fuer_person_id", ich.person_id).order("gestartet_am").limit(20);
+        const ids = (karten ?? []).map((k: any) => k.id);
+        const { data: us } = ids.length ? await db.from("kc_club_gk_unterschrift").select("karte_id,person_id,am").in("karte_id", ids).order("am").limit(2000) : { data: [] as any[] };
+        const leute = await personen([...new Set([...(karten ?? []).flatMap((k: any) => [k.fuer_person_id, k.gestartet_von]), ...(us ?? []).map((u: any) => u.person_id)])]);
+        return json({ ok: true, karten: (karten ?? []).map((k: any) => { const u = (us ?? []).filter((x: any) => x.karte_id === k.id);
+          return { id: k.id, fuer: k.fuer_person_id, fuerName: vorname(leute.get(k.fuer_person_id)) || "Mitglied", motiv: k.motiv, titel: k.titel, text: k.text, von: k.von, bis: k.bis,
+            starter: vorname(leute.get(k.gestartet_von)) || "", darfSenden: k.gestartet_von === ich.person_id || ich.admin, ichDabei: u.some((x: any) => x.person_id === ich.person_id),
+            namen: u.map((x: any) => vorname(leute.get(x.person_id)) || "").filter(Boolean) }; }) });
+      }
       case "fl_informieren": {
         nurVorstand(ich);
         const f = await flFallHolen(p.id);
@@ -18573,6 +18663,16 @@ Köcheclub Werne`,
         return json({ reisen, geburtstage, veranstaltungen, privat });
       }
 
+      // KC-CLUB-WA-LIEBER: der Admin setzt „liest lieber WhatsApp“ für ein Mitglied (für alle, die selten in die Einstellungen schauen)
+      case "wa_lieber_setzen": {
+        nurAdmin(ich);
+        const pid = String(p.person_id || ""), an = p.an === true;
+        if (!/^KC-P-[A-Z0-9-]{1,40}$/.test(pid)) throw new Fehler("Ungültig.");
+        const { error } = await db.from("kc_club_person_einstellung").upsert({ person_id: pid, schluessel: "wa_lieber", wert: { an }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
+        if (error) throw new Fehler("Das hat gerade nicht geklappt.", 503);
+        await protokoll(ich.person_id, "wa_lieber_gesetzt", { fuer: pid, an });
+        return json({ ok: true, an });
+      }
       // KC-CLUB-PULS (Wunsch Hansi 16.11.2026): Aussteuerungsanzeige im Kopf (nur Admin) – Zählerstände der Club-App, die App rechnet „pro Sekunde“
       case "betrieb_puls": {
         nurAdmin(ich);

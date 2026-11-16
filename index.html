@@ -2282,6 +2282,7 @@
   .hl-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 6px; }
   .hl-chips .chip { padding: 9px 12px; font-size: .95rem; color: var(--text); border: 2px solid transparent; cursor: pointer; }
   .hl-chips .chip.an { border-color: var(--rot); }
+  .gk-h { margin: 10px 0 4px; font-size: .95rem; } /* 2.967.0 KC-CLUB-GENESUNGSKARTEN */
   .hl-kal { display: inline-flex; align-items: center; gap: 8px; background: var(--karte2); border-radius: 12px; padding: 7px 10px; font-weight: 700; margin: 0 0 6px; position: relative; cursor: pointer; }
   .hl-kal input { position: absolute; inset: 0; opacity: 0; width: 100%; cursor: pointer; }
   .hl-kal.an { background: var(--rot); color: #fff; }
@@ -3146,6 +3147,7 @@
     #druck .cd-titel { text-align: right; max-width: 55%; } #druck .cd-titel h1 { font-size: 13pt; } #druck .cd-titel .unter { font-size: 9pt; }
     #druck .cd-fuss { margin-top: 8mm; border-top: .5mm solid var(--cd-rot); padding: 2mm 0 0; font-size: 8pt; color: var(--cd-grau); text-align: center; background: none; }
     #druck .cd-fuss b { color: var(--cd-rot); }
+    #druck .cd-fuss { break-before: avoid; page-break-before: avoid; break-inside: avoid; } /* KC-CLUB-DRUCK-FUSS-NIE-ALLEIN: auch beim Drucken aus dem Browser */
     #druck .cd-brief { font-family: Georgia, "Times New Roman", serif; color: #111; font-size: 4mm; line-height: 1.45; min-height: 255mm; display: flex; flex-direction: column; }
     #druck .cd-brief .cd-fuss { font-family: "Segoe UI", Roboto, Arial, sans-serif; }
     #druck .dkopf { display: flex; align-items: center; gap: 10px; border-bottom: 2.5pt solid #741521; padding-bottom: 6pt; margin-bottom: 10pt; }
@@ -3339,6 +3341,7 @@
   /* 2.23.39 KC-CLUB-EINGANG-FILTER + KC-CLUB-DIENST-UEBERSICHT */
   .ekh-liste { display: grid; gap: 6px; }
   /* 2.23.50 KC-CLUB-TERMINANFRAGE-STATUS */
+  .ta-raus { border: none; background: var(--karte2); color: var(--rot); border-radius: 50%; width: 26px; height: 26px; font-weight: 800; cursor: pointer; margin-left: 4px; vertical-align: middle; } /* KC-CLUB-TA-HERAUSNEHMEN */
   .ta-wer { padding: 3px 0; } .ta-st { font-weight: 700; } .ta-st-ja { color: #1e8449; } .ta-st-nein { color: var(--rot); } .ta-st-gv { color: #b9770e; } .ta-st-ab { color: var(--grau); } .ta-st-ge { color: #2471a3; }
   .marke.ta-st-ja { background: #d4efdf; color: #145a32; } .marke.ta-st-nein { background: #fadbd8; color: #78281f; } .marke.ta-st-gv { background: #fdebd0; color: #7e5109; } .marke.ta-st-ab { background: #e5e7e9; color: #424949; } .marke.ta-st-ge { background: #d6eaf8; color: #1b4f72; }
   /* 2.23.60 KC-CLUB-SCHULUNG-ADMIN */
@@ -3672,6 +3675,10 @@
      nach dem ersten Antippen „kleben“ – dann stand das Band für immer. Anhalten jetzt nur, solange der Finger drauf ist (:active) bzw. die Maus darüber (nur Geräte mit Maus). */
   .mini .on-lauf:active .on-band { animation-play-state: paused; }
   @media (hover: hover) and (pointer: fine) { .mini .on-lauf:hover .on-band, .mini .on-lauf:focus-visible .on-band { animation-play-state: paused; } }
+  /* KC-CLUB-ONLINE-LAUF-ZOOM (16.11.2026): der Name in der Mitte wird bis 1,3-fach groß und kräftig grün – gut anzutippen; Platz oben/unten für den Zoom */
+  .kacheln3 .mini > span.on-namen.on-lauf { padding: 5px 0; margin: 0; }
+  .mini .on-namen .on-name { transform-origin: center; will-change: transform; position: relative; }
+  .mini .on-namen .on-name.on-vorn, .mini .on-namen.on-einer .on-name { background: rgba(57,255,20,.45); box-shadow: inset 0 0 0 2px rgba(57,255,20,.95), 0 0 8px rgba(57,255,20,.45); z-index: 1; }
   @keyframes onLauf { from { transform: translateX(0); } to { transform: translateX(-50%); } }
   /* KC-CLUB-ONLINE-LAUF-HANDY: auch im Sparmodus läuft die Laufschrift (nur eine Verschiebung, kostet praktisch nichts) – still nur bei „Bewegung reduzieren“ am Gerät */
   html.spar .mini .on-namen.on-lauf .on-band { animation-duration: var(--on-dauer, 9s) !important; animation-iteration-count: infinite !important; }
@@ -6584,6 +6591,8 @@
       <div class="schalter"><div><b>🏠 Meine Adresse</b></div><input type="checkbox" id="setKontakt_adresse" onchange="kontaktFreigabe('adresse', this.checked)"></div>
       <!-- KC-CLUB-KONTAKT-EXTERN -->
       <div class="schalter"><div><b>📤 Auch an Personen außerhalb des Clubs</b><div class="hinweis">Mitglieder dürfen deine freigegebenen Angaben (oben) weiterleiten – z. B. per WhatsApp oder E-Mail. Standard: aus.</div></div><input type="checkbox" id="setKontaktExtern" onchange="kontaktExternSetzen(this.checked)"></div>
+      <div class="schalter"><div><b>📱 Ich lese lieber WhatsApp</b><div class="hinweis">Schreibt dir jemand in der Club-App im Einzelchat, öffnet sich bei ihm beim Senden gleich WhatsApp mit dem Text – du bekommst die Nachricht dann auch in WhatsApp (und weiter in der Club-App). Geht nur, wenn deine Handynummer freigegeben ist.</div></div><input type="checkbox" id="setWaLieber" onchange="waLieberSetzen(this.checked)"></div> <!-- KC-CLUB-WA-LIEBER -->
+      <div class="schalter"><div><b>🟢 WhatsApp automatisch öffnen</b><div class="hinweis">Schreibst du jemandem, der lieber WhatsApp liest, öffnet sich beim Senden gleich WhatsApp mit deinem Text – nur noch Senden tippen. Gilt für dieses Gerät.</div></div><input type="checkbox" id="setWaAuto" onchange="einstellung('waAuto', this.checked)"></div> <!-- KC-CLUB-WA-LIEBER -->
       <div class="knoepfe"><button class="knopf klein" onclick="mitgliedOeffnen(ICH.person_id)">👁️ So sehen mich die anderen</button></div>
       <p style="margin:16px 0 0"><b>🆘 Mein Notfallkontakt</b></p>
       <p class="hinweis" style="margin:2px 0 0;font-size:.85rem">Wer soll im Notfall (z. B. auf einem Ausflug) benachrichtigt werden? Sehen nur Clubsprecher, Kassenwart und Admin.</p>
@@ -7083,7 +7092,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.964.0" data-v="2.964.0"></script>
+<script src="app.js?v=2.969.0" data-v="2.969.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

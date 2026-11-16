@@ -11,7 +11,7 @@ const quelle = app.slice(start, ende);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 // KC-CLUB-GESPRAECHE: laufende Telefonate stehen als eigene Schilder vorne (gsKopf/gsSchild hier als einfache Nachbildung)
 const gsKopf = () => [], gsSchild = (g, kopie) => `<span class="on-name on-gs"${kopie ? ' aria-hidden="true"' : ' role="button"'}>${g.id}</span>`;
-const mach = (ONL, frisch = true, gs = gsKopf) => new Function("ONL", "mpOnline", "esc", "gsKopf", "gsSchild", quelle + "return onlineNamenHtml();")(ONL, () => (frisch ? ONL.liste.length : 0), esc, gs, gsSchild);
+const mach = (ONL, frisch = true, gs = gsKopf) => new Function("ONL", "mpOnline", "esc", "gsKopf", "gsSchild", "onLaufZoomStart", quelle + "return onlineNamenHtml();")(ONL, () => (frisch ? ONL.liste.length : 0), esc, gs, gsSchild, () => {});
 
 assert.equal(mach({ zeigen: true, liste: [] }), "", "niemand online → nichts");
 assert.equal(mach({ zeigen: false, liste: [{ person_id: "P1", vorname: "Klaus" }] }), "", "selbst unsichtbar → keine Namen (wie die Zahl)");
@@ -36,4 +36,12 @@ assert.match(app, /const innen = e\.target\.closest\("button, a, input, select, 
 assert.match(html, /html\.spar \.mini \.on-namen\.on-lauf \.on-band \{ animation-duration: var\(--on-dauer, 9s\) !important;/); // 2.964.0 KC-CLUB-ONLINE-LAUF-HANDY: läuft auch im Sparmodus
 assert.match(html, /@media \(prefers-reduced-motion: reduce\) \{ \.mini \.on-namen\.on-lauf/); // 2.964.0: langsamer statt still
 assert.ok(fs.readFileSync(new URL("../.github/workflows/tests.yml", import.meta.url), "utf8").includes("node tests/online-namen.test.mjs"), "läuft in der CI");
+// KC-CLUB-ONLINE-LAUF-ZOOM (16.11.2026, Hansi „langsam alle vorbei laufen, der im Vordergrund etwas aufzoomen“)
+assert.match(drei, /--on-dauer:15s/, "langsamer: 5 s je Name (3 Namen = 15 s)");
+assert.match(eins, /class="on-namen on-einer"/, "ein Name steht groß und hervorgehoben");
+const z = app.slice(app.indexOf("function onLaufZoom()"), app.indexOf("\n}\n", app.indexOf("function onLaufZoom()")));
+assert.ok(z.includes("scale(${(1 + 0.3 * nah).toFixed(3)})") && z.includes('n.classList.toggle("on-vorn", nah > 0.55)'), "Mitte bis 1,3-fach, hervorgehoben");
+assert.ok(z.includes("if (!felder.length || document.hidden) { ON_ZOOM_LAEUFT = false; return; }"), "läuft nur, solange sichtbar");
+assert.ok(/function onLaufZoomStart\(\) \{\n  if \(ON_ZOOM_LAEUFT \|\| document\.documentElement\.classList\.contains\("spar"\) \|\| matchMedia/.test(app), "kein Zoom im Sparmodus / bei Bewegung reduzieren");
+assert.match(html, /\.mini \.on-namen \.on-name\.on-vorn, \.mini \.on-namen\.on-einer \.on-name \{/);
 console.log("online-namen: ok");

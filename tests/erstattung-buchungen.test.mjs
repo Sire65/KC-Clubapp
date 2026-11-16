@@ -21,6 +21,6 @@ assert.match(bu, /onclick="ersBuchOeffnen\(\)">📒 Buchungsliste<\/button>/, "a
 for (const k of ["jahr", "monat", "art", "gruppe", "person", "stand"]) assert.ok(bu.includes(`eblFilterBlock("${k}",`), "Filter " + k);
 assert.match(bu, /<details class="ebl-f"\$\{EBL\.auf\[k\] \? " open" : ""\}/, "Filter einklappbar, Zustand gemerkt");
 assert.match(bu, /kopf\("bar", "💶 Bar am"\)\}\$\{kopf\("ueb", "🏦 Überwiesen am"\)\}/, "Spalten Bar am / Überwiesen am mit Symbol");
-assert.match(bu, /return \{ titel: `Buchungsliste Erstattungen \$\{EBL\.jahr\}`, unter: [^,]+, html, quer: true \};/);
+assert.match(bu, /return \{ titel: `Buchungsliste Erstattungen \$\{EBL\.jahr\}`, unter: [^,]+,( rechts: "",)? html, quer: true \};/);
 assert.match(html, /\.ebl-rolle \{ overflow-x: auto;/, "Tabelle scrollt in sich, nie die Seite");
 console.log("erstattung-buchungen: alles grün");

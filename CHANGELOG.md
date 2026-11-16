@@ -1,5 +1,51 @@
 # Änderungen
 
+## 2.969.0 – 2026-11-17 – 📱 „Liest lieber WhatsApp“ – beim Senden öffnet sich WhatsApp von selbst (KC-CLUB-WA-LIEBER) · Server 2.969.0
+Wunsch Hansi 16.11.: „Wenn ich z. B. Marianne eine Nachricht in der Club-App schreibe, dass er automatisch die gleiche auch in WhatsApp … und ich nur noch auf Senden klicke“ – „Nicht für jede Nachricht … zu viele Knöpfe … einige nutzen lieber WhatsApp als die Club-App“ – „Gleich für alle“.
+- Neue Einstellung **„📱 Ich lese lieber WhatsApp“** (⚙️, Standard aus) – setzt das Mitglied selbst oder der Admin auf der Mitgliedsseite („📱 Liest lieber WhatsApp?“).
+- Schreibt man so jemandem im **Einzelchat**, geht die Nachricht wie immer in die Club-App, und **im selben Antippen von „Senden“ öffnet sich WhatsApp** im Chat mit ihm/ihr, der Text steht schon drin – nur noch Senden. Kein neuer Knopf. Nur mit freigegebener WhatsApp-Nummer, nur Text (nicht mit Anlagen, nicht verschlüsselt, nicht Express), nicht in Gruppen (dort bleibt der WA-Knopf).
+- Für Absender abschaltbar: ⚙️ „🟢 WhatsApp automatisch öffnen“ (Standard an, je Gerät). Der Club-Server speichert dafür nichts zusätzlich – das Handy gibt den Text direkt an WhatsApp. Test: `tests/wa-lieber.test.mjs`. Rückweg: App/Server 2.968.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+## 2.968.0 – 2026-11-16 – ✕ Mitglied aus Terminanfrage herausnehmen · 🟢 Online-Laufschrift langsamer mit Zoom · 🖨️ Fußzeile nie allein · Server 2.968.0
+### ✕ Mitglied aus einer Terminanfrage herausnehmen (KC-CLUB-TA-HERAUSNEHMEN)
+Wunsch Hansi 16.11.: „Nimm Karla auch raus aus der Terminbestätigung für nächsten Montag – in Zukunft muss ich das als Admin auch können, damit nicht immer die KI ran muss.“
+- In der Antwortliste jeder Terminanfrage steht hinter jedem Namen ein kleines rotes **✕** – für den, der angefragt hat, und für den Admin (auch bei Anfragen anderer). Rückfrage, dann ist die Person still heraus (keine Nachricht, keine Erinnerungen mehr). Der letzte Empfänger bleibt – dafür gibt es „🚫 Absagen“.
+- Server: neue Aktion `terminanfrage_empfaenger_entfernen` (Protokoll ohne Inhalte). Test neu `tests/ta-herausnehmen.test.mjs`.
+### 🟢 Online-Laufschrift im Kopf: langsamer, der Name in der Mitte zoomt auf (KC-CLUB-ONLINE-LAUF-ZOOM)
+Wunsch Hansi 16.11.: „als Laufschrift … der im Vordergrund soll etwas aufzoomen, damit er angeklickt werden kann – langsam alle vorbei laufen“.
+- Etwa 5 s je Name (bisher 3 s). Wer gerade durch die Mitte läuft, wird bis 1,3-fach groß und kräftig grün – Antippen öffnet den Chat. Ist nur einer online, steht er hervorgehoben. Zusammen mit KC-CLUB-ONLINE-LAUF-HANDY (2.964.0). Kein Zoom im Sparmodus / bei „Bewegung reduzieren“. Test `tests/online-namen.test.mjs` erweitert.
+### 🖨️ Fußzeile nie allein auf der letzten PDF-Seite · Buchungsliste ohne doppeltes Datum (KC-CLUB-DRUCK-FUSS-NIE-ALLEIN)
+Funde Hansi (Buchungsliste für den Kassenwart): Fußzeile allein auf Seite 2, Datum doppelt.
+- Der PDF-Seitenumbruch schneidet früher, wenn für die nächste Seite nur ein kleiner Rest bliebe – die Fußzeile nimmt immer Zeilen mit (vorher bei 18/19/41/42 Zeilen nur die Fußzeile, bei 39/40 eine leere Seite). Gilt für alle Ausdrucke; auch beim Drucken aus dem Browser.
+- Buchungsliste: Datum nur noch einmal („Stand: …“ unter dem Titel).
+- Test neu `tests/druck-fuss.test.mjs`, Browser-Prüfung `tools/hilfe/druck-fuss-browser.mjs` (abgeschirmt, 10–60 Zeilen).
+- Rückweg: App und Server 2.967.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+## 2.967.0 – 2026-11-16 – 💐 Genesungskarten mit 6 Motiven und eigenem Text · 👥 gemeinsame Karte vom ganzen Club (KC-CLUB-GENESUNGSKARTEN, KC-CLUB-GK-GEMEINSAM, Wunschliste #96) · Server 2.967.0 + Datenbank
+Antworten Hansi 16.11.: „1 ja mit Sonne, 2 ja, 3 Köcheclub, 4 ja, 5 später“ – dann: „Baue noch die gemeinsame Karte.“
+- **Sechs Motive**, alle in der App gezeichnet: 💐 Blumenstrauß · 🐭 Maus unter der Decke mit Tee · 🐰 Kaninchen mit Blume · 🧸 Bär mit Herz-Ballon · 🍲 Suppentopf mit Kochmütze · ☀️ Sonne mit Regenbogen. Motiv antippen oder auf der Karte wischen.
+- **Überschrift** zur Wahl („Gute Besserung, …!“ · „Werde schnell gesund, …!“ · „Wir denken an dich, …!“), **Text** aus 2 Vorschlägen je Motiv oder **✏️ eigener Text** (bis 120 Zeichen – Zeilen und Schriftgröße passt die App an), **Absender** „Dein Köcheclub“ (Standard), „… und der ganze Club“, „Von …“ oder eigener. Für alle Mitglieder.
+- **👥 Gemeinsame Karte** (Clubleitung): im Karten-Fenster „Als gemeinsame Karte starten“ → alle Mitglieder außer der beschenkten Person bekommen eine Push und unterschreiben 2 Tage lang mit einem Tipp (Unterschrift zurücknehmen geht auch). Die Karte zeigt dann das Motiv etwas kleiner und darunter „Es grüßen dich:“ mit allen Vornamen. Wer gestartet hat (oder der Admin) legt sie mit „💬 Jetzt in …s Chat legen“ in den Chat → ➤. Die beschenkte Person sieht vorher nichts.
+- Auf keiner Karte steht ein Grund (keine Gesundheitsdaten). Datenbank: `kc_club_gk_gemeinsam` (Motiv, Überschrift, Text, Absender, bis wann) und `kc_club_gk_unterschrift` – RLS an, keine Browser-Rechte, gespiegelt und gesichert. Server: `gk_gemeinsam_start`, `gk_gemeinsam_liste`, `gk_unterschreiben`, `gk_gemeinsam_ende`.
+- Test: `tests/genesungskarte.test.mjs` neu gefasst. Rückweg: App + Server 2.966.0 (Tabellen bleiben, stören nicht).
+- Update-Hinweis für Mitglieder: „💐 Gute-Besserung-Karten jetzt mit Maus, Kaninchen, Bär, Suppentopf und Sonne – und eigenem Text.“
+
+## 2.966.0 – 2026-11-16 – 🧊 Hänger: Ursache wird gemessen · 📖 Fehlerkatalog mit Fehler-ID, Ursache und Lösung (KC-CLUB-HAENGER-URSACHE, KC-CLUB-FEHLERKATALOG) · Server 2.966.0
+Wunsch Hansi 16.11. nach dem Alarm „Klaus: App reagierte 27 s nicht“: „Hänger-Meldung genauer machen, damit der User weiß, woran es liegt. Am besten auf Dauer eine Tabelle anlegen mit Fehler-ID, Fehlername, Ursache, Lösung.“
+- **Neue Tabelle `kc_club_fehler_katalog`** (Migration `20261116_kc_club_fehler_katalog.sql`): je Fehlerart eine Zeile mit Fehler-ID (KC-F-001 …), Symbol, Name, Ursache, Lösung und dem Text für das Mitglied. Hansi kann die Texte dort ändern – spätere Migrationen überschreiben sie nicht. Nur der Club-Server liest sie.
+- **Hänger mit Ursache:** Die App misst jetzt, ob sie in der Lücke selbst gerechnet hat (Chrome/Edge melden lange Aufgaben). KC-F-101 = die App hat zu lange gerechnet (Fehler der App), KC-F-102 = das Gerät hat ihr keine Zeit gegeben (andere Programme, Updates, Virenscanner), KC-F-103 = Arbeitsspeicher fast voll, KC-F-104 = Fenster war im Hintergrund (kein Fehler – keine Meldung, kein Alarm), KC-F-100 = Browser kann es nicht messen (Firefox/Safari). Mitgeschickt werden nur Zahlen (Fenster aktiv, Rechenzeit der App, Speicher in %, Gerätespeicher, Kerne).
+- **Das Mitglied sieht ein Fenster** (Wunsch Hansi: „Beim User muss ein Fenster erscheinen“) mit Name, Ursache, Lösung und Fehler-ID statt „Die App hat kurz gehangen“, z. B. „🖥️ Gerät war ausgelastet – Ursache: … – Lösung: andere Programme schließen und das Gerät ab und zu neu starten – Fehler-ID KC-F-102“. Höchstens 1× in 10 Minuten.
+- **Admin:** Fehlerprotokoll zeigt je Eintrag Fehler-ID, Ursache, Lösung und die Messwerte; neuer Knopf „📖 Fehlerkatalog“ mit allen Fehlern – **gezählt** (Wunsch Hansi: „wie oft ein Fehler vorkommt, um Ursache und Lösung zu finden“): je Fehler-ID wie oft und bei wie vielen Personen im gewählten Zeitraum, die häufigsten oben. Die Alarm-Mail enthält Fehler-ID, Ursache und Lösung.
+- Test `tests/fehlerkatalog.test.mjs`. Update-Hinweis: nur „Kleine Systemanpassung“. Rückweg: App/Server 2.965.0/2.964.0 (die Tabelle stört nicht).
+
+## 2.965.0 – 2026-11-16 – 💐 Genesungskarte mit Blumenstrauß direkt in den Chat (KC-CLUB-GENESUNGSKARTE)
+Wunsch Hansi 16.11.: „Gute Besserung direkt in ihren Chat reinstellen – nicht als Brief auf Briefkopf, sondern als Genesungskarte mit z. B. Blumenstrauß.“
+- Neue Karte, in der App gemalt: bunter **Blumenstrauß** mit Schleife, „**Gute Besserung, Vorname!**“, ein kurzer Satz (3 zur Wahl), unten das weinrote Band mit **Kochmütze und „Köcheclub Werne“** (Corporate Design). Kein Grund und keine Krankheit auf der Karte.
+- **„💬 In Karlas Chat legen“**: die Karte kommt als Bild in den Chat mit der Person, ein Satz ist vorgeschrieben – eigene Worte dazu, dann ➤ (gesendet wird erst mit ➤, wie beim Gratulieren).
+- Wo: **Büro → Freud & Leid** bei „Krankheit“ / „Unfall“ (Kachel „💐 Genesungskarte in den Chat“) und **bei jedem Mitglied** (Knopf „💐 Gute-Besserung-Karte“) – für alle Mitglieder.
+- Kein fremder Dienst, keine neuen Daten. Test: neu `tests/genesungskarte.test.mjs`. Rückweg: App 2.964.0. Nur die App.
+- Update-Hinweis für Mitglieder: „💐 Neu: Gute-Besserung-Karte mit Blumenstrauß – beim Mitglied antippen.“
+
 ## 2.964.0 – 2026-11-16 – 🎚️ Datenverkehr-Säulen im Kopf (Admin) · 🟢 Laufschrift der Online-Mitglieder auch am Handy (KC-CLUB-PULS, KC-CLUB-ONLINE-LAUF-HANDY) · Server 2.964.0 + Datenbank – [Hansi: einspielen]
 Fund Hansi 16.11.: „Am Handy keine Laufschrift bei den Online-Mitgliedern. Am PC klappt es.“
 - **Antippen hielt sie für immer an:** Anhalten war an „Maus darüber“ gebunden – am Handy bleibt dieser Zustand nach dem ersten Antippen hängen. Jetzt: am Handy nur anhalten, solange der Finger drauf ist; „Maus darüber“ nur noch auf Geräten mit Maus.
