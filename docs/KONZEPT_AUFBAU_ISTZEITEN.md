@@ -1,6 +1,6 @@
 # Konzept: Ist-Stunden an Tagen ohne Stechuhr (Aufbau, Nachbereitung, Sonderzeiten für den Club)
 
-Stand 05.11.2026 · Kennzeichen **DP2-F-IST-OHNE-UHR** · Status: **freigegeben von Hansi (05.11.2026) – bereit für Codex (Abschnitt 7).**
+Stand 16.11.2026 · Kennzeichen **DP2-F-IST-OHNE-UHR** · Status: **freigegeben von Hansi (05.11.2026), Fahrzeit-Regel geändert am 16.11.2026 – bereit für Codex (Abschnitt 7).**
 
 Wunsch Hansi: „Die Wunschphase ist vorbei. Es gibt einen Sollplan. Z. B. an den Aufbautagen hat sich Thomas von 10.00 bis 15.00
 eingetragen. Aber um 13.00 war schon alles fertig. Da an den Aufbautagen nicht per Stechuhr gestempelt wird, müssen die Stunden
@@ -9,8 +9,15 @@ Entscheidung Hansi (05.11.): „**Jeder muss selber seinen Plan anpassen.** Nach
 werden, ob er etwas an seiner Einsatzzeit ändern muss. **Wenn nein, bleibt es dabei. Wenn ja, werden die neuen Zeiten in DP2
 übernommen – als geändert.** Und dann gibt es ja noch weitere Sonderzeiten, in denen man etwas für den Club erledigt hat.“
 Ergänzung Hansi (05.11.): „**Bei jeder Zeitänderung müssen Clubsprecher, Kassenwart und Admin Bescheid bekommen.**“
-Entscheidung Hansi (05.11.): „**Fahrzeit zählt nicht als Arbeitszeit, sondern nur vor Ort. Km-Pauschale muss gesondert angegeben werden über Erstattung.**“
-→ Das gilt für **alle** Zeiten ohne Stechuhr, auch für Sonderzeiten. Die bisherige Regel „von zuhause bis zuhause“ (Betreiber 15.10.2026) entfällt.
+~~Entscheidung Hansi (05.11.): „Fahrzeit zählt nicht als Arbeitszeit, sondern nur vor Ort.“~~ **Aufgehoben am 16.11.2026.**
+**Entscheidung Hansi (16.11.2026): Fahrzeit zählt mit.** Bei Sondereinsätzen (Einkäufe/Besorgungen, Kochen in Dortmund, Abholfahrten
+z. B. Wurst, Aufbau/Abbau Weihnachtsmarkt, Fahrt zum Dienst in der Hütte) werden **Arbeitszeit und Fahrzeit** als Stunden erstattet,
+dazu **immer die km-Pauschale 0,30 €/km** – aber **nur für den Fahrer** (Fahrgemeinschaft: Mitfahrer rechnen keine km ab).
+→ Die Regel „von zuhause bis zuhause“ (Betreiber 15.10.2026) **gilt wieder** und bleibt, wie sie im Code steht.
+Normales Clubleben (Clubabende, Sitzungen, Feiern) wird nicht erstattet.
+Wege: Standdienst = Stechuhr an der Kasse · Fahrzeit und Sonderzeiten = Stundenmeldung („Sonderstunden melden“), Planer bestätigt ·
+km = Club-App **Meins → Erstattung** → Kassenwart zahlt bar oder überweist. Bankverbindung **nicht** über Club-App oder WhatsApp,
+sondern aufgeschrieben persönlich beim Kassenwart abgeben. Merkblatt für die Mitglieder: „Erstattung von Stunden und Kilometern“ (16.11.2026).
 
 ## 1. Ausgangslage (Stand Code)
 
@@ -29,8 +36,9 @@ Entscheidung Hansi (05.11.): „**Fahrzeit zählt nicht als Arbeitszeit, sondern
 4. Zeiten in **Viertelstunden**, Auswahl statt Freitext, nur eigene Einsätze.
 5. Jede Änderung wird protokolliert (wer, wann, vorher/nachher). Der Planer sieht alle „geändert“-Fälle in einer Liste.
 6. **Bei jeder Zeitänderung bekommen Clubsprecher, Kassenwart und Admin Bescheid** (Abschnitt 3a).
-7. **Fahrzeit zählt nie als Arbeitszeit.** Es zählt nur die Zeit vor Ort bzw. die Zeit der eigentlichen Arbeit. Gefahrene Kilometer
-   rechnet man **gesondert über die Erstattung** ab (km-Pauschale, nur Fahrer der Fahrgemeinschaft).
+7. **Fahrzeit zählt mit** (Entscheidung 16.11.2026). Bei Sondereinsätzen gilt „von zuhause bis zuhause“. An Aufbau-/Abbautagen und
+   Standtagen deckt das Ist nur die Zeit vor Ort ab; die **Fahrzeit hin und zurück meldet man zusätzlich** über die Stundenmeldung (Abschnitt 4).
+   Gefahrene Kilometer rechnet man **gesondert über die Erstattung** ab (0,30 €/km, nur der Fahrer der Fahrgemeinschaft).
 
 ## 3. Ablauf nach jedem Aufbau- und Nachbereitungstag
 
@@ -95,16 +103,21 @@ Antwortet jemand bis **3 Tage nach dem Tag** nicht, gilt das **Soll als Ist**, g
   Empfänger („3 neue Zeitänderungen“). So wird niemand mit Pushes überschüttet.
 
 
+## 4. Sonderzeiten und Fahrzeiten für den Club
 
-Gemeint sind Zeiten **ohne Solldienst**, in denen jemand etwas für den Club erledigt hat: einkaufen, Getränke zuhause mischen, Fahrten,
-Material holen, Vorbereitung zuhause …
+Gemeint sind Zeiten **ohne Solldienst**, in denen jemand etwas für den Club erledigt hat: einkaufen, Besorgungen, Getränke zuhause mischen,
+Kochen in Dortmund, Abholfahrten (z. B. Wurst), Material holen, Vorbereitung zuhause … – **jeweils einschließlich Fahrzeit**.
+Dazu die **Fahrzeit zu Tagen mit Solldienst** (Aufbau, Abbau, Standdienst in der Hütte), weil das Ist dort nur die Zeit vor Ort enthält.
 
-- Die Rückfrage aus Schritt 1 hat unten zusätzlich **„➕ Ich habe noch etwas anderes für den Club erledigt“**. Der Knopf steht auch dauerhaft
-  in „Mein Dienst“ und bei Twinkey.
-- Er öffnet die vorhandene **Stundenmeldung** (`hour-reports.js`): Einsatz bzw. Anlass, Tag, Zeit **nur der Arbeit vor Ort, ohne Fahrzeit**,
+- Die Rückfrage aus Schritt 1 hat unten zusätzlich **„➕ Ich habe noch etwas anderes für den Club erledigt“** und **„🚗 Fahrzeit melden“**.
+  Beide Knöpfe stehen auch dauerhaft in „Mein Dienst“ und bei Twinkey.
+- Sie öffnen die vorhandene **Stundenmeldung** (`hour-reports.js`): Einsatz bzw. Anlass, Tag, Zeit **von zuhause bis zuhause** (wie heute),
   Tätigkeit aus der Auswahl, auf Wunsch weitere Kollegen.
-- Danach kommt der Hinweis: „**Gefahren?** Kilometer bitte über die Erstattung angeben“ mit dem Knopf **„🚗 Fahrtkosten / km-Pauschale erfassen“**
-  (öffnet die vorhandene Erstattung, vorausgefüllt mit Tag und Anlass). Die Fahrt selbst steht nicht in den Stunden.
+- **„🚗 Fahrzeit melden“** zu einem Solldienst: Tätigkeit ist fest **„Fahrt zum Dienst (hin und zurück)“**, Tag und Anlass sind mit dem Dienst
+  vorbelegt, eingegeben wird nur die Dauer (Viertelstunden, höchstens 4 Std.). Je Dienst höchstens **eine** Fahrzeit-Meldung.
+  An Standtagen gilt das genauso (Stechuhr = Zeit am Stand, Fahrzeit = Meldung).
+- Danach kommt der Hinweis: „**Bist du gefahren?** Kilometer bitte über die Erstattung angeben (nur der Fahrer)“ mit dem Knopf
+  **„🚗 Fahrtkosten / km-Pauschale erfassen“** (öffnet die vorhandene Erstattung, vorausgefüllt mit Tag und Anlass).
 - **Neu:** Anlass **„Sonstiges für den Club“** ohne festen Sondereinsatz, damit jede Clubarbeit meldbar ist (Tätigkeit + Bemerkung Pflicht).
 - Wie bisher: Status „gemeldet“ → Planer bestätigt oder lehnt mit Grund ab → Istzeit `self_report`. Das bleibt so, weil es dafür
   keinen Plan gibt, mit dem man vergleichen könnte (entschieden, 6.4).
@@ -115,14 +128,16 @@ Material holen, Vorbereitung zuhause …
 |---|---|---|
 | Standtage (`market`) | ja | Stechuhr wie bisher |
 | Aufbau (`prep`), Nachbereitung (`after`) | **nein** | **Rückfrage an jeden:** passt / ändern / nicht da |
-| Sonderzeiten für den Club ohne Solldienst | nein | Stundenmeldung → Planer bestätigt |
+| Sonderzeiten für den Club ohne Solldienst (inkl. Fahrzeit) | nein | Stundenmeldung → Planer bestätigt |
+| Fahrzeit zu Aufbau, Abbau und Standdienst | nein | Stundenmeldung „Fahrzeit melden“ → Planer bestätigt |
+| Kilometer (nur Fahrer, 0,30 €/km) | – | Club-App Meins → Erstattung → Kassenwart |
 
 Einstellung je Tag: `stempeluhr: false` (Standard für `prep` und `after`), damit es später auch für andere Tage gilt.
 
 ## 6. Entscheidungen Hansi (05.11.2026)
 
 1. **Keine Antwort bis zur Frist** (3 Tage nach dem Tag): Es gilt das **Soll als Ist**, gekennzeichnet **„⏳ nicht beantwortet“**. Der Planer sieht es.
-2. **Fahrzeit zählt nie** als Arbeitszeit, nur die Zeit vor Ort. Die km-Pauschale gibt man gesondert über die Erstattung an.
+2. ~~Fahrzeit zählt nie~~ – **geändert am 16.11.2026: Fahrzeit zählt mit** (von zuhause bis zuhause; bei Solldiensten über „🚗 Fahrzeit melden“). Die km-Pauschale (0,30 €/km, nur Fahrer) gibt man gesondert über die Erstattung an.
 3. **Änderungen werden sofort übernommen**, gekennzeichnet „geändert“. Clubsprecher, Kassenwart und Admin bekommen Bescheid, der Planer kann korrigieren.
    **Ausnahme: mehr Stunden als geplant** (länger geblieben) zählen erst nach Bestätigung durch den Planer.
 4. **Sonderzeiten für den Club** zählen wie bisher erst nach Bestätigung durch den Planer.
@@ -170,16 +185,19 @@ Dazu die Meldung weiterer Sonderzeiten für den Club. Der Sollplan bleibt unver�
    - Text: Name, Tag/Anlass, neue Zeit statt Soll, Differenz in Stunden, Grund. Knopf „📋 Alle Änderungen ansehen“.
    - Push gebündelt: je Empfänger höchstens einer je 15 Minuten („n neue Zeitänderungen“).
    - Vorbild: Empfänger-Regel der Änderungsmeldungen (`an: ["Clubsprecher", "Kassenwart", "admin"]`, `AE_AN_NAME`).
-6. **Fahrzeit zählt nicht (Entscheidung Hansi 05.11., ersetzt „Betreiber 2026-10-15“):**
-   - `dp2/src/core/hour-reports.js`: Kommentar und Regel anpassen. Ende höchstens 24:00 statt 30:00 (`MAX_END`), höchstens 12 Std. statt 16 (`MAX_SPAN`).
-     Tätigkeit „Transport / Fahrt“ umbenennen in **„Transport / Material holen (Ladezeit vor Ort)“**, dazu der Hinweis „Fahrzeit über Erstattung“.
-     Bereits gemeldete Zeilen bleiben unverändert, der Planer entscheidet sie wie bisher.
-   - Twinkey (`dp2/src/ui/twinkey.js`, Frage „Wann bist du zuhause losgefahren …? Die Fahrzeit zählt mit.“) → **„Von wann bis wann warst du vor Ort
-     im Einsatz? Die Fahrzeit zählt nicht – Kilometer gibst du gleich danach über die Erstattung an.“**
-   - Club-App Hilfe (`app.js` Eintrag `sonderstunden`, `teile/hilfe.js` `sonderstunden-melden`): „von zuhause bis zuhause“ ersetzen durch
-     „nur die Zeit vor Ort, Kilometer über die Erstattung“.
-   - Nach jeder Stundenmeldung und nach „✏️ Ja, ändern“ den Knopf „🚗 Fahrtkosten / km-Pauschale erfassen“ anbieten (vorhandene Erstattung,
-     vorausgefüllt). Die km-Pauschale gilt weiter nur für Fahrer (Fahrgemeinschaft).
+6. **Fahrzeit zählt mit (Entscheidung Hansi 16.11.2026, hebt die Regel vom 05.11. auf):**
+   - `dp2/src/core/hour-reports.js`: Regel „von zuhause bis zuhause“ **bleibt** (`MAX_END` 30:00, `MAX_SPAN` 16 Std. unverändert).
+     **Nicht** umbenennen, **nicht** kürzen. Neue Tätigkeit **„Fahrt zum Dienst (hin und zurück)“** (`id:'fahrt_dienst'`) für „🚗 Fahrzeit melden“:
+     an einen Solldienst gebunden (`shiftId`), nur Dauer in Viertelstunden, höchstens 4 Std., je Dienst höchstens eine Meldung.
+   - Twinkey (`dp2/src/ui/twinkey.js`): Frage „Wann bist du zuhause losgefahren, und wann warst du wieder zuhause? Die Fahrzeit zählt mit.“ **bleibt**.
+     Neuer Eintrag **„🚗 Fahrzeit zu meinem Dienst melden“** (Aufbau, Abbau, Standdienst).
+   - Club-App Hilfe (`app.js` Eintrag `sonderstunden`, `teile/hilfe.js` `sonderstunden-melden`): „von zuhause bis zuhause“ **bleibt**. Ergänzen:
+     „Fahrzeit zu Aufbau, Abbau und Standdienst meldest du über ‚🚗 Fahrzeit melden‘. Kilometer (0,30 €/km, nur der Fahrer) über Meins → Erstattung.
+     Deine Bankverbindung gibst du dem Kassenwart aufgeschrieben persönlich – nicht über die App und nicht über WhatsApp.“
+   - Nach jeder Stundenmeldung, nach „Fahrzeit melden“ und nach „✏️ Ja, ändern“ den Knopf „🚗 Fahrtkosten / km-Pauschale erfassen“ anbieten
+     (vorhandene Erstattung, vorausgefüllt). Die km-Pauschale gilt weiter nur für Fahrer (Fahrgemeinschaft).
+   - km-Satz: Admin trägt **0,30 €/km** mit „gilt ab“ ein (Admin-Einstellungen → Erstattung). Code-Vorgabe `kmSatz: 0.38` in `app.js` nicht als gültigen
+     Satz anzeigen, solange kein Satz gepflegt ist.
 7. **DP2 Planer-Ansicht:** Spalten Soll · Ist · Kennzeichen, Liste „Geändert von Mitgliedern“, Filter „keine Antwort“.
    Planer-Korrektur wie bisher mit Grund + Nachricht ans Mitglied. `closePlan` zählt „keine Antwort“ als ungeklärt.
 8. **Tests (rot verhindert das Einspielen):**
@@ -191,7 +209,9 @@ Dazu die Meldung weiterer Sonderzeiten für den Club. Der Sollplan bleibt unver�
    - Stundenmeldung „Sonstiges für den Club“ ohne Sondereinsatz → gemeldet → bestätigt → Istzeit `self_report`.
    - Bescheid: Änderung → Nachricht an Clubsprecher, Kassenwart und Admin (nicht an den Ändernden). „Passt“ → keine Nachricht.
      Fünf Änderungen in 10 Minuten → je Empfänger nur ein Push.
-   - Fahrzeit: Ende nach 24:00 bzw. mehr als 12 Std. → abgelehnt. Twinkey- und Hilfetexte enthalten nicht mehr „zuhause bis zuhause“.
+   - Fahrzeit: Stundenmeldung „von zuhause bis zuhause“ bis 30:00 / 16 Std. weiter erlaubt. „Fahrzeit melden“ zu Thomas’ Aufbau 02.12. (1 Std.) → gemeldet,
+     zweite Fahrzeit-Meldung zum selben Dienst → abgelehnt, mehr als 4 Std. → abgelehnt, fremder Dienst → abgelehnt.
+     Nach der Meldung steht der Knopf zur Erstattung da. Hilfetext nennt „nur der Fahrer“ und „Bankverbindung persönlich beim Kassenwart“.
      Nach der Meldung steht der Knopf zur Erstattung da.
    - Browser-Rundgang abgeschirmt: Zettel auf einem 360-px-Handy bedienbar.
 9. **Ende:** Eintrag in `CHANGELOG.md`, Hilfe-Text, Rückweg (Version davor), neue Tabelle mit Rechten. Hansi in einfachen Worten berichten.

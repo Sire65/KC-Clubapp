@@ -71,7 +71,7 @@ const dbPufferLeeren = () => { const pf = DB_PUFFER.getStore() as DbPuffer | und
 const DB_RPC_NUR_LESEN = new Set(["kc_club_rt_kanal", "kc_club_ungelesen_je_chat", "kc_communication_get_server_secret", "kc_club_kachel_zahlen", "kc_club_chat_stand",
   // 2.602.0 KC-CLUB-START-KERN: auch die Pakete sind STABLE (Postgres verbietet darin jedes Schreiben) – sie leerten bisher bei jedem Start den Puffer
   "kc_club_start_kern", "kc_club_start_paket", "kc_club_unterhaltung_paket", "kc_club_comm_paket", "kc_club_buero_paket", "kc_club_online_jetzt", "kc_club_nachricht_mahnung", "kc_club_unterhaltungen_paket",
-  "kc_club_manager_mitglieder_kurz", "kc_club_comm_paket_kurz"]); // 2.496.0: Kachel-Zahlen · 2.510.0: Chat-Fingerabdruck (beide STABLE, nur lesend)
+  "kc_club_manager_mitglieder_kurz", "kc_club_comm_paket_kurz", "kc_club_puls"]); // kc_club_puls: KC-CLUB-PULS (STABLE) // 2.496.0: Kachel-Zahlen · 2.510.0: Chat-Fingerabdruck (beide STABLE, nur lesend)
 const dbFetch: typeof fetch = (input, init) => {
   const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
   const pf = url.includes("/rest/v1/") ? DB_PUFFER.getStore() as DbPuffer | undefined : undefined;
@@ -194,7 +194,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.957.0";
+const SERVER_VERSION = "2.966.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -17872,7 +17872,10 @@ Köcheclub Werne`,
         ]);
         if (error || frFehler) throw new Fehler("Die Dienstzeiten konnten gerade nicht geladen werden.", 503); // Regel 11: unbekannt ≠ leer
         const freigegeben = new Set((fr ?? []).map((x: any) => x.person_id));
-        const liste = (rows ?? []).filter((x: any) => !String(x.person_id).startsWith("KC-P-TEST")
+        // 2.962.0 KC-CLUB-DV-AUSNAHMEN (Fund Hansi „in der grafischen Übersicht taucht Karla noch mit ihren Wünschen auf – sie hat sich den Arm gebrochen“):
+        // wer in kc_club_dienst_ausnahmen steht (fällt für den Dienstplan aus), erscheint auch hier nicht – die eigenen Angaben bleiben gespeichert
+        const aus = await dienstAusnahmen();
+        const liste = (rows ?? []).filter((x: any) => !String(x.person_id).startsWith("KC-P-TEST") && !aus.has(x.person_id)
           && (leitung || x.person_id === ich.person_id || x.share_with_colleagues === true || freigegeben.has(x.person_id)));
         const leute = await personen(liste.map((x: any) => x.person_id));
         if (!leitung) return json({ nurFreigegeben: true, veranstaltung: DW.name, personen: liste.map((x: any) => ({ id: x.id, name: leute.get(x.person_id)?.display_name || x.person_id, ich: x.person_id === ich.person_id,
@@ -17880,7 +17883,6 @@ Köcheclub Werne`,
             .map((e: any) => ({ d: e.date, s: Number(e.start), e: Number(e.end), t: e.wishType })) })) });
         // KC-CLUB-DW-FEHLT (2.222.0, Wunsch Hansi): wer hat noch nichts abgegeben (nur Einsammeln – geplant wird in DP2)
         const abgegeben = new Set(liste.map((x: any) => x.person_id));
-        const aus = await dienstAusnahmen(); // KC-CLUB-DIENST-AUSNAHMEN: nicht verfügbar → fehlt auch nicht
         const fehlen = (await aktiveMitglieder()).filter((m) => !abgegeben.has(m.person_id) && !aus.has(m.person_id)).map((m) => ({ person_id: m.person_id, name: m.display_name }));
         const erinnert = await dwZuletztErinnert();
         return json({ fehlen: fehlen.map((f) => ({ ...f, erinnert: erinnert.get(f.person_id) ?? null })), veranstaltung: DW.name, personen: liste.map((x: any) => ({ id: x.id, name: leute.get(x.person_id)?.display_name || x.person_id, revision: x.revision, status: x.status,
@@ -18588,6 +18590,13 @@ Köcheclub Werne`,
         return json({ reisen, geburtstage, veranstaltungen, privat });
       }
 
+      // KC-CLUB-PULS (Wunsch Hansi 16.11.2026): Aussteuerungsanzeige im Kopf (nur Admin) – Zählerstände der Club-App, die App rechnet „pro Sekunde“
+      case "betrieb_puls": {
+        nurAdmin(ich);
+        const { data, error } = await db.rpc("kc_club_puls");
+        if (error || !data) throw new Fehler("Messwerte gerade nicht lesbar.", 503);
+        return json({ ok: true, ...(data as Record<string, unknown>) });
+      }
       // ----- KC-CLUB-GEMEINSCHAFTSGERICHT: einreichen / später / diesmal nicht (Mitglieder und Aushilfen) -----
       case "gericht_zutat_setzen": case "gericht_antwort": {
         if (ich.zugang !== "mitglied" && ich.zugang !== "aushilfe") throw new Fehler("Das Gemeinschaftsgericht ist für Mitglieder und Aushilfen.", 403);

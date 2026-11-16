@@ -1,5 +1,64 @@
 # Änderungen
 
+## 2.966.0 – 2026-11-16 – ✕ Mitglied aus Terminanfrage herausnehmen · 🟢 Online-Laufschrift langsamer mit Zoom · 🖨️ Fußzeile nie allein · Server 2.966.0
+### ✕ Mitglied aus einer Terminanfrage herausnehmen (KC-CLUB-TA-HERAUSNEHMEN)
+Wunsch Hansi 16.11.: „Nimm Karla auch raus aus der Terminbestätigung für nächsten Montag – in Zukunft muss ich das als Admin auch können, damit nicht immer die KI ran muss.“
+- In der Antwortliste jeder Terminanfrage steht hinter jedem Namen ein kleines rotes **✕** – für den, der angefragt hat, und für den Admin (auch bei Anfragen anderer). Rückfrage, dann ist die Person still heraus (keine Nachricht, keine Erinnerungen mehr). Der letzte Empfänger bleibt – dafür gibt es „🚫 Absagen“.
+- Server: neue Aktion `terminanfrage_empfaenger_entfernen` (Protokoll ohne Inhalte). Test neu `tests/ta-herausnehmen.test.mjs`.
+### 🟢 Online-Laufschrift im Kopf: langsamer, der Name in der Mitte zoomt auf (KC-CLUB-ONLINE-LAUF-ZOOM)
+Wunsch Hansi 16.11.: „als Laufschrift … der im Vordergrund soll etwas aufzoomen, damit er angeklickt werden kann – langsam alle vorbei laufen“.
+- Etwa 5 s je Name (bisher 3 s). Wer gerade durch die Mitte läuft, wird bis 1,3-fach groß und kräftig grün – Antippen öffnet den Chat. Ist nur einer online, steht er hervorgehoben. Zusammen mit KC-CLUB-ONLINE-LAUF-HANDY (2.964.0). Kein Zoom im Sparmodus / bei „Bewegung reduzieren“. Test `tests/online-namen.test.mjs` erweitert.
+### 🖨️ Fußzeile nie allein auf der letzten PDF-Seite · Buchungsliste ohne doppeltes Datum (KC-CLUB-DRUCK-FUSS-NIE-ALLEIN)
+Funde Hansi (Buchungsliste für den Kassenwart): Fußzeile allein auf Seite 2, Datum doppelt.
+- Der PDF-Seitenumbruch schneidet früher, wenn für die nächste Seite nur ein kleiner Rest bliebe – die Fußzeile nimmt immer Zeilen mit (vorher bei 18/19/41/42 Zeilen nur die Fußzeile, bei 39/40 eine leere Seite). Gilt für alle Ausdrucke; auch beim Drucken aus dem Browser.
+- Buchungsliste: Datum nur noch einmal („Stand: …“ unter dem Titel).
+- Test neu `tests/druck-fuss.test.mjs`, Browser-Prüfung `tools/hilfe/druck-fuss-browser.mjs` (abgeschirmt, 10–60 Zeilen).
+- Rückweg: App 2.965.0, Server 2.964.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+## 2.965.0 – 2026-11-16 – 💐 Genesungskarte mit Blumenstrauß direkt in den Chat (KC-CLUB-GENESUNGSKARTE)
+Wunsch Hansi 16.11.: „Gute Besserung direkt in ihren Chat reinstellen – nicht als Brief auf Briefkopf, sondern als Genesungskarte mit z. B. Blumenstrauß.“
+- Neue Karte, in der App gemalt: bunter **Blumenstrauß** mit Schleife, „**Gute Besserung, Vorname!**“, ein kurzer Satz (3 zur Wahl), unten das weinrote Band mit **Kochmütze und „Köcheclub Werne“** (Corporate Design). Kein Grund und keine Krankheit auf der Karte.
+- **„💬 In Karlas Chat legen“**: die Karte kommt als Bild in den Chat mit der Person, ein Satz ist vorgeschrieben – eigene Worte dazu, dann ➤ (gesendet wird erst mit ➤, wie beim Gratulieren).
+- Wo: **Büro → Freud & Leid** bei „Krankheit“ / „Unfall“ (Kachel „💐 Genesungskarte in den Chat“) und **bei jedem Mitglied** (Knopf „💐 Gute-Besserung-Karte“) – für alle Mitglieder.
+- Kein fremder Dienst, keine neuen Daten. Test: neu `tests/genesungskarte.test.mjs`. Rückweg: App 2.964.0. Nur die App.
+- Update-Hinweis für Mitglieder: „💐 Neu: Gute-Besserung-Karte mit Blumenstrauß – beim Mitglied antippen.“
+
+## 2.964.0 – 2026-11-16 – 🎚️ Datenverkehr-Säulen im Kopf (Admin) · 🟢 Laufschrift der Online-Mitglieder auch am Handy (KC-CLUB-PULS, KC-CLUB-ONLINE-LAUF-HANDY) · Server 2.964.0 + Datenbank – [Hansi: einspielen]
+Fund Hansi 16.11.: „Am Handy keine Laufschrift bei den Online-Mitgliedern. Am PC klappt es.“
+- **Antippen hielt sie für immer an:** Anhalten war an „Maus darüber“ gebunden – am Handy bleibt dieser Zustand nach dem ersten Antippen hängen. Jetzt: am Handy nur anhalten, solange der Finger drauf ist; „Maus darüber“ nur noch auf Geräten mit Maus.
+- **Sparmodus:** die Laufschrift stand still (der Sparmodus schaltet sich am Handy z. B. nach zwei langsamen Starts selbst ein). Jetzt läuft sie auch dort – es ist nur eine Verschiebung, kostet praktisch nichts.
+- **„Bewegung reduzieren“ am Gerät:** halb so schnell statt still (wie die Kochmütze).
+- Geprüft im abgeschirmten Browser mit Handy-Einstellungen (normal, Sparmodus, Bewegung reduzieren – vorher stand sie in allen drei Fällen nach dem Antippen bzw. ganz). Test: `tests/online-lauf-handy.test.mjs`. Nur die App.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+
+**🎚️ Datenverkehr-Anzeige wie am Mischpult (KC-CLUB-PULS, Wunsch Hansi 16.11.: „In der Musik gibt es so Anzeigen aus LED, die ausschlagen … grün, gelb, rot … in die Kopfzeile beim Admin“ – „Statusleisten senkrecht, nur Club-App messen, ja abschaltbar unter Zahnrad bei Admin“)**
+- Neben den LEDs in der Statusleiste zwei senkrechte LED-Säulen (nur Admin): **L** = Lesen (Seiten, Chats, Fotos holen), **S** = Schreiben (Nachrichten, Zusagen, Uploads) – je 8 Stufen (5 grün, 2 gelb, 1 rot), logarithmisch, die Spitze der letzten Messungen leuchtet nach. Antippen: großes Fenster mit Werten je Sekunde, wie viele in der App sind, und Verlaufskurve.
+- Gemessen wird nur die Club-App: Abfragen des Club-Servers auf Club-Tabellen aus den Zählern, die die Datenbank ohnehin führt (`pg_stat_statements`) – nichts wird zusätzlich gespeichert, keine Inhalte, keine Namen; die Anzeige zählt sich selbst nicht mit. Alle 4 s, nur solange die Startseite sichtbar ist.
+- Abschaltbar: ⚙️ → „🎚️ Datenverkehr-Anzeige im Kopf“ (nur beim Admin, Standard an).
+- 🐢 Sparmodus (Fund Hansi: „ab und an wird an der Stelle die Schildkröte angezeigt“): mit den Säulen passte die Schildkröte nicht mehr in die Leiste – sie sitzt dann klein unten an den Säulen, im Fenster steht der Grund.
+- Datenbank: `supabase/migrations/20261116_kc_club_puls.sql` (nur lesend, nur Club-Server). Fehlt sie, zeigt die Anzeige einfach nichts. Tests: `tests/puls.test.mjs`. Im abgeschirmten Browser geprüft (Ausschlag, Fenster, 360/390/412 px mit Sparmodus).
+## 2.963.0 – 2026-11-16 – 🗄️ „➕ Neues Register …“ auch an allen anderen Ablage-Stellen (KC-CLUB-ABLAGE-NEU-UEBERALL, Wunschliste #95)
+Wunsch Hansi 16.11.: „Durchsuche den Code, ob so was an anderen Stellen auch sinnvoll ist, auch für alle Mitglieder frei geben.“
+- Gefunden und nachgerüstet – überall, wo man im Archiv ein Register auswählt: **📥 Dokument ablegen / ✏️ ändern** (im Archiv), **📋 Kopieren / ➡️ Verschieben nach …**, **Eingang: Dokument annehmen („… ablegen“)** und **🆘 Notfallpass → In mein Archiv kopieren**. Dazu wie in 2.961.0 das Fenster „Wohin damit?“.
+- **Für alle Mitglieder** im eigenen Ordner; in Club-Ordnern wie bisher nur für die Archiv-Pflege (Clubsprecher, Admin) – das prüft auch der Server. Beim Einreichen in einen Club-Ordner oder in den Ordner eines anderen erscheint der Eintrag nicht.
+- Ein gemeinsamer Baustein (`regNeuAnhaengen`) statt Kopien. Keine Serveränderung.
+- Test: `tests/ablage-neu.test.mjs` erweitert. Rückweg: App 2.962.0. Nur die App.
+- Update-Hinweis für Mitglieder: „🗄️ Beim Ablegen kannst du jetzt überall gleich ein neues Register anlegen.“
+## 2.962.0 – 2026-11-16 – 🗓️ Dienstzeiten-Übersicht: wer für den Dienstplan ausfällt, erscheint dort nicht mehr (KC-CLUB-DV-AUSNAHMEN)
+Fund Hansi 16.11.: „In der grafischen Übersicht taucht Karla noch mit ihren Wünschen auf – sie fällt aber aus.“
+- Die Dienstzeiten-Übersicht (Server `dienst_uebersicht`) lässt alle aus, die im Register `kc_club_dienst_ausnahmen` stehen – für Leitung und Mitglieder. Ihre eigenen Angaben bleiben gespeichert; wird der Eintrag gelöscht, erscheinen sie wieder.
+- Karla ist dort seit 16.11. eingetragen (Daten, sofort wirksam für „fehlt noch“ und Erinnerungen); im Dienstplan war sie schon „aus“.
+- Test: Block in `tests/app-vertrag.test.mjs`. Rückweg: Server 2.957.0. Nur der Server (App-Version nur mitgezogen).
+
+## 2.961.0 – 2026-11-16 – 🗄️ „Wohin damit?“: ➕ Neues Register und ➕ Neuer Ordner direkt beim Ablegen (KC-CLUB-ABLAGE-NEU, Wunschliste #95)
+Wunsch Hansi 16.11.: „Die Möglichkeit schaffen, einen anderen Ordner mit + Neu oder ein neues Register mit Register + Neu anzulegen – dann kann man Dateien besser ablegen, als wenn alles in Sonstiges liegt.“
+- Im Fenster „🗄️ Wohin damit? / Auch in deinen Archiv-Ordner legen?“ steht in der Register-Auswahl ganz unten **„➕ Neues Register …“**: Name eingeben (oder Vorschlag antippen) → das Register entsteht im gewählten Ordner vor „Sonstiges“ und ist gleich ausgewählt. Für jeden im eigenen Ordner; in Club-Ordnern nur, wer das Archiv pflegt (prüft der Server). Höchstens 12 Register je Ordner; gibt es den Namen schon, wird das vorhandene genommen.
+- In der Ordner-Auswahl steht für Clubsprecher und Admin **„➕ Neuer Ordner …“** (Club-Ordner, Jahr der Ablage, für alle sichtbar). Den eigenen Ordner gibt es je Jahr genau einmal – darum für Mitglieder kein neuer Ordner.
+- Kein neuer Serverweg: `archiv_ordner_speichern` wie im Archiv selbst. Hilfe „In dein Archiv ablegen“ ergänzt.
+- Test: neu `tests/ablage-neu.test.mjs`. Rückweg: App 2.960.0. Nur die App.
+- Update-Hinweis für Mitglieder: „🗄️ Beim Ablegen kannst du jetzt gleich ein neues Register anlegen.“
+
 ## 2.960.0 – 2026-11-16 – 📖 Hilfe, Erklär-Videos, Lupe und Twinkey neu · 🎬 zwei Erklärfilme neu (Wunschliste #92) · 👀 Knopf auch bei 390 px
 ### 📖 Hilfe, Erklär-Videos, Lupe und Twinkey passend zur neuesten Version (KC-CLUB-HILFE-2955, Wunschliste #92)
 Wunsch Hansi 15.11.: „Alle Hilfetexte, Video-Filme, Lupe, Twinkey an die neueste Version anpassen“ – „Ja alles neu aufbauen, damit es passt“ (auch die Admin-Funktionen).

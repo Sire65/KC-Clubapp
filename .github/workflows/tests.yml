@@ -76,6 +76,7 @@ jobs:
       - run: node tests/online-frage.test.mjs
       - run: node tests/aenderung-erbitten.test.mjs
       - run: node tests/spiegel-schonend.test.mjs
+      - run: node tests/lastwaechter-arbeitszeit.test.mjs
       - run: node tests/online-jede-anfrage.test.mjs
       - run: node tests/schreibtisch.test.mjs
       - run: node tests/anleitungen.test.mjs
@@ -124,6 +125,8 @@ jobs:
       - run: node tests/advent-nikolaus-foto.test.mjs
       - run: node tests/advent-serveruhr.test.mjs
       - run: node tests/gemeinschaftsgericht.test.mjs
+      - run: node tests/online-lauf-handy.test.mjs
+      - run: node tests/puls.test.mjs
       - run: node tests/anfrage-gegenvorschlag.test.mjs
       - run: node tests/netz-balken.test.mjs
       - run: node tests/muenze-gesicht.test.mjs
@@ -192,6 +195,8 @@ jobs:
       - run: node tests/advent-2026.test.mjs
       - run: node tests/advent-preise.test.mjs
       - run: node tests/erstattung-sicher.test.mjs
+      - run: node tests/ablage-neu.test.mjs
+      - run: node tests/genesungskarte.test.mjs
       - run: node tests/teilen-eigen.test.mjs
       - run: node tests/clubabend-anwesend.test.mjs
       - run: node tests/sitzung-schritte.test.mjs
