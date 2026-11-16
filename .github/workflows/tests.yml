@@ -135,6 +135,7 @@ jobs:
       - run: node tests/ta-aendern.test.mjs
       - run: node tests/ta-herausnehmen.test.mjs
       - run: node tests/druck-fuss.test.mjs
+      - run: node tests/lese-schreibtest.test.mjs
       - run: node tests/gastgeber-16uhr.test.mjs
       - run: node tests/spur-dienst.test.mjs
       - run: node tests/ta-protokoll.test.mjs

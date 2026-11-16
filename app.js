@@ -9145,6 +9145,7 @@ function vbEinfachZeigen() {
     const [farbe, text] = vbZustand(), gut = farbe === "gruen";
     $("vbInhalt").innerHTML = `<div class="vb-status"><i class="led ${farbe}"></i><b>${gut ? "✅ Verbindung in Ordnung" : farbe === "blau" ? "🔧 " + esc(text) : farbe === "grau" ? "⏳ Verbindung wird geprüft …" : "⚠️ Gerade Störung – " + esc(text)}</b></div>
       <p class="hinweis" style="margin:8px 0">${gut ? "Nachrichten, Termine und Mitteilungen kommen an." : "Bitte kurz warten. Bleibt es so, hilft „Problem melden“."}</p>
+      ${rwKnopfHtml()}
       <div class="knoepfe"><button class="knopf" onclick="$('verbindungBlatt').classList.add('versteckt');testAnMichStarten()">🧪 Test an mich</button><button class="knopf" onclick="$('verbindungBlatt').classList.add('versteckt');fpProblemMelden()">🆘 Problem melden</button></div>
       <button class="knopf" onclick="verbindungMelden(this)">📨 Ergebnis an ${esc(adminName())} senden</button>
       <button class="knopf" onclick="$('verbindungBlatt').classList.add('versteckt');ttOeffnen()">🔬 Internet zu Hause gründlich prüfen</button>`;
@@ -9200,6 +9201,7 @@ function vbBlattZeigen() {
     <b style="font-size:.9rem">Womit bist du gerade im Netz?${netzErkannt() ? ' <span class="hinweis" style="font-weight:normal">(vom Handy erkannt)</span>' : ""}</b>
     <div class="dwahl" style="margin:4px 0 6px">${Object.entries(NETZARTEN).map(([k, t]) => `<label><input type="radio" name="vbNetz" value="${k}" ${vbNetz() === k ? "checked" : ""} onchange="vbNetzWahl('${k}')"> ${t}</label>`).join("")}</div>
     <button class="knopf haupt" id="vbTestKnopf" onclick="verbindungTesten()" ${VB.test?.laeuft ? "disabled" : ""}>▶️ Verbindung testen</button>
+    ${rwKnopfHtml()}
     <button class="knopf" onclick="$('verbindungBlatt').classList.add('versteckt');ttOeffnen()">🔬 Internet-Tiefentest (Aussetzer, Router, Dauertest)</button>
     ${(() => { const v = vbVerlauf(); if (!v.length) return ""; const z = (x, e) => (x == null ? "–" : x.toLocaleString("de-DE") + e);
       return `<b style="font-size:.9rem">Letzte Tests auf diesem Gerät</b><table class="vb-tabelle"><tr><td><b>Wann</b></td><td><b>Netz</b></td><td><b>Antwort</b><br><small class="hinweis">Netz · Server</small></td><td><b>↓ / ↑ Mbit/s</b></td></tr>
@@ -9252,6 +9254,28 @@ async function wartungUmschalten() {
 // ---------- KC-CLUB-VERBINDUNG-MELDEN (2.23.76, Wunsch Hansi): Werte unter den LEDs drucken und an den Admin senden (Push + E-Mail) ----------
 // Eine Quelle für Druck und Meldung: dieselben Zustände wie im Fenster (unbekannt bleibt „unbekannt“ – nie als OK, Regel 11).
 const VB_FARBE = { gruen: "🟢", gelb: "🟡", rot: "🔴", blau: "🔵", grau: "⚪" };
+// ---------- KC-CLUB-LESE-SCHREIBTEST (16.11.2026, Wunsch Hansi „LEDs antippen … ein Testbutton, der Lese- und Schreibtest macht“ – „bauen, für alle,
+// mit Push-Test, (Admin) mit Neon“) ----------
+// Der Server schreibt einen eigenen Testeintrag, liest ihn zurück, vergleicht, räumt auf und schickt eine Test-Push; der Admin sieht zusätzlich die
+// Sicherungskopie (Neon). Das Ergebnis steht im Verbindungs-Fenster und geht mit „📨 An Admin senden“ und dem Ausdruck mit.
+let RW = null;
+const RW_NAMEN = { schreiben: "✍️ Schreiben", lesen: "📖 Lesen und vergleichen", aufraeumen: "🧹 Aufräumen", push: "🔔 Test-Push an dich", neon: "🗄️ Sicherungskopie (Neon)" };
+const rwKnopfHtml = () => `<button class="knopf" id="rwKnopf" onclick="rwTest(this)">🧪 Lese- und Schreibtest</button><div id="vbRw">${RW ? rwHtml(RW) : ""}</div>`;
+function rwHtml(r) {
+  if (r.laeuft) return '<p class="hinweis" style="margin:6px 0">⏳ Test läuft …</p>';
+  if (r.fehler) return `<p class="rw-zeile rw-nein" style="margin:6px 0">❌ Test nicht möglich: ${esc(r.fehler)}</p>`;
+  return `<div class="rw-erg"><b>${r.ok ? "✅ Alles in Ordnung" : "⚠️ Nicht alles in Ordnung"}</b> <span class="hinweis">· ${esc(zeitKurz(r.zeit))} Uhr</span>
+    ${r.schritte.map((s) => `<div class="rw-zeile ${s.ok ? "rw-ja" : "rw-nein"}">${s.ok ? "✅" : "❌"} ${esc(RW_NAMEN[s.k] || s.k)} <span class="hinweis">${s.ms} ms${s.info ? " · " + esc(s.info) : ""}</span></div>`).join("")}
+    ${r.schritte.some((s) => s.k === "push" && s.ok) ? '<p class="hinweis" style="font-size:.82rem;margin:4px 0 0">Kommt die Test-Push auf jedem deiner Geräte <b>einmal</b> an, ist alles richtig.</p>' : ""}</div>`;
+}
+async function rwTest(knopf) {
+  if (RW?.laeuft) return;
+  RW = { laeuft: true }; const z = () => $("vbRw"); if (z()) z().innerHTML = rwHtml(RW); if (knopf) knopf.disabled = true;
+  try { RW = await api("rw_test", { push: true, neon: !!ICH?.admin }); } catch (e) { RW = { fehler: e?.message || "Keine Verbindung", zeit: new Date().toISOString() }; }
+  if (z()) z().innerHTML = rwHtml(RW); if (knopf?.isConnected) knopf.disabled = false;
+}
+const rwBerichtWert = () => (!RW || RW.laeuft ? "nicht gemacht" : RW.fehler ? `❌ nicht möglich: ${RW.fehler}`
+  : `${RW.ok ? "✅" : "⚠️"} ${RW.schritte.map((s) => `${(RW_NAMEN[s.k] || s.k).replace(/^\S+\s/, "")} ${s.ok ? "ok" : "FEHLER"} (${s.ms} ms${s.info && !s.ok ? ": " + s.info : ""})`).join(" · ")} · ${zeitKurz(RW.zeit)} Uhr`);
 function vbBericht() {
   const [farbe, text] = vbZustand(), [cFarbe, cText] = vbCommZustand(), t = VB.test, c = VB.comm, b = c?.bericht, nc = navigator.connection;
   const zahl = (x, e) => (x == null ? "nicht gemessen" : x.toLocaleString("de-DE", { maximumFractionDigits: 1 }) + e);
@@ -9273,9 +9297,10 @@ function vbBericht() {
     ["Handy", `${navigator.onLine ? "online" : "offline"}${netzErkannt() ? ` · ${NETZARTEN[netzErkannt()]} erkannt` : ""}${nc?.effectiveType ? ` · Tempo-Klasse ${String(nc.effectiveType).toUpperCase()}` : ""}`],
     ["Version App / Server", `${APP_VERSION} / ${VB.server || INIT?.server || "unbekannt"}`],
     ...(VB.wartung?.an ? [["Wartung", VB.wartung.hinweis || "angekündigt"]] : []),
+    ["Lese- und Schreibtest", rwBerichtWert()], // KC-CLUB-LESE-SCHREIBTEST
   ];
-  // auffällig = alles, was nicht grün ist (auch unbekannt) + Fehler seit App-Start
-  const probleme = (farbe !== "gruen") + (cFarbe !== "gruen") + (VB.fehler > 0);
+  // auffällig = alles, was nicht grün ist (auch unbekannt) + Fehler seit App-Start + nicht bestandener Lese-/Schreibtest
+  const probleme = (farbe !== "gruen") + (cFarbe !== "gruen") + (VB.fehler > 0) + (!!RW && !RW.laeuft && !RW.ok);
   return { werte, probleme };
 }
 function druckVerbindung() {
@@ -9927,7 +9952,7 @@ const ZUGANG_AKTIONEN = {
     "sprache_lernen", "sprache_training", "sprache_training_reset", "sprache_vergessen", "sprache_unbekannt", "twinkey_daten", "twinkey_frage",
     "twinkey_gelesen", "fehler_melden", "fehler_katalog", "hilfe_anfordern", "feedback_meins", "feedback_senden", "feedback_neu", "vorfuehren_antwort", "vorfuehren_holen",
     "vorfuehren_senden", "vorfuehren_ende", "vorfuehren_bild", "schnappschuss_antwort", "schnappschuss_bild", "schnappschuss_ende", "fernbedienung_melden", "push_anmelden",
-    "push_pruefen", "geraete_liste", "geraet_entfernen", "andere_geraete_abmelden", "push_abmelden", "push_test", "neues_geraet_antwort"],
+    "push_pruefen", "geraete_liste", "geraet_entfernen", "andere_geraete_abmelden", "push_abmelden", "push_test", "rw_test", "neues_geraet_antwort"],
   aushilfe: ["mein_dienst", "dienstwunsch_laden", "dienstwunsch_speichern", "dienst_gruss", "dienste", "dienst_freigabe", "meine_eingaben",
     "eingaben_bestaetigen", "wunschbogen_mailen", "eingaben_ablegen", "fotos_neueste", "fotos_liste", "foto_oeffnen",
     "schulung_meine", "schulung_antwort", "gericht_zutat_setzen", "gericht_antwort",

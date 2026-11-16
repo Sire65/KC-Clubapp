@@ -3844,6 +3844,7 @@ const NEON_GRENZE = 1024 * 1024 * 1024; // Neon kostenlos: 1 GB Speicher je Proj
 // KC-NEON-PRUEFUNG (26.10.2026, Wunsch Hansi „Prüfung in der Kachel Neon“): Rechenzeit und Datenübertragung des Spiegels im Monat.
 // Nur mit dem Lese-Schlüssel NEON_API_KEY (Supabase-Geheimnis); ohne ihn zeigt die Kachel „Schlüssel fehlt“. Höchstens 1 Abruf je 30 Min. und Server-Instanz,
 // die Neon-Schnittstelle ist kostenlos und weckt die Datenbank nicht. Kostenlos (free_v3): 100 Rechenstunden und 5 GB Übertragung je Projekt und Monat.
+const RW_NEON_MAX_STD = 10; // KC-CLUB-LESE-SCHREIBTEST: Spiegelung 3× täglich (4/13/22 UTC) – längste Lücke 9 Std.
 const NEON_PROJEKT = "purple-hat-23047492", NEON_RECHEN_GRENZE_STD = 100, NEON_UEBERTRAG_GRENZE = 5 * 1024 * 1024 * 1024;
 let NEON_VERBRAUCH: { t: number; w: any } = { t: 0, w: null };
 async function neonVerbrauch() {
@@ -4367,7 +4368,7 @@ const ZUGANG_AKTIONEN: Record<"basis" | "aushilfe", readonly string[]> = {
     "sprache_lernen", "sprache_training", "sprache_training_reset", "sprache_vergessen", "sprache_unbekannt", "twinkey_daten", "twinkey_frage",
     "twinkey_gelesen", "fehler_melden", "fehler_katalog", "hilfe_anfordern", "feedback_meins", "feedback_senden", "feedback_neu", "vorfuehren_antwort", "vorfuehren_holen",
     "vorfuehren_senden", "vorfuehren_ende", "vorfuehren_bild", "schnappschuss_antwort", "schnappschuss_bild", "schnappschuss_ende", "fernbedienung_melden", "push_anmelden",
-    "push_pruefen", "geraete_liste", "geraet_entfernen", "andere_geraete_abmelden", "push_abmelden", "push_test", "neues_geraet_antwort"],
+    "push_pruefen", "geraete_liste", "geraet_entfernen", "andere_geraete_abmelden", "push_abmelden", "push_test", "rw_test", "neues_geraet_antwort"],
   aushilfe: ["mein_dienst", "dienstwunsch_laden", "dienstwunsch_speichern", "dienst_gruss", "dienste", "dienst_freigabe", "meine_eingaben",
     "eingaben_bestaetigen", "wunschbogen_mailen", "eingaben_ablegen", "fotos_neueste", "fotos_liste", "foto_oeffnen",
     "schulung_meine", "schulung_antwort", "gericht_zutat_setzen", "gericht_antwort",
@@ -21365,6 +21366,52 @@ Köcheclub-App`,
         }
         return json({ ok: true });
       }
+      // KC-CLUB-LESE-SCHREIBTEST (16.11.2026, Wunsch Hansi „wenn ich die LEDs antippe … ein Testbutton, der Lese- und Schreibtest macht“ – „bauen, für alle,
+      // mit Push-Test, (Admin) mit Neon“): echter Weg durch die Datenbank – eigenen Testeintrag schreiben, zurücklesen und vergleichen, wieder löschen;
+      // dazu eine Test-Push an mich. Admin zusätzlich: Sicherungskopie (Neon) – nur die Neon-Verwaltung fragen und die letzte erfolgreiche Spiegelung
+      // ansehen (weckt die Spiegel-Datenbank nicht, kostet keine Neon-Rechenzeit). Je Schritt ✅/❌ mit ms; Fehlermeldungen ohne Inhalte.
+      case "rw_test": {
+        const schritte: { k: string; ok: boolean; ms: number; info?: string }[] = [];
+        const schritt = async (k: string, fn: () => Promise<string | void>) => {
+          const t0 = performance.now();
+          try { const info = await fn(); schritte.push({ k, ok: true, ms: Math.round(performance.now() - t0), ...(info ? { info } : {}) }); return true; }
+          catch (e) { schritte.push({ k, ok: false, ms: Math.round(performance.now() - t0), info: String((e as any)?.message || e).slice(0, 160) }); return false; }
+        };
+        const z = crypto.randomUUID();
+        if (ich.nurLesen) schritte.push({ k: "schreiben", ok: false, ms: 0, info: "Nur-Lese-Zugang – Schreiben ist hier nicht erlaubt" });
+        else if (await schritt("schreiben", async () => {
+          const { error } = await db.from("kc_club_person_einstellung").upsert({ person_id: ich.person_id, schluessel: "rw_test", wert: { z, am: jetzt() }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
+          if (error) throw new Error(error.message);
+        })) {
+          await schritt("lesen", async () => {
+            const { data, error } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "rw_test").maybeSingle();
+            if (error) throw new Error(error.message);
+            if (data?.wert?.z !== z) throw new Error("Gelesener Wert passt nicht zum geschriebenen");
+          });
+          await schritt("aufraeumen", async () => {
+            const { error } = await db.from("kc_club_person_einstellung").delete().eq("person_id", ich.person_id).eq("schluessel", "rw_test");
+            if (error) throw new Error(error.message);
+          });
+        }
+        if (p.push !== false) await schritt("push", async () => {
+          const v = await routerSenden("club_nachricht_push", [ich.person_id], { titel: "🧪 Lese- und Schreibtest", kurz: `Hallo ${ich.vorname}, Push kommt an!`, betreff: "Köcheclub Werne – Test", text: "Test", url: APP_URL },
+            `club-rwtest:${ich.person_id}:${Date.now()}`);
+          if (!(v?.gesendet > 0)) throw new Error("Keine Push zugestellt – ist Push auf diesem Gerät eingeschaltet?");
+          return `an ${v.gesendet} ${v.gesendet === 1 ? "Gerät" : "Geräte"}`;
+        });
+        if (p.neon && ich.admin) await schritt("neon", async () => {
+          const [v, { data: snap }] = await Promise.all([neonVerbrauch(),
+            db.from("kc_db_mirror_runs").select("started_at").eq("run_type", "snapshot").eq("status", "ok").order("started_at", { ascending: false }).limit(1).maybeSingle()]);
+          if (!(v as any)?.schluessel) throw new Error("Neon-Schlüssel fehlt");
+          if ((v as any)?.fehler) throw new Error(String((v as any).fehler));
+          const std = snap?.started_at ? (Date.now() - Date.parse(snap.started_at)) / 3600000 : null;
+          if (std == null) throw new Error("Noch keine erfolgreiche Spiegelung gefunden");
+          if (std > RW_NEON_MAX_STD) throw new Error(`Letzte Spiegelung vor ${Math.round(std)} Std. – zu lange her`);
+          return `letzte Spiegelung vor ${std < 1 ? Math.max(1, Math.round(std * 60)) + " Min." : Math.round(std * 10) / 10 + " Std."}`;
+        });
+        return json({ ok: schritte.every((s) => s.ok), schritte, zeit: jetzt() });
+      }
+
       case "push_test": {
         // bewusst ohne persönliche Auswahl: Test soll immer als Push gehen
         const v = await routerSenden("club_nachricht_push", [ich.person_id], { titel: "🔔 Köcheclub Werne", kurz: `Hallo ${ich.vorname}, Push funktioniert!`, betreff: "Köcheclub Werne – Test", text: "Test", url: APP_URL }, `club-pushtest:${ich.person_id}:${Date.now()}`);
