@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.962.0 – 2026-11-16 – 🗓️ Dienstzeiten-Übersicht: wer für den Dienstplan ausfällt, erscheint dort nicht mehr (KC-CLUB-DV-AUSNAHMEN)
+Fund Hansi 16.11.: „In der grafischen Übersicht taucht Karla noch mit ihren Wünschen auf – sie fällt aber aus.“
+- Die Dienstzeiten-Übersicht (Server `dienst_uebersicht`) lässt alle aus, die im Register `kc_club_dienst_ausnahmen` stehen – für Leitung und Mitglieder. Ihre eigenen Angaben bleiben gespeichert; wird der Eintrag gelöscht, erscheinen sie wieder.
+- Karla ist dort seit 16.11. eingetragen (Daten, sofort wirksam für „fehlt noch“ und Erinnerungen); im Dienstplan war sie schon „aus“.
+- Test: Block in `tests/app-vertrag.test.mjs`. Rückweg: Server 2.957.0. Nur der Server (App-Version nur mitgezogen).
+
 ## 2.961.0 – 2026-11-16 – 🗄️ „Wohin damit?“: ➕ Neues Register und ➕ Neuer Ordner direkt beim Ablegen (KC-CLUB-ABLAGE-NEU, Wunschliste #95)
 Wunsch Hansi 16.11.: „Die Möglichkeit schaffen, einen anderen Ordner mit + Neu oder ein neues Register mit Register + Neu anzulegen – dann kann man Dateien besser ablegen, als wenn alles in Sonstiges liegt.“
 - Im Fenster „🗄️ Wohin damit? / Auch in deinen Archiv-Ordner legen?“ steht in der Register-Auswahl ganz unten **„➕ Neues Register …“**: Name eingeben (oder Vorschlag antippen) → das Register entsteht im gewählten Ordner vor „Sonstiges“ und ist gleich ausgewählt. Für jeden im eigenen Ordner; in Club-Ordnern nur, wer das Archiv pflegt (prüft der Server). Höchstens 12 Register je Ordner; gibt es den Namen schon, wird das vorhandene genommen.
