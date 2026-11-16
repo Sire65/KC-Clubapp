@@ -19,7 +19,7 @@ const TEILE_LISTE = {
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-NDuho5dgDL13uhtcTY8d0cGESAWhk+B+5qyWyvBuOxPgmADzmvY9YFCcwWM0s+kx" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
   spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-df8Lw0oCMMrnIIB7cpSpJ2Q2SKgIao/dXXHLrjtixnNByKoeFvC3pVc6zGaNCcVw" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
   tischlive: { einstieg: ["tlStart", "tlStopp", "tlZeichnen", "tlPlatz", "tlRegeln"], sri: "sha384-RCmsKY+DTRfsCMRHkJVG2UJlySANNdHxnEdMps4tkL9kgf8DC5O/b1jMcwVeY3XB" }, // 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: Ton, Kamera, Bildschirm, Unterlagen zeigen am Tisch
-  buero: { einstieg: ["ersBuchOeffnen", "eblDruck", "buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-tE5A+f4O0Djk0PhewuYKxCOIyEWwaMG+OUQ/X9WYy9qySw881LPaUL9UHrZLa2lv" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
+  buero: { einstieg: ["ersBuchOeffnen", "eblDruck", "buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-hXfaH7uQvC+jKPiUGsJ+fY/j+tXk5bBa8XHc2qnFRF0yS+OqS60UGLQCn970gflc" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
   hilfe: { einstieg: ["twFrageStart", "twOffenStart", "sucheAuf", "suSucheKnopf"], sri: "sha384-8A9k87FgeesMgEQxdePUURmcrnJZlfcnIRqlk/8h42RENJYJnKZt0p0zkpCJ6zmH" }, // Stufe 5: Hilfe-Werkzeuge (Frag Twinkey, Mitglied fragen, Schnellsuche) – beim ersten Antippen
   rechner: { einstieg: ["rechnerOeffnen"], sri: "sha384-UWrOf1EIXxhsoWWwxnLDzpzALsaxzNGXgeqoLAjVvqoQ6wbFnIGxYTkQPFpiRuQ4" }, // 2.811.0 KC-CLUB-RECHNER: Tischrechner im Büro, „rechne …“ per Sprache
   glueck: { einstieg: ["kaeferKommt", "kleeKommt"], sri: "sha384-hbPb96l3YrlvBxe1zJJfotwARA0pEPKKaDyb1BBVooEi5BCYbfYqihmMYABmlsg4" }, // KC-CLUB-MARIENKAEFER / KC-CLUB-GLUECKSKLEE (06.11.2026): 🐞 jeder 50., 🍀 jeder 25. Start
@@ -31638,6 +31638,7 @@ function pdfAusCanvas(c, quer, seiten = null, masse = null) { // seiten: fertige
 // „break-inside:avoid“), ab Seite 2 ein Kopf mit Logo, Titel, Datum und „Seite x von y“, auf Seite 1 unten „Seite 1 von y“. Erzwungene Wechsel
 // („break-after:page“, z. B. ein Bogen je Mitglied) bleiben – die Seitenzahlen zählen dann je Bogen. Passt alles auf eine Seite, bleibt es wie bisher.
 const DS_ATOM = "tr, li, p, h1, h2, h3, h4, h5, img, svg, pre, blockquote, .cd-kopf, .cd-fuss, .dseite, [style*='break-inside:avoid'], [style*='break-inside: avoid']";
+const DS_WITWE = 110; // px: so viel muss mindestens auf die nächste Seite wandern (Fußzeile + ein paar Zeilen)
 function druckSeitenBilden(c, el, breite, quer) {
   try {
     const RAND = 45, KOPF = 40, seiteH = Math.round(breite * (quer ? 210 / 297 : 297 / 210)), k = c.width / breite, oben = el.getBoundingClientRect().top;
@@ -31656,7 +31657,11 @@ function druckSeitenBilden(c, el, breite, quer) {
       const titelEl = [...el.querySelectorAll(".cd-titel h1")].find((h) => { const [t] = pos(h); return t >= von - 1 && t < bis; });
       const titel = (titelEl?.textContent || DRUCK?.titel || "").trim(), stuecke = []; let y = von;
       while (y < bis - 2) { const erste = !stuecke.length, platz = (erste ? (von === 0 ? seiteH - RAND : seiteH - 2 * RAND) : seiteH - 2 * RAND - KOPF);
-        const z = bis - y <= platz ? bis : schnitt(y, y + platz); stuecke.push([y, z]); y = z; }
+        let z = bis - y <= platz ? bis : schnitt(y, y + platz);
+        // KC-CLUB-DRUCK-FUSS-NIE-ALLEIN (16.11.2026, Fund Hansi bei der Buchungsliste: „die Fußzeile steht auf Seite 2“): bliebe für die nächste Seite nur ein
+        // kleiner Rest (z. B. nur die Fußzeile), früher schneiden – dann wandern die letzten Zeilen mit und die Fußzeile steht nie allein
+        if (z < bis && bis - z < DS_WITWE) { const z2 = schnitt(y, z - DS_WITWE); if (z2 < z && z2 > y + platz * 0.3) z = z2; }
+        stuecke.push([y, z]); y = z; }
       stuecke.forEach(([y1, y2], i) => {
         const s = document.createElement("canvas"); s.width = c.width; s.height = Math.round(seiteH * k); const g = s.getContext("2d");
         g.fillStyle = "#fff"; g.fillRect(0, 0, s.width, s.height);

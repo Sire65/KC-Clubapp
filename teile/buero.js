@@ -2645,7 +2645,8 @@ function eblDruck() { // DRUCKARTEN.buchungsliste – Kopf, Schrift und Fußzeil
     <p style="margin:0 0 10px"><b>${S.n} ${S.n === 1 ? "Buchung" : "Buchungen"} · ${eblKm(S.km)} km · ${eblEur(S.b)} gesamt</b> – davon offen ${eblEur(S.offen)} · bar ${eblEur(S.bar)} · überwiesen ${eblEur(S.ueb)}</p>
     <table style="width:100%;border-collapse:collapse;font-size:10.5pt"><thead><tr>${th("ID")}${th("Name")}${th("Vorname")}${th("Datum")}${th("Kostenart")}${th("km", 1)}${th("Betrag", 1)}${th("💶 Bar am")}${th("🏦 Überwiesen am")}</tr></thead>
       <tbody>${zeilen}</tbody><tfoot><tr><td colspan="5" style="padding:6px;border-top:2px solid #741521"><b>Summe</b></td><td style="padding:6px;border-top:2px solid #741521;text-align:right"><b>${eblKm(S.km)}</b></td><td style="padding:6px;border-top:2px solid #741521;text-align:right"><b>${eblEur(S.b)}</b></td><td style="padding:6px;border-top:2px solid #741521">${S.bar ? eblEur(S.bar) : ""}</td><td style="padding:6px;border-top:2px solid #741521">${S.ueb ? eblEur(S.ueb) : ""}</td></tr></tfoot></table>`;
-  return { titel: `Buchungsliste Erstattungen ${EBL.jahr}`, unter: `Stand: ${new Date().toLocaleDateString("de-DE")}`, html, quer: true };
+  // 16.11.2026 (Fund Hansi „das Datum erscheint doppelt“): „Stand: …“ steht unter dem Titel – rechts im Kopf kein zweites Datum mehr
+  return { titel: `Buchungsliste Erstattungen ${EBL.jahr}`, unter: `Stand: ${new Date().toLocaleDateString("de-DE")}`, rechts: "", html, quer: true };
 }
 async function eblCsv() {
   const L = eblSortiert(eblGefiltert()), z = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`, n = (x) => String(Math.round(x * 100) / 100).replace(".", ",");

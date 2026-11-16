@@ -3146,6 +3146,7 @@
     #druck .cd-titel { text-align: right; max-width: 55%; } #druck .cd-titel h1 { font-size: 13pt; } #druck .cd-titel .unter { font-size: 9pt; }
     #druck .cd-fuss { margin-top: 8mm; border-top: .5mm solid var(--cd-rot); padding: 2mm 0 0; font-size: 8pt; color: var(--cd-grau); text-align: center; background: none; }
     #druck .cd-fuss b { color: var(--cd-rot); }
+    #druck .cd-fuss { break-before: avoid; page-break-before: avoid; break-inside: avoid; } /* KC-CLUB-DRUCK-FUSS-NIE-ALLEIN: auch beim Drucken aus dem Browser */
     #druck .cd-brief { font-family: Georgia, "Times New Roman", serif; color: #111; font-size: 4mm; line-height: 1.45; min-height: 255mm; display: flex; flex-direction: column; }
     #druck .cd-brief .cd-fuss { font-family: "Segoe UI", Roboto, Arial, sans-serif; }
     #druck .dkopf { display: flex; align-items: center; gap: 10px; border-bottom: 2.5pt solid #741521; padding-bottom: 6pt; margin-bottom: 10pt; }
