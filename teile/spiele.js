@@ -200,7 +200,7 @@ function spListeZeigen() {
   $("spInhalt").innerHTML = `
     ${L.ichBereit ? "" : `<div class="karte" style="border:2px solid var(--gruen)"><b>🎲 Möchtest du auch herausgefordert werden?</b><p class="hinweis" style="margin:4px 0 8px">Dann sehen dich die anderen in der Liste und können dich zu einer Partie einladen.</p><button class="knopf haupt" onclick="spBereitSetzen(true)">✅ Ja, ich spiele mit</button></div>`}
     <button class="knopf haupt" style="width:100%" onclick="spHerausfordernBlatt()">🎲 Jemanden herausfordern</button>
-    <button class="knopf" style="width:100%;margin-top:8px" onclick="tpStart()">⚽ Bundesliga-Tippspiel</button>
+    ${frei("tippspiel") ? `<button class="knopf" style="width:100%;margin-top:8px" onclick="tpStart()">⚽ Bundesliga-Tippspiel${nurTest("tippspiel") ? " <small>🔒 nur für dich (Test)</small>" : ""}</button>` : ""}
     ${spPokalHtml(L)}
     ${an.length ? `<div class="karte"><h3>📩 Herausforderungen an dich</h3>${an.map((g) => zeile(g, "") + `<div class="knoepfe" style="margin:0 0 8px"><button class="knopf haupt" onclick="spAntwort('${g.id}', true)">✅ Annehmen</button><button class="knopf" onclick="spAntwort('${g.id}', false)">Ablehnen</button></div>`).join("")}</div>` : ""}
     ${laufend.length ? `<div class="karte"><h3>▶ Laufende Spiele</h3>${laufend.map((g) => zeile(g, g.ichDran ? '<span class="sp-dran">Du bist dran ›</span>' : '<span class="hinweis">wartet …</span>')).join("")}</div>` : ""}

@@ -194,7 +194,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.971.0";
+const SERVER_VERSION = "2.972.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -5487,6 +5487,7 @@ async function adminIds(): Promise<string[]> {
 // KC-CLUB-FREIGABE (2.23.86, Wunsch Hansi): neue Funktionen erst „nur Admin (Test)“, dann für alle. Standard gilt, solange der Admin nichts gewählt hat.
 const FUNKTIONEN: Record<string, { t: string; u: string; standard: "alle" | "admin" }> = {
   rezepte: { t: "📖 Rezeptbuch", u: "Club-Rezepte, Portionen umrechnen, Einkaufsliste", standard: "admin" },
+  tippspiel: { t: "⚽ Bundesliga-Tippspiel", u: "Ergebnisse tippen bis zum Anpfiff, Punkte und Tabelle – für Mitglieder und Aushilfen", standard: "admin" }, // 2.971.0 KC-CLUB-TIPPSPIEL (Hansi 17.11.: „noch nicht freigegeben“)
   gemeinschaftsgericht: { t: "🍲 Gemeinschaftsgericht", u: "Zutat beim App-Start einreichen, Rezept als PDF an alle – solange „nur für mich“: nur der Admin wird gefragt, Versand nur an ihn", standard: "admin" }, // KC-CLUB-GEMEINSCHAFTSGERICHT (Hansi 15.11.: „noch nicht freigegeben“)
   fitness: { t: "🏋️ Fit bleiben", u: "Übungen mit Twinkey, eigene Auswertung", standard: "admin" }, // KC-CLUB-FITNESS (2.55.0)
   ist_rueckfrage: { t: "✅ Ist-Zeiten nach dem Dienst bestätigen", u: "Rückfrage nach jedem Dienst: übernehmen, ändern, nicht da – Abgleich mit Kasse und DP2", standard: "admin" }, // KC-CLUB-IST-RUECKFRAGE
@@ -12729,6 +12730,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       // 2.971.0 KC-CLUB-TIPPSPIEL: Stand (Spieltag, eigene Tipps, Tipps der anderen erst ab Anpfiff, Tabelle) · mitmachen · Tipp abgeben (bis Anpfiff)
       case "tipp_stand": case "tipp_mitmachen": case "tipp_abgeben": {
         if (ich.zugang !== "mitglied" && ich.zugang !== "aushilfe") throw new Fehler("Das Tippspiel ist für Mitglieder und Aushilfen.", 403);
+        await nurWennFrei("tippspiel", ich, "Das Tippspiel"); // Freigaben-Liste: erst nur Admin (Test), dann alle
         if (a === "tipp_mitmachen") {
           await db.from("kc_club_tipp_teilnehmer").upsert({ person_id: ich.person_id, dabei: p.an !== false }, { onConflict: "person_id" });
           return json({ ok: true, dabei: p.an !== false });

@@ -26,7 +26,11 @@ assert.ok(!/fetch\(/.test(tp) && !/heimBild|gastBild/.test(tp), "keine fremden B
 // App: Programmteil, Laufband, Einstieg
 assert.ok(/tippspiel: \{ einstieg: \["tpStart", "tpTag", "tpMitmachen", "tpTippen", "tpZeigen"\], sri: "sha384-/.test(app), "Programmteil mit Fingerabdruck");
 assert.ok(/\{ const tp = tpLaufband\(\); if \(tp\) add\(tp\); \}/.test(app) && /function tpLaufband\(\)/.test(app), "Hinweis im Info-Laufband");
-assert.ok(/onclick="tpStart\(\)">⚽ Bundesliga-Tippspiel<\/button>/.test(lies("teile/spiele.js")), "Knopf bei 🎲 Spiele");
+assert.ok(/\$\{frei\("tippspiel"\) \? `<button class="knopf" style="width:100%;margin-top:8px" onclick="tpStart\(\)">⚽ Bundesliga-Tippspiel/.test(lies("teile/spiele.js")), "Knopf bei 🎲 Spiele – nur wenn freigegeben");
+// Freigabe (Hansi 17.11.2026: „Noch nicht freigegeben, hochladen ja“): erst nur Admin (Test), Hansi schaltet in der Freigaben-Liste auf „alle“
+assert.ok(/tippspiel: \{ t: "⚽ Bundesliga-Tippspiel", u: "[^"]+", standard: "admin" \}/.test(srv), "Freigabe-Eintrag, Standard nur Admin");
+assert.ok(/await nurWennFrei\("tippspiel", ich, "Das Tippspiel"\)/.test(fall), "Server prüft die Freigabe");
+assert.ok(/\|\| !frei\("tippspiel"\)\) return null;/.test(app), "Laufband nur wenn freigegeben");
 // Datenbank
 assert.ok(/primary key \(person_id, spiel_id\)/.test(mig) && (mig.match(/enable row level security/g) || []).length === 3 && /revoke all on public\.kc_club_tipp from public, anon, authenticated/.test(mig) && /kc_neon_resume_tables/.test(mig), "Tabellen geschützt, gespiegelt, ein Tipp je Spiel");
 console.log("tippspiel: alle Prüfungen bestanden");

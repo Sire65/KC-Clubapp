@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.972.0 – 2026-11-17 – ⚽ Tippspiel erst einmal nur für Hansi (Freigabe) (KC-CLUB-TIPPSPIEL, Wunschliste #96) · Server 2.972.0
+Hansi 17.11.: „Noch nicht freigegeben, hochladen ja.“
+- Das Bundesliga-Tippspiel (2.971.0) steht jetzt in der **Freigaben-Liste** („⚽ Bundesliga-Tippspiel“, Standard: nur Admin). Bis Hansi dort „alle“ wählt, sehen Mitglieder und Aushilfen weder den Knopf bei 🎲 Spiele noch die Zeile im Info-Laufband; der Server lehnt Aufrufe ab („noch nicht freigegeben“). Hansi sieht es mit „🔒 nur für dich (Test)“.
+- Test: `tests/tippspiel.test.mjs` erweitert. Rückweg: App + Server 2.971.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.971.0 – 2026-11-17 – ⚽ Bundesliga-Tippspiel (KC-CLUB-TIPPSPIEL, Wunschliste #96) · Server 2.971.0 + Datenbank
 Wunsch Hansi 16.11.: „Fußball-Tippspiel … wenn ein Spiel ansteht, fragen, ob man einen Tipp abgeben möchte … Übersicht mit den Punkten.“ Antworten 17.11.: „Bundesliga, Mitglieder und Aushilfen, alle Spiele und Vereine.“
 - **⚽ Bundesliga-Tippspiel** (unter 🎲 Spiele und über das Info-Laufband): einmal „Ja, ich tippe mit“, dann je Spiel zwei Zahlen – **bis zum Anpfiff**. Spieltag mit ◀ ▶ wechseln.
@@ -9,7 +15,7 @@ Wunsch Hansi 16.11.: „Fußball-Tippspiel … wenn ein Spiel ansteht, fragen, o
 - **Spiele und Ergebnisse** holt der Club-Server kostenlos von **OpenLigaDB** (ohne Konto/Schlüssel; Adapter, austauschbar), höchstens alle 15 Min., nach Spielende alle 5 Min. Die Handys fragen nie fremde Seiten, keine Vereinswappen von fremden Servern.
 - Datenbank: `kc_club_tipp_spiele`, `kc_club_tipp_teilnehmer`, `kc_club_tipp` – RLS an, keine Browser-Rechte, gespiegelt und gesichert. Neuer Programmteil `teile/tippspiel.js` (lädt erst beim Öffnen).
 - Test: neu `tests/tippspiel.test.mjs`. Rückweg: App + Server 2.970.0 (Tabellen bleiben, stören nicht).
-- Update-Hinweis für Mitglieder: „⚽ Neu: Bundesliga-Tippspiel – unter 🎲 Spiele. Tippst du mit?“
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“ (Tippspiel noch nicht freigegeben, siehe 2.972.0).
 
 ## 2.970.0 – 2026-11-17 – 💬 Schon eine Gruppe mit genau diesen Personen? Dann dort schreiben (KC-CLUB-CHAT-VORHANDEN, Wunschliste #97) · Server 2.970.0
 Wunsch Hansi 16.11.: „Wenn man an Personen schreibt, die schon in der Gruppe sind, keinen neuen Chat aufmachen, sondern in den vorhandenen übernehmen. Z. B. Gruppe Zanders: Heute habe ich an Klaus geschrieben und Dieter dazu genommen – dann ist das ja die Gruppe.“
