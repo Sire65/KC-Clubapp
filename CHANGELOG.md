@@ -1,5 +1,33 @@
 # Änderungen
 
+## 2.973.0 – 2026-11-17 – 12-Uhr-Bündel: Lese-/Schreibtest an den LEDs · Chat schneller wieder öffnen · Kluge Helfer im Chat · „zuletzt da“ nach „weg“ · Server 2.973.0 + Datenbank
+Hansi 17.11.: „Alles schön um 12 einspielen.“
+
+### 🔬 Lese- und Schreibtest im LED-Fenster (KC-CLUB-LESE-SCHREIBTEST, Wunsch Hansi 16.11. „Bauen, für alle, mit Push-Test, ohne Neon mit Neon“)
+- LEDs im Kopf antippen → großes Fenster mit Knopf „Lese- und Schreibtest“: misst Lesen, Schreiben (Testzeile, sofort wieder gelöscht) und schickt einen Test-Push an das eigene Gerät. Für alle Mitglieder; der Admin sieht zusätzlich den Neon-Spiegel (letzte Spiegelung, Verbrauch). Ergebnis auch im Verbindungsbericht.
+- Server: Aktion `rw_test`.
+
+### ⚡ Chat erneut öffnen nur mit Fingerabdruck (KC-CLUB-CHAT-WIEDER, Wunsch Hansi 16.11. „nicht immer alles lesen“)
+- Wird ein Chat wieder geöffnet, zeigt die App sofort den gemerkten Stand und fragt beim Server nur den kleinen Fingerabdruck ab (`unterhaltung_stand`). Nur wenn sich etwas geändert hat, wird der Chat neu geladen – spart Datenbank-Abfragen, wenn mehrere in der App sind.
+
+### ✨ Kluge Helfer im Chat (KC-CLUB-KLUGE-HELFER, Wunsch Hansi 16.11.2026 „Baue alle Vorschläge, aber logisch, bedienerfreundlich, nicht überladen“)
+
+Alles „Automatische“ rechnet nur die App auf dem eigenen Handy aus den schon geladenen Nachrichten (Wort-Regeln, kein fremder Dienst, keine KI). Der Server liest und wertet keine Texte aus. Nichts wird ungefragt gesendet.
+
+- 📌 **Für dich** – oben im Chat höchstens EINE Zeile, wenn etwas auf dich wartet, z. B. „📌 Für dich: 1 Frage · 1 Umfrage · 1 Aufgabe · 📸 4 Fotos“. Antippen zeigt die Liste, ein Tipp auf einen Eintrag springt zur Nachricht (sie blitzt kurz auf). ✕ blendet die Zeile für diesen Chat aus, bis etwas Neues dazukommt. Gezählt werden: Fragen an dich (im Zweier-Chat jede Frage, in Gruppen nur mit @Name oder „Hans, …“), Erwähnungen, Umfragen ohne deine Stimme, Aufgaben mit Frist, Fotos fürs Album und deine eigene offene Frage – nur, bis du geantwortet hast, höchstens 7 Tage.
+- ❓ **Offene Fragen** – hast du etwas gefragt und nach 12 Stunden noch keine Antwort, steht es in „Für dich“ und als kleines ❓ am Chat in der Nachrichten-Liste. „🔔 Freundlich nachfragen“ schreibt einen Text vor – gesendet wird erst mit ➤.
+- ⏰ **Erinnern** – im Menü einer Nachricht (antippen): „Heute Abend, 19 Uhr“ (nach 18:30 Uhr „In 1 Stunde“), „Morgen früh, 9 Uhr“ oder Wunschzeit (bis 30 Tage). Zur Zeit kommt ein Push „⏰ Erinnerung: Nachricht von Klaus“ – ohne den Nachrichtentext; Antippen öffnet den Chat an genau dieser Stelle. Eine schon gestellte Erinnerung steht im Fenster und lässt sich löschen.
+- 💬 **Schnellantworten** – nur unter der neuesten Nachricht, wenn sie an dich ging, höchstens 3 Knöpfe, passend zum Inhalt: Einladung/Termin → „✅ Bin dabei · ❌ Kann nicht · 🤔 Vielleicht“, Bitte → „👍 Mach ich · ⏰ Später“, Dank → „😊 Gern geschehen · 👍“, Info → „🙏 Danke! · 👍“. Antippen sendet nach 5 Sekunden – bis dahin „↩️ Rückgängig“. Weg, sobald du antwortest, spätestens nach 24 Stunden.
+- 📋 **Aufgabe aus Nachricht** – „Kannst du bitte bis Freitag die Grillkohle besorgen?“ wird als Aufgabe erkannt (auch „bis 20.11.“, „bis morgen“, „bis Ende der Woche“). „📋 Als Aufgabe übernehmen (bis Fr, 20.11.)“ in „Für dich“ und im Nachrichten-Menü öffnet ein kleines Fenster (Text und Tag änderbar); erst „Übernehmen“ trägt es in deine To-do-Liste ein – dort mit Knopf „💬 zur Nachricht“.
+- 📝 **Sprachnachricht mit Text** – beim Aufnehmen schreibt die Spracherkennung des Handys mit (wo es sie gibt). Unter der Sprachnachricht steht „📝 Text anzeigen (automatisch erkannt)“ zum Aufklappen; der Text ist auch durchsuchbar und wird vorgelesen. Geht die Erkennung nicht (z. B. manche iPhones), kommt die Sprachnachricht wie bisher ohne Text – ohne Fehlermeldung.
+- 📸 **Fotos ins Album** – liegen in einer Gruppe mindestens 3 Fotos der letzten 2 Tage rund um einen Clubtermin (±1 Tag), fragt „Für dich“ einmal: „📸 4 Fotos vom Grillabend ins Fotoalbum?“ – „Ins Fotoalbum“ öffnet das gewohnte Hochladen mit den Fotos, „Nein danke“ fragt für diese Fotos nie wieder.
+- 👀 **Wer hat's noch nicht gelesen?** – an deinen eigenen Gruppen-Nachrichten (wichtig/Express oder deine letzte) steht nach 2 Stunden „Noch nicht gelesen: Anne, Dieter“ mit „🔔 Kurz erinnern“: Das schreibt „@Anne @Dieter kurze Erinnerung …“ als Antwort ins Schreibfeld – gesendet wird mit ➤.
+- ⚙️ **Einstellungen → „✨ Kluge Helfer im Chat“** – Schalter für „Für dich“, Schnellantworten, offene Fragen und Text zu Sprachnachrichten (je Gerät, ab Werk an – „Text zu Sprachnachrichten“ auf Android ab Werk aus, bis es am Gerät geprüft ist).
+- Server: neue Aktionen `nachricht_erinnerung_setzen`, `nachricht_erinnerung_liste`, `nachricht_erinnerung_loeschen` (nur eigene Chats, nur eigene Erinnerungen); die Wecker-Tabelle kennt die Art „nachricht“ (Migration `20261116_kc_club_kluge_helfer_erinnerung.sql`, keine neue Tabelle). Für „Noch nicht gelesen“ liefert der Chat bei eigenen Gruppen-Nachrichten (2 Stunden bis 3 Tage alt) die Namen mit.
+
+### 🟢 „zuletzt da“ zeigt nicht mehr „online“ nach „weg“ (KC-CLUB-ZULETZT-WEG, Fund Hansi 17.11. „Warum wird bei Wilfried online angezeigt“)
+- Hat jemand die App weggelegt („weg“), zeigt die Mitgliederliste nicht mehr „🟢 online“ bis zum Ablauf der Online-Zeit, sondern sofort „zuletzt da …“. Nur Server.
+
 ## 2.972.0 – 2026-11-17 – ⚽ Tippspiel erst einmal nur für Hansi (Freigabe) (KC-CLUB-TIPPSPIEL, Wunschliste #96) · Server 2.972.0
 Hansi 17.11.: „Noch nicht freigegeben, hochladen ja.“
 - Das Bundesliga-Tippspiel (2.971.0) steht jetzt in der **Freigaben-Liste** („⚽ Bundesliga-Tippspiel“, Standard: nur Admin). Bis Hansi dort „alle“ wählt, sehen Mitglieder und Aushilfen weder den Knopf bei 🎲 Spiele noch die Zeile im Info-Laufband; der Server lehnt Aufrufe ab („noch nicht freigegeben“). Hansi sieht es mit „🔒 nur für dich (Test)“.
