@@ -194,7 +194,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.969.0";
+const SERVER_VERSION = "2.970.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -4359,7 +4359,7 @@ const ZUGANG_AKTIONEN: Record<"basis" | "aushilfe", readonly string[]> = {
     "vorlese_stimmen", "sicherheit_pruefen", "verbindung_melden", "sicherheit_melden", "lebenszeichen", "notbetrieb_nachtragen", "zugang_link_mailen",
     "wetter", "wetter_ort_suchen", "treffen_liste", "treffen_antwort", "erinnerung_setzen", "kalender", "kalender_abo", "kalender_abo_holen", "privattermin_speichern",
     "privattermin_loeschen", "privattermine_liste", "countdowns", "terminumfragen_liste", "terminumfrage_antwort", "mitglieder", "mitglied_details",
-    "unterhaltungen", "unterhaltung", "unterhaltung_stand", "tippen_stand", "tippen", "nachricht_senden", "nachricht_details", "einzelchat_finden", "express_stand", "express_angezeigt",
+    "unterhaltungen", "unterhaltung", "unterhaltung_stand", "tippen_stand", "tippen", "nachricht_senden", "nachricht_details", "einzelchat_finden", "gruppenchat_finden", "express_stand", "express_angezeigt",
     "express_antwort", "startnachricht_bestaetigen", "stadt_woche", "ferien", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "geplant_abrufen", "wecker_setzen", "wecker_loeschen", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
     "chat_selbstloeschen", "link_vorschau", "unterstuetzung_meine", "unterstuetzung_senden", "nachricht_bearbeiten", "nachricht_merken", "gemerkte_nachrichten", "chat_umfrage_stimmen", "nachricht_ausblenden",
     "unterhaltung_ausblenden", "unterhaltung_archivieren", "unterhaltung_leeren", "gruppe_verlassen", "anlage_hochladen", "anlage_url",
@@ -15413,6 +15413,26 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (!ids.length) return json({ id: null });
         const { data: m } = await db.from("kc_communication_messages").select("thread_id,created_at").in("thread_id", ids).order("created_at", { ascending: false }).limit(1);
         return json({ id: m?.[0]?.thread_id || ids[0] });
+      }
+      // 2.970.0 KC-CLUB-CHAT-VORHANDEN (Wunschliste #97, Hansi 16.11.2026: „Wenn man an Personen schreibt, die schon in der Gruppe sind, keinen neuen Chat
+      // aufmachen, sondern in den vorhandenen übernehmen – z. B. Gruppe Zanders: an Klaus geschrieben und Dieter dazu genommen, dann ist das ja die Gruppe“):
+      // gibt es einen Chat, in dem GENAU diese Personen (und ich) sind? Gruppen zuerst, sonst der zuletzt benutzte. Nur Teilnehmer-Listen, keine Inhalte.
+      case "gruppenchat_finden": {
+        const wer = [...new Set((Array.isArray(p.personen) ? p.personen : []).map(String).filter((x: string) => /^KC-P-[A-Z0-9-]{1,30}$/i.test(x) && x !== ich.person_id))].slice(0, 40);
+        if (!wer.length) return json({ id: null });
+        const soll = new Set([...wer, ich.person_id]);
+        const { data: meine } = await db.from("kc_communication_thread_participants").select("thread_id").eq("person_id", ich.person_id);
+        const ids = (meine ?? []).map((x: any) => x.thread_id); if (!ids.length) return json({ id: null });
+        const [{ data: tn }, { data: gr }] = await Promise.all([db.from("kc_communication_thread_participants").select("thread_id,person_id").in("thread_id", ids),
+          db.from("kc_club_gruppen").select("thread_id,name,symbol").in("thread_id", ids)]);
+        const je = new Map<string, Set<string>>(); for (const x of tn ?? []) je.set(x.thread_id, (je.get(x.thread_id) ?? new Set()).add(x.person_id));
+        const passt = [...je.entries()].filter(([, l]) => l.size === soll.size && [...soll].every((x) => l.has(x))).map(([t]) => t);
+        if (!passt.length) return json({ id: null });
+        const gruppen = (gr ?? []).filter((g: any) => passt.includes(g.thread_id));
+        let id = gruppen[0]?.thread_id || null;
+        if (!id) { const { data: m } = await db.from("kc_communication_messages").select("thread_id,created_at").in("thread_id", passt).order("created_at", { ascending: false }).limit(1); id = m?.[0]?.thread_id || passt[0]; }
+        const g = gruppen.find((x: any) => x.thread_id === id);
+        return json({ id, gruppe: g ? { name: g.name, symbol: g.symbol || "👥" } : null });
       }
       // KC-CLUB-MEINE-NACHRICHTEN-STATISTIK (2.36.0, Wunsch Hansi): jedes Mitglied sieht seine EIGENE Statistik (Chat ⋮) – gleiche Zählung, nur für ich.person_id
       case "meine_nachrichten_statistik":

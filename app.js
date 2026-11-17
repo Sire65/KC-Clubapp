@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.969.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.970.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -9917,7 +9917,7 @@ const ZUGANG_AKTIONEN = {
     "vorlese_stimmen", "sicherheit_pruefen", "verbindung_melden", "sicherheit_melden", "lebenszeichen", "notbetrieb_nachtragen", "zugang_link_mailen",
     "wetter", "wetter_ort_suchen", "treffen_liste", "treffen_antwort", "erinnerung_setzen", "kalender", "kalender_abo", "kalender_abo_holen", "privattermin_speichern",
     "privattermin_loeschen", "privattermine_liste", "countdowns", "terminumfragen_liste", "terminumfrage_antwort", "mitglieder", "mitglied_details",
-    "unterhaltungen", "unterhaltung", "unterhaltung_stand", "tippen_stand", "tippen", "nachricht_senden", "nachricht_details", "einzelchat_finden", "express_stand", "express_angezeigt",
+    "unterhaltungen", "unterhaltung", "unterhaltung_stand", "tippen_stand", "tippen", "nachricht_senden", "nachricht_details", "einzelchat_finden", "gruppenchat_finden", "express_stand", "express_angezeigt",
     "express_antwort", "startnachricht_bestaetigen", "stadt_woche", "ferien", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "geplant_abrufen", "wecker_setzen", "wecker_loeschen", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
     "chat_selbstloeschen", "link_vorschau", "unterstuetzung_meine", "unterstuetzung_senden", "nachricht_bearbeiten", "nachricht_merken", "gemerkte_nachrichten", "chat_umfrage_stimmen", "nachricht_ausblenden",
     "unterhaltung_ausblenden", "unterhaltung_archivieren", "unterhaltung_leeren", "gruppe_verlassen", "anlage_hochladen", "anlage_url",
@@ -25210,6 +25210,25 @@ async function senden() {
     const alt = chatId, bisher = (CHAT?.id === chatId ? CHAT.teilnehmer || [] : []).map((t) => t.person_id).filter((x) => x !== ICH.person_id);
     neuEntwurf = { empfaenger: { personen: [...new Set([...bisher, ...WE.ids])], aemter: [], alle: false, vorstand: false }, betreff: "" };
     entwurfWeg(alt); naAntwortWeg(); chatId = null; WE.ids = []; weZeigen();
+  }
+  // 2.970.0 KC-CLUB-CHAT-VORHANDEN (Wunschliste #97, Hansi 16.11.2026: „Wenn man an Personen schreibt, die schon in der Gruppe sind, keinen neuen Chat aufmachen,
+  // sondern in den vorhandenen übernehmen – z. B. Gruppe Zanders“): gibt es schon einen Chat mit GENAU diesen Personen (Gruppe zuerst), fragt die App einmal
+  // „Dort schreiben?“ – Ja: die Nachricht geht in den vorhandenen Chat. Gilt für „Neue Nachricht“ und für ➕ weitere Empfänger. Nicht bei 🔒, Ämtern oder „alle“.
+  if (!chatId && neuEntwurf && !neuEntwurf.mehrfach && !VN.an) {
+    const e = neuEntwurf.empfaenger || {}, wer = [...new Set((e.personen || []).filter((x) => x !== ICH?.person_id))];
+    if (wer.length >= 2 && !(e.aemter || []).length && !e.alle && !e.vorstand) {
+      let r = null; try { r = await api("gruppenchat_finden", { personen: wer }); } catch {}
+      if (r?.id) {
+        const was = r.gruppe ? `die Gruppe ${r.gruppe.symbol || "👥"} „${r.gruppe.name}“` : `schon einen Chat mit ${todoNamen(wer)}`;
+        if (await frage(`💬 Es gibt ${r.gruppe ? "schon " : ""}${was} – mit genau diesen Personen.\n\nDeine Nachricht dort hineinschreiben, statt einen neuen Chat aufzumachen?`, { ja: "💬 Ja, dort schreiben", nein: "Neuen Chat aufmachen" })) {
+          const merkAnl = [...anlagen], merkEntwurf = neuEntwurf;
+          await chatOeffnen(r.id);
+          if (chatId !== r.id) { neuEntwurf = merkEntwurf; return melde("Der Chat ließ sich gerade nicht öffnen – bitte noch einmal ➤ tippen.", true); }
+          neuEntwurfWeg(); // gespeicherten „Neue Nachricht“-Entwurf wegräumen (er geht ja jetzt in den Chat)
+          anlagen = merkAnl; chipsZeigen();
+        }
+      }
+    }
   }
   let vnIds = null; // 2.636.0 KC-CLUB-VN-ANLAGEN: Kennungen der verschlüsselt hochgeladenen Anlagen
   if (VN.an && anlagen.length) {

@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.970.0 – 2026-11-17 – 💬 Schon eine Gruppe mit genau diesen Personen? Dann dort schreiben (KC-CLUB-CHAT-VORHANDEN, Wunschliste #97) · Server 2.970.0
+Wunsch Hansi 16.11.: „Wenn man an Personen schreibt, die schon in der Gruppe sind, keinen neuen Chat aufmachen, sondern in den vorhandenen übernehmen. Z. B. Gruppe Zanders: Heute habe ich an Klaus geschrieben und Dieter dazu genommen – dann ist das ja die Gruppe.“
+- Schreibst du an mehrere Personen (über „Neue Nachricht“ oder im Chat mit **➕ weitere Empfänger**) und es gibt schon einen Chat mit **genau diesen Personen und dir**, fragt die App beim ➤: „💬 Es gibt schon die Gruppe 👥 „Zanders“ – mit genau diesen Personen. Deine Nachricht dort hineinschreiben?“ → **„💬 Ja, dort schreiben“** (Text und Anlagen gehen in die Gruppe) oder „Neuen Chat aufmachen“ (wie bisher).
+- Gruppen haben Vorrang, sonst der zuletzt benutzte passende Chat. Nicht bei 🔒 verschlüsselt, Ämtern oder „an alle“.
+- Server: neuer Lese-Weg `gruppenchat_finden` (nur Teilnehmer-Listen, keine Nachrichteninhalte – KC-CHATS-PRIVAT).
+- Test: neu `tests/chat-vorhanden.test.mjs`. Rückweg: App + Server 2.969.0. Keine Datenbank-Änderung.
+- Update-Hinweis für Mitglieder: „💬 Schreibst du an Leute, mit denen es schon eine Gruppe gibt, fragt die App, ob die Nachricht dort hinein soll.“
+
 ## 2.969.0 – 2026-11-17 – 📱 „Liest lieber WhatsApp“ – beim Senden öffnet sich WhatsApp von selbst (KC-CLUB-WA-LIEBER) · Server 2.969.0
 Wunsch Hansi 16.11.: „Wenn ich z. B. Marianne eine Nachricht in der Club-App schreibe, dass er automatisch die gleiche auch in WhatsApp … und ich nur noch auf Senden klicke“ – „Nicht für jede Nachricht … zu viele Knöpfe … einige nutzen lieber WhatsApp als die Club-App“ – „Gleich für alle“.
 - Neue Einstellung **„📱 Ich lese lieber WhatsApp“** (⚙️, Standard aus) – setzt das Mitglied selbst oder der Admin auf der Mitgliedsseite („📱 Liest lieber WhatsApp?“).
