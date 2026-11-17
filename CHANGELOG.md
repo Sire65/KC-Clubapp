@@ -1,5 +1,16 @@
 # Änderungen
 
+## 2.975.0 – 2026-11-17 – 📇 Kontaktkarte auf der Mitgliedsseite (KC-CLUB-KONTAKTKARTE) · Server 2.975.0
+Wunsch Hansi 17.11.: „In den Stammdaten der Mitglieder einen Button, um eine Kontaktkarte zu erstellen und dann anbieten: per Nachricht versenden, in den Archivordner,
+per WhatsApp schicken, an den Kalender bzw. Kontakte senden usw.“
+- Ein Knopf **„📇 Kontaktkarte“** statt „Ins Telefonbuch“ + „Kontakt weiterleiten“. Das Fenster zeigt die Karte und bietet an:
+  - **Für mich:** 📇 in meine Kontakte (Telefonbuch, .vcf mit Geburtstag), 🗄️ in meinen Archivordner (Register „Kontakte“), 📅 Geburtstag in meinen Kalender (jedes Jahr, .ics).
+  - **Im Club:** 💬 als Kontaktkarte in einen Chat (die anderen sehen nur, was das Mitglied freigegeben hat).
+  - **Nach außen:** 🟢 WhatsApp (neu), ✉️ E-Mail, 📤 Teilen, 📋 Kopieren – nur mit Freigabe des Mitglieds (KC-CLUB-KONTAKT-EXTERN), nur freigegebene Angaben;
+    der Server prüft und vermerkt (neu: Weg „whatsapp“), nie Empfänger oder Inhalt.
+- Test: `tests/kontaktkarte.test.mjs`. Rückweg: App/Server 2.974.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.974.0 – 2026-11-17 – 12-Uhr-Bündel: Lese-/Schreibtest an den LEDs · Chat schneller wieder öffnen · Kluge Helfer im Chat · „zuletzt da“ nach „weg“ · Server 2.974.0 + Datenbank
 Hansi 17.11.: „Alles schön um 12 einspielen.“
 

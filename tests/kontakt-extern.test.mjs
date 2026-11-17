@@ -20,7 +20,7 @@ assert.match(server, /extern: selbst \|\| mdEinst\.kontakt_extern\?\.an === true
 assert.match(server, /externFelder: Object\.keys\(kontakt\)\.filter\(\(f\) => selbst \|\| frei\("kontakt_" \+ f\)\)/, "auch der Admin gibt nur freigegebene Felder weiter");
 
 // --- App: Knopf, Blatt, Wege, ausgegraut ---
-assert.match(app, /zugang\(\) === "mitglied" \? '<button class="knopf" onclick="kwExtern\(\)">/, "Knopf nur für Mitglieder");
+assert.match(app, /mitglied = zugang\(\) === "mitglied", aussen = mitglied && /, "nach außen nur für Mitglieder (seit 2.974.0 im Fenster „📇 Kontaktkarte“, KC-CLUB-KONTAKTKARTE)");
 assert.match(app, /kwxBlatt: "📤 Kontakt weiterleiten"/, "Fenstername");
 assert.match(app, /ir-aus" aria-disabled="true"/, "nicht erlaubte Knöpfe ausgegraut");
 assert.match(app, /teilenMitRueckfall\(\{ files: \[f\], title: m\.name, text \}\)/, "Teilen-Menü mit Kontaktkarte");
