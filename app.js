@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.968.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.972.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -17,11 +17,12 @@ const TEILE_LISTE = {
   szenen: { einstieg: ["jahreszeitVorschau"], sri: "sha384-mAuFkYPP7UnZNUqE/gD38eJ/THfwNSgLrJyvGLQUb5PBmCArQZ8wIH5DiImNHvlj" }, // Stufe 3b: Kopf-Szenen (Jahreszeiten, Sim-Jü, Themen) – kurz nach dem Start über szenenSpaeter
   sprache: { einstieg: ["spracheEnglisch", "spracheDeutsch"], sri: "sha384-YPGi1MBE6HC7gIBCHl8ypykouxpAPEcg836qm5gE6W6itUoKYYYOU2haKwqQ08Tg" }, // KC-CLUB-SPRACHE: Bedienung auf Englisch – nur geladen, wenn jemand 🇬🇧 wählt
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-NDuho5dgDL13uhtcTY8d0cGESAWhk+B+5qyWyvBuOxPgmADzmvY9YFCcwWM0s+kx" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
-  spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-df8Lw0oCMMrnIIB7cpSpJ2Q2SKgIao/dXXHLrjtixnNByKoeFvC3pVc6zGaNCcVw" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
+  spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-gD3q/2L9GT3oU74JreTUDAa1vJDESZ3irJ9nuzr2VuaVzNUREU4KIH2pROKYjUNn" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
   tischlive: { einstieg: ["tlStart", "tlStopp", "tlZeichnen", "tlPlatz", "tlRegeln"], sri: "sha384-RCmsKY+DTRfsCMRHkJVG2UJlySANNdHxnEdMps4tkL9kgf8DC5O/b1jMcwVeY3XB" }, // 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: Ton, Kamera, Bildschirm, Unterlagen zeigen am Tisch
   buero: { einstieg: ["ersBuchOeffnen", "eblDruck", "buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-VPnvAguly/J0kMc0JZ7JWq36ymMqurBv176yx9CmcE6G2Y/5UF38fVO5bvRWOJTG" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
   hilfe: { einstieg: ["twFrageStart", "twOffenStart", "sucheAuf", "suSucheKnopf"], sri: "sha384-8A9k87FgeesMgEQxdePUURmcrnJZlfcnIRqlk/8h42RENJYJnKZt0p0zkpCJ6zmH" }, // Stufe 5: Hilfe-Werkzeuge (Frag Twinkey, Mitglied fragen, Schnellsuche) – beim ersten Antippen
   rechner: { einstieg: ["rechnerOeffnen"], sri: "sha384-UWrOf1EIXxhsoWWwxnLDzpzALsaxzNGXgeqoLAjVvqoQ6wbFnIGxYTkQPFpiRuQ4" }, // 2.811.0 KC-CLUB-RECHNER: Tischrechner im Büro, „rechne …“ per Sprache
+  tippspiel: { einstieg: ["tpStart", "tpTag", "tpMitmachen", "tpTippen", "tpZeigen"], sri: "sha384-KNPQv0SkmN1bZrgFpl3dE1Osi/OcP0KUNKuIWQeEqe/98OM34+NRwv5m+2ePuBJ6" }, // 2.971.0 KC-CLUB-TIPPSPIEL (Wunschliste #96): Bundesliga-Tippspiel
   glueck: { einstieg: ["kaeferKommt", "kleeKommt"], sri: "sha384-hbPb96l3YrlvBxe1zJJfotwARA0pEPKKaDyb1BBVooEi5BCYbfYqihmMYABmlsg4" }, // KC-CLUB-MARIENKAEFER / KC-CLUB-GLUECKSKLEE (06.11.2026): 🐞 jeder 50., 🍀 jeder 25. Start
   hilfetipp: { einstieg: ["tippSenden", "tippListe"], sri: "sha384-cOxaOEtxAQP/CZRKEEryWTGLYs/TRIWVXRitip1nRotyRzYD9GRoisKEzLGKAbGF" }, // 2.835.0 KC-CLUB-HILFE-TIPPS: Clubleitung – Lösung schicken, Vorlagen, Gesendete Tipps
   magazin: { einstieg: ["magStart", "wmProspekt", "magMenue", "magEinsenden", "magPostfach", "magMeine", "magArchiv", "magDruck"], sri: "sha384-OiXZsCLJbex0QfLSH0KITIziZhWhBosxXRmJMUu4apSNCQUD29gIUsW7PsOGabCK" }, // KC-CLUB-MAGAZIN-GERUEST: Club-Küche und Weihnachtsmarkt-Prospekt (Gerüst, blättern)
@@ -9944,7 +9945,7 @@ const ZUGANG_AKTIONEN = {
     "vorlese_stimmen", "sicherheit_pruefen", "verbindung_melden", "sicherheit_melden", "lebenszeichen", "notbetrieb_nachtragen", "zugang_link_mailen",
     "wetter", "wetter_ort_suchen", "treffen_liste", "treffen_antwort", "erinnerung_setzen", "kalender", "kalender_abo", "kalender_abo_holen", "privattermin_speichern",
     "privattermin_loeschen", "privattermine_liste", "countdowns", "terminumfragen_liste", "terminumfrage_antwort", "mitglieder", "mitglied_details",
-    "unterhaltungen", "unterhaltung", "unterhaltung_stand", "tippen_stand", "tippen", "nachricht_senden", "nachricht_details", "einzelchat_finden", "express_stand", "express_angezeigt",
+    "unterhaltungen", "unterhaltung", "unterhaltung_stand", "tippen_stand", "tippen", "nachricht_senden", "nachricht_details", "einzelchat_finden", "gruppenchat_finden", "express_stand", "express_angezeigt",
     "express_antwort", "startnachricht_bestaetigen", "stadt_woche", "ferien", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "geplant_abrufen", "wecker_setzen", "wecker_loeschen", "nachricht_erinnerung_setzen", "nachricht_erinnerung_liste", "nachricht_erinnerung_loeschen", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
     "chat_selbstloeschen", "link_vorschau", "unterstuetzung_meine", "unterstuetzung_senden", "nachricht_bearbeiten", "nachricht_merken", "gemerkte_nachrichten", "chat_umfrage_stimmen", "nachricht_ausblenden",
     "unterhaltung_ausblenden", "unterhaltung_archivieren", "unterhaltung_leeren", "gruppe_verlassen", "anlage_hochladen", "anlage_url",
@@ -9957,7 +9958,7 @@ const ZUGANG_AKTIONEN = {
     "push_pruefen", "geraete_liste", "geraet_entfernen", "andere_geraete_abmelden", "push_abmelden", "push_test", "rw_test", "neues_geraet_antwort"],
   aushilfe: ["mein_dienst", "dienstwunsch_laden", "dienstwunsch_speichern", "dienst_gruss", "dienste", "dienst_freigabe", "meine_eingaben",
     "eingaben_bestaetigen", "wunschbogen_mailen", "eingaben_ablegen", "fotos_neueste", "fotos_liste", "foto_oeffnen",
-    "schulung_meine", "schulung_antwort", "gericht_zutat_setzen", "gericht_antwort",
+    "schulung_meine", "schulung_antwort", "gericht_zutat_setzen", "gericht_antwort", "tipp_stand", "tipp_mitmachen", "tipp_abgeben",
     "sondereinsatz_zusage", "stunden_melden", "mein_ausweis", "dienst_stand", "dienst_buchen", "dienst_korrigieren", "dienst_tausch_liste", "dienst_tausch_anbieten", "dienst_tausch_aktion", "dp_einzelplan", "ist_offen", "ist_antworten", "ist_feedback"], // 2.590.0 KC-CLUB-DIENST-STEMPEL; 2.606.0 KC-CLUB-DIENST-TAUSCH
 };
 const ZUGANG_KACHELN = { basis: ["termine", "kommunikation", "sos", "spiele", "status", "einstellungen", "hilfezentrum", "twinkey", "erklaer", "update", "sicherheit", "feedback", "test"],
@@ -16920,6 +16921,23 @@ const IL_NEUHEITEN = [ // wann(Monat 1–12, Tag) · los = was „▶ Ansehen“
 const ilVersionNr = (v) => +String(v || "").split(".")[1] || 0;
 function ilNeuLesen() { try { return JSON.parse(localStorage.getItem(IL_NEU) || "{}") || {}; } catch { return {}; } }
 function ilNeuGesehen(id) { const s = ilNeuLesen(); s[id] = { ...(s[id] || {}), fertig: true }; try { localStorage.setItem(IL_NEU, JSON.stringify(s)); } catch {} }
+// 2.971.0 KC-CLUB-TIPPSPIEL (Wunschliste #96, Hansi: „Wenn ein Spiel ansteht … Frage, ob man einen Tipp abgeben möchte“): Zeile im Info-Laufband aus dem
+// Merkzettel des letzten Abrufs (kein zusätzlicher Aufruf beim Start). Mittipper: „⚽ 3 Spiele bald – noch nicht getippt“ (bis Anpfiff); alle anderen:
+// 4 Wochen lang einmal die Einladung. Der Merkzettel wird höchstens alle 6 Std. still im Hintergrund erneuert.
+function tpLaufband() {
+  if (!["mitglied", "aushilfe"].includes(zugang()) || !frei("tippspiel")) return null; // Freigaben-Liste (Hansi 17.11.: erst „noch nicht freigegeben“)
+  let c = null; try { c = JSON.parse(localStorage.getItem("kc_club_tipp_cache") || "null"); } catch {}
+  if ((!c || Date.now() - c.am > 6 * 3600000) && !TP_HOLT) { TP_HOLT = true; setTimeout(tpMerkzettelErneuern, 8000); } // still im Hintergrund, nach dem Start
+  if (c?.dabei) {
+    const offen = (c.bald || []).filter((x) => !x.getippt && Date.parse(x.anpfiff) > Date.now() && Date.parse(x.anpfiff) - Date.now() < 48 * 3600000);
+    if (!offen.length) return null;
+    const erst = offen.map((x) => Date.parse(x.anpfiff)).sort((a, b) => a - b)[0], heute = isoBerlin(new Date(erst)) === heuteIso();
+    return { id: "tipp:" + offen.length, stufe: heute ? "gold" : "weiss", sym: "⚽", t: offen.length === 1 ? "Ein Bundesliga-Spiel – noch nicht getippt" : `${offen.length} Bundesliga-Spiele – noch nicht getippt`,
+      u: `Anpfiff ${heute ? "heute" : new Date(erst).toLocaleDateString("de-DE", { weekday: "long" })} ${new Date(erst).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })} · jetzt tippen`, auf: "tpStart()" };
+  }
+  if (c && !c.dabei && Date.now() < Date.parse("2026-12-20T00:00:00+01:00")) return { id: "tipp-neu", stufe: "weiss", sym: "⚽", t: "Neu: Bundesliga-Tippspiel im Köcheclub", u: "Tippst du mit? Antippen", auf: "tpStart()" };
+  return null;
+}
 function ilNeuheit() {
   const d = new Date(), m = d.getMonth() + 1, tag = d.getDate(), jetzt = ilVersionNr(APP_VERSION), s = ilNeuLesen();
   const hilfe = HILFE.filter((h) => h.seit && h.thema !== "erste" && jetzt - ilVersionNr(h.seit) <= 10 && (!h.nur || h.nur()))
@@ -17088,6 +17106,7 @@ function ilMeldungen() {
   // 2.493.0 KC-CLUB-DW-LAUFBAND (Wunsch Hansi): Dienstwünsche Weihnachtsmarkt noch nicht abgegeben → Twinkey führt durch (der Server weiß, wer schon abgegeben hat)
   if (INIT?.dienstwunschFehlt === true && !DW_LB.geoeffnet) add({ id: "dw-fehlt", stufe: "rot", sym: "🎄", t: "Dienstplan Weihnachtsmarkt: Wünsche eingeben?", u: "Twinkey führt dich Schritt für Schritt durch", auf: "dwLaufbandAuf()", knoepfe: [["📝 Mit Twinkey eingeben", "dwLaufbandAuf()"]], fertig: "Dienstwünsche Weihnachtsmarkt eingegeben" });
   if (PW.neu > 0) add({ id: "pw-neu:" + PW.neu, stufe: "gold", sym: "📌", t: PW.neu === 1 ? "Ein neuer Zettel an der Pinnwand" : `${PW.neu} neue Zettel an der Pinnwand`, u: "Antippen zum Lesen", auf: "zeige('pinnwand')" }); // KC-CLUB-PINNWAND-NIE-AUTO
+  { const tp = tpLaufband(); if (tp) add(tp); } // 2.971.0 KC-CLUB-TIPPSPIEL
   tippLaufband(add); // 2.835.0 KC-CLUB-HILFE-TIPPS: grün → gelb → rot, bis geantwortet
   // 2.492.0 KC-CLUB-UNTERSTUETZUNG-ANFRAGE: Admin – offene Anfragen (orange); alle anderen – Angebot „Unterstützung?“ (ausblendbar, 30 Tage Pause nach dem Senden)
   if (ICH?.admin && kz.unterstuetzung > 0) add({ id: "ua-admin", stufe: "orange", sym: "🙋", t: kz.unterstuetzung === 1 ? "Eine Unterstützungs-Anfrage wartet" : `${kz.unterstuetzung} Unterstützungs-Anfragen warten`, u: "Antippen und Kontakt aufnehmen", auf: "uaAdmin()" });
@@ -22073,7 +22092,7 @@ async function chatLaden(scrollen, merk) {
     if (merk && CHAT?.id === fuer) return; // frische Antwort war schneller – nichts Älteres drüberzeichnen
     if (!merk) chatMerken(fuer, u);
     if (VN.an && VN.chat !== fuer) vnUmschalten(false); // 2.529.0 KC-CLUB-VN-RUECKFRAGE: Schloss gilt nur im Chat, in dem es eingeschaltet wurde
-    CHAT = u; if (!merk) CHAT_VOLL_AM = Date.now(); setTimeout(owZeigen, 0); setTimeout(gpZeigen, 0); slAnzeigen(); // 2.362.0 KC-CLUB-SPAETER-SENDEN: eigene geplante Nachrichten unten // KC-CLUB-SELBSTLOESCHEN // KC-CLUB-OFFLINE: vorgemerkte Nachrichten unten zeigen
+    CHAT = u; if (!merk) CHAT_VOLL_AM = Date.now(); setTimeout(owZeigen, 0); setTimeout(gpZeigen, 0); slAnzeigen(); setTimeout(waLieberVorbereiten, 0); /* KC-CLUB-WA-LIEBER */ // 2.362.0 KC-CLUB-SPAETER-SENDEN: eigene geplante Nachrichten unten // KC-CLUB-SELBSTLOESCHEN // KC-CLUB-OFFLINE: vorgemerkte Nachrichten unten zeigen
     const andere = u.teilnehmer.filter((x) => x.person_id !== ICH.person_id);
     // KC-CLUB-CHAT-KOPF-BILD (2.24.19): Bild vorn (Person: Avatar/Kreis; Gruppe: Symbol mit 🔗; Runde: gestrichelt), Titel ohne doppeltes Symbol
     $("chatTitel").textContent = (u.gruppe ? u.gruppe.name : u.betreff || andere.map((x) => x.name).join(", ")) + (stummAn(chatId) ? " 🔕" : "");
@@ -24799,6 +24818,43 @@ async function waSenden() {
   else if (IST_IOS) location.href = `whatsapp://send?text=${t}`;
   else window.open(web, "_blank", "noopener"); // PC: neuer Tab, die App bleibt offen
 }
+// ---------- KC-CLUB-WA-LIEBER (Wunsch Hansi 16.11.2026: „Wenn ich z. B. Marianne eine Nachricht in der Club-App schreibe, soll er automatisch die gleiche
+// auch in WhatsApp … ich nur noch auf Senden klicke“ – „nicht für jede Nachricht … zu viele Knöpfe … einige nutzen lieber die WhatsApp-App“ – „gleich für alle“):
+// Wer „📱 Ich lese lieber WhatsApp“ eingestellt hat (selbst unter ⚙️ oder vom Admin auf der Mitgliedsseite), bekommt Nachrichten im EINZELCHAT wie bisher
+// in der Club-App – und beim Absender öffnet sich im selben Antippen von „Senden“ WhatsApp im Chat mit ihr/ihm, Text schon drin, nur noch Senden.
+// Kein neuer Knopf. Nur Einzelchats, nur Text (ohne Anlagen, nicht verschlüsselt, nicht Express), nur mit freigegebener WhatsApp-Nummer (wege.whatsapp).
+// Die Nummer wird beim Öffnen des Chats vorab geholt – das Antippen von Senden muss WhatsApp sofort öffnen können. Abschaltbar: ⚙️ „WhatsApp automatisch öffnen“.
+const WA_NR = {};
+function waLieberPartner() {
+  if (!chatId || CHAT?.id !== chatId || CHAT.gruppe) return null;
+  const andere = (CHAT.teilnehmer || []).filter((t) => t.person_id !== ICH?.person_id); if (andere.length !== 1) return null;
+  const m = MITGLIEDER?.find((x) => x.person_id === andere[0].person_id);
+  return m?.wege?.whatsapp && m.wege.waLieber ? m : null;
+}
+async function waLieberVorbereiten() {
+  try { if (!MITGLIEDER) await mitgliederHolen(); const m = waLieberPartner(); if (!m || WA_NR[m.person_id]) return;
+    const d = await api("mitglied_details", { person_id: m.person_id }, { still: true }); if (d.kontakt?.handy) WA_NR[m.person_id] = waNummer(d.kontakt.handy); } catch {}
+}
+function waLieberJetzt(text) {
+  if (!text || !einst("waAuto", true) || VN.an || EXPRESS || anlagen.length || (typeof WE !== "undefined" && WE.ids?.length)) return;
+  const m = waLieberPartner(), n = m && WA_NR[m.person_id]; if (!n) return;
+  const t = encodeURIComponent(`${text}\n\n– ${ICH.vorname} (Köcheclub-App)`);
+  melde(`🟢 ${m.vorname || m.name} liest lieber WhatsApp – dort steht der Text schon drin, nur noch Senden. (Geht auch in die Club-App.)`);
+  try { if (IST_ANDROID) location.href = `intent://send?phone=${n}&text=${t}#Intent;scheme=whatsapp;S.browser_fallback_url=${encodeURIComponent(`https://wa.me/${n}?text=${t}`)};end`;
+    else if (IST_IOS) location.href = `whatsapp://send?phone=${n}&text=${t}`;
+    else window.open(`https://wa.me/${n}?text=${t}`, "_blank", "noopener"); } catch {}
+}
+async function waLieberSetzen(an) { // eigene Einstellung
+  try { const r = await api("einstellung_setzen", { schluessel: "wa_lieber", wert: { an } }); INIT.einstellungen = { ...(INIT.einstellungen || {}), wa_lieber: r.wert };
+    melde(an ? "📱 Wer dir im Einzelchat schreibt, bekommt beim Senden gleich WhatsApp geöffnet – du bekommst es dann dort." : "Nachrichten an dich bleiben in der Club-App (wie bisher)."); }
+  catch (e) { meldeFehler(e); if ($("setWaLieber")) $("setWaLieber").checked = !an; }
+}
+async function waLieberAdmin(pid) { // Admin für ein Mitglied
+  const m = MITGLIEDER?.find((x) => x.person_id === pid), an = !m?.wege?.waLieber;
+  try { await api("wa_lieber_setzen", { person_id: pid, an }, { warten: true }); if (m?.wege) m.wege.waLieber = an;
+    melde(an ? `📱 ${m?.vorname || "Das Mitglied"} liest jetzt „lieber WhatsApp“${m?.wege?.whatsapp ? "" : " – aber es ist keine WhatsApp-Nummer freigegeben, dann passiert nichts"}` : `📱 ${m?.vorname || "Das Mitglied"}: wieder nur Club-App`);
+    if (typeof mitgliedZeigen === "function" && MD?.person_id === pid) mitgliedZeigen(); } catch (e) { meldeFehler(e); }
+}
 async function whatsappWeitergeben(text, ids) {
   const nachricht = `${text}\n\n– ${ICH.vorname} (Köcheclub-App)`;
   if (ids.length > 1) return waMehrere(nachricht, ids); // 2.637.0 KC-CLUB-WA-MEHRERE
@@ -25528,6 +25584,7 @@ async function senden() {
   emoUmschalten(false); // KC-CLUB-EMOJI
   let text = $("text").value.trim();
   if (!text && !anlagen.length) return;
+  waLieberJetzt(text); // KC-CLUB-WA-LIEBER: im selben Antippen (sonst blockiert das Handy den Sprung zu WhatsApp) – die Nachricht geht trotzdem in die Club-App
   if (!(await sensibelGaesteOk(text))) return; // KC-CLUB-SENSIBEL-GAESTE (2.78.0)
   await inkoChatFrage(chatId ? "c:" + chatId : "neu"); // 2.153.0 KC-CLUB-INKOGNITO-CHAT: auch beim Schreiben in einem schon offenen Chat (einmal je Chat)
   VW.nurApp = false;
@@ -25551,6 +25608,25 @@ async function senden() {
     const alt = chatId, bisher = (CHAT?.id === chatId ? CHAT.teilnehmer || [] : []).map((t) => t.person_id).filter((x) => x !== ICH.person_id);
     neuEntwurf = { empfaenger: { personen: [...new Set([...bisher, ...WE.ids])], aemter: [], alle: false, vorstand: false }, betreff: "" };
     entwurfWeg(alt); naAntwortWeg(); chatId = null; WE.ids = []; weZeigen();
+  }
+  // 2.970.0 KC-CLUB-CHAT-VORHANDEN (Wunschliste #97, Hansi 16.11.2026: „Wenn man an Personen schreibt, die schon in der Gruppe sind, keinen neuen Chat aufmachen,
+  // sondern in den vorhandenen übernehmen – z. B. Gruppe Zanders“): gibt es schon einen Chat mit GENAU diesen Personen (Gruppe zuerst), fragt die App einmal
+  // „Dort schreiben?“ – Ja: die Nachricht geht in den vorhandenen Chat. Gilt für „Neue Nachricht“ und für ➕ weitere Empfänger. Nicht bei 🔒, Ämtern oder „alle“.
+  if (!chatId && neuEntwurf && !neuEntwurf.mehrfach && !VN.an) {
+    const e = neuEntwurf.empfaenger || {}, wer = [...new Set((e.personen || []).filter((x) => x !== ICH?.person_id))];
+    if (wer.length >= 2 && !(e.aemter || []).length && !e.alle && !e.vorstand) {
+      let r = null; try { r = await api("gruppenchat_finden", { personen: wer }); } catch {}
+      if (r?.id) {
+        const was = r.gruppe ? `die Gruppe ${r.gruppe.symbol || "👥"} „${r.gruppe.name}“` : `schon einen Chat mit ${todoNamen(wer)}`;
+        if (await frage(`💬 Es gibt ${r.gruppe ? "schon " : ""}${was} – mit genau diesen Personen.\n\nDeine Nachricht dort hineinschreiben, statt einen neuen Chat aufzumachen?`, { ja: "💬 Ja, dort schreiben", nein: "Neuen Chat aufmachen" })) {
+          const merkAnl = [...anlagen], merkEntwurf = neuEntwurf;
+          await chatOeffnen(r.id);
+          if (chatId !== r.id) { neuEntwurf = merkEntwurf; return melde("Der Chat ließ sich gerade nicht öffnen – bitte noch einmal ➤ tippen.", true); }
+          neuEntwurfWeg(); // gespeicherten „Neue Nachricht“-Entwurf wegräumen (er geht ja jetzt in den Chat)
+          anlagen = merkAnl; chipsZeigen();
+        }
+      }
+    }
   }
   let vnIds = null; // 2.636.0 KC-CLUB-VN-ANLAGEN: Kennungen der verschlüsselt hochgeladenen Anlagen
   if (VN.an && anlagen.length) {
@@ -32788,6 +32864,7 @@ function mitgliedZeigen() {
       ${stDarf("zeigen") && !m.selbst ? `<button class="knopf" onclick="vfStart('${m.person_id}')"><span class="kt-ico">📺</span>Live zeigen</button>` : ""}
       ${ICH?.admin ? `<button class="knopf" onclick="linkTeilen('${m.person_id}')"><span class="kt-ico">🔗</span>App-Link</button><button class="knopf" onclick="einrichtungskarte('${m.person_id}')"><span class="kt-ico">🖨️</span>Einrichtungs&shy;karte</button><button class="knopf" onclick="rolleBearbeiten('${m.person_id}')"><span class="kt-ico">🎖️</span>Amt & Rechte</button><button class="knopf" onclick="ansageVorgabeSetzen('${m.person_id}', ${esc(JSON.stringify((m.name || "").split(" ")[0]))})"><span class="kt-ico">🗣️</span>Online-Ansagen einschalten</button>` : ""}
       ${(ICH?.admin || ICH?.vorstand) && !m.selbst ? `<button class="knopf" onclick="elternHandy('${esc(m.person_id)}')"><span class="kt-ico">👪</span>Eltern-Handy</button>` : ""}
+      ${ICH?.admin && !m.selbst ? `<button class="knopf" onclick="waLieberAdmin('${esc(m.person_id)}')"><span class="kt-ico">📱</span>${MITGLIEDER?.find((x) => x.person_id === m.person_id)?.wege?.waLieber ? "Liest lieber WhatsApp ✓" : "Liest lieber WhatsApp?"}</button>` : ""}
       ${(ICH?.admin || ICH?.vorstand) && !m.selbst ? `<button class="knopf" onclick="mgEingang('${esc(m.person_id)}')"><span class="kt-ico">📥</span>In den Eingangskorb</button>` : ""}
       ${ICH?.admin && !m.selbst ? `<button class="knopf" onclick="aeErbitten(${jsArg(m.person_id)}, ${jsArg(String(m.name || "").split(" ")[0])})"><span class="kt-ico">✏️</span>Änderung erbitten</button>` : ""}
       ${zeilen ? '<button class="knopf" onclick="kontaktSpeichern()"><span class="kt-ico">📇</span>Ins Telefonbuch</button>' : ""}
@@ -32996,6 +33073,8 @@ async function kontaktExternSetzen(an) { // KC-CLUB-KONTAKT-EXTERN
 }
 function kontaktSchalterZeigen() {
   if ($("setKontaktExtern")) $("setKontaktExtern").checked = INIT?.einstellungen?.kontakt_extern?.an === true; // KC-CLUB-KONTAKT-EXTERN
+  if ($("setWaLieber")) $("setWaLieber").checked = INIT?.einstellungen?.wa_lieber?.an === true; // KC-CLUB-WA-LIEBER
+  if ($("setWaAuto")) $("setWaAuto").checked = einst("waAuto", true);
   const kf = INIT?.kontaktFreigabe || {};
   for (const f of ["handy", "festnetz", "mail", "adresse"]) { const s = $("setKontakt_" + f); if (s) s.checked = !!kf[f]; }
 }
@@ -33014,6 +33093,9 @@ async function gratulieren(pid, ohneFrage) {
   textVorbelegen(`Alles Gute zum Geburtstag, ${m.vorname}! 🎂🥳`);
   $("text").focus();
 }
+// 2.971.0 KC-CLUB-TIPPSPIEL: Merkzettel fürs Info-Laufband (welche Spiele bald, schon getippt?) – höchstens alle 6 Std., 8 s nach dem Start, still
+let TP_HOLT = false;
+function tpMerkzettelErneuern() { api("tipp_stand").then((d) => { try { localStorage.setItem("kc_club_tipp_cache", JSON.stringify({ am: Date.now(), dabei: !!d.dabei, bald: d.bald || [] })); } catch {} }).catch(() => {}); }
 // 2.965.0 KC-CLUB-GENESUNGSKARTE (Wunsch Hansi 16.11.2026: „Gute Besserung direkt in ihren Chat reinstellen … nicht als Brief auf Briefkopf, sondern als
 // Genesungskarte mit z. B. Blumenstrauß“): die App malt eine Karte (Blumenstrauß, „Gute Besserung, Vorname!“, unten Kochmütze + „Köcheclub Werne“ in
 // Weinrot/Beige – KC-CD), zeigt sie zur Ansicht und legt sie mit einem Tipp als Bild in den Chat mit der Person; ➤ tippt man selbst (wie beim Gratulieren).
@@ -36076,7 +36158,7 @@ const FENSTER_NAMEN = {
   diktatBlatt: "✍️ Diktieren", druckBlatt: "🖨️ Drucken", dsBlatt: "🗓️ Dienstplan", dsOrteBlatt: "📍 Dienst-Orte", dsWerBlatt: "👥 Wer ist heute im Dienst",
   rundBlatt: "🪑 Runder Tisch", rundNeuBlatt: "🪑 Zum Runden Tisch einladen", rundTischBlatt: "🪑 Am Runden Tisch", rundTascheBlatt: "💼 Tasche für den Runden Tisch", rundArchivBlatt: "🗄️ Tasche: aus dem Archiv", // 2.762.0 KC-CLUB-RUNDER-TISCH
   dtBlatt: "🗓️ Dienst-Tausch", dvBlatt: "📊 Dienstzeiten-Übersicht", dwSperreBlatt: "💡 Sperrzeit nicht nötig", egBlatt: "📥 Mein Eingangskorb", eingangBlatt: "📥 In den Eingangskorb eines Mitglieds",
-  einlBlatt: "📥 Dokument einlesen", ekAblageBlatt: "🗄️ Eingangskorb: ablegen", ekDwBlatt: "📅 Dienstzeiten", ekErstBlatt: "💶 Erstattung", ekErstOkBlatt: "✅ Erstattung als erstattet markieren?", gkBlatt: "💐 Genesungskarte", gkGemBlatt: "👥 Gemeinsame Karte", ekHinweisBlatt: "📥 Hinweis: Eingangskorb",
+  einlBlatt: "📥 Dokument einlesen", ekAblageBlatt: "🗄️ Eingangskorb: ablegen", ekDwBlatt: "📅 Dienstzeiten", ekErstBlatt: "💶 Erstattung", ekErstOkBlatt: "✅ Erstattung als erstattet markieren?", gkBlatt: "💐 Genesungskarte", tpBlatt: "⚽ Bundesliga-Tippspiel", gkGemBlatt: "👥 Gemeinsame Karte", ekHinweisBlatt: "📥 Hinweis: Eingangskorb",
   ekNachBlatt: "🔎 Nachverfolgen", elternBlatt: "👪 Eltern-Handy", entwicklerBlatt: "👨‍💻 Über den Entwickler", erBlatt: "✅ Alles eingerichtet", ibBlatt: "🖼️ Installieren mit Bildern", erinBlatt: "🔔 Erinnerung für dich",
   erkBlatt: "💡 Vorschlag aus der Nachricht", khBlatt: "📌 Für dich (Chat)", khErinBlatt: "⏰ An Nachricht erinnern", khAufgabeBlatt: "📋 Nachricht als Aufgabe",ersBesBlatt: "🎓 Fahrten aus Besuchen", ersCsvBlatt: "📊 Erstattungen für Excel", eblBlatt: "📒 Buchungsliste", esTafelBlatt: "📤 Tafel sichern", ewBlatt: "🧭 Einstellungen erklärt",
   expressBlatt: "🏎️ Express-Sendung", externBlatt: "🌐 Externer Inhalt", faAlbenKorb: "🗑️ Gelöschte Alben", faAlbumBlatt: "📸 Foto in welches Album?", faAlbumForm: "📸 Album anlegen/ändern",

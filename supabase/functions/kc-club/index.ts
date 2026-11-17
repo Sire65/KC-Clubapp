@@ -194,7 +194,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.968.0";
+const SERVER_VERSION = "2.972.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -527,6 +527,44 @@ async function gerichtErinnerung() {
   }
 }
 // 2.947.0 KC-CLUB-ADVENT-PREISE: Preis-Türchen (Tag → Preis); muss zu ADVENT_PREISE/AK_TUERCHEN in der App passen (Test advent-preise)
+// 2.971.0 KC-CLUB-TIPPSPIEL (Wunschliste #96): Bundesliga-Tippspiel. Adapter für die kostenlose OpenLigaDB (ohne Schlüssel) – austauschbar (AGENTS Regel 18).
+// Der Server holt Spielplan und Ergebnisse höchstens alle 15 Min. (nach Spielende alle 5 Min.), die Handys fragen nie fremde Seiten.
+const TIPP_LIGA = "bl1", TIPP_QUELLE = "https://api.openligadb.de";
+const tippSaison = (d = new Date()) => { const t = berlinTag(d), j = Number(t.slice(0, 4)), m = Number(t.slice(5, 7)); return m >= 7 ? j : j - 1; };
+const tippPunkte = (t: any, s: any): number | null => { // 3 genau · 2 Tordifferenz · 1 Tendenz · 0 daneben (nur fertige Spiele)
+  if (!s?.fertig || s.tore_heim === null || s.tore_gast === null || !t) return null;
+  if (t.heim === s.tore_heim && t.gast === s.tore_gast) return 3;
+  if (t.heim - t.gast === s.tore_heim - s.tore_gast) return 2;
+  return Math.sign(t.heim - t.gast) === Math.sign(s.tore_heim - s.tore_gast) ? 1 : 0;
+};
+let TIPP_SYNC = 0;
+async function tippQuelle(pfad: string): Promise<any> {
+  const r = await fetch(TIPP_QUELLE + pfad, { signal: AbortSignal.timeout(8000), headers: { accept: "application/json" } });
+  if (!r.ok) throw new Error("OpenLigaDB " + r.status); return await r.json();
+}
+async function tippAbgleich(): Promise<void> { // aktueller und nächster Spieltag (Fehler stören nie: dann bleibt der letzte Stand)
+  const jetztMs = Date.now();
+  const { data: offen } = await db.from("kc_club_tipp_spiele").select("spiel_id").eq("fertig", false).lt("anpfiff", new Date(jetztMs - 105 * 60000).toISOString()).limit(1);
+  if (jetztMs - TIPP_SYNC < ((offen ?? []).length ? 5 : 15) * 60000) return;
+  const { data: zuletzt } = await db.from("kc_club_tipp_spiele").select("aktualisiert_am").order("aktualisiert_am", { ascending: false }).limit(1);
+  const alt = zuletzt?.[0] ? jetztMs - Date.parse(zuletzt[0].aktualisiert_am) : Infinity;
+  if (alt < ((offen ?? []).length ? 5 : 15) * 60000) { TIPP_SYNC = jetztMs - alt; return; }
+  TIPP_SYNC = jetztMs;
+  try {
+    const saison = tippSaison(), akt = Number((await tippQuelle(`/getcurrentgroup/${TIPP_LIGA}`))?.groupOrderID) || 1;
+    for (const tag of [akt - 1, akt, akt + 1].filter((x) => x >= 1 && x <= 34)) {
+      const liste = await tippQuelle(`/getmatchdata/${TIPP_LIGA}/${saison}/${tag}`); if (!Array.isArray(liste)) continue;
+      const zeilen = liste.filter((m: any) => Number.isInteger(m?.matchID) && m.matchDateTimeUTC).map((m: any) => {
+        const end = (m.matchResults || []).find((x: any) => x.resultTypeID === 2);
+        return { spiel_id: m.matchID, liga: TIPP_LIGA, saison, spieltag: Number(m.group?.groupOrderID) || tag, anpfiff: m.matchDateTimeUTC,
+          heim: txt(m.team1?.teamName, 60) || "?", gast: txt(m.team2?.teamName, 60) || "?", heim_kurz: txt(m.team1?.shortName, 30) || null, gast_kurz: txt(m.team2?.shortName, 30) || null,
+          heim_bild: /^https:\/\//.test(m.team1?.teamIconUrl || "") ? String(m.team1.teamIconUrl).slice(0, 300) : null, gast_bild: /^https:\/\//.test(m.team2?.teamIconUrl || "") ? String(m.team2.teamIconUrl).slice(0, 300) : null,
+          tore_heim: end ? Number(end.pointsTeam1) : null, tore_gast: end ? Number(end.pointsTeam2) : null, fertig: !!m.matchIsFinished && !!end, aktualisiert_am: jetzt() };
+      });
+      if (zeilen.length) await db.from("kc_club_tipp_spiele").upsert(zeilen, { onConflict: "spiel_id" });
+    }
+  } catch (e) { console.error("tippAbgleich", String(e)); }
+}
 const ADVENT_PREISE: Record<number, string> = { 6: "Mini-Schoko-Nikolaus", 20: "Kinderriegel" };
 const berlinTag = (d: Date) => new Intl.DateTimeFormat("sv-SE", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
 const berlinStunde = (d: Date) => Number(new Intl.DateTimeFormat("en-US", { timeZone: TZ, hourCycle: "h23", hour: "2-digit" }).format(d));
@@ -2367,6 +2405,8 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
   fristen: (w) => fristWahl(w),
   // KC-CLUB-KONTAKT-EXTERN (Wunsch Hansi 09.11.2026): „Meine Kontaktdaten dürfen an Personen außerhalb des Clubs weitergegeben werden“ – Standard aus
   kontakt_extern: (w) => ({ an: w?.an === true }),
+  // KC-CLUB-WA-LIEBER (Wunsch Hansi 16.11.2026: „einige nutzen lieber WhatsApp als die Club-App“): ich lese lieber WhatsApp – Standard aus
+  wa_lieber: (w) => ({ an: w?.an === true }),
   ruhezeit: (w) => {
     const zeit = (x: unknown, std: string) => /^([01]\d|2[0-3]):[0-5]\d$/.test(String(x)) ? String(x) : std;
     return { an: w?.an === true, von: zeit(w?.von, "22:00"), bis: zeit(w?.bis, "07:00"), erwaehnung: w?.erwaehnung !== false };
@@ -4361,7 +4401,7 @@ const ZUGANG_AKTIONEN: Record<"basis" | "aushilfe", readonly string[]> = {
     "vorlese_stimmen", "sicherheit_pruefen", "verbindung_melden", "sicherheit_melden", "lebenszeichen", "notbetrieb_nachtragen", "zugang_link_mailen",
     "wetter", "wetter_ort_suchen", "treffen_liste", "treffen_antwort", "erinnerung_setzen", "kalender", "kalender_abo", "kalender_abo_holen", "privattermin_speichern",
     "privattermin_loeschen", "privattermine_liste", "countdowns", "terminumfragen_liste", "terminumfrage_antwort", "mitglieder", "mitglied_details",
-    "unterhaltungen", "unterhaltung", "unterhaltung_stand", "tippen_stand", "tippen", "nachricht_senden", "nachricht_details", "einzelchat_finden", "express_stand", "express_angezeigt",
+    "unterhaltungen", "unterhaltung", "unterhaltung_stand", "tippen_stand", "tippen", "nachricht_senden", "nachricht_details", "einzelchat_finden", "gruppenchat_finden", "express_stand", "express_angezeigt",
     "express_antwort", "startnachricht_bestaetigen", "stadt_woche", "ferien", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "geplant_abrufen", "wecker_setzen", "wecker_loeschen", "nachricht_erinnerung_setzen", "nachricht_erinnerung_liste", "nachricht_erinnerung_loeschen", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
     "chat_selbstloeschen", "link_vorschau", "unterstuetzung_meine", "unterstuetzung_senden", "nachricht_bearbeiten", "nachricht_merken", "gemerkte_nachrichten", "chat_umfrage_stimmen", "nachricht_ausblenden",
     "unterhaltung_ausblenden", "unterhaltung_archivieren", "unterhaltung_leeren", "gruppe_verlassen", "anlage_hochladen", "anlage_url",
@@ -4374,7 +4414,7 @@ const ZUGANG_AKTIONEN: Record<"basis" | "aushilfe", readonly string[]> = {
     "push_pruefen", "geraete_liste", "geraet_entfernen", "andere_geraete_abmelden", "push_abmelden", "push_test", "rw_test", "neues_geraet_antwort"],
   aushilfe: ["mein_dienst", "dienstwunsch_laden", "dienstwunsch_speichern", "dienst_gruss", "dienste", "dienst_freigabe", "meine_eingaben",
     "eingaben_bestaetigen", "wunschbogen_mailen", "eingaben_ablegen", "fotos_neueste", "fotos_liste", "foto_oeffnen",
-    "schulung_meine", "schulung_antwort", "gericht_zutat_setzen", "gericht_antwort",
+    "schulung_meine", "schulung_antwort", "gericht_zutat_setzen", "gericht_antwort", "tipp_stand", "tipp_mitmachen", "tipp_abgeben",
     "sondereinsatz_zusage", "stunden_melden", "mein_ausweis", "dienst_stand", "dienst_buchen", "dienst_korrigieren", "dienst_tausch_liste", "dienst_tausch_anbieten", "dienst_tausch_aktion", "dp_einzelplan", "ist_offen", "ist_antworten", "ist_feedback"], // 2.590.0: Aushilfen dürfen sich auch anmelden (Hansi 22.10.); 2.606.0: und Dienste tauschen
 };
 const ZUGANG_ERLAUBT = { gast: new Set(ZUGANG_AKTIONEN.basis), aushilfe: new Set([...ZUGANG_AKTIONEN.basis, ...ZUGANG_AKTIONEN.aushilfe]), tischgast: new Set<string>(TISCHGAST_AKTIONEN) };
@@ -5451,6 +5491,7 @@ async function adminIds(): Promise<string[]> {
 // KC-CLUB-FREIGABE (2.23.86, Wunsch Hansi): neue Funktionen erst „nur Admin (Test)“, dann für alle. Standard gilt, solange der Admin nichts gewählt hat.
 const FUNKTIONEN: Record<string, { t: string; u: string; standard: "alle" | "admin" }> = {
   rezepte: { t: "📖 Rezeptbuch", u: "Club-Rezepte, Portionen umrechnen, Einkaufsliste", standard: "admin" },
+  tippspiel: { t: "⚽ Bundesliga-Tippspiel", u: "Ergebnisse tippen bis zum Anpfiff, Punkte und Tabelle – für Mitglieder und Aushilfen", standard: "admin" }, // 2.971.0 KC-CLUB-TIPPSPIEL (Hansi 17.11.: „noch nicht freigegeben“)
   gemeinschaftsgericht: { t: "🍲 Gemeinschaftsgericht", u: "Zutat beim App-Start einreichen, Rezept als PDF an alle – solange „nur für mich“: nur der Admin wird gefragt, Versand nur an ihn", standard: "admin" }, // KC-CLUB-GEMEINSCHAFTSGERICHT (Hansi 15.11.: „noch nicht freigegeben“)
   fitness: { t: "🏋️ Fit bleiben", u: "Übungen mit Twinkey, eigene Auswertung", standard: "admin" }, // KC-CLUB-FITNESS (2.55.0)
   ist_rueckfrage: { t: "✅ Ist-Zeiten nach dem Dienst bestätigen", u: "Rückfrage nach jedem Dienst: übernehmen, ändern, nicht da – Abgleich mit Kasse und DP2", standard: "admin" }, // KC-CLUB-IST-RUECKFRAGE
@@ -10684,7 +10725,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // 2.593.0 KC-CLUB-GLEICHZEITIG (Wunsch Hansi „bündeln statt einzeln nacheinander – sorgfältig und vorsichtig“): die folgenden Lesungen
         // hängen nicht voneinander ab (nur an „leute“ aus dem ersten Block) – sie laufen jetzt gleichzeitig statt in ~6 Schritten nacheinander.
         // Gleiche Abfragen, gleiche Regeln, gleiches Ergebnis; nur „online jetzt“ wartet weiter auf meine eigene Sichtbarkeit.
-        const [{ data: mitgl }, { data: avs }, ichZeigeMap, zd, zeigen, inko, probe, ohneKommListen, adminLesen] = await Promise.all([
+        const [{ data: mitgl }, { data: avs }, ichZeigeMap, zd, zeigen, inko, probe, ohneKommListen, adminLesen, { data: wal }] = await Promise.all([
           db.from("kc_core_club_memberships").select("person_id,membership_type,membership_status").eq("org_id", ORG),
           db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "avatar"),
           onlineZeigenMap([ich.person_id]),
@@ -10697,7 +10738,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             db.from("kc_communication_requests").select("recipient_refs,channel,status,created_at").eq("source_program", "kc-club").in("status", COMM_FEHLER).gte("created_at", new Date(Date.now() - 7 * 86400000).toISOString()).limit(500),
             db.from("kc_communication_requests").select("recipient_refs,channel,created_at").eq("source_program", "kc-club").in("status", COMM_OK).gte("created_at", new Date(Date.now() - 7 * 86400000).toISOString()).order("created_at", { ascending: false }).limit(2000),
           ]) : Promise.resolve(null),
+          db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "wa_lieber"), // KC-CLUB-WA-LIEBER
         ]);
+        const waLieber = new Set((wal ?? []).filter((x: any) => x.wert?.an === true).map((x: any) => x.person_id));
         // KC-CLUB-SENSIBEL-GAESTE (2.78.0, Wunsch Hansi): wer ist KEIN ordentliches Mitglied (Gast, ausgetreten, ohne Eintrag)?
         // Ohne lesbaren Eintrag gilt jemand als Nicht-Mitglied – unbekannt wird nie als „Mitglied“ (OK) gezeigt.
         const ordentlich = new Set((mitgl ?? []).filter((x: any) => x.membership_type === "regular" && x.membership_status === "active").map((x: any) => x.person_id));
@@ -10751,7 +10794,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             status: st.get(m.person_id) ?? null, online: on.has(m.person_id) && m.person_id !== ich.person_id, zuletztDa: zd.get(m.person_id) ?? null,
             verborgen: m.person_id !== ich.person_id && (!ichZeige || zeigen.get(m.person_id) === false),
             heute: ichZeige && ((zeigen.get(m.person_id) !== false && !inko.has(m.person_id)) || m.person_id === ich.person_id) && !!(z.get(m.person_id) as any)?.zuletzt_gesehen && tag((z.get(m.person_id) as any).zuletzt_gesehen) === heute,
-            wege: { push: ps.has(m.person_id), mail: !!m.email, whatsapp: hatTel.has(m.person_id) && (ich.admin || m.person_id === ich.person_id || (ich.kontakte && handyFrei.has(m.person_id))) },
+            wege: { push: ps.has(m.person_id), mail: !!m.email, whatsapp: hatTel.has(m.person_id) && (ich.admin || m.person_id === ich.person_id || (ich.kontakte && handyFrei.has(m.person_id))),
+              waLieber: waLieber.has(m.person_id) }, // KC-CLUB-WA-LIEBER: liest lieber WhatsApp (die App öffnet beim Senden WhatsApp – nur wenn „whatsapp“ erlaubt ist)
             // für alle nur grob: in den letzten 14 Tagen in der App gewesen (genaue Zeit nur für den Admin)
             aktiv: !(inko.has(m.person_id) && m.person_id !== ich.person_id) && !!(z.get(m.person_id) as any)?.zuletzt_gesehen && Date.now() - new Date((z.get(m.person_id) as any).zuletzt_gesehen).getTime() < 14 * 86400000,
             ...(ich.admin ? { zugang: (r.get(m.person_id) as any)?.zugang === "passiv" ? "passiv" : zugangAus(r.get(m.person_id)), kontakte: (r.get(m.person_id) as any)?.kontakte_sehen !== false, protokolle: (r.get(m.person_id) as any)?.protokolle_lesen !== false, app: !!(z.get(m.person_id) as any)?.aktiv, zuletzt: inko.has(m.person_id) && m.person_id !== ich.person_id ? null : (z.get(m.person_id) as any)?.zuletzt_gesehen ?? null, push: ps.has(m.person_id), mail: !!m.email, fehler: fehler.get(m.person_id) ?? null,
@@ -12693,6 +12737,53 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           pflanzen: (x.pflanzen || []).map((q: any) => ({ art: q.art, gesaet: q.gesaet, gegossen: q.gegossen, stand: q.stand, wachs: q.wachs })) })) });
       }
       // 2.947.0 KC-CLUB-ADVENT-PREISE (Wunschliste #89, Hansi 15.11.2026): Preis-Türchen im Adventskalender – „🎁 Ja, den nehme ich“ → Hansis Liste.
+      // 2.971.0 KC-CLUB-TIPPSPIEL: Stand (Spieltag, eigene Tipps, Tipps der anderen erst ab Anpfiff, Tabelle) · mitmachen · Tipp abgeben (bis Anpfiff)
+      case "tipp_stand": case "tipp_mitmachen": case "tipp_abgeben": {
+        if (ich.zugang !== "mitglied" && ich.zugang !== "aushilfe") throw new Fehler("Das Tippspiel ist für Mitglieder und Aushilfen.", 403);
+        await nurWennFrei("tippspiel", ich, "Das Tippspiel"); // Freigaben-Liste: erst nur Admin (Test), dann alle
+        if (a === "tipp_mitmachen") {
+          await db.from("kc_club_tipp_teilnehmer").upsert({ person_id: ich.person_id, dabei: p.an !== false }, { onConflict: "person_id" });
+          return json({ ok: true, dabei: p.an !== false });
+        }
+        if (a === "tipp_abgeben") {
+          const id = Math.round(Number(p.spiel_id)), h = Math.round(Number(p.heim)), g = Math.round(Number(p.gast));
+          if (!(h >= 0 && h <= 20 && g >= 0 && g <= 20)) throw new Fehler("Bitte zwei Zahlen von 0 bis 20 eingeben.");
+          const { data: s } = await db.from("kc_club_tipp_spiele").select("spiel_id,anpfiff").eq("spiel_id", id).maybeSingle();
+          if (!s) throw new Fehler("Spiel nicht gefunden.", 404);
+          if (Date.parse(s.anpfiff) <= Date.now()) throw new Fehler("Das Spiel läuft schon – Tippen geht nur bis zum Anpfiff.", 409);
+          await db.from("kc_club_tipp_teilnehmer").upsert({ person_id: ich.person_id, dabei: true }, { onConflict: "person_id", ignoreDuplicates: true });
+          const { error } = await db.from("kc_club_tipp").upsert({ person_id: ich.person_id, spiel_id: id, heim: h, gast: g, am: jetzt() }, { onConflict: "person_id,spiel_id" });
+          if (error) throw new Fehler("Der Tipp konnte nicht gespeichert werden – bitte gleich noch einmal.", 503);
+          return json({ ok: true });
+        }
+        await tippAbgleich();
+        const saison = tippSaison(), jetztIso = new Date().toISOString();
+        const [{ data: tn }, { data: alleSpiele }] = await Promise.all([db.from("kc_club_tipp_teilnehmer").select("person_id,dabei"),
+          db.from("kc_club_tipp_spiele").select("*").eq("liga", TIPP_LIGA).eq("saison", saison).order("anpfiff").limit(400)]);
+        const spiele = alleSpiele ?? [], dabei = (tn ?? []).filter((x: any) => x.dabei).map((x: any) => x.person_id), ichDabei = dabei.includes(ich.person_id);
+        const naechstes = spiele.find((x: any) => !x.fertig) || spiele[spiele.length - 1];
+        const tage = [...new Set(spiele.map((x: any) => x.spieltag))].sort((x: any, y: any) => x - y);
+        const tag = tage.includes(Number(p.spieltag)) ? Number(p.spieltag) : naechstes?.spieltag ?? null;
+        const ids = spiele.map((x: any) => x.spiel_id);
+        const { data: tipps } = ids.length ? await db.from("kc_club_tipp").select("person_id,spiel_id,heim,gast").in("spiel_id", ids).limit(20000) : { data: [] as any[] };
+        const leute = await personen([...new Set([...dabei, ...(tipps ?? []).map((t: any) => t.person_id)])]);
+        const nameVon = (id: string) => vorname(leute.get(id)) || leute.get(id)?.display_name || "Mitglied";
+        const sp = new Map(spiele.map((x: any) => [x.spiel_id, x]));
+        const tab = new Map<string, { punkte: number; genau: number; tag: number; getippt: number }>();
+        for (const id of dabei) tab.set(id, { punkte: 0, genau: 0, tag: 0, getippt: 0 });
+        for (const t of tipps ?? []) { const s: any = sp.get(t.spiel_id), pk = tippPunkte(t, s); const z = tab.get(t.person_id) ?? { punkte: 0, genau: 0, tag: 0, getippt: 0 }; z.getippt++;
+          if (pk !== null) { z.punkte += pk; if (pk === 3) z.genau++; if (s.spieltag === tag) z.tag += pk; } tab.set(t.person_id, z); }
+        const tabelle = [...tab.entries()].map(([id, z]) => ({ name: nameVon(id), ich: id === ich.person_id, ...z })).sort((x, y) => y.punkte - x.punkte || y.genau - x.genau || x.name.localeCompare(y.name, "de"));
+        const spieltag = spiele.filter((x: any) => x.spieltag === tag).map((x: any) => {
+          const los = x.anpfiff <= jetztIso, mein = (tipps ?? []).find((t: any) => t.spiel_id === x.spiel_id && t.person_id === ich.person_id);
+          return { id: x.spiel_id, anpfiff: x.anpfiff, heim: x.heim_kurz || x.heim, gast: x.gast_kurz || x.gast, heimBild: x.heim_bild, gastBild: x.gast_bild, fertig: x.fertig, los,
+            tore: x.tore_heim === null ? null : [x.tore_heim, x.tore_gast], mein: mein ? [mein.heim, mein.gast] : null, meinePunkte: tippPunkte(mein, x),
+            andere: los ? (tipps ?? []).filter((t: any) => t.spiel_id === x.spiel_id && t.person_id !== ich.person_id).map((t: any) => ({ name: nameVon(t.person_id), tipp: [t.heim, t.gast], punkte: tippPunkte(t, x) })) : null };
+        });
+        const bald = spiele.filter((x: any) => x.anpfiff > jetztIso && Date.parse(x.anpfiff) - Date.now() < 3 * 86400000)
+          .map((x: any) => ({ id: x.spiel_id, anpfiff: x.anpfiff, getippt: (tipps ?? []).some((t: any) => t.spiel_id === x.spiel_id && t.person_id === ich.person_id) }));
+        return json({ ok: true, saison, dabei: ichDabei, spieltag: tag, tage, spiele: spieltag, tabelle, bald, quelle: "OpenLigaDB" });
+      }
       case "advent_preis_melden": case "advent_preise_meine": case "advent_preise_liste": {
         if (ich.zugang !== "mitglied") throw new Fehler("Der Adventskalender ist nur für Mitglieder.", 403);
         const heute = berlinTag(new Date()), jahr = Number(heute.slice(0, 4));
@@ -15448,6 +15539,26 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (!ids.length) return json({ id: null });
         const { data: m } = await db.from("kc_communication_messages").select("thread_id,created_at").in("thread_id", ids).order("created_at", { ascending: false }).limit(1);
         return json({ id: m?.[0]?.thread_id || ids[0] });
+      }
+      // 2.970.0 KC-CLUB-CHAT-VORHANDEN (Wunschliste #97, Hansi 16.11.2026: „Wenn man an Personen schreibt, die schon in der Gruppe sind, keinen neuen Chat
+      // aufmachen, sondern in den vorhandenen übernehmen – z. B. Gruppe Zanders: an Klaus geschrieben und Dieter dazu genommen, dann ist das ja die Gruppe“):
+      // gibt es einen Chat, in dem GENAU diese Personen (und ich) sind? Gruppen zuerst, sonst der zuletzt benutzte. Nur Teilnehmer-Listen, keine Inhalte.
+      case "gruppenchat_finden": {
+        const wer = [...new Set((Array.isArray(p.personen) ? p.personen : []).map(String).filter((x: string) => /^KC-P-[A-Z0-9-]{1,30}$/i.test(x) && x !== ich.person_id))].slice(0, 40);
+        if (!wer.length) return json({ id: null });
+        const soll = new Set([...wer, ich.person_id]);
+        const { data: meine } = await db.from("kc_communication_thread_participants").select("thread_id").eq("person_id", ich.person_id);
+        const ids = (meine ?? []).map((x: any) => x.thread_id); if (!ids.length) return json({ id: null });
+        const [{ data: tn }, { data: gr }] = await Promise.all([db.from("kc_communication_thread_participants").select("thread_id,person_id").in("thread_id", ids),
+          db.from("kc_club_gruppen").select("thread_id,name,symbol").in("thread_id", ids)]);
+        const je = new Map<string, Set<string>>(); for (const x of tn ?? []) je.set(x.thread_id, (je.get(x.thread_id) ?? new Set()).add(x.person_id));
+        const passt = [...je.entries()].filter(([, l]) => l.size === soll.size && [...soll].every((x) => l.has(x))).map(([t]) => t);
+        if (!passt.length) return json({ id: null });
+        const gruppen = (gr ?? []).filter((g: any) => passt.includes(g.thread_id));
+        let id = gruppen[0]?.thread_id || null;
+        if (!id) { const { data: m } = await db.from("kc_communication_messages").select("thread_id,created_at").in("thread_id", passt).order("created_at", { ascending: false }).limit(1); id = m?.[0]?.thread_id || passt[0]; }
+        const g = gruppen.find((x: any) => x.thread_id === id);
+        return json({ id, gruppe: g ? { name: g.name, symbol: g.symbol || "👥" } : null });
       }
       // KC-CLUB-MEINE-NACHRICHTEN-STATISTIK (2.36.0, Wunsch Hansi): jedes Mitglied sieht seine EIGENE Statistik (Chat ⋮) – gleiche Zählung, nur für ich.person_id
       case "meine_nachrichten_statistik":
@@ -18698,6 +18809,16 @@ Köcheclub Werne`,
         return json({ reisen, geburtstage, veranstaltungen, privat });
       }
 
+      // KC-CLUB-WA-LIEBER: der Admin setzt „liest lieber WhatsApp“ für ein Mitglied (für alle, die selten in die Einstellungen schauen)
+      case "wa_lieber_setzen": {
+        nurAdmin(ich);
+        const pid = String(p.person_id || ""), an = p.an === true;
+        if (!/^KC-P-[A-Z0-9-]{1,40}$/.test(pid)) throw new Fehler("Ungültig.");
+        const { error } = await db.from("kc_club_person_einstellung").upsert({ person_id: pid, schluessel: "wa_lieber", wert: { an }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
+        if (error) throw new Fehler("Das hat gerade nicht geklappt.", 503);
+        await protokoll(ich.person_id, "wa_lieber_gesetzt", { fuer: pid, an });
+        return json({ ok: true, an });
+      }
       // KC-CLUB-PULS (Wunsch Hansi 16.11.2026): Aussteuerungsanzeige im Kopf (nur Admin) – Zählerstände der Club-App, die App rechnet „pro Sekunde“
       case "betrieb_puls": {
         nurAdmin(ich);
