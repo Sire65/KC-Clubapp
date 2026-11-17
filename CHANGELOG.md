@@ -1,5 +1,15 @@
 # Änderungen
 
+## 2.973.0 – 2026-11-17 – 📱 WhatsApp-Nachrichten in die Club-App holen (KC-CLUB-WA-HOLEN) · nur App (Server bleibt 2.972.0)
+Wunsch Hansi 16.11.: „Wie kriegen wir WhatsApp-Nachrichten in die Club-App – direkt oder über Umwege?“ – Weg 2 „Teilen/Einfügen“: „Ja“.
+- **Einfügen:** In WhatsApp Nachricht(en) lange drücken → Kopieren → in der Club-App ganz normal ins Schreibfeld einfügen. Die App erkennt WhatsApp-Text und
+  bereitet ihn auf wie der 📋-Knopf (KC-CLUB-WA-EINFUEGEN): „📋 Aus WhatsApp: Marianne (21:03): …“, Handynummern entfernt. Normaler Text bleibt unverändert.
+- **Teilen:** Text aus WhatsApp (oder anderen Apps) mit „Köcheclub“ teilen → Auswahl „💬 In den Chat mit Marianne“ (wenn der Name eindeutig zu einem Mitglied passt),
+  „💬 In einen Club-Chat …“ oder „📥 In den Ablagekorb“ (wie bisher). Dateien/Fotos gehen weiter zuerst in den Ablagekorb.
+- Übernommener Text öffnet beim Senden nicht wieder WhatsApp (KC-CLUB-WA-LIEBER). Gesendet wird erst mit ➤; der Club-Server bekommt dafür nichts Neues.
+- Test: `tests/wa-holen.test.mjs`. Rückweg: App 2.972.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.972.0 – 2026-11-17 – ⚽ Tippspiel erst einmal nur für Hansi (Freigabe) (KC-CLUB-TIPPSPIEL, Wunschliste #96) · Server 2.972.0
 Hansi 17.11.: „Noch nicht freigegeben, hochladen ja.“
 - Das Bundesliga-Tippspiel (2.971.0) steht jetzt in der **Freigaben-Liste** („⚽ Bundesliga-Tippspiel“, Standard: nur Admin). Bis Hansi dort „alle“ wählt, sehen Mitglieder und Aushilfen weder den Knopf bei 🎲 Spiele noch die Zeile im Info-Laufband; der Server lehnt Aufrufe ab („noch nicht freigegeben“). Hansi sieht es mit „🔒 nur für dich (Test)“.

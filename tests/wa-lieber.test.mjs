@@ -20,7 +20,7 @@ const lauf = (o = {}) => {
   const log = [];
   const umg = { chatId: "c1", CHAT: { id: "c1", gruppe: null, teilnehmer: [{ person_id: "ICH" }, { person_id: "M" }] }, ICH: { person_id: "ICH", vorname: "Hansi" },
     MITGLIEDER: [{ person_id: "M", vorname: "Marianne", wege: { whatsapp: true, waLieber: true } }], VN: { an: false }, EXPRESS: false, anlagen: [], WE: { ids: [] },
-    IST_ANDROID: false, IST_IOS: false, einst: () => true, ...o };
+    IST_ANDROID: false, IST_IOS: false, einst: () => true, WA_HOLEN: { aus: false }, ...o };
   const loc = { set href(u) { log.push(u); } };
   const f = new Function(...Object.keys(umg), "location", "window", "melde", "api", "mitgliederHolen", "waNummer", "encodeURIComponent",
     code + "; WA_NR.M = '4915204077312'; return waLieberJetzt;")(...Object.values(umg), loc, { open: (u) => log.push(u) }, () => {}, async () => ({}), async () => {}, (x) => x, encodeURIComponent);
@@ -35,4 +35,5 @@ assert.equal(lauf({ CHAT: { id: "c1", gruppe: { name: "G" }, teilnehmer: [{ pers
 assert.equal(lauf({ einst: () => false }).length, 0, "abschaltbar");
 assert.equal(lauf({ anlagen: [1] }).length, 0, "nicht mit Anlagen");
 assert.equal(lauf({ VN: { an: true } }).length, 0, "nicht verschlüsselt");
+assert.equal(lauf({ WA_HOLEN: { aus: true } }).length, 0, "nicht, wenn der Text gerade aus WhatsApp übernommen wurde (KC-CLUB-WA-HOLEN)");
 console.log("✅ wa-lieber: alle Prüfungen bestanden");
