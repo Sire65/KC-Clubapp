@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.973.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.974.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -15,12 +15,12 @@ const TEILE_LISTE = {
   etiketten: { einstieg: ["peStart"], sri: "sha384-hZPVTBtZRkjm/gH7EiiPwId/cpV/5bFoQ/Zasy+rHzKYdMbfrZ1Muv762mCmZd7d" }, // KC-CLUB-PREISETIKETTEN (12.11.2026): Büro → Drucker → 🏷️ Preisetiketten (nur Clubleitung)
   videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl", "installAnleitung"], sri: "sha384-eAAjAsra7n6WSzBUKOSx5Hqm9q8OzAHCGb//HVeoE9LH/7OQqJ2Gb07lND8kHTcc" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
   szenen: { einstieg: ["jahreszeitVorschau"], sri: "sha384-mAuFkYPP7UnZNUqE/gD38eJ/THfwNSgLrJyvGLQUb5PBmCArQZ8wIH5DiImNHvlj" }, // Stufe 3b: Kopf-Szenen (Jahreszeiten, Sim-Jü, Themen) – kurz nach dem Start über szenenSpaeter
-  sprache: { einstieg: ["spracheEnglisch", "spracheDeutsch"], sri: "sha384-YPGi1MBE6HC7gIBCHl8ypykouxpAPEcg836qm5gE6W6itUoKYYYOU2haKwqQ08Tg" }, // KC-CLUB-SPRACHE: Bedienung auf Englisch – nur geladen, wenn jemand 🇬🇧 wählt
+  sprache: { einstieg: ["spracheEnglisch", "spracheDeutsch"], sri: "sha384-ClAyep1YzwEniJlCEsh1IBmuGtitUSrdvupHqcasL5jZH2Dmq6pi+/IZYyAoZrem" }, // KC-CLUB-SPRACHE: Bedienung auf Englisch – nur geladen, wenn jemand 🇬🇧 wählt
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-NDuho5dgDL13uhtcTY8d0cGESAWhk+B+5qyWyvBuOxPgmADzmvY9YFCcwWM0s+kx" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
   spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-gD3q/2L9GT3oU74JreTUDAa1vJDESZ3irJ9nuzr2VuaVzNUREU4KIH2pROKYjUNn" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
   tischlive: { einstieg: ["tlStart", "tlStopp", "tlZeichnen", "tlPlatz", "tlRegeln"], sri: "sha384-RCmsKY+DTRfsCMRHkJVG2UJlySANNdHxnEdMps4tkL9kgf8DC5O/b1jMcwVeY3XB" }, // 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: Ton, Kamera, Bildschirm, Unterlagen zeigen am Tisch
   buero: { einstieg: ["ersBuchOeffnen", "eblDruck", "buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-VPnvAguly/J0kMc0JZ7JWq36ymMqurBv176yx9CmcE6G2Y/5UF38fVO5bvRWOJTG" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
-  hilfe: { einstieg: ["twFrageStart", "twOffenStart", "sucheAuf", "suSucheKnopf"], sri: "sha384-8A9k87FgeesMgEQxdePUURmcrnJZlfcnIRqlk/8h42RENJYJnKZt0p0zkpCJ6zmH" }, // Stufe 5: Hilfe-Werkzeuge (Frag Twinkey, Mitglied fragen, Schnellsuche) – beim ersten Antippen
+  hilfe: { einstieg: ["twFrageStart", "twOffenStart", "sucheAuf", "suSucheKnopf"], sri: "sha384-kQ/pCEoGC36q1hgJ8LDEz49OXpMoLtqkmA7pqx4XNc3viLKWIngKuwOUPaRsTYxg" }, // Stufe 5: Hilfe-Werkzeuge (Frag Twinkey, Mitglied fragen, Schnellsuche) – beim ersten Antippen
   rechner: { einstieg: ["rechnerOeffnen"], sri: "sha384-UWrOf1EIXxhsoWWwxnLDzpzALsaxzNGXgeqoLAjVvqoQ6wbFnIGxYTkQPFpiRuQ4" }, // 2.811.0 KC-CLUB-RECHNER: Tischrechner im Büro, „rechne …“ per Sprache
   tippspiel: { einstieg: ["tpStart", "tpTag", "tpMitmachen", "tpTippen", "tpZeigen"], sri: "sha384-KNPQv0SkmN1bZrgFpl3dE1Osi/OcP0KUNKuIWQeEqe/98OM34+NRwv5m+2ePuBJ6" }, // 2.971.0 KC-CLUB-TIPPSPIEL (Wunschliste #96): Bundesliga-Tippspiel
   glueck: { einstieg: ["kaeferKommt", "kleeKommt"], sri: "sha384-hbPb96l3YrlvBxe1zJJfotwARA0pEPKKaDyb1BBVooEi5BCYbfYqihmMYABmlsg4" }, // KC-CLUB-MARIENKAEFER / KC-CLUB-GLUECKSKLEE (06.11.2026): 🐞 jeder 50., 🍀 jeder 25. Start
@@ -2544,7 +2544,7 @@ const HILFE = [
   { id: "dw_fertig", thema: "termine", sym: "✅", t: "Dienstwünsche mit „Fertig“ abschließen", x: "Hast du Dienstwünsche eingetragen, schließt du mit <b>„✅ Fertig“</b> ab – dann bekommst du eine <b>Bestätigung mit Zusammenfassung per E-Mail</b> (das ist noch nicht der Dienstplan, sondern deine Wunschplanung). Gehst du vorher zurück, fragt die App nach; <b>„Abbrechen“</b> führt zurück in die Eingabe. Klappt der Versand nicht (z. B. kein Netz), kannst du trotzdem gehen. Hast du einen Tag geändert, aber nicht gespeichert, hält die App dich auf: <b>„💾 Noch nicht gespeichert!“</b> – zurück zum Speichern oder trotzdem verlassen.", seit: "2.326.0" }, // 2.337.0 KC-CLUB-TUEV-4
   { id: "wunschbogen", thema: "termine", sym: "🖨️", t: "Leeren Wunschbogen drucken oder mailen", x: "Unter <b>📝 Dienstwünsche</b> oben auf <b>„🖨️ Bogen“</b> tippen. Du bekommst deinen persönlichen Bogen mit Namen und oben rechts einem QR-Code mit deiner Mitglieds-ID. <b>🖨️ Drucken</b> – oder ohne Drucker <b>✉️ Per E-Mail an mich</b>, dann kommt er als PDF in dein Postfach. Von Hand ausfüllen und die Zeiten danach mit Twinkey eintragen.", zeig: () => wbStart(), seit: "2.23.28" },
   { id: "chat_archiv", thema: "nachrichten", sym: "📦", t: "Chats archivieren, zurückholen und löschen", x: "In der Chat-Liste rechts am Chat auf <b>⋯</b> tippen: <b>📦 Archivieren</b> räumt ihn aus der Liste – er bleibt dort, auch wenn jemand schreibt, und steht oben unter <b>„📦 Archiviert“</b>. Dort holst du ihn mit <b>📤 Wieder aktivieren</b> zurück. <b>🗑️ Bei mir komplett löschen</b> entfernt den Chat mit allen bisherigen Nachrichten – nur bei dir, die anderen behalten ihn. Dasselbe findest du im Chat oben im Menü.", zeig: () => zeige("nachrichten"), seit: "2.23.28" },
-  { id: "kontakt_extern", thema: "privat", sym: "📤", t: "Kontakt an jemanden außerhalb des Clubs weiterleiten", x: "Auf der Seite eines Mitglieds: <b>„📤 Kontakt weiterleiten“</b>. Angaben ankreuzen, dann <b>📤 Teilen</b> (WhatsApp, SMS, Mail, AirDrop … mit Kontaktkarte), <b>✉️ E-Mail</b> (dein Mail-Programm öffnet sich) oder <b>📋 Kopieren</b>. Das geht nur, wenn das Mitglied es erlaubt hat: ⚙️ → Privatsphäre → <b>„📤 Auch an Personen außerhalb des Clubs“</b> (Standard aus) – und nur mit den Angaben, die es freigegeben hat. Deine eigene Karte kannst du immer weitergeben." },
+  { id: "kontakt_extern", thema: "privat", sym: "📤", t: "Kontakt an jemanden außerhalb des Clubs weiterleiten", x: "Auf der Seite eines Mitglieds: <b>„📇 Kontaktkarte“</b> → „Nach außen“: <b>🟢 WhatsApp</b>, <b>📤 Teilen</b> (WhatsApp, SMS, Mail, AirDrop … mit Kontaktkarte), <b>✉️ E-Mail</b> (dein Mail-Programm öffnet sich) oder <b>📋 Kopieren</b>. Das geht nur, wenn das Mitglied es erlaubt hat: ⚙️ → Privatsphäre → <b>„📤 Auch an Personen außerhalb des Clubs“</b> (Standard aus) – und nur mit den Angaben, die es freigegeben hat. Deine eigene Karte kannst du immer weitergeben." },
   { id: "kontakt_teilen", thema: "nachrichten", sym: "👤", t: "Eine Telefonnummer weitergeben", x: "Jemand fragt nach einer Nummer? Mit <b>📎 → „👤 Kontakt teilen“</b> schickst du eine Kontaktkarte in den Chat – der andere tippt sie an und hat alles beisammen.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
   { id: "kopieren", thema: "nachrichten", sym: "📋", t: "Text aus einer Nachricht übernehmen", x: "Nachricht antippen, <b>„📋 Kopieren“</b> wählen – schon liegt der Text in der Zwischenablage und lässt sich überall einfügen, etwa in eine Mail.", seit: "2.23.1" },
   { id: "einstellungen_ordnung", thema: "darstellung", sym: "🔍", t: "Einstellungen schneller finden", x: "Ganz oben unter ⚙️ steht <b>„🔍 Einstellung suchen“</b>: ein Wort eintippen (z. B. <b>Uhr</b>, <b>Schrift</b>, <b>Push</b>) – dann siehst du nur noch die passenden Schalter, ✕ zeigt wieder alles. Was zu einem Schalter gehört (z. B. die <b>Szenen</b> bei „🍂 Jahreszeiten im Kopf“, die Uhrenauswahl oder die Zeiten bei „Nicht stören“), steht in einem <b>eigenen Klappbereich</b> darunter: Schaltest du den Schalter ein, klappt er von selbst auf. Ist der Schalter aus, ist er grau mit 🔒.", zeig: () => { zeige("einstellungen"); setTimeout(() => $("einstSuche")?.focus(), 300); }, seit: "2.478.0" },
@@ -32535,8 +32535,7 @@ function mitgliedZeigen() {
       ${ICH?.admin && !m.selbst ? `<button class="knopf" onclick="waLieberAdmin('${esc(m.person_id)}')"><span class="kt-ico">📱</span>${MITGLIEDER?.find((x) => x.person_id === m.person_id)?.wege?.waLieber ? "Liest lieber WhatsApp ✓" : "Liest lieber WhatsApp?"}</button>` : ""}
       ${(ICH?.admin || ICH?.vorstand) && !m.selbst ? `<button class="knopf" onclick="mgEingang('${esc(m.person_id)}')"><span class="kt-ico">📥</span>In den Eingangskorb</button>` : ""}
       ${ICH?.admin && !m.selbst ? `<button class="knopf" onclick="aeErbitten(${jsArg(m.person_id)}, ${jsArg(String(m.name || "").split(" ")[0])})"><span class="kt-ico">✏️</span>Änderung erbitten</button>` : ""}
-      ${zeilen ? '<button class="knopf" onclick="kontaktSpeichern()"><span class="kt-ico">📇</span>Ins Telefonbuch</button>' : ""}
-      ${zeilen && zugang() === "mitglied" ? '<button class="knopf" onclick="kwExtern()"><span class="kt-ico">📤</span>Kontakt weiterleiten</button>' : ""}
+      ${zeilen ? '<button class="knopf" onclick="kkMenue()"><span class="kt-ico">📇</span>Kontaktkarte</button>' : ""}
     </div>
     ${prKarte(m)}
     ${ICH?.admin && m.rose ? roseAdminKarte(m) : ""}
@@ -32690,8 +32689,12 @@ function kwExtern() {
     <p class="hinweis" style="margin:8px 0 0">📤 öffnet das Teilen-Menü deines Handys (WhatsApp, SMS, Mail, AirDrop …) mit der Kontaktkarte. ✉️ öffnet dein Mail-Programm mit den Angaben.</p>`);
 }
 async function kwSenden(weg) {
-  const m = MD, k = m?.kontakt || {}, felder = [...document.querySelectorAll(".kwx-f:checked")].map((x) => x.value);
+  const felder = [...document.querySelectorAll(".kwx-f:checked")].map((x) => x.value);
   if (!felder.length) return melde("Bitte mindestens eine Angabe ankreuzen.");
+  return kwSendenMit(weg, felder);
+}
+async function kwSendenMit(weg, felder) { // KC-CLUB-KONTAKTKARTE: auch direkt aus „📇 Kontaktkarte“ (alle freigegebenen Angaben)
+  const m = MD, k = m?.kontakt || {};
   try { await api("kontakt_weitergeben", { person_id: m.person_id, weg, felder }, { warten: true }); } catch (e) { return meldeFehler(e); }
   const text = kwText(m, k, felder), datei = m.name.replace(/[^\wäöüÄÖÜß ]/g, "") + ".vcf";
   try {
@@ -32717,6 +32720,76 @@ function kontaktSpeichern() {
   a.href = URL.createObjectURL(new Blob([karte], { type: "text/vcard" })); a.download = m.name.replace(/[^\wäöüÄÖÜß ]/g, "") + ".vcf";
   document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
   melde("📇 Kontakt-Datei erstellt – antippen zum Speichern im Telefonbuch");
+}
+// ---------- KC-CLUB-KONTAKTKARTE (Wunsch Hansi 17.11.2026: „In den Stammdaten der Mitglieder einen Button, um eine Kontaktkarte zu erstellen und dann anbieten:
+// per Nachricht versenden, in den Archivordner, per WhatsApp schicken, an den Kalender bzw. Kontakte senden usw.“): ein Knopf „📇 Kontaktkarte“ statt
+// „Ins Telefonbuch“ + „Kontakt weiterleiten“. Für mich: 📇 Kontakte, 🗄️ Archiv, 📅 Geburtstag in den Kalender. Im Club: 💬 als Kontaktkarte in einen Chat
+// (zeigt den anderen nur, was das Mitglied freigegeben hat). Nach außen (🟢 WhatsApp, ✉️ E-Mail, 📤 Teilen, 📋 Kopieren): nur wie bisher mit Freigabe des
+// Mitglieds (KC-CLUB-KONTAKT-EXTERN) – der Server prüft und protokolliert, nie Empfänger oder Inhalt.
+function kkVcard(m) { const k = m.kontakt || {}, felder = Object.keys(KW_NAMEN).filter((f) => k[f]);
+  let v = kwVcard(m, k, felder); if (m.geburtstag) v = v.replace("\r\nEND:VCARD", `\r\nBDAY:--${String(m.geburtstag).replace("-", "")}\r\nEND:VCARD`); return v; }
+const kkDatei = (m) => String(m.name || "Kontakt").replace(/[^\wäöüÄÖÜß ]/g, "") + ".vcf";
+function kkMenue() {
+  const m = MD; if (!m) return;
+  const k = m.kontakt || {}, mitglied = zugang() === "mitglied", aussen = mitglied && (m.person_id === ICH?.person_id || m.extern) && (m.externFelder || []).some((f) => k[f]);
+  const zeile = (sym, t, f, an = true) => an ? `<button class="knopf" style="text-align:left" onclick="${f}">${sym} ${t}</button>` : "";
+  blattAuf("kkBlatt", `<h3 style="margin:0">📇 Kontaktkarte</h3>
+    <div class="karte" style="margin:8px 0;white-space:pre-wrap">${esc(kwText(m, k, Object.keys(KW_NAMEN)).replace(/\n\(weitergegeben aus der Club-App des Köcheclub Werne\)$/, ""))}${m.geburtstag ? `\nGeburtstag: ${esc(m.geburtstag.split("-").reverse().join("."))}.` : ""}</div>
+    <div style="display:grid;gap:6px">
+      <b class="hinweis">Für mich</b>
+      ${zeile("📇", "In meine Kontakte (Telefonbuch)", "fensterZu($('kkBlatt'));kontaktSpeichern()")}
+      ${zeile("🗄️", "In meinen Archivordner", "kkArchiv()")}
+      ${zeile("📅", "Geburtstag in meinen Kalender", "kkGeburtstag()", !!m.geburtstag)}
+      <b class="hinweis">Im Club</b>
+      ${zeile("💬", "Als Kontaktkarte in einen Chat schicken", "kkChatWahl()")}
+      <b class="hinweis">Nach außen</b>
+      ${aussen ? zeile("🟢", "Per WhatsApp", "kkAussen('whatsapp')") + zeile("✉️", "Per E-Mail", "kkAussen('mail')") + zeile("📤", "Teilen … (SMS, AirDrop, andere Apps)", "kkAussen('teilen')") + zeile("📋", "Kopieren", "kkAussen('kopieren')")
+        : `<p class="hinweis" style="margin:0">🔒 ${mitglied ? esc(m.vorname || m.name) + " hat die Weitergabe an Personen außerhalb des Clubs nicht freigegeben." : "Nur für Mitglieder."}</p>`}
+    </div>
+    <div class="knoepfe" style="margin-top:10px"><button class="knopf" onclick="fensterZu($('kkBlatt'))">Schließen</button></div>`);
+}
+async function kkAussen(weg) {
+  const m = MD, k = m?.kontakt || {}; if (!m) return;
+  const felder = (m.person_id === ICH?.person_id ? Object.keys(KW_NAMEN) : m.externFelder || []).filter((f) => k[f]);
+  if (!felder.length) return melde("Es gibt keine freigegebenen Angaben zum Weitergeben.", true);
+  if (weg !== "whatsapp") { fensterZu($("kkBlatt")); return kwSendenMit(weg, felder); }
+  const text = kwText(m, k, felder), t = encodeURIComponent(text), web = `https://wa.me/?text=${t}`;
+  // erst öffnen (im selben Antippen, sonst blockiert das Handy den Sprung), dann vermerken
+  if (IST_ANDROID) location.href = `intent://send?text=${t}#Intent;scheme=whatsapp;S.browser_fallback_url=${encodeURIComponent(web)};end`;
+  else if (IST_IOS) location.href = `whatsapp://send?text=${t}`;
+  else window.open(web, "_blank", "noopener");
+  fensterZu($("kkBlatt")); melde("🟢 WhatsApp öffnet sich – Empfänger wählen und senden");
+  api("kontakt_weitergeben", { person_id: m.person_id, weg: "whatsapp", felder }).catch(() => {}); spur("kontakt_extern", m.person_id);
+}
+async function kkArchiv() {
+  const m = MD; if (!m) return; fensterZu($("kkBlatt"));
+  const ok = await archivAblageFragen("kontakt", { titel: `Kontakt ${m.name}`, datum: heuteIso(), hinweis: "Kontaktkarte (.vcf)", frage: "Kontaktkarte in deinen Archiv-Ordner legen?",
+    dateien: async () => [{ titel: `Kontakt ${m.name}`, name: kkDatei(m), mime: "text/vcard", blob: new Blob([kkVcard(m)], { type: "text/vcard" }), stichworte: "Kontakt" }] });
+  if (ok === false) melde("Kein Archivordner gefunden oder das Archiv ist gerade nicht erreichbar – bitte später noch einmal.", true);
+}
+function kkGeburtstag() {
+  const m = MD; if (!m?.geburtstag) return; fensterZu($("kkBlatt"));
+  const [mo, ta] = String(m.geburtstag).split("-"), jetzt = new Date(), j = jetzt.getFullYear(), d = `${j}${mo}${ta}`, e = (s) => String(s || "").replace(/[\;,]/g, (c) => "\\" + c);
+  const ende = new Date(Date.UTC(j, +mo - 1, +ta + 1)).toISOString().slice(0, 10).replace(/-/g, "");
+  const ics = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Koecheclub Werne//Club-App//DE", "BEGIN:VEVENT", `UID:geburtstag-${m.person_id}@koecheclub-werne`,
+    `DTSTAMP:${jetzt.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "")}`, `SUMMARY:${e("🎂 Geburtstag " + m.name)}`, `DTSTART;VALUE=DATE:${d}`, `DTEND;VALUE=DATE:${ende}`,
+    "RRULE:FREQ=YEARLY", "TRANSP:TRANSPARENT", "END:VEVENT", "END:VCALENDAR"].join("\r\n");
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([ics], { type: "text/calendar" })); a.download = `Geburtstag ${kkDatei(m).replace(/\.vcf$/, "")}.ics`;
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  melde("📅 Kalender-Datei erstellt – antippen, dann „Zum Kalender hinzufügen“ (jedes Jahr)");
+}
+async function kkChatWahl() {
+  const m = MD; if (!m) return;
+  let liste = []; try { liste = (await api("unterhaltungen", {}, { warten: true })).unterhaltungen || []; } catch (e) { return meldeFehler(e); }
+  blattAuf("kkBlatt", `<h3 style="margin-top:0">💬 Kontaktkarte von ${esc(m.vorname || m.name)} – in welchen Chat?</h3>
+    <p class="hinweis" style="margin:0 0 6px">Die anderen sehen nur, was ${esc(m.vorname || m.name)} selbst freigegeben hat.</p>
+    <div style="display:grid;gap:6px">${liste.slice(0, 30).map((u) => `<button class="knopf" style="text-align:left" onclick="kkInChat('${esc(u.id)}')">${u.gruppe ? esc(u.gruppe.symbol) + " " : ""}${esc(u.gruppe?.name || u.betreff || u.teilnehmer.join(", "))}</button>`).join("") || '<p class="hinweis">Noch keine Chats.</p>'}</div>
+    <div class="knoepfe" style="margin-top:8px"><button class="knopf" onclick="fensterZu($('kkBlatt'))">Abbrechen</button></div>`);
+}
+async function kkInChat(id) {
+  const m = MD; if (!m) return;
+  try { await api("nachricht_senden", { id, kontakt: m.person_id, wege: ["push"] }, { warten: true }); fensterZu($("kkBlatt")); melde("📇 Kontaktkarte gesendet"); }
+  catch (e) { meldeFehler(e); }
 }
 // Korrektur an den Admin (normale App-Nachricht, damit es nur eine Stelle mit den richtigen Daten gibt)
 async function korrekturMelden() {
@@ -35220,6 +35293,7 @@ const ARCHIV_ABLAGE_ARTEN = {
   foto: { sym: "📷", register: ["Fotos", "Sonstiges"], stichworte: "Foto" },
   protokoll: { sym: "📝", register: ["Protokolle", "Sonstiges"], stichworte: "Protokoll" },
   geteilt: { sym: "📥", register: ["Chats", "Sonstiges"], stichworte: "geteilt" },
+  kontakt: { sym: "📇", register: ["Kontakte", "Sonstiges"], stichworte: "Kontakt" }, // KC-CLUB-KONTAKTKARTE
   skizze: { sym: "🖍️", register: ["Fotos", "Sonstiges"], stichworte: "Skizze" }, // 2.292.0 KC-CLUB-ESELSOHR: Skizze von der Tafel // 1.22.0: über „Teilen → Köcheclub“ (z. B. WhatsApp-Export)
   eingelesen: { sym: "📄", register: ["Sonstiges"], stichworte: "eingelesen" }, // 2.101.0 KC-CLUB-BUERO-EINLESEN
   vorschlag: { sym: "💡", register: ["Vorschläge", "Abstimmungen", "Sonstiges"], stichworte: "Vorschlag" }, // 2.820.0 KC-CLUB-VORSCHLAG-ORDNER
@@ -35811,7 +35885,7 @@ const FENSTER_NAMEN = {
   abBlatt: "📼 Mein Anrufbeantworter", ttBlatt: "🔬 Internet-Tiefentest", wchBlatt: "🛡️ Wächter", wchInfoBlatt: "🛡️ Wächter: Einzelheiten", wuBlatt: "📝 Wunschliste",
   stadtBlatt: "🏙️ Termine der Stadt Werne", uaBlatt: "🙋 Unterstützung bei der Club-App", treffenInfo: "📅 Termin-Details", ugBlatt: "📭 Noch nicht gelesen", snAdmin: "📣 Startnachricht schreiben",
   ltBlatt: "🔴 Live-Abstimmung", aeBlatt: "✏️ Meine Daten haben sich geändert", aeEingBlatt: "📬 Änderungen der Mitglieder", ausweisBlatt: "🪪 Mitgliedsausweis", fdkAbgabeBlatt: "🃏 Fang den Koch: Abgabe",
-  abAufnahmeBlatt: "🎙️ Sprachaufnahme", ablageBlatt: "🗄️ Ablage", ablkBlatt: "📥 Ablagekorb", ablkEgBlatt: "📥 In die Eingangskörbe der Mitglieder", pfoBlatt: "🔎 Protokoll-Fotos lesen", prWunschBlatt: "✏️ Protokoll: Änderung wünschen", nuBlatt: "📈 So nutzen wir die App", npBlatt: "📊 Nutzungsstatistik", irBlatt: "🗓️ Meine Ist-Zeiten", kwxBlatt: "📤 Kontakt weiterleiten", irAeBlatt: "📋 Zeitänderungen", impressumBlatt: "§ Impressum", teilnahmeBlatt: "👥 Teilnahme an den Sitzungen", einlEgBlatt: "👥 Einlesen: in die Eingangskörbe", adBlatt: "🛠️ Verwaltung",
+  abAufnahmeBlatt: "🎙️ Sprachaufnahme", ablageBlatt: "🗄️ Ablage", ablkBlatt: "📥 Ablagekorb", ablkEgBlatt: "📥 In die Eingangskörbe der Mitglieder", pfoBlatt: "🔎 Protokoll-Fotos lesen", prWunschBlatt: "✏️ Protokoll: Änderung wünschen", nuBlatt: "📈 So nutzen wir die App", npBlatt: "📊 Nutzungsstatistik", irBlatt: "🗓️ Meine Ist-Zeiten", kwxBlatt: "📤 Kontakt weiterleiten", kkBlatt: "📇 Kontaktkarte",irAeBlatt: "📋 Zeitänderungen", impressumBlatt: "§ Impressum", teilnahmeBlatt: "👥 Teilnahme an den Sitzungen", einlEgBlatt: "👥 Einlesen: in die Eingangskörbe", adBlatt: "🛠️ Verwaltung",
   adbBlatt: "📒 Adressbuch", akPreisBlatt: "📋 Adventskalender – wer bekommt was", adbFormBlatt: "📒 Adresse melden/ändern", adminBlatt: "🛠️ Verwaltungsfenster", akBlatt: "🎄 Adventskalender", alarmBlatt: "🚨 Notfall-Meldung",
   alarmVorschau: "🚨 Notfall-Probe", ampelInfo: "🚦 Die Ampel", angebotInfo: "🎁 Angebot ansehen", anlAnsehBlatt: "📎 Anhang", anlBlatt: "📄 Anhang",
   anlLinkBlatt: "📄 Anhang (Link)", anlageBlatt: "📎 Anlage hinzufügen", ansichtBlatt: "👓 Ansicht wählen", arMenue: "🗄️ Archiv: Dokument", arWegBlatt: "🗑️ Dokument entfernen",

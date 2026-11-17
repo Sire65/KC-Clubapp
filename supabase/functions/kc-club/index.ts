@@ -194,7 +194,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.972.0";
+const SERVER_VERSION = "2.974.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -14563,7 +14563,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       // (wer, wessen Kontakt, welcher Weg, welche Felder – nie Empfänger oder Inhalt). Höchstens 30 je Person und Tag.
       case "kontakt_weitergeben": {
         if (ich.zugang !== "mitglied") throw new Fehler("Nur für Mitglieder.", 403);
-        const pid = String(p.person_id || ""), weg = ["teilen", "mail", "kopieren"].includes(String(p.weg)) ? String(p.weg) : "teilen";
+        const pid = String(p.person_id || ""), weg = ["teilen", "mail", "kopieren", "whatsapp"].includes(String(p.weg)) ? String(p.weg) : "teilen";
         const felder = (Array.isArray(p.felder) ? p.felder : []).map(String).filter((f: string) => KONTAKT_FELDER.includes(f));
         const selbst = pid === ich.person_id;
         if (!selbst) {
