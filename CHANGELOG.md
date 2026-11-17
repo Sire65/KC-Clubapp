@@ -1,6 +1,6 @@
 # Änderungen
 
-## 2.973.0 – 2026-11-17 – 12-Uhr-Bündel: Lese-/Schreibtest an den LEDs · Chat schneller wieder öffnen · Kluge Helfer im Chat · „zuletzt da“ nach „weg“ · Server 2.973.0 + Datenbank
+## 2.974.0 – 2026-11-17 – 12-Uhr-Bündel: Lese-/Schreibtest an den LEDs · Chat schneller wieder öffnen · Kluge Helfer im Chat · „zuletzt da“ nach „weg“ · Server 2.974.0 + Datenbank
 Hansi 17.11.: „Alles schön um 12 einspielen.“
 
 ### 🔬 Lese- und Schreibtest im LED-Fenster (KC-CLUB-LESE-SCHREIBTEST, Wunsch Hansi 16.11. „Bauen, für alle, mit Push-Test, ohne Neon mit Neon“)
@@ -27,6 +27,16 @@ Alles „Automatische“ rechnet nur die App auf dem eigenen Handy aus den schon
 
 ### 🟢 „zuletzt da“ zeigt nicht mehr „online“ nach „weg“ (KC-CLUB-ZULETZT-WEG, Fund Hansi 17.11. „Warum wird bei Wilfried online angezeigt“)
 - Hat jemand die App weggelegt („weg“), zeigt die Mitgliederliste nicht mehr „🟢 online“ bis zum Ablauf der Online-Zeit, sondern sofort „zuletzt da …“. Nur Server.
+
+## 2.973.0 – 2026-11-17 – 📱 WhatsApp-Nachrichten in die Club-App holen (KC-CLUB-WA-HOLEN) · nur App (Server bleibt 2.972.0)
+Wunsch Hansi 16.11.: „Wie kriegen wir WhatsApp-Nachrichten in die Club-App – direkt oder über Umwege?“ – Weg 2 „Teilen/Einfügen“: „Ja“.
+- **Einfügen:** In WhatsApp Nachricht(en) lange drücken → Kopieren → in der Club-App ganz normal ins Schreibfeld einfügen. Die App erkennt WhatsApp-Text und
+  bereitet ihn auf wie der 📋-Knopf (KC-CLUB-WA-EINFUEGEN): „📋 Aus WhatsApp: Marianne (21:03): …“, Handynummern entfernt. Normaler Text bleibt unverändert.
+- **Teilen:** Text aus WhatsApp (oder anderen Apps) mit „Köcheclub“ teilen → Auswahl „💬 In den Chat mit Marianne“ (wenn der Name eindeutig zu einem Mitglied passt),
+  „💬 In einen Club-Chat …“ oder „📥 In den Ablagekorb“ (wie bisher). Dateien/Fotos gehen weiter zuerst in den Ablagekorb.
+- Übernommener Text öffnet beim Senden nicht wieder WhatsApp (KC-CLUB-WA-LIEBER). Gesendet wird erst mit ➤; der Club-Server bekommt dafür nichts Neues.
+- Test: `tests/wa-holen.test.mjs`. Rückweg: App 2.972.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
 
 ## 2.972.0 – 2026-11-17 – ⚽ Tippspiel erst einmal nur für Hansi (Freigabe) (KC-CLUB-TIPPSPIEL, Wunschliste #96) · Server 2.972.0
 Hansi 17.11.: „Noch nicht freigegeben, hochladen ja.“
