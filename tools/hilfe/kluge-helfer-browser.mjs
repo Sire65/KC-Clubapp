@@ -57,6 +57,8 @@ ok(/Für dich: 1 Frage · 1 Umfrage · 1 Aufgabe · 📸 4 Fotos/.test(zeile), "
 ok(await seite.evaluate(() => document.querySelectorAll("#khFuerDich .kh-zeile").length === 1), "genau eine Zeile");
 const chips = await seite.evaluate(() => [...document.querySelectorAll("#chat .kh-chips")].map((c) => ({ nach: c.previousElementSibling?.dataset.id, t: [...c.querySelectorAll("button")].map((b) => b.textContent) })));
 ok(chips.length === 1 && chips[0].nach === "g5" && chips[0].t.join("|") === "✅ Bin dabei|❌ Kann nicht|🤔 Vielleicht", "Schnellantworten nur unter der neuesten: " + JSON.stringify(chips));
+// früh morgens liegen „vor 5 Std.“-Nachrichten am Vortag – der Chat klappt ältere Tage zusammen: erst aufklappen (Prüfung unabhängig von der Uhrzeit)
+await seite.evaluate(() => [...document.querySelectorAll("#chat button, #chat a")].find((b) => /aufklappen/i.test(b.textContent || ""))?.click()); await seite.waitForTimeout(500);
 const ung = await seite.evaluate(() => document.querySelector("#msg-g2 .kh-ungelesen")?.textContent.trim() || "");
 ok(/Noch nicht gelesen: Anne, Dieter/.test(ung) && /🔔 Kurz erinnern/.test(ung), "eigene wichtige Nachricht: " + ung);
 await seite.evaluate(() => window.scrollTo(0, document.body.scrollHeight)); await seite.waitForTimeout(500);
