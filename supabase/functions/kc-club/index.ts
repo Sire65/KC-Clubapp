@@ -1213,9 +1213,12 @@ async function zuletztDaMap(ich: Ich, ids: string[]) {
     const t = new Date(zg).getTime();
     if (t < grenze) { aus.set(pid, { online: false, lange: true }); continue; }
     const tag = berlinTag(new Date(zg));
-    const online = Date.now() - t < ONLINE_SEK * 1000, uhr = (d: Date) => new Intl.DateTimeFormat("de-DE", { timeZone: TZ, hour: "2-digit", minute: "2-digit" }).format(d);
+    // KC-CLUB-ZULETZT-WEG (17.11.2026, Fund Hansi „warum wird bei Wilfried online angezeigt“ – er hatte die App nach 13 s weggelegt): „online“ hier
+    // genauso wie überall sonst (onlineJetzt, KC-CLUB-ONLINE-ECHT) – wer „weg“ gemeldet hat und seitdem nicht wieder sichtbar war, ist nicht online.
+    const osRoh = (e ?? []).find((x: any) => x.person_id === pid && x.schluessel === "online_seit")?.wert;
+    const online = Date.now() - t < ONLINE_SEK * 1000 && !istWeg(osRoh), uhr = (d: Date) => new Intl.DateTimeFormat("de-DE", { timeZone: TZ, hour: "2-digit", minute: "2-digit" }).format(d);
     // KC-CLUB-ONLINE-SEIT (2.25.5): seit wann ohne Unterbrechung online (nur wenn der Merker zur aktuellen Sitzung passt)
-    const os = online ? (e ?? []).find((x: any) => x.person_id === pid && x.schluessel === "online_seit")?.wert : null;
+    const os = online ? osRoh : null;
     const seitD = os?.seit && os?.zuletzt && Date.now() - Date.parse(os.zuletzt) < ONLINE_SEK * 1000 ? new Date(os.seit) : null;
     aus.set(pid, { online, tag, zeit: tag === heute ? uhr(new Date(zg)) : null,
       ...(seitD && !isNaN(seitD.getTime()) ? { seit: uhr(seitD), seitTag: berlinTag(seitD) } : {}) });
