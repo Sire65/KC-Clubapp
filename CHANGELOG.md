@@ -1,14 +1,39 @@
 # Änderungen
 
-## 2.970.0 – 2026-11-17 – 📱 WhatsApp-Nachrichten in die Club-App holen (KC-CLUB-WA-HOLEN) · nur App (Server bleibt 2.969.0)
+## 2.973.0 – 2026-11-17 – 📱 WhatsApp-Nachrichten in die Club-App holen (KC-CLUB-WA-HOLEN) · nur App (Server bleibt 2.972.0)
 Wunsch Hansi 16.11.: „Wie kriegen wir WhatsApp-Nachrichten in die Club-App – direkt oder über Umwege?“ – Weg 2 „Teilen/Einfügen“: „Ja“.
 - **Einfügen:** In WhatsApp Nachricht(en) lange drücken → Kopieren → in der Club-App ganz normal ins Schreibfeld einfügen. Die App erkennt WhatsApp-Text und
   bereitet ihn auf wie der 📋-Knopf (KC-CLUB-WA-EINFUEGEN): „📋 Aus WhatsApp: Marianne (21:03): …“, Handynummern entfernt. Normaler Text bleibt unverändert.
 - **Teilen:** Text aus WhatsApp (oder anderen Apps) mit „Köcheclub“ teilen → Auswahl „💬 In den Chat mit Marianne“ (wenn der Name eindeutig zu einem Mitglied passt),
   „💬 In einen Club-Chat …“ oder „📥 In den Ablagekorb“ (wie bisher). Dateien/Fotos gehen weiter zuerst in den Ablagekorb.
 - Übernommener Text öffnet beim Senden nicht wieder WhatsApp (KC-CLUB-WA-LIEBER). Gesendet wird erst mit ➤; der Club-Server bekommt dafür nichts Neues.
-- Test: `tests/wa-holen.test.mjs`. Rückweg: App 2.969.0.
+- Test: `tests/wa-holen.test.mjs`. Rückweg: App 2.972.0.
 - Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+## 2.972.0 – 2026-11-17 – ⚽ Tippspiel erst einmal nur für Hansi (Freigabe) (KC-CLUB-TIPPSPIEL, Wunschliste #96) · Server 2.972.0
+Hansi 17.11.: „Noch nicht freigegeben, hochladen ja.“
+- Das Bundesliga-Tippspiel (2.971.0) steht jetzt in der **Freigaben-Liste** („⚽ Bundesliga-Tippspiel“, Standard: nur Admin). Bis Hansi dort „alle“ wählt, sehen Mitglieder und Aushilfen weder den Knopf bei 🎲 Spiele noch die Zeile im Info-Laufband; der Server lehnt Aufrufe ab („noch nicht freigegeben“). Hansi sieht es mit „🔒 nur für dich (Test)“.
+- Test: `tests/tippspiel.test.mjs` erweitert. Rückweg: App + Server 2.971.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+## 2.971.0 – 2026-11-17 – ⚽ Bundesliga-Tippspiel (KC-CLUB-TIPPSPIEL, Wunschliste #96) · Server 2.971.0 + Datenbank
+Wunsch Hansi 16.11.: „Fußball-Tippspiel … wenn ein Spiel ansteht, fragen, ob man einen Tipp abgeben möchte … Übersicht mit den Punkten.“ Antworten 17.11.: „Bundesliga, Mitglieder und Aushilfen, alle Spiele und Vereine.“
+- **⚽ Bundesliga-Tippspiel** (unter 🎲 Spiele und über das Info-Laufband): einmal „Ja, ich tippe mit“, dann je Spiel zwei Zahlen – **bis zum Anpfiff**. Spieltag mit ◀ ▶ wechseln.
+- **Punkte**: 🎯 3 für das genaue Ergebnis, 2 für die richtige Tordifferenz, 1 für den richtigen Sieger bzw. Unentschieden. **🏆 Tabelle** der Saison mit Punkten, exakten Tipps und Punkten des Spieltags.
+- **Fair**: die Tipps der anderen sieht man erst ab Anpfiff. Für **Mitglieder und Aushilfen**.
+- **Erinnerung** ohne Push: im Info-Laufband „⚽ 3 Bundesliga-Spiele – noch nicht getippt · Anpfiff heute 15:30“ (aus dem Merkzettel des letzten Abrufs – kein zusätzlicher Aufruf beim Start). Wer noch nicht mitmacht, sieht bis 20.12. einmal die Einladung.
+- **Spiele und Ergebnisse** holt der Club-Server kostenlos von **OpenLigaDB** (ohne Konto/Schlüssel; Adapter, austauschbar), höchstens alle 15 Min., nach Spielende alle 5 Min. Die Handys fragen nie fremde Seiten, keine Vereinswappen von fremden Servern.
+- Datenbank: `kc_club_tipp_spiele`, `kc_club_tipp_teilnehmer`, `kc_club_tipp` – RLS an, keine Browser-Rechte, gespiegelt und gesichert. Neuer Programmteil `teile/tippspiel.js` (lädt erst beim Öffnen).
+- Test: neu `tests/tippspiel.test.mjs`. Rückweg: App + Server 2.970.0 (Tabellen bleiben, stören nicht).
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“ (Tippspiel noch nicht freigegeben, siehe 2.972.0).
+
+## 2.970.0 – 2026-11-17 – 💬 Schon eine Gruppe mit genau diesen Personen? Dann dort schreiben (KC-CLUB-CHAT-VORHANDEN, Wunschliste #97) · Server 2.970.0
+Wunsch Hansi 16.11.: „Wenn man an Personen schreibt, die schon in der Gruppe sind, keinen neuen Chat aufmachen, sondern in den vorhandenen übernehmen. Z. B. Gruppe Zanders: Heute habe ich an Klaus geschrieben und Dieter dazu genommen – dann ist das ja die Gruppe.“
+- Schreibst du an mehrere Personen (über „Neue Nachricht“ oder im Chat mit **➕ weitere Empfänger**) und es gibt schon einen Chat mit **genau diesen Personen und dir**, fragt die App beim ➤: „💬 Es gibt schon die Gruppe 👥 „Zanders“ – mit genau diesen Personen. Deine Nachricht dort hineinschreiben?“ → **„💬 Ja, dort schreiben“** (Text und Anlagen gehen in die Gruppe) oder „Neuen Chat aufmachen“ (wie bisher).
+- Gruppen haben Vorrang, sonst der zuletzt benutzte passende Chat. Nicht bei 🔒 verschlüsselt, Ämtern oder „an alle“.
+- Server: neuer Lese-Weg `gruppenchat_finden` (nur Teilnehmer-Listen, keine Nachrichteninhalte – KC-CHATS-PRIVAT).
+- Test: neu `tests/chat-vorhanden.test.mjs`. Rückweg: App + Server 2.969.0. Keine Datenbank-Änderung.
+- Update-Hinweis für Mitglieder: „💬 Schreibst du an Leute, mit denen es schon eine Gruppe gibt, fragt die App, ob die Nachricht dort hinein soll.“
 
 ## 2.969.0 – 2026-11-17 – 📱 „Liest lieber WhatsApp“ – beim Senden öffnet sich WhatsApp von selbst (KC-CLUB-WA-LIEBER) · Server 2.969.0
 Wunsch Hansi 16.11.: „Wenn ich z. B. Marianne eine Nachricht in der Club-App schreibe, dass er automatisch die gleiche auch in WhatsApp … und ich nur noch auf Senden klicke“ – „Nicht für jede Nachricht … zu viele Knöpfe … einige nutzen lieber WhatsApp als die Club-App“ – „Gleich für alle“.
