@@ -25628,7 +25628,7 @@ async function mailRundSenden(text, empf) { // nur Admin: Rundmail ohne Chat
     const ablegbar = gesendetAblegbar(vorher); if (ablegbar.length) setTimeout(() => gesendetAblageFragen(ablegbar), 500);
     if (!chatId) { neuEntwurf = null; zeige("nachrichten"); }
   } catch (e) { meldeFehler(e); }
-  $("sendenKnopf").disabled = false;
+  sendenFrei();
 }
 
 async function senden() {
@@ -25684,8 +25684,8 @@ async function senden() {
     if (EINMAL) return melde("👁️ Einmal-Foto und 🔒 verschlüsselt gehen nicht zusammen – bitte eins von beiden ausschalten.", true);
     if (anlagen.some((a) => a.id && !a.vnWartet) && !(await frage("🔒 Anlage schon hochgeladen\nDiese Anlage wurde ausgewählt, bevor 🔒 an war, und liegt schon unverschlüsselt auf dem Server. Für echte Geheimhaltung: entfernen und mit 🔒 neu auswählen.\n\nTrotzdem verschlüsselt senden?", { ja: "🔒 Verschlüsselt senden", nein: "Abbrechen" }))) return;
     $("sendenKnopf").disabled = true; melde("🔒 Anlagen werden auf dem Handy verschlüsselt …");
-    let enc; try { enc = await vnAnlVerschluesseln(anlagen); } catch (e) { $("sendenKnopf").disabled = false; return meldeFehler(e); }
-    $("sendenKnopf").disabled = false;
+    let enc; try { enc = await vnAnlVerschluesseln(anlagen); } catch (e) { sendenFrei(); return meldeFehler(e); }
+    sendenFrei();
     const v = await vnVerschluesseln(text + VN_ANL + JSON.stringify(enc)); if (!v) return;
     if (vnIst(v)) { text = v; vnIds = enc.map((x) => x.id); }
     // „Normal senden“ gewählt: Text wie getippt, Anlagen unverschlüsselt (die verschlüsselten Kopien bleiben ungenutzt liegen)
@@ -25695,7 +25695,7 @@ async function senden() {
   if (anlagen.some((a) => a.laedt)) {
     $("sendenKnopf").disabled = true; melde("⏳ Die Anlage lädt noch – deine Nachricht geht mit ihr zusammen raus, sobald sie fertig ist …");
     const fertig = await anlagenFertig();
-    $("sendenKnopf").disabled = false;
+    sendenFrei();
     if (!fertig) return melde("⚠️ Die Anlage ist noch nicht fertig hochgeladen – nichts wurde gesendet. Bitte kurz warten und nochmal auf ➤ tippen.", true);
     if (!$("text").value.trim() && !anlagen.length) return;
   }
@@ -25732,7 +25732,7 @@ async function senden() {
       spur("gesendet", vorher); // KC-CLUB-SPUR: nur „gesendet“ + Unterhaltung, nie der Text
       if (ZW.whatsapp && text) whatsappWeitergeben(text, empfIds.filter((id) => id !== ICH.person_id));
       setTimeout(() => window.scrollTo(0, document.body.scrollHeight), 30);
-      $("sendenKnopf").disabled = false; try { $("text").focus({ preventScroll: true }); } catch {} // Tastatur bleibt offen – gleich weiterschreiben
+      sendenFrei(); try { $("text").focus({ preventScroll: true }); } catch {} // Tastatur bleibt offen – gleich weiterschreiben
       return;
     }
     const r = chatId ? await api("nachricht_senden", { id: chatId, ...daten }) : await api("nachricht_senden", { ...daten, ...neuEntwurf });
@@ -25752,7 +25752,7 @@ async function senden() {
     await chatLaden(true);
     if (gesendet.length) setTimeout(() => gesendetAblageFragen(gesendet), 500);
   } catch (e) { meldeFehler(e); }
-  $("sendenKnopf").disabled = false;
+  sendenFrei();
 }
 
 // KC-CLUB-MEHRFACH-NACHRICHT: nacheinander in jeden markierten Chat; was nicht ging, bleibt markiert (nochmal versuchen), der Text bleibt dann stehen
@@ -25768,7 +25768,7 @@ async function uhMehrfachSenden(daten, text) {
     melde(fehl.length ? `📨 ${ids.length - fehl.length} von ${ids.length} Chats bekommen – ${fehl.length} ging nicht (bleibt markiert, einfach nochmal ➤)` : `📨 An ${ids.length === 1 ? "den Chat" : `alle ${ids.length} Chats`} gesendet`, !!fehl.length);
     if (!fehl.length) { zeige("nachrichten"); neuLaden(); }
   } catch (e) { meldeFehler(e); }
-  $("sendenKnopf").disabled = false;
+  sendenFrei();
 }
 
 // ---------- Fotos über „Teilen“ aus der Galerie (KC-CLUB-TEILEN) ----------
@@ -26773,8 +26773,17 @@ async function einmalOeffnen(id) {
   document.body.appendChild(f); spur("einmal_foto", chatId);
 }
 function einmalSchliessen() { const f = $("einmalSchirm"); if (!f) return; f._weg?.(); f.remove(); melde("👁️ Das Foto ist jetzt weg."); chatLaden(true).catch(() => {}); }
+// KC-CLUB-SENDEN-NACH-UPLOAD (17.11.2026, Wunsch Hansi nach Rundschreiben ohne PDF: „wenn ein Anhang dabei ist, Sendeknopf erst freigeben,
+// wenn die Anlage hochgeladen ist“): solange eine Anlage hochlädt, ist ➤ gesperrt und zeigt ⏳ – erst wenn alles oben ist, wird gesendet.
+function sendenFrei() {
+  const k = $("sendenKnopf"); if (!k) return;
+  const laedt = anlagen.some((a) => a.laedt);
+  k.disabled = laedt; k.classList.toggle("laedt-hoch", laedt);
+  k.textContent = laedt ? "⏳" : "➤"; k.title = laedt ? "Bitte warten – die Anlage wird noch hochgeladen" : "Senden";
+  k.setAttribute("aria-label", k.title);
+}
 function chipsZeigen() {
-  versandZeigen(); // 2.524.0 KC-CLUB-VERSANDART: mit Anhang auch ohne Text
+  versandZeigen(); sendenFrei(); // 2.524.0 KC-CLUB-VERSANDART: mit Anhang auch ohne Text
   if (!(anlagen.length === 1 && anlagen[0].bild)) EINMAL = false; // KC-CLUB-EINMAL-FOTO: nur bei genau einem Foto
   $("anlagenChips").innerHTML = anlagen.map((a, i) => `<span class="chip anl-chip"><button type="button" class="anl-auf" onclick="anlageAnsehen(${i})" aria-label="Anhang ansehen: ${esc(a.name)}">${a.vnWartet ? "🔒" : ""}${a.bild ? `<img src="${a.bild}" alt="">` : a.laedt ? "⏳" : "📎"} ${esc(a.name)}</button><button type="button" class="anl-weg" onclick="anlageEntfernen(${i})" aria-label="Anhang entfernen" title="Anhang entfernen">✕</button></span>`).join("");
   if (anlagen.length === 1 && anlagen[0].bild) $("anlagenChips").insertAdjacentHTML("beforeend", `<button type="button" class="chip einmal-chip${EINMAL ? " an" : ""}" onclick="einmalUmschalten()" aria-pressed="${EINMAL}" title="Der Empfänger kann das Foto nur ein einziges Mal öffnen">👁️ Einmal ansehen: ${EINMAL ? "An" : "Aus"}</button>`);
@@ -26836,10 +26845,11 @@ async function dateienGewaehlt(input) {
     try {
       const r = await anlageHochladen(roh);
       Object.assign(eintrag, { id: r.id, name: r.name, laedt: false });
-    } catch (e) { anlagen.splice(anlagen.indexOf(eintrag), 1); meldeFehler(e); }
+    } catch (e) { anlagen.splice(anlagen.indexOf(eintrag), 1); melde(`⚠️ „${roh.name}“ wurde NICHT angehängt: ${e?.message || e}`, true); } // KC-CLUB-SENDEN-NACH-UPLOAD: deutlich sagen, dass die Datei fehlt
     chipsZeigen();
   }
   input.value = "";
+  if (!anlagen.some((a) => a.laedt) && anlagen.length) melde("📎 Anlage bereit – du kannst jetzt senden.");
 }
 
 // ---------- Aktionen / Ausflüge (KC-CLUB-AKTIONEN) – Daten aus dem KC Manager, hier nur zum Ansehen ----------

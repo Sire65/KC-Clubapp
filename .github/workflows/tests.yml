@@ -245,6 +245,7 @@ jobs:
       - run: node tests/ungelesen-admin.test.mjs
       - run: node tests/vorladen-foto.test.mjs
       - run: node tests/chatfoto-speichern.test.mjs
+      - run: node tests/senden-nach-upload.test.mjs
       - run: node tests/dp-bereitschaft-weit.test.mjs
       - run: node tests/dp-einzelplan.test.mjs
       - run: node tests/actions-fest.test.mjs
