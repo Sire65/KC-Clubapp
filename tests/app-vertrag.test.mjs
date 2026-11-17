@@ -9826,7 +9826,8 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 // 2.167.0 KC-CLUB-ANLAGE-OEFFNEN (Diagnose Hansi: „angetippt“, aber nie „Öffnen“): der Tipp auf die Anlage öffnete zugleich das Nachrichten-Menü
 // der Sprechblase, das sich über das Anlage-Fenster legte → Tipp auf Anlage/Bild darf nicht zur Blase durchgehen
 {
-  assert.ok(/onclick="event\.stopPropagation\(\);anlageOeffnen\('\$\{a\.id\}'\)"/.test(html) && /<div class="anlage" onclick='event\.stopPropagation\(\);anlageAktion\(/.test(html), "Anlage und Bild im Chat: Tipp bleibt bei der Anlage");
+  // KC-CLUB-CHATFOTO-SPEICHERN (17.11.2026): Bilder gehen jetzt ebenfalls über anlageAktion (Öffnen/Teilen/Speichern) – Tipp bleibt weiter beim Bild
+  assert.ok(/<img data-anlage="\$\{a\.id\}" alt="\$\{esc\(a\.name\)\}" onclick="event\.stopPropagation\(\);anlageAktion\(/.test(html) && /<div class="anlage" onclick='event\.stopPropagation\(\);anlageAktion\(/.test(html), "Anlage und Bild im Chat: Tipp bleibt bei der Anlage");
 }
 // 2.168.0 KC-CLUB-SELBSTLOESCHEN-ALT (Wunsch Hansi): beim Einschalten auf Wunsch auch die eigenen bisherigen Nachrichten – nie fremde
 {
