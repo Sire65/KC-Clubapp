@@ -304,7 +304,7 @@ const SP_EN = {
   "Suchen – Titel, Ordner, Stichwort": "Search – title, folder, keyword", "Sprechen": "Speak", "Verschlüsselte Nachricht": "Encrypted message", "Du": "You",
   "frei": "free", "Vorlagen": "Templates", "Senden & Ablegen": "Send & file", "Anklopfen – ist gerade online": "Knock – is online now", "Video (Test": "Video (test",
   "Statistik": "Statistics", "Live zeigen": "Show live", "Online-Ansagen einschalten": "Turn on online announcements", "Eltern-Handy": "Parents' phone",
-  "In den Eingangskorb": "To the in-tray", "Ins Telefonbuch": "To the phone book", "Kontakt weiterleiten": "Forward contact",
+  "In den Eingangskorb": "To the in-tray", "Ins Telefonbuch": "To the phone book", "Kontakt weiterleiten": "Forward contact", "Kontaktkarte": "Contact card",
   "Zu einem Spiel herausfordern": "Challenge to a game", "Mehr Platz": "More space", "Bildschirm": "Screen", "Zeigen": "Show", "Lied/Video": "Song/video",
   "Nächstes": "Next", "Live aus": "Live off", "Club-Thema für alle festlegen (Admin": "Set club theme for everyone (admin", "Browser": "Browser",
   "Tipp: Wann eine Sperrzeit": "Tip: when a quiet time", "Was tun, wenn": "What to do if", "Schlüssel-Kopie (automatisch": "Key copy (automatic",
