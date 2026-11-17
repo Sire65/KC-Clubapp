@@ -1653,6 +1653,24 @@
   .blase .erk-zeile { display: flex; gap: 4px; align-items: stretch; margin: 6px 0 2px; } /* 2.666.0 KC-CLUB-ERKENNUNG-NACHRICHT */
   .blase .erk-knopf { flex: 1; padding: 4px 10px; border: 1px dashed #c9a46a; border-radius: 12px; background: #fff8e6; color: #741521; font: 600 .82rem/1.3 inherit; cursor: pointer; text-align: left; }
   .blase .erk-weg { padding: 0 8px; border: 1px solid #ddd; border-radius: 12px; background: transparent; color: inherit; opacity: .7; cursor: pointer; }
+  /* KC-CLUB-KLUGE-HELFER (16.11.2026) */
+  #khFuerDich:empty { display: none; }
+  .kh-zeile { display: flex; gap: 4px; margin: 0 0 8px; }
+  .kh-zeile-text { flex: 1; min-height: 44px; text-align: left; border: none; border-left: 4px solid #c9a46a; border-radius: 10px; background: #fff8e6; color: #741521; padding: 8px 10px; font: inherit; font-size: .92rem; cursor: pointer; box-shadow: var(--schatten); }
+  .kh-zu { min-width: 44px; border: 1px solid var(--linie, #ddd); border-radius: 10px; background: var(--karte); color: inherit; cursor: pointer; font-size: 1rem; }
+  .kh-eintrag { border: 1px solid var(--linie, #ddd); border-radius: 12px; margin: 0 0 8px; overflow: hidden; background: var(--karte); }
+  .kh-sprung { display: block; width: 100%; min-height: 48px; text-align: left; border: none; background: transparent; color: inherit; padding: 10px 12px; font: inherit; cursor: pointer; }
+  .kh-sprung small { display: block; opacity: .8; margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .kh-extra { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 12px 10px; }
+  .kh-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: -2px 0 10px 8px; }
+  .kh-chips button { min-height: 40px; padding: 6px 12px; border: 1px solid #c9a46a; border-radius: 20px; background: #fff8e6; color: #741521; font: 600 .9rem/1.2 inherit; cursor: pointer; }
+  .blase .kh-ungelesen { margin: 6px 0 0; font-size: .8rem; opacity: .95; }
+  .blase .kh-ungelesen button { margin-left: 4px; padding: 4px 10px; min-height: 32px; border: 1px solid rgba(255,255,255,.7); border-radius: 14px; background: rgba(255,255,255,.18); color: inherit; font: 600 .8rem/1.2 inherit; cursor: pointer; }
+  .blase .kh-sprachtext { margin: 4px 0 2px; font-size: .9rem; } .blase .kh-sprachtext summary { cursor: pointer; } .blase .kh-sprachtext > div { margin-top: 4px; white-space: pre-wrap; }
+  .kh-offen-marke { font-size: .9rem; }
+  .kh-erin-wahl { display: grid; gap: 8px; } .kh-erin-wahl .knopf { min-height: 48px; text-align: left; }
+  .kh-todo-link { margin-left: 6px; }
+  :root.dunkel .kh-zeile-text, :root.dunkel .kh-chips button { background: #3a2f1c; color: #ffe6c2; }
   .erk-teil { margin: 8px 0; display: grid; gap: 6px; }
   .erk-dienst { display: flex; gap: 8px; align-items: flex-start; }
   .erkd-karte { margin: 0 0 8px; border: 1px dashed #c9a46a; background: #fff8e6; color: #3a2a1a; } /* 2.669.0 KC-CLUB-ERKENNUNG-DATEI */
@@ -5248,6 +5266,8 @@
   @keyframes ledFlackern { 50% { opacity: .2; } }
   @keyframes ledPuls { 50% { opacity: .45; } }
   .vb-status { display: flex; gap: 10px; align-items: center; }
+  /* KC-CLUB-LESE-SCHREIBTEST: Ergebnis je Schritt */
+  .rw-erg { border: 1px solid var(--linie, #ddd); border-radius: 10px; padding: 8px 10px; margin: 6px 0; } .rw-zeile { padding: 3px 0; } .rw-nein { color: var(--rot); font-weight: 700; } .rw-nein .hinweis { color: inherit; font-weight: 400; }
   .instrumente { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
   .instrument { text-align: center; }
   .instrument svg { width: 100%; display: block; }
@@ -6278,6 +6298,7 @@
       <div class="chat-unterzeile" id="chatUnterzeile"><div class="hinweis" id="chatTeilnehmer" style="margin-left:54px;cursor:pointer" onclick="if(CHAT?.gruppe||(CHAT?.teilnehmer||[]).length>2)chatMitgliederZeigen()"></div><button type="button" class="tz-pfeil ct-pfeil versteckt" id="chatTeilnehmerPfeil" aria-expanded="false" title="Alle Teilnehmer zeigen" onclick="chatTnKlappen()">▸</button><button class="sl-kopf versteckt" id="chatSlMarke" title="Selbstlöschen in diesem Chat – antippen zum Ändern" onclick="slWahl('chat')"></button></div> <!-- KC-CLUB-SELBSTLOESCHEN 2.148.0: ⏳ neben „online“ -->
       <div id="chatFilterHinweis" class="chat-filter-hinweis versteckt" onclick="chatFilterSetzen('alle')"></div><!-- 2.577.0 KC-CLUB-CHAT-FILTER -->
       <div id="chatAngeheftet"></div>
+      <div id="khFuerDich" aria-live="polite"></div><!-- KC-CLUB-KLUGE-HELFER: eine Zeile „📌 Für dich“ -->
       <div id="chatRunde"></div>
     </div>
     <div class="chat" id="chat"></div>
@@ -6734,6 +6755,15 @@
       <div class="schalter"><div><b>📋 Tages-Übersicht beim Start</b><div class="hinweis">Eingang, Aufgaben, Geburtstage, nächste Sitzung – einmal je Start. Jederzeit über „📋 Übersicht“ erreichbar.</div></div><input type="checkbox" id="setTagesinfo" onchange="leitungStartSetzen('tagesinfo', this.checked)"></div>
       <div class="schalter"><div><b>📥 Hinweis: viel im Eingangskorb</b><div class="hinweis">Liegen mehr als 5 Sachen im Eingangskorb, kommt beim Start eine kurze Liste mit „Jetzt bearbeiten / Später / Heute nicht mehr“.</div></div><input type="checkbox" id="setEkHinweis" onchange="leitungStartSetzen('eingang', this.checked)"></div>
     </details>
+    <!-- KC-CLUB-KLUGE-HELFER (16.11.2026): alles rechnet nur das Handy aus den geladenen Nachrichten – nichts geht an fremde Dienste -->
+    <details class="karte" data-klappe="klugeHelfer">
+      <summary>✨ Kluge Helfer</summary>
+      <p class="hinweis" style="margin:0 0 6px">Kleine Hilfen im Chat. Deine App sucht sie auf dem Handy aus den Nachrichten heraus – nichts geht an fremde Dienste, nichts wird ungefragt gesendet. Gilt für dieses Gerät.</p>
+      <div class="schalter"><div><b>📌 Zeile „Für dich“</b><div class="hinweis">Oben im Chat eine Zeile, wenn etwas auf dich wartet: Fragen an dich, Erwähnungen, offene Umfragen, Aufgaben mit Frist, Fotos fürs Album. Antippen zeigt die Liste, ✕ blendet sie aus.</div></div><input type="checkbox" id="setKhFuerDich" aria-label="📌 Zeile „Für dich“" onchange="einstellung('khFuerDich', this.checked);chatStand=''"></div>
+      <div class="schalter"><div><b>💬 Schnellantworten</b><div class="hinweis">Unter der neuesten Nachricht an dich bis zu 3 Knöpfe, z. B. „✅ Bin dabei“ oder „👍 Mach ich“. Antippen sendet nach 5 Sekunden – bis dahin rückgängig.</div></div><input type="checkbox" id="setKhChips" aria-label="💬 Schnellantworten" onchange="einstellung('khChips', this.checked);chatStand=''"></div>
+      <div class="schalter"><div><b>❓ Hinweis auf offene Fragen</b><div class="hinweis">Hast du etwas gefragt und nach 12 Stunden noch keine Antwort, steht ein ❓ am Chat – mit „🔔 Freundlich nachfragen“.</div></div><input type="checkbox" id="setKhFragen" aria-label="❓ Hinweis auf offene Fragen" onchange="einstellung('khFragen', this.checked);chatStand=''"></div>
+      <div class="schalter"><div><b>📝 Text zu Sprachnachrichten</b><div class="hinweis">Beim Aufnehmen schreibt die Spracherkennung des Handys mit. Der Text steht einklappbar unter der Sprachnachricht („automatisch erkannt“). Geht das auf deinem Handy nicht, kommt die Sprachnachricht wie bisher ohne Text.</div></div><input type="checkbox" id="setKhSprachText" aria-label="📝 Text zu Sprachnachrichten" onchange="einstellung('khSprachText', this.checked);chatStand=''"></div>
+    </details>
     <details class="karte" data-klappe="install" data-einfach>
       <summary>📲 App-Installation</summary>
       <div id="installStand"></div>
@@ -7099,7 +7129,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.974.0" data-v="2.974.0"></script>
+<script src="app.js?v=2.975.0" data-v="2.975.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

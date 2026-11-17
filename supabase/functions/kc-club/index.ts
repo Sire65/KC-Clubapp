@@ -194,7 +194,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.974.0";
+const SERVER_VERSION = "2.975.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -1251,9 +1251,12 @@ async function zuletztDaMap(ich: Ich, ids: string[]) {
     const t = new Date(zg).getTime();
     if (t < grenze) { aus.set(pid, { online: false, lange: true }); continue; }
     const tag = berlinTag(new Date(zg));
-    const online = Date.now() - t < ONLINE_SEK * 1000, uhr = (d: Date) => new Intl.DateTimeFormat("de-DE", { timeZone: TZ, hour: "2-digit", minute: "2-digit" }).format(d);
+    // KC-CLUB-ZULETZT-WEG (17.11.2026, Fund Hansi „warum wird bei Wilfried online angezeigt“ – er hatte die App nach 13 s weggelegt): „online“ hier
+    // genauso wie überall sonst (onlineJetzt, KC-CLUB-ONLINE-ECHT) – wer „weg“ gemeldet hat und seitdem nicht wieder sichtbar war, ist nicht online.
+    const osRoh = (e ?? []).find((x: any) => x.person_id === pid && x.schluessel === "online_seit")?.wert;
+    const online = Date.now() - t < ONLINE_SEK * 1000 && !istWeg(osRoh), uhr = (d: Date) => new Intl.DateTimeFormat("de-DE", { timeZone: TZ, hour: "2-digit", minute: "2-digit" }).format(d);
     // KC-CLUB-ONLINE-SEIT (2.25.5): seit wann ohne Unterbrechung online (nur wenn der Merker zur aktuellen Sitzung passt)
-    const os = online ? (e ?? []).find((x: any) => x.person_id === pid && x.schluessel === "online_seit")?.wert : null;
+    const os = online ? osRoh : null;
     const seitD = os?.seit && os?.zuletzt && Date.now() - Date.parse(os.zuletzt) < ONLINE_SEK * 1000 ? new Date(os.seit) : null;
     aus.set(pid, { online, tag, zeit: tag === heute ? uhr(new Date(zg)) : null,
       ...(seitD && !isNaN(seitD.getTime()) ? { seit: uhr(seitD), seitTag: berlinTag(seitD) } : {}) });
@@ -3884,6 +3887,7 @@ const NEON_GRENZE = 1024 * 1024 * 1024; // Neon kostenlos: 1 GB Speicher je Proj
 // KC-NEON-PRUEFUNG (26.10.2026, Wunsch Hansi „Prüfung in der Kachel Neon“): Rechenzeit und Datenübertragung des Spiegels im Monat.
 // Nur mit dem Lese-Schlüssel NEON_API_KEY (Supabase-Geheimnis); ohne ihn zeigt die Kachel „Schlüssel fehlt“. Höchstens 1 Abruf je 30 Min. und Server-Instanz,
 // die Neon-Schnittstelle ist kostenlos und weckt die Datenbank nicht. Kostenlos (free_v3): 100 Rechenstunden und 5 GB Übertragung je Projekt und Monat.
+const RW_NEON_MAX_STD = 10; // KC-CLUB-LESE-SCHREIBTEST: Spiegelung 3× täglich (4/13/22 UTC) – längste Lücke 9 Std.
 const NEON_PROJEKT = "purple-hat-23047492", NEON_RECHEN_GRENZE_STD = 100, NEON_UEBERTRAG_GRENZE = 5 * 1024 * 1024 * 1024;
 let NEON_VERBRAUCH: { t: number; w: any } = { t: 0, w: null };
 async function neonVerbrauch() {
@@ -4398,7 +4402,7 @@ const ZUGANG_AKTIONEN: Record<"basis" | "aushilfe", readonly string[]> = {
     "wetter", "wetter_ort_suchen", "treffen_liste", "treffen_antwort", "erinnerung_setzen", "kalender", "kalender_abo", "kalender_abo_holen", "privattermin_speichern",
     "privattermin_loeschen", "privattermine_liste", "countdowns", "terminumfragen_liste", "terminumfrage_antwort", "mitglieder", "mitglied_details",
     "unterhaltungen", "unterhaltung", "unterhaltung_stand", "tippen_stand", "tippen", "nachricht_senden", "nachricht_details", "einzelchat_finden", "gruppenchat_finden", "express_stand", "express_angezeigt",
-    "express_antwort", "startnachricht_bestaetigen", "stadt_woche", "ferien", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "geplant_abrufen", "wecker_setzen", "wecker_loeschen", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
+    "express_antwort", "startnachricht_bestaetigen", "stadt_woche", "ferien", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "geplant_abrufen", "wecker_setzen", "wecker_loeschen", "nachricht_erinnerung_setzen", "nachricht_erinnerung_liste", "nachricht_erinnerung_loeschen", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
     "chat_selbstloeschen", "link_vorschau", "unterstuetzung_meine", "unterstuetzung_senden", "nachricht_bearbeiten", "nachricht_merken", "gemerkte_nachrichten", "chat_umfrage_stimmen", "nachricht_ausblenden",
     "unterhaltung_ausblenden", "unterhaltung_archivieren", "unterhaltung_leeren", "gruppe_verlassen", "anlage_hochladen", "anlage_url",
     "einmal_foto_ansehen", "meine_nachrichten_statistik", "mf_antwort", "mf_gelesen", "sos_kontakte", "sos_ort", "notfall_setzen", "spiele_liste",
@@ -4407,7 +4411,7 @@ const ZUGANG_AKTIONEN: Record<"basis" | "aushilfe", readonly string[]> = {
     "sprache_lernen", "sprache_training", "sprache_training_reset", "sprache_vergessen", "sprache_unbekannt", "twinkey_daten", "twinkey_frage",
     "twinkey_gelesen", "fehler_melden", "fehler_katalog", "hilfe_anfordern", "feedback_meins", "feedback_senden", "feedback_neu", "vorfuehren_antwort", "vorfuehren_holen",
     "vorfuehren_senden", "vorfuehren_ende", "vorfuehren_bild", "schnappschuss_antwort", "schnappschuss_bild", "schnappschuss_ende", "fernbedienung_melden", "push_anmelden",
-    "push_pruefen", "geraete_liste", "geraet_entfernen", "andere_geraete_abmelden", "push_abmelden", "push_test", "neues_geraet_antwort"],
+    "push_pruefen", "geraete_liste", "geraet_entfernen", "andere_geraete_abmelden", "push_abmelden", "push_test", "rw_test", "neues_geraet_antwort"],
   aushilfe: ["mein_dienst", "dienstwunsch_laden", "dienstwunsch_speichern", "dienst_gruss", "dienste", "dienst_freigabe", "meine_eingaben",
     "eingaben_bestaetigen", "wunschbogen_mailen", "eingaben_ablegen", "fotos_neueste", "fotos_liste", "foto_oeffnen",
     "schulung_meine", "schulung_antwort", "gericht_zutat_setzen", "gericht_antwort", "tipp_stand", "tipp_mitmachen", "tipp_abgeben",
@@ -9515,18 +9519,24 @@ async function geplantFaelligLauf() {
 // Erst belegen (status „fertig“), dann senden – zwei Läufe gleichzeitig senden nie doppelt. Den Wecker hat man selbst gestellt, er kommt
 // daher auch in der eigenen Ruhezeit. Über 2 Stunden zu spät (Zeitplaner war aus) = „verpasst“, kein Push mehr mitten in der Nacht.
 const WECKER_MAX = 10, WECKER_TAGE = 7, WECKER_SPAET_MS = 2 * 3600000;
+// KC-CLUB-KLUGE-HELFER (16.11.2026): „⏰ Erinnern“ an eine Nachricht nutzt dieselbe Tabelle (Art „nachricht“ mit Chat- und Nachrichten-Kennung).
+// Gespeichert werden nur Zeit, Kennungen und „Nachricht von <Vorname>“ – nie der Nachrichtentext. Eigene Grenze, damit Wecker frei bleiben.
+const NA_ERIN_MAX = 30, NA_ERIN_TAGE = 30, NA_ERIN_SPAET_MS = 12 * 3600000;
 async function weckerFaelligLauf() {
   const z = { gesendet: 0, fehler: 0, verpasst: 0 };
-  const { data: faellig } = await db.from("kc_club_wecker").select("id,person_id,art,faellig_um,text").eq("status", "offen").lte("faellig_um", jetzt()).order("faellig_um").limit(50);
+  const { data: faellig } = await db.from("kc_club_wecker").select("id,person_id,art,faellig_um,text,thread_id,message_id").eq("status", "offen").lte("faellig_um", jetzt()).order("faellig_um").limit(50);
   for (const w of faellig ?? []) {
-    const spaet = Date.now() - Date.parse(w.faellig_um) > WECKER_SPAET_MS;
+    // KC-CLUB-KLUGE-HELFER: „⏰ Erinnern“ an eine Nachricht – darf bis 12 Std. zu spät kommen (z. B. nach einer Störung), Wecker/Timer nur 2 Std.
+    const spaet = Date.now() - Date.parse(w.faellig_um) > (w.art === "nachricht" ? NA_ERIN_SPAET_MS : WECKER_SPAET_MS);
     const { data: belegt } = await db.from("kc_club_wecker").update({ status: spaet ? "verpasst" : "fertig", gesendet_am: jetzt() }).eq("id", w.id).eq("status", "offen").select("id");
     if (!belegt?.length || spaet) { if (belegt?.length) z.verpasst++; continue; }
     try {
-      const timer = w.art === "timer", um = fZeit.format(new Date(w.faellig_um));
+      const timer = w.art === "timer", nachricht = w.art === "nachricht", um = fZeit.format(new Date(w.faellig_um));
+      // Nachricht: im Push nur „Nachricht von …“ (steht so in text) – nie der Nachrichtentext; Antippen öffnet den Chat an der Stelle (#naerin=Chat:Nachricht)
       await sendenGewaehlt("club_erinnerung", [w.person_id], ["push"], {
-        titel: timer ? "⏲️ Zeit ist um!" : `⏰ Wecker ${um} Uhr`, kurz: txt(w.text, 120) || (timer ? "Dein Timer ist abgelaufen." : "Dein Wecker klingelt."),
-        url: `${APP_URL}#wecker`, wichtigkeit: "hoch" }, `club-wecker:${w.id}`, { notfall: true });
+        titel: nachricht ? `⏰ Erinnerung: ${txt(w.text, 80) || "Nachricht"}` : timer ? "⏲️ Zeit ist um!" : `⏰ Wecker ${um} Uhr`,
+        kurz: nachricht ? "Nachricht ansehen" : txt(w.text, 120) || (timer ? "Dein Timer ist abgelaufen." : "Dein Wecker klingelt."),
+        url: nachricht ? `${APP_URL}#naerin=${w.thread_id}:${w.message_id}` : `${APP_URL}#wecker`, wichtigkeit: nachricht ? "normal" : "hoch" }, `club-wecker:${w.id}`, { notfall: true });
       z.gesendet++;
     } catch (e) {
       await db.from("kc_club_wecker").update({ status: "fehler" }).eq("id", w.id);
@@ -14887,6 +14897,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             ...(lvMap.has(m.id) ? { link: lvMap.get(m.id) } : {}), // KC-CLUB-LINK-VORSCHAU
             anlagen: (ma ?? []).filter((x: any) => x.message_id === m.id).map((x: any) => (att ?? []).find((y: any) => y.id === x.attachment_id)).filter(Boolean)
               .map((y: any) => ({ id: y.id, name: y.file_name, mime: y.mime_type, groesse: y.size_bytes, ...(einm.has(y.id) ? { einmal: einmalInfo(y.id) } : {}) })),
+            // KC-CLUB-KLUGE-HELFER: „Noch nicht gelesen: Anne, Dieter“ – nur eigene Gruppen-Nachrichten, 2 Std. bis 3 Tage alt, nur solange jemand fehlt
+            ...(eigen && andere.length > 1 && gelesenVon.length < andere.length && Date.now() - Date.parse(m.created_at) >= 2 * 3600000 && Date.now() - Date.parse(m.created_at) <= 3 * 86400000
+              ? { nichtGelesen: andere.filter((x: any) => !(x.last_read_at && x.last_read_at >= m.created_at)).slice(0, 30).map((x: any) => ({ id: x.person_id, name: vorname(leute.get(x.person_id)) || "?" })) } : {}),
             ...(eigen ? { gelesenVon, gelesenAlle: andere.length > 0 && gelesenVon.length === andere.length, zustellung: zustellung(m.id),
               // ✓ gesendet · ✓✓ auf allen Handys angekommen · blaue ✓✓ von allen gelesen (wie WhatsApp; Gruppe: erst wenn alle)
               haken: andere.length > 0 && gelesenVon.length === andere.length ? "gelesen" : andere.length > 0 && angekommenBei(m) === andere.length ? "angekommen" : "gesendet" } : {}),
@@ -15078,6 +15091,33 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         await protokoll(ich.person_id, "geplant_geloescht", { id: data[0].id });
         return json({ ok: true });
       }
+      // ----- KC-CLUB-KLUGE-HELFER (16.11.2026): „⏰ Erinnern“ an eine Nachricht – nur in eigenen Chats, immer nur die eigenen Erinnerungen -----
+      case "nachricht_erinnerung_setzen": {
+        const um = new Date(String(p.um || ""));
+        if (isNaN(um.getTime())) throw new Fehler("Bitte eine Zeit wählen.");
+        if (um.getTime() < Date.now() + 30000) throw new Fehler("Die Zeit liegt schon in der Vergangenheit.");
+        if (um.getTime() > Date.now() + NA_ERIN_TAGE * 86400000) throw new Fehler(`Höchstens ${NA_ERIN_TAGE} Tage im Voraus.`);
+        const { data: m } = await db.from("kc_communication_messages").select("id,thread_id,sender_person_id").eq("id", String(p.id || "")).maybeSingle();
+        if (!m) throw new Fehler("Nachricht nicht gefunden.", 404);
+        await binTeilnehmer(m.thread_id, ich.person_id);
+        const von = m.sender_person_id === ich.person_id ? "dir" : vorname((await personen([m.sender_person_id])).get(m.sender_person_id)) || "jemandem";
+        // dieselbe Nachricht nur einmal: eine offene Erinnerung daran wird ersetzt
+        await db.from("kc_club_wecker").update({ status: "geloescht" }).eq("person_id", ich.person_id).eq("art", "nachricht").eq("message_id", m.id).eq("status", "offen");
+        const { count } = await db.from("kc_club_wecker").select("id", { count: "exact", head: true }).eq("person_id", ich.person_id).eq("art", "nachricht").eq("status", "offen");
+        if ((count ?? 0) >= NA_ERIN_MAX) throw new Fehler(`Höchstens ${NA_ERIN_MAX} Erinnerungen an Nachrichten gleichzeitig.`);
+        const { data: w, error } = await db.from("kc_club_wecker").insert({ person_id: ich.person_id, art: "nachricht", faellig_um: um.toISOString(), text: txt(`Nachricht von ${von}`, 120), thread_id: m.thread_id, message_id: m.id }).select("id").single();
+        if (error || !w) throw new Fehler("Konnte nicht gespeichert werden.", 500);
+        return json({ ok: true, id: w.id, um: um.toISOString() });
+      }
+      case "nachricht_erinnerung_liste": {
+        const { data } = await db.from("kc_club_wecker").select("id,faellig_um,thread_id,message_id,text").eq("person_id", ich.person_id).eq("art", "nachricht").eq("status", "offen").order("faellig_um").limit(NA_ERIN_MAX);
+        return json({ liste: (data ?? []).map((w: any) => ({ id: w.id, um: w.faellig_um, chat: w.thread_id, nachricht: w.message_id, text: w.text })) });
+      }
+      case "nachricht_erinnerung_loeschen": {
+        const id = String(p.id || "");
+        if (/^[0-9a-f-]{36}$/i.test(id)) await db.from("kc_club_wecker").update({ status: "geloescht" }).eq("id", id).eq("person_id", ich.person_id).eq("art", "nachricht").eq("status", "offen");
+        return json({ ok: true });
+      }
       // ----- 2.640.0 KC-CLUB-UHR-WECKER: Wecker/Timer für den Push stellen bzw. abstellen – immer nur die eigenen -----
       case "wecker_setzen": {
         const um = new Date(String(p.um || "")), art = p.art === "timer" ? "timer" : "wecker";
@@ -15088,7 +15128,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (p.id) { // ersetzt den eigenen (z. B. „5 Min. später“, „+1 Min.“, Pause → weiter)
           await db.from("kc_club_wecker").update({ status: "geloescht" }).eq("id", String(p.id)).eq("person_id", ich.person_id).eq("status", "offen");
         }
-        const { count } = await db.from("kc_club_wecker").select("id", { count: "exact", head: true }).eq("person_id", ich.person_id).eq("status", "offen");
+        const { count } = await db.from("kc_club_wecker").select("id", { count: "exact", head: true }).eq("person_id", ich.person_id).eq("status", "offen").neq("art", "nachricht"); // KC-CLUB-KLUGE-HELFER: Erinnerungen an Nachrichten zählen extra
         if ((count ?? 0) >= WECKER_MAX) throw new Fehler(`Höchstens ${WECKER_MAX} Wecker und Timer gleichzeitig.`);
         const { data: w, error } = await db.from("kc_club_wecker").insert({ person_id: ich.person_id, art, faellig_um: um.toISOString(), text }).select("id").single();
         if (error || !w) throw new Fehler("Konnte nicht gestellt werden.", 500);
@@ -21486,6 +21526,52 @@ Köcheclub-App`,
         }
         return json({ ok: true });
       }
+      // KC-CLUB-LESE-SCHREIBTEST (16.11.2026, Wunsch Hansi „wenn ich die LEDs antippe … ein Testbutton, der Lese- und Schreibtest macht“ – „bauen, für alle,
+      // mit Push-Test, (Admin) mit Neon“): echter Weg durch die Datenbank – eigenen Testeintrag schreiben, zurücklesen und vergleichen, wieder löschen;
+      // dazu eine Test-Push an mich. Admin zusätzlich: Sicherungskopie (Neon) – nur die Neon-Verwaltung fragen und die letzte erfolgreiche Spiegelung
+      // ansehen (weckt die Spiegel-Datenbank nicht, kostet keine Neon-Rechenzeit). Je Schritt ✅/❌ mit ms; Fehlermeldungen ohne Inhalte.
+      case "rw_test": {
+        const schritte: { k: string; ok: boolean; ms: number; info?: string }[] = [];
+        const schritt = async (k: string, fn: () => Promise<string | void>) => {
+          const t0 = performance.now();
+          try { const info = await fn(); schritte.push({ k, ok: true, ms: Math.round(performance.now() - t0), ...(info ? { info } : {}) }); return true; }
+          catch (e) { schritte.push({ k, ok: false, ms: Math.round(performance.now() - t0), info: String((e as any)?.message || e).slice(0, 160) }); return false; }
+        };
+        const z = crypto.randomUUID();
+        if (ich.nurLesen) schritte.push({ k: "schreiben", ok: false, ms: 0, info: "Nur-Lese-Zugang – Schreiben ist hier nicht erlaubt" });
+        else if (await schritt("schreiben", async () => {
+          const { error } = await db.from("kc_club_person_einstellung").upsert({ person_id: ich.person_id, schluessel: "rw_test", wert: { z, am: jetzt() }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
+          if (error) throw new Error(error.message);
+        })) {
+          await schritt("lesen", async () => {
+            const { data, error } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "rw_test").maybeSingle();
+            if (error) throw new Error(error.message);
+            if (data?.wert?.z !== z) throw new Error("Gelesener Wert passt nicht zum geschriebenen");
+          });
+          await schritt("aufraeumen", async () => {
+            const { error } = await db.from("kc_club_person_einstellung").delete().eq("person_id", ich.person_id).eq("schluessel", "rw_test");
+            if (error) throw new Error(error.message);
+          });
+        }
+        if (p.push !== false) await schritt("push", async () => {
+          const v = await routerSenden("club_nachricht_push", [ich.person_id], { titel: "🧪 Lese- und Schreibtest", kurz: `Hallo ${ich.vorname}, Push kommt an!`, betreff: "Köcheclub Werne – Test", text: "Test", url: APP_URL },
+            `club-rwtest:${ich.person_id}:${Date.now()}`);
+          if (!(v?.gesendet > 0)) throw new Error("Keine Push zugestellt – ist Push auf diesem Gerät eingeschaltet?");
+          return `an ${v.gesendet} ${v.gesendet === 1 ? "Gerät" : "Geräte"}`;
+        });
+        if (p.neon && ich.admin) await schritt("neon", async () => {
+          const [v, { data: snap }] = await Promise.all([neonVerbrauch(),
+            db.from("kc_db_mirror_runs").select("started_at").eq("run_type", "snapshot").eq("status", "ok").order("started_at", { ascending: false }).limit(1).maybeSingle()]);
+          if (!(v as any)?.schluessel) throw new Error("Neon-Schlüssel fehlt");
+          if ((v as any)?.fehler) throw new Error(String((v as any).fehler));
+          const std = snap?.started_at ? (Date.now() - Date.parse(snap.started_at)) / 3600000 : null;
+          if (std == null) throw new Error("Noch keine erfolgreiche Spiegelung gefunden");
+          if (std > RW_NEON_MAX_STD) throw new Error(`Letzte Spiegelung vor ${Math.round(std)} Std. – zu lange her`);
+          return `letzte Spiegelung vor ${std < 1 ? Math.max(1, Math.round(std * 60)) + " Min." : Math.round(std * 10) / 10 + " Std."}`;
+        });
+        return json({ ok: schritte.every((s) => s.ok), schritte, zeit: jetzt() });
+      }
+
       case "push_test": {
         // bewusst ohne persönliche Auswahl: Test soll immer als Push gehen
         const v = await routerSenden("club_nachricht_push", [ich.person_id], { titel: "🔔 Köcheclub Werne", kurz: `Hallo ${ich.vorname}, Push funktioniert!`, betreff: "Köcheclub Werne – Test", text: "Test", url: APP_URL }, `club-pushtest:${ich.person_id}:${Date.now()}`);

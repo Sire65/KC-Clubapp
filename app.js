@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.974.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.975.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1174,7 +1174,7 @@ function anwendenDesign() {
   const MODUS_ZEICHEN = { auto: ["A", "Automatik"], tag: ["T", "Immer Tag"], nacht: ["N", "Immer Nacht"] }, mz = MODUS_ZEICHEN[DS.modus] || MODUS_ZEICHEN.auto;
   if ($("modusKnopf")) { $("modusKnopf").innerHTML = `${nacht ? "☀️" : "🌙"}<span class="modusbuchstabe" aria-hidden="true">${mz[0]}</span>`;
     $("modusKnopf").title = `Tag/Nacht umschalten – eingestellt: ${mz[1]}`; $("modusKnopf").setAttribute("aria-label", `Tag/Nacht umschalten, eingestellt: ${mz[1]}`); }
-  jzWahlZeigen(); jzDekoWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setFerien").checked = einst("ferien", true); ferienLaenderZeigen(); /* 2.484.0 KC-CLUB-FERIEN */ $("setGross").checked = $("setGrossE").checked = einst("gross", false); szAnzeigeEinstellung(); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setKuckuck")) $("setKuckuck").checked = einst("kuckuck", true); suWahlZeigen(); kopfEffektEinstellungen(); schattenEinstellungen(); kachelEckenAnwenden(); vwVorwahlEinstellungen(); /* KC-CLUB-KOPF-EFFEKTE */ tippTonZeigen(); /* KC-CLUB-TIPP-GERAEUSCH */ if ($("setGbVogel")) $("setGbVogel").checked = gbvAn(); /* KC-CLUB-GEBURTSTAG-VOGEL */ if ($("setAdventGesteck")) $("setAdventGesteck").checked = agAn(); /* 2.572.0 KC-CLUB-ADVENTSGESTECK */ if ($("setFee")) $("setFee").checked = einst("fee", true); for (const k of ["kaefer", "klee"]) { const c = $("set" + k[0].toUpperCase() + k.slice(1)); if (c) c.checked = einst(k, true); } /* KC-CLUB-MARIENKAEFER, KC-CLUB-GLUECKSKLEE */ ["kachelStart", "kachelWelle", "kachelWackeln", "kachelAbschied"].forEach((k) => { const c = $("set_" + k); if (c) c.checked = einst(k, true); }); /* 2.566.0 KC-CLUB-KACHEL-EXTRAS */ if ($("setAdvent")) $("setAdvent").checked = akAn(); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); for (const [id, k] of [["setNetzSymbol", "netzSymbol"], ["setNetzBalken", "netzBalken"], ["setPuls", "puls"], ["setNetzBlinken", "netzBlinken"], ["setChatEinklappen", "chatEinklappen"], ["setChatKW", "chatKW"], ["setKomSym", "komSym"]]) if ($(id)) $(id).checked = einst(k, true); if ($("setUhGlied")) $("setUhGlied").value = uhGlied(); /* 2.720.0 KC-CLUB-NACHRICHTEN-GLIEDERUNG */ pinAnzeige(); /* 2.726.0 KC-CLUB-LIEGEN-SCHUTZ */ // 2.429.0 if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu2", false); $("setTon").checked = einst("ton", true);
+  jzWahlZeigen(); jzDekoWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setFerien").checked = einst("ferien", true); ferienLaenderZeigen(); /* 2.484.0 KC-CLUB-FERIEN */ $("setGross").checked = $("setGrossE").checked = einst("gross", false); szAnzeigeEinstellung(); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setKuckuck")) $("setKuckuck").checked = einst("kuckuck", true); suWahlZeigen(); kopfEffektEinstellungen(); schattenEinstellungen(); kachelEckenAnwenden(); vwVorwahlEinstellungen(); /* KC-CLUB-KOPF-EFFEKTE */ tippTonZeigen(); /* KC-CLUB-TIPP-GERAEUSCH */ if ($("setGbVogel")) $("setGbVogel").checked = gbvAn(); /* KC-CLUB-GEBURTSTAG-VOGEL */ if ($("setAdventGesteck")) $("setAdventGesteck").checked = agAn(); /* 2.572.0 KC-CLUB-ADVENTSGESTECK */ if ($("setFee")) $("setFee").checked = einst("fee", true); for (const k of ["kaefer", "klee"]) { const c = $("set" + k[0].toUpperCase() + k.slice(1)); if (c) c.checked = einst(k, true); } /* KC-CLUB-MARIENKAEFER, KC-CLUB-GLUECKSKLEE */ ["kachelStart", "kachelWelle", "kachelWackeln", "kachelAbschied"].forEach((k) => { const c = $("set_" + k); if (c) c.checked = einst(k, true); }); /* 2.566.0 KC-CLUB-KACHEL-EXTRAS */ if ($("setAdvent")) $("setAdvent").checked = akAn(); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); for (const [id, k] of [["setNetzSymbol", "netzSymbol"], ["setNetzBalken", "netzBalken"], ["setPuls", "puls"], ["setNetzBlinken", "netzBlinken"], ["setChatEinklappen", "chatEinklappen"], ["setChatKW", "chatKW"], ["setKomSym", "komSym"], ["setKhFuerDich", "khFuerDich"], ["setKhChips", "khChips"], ["setKhFragen", "khFragen"], ["setKhSprachText", "khSprachText"]]) if ($(id)) $(id).checked = einst(k, khStandard(k)); if ($("setUhGlied")) $("setUhGlied").value = uhGlied(); /* 2.720.0 KC-CLUB-NACHRICHTEN-GLIEDERUNG */ pinAnzeige(); /* 2.726.0 KC-CLUB-LIEGEN-SCHUTZ */ // 2.429.0 if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu2", false); $("setTon").checked = einst("ton", true);
   designWahlZeigen();
   try { $("setEselsohr").checked = esAn(); $("setBwEinladung").checked = !bwEinStand().aus; $("setKachelVorschlag").checked = !nuStand().aus; kaAuswahlZeigen(); } catch (e) { /* 2.314.0: vor dem Aufbau der Rückseite noch nicht da */ }
   try { themaSchriftAnwenden(); } catch {} // 2.333.0 KC-CLUB-THEMEN-SCHRIFT
@@ -7119,7 +7119,7 @@ function todoZeigen() {
   const zeilen = [...offen, ...(TODO.erledigteZeigen ? fertig : [])];
   $("todoTabelle").innerHTML = zeilen.length ? `<table class="todotab">${zeilen.map((x) => { const k = kat(x.kategorie), spaet = !x.erledigt && x.faellig && x.faellig < heute;
     return `<tr class="${x.erledigt ? "fertig" : ""}"><td style="width:34px"><input type="checkbox" ${x.erledigt ? "checked" : ""} onchange="todoHaken('${x.id}', this.checked)" aria-label="erledigt"></td>
-      <td><div class="aufgabe">${esc(x.text)}</div><div class="meta">${zust(x).length ? `<b ${x.darfZuweisen && !x.erledigt ? `role="button" style="cursor:pointer;${zust(x).some((z) => z.ich) ? "color:var(--rot)" : ""}" title="Zuständige ändern" onclick="todoZuweisen('${x.id}')"` : `style="${zust(x).some((z) => z.ich) ? "color:var(--rot)" : ""}"`}>👉 ${zust(x).map((z) => (z.ich ? "du" : esc(z.vorname))).join(", ")}</b> · ` : x.darfZuweisen && !x.erledigt ? `<a href="#" onclick="event.preventDefault();todoZuweisen('${x.id}')">👉 zuweisen</a> · ` : ""}${x.fuer === "alle" ? "👥 für alle" : x.vonMir ? "👤 nur für mich" : "👤 privat"}${x.vonMir ? "" : " · von " + esc(x.von)}${x.faellig ? ` · <span class="${spaet ? "spaet" : ""}">fällig ${esc(fDatumKurz(x.faellig))}${spaet ? " – überfällig" : ""}</span>` : ""}${x.erledigt ? ` · ✓ ${esc(x.erledigtVon || "")} ${esc(zeitKurz(x.erledigt))}` : ""}</div></td>
+      <td><div class="aufgabe">${esc(x.text)}${khTodoLink(x.id) /* KC-CLUB-KLUGE-HELFER */}</div><div class="meta">${zust(x).length ? `<b ${x.darfZuweisen && !x.erledigt ? `role="button" style="cursor:pointer;${zust(x).some((z) => z.ich) ? "color:var(--rot)" : ""}" title="Zuständige ändern" onclick="todoZuweisen('${x.id}')"` : `style="${zust(x).some((z) => z.ich) ? "color:var(--rot)" : ""}"`}>👉 ${zust(x).map((z) => (z.ich ? "du" : esc(z.vorname))).join(", ")}</b> · ` : x.darfZuweisen && !x.erledigt ? `<a href="#" onclick="event.preventDefault();todoZuweisen('${x.id}')">👉 zuweisen</a> · ` : ""}${x.fuer === "alle" ? "👥 für alle" : x.vonMir ? "👤 nur für mich" : "👤 privat"}${x.vonMir ? "" : " · von " + esc(x.von)}${x.faellig ? ` · <span class="${spaet ? "spaet" : ""}">fällig ${esc(fDatumKurz(x.faellig))}${spaet ? " – überfällig" : ""}</span>` : ""}${x.erledigt ? ` · ✓ ${esc(x.erledigtVon || "")} ${esc(zeitKurz(x.erledigt))}` : ""}</div></td>
       <td class="kat" title="${esc(k.name)}">${k.sym}</td><td style="width:34px">${x.darfLoeschen ? `<button aria-label="Löschen" class="weg" title="löschen" onclick="todoLoeschen('${x.id}')">🗑️</button>` : ""}</td></tr>`; }).join("")}</table>`
     : `<p class="hinweis" style="margin:0">${offen.length || !fertig.length ? "Nichts zu tun 🎉 – oben einen Eintrag hinzufügen." : `Alles erledigt 🎉 (${fertig.length} erledigte ausgeblendet)`}</p>`;
   if (!TODO.erledigteZeigen && fertig.length && offen.length) $("todoTabelle").insertAdjacentHTML("beforeend", `<p class="hinweis" style="margin:8px 0 0">✓ ${fertig.length} erledigt (ausgeblendet)</p>`);
@@ -7480,6 +7480,7 @@ async function spracheStart() {
   SPR = { rec, strom, teile: [], start: Date.now(), typ: rec.mimeType || typ || "audio/webm" };
   rec.ondataavailable = (e) => { if (e.data?.size) SPR?.teile.push(e.data); };
   rec.start(1000);
+  khMitschreiben(SPR); // KC-CLUB-KLUGE-HELFER: Text zur Sprachnachricht (nur wo die Spracherkennung geht, sonst still ohne)
   $("aufnahmeLeiste").classList.remove("versteckt"); $("mikroKnopf").classList.add("versteckt");
   osziStart(strom); sprichtMelden(); // KC-CLUB-SPRICHT (1.11.0)
   try { navigator.vibrate?.(30); } catch {}
@@ -7529,10 +7530,11 @@ async function spracheSenden() {
   if (!s.teile.length) return melde("Die Aufnahme ist leer – bitte nochmal versuchen.", true);
   const typ = s.typ.split(";")[0], endung = typ.includes("mp4") ? "m4a" : typ.includes("ogg") ? "ogg" : "webm";
   const datei = new File(s.teile, `Sprachnachricht-${new Date().toISOString().slice(11, 19).replace(/:/g, "")}.${endung}`, { type: typ });
+  const erkannt = await khMitschreibenEnde(s), dazu = erkannt ? `\n${KH_SPRACH_MARKE} ${erkannt}` : ""; // KC-CLUB-KLUGE-HELFER: „📝 Automatisch erkannt: …“ (leer → wie bisher)
   try {
     const r = await anlageHochladen(datei);
     anlagen = [...anlagen, { id: r.id, name: r.name, laedt: false }]; chipsZeigen();
-    const alt = $("text").value; $("text").value = (alt ? alt + "\n" : "") + `🎤 Sprachnachricht (${Math.floor(sek / 60)}:${String(sek % 60).padStart(2, "0")})`;
+    const alt = $("text").value; $("text").value = (alt ? alt + "\n" : "") + `🎤 Sprachnachricht (${Math.floor(sek / 60)}:${String(sek % 60).padStart(2, "0")})` + (alt ? "" : dazu);
     await senden();
   } catch (e) { meldeFehler(e); }
 }
@@ -9146,6 +9148,7 @@ function vbEinfachZeigen() {
     const [farbe, text] = vbZustand(), gut = farbe === "gruen";
     $("vbInhalt").innerHTML = `<div class="vb-status"><i class="led ${farbe}"></i><b>${gut ? "✅ Verbindung in Ordnung" : farbe === "blau" ? "🔧 " + esc(text) : farbe === "grau" ? "⏳ Verbindung wird geprüft …" : "⚠️ Gerade Störung – " + esc(text)}</b></div>
       <p class="hinweis" style="margin:8px 0">${gut ? "Nachrichten, Termine und Mitteilungen kommen an." : "Bitte kurz warten. Bleibt es so, hilft „Problem melden“."}</p>
+      ${rwKnopfHtml()}
       <div class="knoepfe"><button class="knopf" onclick="$('verbindungBlatt').classList.add('versteckt');testAnMichStarten()">🧪 Test an mich</button><button class="knopf" onclick="$('verbindungBlatt').classList.add('versteckt');fpProblemMelden()">🆘 Problem melden</button></div>
       <button class="knopf" onclick="verbindungMelden(this)">📨 Ergebnis an ${esc(adminName())} senden</button>
       <button class="knopf" onclick="$('verbindungBlatt').classList.add('versteckt');ttOeffnen()">🔬 Internet zu Hause gründlich prüfen</button>`;
@@ -9201,6 +9204,7 @@ function vbBlattZeigen() {
     <b style="font-size:.9rem">Womit bist du gerade im Netz?${netzErkannt() ? ' <span class="hinweis" style="font-weight:normal">(vom Handy erkannt)</span>' : ""}</b>
     <div class="dwahl" style="margin:4px 0 6px">${Object.entries(NETZARTEN).map(([k, t]) => `<label><input type="radio" name="vbNetz" value="${k}" ${vbNetz() === k ? "checked" : ""} onchange="vbNetzWahl('${k}')"> ${t}</label>`).join("")}</div>
     <button class="knopf haupt" id="vbTestKnopf" onclick="verbindungTesten()" ${VB.test?.laeuft ? "disabled" : ""}>▶️ Verbindung testen</button>
+    ${rwKnopfHtml()}
     <button class="knopf" onclick="$('verbindungBlatt').classList.add('versteckt');ttOeffnen()">🔬 Internet-Tiefentest (Aussetzer, Router, Dauertest)</button>
     ${(() => { const v = vbVerlauf(); if (!v.length) return ""; const z = (x, e) => (x == null ? "–" : x.toLocaleString("de-DE") + e);
       return `<b style="font-size:.9rem">Letzte Tests auf diesem Gerät</b><table class="vb-tabelle"><tr><td><b>Wann</b></td><td><b>Netz</b></td><td><b>Antwort</b><br><small class="hinweis">Netz · Server</small></td><td><b>↓ / ↑ Mbit/s</b></td></tr>
@@ -9253,6 +9257,28 @@ async function wartungUmschalten() {
 // ---------- KC-CLUB-VERBINDUNG-MELDEN (2.23.76, Wunsch Hansi): Werte unter den LEDs drucken und an den Admin senden (Push + E-Mail) ----------
 // Eine Quelle für Druck und Meldung: dieselben Zustände wie im Fenster (unbekannt bleibt „unbekannt“ – nie als OK, Regel 11).
 const VB_FARBE = { gruen: "🟢", gelb: "🟡", rot: "🔴", blau: "🔵", grau: "⚪" };
+// ---------- KC-CLUB-LESE-SCHREIBTEST (16.11.2026, Wunsch Hansi „LEDs antippen … ein Testbutton, der Lese- und Schreibtest macht“ – „bauen, für alle,
+// mit Push-Test, (Admin) mit Neon“) ----------
+// Der Server schreibt einen eigenen Testeintrag, liest ihn zurück, vergleicht, räumt auf und schickt eine Test-Push; der Admin sieht zusätzlich die
+// Sicherungskopie (Neon). Das Ergebnis steht im Verbindungs-Fenster und geht mit „📨 An Admin senden“ und dem Ausdruck mit.
+let RW = null;
+const RW_NAMEN = { schreiben: "✍️ Schreiben", lesen: "📖 Lesen und vergleichen", aufraeumen: "🧹 Aufräumen", push: "🔔 Test-Push an dich", neon: "🗄️ Sicherungskopie (Neon)" };
+const rwKnopfHtml = () => `<button class="knopf" id="rwKnopf" onclick="rwTest(this)">🧪 Lese- und Schreibtest</button><div id="vbRw">${RW ? rwHtml(RW) : ""}</div>`;
+function rwHtml(r) {
+  if (r.laeuft) return '<p class="hinweis" style="margin:6px 0">⏳ Test läuft …</p>';
+  if (r.fehler) return `<p class="rw-zeile rw-nein" style="margin:6px 0">❌ Test nicht möglich: ${esc(r.fehler)}</p>`;
+  return `<div class="rw-erg"><b>${r.ok ? "✅ Alles in Ordnung" : "⚠️ Nicht alles in Ordnung"}</b> <span class="hinweis">· ${esc(zeitKurz(r.zeit))} Uhr</span>
+    ${r.schritte.map((s) => `<div class="rw-zeile ${s.ok ? "rw-ja" : "rw-nein"}">${s.ok ? "✅" : "❌"} ${esc(RW_NAMEN[s.k] || s.k)} <span class="hinweis">${s.ms} ms${s.info ? " · " + esc(s.info) : ""}</span></div>`).join("")}
+    ${r.schritte.some((s) => s.k === "push" && s.ok) ? '<p class="hinweis" style="font-size:.82rem;margin:4px 0 0">Kommt die Test-Push auf jedem deiner Geräte <b>einmal</b> an, ist alles richtig.</p>' : ""}</div>`;
+}
+async function rwTest(knopf) {
+  if (RW?.laeuft) return;
+  RW = { laeuft: true }; const z = () => $("vbRw"); if (z()) z().innerHTML = rwHtml(RW); if (knopf) knopf.disabled = true;
+  try { RW = await api("rw_test", { push: true, neon: !!ICH?.admin }); } catch (e) { RW = { fehler: e?.message || "Keine Verbindung", zeit: new Date().toISOString() }; }
+  if (z()) z().innerHTML = rwHtml(RW); if (knopf?.isConnected) knopf.disabled = false;
+}
+const rwBerichtWert = () => (!RW || RW.laeuft ? "nicht gemacht" : RW.fehler ? `❌ nicht möglich: ${RW.fehler}`
+  : `${RW.ok ? "✅" : "⚠️"} ${RW.schritte.map((s) => `${(RW_NAMEN[s.k] || s.k).replace(/^\S+\s/, "")} ${s.ok ? "ok" : "FEHLER"} (${s.ms} ms${s.info && !s.ok ? ": " + s.info : ""})`).join(" · ")} · ${zeitKurz(RW.zeit)} Uhr`);
 function vbBericht() {
   const [farbe, text] = vbZustand(), [cFarbe, cText] = vbCommZustand(), t = VB.test, c = VB.comm, b = c?.bericht, nc = navigator.connection;
   const zahl = (x, e) => (x == null ? "nicht gemessen" : x.toLocaleString("de-DE", { maximumFractionDigits: 1 }) + e);
@@ -9274,9 +9300,10 @@ function vbBericht() {
     ["Handy", `${navigator.onLine ? "online" : "offline"}${netzErkannt() ? ` · ${NETZARTEN[netzErkannt()]} erkannt` : ""}${nc?.effectiveType ? ` · Tempo-Klasse ${String(nc.effectiveType).toUpperCase()}` : ""}`],
     ["Version App / Server", `${APP_VERSION} / ${VB.server || INIT?.server || "unbekannt"}`],
     ...(VB.wartung?.an ? [["Wartung", VB.wartung.hinweis || "angekündigt"]] : []),
+    ["Lese- und Schreibtest", rwBerichtWert()], // KC-CLUB-LESE-SCHREIBTEST
   ];
-  // auffällig = alles, was nicht grün ist (auch unbekannt) + Fehler seit App-Start
-  const probleme = (farbe !== "gruen") + (cFarbe !== "gruen") + (VB.fehler > 0);
+  // auffällig = alles, was nicht grün ist (auch unbekannt) + Fehler seit App-Start + nicht bestandener Lese-/Schreibtest
+  const probleme = (farbe !== "gruen") + (cFarbe !== "gruen") + (VB.fehler > 0) + (!!RW && !RW.laeuft && !RW.ok);
   return { werte, probleme };
 }
 function druckVerbindung() {
@@ -9919,7 +9946,7 @@ const ZUGANG_AKTIONEN = {
     "wetter", "wetter_ort_suchen", "treffen_liste", "treffen_antwort", "erinnerung_setzen", "kalender", "kalender_abo", "kalender_abo_holen", "privattermin_speichern",
     "privattermin_loeschen", "privattermine_liste", "countdowns", "terminumfragen_liste", "terminumfrage_antwort", "mitglieder", "mitglied_details",
     "unterhaltungen", "unterhaltung", "unterhaltung_stand", "tippen_stand", "tippen", "nachricht_senden", "nachricht_details", "einzelchat_finden", "gruppenchat_finden", "express_stand", "express_angezeigt",
-    "express_antwort", "startnachricht_bestaetigen", "stadt_woche", "ferien", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "geplant_abrufen", "wecker_setzen", "wecker_loeschen", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
+    "express_antwort", "startnachricht_bestaetigen", "stadt_woche", "ferien", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "geplant_abrufen", "wecker_setzen", "wecker_loeschen", "nachricht_erinnerung_setzen", "nachricht_erinnerung_liste", "nachricht_erinnerung_loeschen", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
     "chat_selbstloeschen", "link_vorschau", "unterstuetzung_meine", "unterstuetzung_senden", "nachricht_bearbeiten", "nachricht_merken", "gemerkte_nachrichten", "chat_umfrage_stimmen", "nachricht_ausblenden",
     "unterhaltung_ausblenden", "unterhaltung_archivieren", "unterhaltung_leeren", "gruppe_verlassen", "anlage_hochladen", "anlage_url",
     "einmal_foto_ansehen", "meine_nachrichten_statistik", "mf_antwort", "mf_gelesen", "sos_kontakte", "sos_ort", "notfall_setzen", "spiele_liste",
@@ -9928,7 +9955,7 @@ const ZUGANG_AKTIONEN = {
     "sprache_lernen", "sprache_training", "sprache_training_reset", "sprache_vergessen", "sprache_unbekannt", "twinkey_daten", "twinkey_frage",
     "twinkey_gelesen", "fehler_melden", "fehler_katalog", "hilfe_anfordern", "feedback_meins", "feedback_senden", "feedback_neu", "vorfuehren_antwort", "vorfuehren_holen",
     "vorfuehren_senden", "vorfuehren_ende", "vorfuehren_bild", "schnappschuss_antwort", "schnappschuss_bild", "schnappschuss_ende", "fernbedienung_melden", "push_anmelden",
-    "push_pruefen", "geraete_liste", "geraet_entfernen", "andere_geraete_abmelden", "push_abmelden", "push_test", "neues_geraet_antwort"],
+    "push_pruefen", "geraete_liste", "geraet_entfernen", "andere_geraete_abmelden", "push_abmelden", "push_test", "rw_test", "neues_geraet_antwort"],
   aushilfe: ["mein_dienst", "dienstwunsch_laden", "dienstwunsch_speichern", "dienst_gruss", "dienste", "dienst_freigabe", "meine_eingaben",
     "eingaben_bestaetigen", "wunschbogen_mailen", "eingaben_ablegen", "fotos_neueste", "fotos_liste", "foto_oeffnen",
     "schulung_meine", "schulung_antwort", "gericht_zutat_setzen", "gericht_antwort", "tipp_stand", "tipp_mitmachen", "tipp_abgeben",
@@ -13176,7 +13203,8 @@ const EU_GRUPPEN = [
     { id: "einfach", sym: "⚙️", t: "Das Wichtigste", info: "Neuigkeiten, Nicht stören, Farbe, Schrift, Hilfe", karten: ["einfach"] },
     { id: "benachrichtigung", sym: "🔔", t: "Benachrichtigungen", info: "Push, Warnton, Nicht stören, @Erwähnungen", karten: ["benachrichtigung"] },
     { id: "ansagen", sym: "🗣️", t: "Ansagen, Töne & Tipps", info: "Tipp des Tages, Vorlesen, Sprachsteuerung, Einweisungen", karten: ["ansagen"] },
-    { id: "privat", sym: "🔒", t: "Privatsphäre", info: "Online-Anzeige, Anklopfen, Spiele, was andere von mir sehen", karten: ["privat"] }]],
+    { id: "privat", sym: "🔒", t: "Privatsphäre", info: "Online-Anzeige, Anklopfen, Spiele, was andere von mir sehen", karten: ["privat"] },
+    { id: "klugeHelfer", sym: "✨", t: "Kluge Helfer im Chat", info: "Für dich, Schnellantworten, offene Fragen, Text zu Sprachnachrichten", karten: ["klugeHelfer"] }]], // KC-CLUB-KLUGE-HELFER
   ["Aussehen", [
     { id: "darstellung", sym: "🎨", t: "Darstellung", info: "Farben, Themen, Schriftgröße, Tag/Nacht, Sparmodus", karten: ["darstellung"] },
     { id: "effekte", sym: "✨", t: "Effekte", info: "Uhr, Jahreszeiten, Fee, Senden, Reißwolf …", karten: ["effekte"] },
@@ -17171,6 +17199,7 @@ function hashSprung(h) {
     else if (h.startsWith("#tipp=")) tippZeigen(decodeURIComponent(h.slice(6))); // 2.835.0 KC-CLUB-HILFE-TIPPS: aus der Benachrichtigung
     else if (h.startsWith("#aktion=")) aktionOeffnen(decodeURIComponent(h.slice(8)));
     else if (h === "#rundgang" || h.startsWith("#rundgang=")) rundgangStart(true, h.slice(10) || "ueberblick"); // KC-CLUB-RUNDGANG (2.241.0): Link zum Weitergeben – startet mit „▶ Los geht's“ (Ton braucht einen Tipp)
+    else if (h.startsWith("#naerin=")) { const [t, m] = h.slice(8).split(":"); if (t && m) gemerktOeffnen(t, m); } // KC-CLUB-KLUGE-HELFER: Push „⏰ Erinnerung: Nachricht von …“
     else if (h === "#wecker") wkChipTippen(); // 2.640.0 KC-CLUB-UHR-WECKER: aus dem Push „Zeit ist um“ / „Wecker“
     else if (h === "#dpdruck" && ICH?.admin) dpdStart(); // 2.665.0 KC-CLUB-DP-NEU-RECHNEN: aus dem Push „Neuer Wunschplan“
     else if (h === "#anruf") anrufZurueck(); // KC-CLUB-ANRUF-ANZEIGE (2.237.0): aus der Mitteilung in der Statusleiste
@@ -21720,7 +21749,7 @@ function uhGliedHtml(zeigen) {
 function uhZeile(u) {
   return `<div class="unterh${u.id === UH.wahl ? " gewaehlt" : ""}${UH.mark.has(u.id) ? " markiert" : ""}${u.wichtigNeu ? " wichtig-neu" : ""}${uhUngelesen(u) ? " uh-neu" : ""}" data-id="${u.id}" onclick="unterhTipp('${u.id}')">
       ${u.gruppe || u.anzahl > 2 ? uhRundeKreis(u) : kreis(MITGLIEDER?.find((m) => m.name === u.teilnehmer[0]) || null, u.teilnehmer[0], 46)}
-      <div class="mitte"><div><b>${esc(u.gruppe?.name || u.betreff || u.teilnehmer.join(", "))}</b>${istFav(u) ? ' <span title="Favorit">⭐</span>' : UH.favAnsicht && u.haeufig ? ' <span class="hinweis" style="font-size:.8rem" title="Hier schreibst du am meisten">· oft</span>' : ""}${stummAn(u.id) ? ' <span title="stummgeschaltet">🔕</span>' : ""}${u.gruppe ? ` <span class="hinweis" style="font-size:.8rem">· ${u.anzahl} Mitgl.</span>` : ""}</div><div class="hinweis">${entwurfAlle()[u.id]?.trim() ? `<span class="entwurf-marke">✏️ Entwurf:</span> ${esc(entwurfAlle()[u.id].trim().slice(0, 80))}` : u.letzte ? esc(u.letzte.von + ": " + vnKurz(u.letzte.text)) : "Noch keine Nachricht"}</div>${uhLesestand(u)}</div>
+      <div class="mitte"><div><b>${esc(u.gruppe?.name || u.betreff || u.teilnehmer.join(", "))}</b>${istFav(u) ? ' <span title="Favorit">⭐</span>' : UH.favAnsicht && u.haeufig ? ' <span class="hinweis" style="font-size:.8rem" title="Hier schreibst du am meisten">· oft</span>' : ""}${stummAn(u.id) ? ' <span title="stummgeschaltet">🔕</span>' : ""}${khOffenMarke(u) /* KC-CLUB-KLUGE-HELFER */}${u.gruppe ? ` <span class="hinweis" style="font-size:.8rem">· ${u.anzahl} Mitgl.</span>` : ""}</div><div class="hinweis">${entwurfAlle()[u.id]?.trim() ? `<span class="entwurf-marke">✏️ Entwurf:</span> ${esc(entwurfAlle()[u.id].trim().slice(0, 80))}` : u.letzte ? esc(u.letzte.von + ": " + vnKurz(u.letzte.text)) : "Noch keine Nachricht"}</div>${uhLesestand(u)}</div>
       <div style="text-align:right"><div class="hinweis" style="font-size:.8rem">${u.letzte ? zeitKurz(u.letzte.zeit) : ""}</div>${u.nachrichten ? `<div class="hinweis uh-zahl" title="Nachrichten in dieser Unterhaltung">💬 ${u.nachrichten >= 1000 ? "999+" : u.nachrichten}</div>` : ""}${u.ungelesen ? `<span class="punkt${u.wichtigNeu ? " wichtig" : ""}" title="${u.wichtigNeu ? "darunter wichtige Nachricht" : ""}">${u.wichtigNeu ? "❗ " : ""}${u.ungelesen}</span>` : ""}</div><button type="button" class="uh-mehr" aria-label="Mehr zu diesem Chat: Favorit, archivieren, löschen" aria-expanded="${u.id === UH.wahl}" onclick="event.stopPropagation();uhMenue('${u.id}')">⋯</button></div>${u.id === UH.wahl ? unterhAktionen(u) : ""}`;
 }
 // ---------- KC-CLUB-CHAT-KARTEI (2.191.0) ----------
@@ -22009,7 +22038,7 @@ function chatMerkAlle() {
 function chatMerken(id, u) {
   if (!id || !u || !Array.isArray(u.nachrichten) || !KEY || !ICH) return;
   const m = chatMerkAlle(); m.delete(id);
-  m.set(id, { zeit: Date.now(), u: { ...u, nachrichten: u.nachrichten.slice(-CHAT_MERK_NACHR), tippt: [], entwurf: [], spricht: [], diktiert: [] } });
+  m.set(id, { zeit: Date.now(), voll: u.nachrichten.length <= CHAT_MERK_NACHR, u: { ...u, nachrichten: u.nachrichten.slice(-CHAT_MERK_NACHR), tippt: [], entwurf: [], spricht: [], diktiert: [] } }); // voll: KC-CLUB-CHAT-WIEDER – nur ein vollständiger Merker darf das Laden ersetzen
   while (m.size > CHAT_MERK_ANZAHL) m.delete(m.keys().next().value);
   clearTimeout(chatMerken.t);
   chatMerken.t = setTimeout(() => { // gebündelt schreiben; zu groß → älteste Chats weglassen
@@ -22030,6 +22059,7 @@ async function chatOeffnen(id, ausHistorie) {
   if (id !== chatId) ZW = { push: false, email: false, whatsapp: false };
   if (id !== chatId && WE.ids.length) { WE.ids = []; weZeigen(); } // 2.637.0 KC-CLUB-WEITERE-EMPFAENGER: gehört zum vorigen Chat
   if (id !== chatId && CS.offen) chatSucheZu(); // KC-CLUB-CHATSUCHE: Suche gehört zum vorigen Chat
+  if (id !== chatId && $("khFuerDich")) $("khFuerDich").innerHTML = ""; // KC-CLUB-KLUGE-HELFER: „Für dich“ gehört zum vorigen Chat
   chatFilterSetzen("alle", true); // 2.577.0 KC-CLUB-CHAT-FILTER: beim Öffnen immer alle Nachrichten
   if (id !== chatId) { entwurfLaden(id); zustellUmschalten(false); versandZurueck(); } // KC-CLUB-ENTWURF / -RUHIGE-EINGABE (1.12.0) / -WICHTIG / -VERSANDART
   NA.trennerChat = null; // KC-CLUB-NEU-LINIE: beim Öffnen neu bestimmen
@@ -22039,12 +22069,20 @@ async function chatOeffnen(id, ausHistorie) {
   const offenId = chatId;
   // 2.578.0 KC-CLUB-CHAT-SOFORT: gemerkten Stand sofort zeigen, dann wie bisher frisch laden (Vergleichsstand bleibt wie ohne Merker)
   const merk = CHAT?.id !== id ? chatAusMerk(id) : null;
-  if (merk) { const s0 = chatStand, i0 = NA.idStand; await chatLaden(true, merk); chatStand = s0; NA.idStand = i0; }
-  await chatLaden(true);
+  if (merk) {
+    const s0 = chatStand, i0 = NA.idStand; await chatLaden(true, merk);
+    // KC-CLUB-CHAT-WIEDER (16.11.2026, Wunsch Hansi „schnell, auch wenn mehrere drin sind – nicht immer alles lesen“): wurde der Chat in den letzten
+    // CHAT_VOLL_MS ganz geladen und hat sich sein Fingerabdruck seitdem nicht geändert (keine neue Nachricht, Reaktion, Lesestand …), nur den
+    // Fingerabdruck fragen (1 Abfrage) statt den ganzen Chat (~30). „Gelesen“ stimmt dann schon – es gibt nichts Neues. Sonst wie bisher ganz laden.
+    let gleich = false;
+    if (merk.voll && merk.u?.stand && Date.now() - merk.zeit < CHAT_VOLL_MS) try { const r = await api("unterhaltung_stand", { id }); gleich = chatId === offenId && !!r?.stand && r.stand === merk.u.stand; } catch { /* lieber ganz laden */ }
+    if (gleich) { CHAT_VOLL_AM = merk.zeit; $("chatTeilnehmer").textContent = CHAT_TN_NORMAL; } // bestätigt aktuell → Hinweis „wird aktualisiert“ weg; der Takt lädt spätestens CHAT_VOLL_MS nach dem letzten vollen Laden wieder ganz
+    else { chatStand = s0; NA.idStand = i0; await chatLaden(true); }
+  } else await chatLaden(true);
   clearInterval(chatTimer); if (chatId === offenId && aktuelleAnsicht === "chat") chatTimer = setInterval(chatTakt, CHAT_TAKT_MS); // 1.97.0: nie zwei Takte
   $("liveHinweis").classList.toggle("versteckt", !liveTippen() || !ONL.zeigen);
 }
-let chatStand = "";
+let chatStand = "", CHAT_TN_NORMAL = "";
 async function chatLaden(scrollen, merk) {
   if (!chatId) return;
   try {
@@ -22066,6 +22104,7 @@ async function chatLaden(scrollen, merk) {
     let st = "";
     if (andere.length === 1) { const m = MITGLIEDER?.find((x) => x.person_id === andere[0].person_id); if (m?.status) st = statusText(m.status); }
     $("chatTeilnehmer").textContent = !andere.length ? "Nur du (Test-Unterhaltung)" : u.gruppe ? `🔗 Feste Gruppe · ${andere.length + 1} Mitglieder: Du, ${andere.map((x) => x.name.split(" ")[0]).join(", ")} ›` : andere.length > 1 ? "Runde (keine feste Gruppe) · Mit: " + andere.map((x) => x.name).join(", ") : u.betreff ? "Mit: " + andere.map((x) => x.name).join(", ") : [zuletztText(u.partnerDa), st].filter(Boolean).join(" · "); // 1.20.0: zuletzt da
+    CHAT_TN_NORMAL = $("chatTeilnehmer").textContent; // KC-CLUB-CHAT-WIEDER: gilt wieder, wenn der Merker als aktuell bestätigt ist
     if (merk) $("chatTeilnehmer").textContent = `🔄 Stand von ${fZeit.format(new Date(merk.zeit))} Uhr – wird aktualisiert …`; // Regel 11: nicht als aktuell zeigen
     else if (u.tippt?.length && andere.length === 1) $("chatTeilnehmer").textContent = "✍️ schreibt …";
     else if (u.diktiert?.length && andere.length === 1) $("chatTeilnehmer").textContent = "🗣️ diktiert …"; // 2.529.0
@@ -22093,7 +22132,7 @@ async function chatLaden(scrollen, merk) {
     }
     NA.nachrichten = new Map(u.nachrichten.map((m) => [m.id, m]));
     const blaseHtml = (m) => `${m.id === NA.trennerVor ? '<div class="neu-trenner" id="neuTrenner">⬇ Neue Nachrichten</div>' : ""}<div data-id="${m.id}" class="blase${m.eigen ? " eigen" : ""}${istNotfall(m) ? " notfall" : ""}${m.erwaehntMich ? " erwaehnt-mich" : ""}${m.wichtig ? " wichtig" : ""}${!m.eigen && andere.length > 1 ? " farbig" : ""}"${!m.eigen && andere.length > 1 ? ` style="${gruppenFarbe(m.von)}"` : ""} id="msg-${m.id}" title="Antippen: reagieren, antworten, Details" onclick="if(!event.target.closest('button,img,a,audio,video,.sprache,.zitat'))nachrichtMenue('${m.id}')" oncontextmenu="if(!event.target.closest('a,img,audio,video,input,textarea')){event.preventDefault();nachrichtMenue('${m.id}')}">
-      ${istNotfall(m) ? '<div class="notfall-marke">🚨 NOTFALL</div>' : m.wichtig ? '<div class="wichtig-marke">❗ WICHTIG</div>' : ""}${m.express ? '<div class="express-marke">🏎️ EXPRESS</div>' : ""}${!m.eigen && andere.length > 1 ? `<div class="von">${esc(m.von)}</div>` : ""}${m.antwortAuf ? `<div class="zitat" onclick="zuNachricht('${m.antwortAuf.id}')"><b>${esc(m.antwortAuf.von)}</b><span>${esc(vnKurz(m.antwortAuf.text))}</span></div>` : ""}${m.umfrage ? umfrageHtml(m) : m.kontakt ? kontaktKarteHtml(m) : (m.text === "📎" || (m.text === EINMAL_TEXT && m.anlagen.some((a) => a.einmal))) && m.anlagen.length ? "" : `<div class="txt">${naText(istNotfall(m) ? m.text.replace(NOTFALL_RE, "") : m.text)}</div>`}${m.link ? lvKarteHtml(m.link) : ""}${ntKnopfHtml(m) /* 2.608.0 KC-CLUB-NACHRICHT-TERMIN */}${erkKnopfHtml(m) /* 2.666.0 KC-CLUB-ERKENNUNG-NACHRICHT */}
+      ${istNotfall(m) ? '<div class="notfall-marke">🚨 NOTFALL</div>' : m.wichtig ? '<div class="wichtig-marke">❗ WICHTIG</div>' : ""}${m.express ? '<div class="express-marke">🏎️ EXPRESS</div>' : ""}${!m.eigen && andere.length > 1 ? `<div class="von">${esc(m.von)}</div>` : ""}${m.antwortAuf ? `<div class="zitat" onclick="zuNachricht('${m.antwortAuf.id}')"><b>${esc(m.antwortAuf.von)}</b><span>${esc(vnKurz(m.antwortAuf.text))}</span></div>` : ""}${m.umfrage ? umfrageHtml(m) : m.kontakt ? kontaktKarteHtml(m) : (m.text === "📎" || (m.text === EINMAL_TEXT && m.anlagen.some((a) => a.einmal))) && m.anlagen.length ? "" : khSprachHtml(m) /* KC-CLUB-KLUGE-HELFER */ ?? `<div class="txt">${naText(istNotfall(m) ? m.text.replace(NOTFALL_RE, "") : m.text)}</div>`}${m.link ? lvKarteHtml(m.link) : ""}${ntKnopfHtml(m) /* 2.608.0 KC-CLUB-NACHRICHT-TERMIN */}${erkKnopfHtml(m) /* 2.666.0 KC-CLUB-ERKENNUNG-NACHRICHT */}
       ${m.anlagen.map((a) => a.name === VN_ANL_NAME ? vnAnlHtml(a) : a.einmal ? einmalKachel(a) : /^image\//.test(a.mime || "") ? `<img data-anlage="${a.id}" alt="${esc(a.name)}" onclick="event.stopPropagation();anlageOeffnen('${a.id}')">` : /^audio\//.test(a.mime || "") ? `<div class="sprache" data-sprache="${a.id}"><button onclick="spracheAbspielen(this, '${a.id}', ${/^Sprachnachricht/i.test(a.name || "") ? "false" : "true"})">${/^Sprachnachricht/i.test(a.name || "") ? "▶️ Sprachnachricht anhören" : `▶️ 🎵 ${esc(a.name || "Musik")}`}</button></div>` : `<div class="anlage" onclick='event.stopPropagation();anlageAktion(${hlJs(a.id)}, ${hlJs(a.name || "Datei")}, ${hlJs(a.mime || "")})'>📄 ${esc(a.name)}</div>`).join("")}
       <div class="na-seite"><button class="na-pfeil" title="Weiterleiten oder kopieren" aria-label="Weiterleiten oder kopieren" onclick="naPfeilMenue('${m.id}')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4.5l7.5 7.5-7.5 7.5v-4.3c-5.2 0-8.8 1.7-11.4 5.3 1-5.2 4.1-10.3 11.4-11.3V4.5z"/></svg></button><button class="na-info" title="Info: wer geschrieben, bekommen und gelesen hat" aria-label="Info zur Nachricht" onclick="nachrichtInfo('${m.id}')">i</button></div>
       ${m.eigen && m.express?.empfaenger ? expressStatusHtml(m.express) : m.express?.quittungen?.length ? `<div class="express-quittung">📬 Empfang bestätigt: ${m.express.quittungen.map((q) => `${esc(q.name)} ${esc(zeitKurz(q.am))}`).join(", ")}</div>` : m.eigen && m.express ? '<div class="express-quittung warte">📭 Empfang noch nicht bestätigt</div>' : ""}
@@ -22103,6 +22142,7 @@ async function chatLaden(scrollen, merk) {
     document.querySelectorAll("img[data-anlage]").forEach(bildLaden);
     naWischenEinrichten();
     naReaktionenZeigen(u.nachrichten);
+    try { khNachZeichnen(u, andere); } catch (e) { console.warn("kluge helfer", e); } // KC-CLUB-KLUGE-HELFER: „Für dich“, Schnellantworten, „Noch nicht gelesen“
     if (CS.offen) chatSucheJetzt(false); // KC-CLUB-CHATSUCHE: Markierung nach dem Neuzeichnen behalten
     if (!merk && neuVonAnderen && einst("ton", true) && !stummAn(chatId)) ton();
     // KC-CLUB-NACH-UNTEN (1.12.0): beim Lesen älterer Nachrichten nicht nach unten reißen – stattdessen ⬇️ mit Punkt
@@ -22483,6 +22523,8 @@ function nachrichtMenue(id) {
     <button class="knopf" onclick="document.getElementById('naMenue').remove();naAntworten('${id}')">↩️ Antworten</button>
     <button class="knopf" onclick="document.getElementById('naMenue').remove();naAnheften('${id}', ${!m.angeheftet})">${m.angeheftet ? "📌 Lösen (nicht mehr oben)" : "📌 Oben anheften"}</button>
     <button class="knopf" onclick="document.getElementById('naMenue').remove();naMerken('${id}', ${!m.gemerkt})">${m.gemerkt ? "⭐ Nicht mehr merken" : "⭐ Merken"}</button>
+    ${zugangAktion("nachricht_erinnerung_setzen") ? `<button class="knopf" onclick="document.getElementById('naMenue').remove();khErinnern('${id}')">⏰ Erinnern …</button>` : ""}<!-- KC-CLUB-KLUGE-HELFER -->
+    ${!m.eigen && khNurText(m) && zugangAktion("todo_anlegen") ? (() => { const a = khAufgabe(khNurText(m), m.zeit ? berlinIso(m.zeit) : heuteIso()); return a ? `<button class="knopf" onclick="document.getElementById('naMenue').remove();khAufgabeStart('${id}')">📋 Als Aufgabe übernehmen (bis ${esc(khTagText(a.bis))})</button>` : ""; })() : ""}<!-- nur bei erkannter Bitte mit Frist – das Menü bleibt kurz -->
     ${m.bearbeitbarBis && Date.parse(m.bearbeitbarBis) > Date.now() && !String(m.text || "").startsWith(VN_PRE) ? `<button class="knopf" onclick="document.getElementById('naMenue').remove();naBearbeiten('${id}')">✏️ ${m.anlagen?.length ? (m.text && m.text !== "📎" ? "Unterschrift ändern" : "Unterschrift hinzufügen") : "Bearbeiten"}</button>` : ""}
     ${m.text && m.text !== "📎" ? `<button class="knopf" onclick="document.getElementById('naMenue').remove();ntAusNachricht('${id}')">📅 Als Termin übernehmen</button>` : ""}<!-- 2.608.0 KC-CLUB-NACHRICHT-TERMIN -->
     ${m.text ? `<button class="knopf" onclick="document.getElementById('naMenue').remove();naKopieren('${id}')">📋 Kopieren</button>` : ""}
@@ -22703,6 +22745,343 @@ async function erkStart(id) {
   });
   f.querySelectorAll("[data-ant]").forEach((b) => b.onclick = () => tun(b, { art: "teilnahme", treffen: $("erkTreffen").value, antwort: b.dataset.ant }, (r) => melde(`${b.textContent} für ${vn} eingetragen: ${r.titel}`)));
   f.querySelector("#erkWegK").onclick = () => { erkAusblenden(id); f.remove(); };
+}
+// ---------- KC-CLUB-KLUGE-HELFER (16.11.2026, Wunsch Hansi „Baue alle Vorschläge, aber logisch, bedienerfreundlich, nicht überladen“) ----------
+// Acht kleine Helfer im Chat. Alles „Automatische“ rechnet NUR die App auf dem eigenen Handy aus den schon geladenen Nachrichten (Wort-Regeln, kein
+// fremder Dienst, keine KI). Der Server liest und wertet keine Texte aus – er speichert nur, was eine Uhrzeit braucht (⏰ Erinnern, Tabelle kc_club_wecker).
+// 1 📌 „Für dich“: EINE Zeile oben im Chat (Fragen an mich, Erwähnungen, offene Umfragen, Aufgaben, Foto-Angebot, eigene offene Frage) → Blatt → Sprung.
+//   ✕ blendet sie für diesen Chat aus, bis etwas Neues dazukommt. Das ist der einzige Ort für die automatischen Hinweise – keine weiteren Banner.
+// 2 ❓ Offene Frage: eigene Frage (Zweier-Chat; in Gruppen nur mit @Name oder „Anne, …“) ohne Antwort seit 12 Std. → in „Für dich“ und als ❓ in der
+//   Chat-Liste; „🔔 Freundlich nachfragen“ füllt nur das Schreibfeld (gesendet wird mit ➤).
+// 3 ⏰ Erinnern: im Nachrichten-Menü (heute Abend 19 Uhr · morgen 9 Uhr · Wunschzeit) – Push zur Zeit, nur Absender, nie der Text; Antippen springt hin.
+// 4 Schnellantworten: höchstens 3 Knöpfe nur unter der neuesten Nachricht, wenn sie von anderen ist (weg, sobald ich antworte, spätestens nach 24 Std.).
+//   Antippen sendet nach 5 Sekunden – bis dahin „↩️ Rückgängig“ (wie beim Leeren des Schreibfelds).
+// 5 📋 Aufgabe: Bitte mit Frist an mich („kannst du … bis Freitag“) → Vorschlag in „Für dich“ und im Menü; erst „Übernehmen“ legt das To-do an.
+// 6 Sprachnachricht mit Text: die Spracherkennung des Handys hört mit (wo es sie gibt) – „📝 Text anzeigen (automatisch erkannt)“ unter der Nachricht.
+// 7 📸 Fotos ins Album: ≥3 Fotos der letzten 2 Tage in einer Gruppe rund um einen Clubtermin (±1 Tag) → einmal je Chat und Termin anbieten.
+// 8 Wer hat's noch nicht gesehen: eigene Gruppen-Nachricht (wichtig/Express oder meine letzte), nach 2 Std. „Noch nicht gelesen: …“ + „🔔 Kurz erinnern“
+//   (füllt @Namen ins Schreibfeld – wie „💬 Erinnern“ in KC-CLUB-UNGELESEN-ADMIN). Die Namen liefert der Server (nichtGelesen), kein Raten über Vornamen.
+// Schalter: ⚙️ → „✨ Kluge Helfer“ (je Gerät, ab Werk an). Gemerkt wird nur auf dem Handy und nur Kennungen/Zeiten, nie Text.
+// >>> KH-REGELN (rein, ohne Seite – tests/kluge-helfer.test.mjs prüft sie im Sandkasten)
+const KH_FRAGE_MS = 12 * 3600000, KH_CHIP_MS = 24 * 3600000, KH_UNGELESEN_MS = 2 * 3600000, KH_TAGE = 7;
+const KH_URL = /(?:https?:\/\/|www\.)[^\s<>"„“]+/gi, KH_ZITAT = /„[^“”"\n]*[“”"]|"[^"\n]*"|»[^«\n]*«|«[^»\n]*»/g;
+const KH_W = (w) => new RegExp(`(?:^|[^a-zäöüß])(?:${w})(?![a-zäöüß])`, "i"); // Wortgrenze auch für Umlaute (\b kennt kein „ü“)
+const KH_EINLADUNG = KH_W("termin|treffen wir uns|kommst du|kommt ihr|bist du dabei|seid ihr dabei|wer kommt|wer ist dabei|wer hat zeit|hast du zeit|habt ihr zeit|einladung|lade (?:dich|euch) ein|zu- oder absagen");
+const KH_ZEIT = /\d{1,2}(?:[:.]\d\d)?\s*uhr(?![a-zäöüß])|(?:^|\D)\d{1,2}:\d\d(?!\d)|(?:^|\D)\d{1,2}\.\d{1,2}\.|(?:^|[^a-zäöüß])(?:montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag|wochenende|morgen|übermorgen|heute abend)(?![a-zäöüß])/i;
+const KH_BITTE = KH_W("kannst du|könntest du|koenntest du|würdest du|wuerdest du|magst du|bitte|denk(?:st du)? (?:bitte )?dran|vergiss (?:bitte )?nicht");
+const KH_DANK = KH_W("danke\\w*|vielen dank|merci|thx");
+const KH_GRUSS = /^(?:hallo|hi|hey|moin|servus|liebe[rs]?|guten (?:morgen|tag|abend))\s+/i;
+const KH_SPRACH_KOPF = /^🎤 Sprachnachricht \(\d+:\d\d\)/, KH_SPRACH_MARKE = "📝 Automatisch erkannt:";
+const KH_WT = { sonntag: 0, montag: 1, dienstag: 2, mittwoch: 3, donnerstag: 4, freitag: 5, samstag: 6, sonnabend: 6, "so.": 0, "mo.": 1, "di.": 2, "mi.": 3, "do.": 4, "fr.": 5, "sa.": 6 };
+const KH_WT_KURZ = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
+const khOhneZitat = (t) => String(t ?? "").replace(KH_URL, " ").replace(KH_ZITAT, " ");
+function khIstFrage(t) { // „?“ zählt nicht in Links („…?id=3“) und nicht in Zitaten („Er fragte: „Kommst du?““)
+  const s = khOhneZitat(t); return s.length <= 2000 && /[a-zäöüß0-9)]\s*\?/i.test(s);
+}
+function khKopf(t) { // Anrede am Anfang: „Anne, …“, „Hallo Anne und Dieter! …“, „@Klaus: …“ → Namen (sonst [])
+  const h = /^\s*([^,:!?.\n]{1,40})[,:!]/.exec(String(t ?? "")); if (!h) return [];
+  const teile = h[1].trim().replace(KH_GRUSS, "").split(/\s*,\s*|\s+und\s+|\s*&\s*/).map((x) => x.trim()).filter(Boolean);
+  return teile.length && teile.length <= 4 && teile.every((w) => /^@?[A-ZÄÖÜ][a-zäöüß-]+$/.test(w)) ? teile.map((w) => w.replace(/^@/, "")) : [];
+}
+function khAnrede(t, namen) { // welche der Vornamen werden angesprochen (@Name irgendwo oder Anrede am Anfang)?
+  const s = String(t ?? ""), kopf = khKopf(s).map((x) => x.toLowerCase());
+  return (namen || []).filter((n) => n && (kopf.includes(String(n).toLowerCase()) || new RegExp(`(^|\\s)@${String(n).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![\\wäöüß])`, "i").test(s)));
+}
+function khChips(t) { // höchstens 3 passende Schnellantworten (Text = was gesendet wird)
+  const s = khOhneZitat(t).trim(); if (!s || s.length > 1500) return [];
+  const istFrage = khIstFrage(t);
+  if (KH_EINLADUNG.test(s) || (istFrage && KH_ZEIT.test(s))) return [{ t: "✅ Bin dabei", text: "✅ Bin dabei" }, { t: "❌ Kann nicht", text: "❌ Kann leider nicht" }, { t: "🤔 Vielleicht", text: "🤔 Vielleicht – ich sag noch Bescheid" }];
+  if (KH_BITTE.test(s)) return [{ t: "👍 Mach ich", text: "👍 Mach ich" }, { t: "⏰ Später", text: "⏰ Mach ich später" }];
+  if (KH_DANK.test(s)) return [{ t: "😊 Gern geschehen", text: "😊 Gern geschehen" }, { t: "👍", text: "👍" }];
+  if (istFrage || s.length < 12) return []; // offene Frage: dafür gibt es keine sinnvolle Schnellantwort
+  return [{ t: "🙏 Danke!", text: "🙏 Danke!" }, { t: "👍", text: "👍" }];
+}
+const khHeute = (d) => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Berlin" }).format(d); // Berliner Tag (JJJJ-MM-TT), nie der UTC-Tag
+const khTag = (iso, n) => { const d = new Date(iso + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+const khWtag = (iso) => new Date(iso + "T12:00:00Z").getUTCDay();
+function khDatum(j, mo, t) { const d = new Date(Date.UTC(j, mo - 1, t)); return d.getUTCMonth() === mo - 1 && d.getUTCDate() === t ? d.toISOString().slice(0, 10) : null; }
+function khFrist(t, bezug) { // „bis Freitag“, „bis zum 20.11.“, „spätestens morgen“, „bis Ende der Woche“ → Tag (JJJJ-MM-TT) oder null
+  const s = khOhneZitat(t).toLowerCase(); bezug = /^\d{4}-\d\d-\d\d$/.test(bezug || "") ? bezug : khHeute(new Date());
+  const BIS = "(?:^|[^a-zäöüß])(?:bis|spätestens|spaetestens)\\s+(?:(?:zum|zur|am|spätestens|spaetestens)\\s+)?";
+  let m = new RegExp(BIS + "(\\d{1,2})\\.(\\d{1,2})\\.?(\\d{4}|\\d\\d(?!\\d))?").exec(s);
+  if (m) { const j = m[3] ? (m[3].length === 2 ? 2000 + +m[3] : +m[3]) : +bezug.slice(0, 4); let d = khDatum(j, +m[2], +m[1]);
+    if (d && !m[3] && d < khTag(bezug, -60)) d = khDatum(j + 1, +m[2], +m[1]); return d; }
+  if ((m = new RegExp(BIS + "(heute|morgen|übermorgen|uebermorgen)(?![a-zäöüß])").exec(s))) return khTag(bezug, m[1] === "heute" ? 0 : m[1] === "morgen" ? 1 : 2);
+  if ((m = new RegExp(BIS + "(?:(?:nächste[nm]?|naechste[nm]?|kommende[nm]?|diese[nm]?)\\s+)?(sonntag|montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonnabend|(?:so|mo|di|mi|do|fr|sa)\\.)(?![a-zäöüß])").exec(s))) {
+    const d = (KH_WT[m[1]] - khWtag(bezug) + 7) % 7; return khTag(bezug, d || 7); }
+  if (new RegExp(BIS + "(?:ende der woche|zum wochenende|wochenende)").test(s)) { const d = (5 - khWtag(bezug) + 7) % 7; return khTag(bezug, d); }
+  if (new RegExp(BIS + "(?:nächste|naechste|kommende)\\s+woche").test(s)) return khTag(bezug, 7);
+  return null;
+}
+function khAufgabeText(t) { // „Hallo Hans, kannst du bitte bis Freitag die Grillkohle besorgen?“ → „Die Grillkohle besorgen“
+  const s0 = String(t ?? "").replace(KH_URL, " "), saetze = []; let a0 = 0;
+  for (let i = 0; i < s0.length; i++) // Satzende: Zeilenumbruch oder . ! ? mit Leerzeichen danach – aber nicht nach einer Ziffer („bis 20.11. die Liste“)
+    if (s0[i] === "\n" || (/[.!?]/.test(s0[i]) && !/\d/.test(s0[i - 1] || "") && (i + 1 >= s0.length || /\s/.test(s0[i + 1])))) { saetze.push(s0.slice(a0, i + 1)); a0 = i + 1; }
+  if (a0 < s0.length) saetze.push(s0.slice(a0));
+  let x = saetze.find((z) => KH_BITTE.test(z)) || saetze[0] || "";
+  if (khKopf(x).length || KH_GRUSS.test(x.trim())) x = x.replace(/^\s*[^,:!?.\n]{1,40}[,:!]\s*/, "");
+  x = x.replace(/(^|\s)(?:kannst|könntest|koenntest|würdest|wuerdest|magst)\s+du\s+((?:mal|bitte|vielleicht|noch)\s+)*/i, " ").replace(/(^|\s)bitte(\s|$)/gi, " ")
+    .replace(/\s*(?:bis|spätestens|spaetestens)\s+(?:(?:zum|zur|am)\s+)?(?:(?:nächste[nm]?|naechste[nm]?|kommende[nm]?|ende der)\s+)?\S+(?:\s+\d{4})?/i, " ")
+    .replace(/[?!.\s]+$/, "").replace(/\s{2,}/g, " ").trim();
+  return (x.charAt(0).toUpperCase() + x.slice(1)).slice(0, 120);
+}
+function khAufgabe(t, bezug) { // Bitte + Frist → { text, bis } (nur ein Vorschlag – angelegt wird erst mit „Übernehmen“)
+  const s = khOhneZitat(t); if (!s.trim() || s.length > 1500 || !KH_BITTE.test(s)) return null;
+  const bis = khFrist(t, bezug); return bis ? { text: khAufgabeText(t), bis } : null;
+}
+const khNurText = (m) => { // was die Regeln lesen: Text, bei Sprachnachrichten nur der erkannte Text; Verschlüsseltes/📎/Umfrage/Kontakt nie
+  const t = String(m?.text ?? ""); if (!t || t === "📎" || t.startsWith("🔒KCV1:") || m.umfrage || m.kontakt) return "";
+  if (KH_SPRACH_KOPF.test(t)) { const i = t.indexOf(KH_SPRACH_MARKE); return i < 0 ? "" : t.slice(i + KH_SPRACH_MARKE.length).trim(); }
+  return t;
+};
+function khOffeneFrage(liste, o) { // eigene Frage am Ende des Chats, auf die noch niemand geantwortet hat → { id, zeit } (Alter prüft der Aufrufer)
+  const l = liste || []; let i = l.length - 1;
+  for (; i >= 0 && l[i].eigen; i--) { const m = l[i], t = khNurText(m);
+    if (!t || !khIstFrage(t)) continue;
+    if (o?.gruppe && !(m.erwaehnt || []).some((x) => x !== "dich") && !khAnrede(t, o.namen || []).length) continue; // Gruppe: nur, wenn ich jemanden anspreche
+    return { id: m.id, zeit: m.zeit };
+  }
+  return null;
+}
+function khFuerDich(liste, o) { // Einträge für die Zeile „📌 Für dich“ – je Nachricht höchstens einer, neueste zuletzt
+  const jetzt = o?.jetzt ?? Date.now(), weg = o?.weg || new Set(), tag = o?.tag || ((iso) => khHeute(new Date(iso))), heute = tag(new Date(jetzt).toISOString());
+  const l = liste || [], aus = [], grenze = jetzt - KH_TAGE * 86400000;
+  let letzteEigene = -1; l.forEach((m, i) => { if (m.eigen) letzteEigene = i; });
+  l.forEach((m, i) => {
+    if (m.eigen || Date.parse(m.zeit) < grenze) return;
+    const basis = { id: m.id, zeit: m.zeit, von: m.von };
+    if (m.umfrage && !(m.umfrage.optionen || []).some((x) => x.meine)) return aus.push({ ...basis, art: "umfrage" });
+    if (i < letzteEigene || weg.has("a:" + m.id)) return; // danach habe ich schon geschrieben → gilt als beantwortet; als Aufgabe übernommen → erledigt
+    const t = khNurText(m), anMich = !o?.gruppe || m.erwaehntMich || (!!o?.ich && khAnrede(t, [o.ich]).length > 0);
+    const a = anMich ? khAufgabe(t, tag(m.zeit)) : null;
+    if (a && a.bis >= heute) return aus.push({ ...basis, art: "aufgabe", bis: a.bis, aufgabe: a.text });
+    if (anMich && t && khIstFrage(t)) return aus.push({ ...basis, art: "frage" });
+    if (m.erwaehntMich) aus.push({ ...basis, art: "erwaehnung" });
+  });
+  if (o?.offen !== false) { const f = khOffeneFrage(l, o); if (f && jetzt - Date.parse(f.zeit) >= KH_FRAGE_MS && jetzt - Date.parse(f.zeit) <= 14 * 86400000) aus.push({ id: f.id, zeit: f.zeit, von: "Du", art: "offen" }); }
+  return aus;
+}
+const KH_ARTEN = { frage: ["Frage", "Fragen"], erwaehnung: ["Erwähnung", "Erwähnungen"], umfrage: ["Umfrage", "Umfragen"], aufgabe: ["Aufgabe", "Aufgaben"] };
+function khZeile(liste) { // „1 Frage · 2 Erwähnungen · 📸 6 Fotos · ❓ deine Frage offen“
+  const n = (a) => liste.filter((x) => x.art === a).length, teile = [];
+  for (const [a, [ein, mehr]] of Object.entries(KH_ARTEN)) { const k = n(a); if (k) teile.push(`${k} ${k === 1 ? ein : mehr}`); }
+  const f = liste.find((x) => x.art === "fotos"); if (f) teile.push(`📸 ${f.anzahl} Fotos`);
+  if (n("offen")) teile.push("❓ deine Frage offen");
+  return teile.join(" · ");
+}
+function khFotoTreffen(fotoTage, treffen) { // Fotos (Tage) rund um einen Clubtermin (±1 Tag) → { treffen, anzahl } mit den meisten Fotos (mind. 3)
+  const ab = (a, b) => Math.abs(Date.parse(a + "T12:00:00Z") - Date.parse(b + "T12:00:00Z")) / 86400000;
+  let best = null;
+  for (const t of treffen || []) { const n = (fotoTage || []).filter((d) => ab(d, t.tag) <= 1).length; if (n >= 3 && (!best || n > best.anzahl)) best = { treffen: t, anzahl: n }; }
+  return best;
+}
+function khBerlin(tag, hh, mi) { // Berliner Uhrzeit → Zeitpunkt (Sommer-/Winterzeit richtig)
+  const g = Date.UTC(+tag.slice(0, 4), +tag.slice(5, 7) - 1, +tag.slice(8, 10), hh, mi || 0);
+  const p = Object.fromEntries(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Berlin", hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }).formatToParts(new Date(g)).map((x) => [x.type, x.value]));
+  return new Date(g - (Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute) - g));
+}
+function khErinZeiten(jetzt) { // Auswahl im Fenster „⏰ Erinnern“: heute Abend 19 Uhr (danach: in 1 Stunde) · morgen 9 Uhr
+  jetzt = jetzt || new Date(); const heute = khHeute(jetzt), abend = khBerlin(heute, 19);
+  return [abend - jetzt >= 30 * 60000 ? { k: "abend", t: "Heute Abend, 19 Uhr", um: abend } : { k: "stunde", t: "In 1 Stunde", um: new Date(jetzt.getTime() + 3600000) },
+    { k: "morgen", t: "Morgen früh, 9 Uhr", um: khBerlin(khTag(heute, 1), 9) }];
+}
+// <<< KH-REGELN
+const KH = { items: [], foto: new Map(), treffen: null, treffenAm: 0, chat: null };
+// 17.11.2026 (Hansi „alles um 12 einspielen“, Vorschlag: auf Android erst prüfen): Text zu Sprachnachrichten ist auf Android-Handys ab Werk AUS –
+// ob Chrome auf Android Aufnahme und Spracherkennung gleichzeitig kann, ist noch nicht am echten Gerät geprüft. Einschalten in ⚙️ → Kluge Helfer.
+function khStandard(k) { return !(k === "khSprachText" && typeof IST_ANDROID !== "undefined" && IST_ANDROID); }
+const khAn = (k) => einst(k, khStandard(k)); // khFuerDich · khChips · khFragen · khSprachText
+const khLesen = (k, d) => { try { return JSON.parse(localStorage.getItem("kc_club_" + k) || "null") ?? d; } catch { return d; } };
+const khSchreiben = (k, v) => { try { localStorage.setItem("kc_club_" + k, JSON.stringify(v)); } catch {} };
+function khWegMerken(key) { const w = khLesen("kh_weg", []); if (!w.includes(key)) khSchreiben("kh_weg", [...w, key].slice(-300)); }
+const khWeg = () => new Set(khLesen("kh_weg", []));
+const khVorname = (n) => String(n || "").split(" ")[0];
+function khNachZeichnen(u, andere) { // nach jedem Zeichnen des Chats (chatLaden)
+  if (!u || u.id !== chatId) return;
+  const gruppe = andere.length > 1, namen = andere.map((x) => khVorname(x.name)), ich = khVorname(ICH?.vorname || ICH?.name);
+  // 2 ❓ offene Frage für die Chat-Liste merken (nur Kennung und Zeit)
+  const of = khLesen("kh_offen", {}), f = khAn("khFragen") ? khOffeneFrage(u.nachrichten, { gruppe, namen }) : null;
+  if (f) of[u.id] = f.zeit; else delete of[u.id];
+  khSchreiben("kh_offen", of);
+  KH.items = khFuerDich(u.nachrichten, { gruppe, namen, ich, weg: khWeg(), tag: berlinIso, offen: khAn("khFragen") });
+  KH.chat = u.id; khZeileZeigen();
+  khChipsZeigen(u); khUngelesenZeigen(u, andere);
+  if (gruppe) khFotoPruefen(u).then((x) => { if (chatId !== u.id) return; KH.foto.set(u.id, x); khZeileZeigen(); }).catch(() => {});
+}
+function khAlle() { const f = KH.foto.get(chatId); return KH.chat === chatId ? [...KH.items, ...(f ? [f] : [])] : []; }
+function khZeileZeigen() {
+  const el = $("khFuerDich"); if (!el) return;
+  const l = khAlle(), zu = khLesen("kh_zu", {})[chatId] || "", neu = l.reduce((a, x) => (x.zeit > a ? x.zeit : a), "");
+  if (!khAn("khFuerDich") || !l.length || (zu && neu <= zu)) { el.innerHTML = ""; return; }
+  el.innerHTML = `<div class="kh-zeile"><button type="button" class="kh-zeile-text" onclick="khBlatt()" title="Antippen: zeigen, was für dich wichtig ist">📌 <b>Für dich:</b> ${esc(khZeile(l))} <span aria-hidden="true">›</span></button><button type="button" class="kh-zu" aria-label="„Für dich“ ausblenden" title="Ausblenden, bis etwas Neues kommt" onclick="khZeileZu()">✕</button></div>`;
+}
+function khZeileZu() {
+  const z = khLesen("kh_zu", {}), neu = khAlle().reduce((a, x) => (x.zeit > a ? x.zeit : a), ""); z[chatId] = neu || new Date().toISOString();
+  const k = Object.keys(z); if (k.length > 200) delete z[k[0]];
+  khSchreiben("kh_zu", z); khZeileZeigen(); melde("📌 Ausgeblendet – kommt wieder, sobald etwas Neues für dich da ist");
+}
+const KH_SYM = { frage: "❓ Frage an dich", erwaehnung: "📣 Du wurdest erwähnt", umfrage: "📊 Umfrage – du hast noch nicht abgestimmt", aufgabe: "📋 Aufgabe für dich", offen: "⏳ Deine Frage – noch keine Antwort", fotos: "📸 Fotos ins Fotoalbum?" };
+function khBlatt() {
+  const l = khAlle(); if (!l.length) return;
+  const zeile = (x) => { const m = NA.nachrichten.get(x.id), vors = m ? esc(vnKurz(khNurText(m) || m.umfrage?.frage || m.text || "").slice(0, 110)) : "";
+    const extra = x.art === "aufgabe" ? `<button class="knopf klein haupt" onclick="khAufgabeStart('${x.id}')">📋 Als Aufgabe übernehmen (bis ${esc(khTagText(x.bis))})</button>`
+      : x.art === "offen" ? `<button class="knopf klein haupt" onclick="khNachfragen('${x.id}')">🔔 Freundlich nachfragen</button>`
+      : x.art === "fotos" ? `<button class="knopf klein haupt" onclick="khFotosAlbum()">📸 Ins Fotoalbum</button><button class="knopf klein" onclick="khFotosWeg()">Nein danke</button>` : "";
+    return `<div class="kh-eintrag"><button type="button" class="kh-sprung" onclick="khSprung('${x.id}')"><span><b>${x.art === "fotos" ? `📸 ${x.anzahl} Fotos vom ${esc(x.titel)} ins Fotoalbum?` : KH_SYM[x.art]}</b> · ${esc(x.art === "offen" ? "du" : khVorname(x.von))} · ${esc(zeitKurz(x.zeit))}</span>${vors && x.art !== "fotos" ? `<small>${vors}</small>` : ""}</button>${extra ? `<div class="kh-extra">${extra}</div>` : ""}</div>`; };
+  blattAuf("khBlatt", `<h3 style="margin-top:0">📌 Für dich</h3><p class="hinweis" style="margin:0 0 8px">Nur du siehst das – deine App hat es auf dem Handy aus diesem Chat herausgesucht. Antippen springt zur Nachricht.</p>
+    ${l.map(zeile).join("")}<div class="dlg-knoepfe"><button class="knopf" onclick="khZeileZu();$('khBlatt')?.remove()">✕ Ausblenden</button><button class="knopf haupt" onclick="$('khBlatt').remove()">Schließen</button></div>`);
+}
+const khTagText = (iso) => (iso ? `${KH_WT_KURZ[khWtag(iso)]}, ${iso.slice(8, 10)}.${iso.slice(5, 7)}.` : "");
+function khSprung(id) { $("khBlatt")?.remove(); zuNachricht(id); }
+// 2 🔔 Freundlich nachfragen – nur vorschreiben, gesendet wird mit ➤
+function khNachfragen(id) {
+  const m = NA.nachrichten.get(id); $("khBlatt")?.remove(); if (!m) return;
+  const andere = (CHAT?.teilnehmer || []).filter((x) => x.person_id !== ICH?.person_id), gruppe = andere.length > 1;
+  const an = gruppe ? andere.filter((x) => khAnrede(khNurText(m), [khVorname(x.name)]).length || (m.erwaehnt || []).includes(khVorname(x.name))) : [];
+  an.forEach((x) => NA.erw.set(khVorname(x.name), x.person_id));
+  naAntworten(id); textVorbelegen(an.length ? `${an.map((x) => "@" + khVorname(x.name)).join(" ")} kurze Nachfrage zu meiner Frage 🙂 Habt ihr kurz Zeit zu antworten?`.replace(/Habt ihr/, an.length === 1 ? "Hast du" : "Habt ihr")
+    : "Kurze Nachfrage zu meiner Frage 🙂 Hast du kurz Zeit zu antworten?");
+  $("text")?.dispatchEvent(new Event("input")); melde("🔔 Text steht drin – anpassen und mit ➤ senden");
+}
+// 4 Schnellantworten unter der neuesten fremden Nachricht
+const KH_RUECK_MS = 5000;
+function khChipsZeigen(u) {
+  document.querySelectorAll("#chat .kh-chips").forEach((e) => e.remove());
+  if (!khAn("khChips") || KH.sendet === chatId) return;
+  const m = u.nachrichten[u.nachrichten.length - 1];
+  if (!m || m.eigen || istNotfall(m) || Date.now() - Date.parse(m.zeit) > KH_CHIP_MS) return;
+  const c = khChips(khNurText(m)), el = document.getElementById("msg-" + m.id); if (!c.length || !el) return;
+  el.insertAdjacentHTML("afterend", `<div class="kh-chips" role="group" aria-label="Schnell antworten">${c.map((x, i) => `<button type="button" onclick="khChipSenden('${m.id}', ${i})">${esc(x.t)}</button>`).join("")}</div>`);
+}
+async function khChipSenden(id, i) {
+  const m = NA.nachrichten.get(id), c = m && khChips(khNurText(m))[i], chat = chatId; if (!c || !chat) return;
+  const gruppe = (CHAT?.teilnehmer || []).length > 2; let ab = false;
+  KH.sendet = chat; document.querySelectorAll("#chat .kh-chips").forEach((e) => e.remove());
+  melde(`✉️ „${c.text}“ geht gleich raus – hier antippen: ↩️ Rückgängig`); const t = [...document.querySelectorAll(".meldung")].pop();
+  if (t) t.onclick = () => { ab = true; t.remove(); KH.sendet = null; melde("↩️ Nicht gesendet"); if (chatId === chat && CHAT) khChipsZeigen(CHAT); };
+  await new Promise((r) => setTimeout(r, KH_RUECK_MS));
+  if (ab) return; t?.remove();
+  try { await api("nachricht_senden", { id: chat, text: c.text, anlagen: [], wege: [], ...(gruppe ? { antwort_auf: id } : {}) }); spur("gesendet", chat);
+    if (chatId === chat) { chatStand = ""; await chatLaden(true); } }
+  catch (e) { meldeFehler(e); }
+  finally { KH.sendet = null; }
+}
+// 8 Wer hat's noch nicht gesehen? – nur eigene Nachrichten in Gruppen, nur wichtige/Express oder meine letzte, erst nach 2 Std.
+function khUngelesenZeigen(u, andere) {
+  if (andere.length < 2) return;
+  const letzte = [...u.nachrichten].reverse().find((m) => m.eigen);
+  for (const m of u.nachrichten) {
+    if (!m.eigen || !(m.nichtGelesen || []).length || Date.now() - Date.parse(m.zeit) < KH_UNGELESEN_MS || !(m.wichtig || m.express || m === letzte)) continue;
+    const fuss = document.querySelector(`#msg-${m.id} .fuss`); if (!fuss) continue;
+    fuss.insertAdjacentHTML("beforebegin", `<div class="kh-ungelesen">👀 Noch nicht gelesen: ${esc(m.nichtGelesen.map((x) => x.name).join(", "))} <button type="button" onclick="event.stopPropagation();khKurzErinnern('${m.id}')">🔔 Kurz erinnern</button></div>`);
+  }
+}
+function khKurzErinnern(id) {
+  const m = NA.nachrichten.get(id), l = (m?.nichtGelesen || []).filter((x) => x.id && x.name); if (!l.length) return;
+  l.forEach((x) => NA.erw.set(x.name, x.id)); naAntworten(id);
+  textVorbelegen(`${l.map((x) => "@" + x.name).join(" ")} kurze Erinnerung an meine Nachricht hier 🙂`);
+  $("text")?.dispatchEvent(new Event("input")); melde("🔔 Text steht drin – anpassen und mit ➤ senden");
+}
+// 3 ⏰ Erinnern
+function khErinnern(id) {
+  const m = NA.nachrichten.get(id); if (!m) return;
+  const z = khErinZeiten(new Date()), min = new Date(Date.now() + 5 * 60000), lok = (d) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  const f = blattAuf("khErinBlatt", `<h3 style="margin-top:0">⏰ An diese Nachricht erinnern</h3>
+    <div class="na-vorschau">${m.eigen ? "Du" : esc(m.von)}: ${esc(vnKurz(String(m.text || "📎")).slice(0, 120))}</div>
+    <p class="hinweis" id="khErinStand" style="margin:6px 0"></p>
+    <div class="kh-erin-wahl">${z.map((x) => `<button type="button" class="knopf" data-um="${x.um.toISOString()}">${x.k === "morgen" ? "🌅" : "🌙"} ${esc(x.t)}</button>`).join("")}
+      <label class="feld">🕐 Wunschzeit<input type="datetime-local" id="khErinWunsch" min="${lok(min)}" value="${lok(new Date(Date.now() + 2 * 3600000))}"></label>
+      <button type="button" class="knopf" id="khErinWunschLos">⏰ Zur Wunschzeit erinnern</button></div>
+    <p class="hinweis" style="margin:6px 0">Zur Zeit kommt eine Mitteilung aufs Handy: „⏰ Erinnerung: Nachricht von ${esc(m.eigen ? "dir" : khVorname(m.von))}“ – ohne den Text. Antippen öffnet den Chat an dieser Stelle.</p>
+    <button class="knopf" onclick="$('khErinBlatt').remove()">Abbrechen</button>`);
+  f.querySelectorAll("[data-um]").forEach((b) => (b.onclick = () => khErinSetzen(id, b.dataset.um)));
+  f.querySelector("#khErinWunschLos").onclick = () => { const v = $("khErinWunsch").value, d = v ? new Date(v) : null;
+    if (!d || isNaN(d) || d < Date.now() + 60000) return melde("Bitte eine Zeit in der Zukunft wählen.", true); khErinSetzen(id, d.toISOString()); };
+  api("nachricht_erinnerung_liste", {}, { still: true }).then((r) => { const e = (r?.liste || []).find((x) => x.nachricht === id), s = $("khErinStand");
+    if (e && s) s.innerHTML = `⏰ Schon eingestellt: ${esc(zeitKurz(e.um))} Uhr <button type="button" class="knopf klein" onclick="khErinLoeschen('${esc(e.id)}')">🗑️ Löschen</button>`; }).catch(() => {});
+}
+async function khErinSetzen(id, um) {
+  try { await api("nachricht_erinnerung_setzen", { id, um }, { warten: true }); $("khErinBlatt")?.remove();
+    melde(`⏰ Erinnerung kommt ${new Date(um).toDateString() === new Date().toDateString() ? "heute" : fTag.format(new Date(um))} um ${fZeit.format(new Date(um))} Uhr`); }
+  catch (e) { meldeFehler(e); }
+}
+async function khErinLoeschen(eid) {
+  try { await api("nachricht_erinnerung_loeschen", { id: eid }); $("khErinBlatt")?.remove(); melde("🗑️ Erinnerung gelöscht"); } catch (e) { meldeFehler(e); }
+}
+// 5 📋 Als Aufgabe übernehmen (todo_anlegen – nur für mich; der Knopf „💬 zur Nachricht“ steht in der To-do-Liste)
+function khAufgabeStart(id) {
+  const m = NA.nachrichten.get(id); $("khBlatt")?.remove(); if (!m) return;
+  if (!zugangAktion("todo_anlegen")) return melde("Die To-do-Liste gibt es mit deinem Zugang nicht.", true);
+  const t = khNurText(m) || String(m.text || ""), a = khAufgabe(t, m.zeit ? berlinIso(m.zeit) : heuteIso()) || { text: khAufgabeText(t), bis: "" };
+  const f = blattAuf("khAufgabeBlatt", `<h3 style="margin-top:0">📋 Als Aufgabe übernehmen</h3>
+    <div class="na-vorschau">${m.eigen ? "Du" : esc(m.von)}: ${esc(vnKurz(t).slice(0, 200))}</div>
+    <label class="feld">Was ist zu tun?<input id="khAufText" maxlength="180" value="${esc(a.text)}"></label>
+    <label class="feld">Bis wann (freiwillig)<input id="khAufBis" type="date" value="${a.bis || ""}"></label>
+    <p class="hinweis" style="margin:6px 0">Kommt in deine To-do-Liste (📅 Termine → ✅ To-do), nur für dich – mit Knopf zurück zu dieser Nachricht.</p>
+    <div class="dlg-knoepfe"><button class="knopf haupt" id="khAufLos">📋 Übernehmen</button><button class="knopf" onclick="$('khAufgabeBlatt').remove()">Abbrechen</button></div>`);
+  f.querySelector("#khAufLos").onclick = async (e) => {
+    const text = $("khAufText").value.trim(), bis = $("khAufBis").value || null; if (!text) return melde("Bitte kurz aufschreiben, was zu tun ist.", true);
+    e.currentTarget.disabled = true;
+    try { const r = await api("todo_anlegen", { text: `${text} (💬 ${m.eigen ? "eigene Nachricht" : khVorname(m.von)})`.slice(0, 200), kategorie: "sonstiges", fuer: "ich", faellig: bis, zustaendige: [ICH.person_id] }, { warten: true });
+      if (r?.id) { const tl = khLesen("kh_todo", {}); tl[r.id] = [chatId, id]; const k = Object.keys(tl); if (k.length > 200) delete tl[k[0]]; khSchreiben("kh_todo", tl); }
+      khWegMerken("a:" + id); f.remove(); melde(`📋 In deiner To-do-Liste${bis ? " – fällig " + khTagText(bis) : ""}`); KH.items = KH.items.filter((x) => !(x.art === "aufgabe" && x.id === id)); khZeileZeigen(); }
+    catch (x) { e.currentTarget.disabled = false; meldeFehler(x); }
+  };
+}
+function khTodoLink(todoId) { const z = khLesen("kh_todo", {})[todoId]; return z ? ` <button type="button" class="knopf klein kh-todo-link" onclick="gemerktOeffnen(${jsArg(z[0])}, ${jsArg(z[1])})">💬 zur Nachricht</button>` : ""; }
+// 2 ❓ in der Chat-Liste: steht noch meine Nachricht zuletzt und ist die Frage älter als 12 Std.?
+function khOffenMarke(u) {
+  if (!khAn("khFragen")) return ""; const z = khLesen("kh_offen", {})[u.id];
+  return z && u.letzte?.von === "Du" && Date.now() - Date.parse(z) >= KH_FRAGE_MS ? ' <span class="kh-offen-marke" title="Deine Frage ist seit über 12 Stunden unbeantwortet">❓</span>' : "";
+}
+// 7 📸 Fotos ins Album – Clubtermine einmal je Sitzung holen (höchstens alle 6 Std.)
+async function khTreffen() {
+  if (KH.treffen && Date.now() - KH.treffenAm < 6 * 3600000) return KH.treffen;
+  const r = await api("treffen_liste", {}, { still: true });
+  KH.treffen = (r?.treffen || []).map((t) => ({ id: t.id, titel: t.titel || "Clubtermin", tag: berlinIso(t.beginn) })); KH.treffenAm = Date.now(); return KH.treffen;
+}
+async function khFotoPruefen(u) {
+  if (!khAn("khFuerDich") || !zugangAktion("foto_hochladen")) return null;
+  const grenze = Date.now() - 2 * 86400000;
+  const fotos = u.nachrichten.filter((m) => Date.parse(m.zeit) >= grenze).flatMap((m) => (m.anlagen || []).filter((a) => /^image\//.test(a.mime || "") && !a.einmal && a.name !== VN_ANL_NAME).map((a) => ({ a, m })));
+  if (fotos.length < 3) return null;
+  const b = khFotoTreffen(fotos.map((x) => berlinIso(x.m.zeit)), (await khTreffen()).filter((t) => Math.abs(Date.parse(t.tag) - Date.now()) < 5 * 86400000)); if (!b) return null;
+  const key = `f:${u.id}:${b.treffen.id}`; if (khWeg().has(key)) return null;
+  const dabei = fotos.filter((x) => Math.abs(Date.parse(berlinIso(x.m.zeit)) - Date.parse(b.treffen.tag)) <= 86400000), letzte = dabei[dabei.length - 1].m;
+  return { art: "fotos", id: letzte.id, zeit: letzte.zeit, von: letzte.von, anzahl: dabei.length, titel: b.treffen.titel, key, anlagen: dabei.map((x) => x.a) };
+}
+async function khFotosAlbum() {
+  const f = KH.foto.get(chatId); $("khBlatt")?.remove(); if (!f) return;
+  melde(`📸 ${f.anzahl} Fotos werden geholt …`);
+  try { const dateien = [];
+    for (const a of f.anlagen) { const d = await anlageAlsDatei(a); dateien.push(new File([d.blob], d.name || "Foto.jpg", { type: d.mime || "image/jpeg" })); }
+    khWegMerken(f.key); KH.foto.delete(chatId);
+    faFilter = {}; faPapierkorb = false; faGeteilt = dateien; zeige("fotos");
+    melde(`📸 ${dateien.length} Fotos vom ${f.titel} – Album wählen und „Hochladen“ tippen`); }
+  catch (e) { meldeFehler(e); }
+}
+function khFotosWeg() { const f = KH.foto.get(chatId); if (f) khWegMerken(f.key); KH.foto.delete(chatId); $("khBlatt")?.remove(); khZeileZeigen(); }
+// 6 Sprachnachricht mit Text: Spracherkennung läuft neben der Aufnahme; geht sie nicht (iPhone, kein Netz, Mikrofon belegt) → ohne Text, keine Meldung
+function khMitschreiben(s) {
+  const E = window.SpeechRecognition || window.webkitSpeechRecognition; if (!E || !khAn("khSprachText")) return;
+  s.stuecke = []; s.erkNeu = 0;
+  const start = () => { try { const r = new E(); r.lang = "de-DE"; r.continuous = !IST_ANDROID; r.interimResults = false; s.erk = r;
+    r.onresult = (ev) => { for (let i = ev.resultIndex; i < ev.results.length; i++) if (ev.results[i].isFinal) { const x = String(ev.results[i][0]?.transcript || "").trim(), l = s.stuecke[s.stuecke.length - 1] || "";
+      if (!x) continue; if (l && x.toLowerCase().startsWith(l.toLowerCase())) s.stuecke[s.stuecke.length - 1] = x; else if (!l.toLowerCase().endsWith(x.toLowerCase())) s.stuecke.push(x); } }; // Android liefert Stücke doppelt (wie KC-CLUB-DIKTAT-DOPPELT)
+    r.onerror = (ev) => { if (["not-allowed", "service-not-allowed", "audio-capture", "language-not-supported"].includes(ev?.error)) s.erkAus = true; };
+    r.onend = () => { if (SPR === s && !s.erkAus && s.erkNeu++ < 30) start(); else { s.erkEnde = true; s.erkFertig?.(); } };
+    r.start(); } catch { s.erkAus = true; s.erkFertig?.(); } };
+  start();
+}
+function khMitschreibenEnde(s) { // Text der Aufnahme (höchstens 3.000 Zeichen) – wartet kurz auf das letzte Stück
+  if (!s?.erk) return Promise.resolve("");
+  return new Promise((ok) => { let fertig = false; const aus = () => { if (fertig) return; fertig = true; const t = (typeof diktatSatz === "function" ? diktatSatz(s.stuecke.join(". ")) : s.stuecke.join(". ")).slice(0, 3000); ok(t); };
+    if (s.erkEnde) return aus();
+    s.erkFertig = aus; s.erkAus = true; try { s.erk.stop(); } catch { aus(); } setTimeout(aus, 1500); });
+}
+function khSprachHtml(m) { // „🎤 Sprachnachricht (0:12)“ + einklappbarer erkannter Text
+  const t = String(m.text || ""), i = t.indexOf("\n" + KH_SPRACH_MARKE); if (!KH_SPRACH_KOPF.test(t) || i < 0) return null;
+  return `<div class="txt">${naText(t.slice(0, i))}</div><details class="kh-sprachtext" onclick="event.stopPropagation()"><summary>📝 Text anzeigen <small>(automatisch erkannt)</small></summary><div>${naText(t.slice(i + KH_SPRACH_MARKE.length + 1).trim())}</div></details>`;
 }
 function ntAusNachricht(id) {
   const m = NA.nachrichten.get(id); if (!m) return;
@@ -35902,7 +36281,7 @@ const FENSTER_NAMEN = {
   dtBlatt: "🗓️ Dienst-Tausch", dvBlatt: "📊 Dienstzeiten-Übersicht", dwSperreBlatt: "💡 Sperrzeit nicht nötig", egBlatt: "📥 Mein Eingangskorb", eingangBlatt: "📥 In den Eingangskorb eines Mitglieds",
   einlBlatt: "📥 Dokument einlesen", ekAblageBlatt: "🗄️ Eingangskorb: ablegen", ekDwBlatt: "📅 Dienstzeiten", ekErstBlatt: "💶 Erstattung", ekErstOkBlatt: "✅ Erstattung als erstattet markieren?", gkBlatt: "💐 Genesungskarte", tpBlatt: "⚽ Bundesliga-Tippspiel", gkGemBlatt: "👥 Gemeinsame Karte", ekHinweisBlatt: "📥 Hinweis: Eingangskorb",
   ekNachBlatt: "🔎 Nachverfolgen", elternBlatt: "👪 Eltern-Handy", entwicklerBlatt: "👨‍💻 Über den Entwickler", erBlatt: "✅ Alles eingerichtet", ibBlatt: "🖼️ Installieren mit Bildern", erinBlatt: "🔔 Erinnerung für dich",
-  erkBlatt: "💡 Vorschlag aus der Nachricht", ersBesBlatt: "🎓 Fahrten aus Besuchen", ersCsvBlatt: "📊 Erstattungen für Excel", eblBlatt: "📒 Buchungsliste", esTafelBlatt: "📤 Tafel sichern", ewBlatt: "🧭 Einstellungen erklärt",
+  erkBlatt: "💡 Vorschlag aus der Nachricht", khBlatt: "📌 Für dich (Chat)", khErinBlatt: "⏰ An Nachricht erinnern", khAufgabeBlatt: "📋 Nachricht als Aufgabe",ersBesBlatt: "🎓 Fahrten aus Besuchen", ersCsvBlatt: "📊 Erstattungen für Excel", eblBlatt: "📒 Buchungsliste", esTafelBlatt: "📤 Tafel sichern", ewBlatt: "🧭 Einstellungen erklärt",
   expressBlatt: "🏎️ Express-Sendung", externBlatt: "🌐 Externer Inhalt", faAlbenKorb: "🗑️ Gelöschte Alben", faAlbumBlatt: "📸 Foto in welches Album?", faAlbumForm: "📸 Album anlegen/ändern",
   fdkFrageBlatt: "🧪 Hygienekontrolle", fdkKarteBlatt: "🃏 Fang den Koch: Karte", fdkRegelBlatt: "📖 So geht Fang den Koch", feeBlatt: "🧚 Die Fee", kaeferBlatt: "🐞 Der Marienkäfer", kleeBlatt: "🍀 Der Glücksklee", fiBlatt: "🏋️ Fit bleiben",
   flAng: "✏️ Angaben ändern", flInfo: "📣 Mitglieder informieren", ggBlatt: "🎂 Meine Geburtstagsgrüße", ggWahlBlatt: "🎂 Geburtstagsgruß wählen", gmFenster: "⭐ Gemerkte Nachrichten",
