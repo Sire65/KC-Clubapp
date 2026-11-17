@@ -146,3 +146,12 @@ for (const id of ["khBlatt", "khErinBlatt", "khAufgabeBlatt"]) assert.ok(new Reg
 // localStorage: nur Kennungen/Zeiten, Schlüssel mit kc_club_ (beim Abmelden gelöscht)
 assert.ok(/localStorage\.getItem\("kc_club_" \+ k\)/.test(programm.slice(programm.indexOf("const khLesen"))), "Speicher mit kc_club_-Präfix");
 console.log("kluge-helfer: alle Prüfungen bestanden");
+// 17.11.2026: Text zu Sprachnachrichten auf Android ab Werk aus (noch nicht am echten Gerät geprüft), sonst an
+{
+  const kh = new Function("IST_ANDROID", programm.slice(programm.indexOf("function khStandard(k)"), programm.indexOf("\n", programm.indexOf("function khStandard(k)"))) + "\nreturn khStandard;");
+  assert.equal(kh(true)("khSprachText"), false, "Android: Sprachtext aus");
+  assert.equal(kh(false)("khSprachText"), true, "sonst an");
+  assert.equal(kh(true)("khChips"), true, "andere Schalter an");
+  assert.ok(programm.includes("$(id).checked = einst(k, khStandard(k));") && programm.includes("const khAn = (k) => einst(k, khStandard(k));"), "Anzeige und Wirkung gleich");
+}
+console.log("kluge-helfer Android-Standard: ok");
