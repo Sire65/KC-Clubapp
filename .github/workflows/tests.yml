@@ -201,6 +201,7 @@ jobs:
       - run: node tests/ablage-neu.test.mjs
       - run: node tests/genesungskarte.test.mjs
       - run: node tests/chat-vorhanden.test.mjs
+      - run: node tests/tippspiel.test.mjs
       - run: node tests/teilen-eigen.test.mjs
       - run: node tests/clubabend-anwesend.test.mjs
       - run: node tests/sitzung-schritte.test.mjs

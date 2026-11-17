@@ -2282,7 +2282,14 @@
   .hl-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 6px; }
   .hl-chips .chip { padding: 9px 12px; font-size: .95rem; color: var(--text); border: 2px solid transparent; cursor: pointer; }
   .hl-chips .chip.an { border-color: var(--rot); }
-  .gk-h { margin: 10px 0 4px; font-size: .95rem; } /* 2.967.0 KC-CLUB-GENESUNGSKARTEN */
+  .gk-h { margin: 10px 0 4px; font-size: .95rem; }
+  .tp-tagwahl { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 6px 0 8px; } /* 2.971.0 KC-CLUB-TIPPSPIEL */
+  .tp-spiel { padding: 10px 12px; margin: 0 0 8px; } .tp-teams { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; font-weight: 700; }
+  .tp-teams span:first-child { text-align: right; } .tp-erg { min-width: 3.4em; text-align: center; font-size: 1.15rem; }
+  .tp-zeit { text-align: center; font-size: .85rem; margin: 2px 0 6px; } .tp-eingabe { display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .tp-eingabe input { width: 3.2em; font-size: 1.2rem; text-align: center; padding: 6px; } .tp-andere { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 4px; font-size: .88rem; }
+  .tp-pkt { display: inline-block; padding: 1px 8px; border-radius: 10px; background: var(--grau, #ddd); font-size: .85rem; } .tp-p3 { background: #f7c948; color: #3a2a00; } .tp-p2 { background: #9ccc65; color: #1f3a00; } .tp-p1 { background: #cfe8fc; color: #0b2a44; }
+  .tp-ich { background: rgba(116,21,33,.08); border-radius: 8px; } /* 2.967.0 KC-CLUB-GENESUNGSKARTEN */
   .hl-kal { display: inline-flex; align-items: center; gap: 8px; background: var(--karte2); border-radius: 12px; padding: 7px 10px; font-weight: 700; margin: 0 0 6px; position: relative; cursor: pointer; }
   .hl-kal input { position: absolute; inset: 0; opacity: 0; width: 100%; cursor: pointer; }
   .hl-kal.an { background: var(--rot); color: #fff; }
@@ -7092,7 +7099,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.970.0" data-v="2.970.0"></script>
+<script src="app.js?v=2.971.0" data-v="2.971.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>
