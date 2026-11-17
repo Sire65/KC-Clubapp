@@ -1,0 +1,5 @@
+nachricht_ok=t
+ohne_kennung_abgelehnt=t
+falsche_art_abgelehnt=t
+wecker_timer_weiter=t
+rls=t
