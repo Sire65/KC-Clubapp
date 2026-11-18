@@ -1,5 +1,20 @@
 # Änderungen
 
+## 2.976.0 – 2026-11-18 – 📐 Anordnung der Knöpfe (KC-CLUB-ANORDNUNG) · nur App (Server bleibt 2.975.0)
+Wunsch Hansi 18.11.: nach dem Vorbild Bachkreis erst prüfen, dann „Ja bauen, aber vorsichtig“. Gemessen: 84 Seiten/Fenster in 6 Rollen (Admin, Vorstand, Mitglied,
+Aushilfe, Gast, einfache Ansicht) auf Handy 360 px und Tablet 820 px – 4.877 Knöpfe. Nichts war zu breit; gezielt verbessert:
+- **Titel ganz:** „💬 Nachrichten“ (am Handy nur „💬 …“) und „📄 Protokolle“ („Proto…“) werden nicht mehr abgeschnitten. Passen die Knöpfe nicht daneben,
+  rutschen sie rechtsbündig in Zeile 2 (beim Admin „＋ Neu“ unter SOS). Fotos/Mitglieder am Handy: Titel in Zeile 1, alle Knöpfe zusammen rechts in Zeile 2.
+- **Lange Reihen laufen sichtbar aus:** Hilfe & Tipps (12 Reiter, am Handy nur 2 zu sehen) und Archiv-Filter blenden rechts weich aus – man sieht, dass es weitergeht.
+- **Größere Knöpfe:** „Noch zu entdecken“ (So nutzen wir die App) und „Lieber ein Mitglied fragen“/Schulung mindestens 36 px statt 24–26 px.
+- **Nachrichten-Leiste** (Symbole): alle Knöpfe gleich breit in Spalten statt 5 schmale + 2 sehr breite.
+- **Status am Start:** „verfügbar“ trennt mit Strich („verfüg-bar“) statt mitten im Wort.
+- Bewusst **nicht** geändert: 👆 ? 🔍 bleiben, wo sie seit 2.380.0/2.725.0 stehen (gleiten beim Lesen weg); die kleinen Zeichen der Statusleiste am Start haben
+  schon eine größere unsichtbare Tippfläche (KC-CLUB-TIPPFLAECHEN-2).
+- Messwerkzeug: `node tools/anordnung-pruefen.mjs` (abgeschirmt, nur Testdaten). Nachher: 0 abgeschnittene Titel, Knöpfe unter 32 px 6 % → 4 %.
+- Test: `tests/anordnung.test.mjs`. Rückweg: App 2.975.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.975.0 – 2026-11-17 – 📇 Kontaktkarte auf der Mitgliedsseite (KC-CLUB-KONTAKTKARTE) · Server 2.975.0
 Wunsch Hansi 17.11.: „In den Stammdaten der Mitglieder einen Button, um eine Kontaktkarte zu erstellen und dann anbieten: per Nachricht versenden, in den Archivordner,
 per WhatsApp schicken, an den Kalender bzw. Kontakte senden usw.“
