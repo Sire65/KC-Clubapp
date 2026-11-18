@@ -4877,6 +4877,7 @@ async function onlinePing(opt) {
       else if (a.status === "spaeter" && a.antwort) { melde(`👋 ${a.an.vorname}: „${a.antwort}“`); try { navigator.vibrate?.(60); } catch {} }
       else if (a.status === "spaeter") melde(`⏳ ${a.an.vorname} hat gerade keine Zeit – schreib eine Nachricht, sie/er meldet sich.`);
     }
+    if (ONL.sicher && ONL.sicherMs !== onlSicherMs()) onlineTakt(); // 19.11.2026 KC-CLUB-LEITUNG-SPARSAM: jemand ohne Leitung online → 3-Min.-Takt (und zurück)
     ONL.fehlerFolge = 0;
   } catch (e) {
     // KC-CLUB-ONLINE-JEDE-ANFRAGE (09.11.2026): Online-Meldung scheitert zweimal hintereinander → einmal je Sitzung ins Fehlerprotokoll (vorher völlig still)
@@ -4906,6 +4907,11 @@ function anwAnders() {
   const warte = Math.max(2000 + Math.random() * 4000, RT.anwLetzt + ANW_ABSTAND_MS - Date.now());
   RT.anwUhr = setTimeout(() => { RT.anwUhr = null; RT.anwLetzt = Date.now(); onlinePing(); }, warte);
 }
+// 19.11.2026 KC-CLUB-LEITUNG-SPARSAM (Hansi: „wird sichergestellt, dass die Anzeige wer ist online und wer ist raus funktioniert?“): geht ein Gerät
+// OHNE „weg“ (Absturz, Netz weg, Akku leer), zeigt der Server es noch bis ONLINE_SEK (150 s) nach seiner letzten Meldung als online. Darum nach
+// jedem Abgang zusätzlich ein Nachlauf-Abgleich nach 150 + 15 s – dann ist es sicher aus der Liste. Immer nur ein Nachlauf (neu stellen, nicht stapeln).
+const ANW_NACHLAUF_MS = 165000;
+function anwNachlauf() { clearTimeout(RT.nachlauf); RT.nachlauf = setTimeout(() => { RT.nachlauf = null; onlinePing(); }, ANW_NACHLAUF_MS); }
 const rtAn = () => RT.ok;
 function rtVerbinden() {
   const kanal = INIT?.rtKanal;
@@ -4938,6 +4944,7 @@ function rtVerbinden() {
         for (const k of Object.keys(d.payload?.leaves || {})) RT.anwKeys.delete(k); // erst gehen, dann kommen (neu eintragen = gehen + kommen)
         for (const k of Object.keys(d.payload?.joins || {})) RT.anwKeys.add(k);
         if (keys.some((k) => k !== RT.anwKey)) anwAnders();
+        if (Object.keys(d.payload?.leaves || {}).some((k) => k !== RT.anwKey)) anwNachlauf(); // KC-CLUB-LEITUNG-SPARSAM: Abgang ohne „weg“ sicher ausblenden
       }
     }
   };
@@ -5225,9 +5232,14 @@ document.addEventListener("visibilitychange", () => {
 const ONL_SICHER_MS = 10 * 60000, ONL_WARTET_RT_MS = 15000;
 const onlLeitungVoll = () => rtAn() && RT.anw;
 const anwNurIch = () => RT.anw && RT.anwStand && ![...RT.anwKeys].some((k) => k !== RT.anwKey); // laut Anwesenheit ist sonst niemand da
+// 19.11.2026: Mitglieder ohne Leitung (alte App, kein WebSocket) stehen nicht in der Anwesenheit – ihr Kommen/Gehen meldet niemand. Zeigt die Online-Liste
+// mehr Personen, als fremde Geräte in der Anwesenheit sind (oder ist der Anwesenheits-Stand noch unbekannt), Sicherheitsabgleich alle 3 statt 10 Min.
+const ONL_SICHER_OHNE_MS = 3 * 60000;
+const anwFremde = () => [...RT.anwKeys].filter((k) => k !== RT.anwKey).length;
+const onlSicherMs = () => RT.anwStand && ONL.liste.length <= anwFremde() ? ONL_SICHER_MS : ONL_SICHER_OHNE_MS;
 function onlineTakt() {
   clearInterval(ONL.timer); ONL.sicher = !ONL.wartet && onlLeitungVoll();
-  if (ONL.sicher) { ONL.timer = setInterval(() => onlinePing({ sicher: true }), ONL_SICHER_MS); return; } // KC-CLUB-LEITUNG-SPARSAM
+  if (ONL.sicher) { ONL.sicherMs = onlSicherMs(); ONL.timer = setInterval(() => onlinePing({ sicher: true }), ONL.sicherMs); return; } // KC-CLUB-LEITUNG-SPARSAM
   // KC-CLUB-ANRUF-TAKT (0.80.0): ohne Push erfährt die App von einem Anruf nur über diesen Takt – ein Anruf klingelt 45 s,
   // darum dann alle 15 s nachsehen (mit Push weckt der Push die offene App sofort, 60 s reichen).
   ONL.timer = setInterval(onlinePing, ONL.wartet ? (rtAn() ? ONL_WARTET_RT_MS : 4000) : Math.min(ONLINE_TAKT_MAX_MS, sparTakt(PUSH_AKTIV || rtAn() ? 60000 : 15000))); // KC-CLUB-SPARMODUS: seltener · KC-CLUB-REALTIME: Leitung steht → wie mit Push
@@ -5235,7 +5247,7 @@ function onlineTakt() {
 // KC-CLUB-LEITUNG-SPARSAM: die Anzeigen werten einen Online-Stand nur 3 Min. als aktuell (ONL.stand). Solange Leitung und Anwesenheit stehen und
 // die Leitung antwortet, ist die Liste bestätigt (jede Änderung hätte einen Abgleich ausgelöst) – dann jede Minute als bestätigt markieren,
 // höchstens bis 90 s nach dem fälligen Sicherheitsabgleich (ONL.echt = letzte echte Antwort). Bricht die Leitung ab, veraltet der Stand wie bisher.
-setInterval(() => { try { if (onlLeitungVoll() && ONL.echt && Date.now() - ONL.echt < ONL_SICHER_MS + 90000 && Date.now() - (RT.letzte || 0) < RT_STILL_MS) ONL.stand = Date.now(); } catch {} }, 60000);
+setInterval(() => { try { if (onlLeitungVoll() && ONL.echt && Date.now() - ONL.echt < (ONL.sicherMs || ONL_SICHER_MS) + 90000 && Date.now() - (RT.letzte || 0) < RT_STILL_MS) ONL.stand = Date.now(); } catch {} }, 60000);
 document.addEventListener("visibilitychange", () => { // KC-CLUB-WER-IST-DA (2.454.0): nach ≥ 10 Min. im Hintergrund wieder „wer ist da“ – vor dem Ping
   if (document.hidden) WER_DA.weg = Date.now(); else if (WER_DA.weg && Date.now() - WER_DA.weg >= ANSAGE_PAUSE_MS) WER_DA.faellig = true;
 });

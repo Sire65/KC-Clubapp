@@ -276,3 +276,4 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: node tests/rundgang.browser.mjs
       - run: node tests/bildschirmfoto-farben.browser.mjs
+      - run: node tests/anwesenheit.browser.mjs  # 19.11.2026 KC-CLUB-LEITUNG-SPARSAM: wer ist online / wer ist raus

@@ -17,7 +17,7 @@ assert.ok(app.includes("if (keys.some((k) => k !== RT.anwKey)) anwAnders();"));
 assert.ok(/const ANW_ABSTAND_MS = 20000;/.test(app) && app.includes("Math.max(2000 + Math.random() * 4000, RT.anwLetzt + ANW_ABSTAND_MS - Date.now())"), "höchstens alle 20 s, versetzt");
 // Takt: 18.11.2026 KC-CLUB-LEITUNG-SPARSAM – mit Leitung + Anwesenheit nur noch Sicherheitsabgleich alle 10 Min., sonst wie bisher.
 // Die Regel KC-EINSPIELEN-RUHIG (3 Min.) und „online“ (150 s) hängen am Lebenszeichen (alle 60 s, sichtbare App, _sichtbar) – das bleibt.
-assert.ok(app.includes("ONL.sicher = !ONL.wartet && onlLeitungVoll();") && app.includes("if (ONL.sicher) { ONL.timer = setInterval(() => onlinePing({ sicher: true }), ONL_SICHER_MS); return; }"), "Sicherheitsabgleich mit Leitung + Anwesenheit");
+assert.ok(app.includes("ONL.sicher = !ONL.wartet && onlLeitungVoll();") && app.includes("if (ONL.sicher) { ONL.sicherMs = onlSicherMs(); ONL.timer = setInterval(() => onlinePing({ sicher: true }), ONL.sicherMs); return; }"), "Sicherheitsabgleich mit Leitung + Anwesenheit");
 assert.ok(app.includes("sparTakt(PUSH_AKTIV || rtAn() ? 60000 : 15000)"), "ohne Anwesenheit wie bisher");
 assert.ok(/const HERZ = \{ takt: 60,/.test(app) && app.includes("HB = setInterval(() => { if (document.visibilityState !== \"hidden\") herzSenden(); }, HERZ.takt * 1000);"), "Lebenszeichen alle 60 s bleibt");
 // Leitung weg → Anwesenheit weg (wieder alter Takt)

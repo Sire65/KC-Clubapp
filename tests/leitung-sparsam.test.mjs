@@ -54,7 +54,7 @@ assert.ok(app.includes("if (takt === true && RT.ok && PW_AUFBAU === RT.aufbauten
 {
   const teil = stueck("const ONL_SICHER_MS", "// KC-CLUB-LEITUNG-SPARSAM: die Anzeigen");
   const uhren = [];
-  const ctx = { RT: { ok: false, anw: false, anwKeys: new Set(), anwStand: false, anwKey: "gich" }, ONL: { wartet: null, timer: null }, PUSH_AKTIV: false, ONLINE_TAKT_MAX_MS: 90000,
+  const ctx = { RT: { ok: false, anw: false, anwKeys: new Set(), anwStand: false, anwKey: "gich" }, ONL: { wartet: null, timer: null, liste: [] }, PUSH_AKTIV: false, ONLINE_TAKT_MAX_MS: 90000,
     sparTakt: (ms) => ms, rtAn: () => ctx.RT.ok, onlinePing: () => {}, clearInterval: () => {}, setInterval: (fn, ms) => { uhren.push({ fn, ms }); return uhren.length; } };
   const f = new Function("ctx", `with (ctx) { ${teil}\nreturn { onlineTakt, anwNurIch, ONL_SICHER_MS }; }`)(ctx);
   const takt = () => { f.onlineTakt(); return uhren[uhren.length - 1].ms; };
@@ -64,7 +64,12 @@ assert.ok(app.includes("if (takt === true && RT.ok && PW_AUFBAU === RT.aufbauten
   ctx.ONL.wartet = "x"; assert.equal(takt(), 4000, "Warten ohne Leitung: 4 s (unverändert)");
   ctx.RT.ok = true; assert.equal(takt(), 15000, "Warten mit Leitung: 15 s");
   ctx.ONL.wartet = null; assert.equal(takt(), 60000, "Leitung ohne Anwesenheit: 60 s (unverändert)");
-  ctx.RT.anw = true; assert.equal(takt(), 600000, "Leitung + Anwesenheit: Sicherheitsabgleich alle 10 Min.");
+  ctx.RT.anw = true; assert.equal(takt(), 180000, "Anwesenheits-Stand noch unbekannt: vorsichtshalber 3 Min.");
+  ctx.RT.anwStand = true; assert.equal(takt(), 600000, "Leitung + Anwesenheit: Sicherheitsabgleich alle 10 Min.");
+  // 19.11.2026: Mitglied ohne Leitung online (Liste > fremde Anwesenheit) → 3 Min.; wieder alle mit Leitung → 10 Min.
+  ctx.ONL.liste = [{ person_id: "KC-P-ALT" }]; assert.equal(takt(), 180000, "jemand ohne Leitung online → 3 Min.");
+  ctx.RT.anwKeys = new Set(["gich", "galt"]); assert.equal(takt(), 600000, "jeder Online-Eintrag hat ein Gerät in der Anwesenheit → 10 Min.");
+  ctx.ONL.liste = []; ctx.RT.anwKeys = new Set(); ctx.RT.anwStand = false;
   let opt; ctx.onlinePing = (o) => { opt = o; }; uhren[uhren.length - 1].fn(); assert.deepEqual(opt, { sicher: true }, "als Sicherheitsabgleich gekennzeichnet");
   // f) Anwesenheit: nur ich da?
   assert.equal(f.anwNurIch(), false, "ohne Anwesenheits-Stand nie „nur ich“");
@@ -81,7 +86,8 @@ assert.ok(app.includes("if (takt === true && RT.ok && PW_AUFBAU === RT.aufbauten
   assert.ok(app.includes("if (ONL.timer && ONL.sicher) onlineTakt(); } // 18.11.2026 KC-CLUB-LEITUNG-SPARSAM"), "Leitung bewusst getrennt → sofort wieder alter Takt (nur aus dem Sicherheitsabgleich heraus)");
   assert.equal(ctx.ONL.sicher, true, "Merker Sicherheitsabgleich"); ctx.RT.ok = false; f.onlineTakt(); assert.equal(ctx.ONL.sicher, false);
   // Anzeigen: Stand gilt als bestätigt, solange Leitung + Anwesenheit stehen und die Leitung antwortet – höchstens bis kurz nach dem fälligen Abgleich
-  assert.ok(app.includes("if (onlLeitungVoll() && ONL.echt && Date.now() - ONL.echt < ONL_SICHER_MS + 90000 && Date.now() - (RT.letzte || 0) < RT_STILL_MS) ONL.stand = Date.now();"), "bestätigter Stand");
+  assert.ok(app.includes("if (onlLeitungVoll() && ONL.echt && Date.now() - ONL.echt < (ONL.sicherMs || ONL_SICHER_MS) + 90000 && Date.now() - (RT.letzte || 0) < RT_STILL_MS) ONL.stand = Date.now();"), "bestätigter Stand");
+  assert.ok(app.includes("if (ONL.sicher && ONL.sicherMs !== onlSicherMs()) onlineTakt();"), "nach jedem Abgleich Takt anpassen (3 ↔ 10 Min.)");
   assert.ok(app.includes("ONL.stand = ONL.echt = Date.now();") && app.includes("ONL.stand = ONL.echt = 0;"), "echter Stand / offline");
 }
 // f) Sicherheitsabgleich auslassen, wenn laut Anwesenheit niemand sonst da ist (nur der Takt, nie Start/Rückkehr/Signal)
@@ -121,6 +127,28 @@ assert.ok(app.includes("SPUR_BALD = setTimeout(spurSenden, 15000);"), "Wege-Live
   const alt = fs.readFileSync(new URL("../supabase/migrations/20261106_kc_club_rt_terminanfrage.sql", import.meta.url), "utf8");
   const fn = (t) => t.slice(t.indexOf("create or replace function public.kc_club_rt_klingeln"), t.indexOf("revoke all on function public.kc_club_rt_klingeln")).replace(", 'gespraech', 'sichtbar'", "");
   assert.equal(fn(mig), fn(alt), "sonst identisch mit der Fassung vom 06.11.");
+}
+
+// 19.11.2026 Absicherung „wer ist online / wer ist raus“ (Frage Hansi)
+{
+  // Abgang ohne „weg“: Nachlauf nach ONLINE_SEK + 15 s, nur einer gleichzeitig
+  const ONLINE_SEK = Number(server.match(/const ONLINE_SEK = (\d+)/)[1]);
+  assert.equal(Number(app.match(/const ANW_NACHLAUF_MS = (\d+);/)[1]), ONLINE_SEK * 1000 + 15000, "Nachlauf = ONLINE_SEK + 15 s");
+  assert.ok(app.includes('if (Object.keys(d.payload?.leaves || {}).some((k) => k !== RT.anwKey)) anwNachlauf();'), "nur bei fremdem Abgang");
+  const teil = stueck("function anwNachlauf()", "\n") + "\n";
+  const uhren = new Map(); let n = 0, pings = 0;
+  const ctx = { RT: {}, ANW_NACHLAUF_MS: 165000, onlinePing: () => { pings++; }, setTimeout: (fn, ms) => { uhren.set(++n, { fn, ms }); return n; }, clearTimeout: (id) => uhren.delete(id) };
+  const nach = new Function("ctx", `with (ctx) { ${teil} return anwNachlauf; }`)(ctx);
+  nach(); nach(); nach();
+  assert.equal(uhren.size, 1, "nicht gestapelt"); const [u] = uhren.values(); assert.equal(u.ms, 165000);
+  u.fn(); assert.equal(pings, 1); assert.equal(ctx.RT.nachlauf, null);
+  // Server: „weg“ blendet sofort aus (istWeg) – in beiden Wegen der Online-Liste, sich selbst zeigt die Liste nie
+  assert.ok(/const istWeg = \(w: any\) => !!w\?\.weg && Date\.parse\(w\.weg\) >= \(Date\.parse\(w\.zuletzt \|\| ""\) \|\| 0\);/.test(server), "istWeg");
+  assert.ok((server.match(/!inko\.has\(id\) && !istWeg\(einst\.get\("online_seit"\)\?\.get\(id\)\)\)\)/g) || []).length >= 2, "Online-Liste blendet „weg“ sofort aus");
+  assert.ok(/if \(!weitere\.includes\("online_seit"\)\) weitere = \[\.\.\.weitere, "online_seit"\];/.test(server) && server.includes("on.delete(ich.person_id);"), "online_seit immer gelesen, ich nie in der Liste");
+  assert.ok(/case "weg": \{[^]{0,300}await wegMerken\(ich\.person_id\)/.test(server), "Aktion weg merkt sofort");
+  assert.ok(/if \(w > 0 && jetztMs - w < ONLINE_WEG_TOLERANZ_MS\) return;/.test(server), "verspätete Meldung nach „weg“ macht nicht wieder online");
+  assert.ok(fs.readFileSync(new URL("../.github/workflows/tests.yml", import.meta.url), "utf8").includes("node tests/anwesenheit.browser.mjs"), "Browser-Test im rundgang-Job");
 }
 
 assert.ok(fs.readFileSync(new URL("../.github/workflows/tests.yml", import.meta.url), "utf8").includes("node tests/leitung-sparsam.test.mjs"), "läuft in der CI");

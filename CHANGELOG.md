@@ -24,6 +24,12 @@ ohnehin sofort als Signal; die App fragt dann seltener selbst nach. **Ohne Leitu
     gebremster Abgleich (höchstens alle 20 s) statt zwei.
   - Sparbremse: „gespraech“ und „sichtbar“ gelten wie „online“ als „teuer“ – ab 70 % des Monatskontingents keine Signale mehr (dann Sicherheitstakt).
   - Reihenfolge beim Einspielen: Migration vor dem Server (sonst zählen die neuen Arten bis 95 % – harmlos).
+- **Absicherung „wer ist online / wer ist raus“** (Frage Hansi):
+  - Geht ein Gerät ohne Abmeldung (Absturz, Netz weg, Akku leer), fragt die App außer sofort noch einmal nach 165 s nach – dann ist die
+    Person beim Server sicher abgelaufen (150 s) und verschwindet aus der Liste. Immer nur ein solcher Nachlauf.
+  - Ist jemand online, der keine direkte Leitung hat (alte App), gleicht die App alle 3 statt 10 Min. ab, damit dessen Kommen und Gehen zügig erscheint.
+  - Geprüft: Wer die App weglegt („weg“), verschwindet beim Server sofort aus der Online-Liste.
+  - Neuer Browser-Test `tests/anwesenheit.browser.mjs` (abgeschirmt, Leitung nachgebaut, Uhr vorgespult): Kommen sofort, Gehen nach dem Nachlauf, Takt 10/3 Min.
 - Test: `tests/leitung-sparsam.test.mjs` (angepasst: anwesenheit, online-echt, online-jede-anfrage, rt-terminanfrage, rt-clubabend-mitfahrt, app-vertrag).
 
 ## 2.978.0 – 2026-11-18 – 📐 Anordnung der Knöpfe (KC-CLUB-ANORDNUNG) · nur App (Server unverändert)
