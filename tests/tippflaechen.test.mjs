@@ -3,7 +3,8 @@
 import fs from "node:fs";
 import assert from "node:assert/strict";
 const html = fs.readFileSync("index.html", "utf8");
-const i = html.indexOf("/* 2.827.0 KC-CLUB-TIPPFLAECHEN"), blk = html.slice(i, html.indexOf("</style>", i));
+const i = html.indexOf("/* 2.827.0 KC-CLUB-TIPPFLAECHEN"), ende = [html.indexOf("/* ---------- KC-CLUB-ANORDNUNG", i), html.indexOf("</style>", i)].filter((x) => x > 0);
+const blk = html.slice(i, Math.min(...ende)); // nur der eigene Block (2.976.0: danach folgt KC-CLUB-ANORDNUNG mit eigenem Test)
 assert.ok(i > 0 && i > html.indexOf(".herz {") && i > html.indexOf(".ipunkt {"), "Block steht nach den alten Regeln (überschreibt sie)");
 assert.ok(/\.herz \{ padding: 11px 6px; margin: -11px -4px; \}/.test(blk), "Herz: unsichtbar größer, Platz im Kopf gleich");
 assert.ok(/\.ipunkt \{ height: 44px; margin: -13px 0; \}/.test(blk), "Info-Punkte 44 hoch, Abstand gleich");

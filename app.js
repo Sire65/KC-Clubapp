@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.977.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.978.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -26960,7 +26960,8 @@ async function protokolleLaden() {
       ${treffenOhneProtokoll.map((t) => `<div class="zeile"><div style="flex:1"><b>${esc(t.titel)}</b><div class="hinweis" style="font-size:.85rem">${esc(wann(t.beginn))}${t.ort ? " · " + esc(t.ort) : ""}</div></div>
         <button class="knopf haupt klein" onclick="einmal(this, () => protokollAnlegen('${t.id}'))">＋ Anlegen</button></div>`).join("")}</details>` : "";
     const suche = protokolle.length > 5 ? `<label class="feld" style="margin-top:12px"><input id="prSuche" placeholder="🔍 Protokoll suchen …" oninput="protokollFilter()"></label>` : "";
-    $("protokollListe").innerHTML = auf + neu + `<div class="abschnitt"><h3>📄 Protokolle</h3></div>` + suche
+    // KC-CLUB-ANORDNUNG (18.11.2026): Zwischenüberschrift nur, wenn oben Aufgaben/„Protokoll schreiben“ stehen – sonst stand „📄 Protokolle“ doppelt (Kopf + direkt darunter)
+    $("protokollListe").innerHTML = auf + neu + (auf || neu ? `<div class="abschnitt"><h3>📄 Protokolle</h3></div>` : "") + suche
       + (protokolle.length ? prGruppenHtml(protokolle) : "") + (protokolle.length ? "" : '<div class="karte hinweis">Noch keine Protokolle. Nach der nächsten Sitzung erscheint sie oben unter „Protokoll schreiben“.</div>');
     prAnsichtKnopf();
     klappenMerken($("protokollListe")); // 1.46.0: Klappbereiche mit Pfeil und Schloss wie überall
