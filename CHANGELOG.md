@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.979.0 – 2026-11-18 – 🟢 Wege der Mitglieder: grüne LED, solange sie/er noch in der App ist (KC-CLUB-SPUR-ONLINE) · Server 2.979.0
+Wunsch Hansi 18.11.: „Wenn ich in der Liste Wege der Mitglieder bin, wo alles aufgelistet ist, was sie angesehen haben, oben noch die grüne LED anzeigen, dass sie noch online sind.“
+- In den Wegen eines Mitglieds (👥 Nutzung → 👣 Wege der Mitglieder → Name) steht oben eine **grüne, leuchtende LED „gerade in der App“**, solange es noch da ist
+  (letzte 3 Minuten, auch mit Online-Anzeige aus – dann mit 🙈). Ist es weg: graue LED „nicht mehr in der App · zuletzt hh:mm Uhr“. Aktualisiert sich mit den Wegen
+  alle 20 Sekunden. Nur für heute, nur für den Admin (wie die Wege).
+- Server: `spur_liste` für eine Person liefert dazu `online` (nur ja/nein + verborgen, gleiche Regel wie die Übersicht KC-CLUB-SPUR-ALLE-DA; keine Inhalte).
+- Test: `tests/spur-online.test.mjs`. Rückweg: App/Server 2.978.0/2.977.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.978.0 – 2026-11-18 – 📐 Anordnung der Knöpfe (KC-CLUB-ANORDNUNG) · nur App (Server unverändert)
 Wunsch Hansi 18.11.: nach dem Vorbild Bachkreis erst prüfen, dann „Ja bauen, aber vorsichtig“. Gemessen: 84 Seiten/Fenster in 6 Rollen (Admin, Vorstand, Mitglied,
 Aushilfe, Gast, einfache Ansicht) auf Handy 360 px und Tablet 820 px – 4.877 Knöpfe. Nichts war zu breit; gezielt verbessert:
