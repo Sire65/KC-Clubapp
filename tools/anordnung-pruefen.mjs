@@ -1,6 +1,6 @@
 // KC-CLUB-ANORDNUNG (Wunsch Hansi 18.11.2026, nach dem Vorbild Bachkreis): misst die Anordnung der Knöpfe auf allen Seiten und Kachel-Fenstern
 // in 6 Rollen (Admin, Vorstand, Mitglied, Aushilfe, Gast, einfache Ansicht) auf Handy- (360 px) und Tablet-Breite (820 px):
-// Seite zu breit · über den Rand · abgeschnittene Titel/Texte · Reihen, die rechts unsichtbar weiterlaufen · unruhige Knopfreihen · Knöpfe unter 32/40 px · schwebende Knöpfe.
+// Seite zu breit · über den Rand · abgeschnittene Titel/Texte · Reihen, die rechts unsichtbar weiterlaufen · unruhige Knopfreihen (ein schmaler Knopf allein in einer Zeile) · Knöpfe unter 32/40 px · schwebende Knöpfe.
 // Nur Testdaten, abgeschirmt (KC-TESTS-OHNE-ECHTSERVER): seite.route("**/*") + Netzsperre – nie der echte Club-Server. Prüft, baut nichts.
 // Aufruf: node tools/anordnung-pruefen.mjs [ausgabe.json] [bilder-ordner]   (Umgebung: NUR=admin,mitglied  GERAET=Handy|Tablet) – dauert ca. 20 Min.
 // Grenzen: leere Testdaten (volle Listen nicht gemessen); Kacheln, die ohne echte Daten nichts öffnen, werden übersprungen.
@@ -77,8 +77,12 @@ function messen() {
   const behaelter = new Set(knoepfe.map((b) => b.parentElement));
   out.unruhig = [...behaelter].filter((p) => { const s = getComputedStyle(p); if (!/flex/.test(s.display) || s.flexWrap !== "wrap") return false;
     const k = [...p.children].filter((c) => sichtbar(c) && c.matches("button, .knopf, a.knopf") && !c.matches(".zurueck")); // der schmale Zurück-Pfeil zählt nicht if (k.length < 3) return false;
-    const tops = new Set(k.map((c) => Math.round(c.getBoundingClientRect().top))), ws = k.map((c) => c.getBoundingClientRect().width);
-    return tops.size >= 2 && Math.min(...ws) / Math.max(...ws) < 0.5; }).map((p) => ({ id: p.id || String(p.className).slice(0, 30), knoepfe: [...p.children].filter((c) => c.matches("button, .knopf")).length, beispiel: kurz(p).slice(0, 40) })).slice(0, 6);
+    if (/filter|chips/.test(p.className)) return false; // Filter dürfen umbrechen (wie bei Bachkreis)
+    // unruhig = mehrere Zeilen mit Knöpfen, und ein schmaler Knopf (unter halber Breite) hängt allein in einer Zeile
+    const zeilen = []; for (const c of k) { const r = c.getBoundingClientRect(), z = zeilen.find((x) => r.top < x.unten - 6 && r.bottom > x.oben + 6); // gleiche Zeile = überlappen senkrecht
+      if (z) { z.k.push(c); z.oben = Math.min(z.oben, r.top); z.unten = Math.max(z.unten, r.bottom); } else zeilen.push({ oben: r.top, unten: r.bottom, k: [c] }); }
+    const breite = p.getBoundingClientRect().width;
+    return zeilen.length >= 2 && zeilen.some((z) => z.k.length === 1 && z.k[0].getBoundingClientRect().width < breite / 2); }).map((p) => ({ id: p.id || String(p.className).slice(0, 30), knoepfe: [...p.children].filter((c) => c.matches("button, .knopf")).length, beispiel: kurz(p).slice(0, 40) })).slice(0, 6);
   // 6. schwebende Knöpfe (fest am Rand)
   out.schwebend = [...document.querySelectorAll("body *")].filter((el) => { const s = getComputedStyle(el); return s.position === "fixed" && sichtbar(el) && el.matches("button, a, .knopf, [role=button]"); })
     .map((el) => { const r = el.getBoundingClientRect(); return { t: kurz(el) || el.id, w: Math.round(r.width), h: Math.round(r.height), x: Math.round(r.left), y: Math.round(r.top), deckkraft: +getComputedStyle(el).opacity }; });

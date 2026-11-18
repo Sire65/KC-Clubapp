@@ -24,6 +24,7 @@ assert.ok(!/(su-klein|hz-frage|hz-klick)[^{]*\{[^}]*(right|left|bottom|top|width
 assert.ok(/body:not\(\.knoepfe-weg\) :is\(\.su-klein, \.hz-frage, \.hz-klick\) \{ opacity: \.72; \}/.test(css) && /body\.klick-zeigen:not\(\.knoepfe-weg\) \.hz-klick \{ opacity: 1; \}/.test(css), "halb durchsichtig, Wegscrollen bleibt");
 // 2. Runde: Reihen füllen die Zeile am Handy, Texte nicht abgeschnitten, Protokolle-Titel nicht doppelt
 assert.ok(/\.rgl-fuss, #v-archiv \.ar-zeile > \.knoepfe, #scBlatt \.karte > \.knoepfe \{ display: flex; flex-wrap: wrap; gap: 8px; \}/.test(css) && /> \.knopf \{ flex: 1 1 auto; margin: 0; \}/.test(css) && /\.rgl-fuss \.knopf\.haupt \{ flex-basis: 100%; \}/.test(css), "Zeilen ganz gefüllt");
+assert.ok(/\.blatt \.knoepfe > \.knopf:not\(\.klein\) \{ flex: 1 1 auto; \}/.test(css) && /body:is\(\.ist-admin, \.sos-frei\) #v-nachrichten \.kopf2 > h2 \{ flex: 1 0 calc\(100% - 104px\); \}/.test(css), "Fenster-Knopfreihen füllen die Zeile; SOS + Neu zusammen");
 assert.ok(!/hyphens: auto/.test(css.slice(css.indexOf("/* 6."), css.indexOf("/* 7."))), "in den Reihen keine Worttrennung");
 assert.ok(/@media \(max-width: 420px\) \{ #v-start \.marke-klein \{ white-space: normal; \} \}/.test(css) && /\.zk-naechst \{ white-space: normal;/.test(css), "Texte umbrechen statt …");
 const app = fs.readFileSync(new URL("../app.js", import.meta.url), "utf8");
