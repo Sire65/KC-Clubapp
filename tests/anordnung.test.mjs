@@ -18,8 +18,16 @@ assert.ok(/\.nu-entdecken \{ min-height: 36px;/.test(css) && /\.tw-nicht \{ min-
 assert.ok(/html\.kom-sym \.kom-leiste \{ display: grid; grid-template-columns: repeat\(auto-fill, minmax\(76px, 1fr\)\); \}/.test(css) && /max-width: none; min-width: 0;/.test(css), "gleich breite Spalten");
 // 5. Status-Knopf trennt mit Strich
 assert.ok(/#statusChip \{ hyphens: auto;/.test(css) && /<html lang="de">/.test(html), "Silbentrennung (deutsch)");
-// vorsichtig: 👆 ? 🔍 bleiben, wo Hansi sie hingestellt hat (2.380.0, 2.725.0) – der Block fasst sie nicht an
-assert.ok(!/su-klein|hz-frage|hz-klick/.test(css.replace(/\/\*[\s\S]*?\*\//g, "")), "schwebende Knöpfe unverändert");
+// 👆 ? 🔍 bleiben, wo Hansi sie hingestellt hat (2.380.0, 2.725.0): keine neue Lage oder Größe – nur halb durchsichtig in Ruhe, beim Wegscrollen weiter ganz weg
+const ohneKomm = css.replace(/\/\*[\s\S]*?\*\//g, "");
+assert.ok(!/(su-klein|hz-frage|hz-klick)[^{]*\{[^}]*(right|left|bottom|top|width|height):/.test(ohneKomm), "schwebende Knöpfe: Lage und Größe unverändert");
+assert.ok(/body:not\(\.knoepfe-weg\) :is\(\.su-klein, \.hz-frage, \.hz-klick\) \{ opacity: \.72; \}/.test(css) && /body\.klick-zeigen:not\(\.knoepfe-weg\) \.hz-klick \{ opacity: 1; \}/.test(css), "halb durchsichtig, Wegscrollen bleibt");
+// 2. Runde: Reihen füllen die Zeile am Handy, Texte nicht abgeschnitten, Protokolle-Titel nicht doppelt
+assert.ok(/\.rgl-fuss, #v-archiv \.ar-zeile > \.knoepfe, #scBlatt \.karte > \.knoepfe \{ display: flex; flex-wrap: wrap; gap: 8px; \}/.test(css) && /> \.knopf \{ flex: 1 1 auto; margin: 0; \}/.test(css) && /\.rgl-fuss \.knopf\.haupt \{ flex-basis: 100%; \}/.test(css), "Zeilen ganz gefüllt");
+assert.ok(!/hyphens: auto/.test(css.slice(css.indexOf("/* 6."), css.indexOf("/* 7."))), "in den Reihen keine Worttrennung");
+assert.ok(/@media \(max-width: 420px\) \{ #v-start \.marke-klein \{ white-space: normal; \} \}/.test(css) && /\.zk-naechst \{ white-space: normal;/.test(css), "Texte umbrechen statt …");
+const app = fs.readFileSync(new URL("../app.js", import.meta.url), "utf8");
+assert.ok(/\+ \(auf \|\| neu \? `<div class="abschnitt"><h3>📄 Protokolle<\/h3><\/div>` : ""\)/.test(app), "Protokolle-Zwischenüberschrift nur mit Abschnitten darüber");
 // Messwerkzeug liegt in der App
 const w = fs.readFileSync(new URL("../tools/anordnung-pruefen.mjs", import.meta.url), "utf8");
 assert.ok(/const ROLLEN = \{/.test(w) && /admin:/.test(w) && /aushilfe:/.test(w) && /gast:/.test(w) && /einfach:/.test(w) && /\{ name: "Handy", w: 360/.test(w) && /\{ name: "Tablet", w: 820/.test(w), "6 Rollen, Handy und Tablet");

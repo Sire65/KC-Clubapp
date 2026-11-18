@@ -9,8 +9,14 @@ Aushilfe, Gast, einfache Ansicht) auf Handy 360 px und Tablet 820 px – 4.877 K
 - **Größere Knöpfe:** „Noch zu entdecken“ (So nutzen wir die App) und „Lieber ein Mitglied fragen“/Schulung mindestens 36 px statt 24–26 px.
 - **Nachrichten-Leiste** (Symbole): alle Knöpfe gleich breit in Spalten statt 5 schmale + 2 sehr breite.
 - **Status am Start:** „verfügbar“ trennt mit Strich („verfüg-bar“) statt mitten im Wort.
-- Bewusst **nicht** geändert: 👆 ? 🔍 bleiben, wo sie seit 2.380.0/2.725.0 stehen (gleiten beim Lesen weg); die kleinen Zeichen der Statusleiste am Start haben
-  schon eine größere unsichtbare Tippfläche (KC-CLUB-TIPPFLAECHEN-2).
+- **2. Runde** (Hansi: „Dann baue alles sorgfältig um“):
+  - Knopfreihen am Handy füllen jede Zeile ganz aus, statt dass ein Knopf allein am Rand hängt: Erklär-Videos (Fuß), Archiv (Ordner/Inhaltsverzeichnis/Papierkorb),
+    Schulungen – ohne Worttrennung.
+  - Protokolle: „📄 Protokolle“ steht nicht mehr doppelt (Zwischenüberschrift nur, wenn darüber Aufgaben oder „Protokoll schreiben“ stehen).
+  - „KÖCHECLUB WERNE“ am Start bricht am Handy um statt „KÖCHECLUB …“; „Tippen: 🟢 Online (0)“ auf den Umschaltern darf zwei Zeilen haben.
+  - 👆 ? 🔍 bleiben an ihrem Platz (2.380.0) und gleiten beim Lesen weg (2.725.0) – im Ruhezustand jetzt halb durchsichtig, beim Antippen voll.
+- Bewusst nicht geändert: die kleinen Zeichen der Statusleiste am Start (Sprache, Verbindung, Version) – sie haben schon eine größere unsichtbare
+  Tippfläche (KC-CLUB-TIPPFLAECHEN-2); die Kurzzeile im Termin-Laufband am Start bleibt einzeilig (Laufband).
 - Messwerkzeug: `node tools/anordnung-pruefen.mjs` (abgeschirmt, nur Testdaten). Nachher: 0 abgeschnittene Titel, Knöpfe unter 32 px 6 % → 4 %.
 - Test: `tests/anordnung.test.mjs`. Rückweg: App 2.975.0.
 - Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
