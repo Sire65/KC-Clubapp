@@ -208,6 +208,7 @@ jobs:
       - run: node tests/genesungskarte.test.mjs
       - run: node tests/chat-vorhanden.test.mjs
       - run: node tests/tippspiel.test.mjs
+      - run: node tests/start-warum.test.mjs
       - run: node tests/teilen-eigen.test.mjs
       - run: node tests/clubabend-anwesend.test.mjs
       - run: node tests/sitzung-schritte.test.mjs
@@ -258,6 +259,10 @@ jobs:
       - run: node tests/backup-verify-teile.test.mjs
       - run: node tests/rose.test.mjs
       - run: node tests/halloween-fuer-alle.test.mjs
+      # 2.977.0 Egress-Sparprogramm (KC-CLUB-ANHANG-MERKEN, KC-CLUB-UNTERHALTUNGEN-TEILEN)
+      - run: node tests/egress-sparen.test.mjs
+      # 2.977.0 KC-CLUB-GK-NACHFRAGE + KC-CLUB-GK-GESICHTER
+      - run: node tests/gk-nachfrage.test.mjs
   # 2.725.0 KC-CLUB-RUNDGANG: Klick-Rundgang im echten Browser (Testdaten, nichts nach draußen) – Programmfehler und Schutzschild-Sperren werden rot
   rundgang:
     runs-on: ubuntu-latest

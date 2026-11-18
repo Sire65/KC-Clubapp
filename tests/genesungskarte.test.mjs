@@ -24,7 +24,7 @@ assert.ok(/ICH\?\.admin \|\| ICH\?\.vorstand \? `<button type="button" class="kn
 assert.ok(/h\.startsWith\("#gk="\)\) gkGemeinsamOeffnen\(/.test(app), "Push öffnet die Karte zum Unterschreiben");
 const fall = srv.slice(srv.indexOf('case "gk_gemeinsam_start"'), srv.indexOf('case "fl_informieren"'));
 assert.ok(/if \(!leitung\) throw new Fehler\(/.test(fall), "Starten nur Clubleitung (Server)");
-assert.ok(/\.filter\(\(id\) => id !== ich\.person_id && id !== fuer\)/.test(fall) && /\["push"\]/.test(fall), "Push an alle außer der beschenkten Person");
+assert.ok(/\.filter\(\(id\) => id !== ich\.person_id && id !== fuer\)/.test(fall) && /\["push", "email"\]/.test(fall), "Push und E-Mail an alle außer der beschenkten Person (2.977.0 KC-CLUB-GK-NACHFRAGE)");
 assert.ok(/\.neq\("fuer_person_id", ich\.person_id\)/.test(fall) && /k\.fuer_person_id === ich\.person_id\) throw/.test(fall), "die beschenkte Person sieht nichts");
 assert.ok(/k\.gestartet_von !== ich\.person_id && !ich\.admin/.test(fall), "verschicken: Starter oder Admin");
 assert.ok(/enable row level security/.test(mig) && /revoke all on public\.kc_club_gk_gemeinsam from public, anon, authenticated/.test(mig) && /kc_neon_resume_tables/.test(mig) && /where status = 'offen'/.test(mig), "Tabellen geschützt, gespiegelt, eine offene Karte je Person");

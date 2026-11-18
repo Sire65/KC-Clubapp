@@ -16,8 +16,9 @@ const a = app.indexOf("function schwerLage(z = INIT?.schwerZeiten"), b = app.ind
 const code = app.slice(a, app.indexOf("\n", b));
 const { schwerLage, schwerOder } = new Function("INIT", code + "\nreturn { schwerLage, schwerOder };")({ schwerZeiten: SCHWER_ZEITEN });
 const t = (hh, mm, ss = 0) => new Date(Date.UTC(2026, 10, 2, hh, mm, ss));
-assert.deepEqual(schwerLage(SCHWER_ZEITEN, t(12, 24, 30)), { was: "das Notfall-Paket gebaut", rest: 2 });
-assert.equal(schwerLage(SCHWER_ZEITEN, t(12, 26)), null, "nach dem Paket wieder normal");
+assert.deepEqual(schwerLage(SCHWER_ZEITEN, t(12, 9, 30)), { was: "das Notfall-Paket gebaut", rest: 2 }); // seit 2.977.0 stündlich um :09 (Egress-Sparprogramm)
+assert.equal(schwerLage(SCHWER_ZEITEN, t(12, 11)), null, "nach dem Paket wieder normal");
+assert.equal(schwerLage(SCHWER_ZEITEN, t(12, 24, 30)), null, "um :24 läuft kein Paket mehr");
 assert.equal(schwerLage(SCHWER_ZEITEN, t(13, 20)).rest, 25, "Spiegelung bis :45 (KC-SPIEGEL-SCHONEND)");
 assert.equal(schwerLage(SCHWER_ZEITEN, t(16, 20)), null, "16 UTC keine Spiegelung mehr");
 assert.equal(schwerLage(SCHWER_ZEITEN, t(1, 59, 30)).rest, 1, "nie 0 Minuten");
