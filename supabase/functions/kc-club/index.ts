@@ -8381,6 +8381,9 @@ const WAECHTER: { id: string; sym: string; name: string; job?: string; gh?: stri
   { id: "last", sym: "🚦", name: "Last-Wächter", job: "kc-traffic-guard-15m", befund: (d) => { const x = d.last; return !x || x.stufe === "normal" ? null : [x.stufe === "critical" ? "rot" : "gelb", x.stufe === "critical" ? "sehr hohe Last" : "erhöhte Last", x.ursache || ""]; } },
   { id: "betriebw", sym: "👁️", name: "Betriebs-Wächter", job: "kc-live-operations-watch-minute" },
   { id: "systemcheck", sym: "🚨", name: "System-Check", job: "kc-system-check-auto-15m" },
+  // KC-PRUEFREGISTER-ABGLEICH (18.11.2026, Wunsch Hansi „täglicher Abgleich, aber sparsam“): 1× am Tag, rot mit Funktion + Migration, wenn eine
+  // SECURITY-DEFINER-Funktion ohne Eintrag im Prüfregister angelegt wurde (Text kommt aus dem fehlgeschlagenen Lauf).
+  { id: "pruefregister", sym: "📋", name: "Prüfregister-Abgleich", job: "kc-pruefregister-abgleich" },
   // 2.862.0 KC-CLUB-NOTPAKET-ABBRUCH: Notfall-Paket (Kopie für den Ersatz-Server). Gelb erst, wenn auch der Neuversuch nach der Fehlerpause fehlt
   // (Fehler ≥ 45 Min. alt und kein neueres Paket) – ein einzelner Abbruch mit gelungenem Neuversuch steht nur im Protokoll und hier als Hinweis.
   { id: "notpaket", sym: "🧯", name: "Notfall-Paket", app: (d) => notpaketBefund(d.notpaket) },

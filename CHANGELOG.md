@@ -1,5 +1,11 @@
 # Änderungen
 
+## Prüfregister-Abgleich – 2026-11-18 (KC-PRUEFREGISTER-ABGLEICH) · nur Datenbank + Wächter im Server, App unverändert
+Wunsch Hansi 18.11.: „täglichen Abgleich einbauen, aber aufpassen mit Abfragen an die Datenbank – sparsam sein wegen Limit“. Anlass: Stand-Brücke (16.11.) und Stempel-Kasse (18.11.) wurden ohne Eintrag im Prüfregister angelegt.
+- Zeitplan `kc-pruefregister-abgleich` 1× täglich 06:20 UTC (07:20 Uhr): eine Katalog-Abfrage in der Datenbank, kein Netz; alles in Ordnung → nichts wird geschrieben.
+- Fehlt ein Eintrag: Protokollzeile `pruefregister_luecke` und der Lauf endet mit Fehler – der Text nennt Funktion und Migration (letzte 14 Tage). Neuer Wächter „📋 Prüfregister-Abgleich“ zeigt das rot und meldet es wie jeder Wächter.
+- Migration `20261118_kc_pruefregister_abgleich.sql`, Test `tests/pruefregister-abgleich.test.mjs`.
+
 ## 2.976.0 – 2026-11-18 – ⏳ Beim Start sagen, warum es dauert – und wie lange noch (KC-CLUB-START-WARUM)
 Wunsch Hansi 18.11.: „Wichtig ist, dass der User eine Meldung bekommt, warum es gerade dauert, z. B. Notfall-Paket wird gerade gebaut, dauert noch ca. 3 Minuten, Spiegelung läuft noch ca. 4 Min. usw.“
 - Anlass: Am 17.11. hing zwischen 14:27 und 14:33 Uhr bei 7 Starts die Anmeldung über 12 s – genau während der Spiegelung. Fehlermeldungen nannten den Grund schon, **der Start aber nicht**: die Zeiten kamen erst mit der Anmeldung, und die hing ja gerade.

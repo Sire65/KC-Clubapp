@@ -7772,7 +7772,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.match(server, /if \(f === "grau"\) \{ if \(a\) neu\[w\.id\] = a; continue; \}/, "unbekannt meldet nichts");
   assert.match(server, /routerSenden\("club_fehler", an, \{ titel,/, "Push + Mail an die Admins");
   assert.match(server, /abschnitte\.splice\(3, 0, \["🛡️ Wächter"/, "Wächter im Wochenbericht");
-  assert.equal((server.match(/^  \{ id: "[a-z]+", sym: "[^"]+", name: "[^"]+", (job|gh|app)/gm) || []).length, 24, "24 Wächter auf dem Server (🐌 und 💤 nur im Gerät; 2.862.0: + 🧯 Notfall-Paket; 2.868.0: + 📞 Telefon-Umleitung)");
+  assert.equal((server.match(/^  \{ id: "[a-z]+", sym: "[^"]+", name: "[^"]+", (job|gh|app)/gm) || []).length, 25, "25 Wächter auf dem Server (🐌 und 💤 nur im Gerät; 2.862.0: + 🧯 Notfall-Paket; 2.868.0: + 📞 Telefon-Umleitung; 18.11.: + 📋 Prüfregister-Abgleich)");
   // 2.726.0 KC-CLUB-SICHERHEIT-WAECHTER
   assert.match(server, /siZaehlen\(a, ich\); \/\/ 2\.726\.0/, "jede Aktion wird gezählt");
   assert.match(server, /default: siUnbekannt\(a, ich\); return json/, "unbekannte Befehle fallen auf");
