@@ -23,7 +23,7 @@ Aushilfe, Gast, einfache Ansicht) auf Handy 360 px und Tablet 820 px – 4.877 K
 - Test: `tests/anordnung.test.mjs`. Rückweg: App 2.977.0.
 - Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
 
-- Nachtrag 18.11. (Hansi: „ja setzen und aktualisieren“): Mindestversion in `version.json` von 2.500.0 auf **2.977.0** – jede ältere App aktualisiert sich beim nächsten Öffnen von selbst (nicht mitten im Tippen/Anruf, KC-CLUB-MINDESTVERSION), damit alle die Nachfrage zur gemeinsamen Genesungskarte bekommen.
+- Nachtrag 18.11. (Hansi: „ja setzen und aktualisieren“): Mindestversion in `version.json` von 2.500.0 auf **2.977.0** – jede ältere App aktualisiert sich beim nächsten Öffnen von selbst (nicht mitten im Tippen/Anruf, KC-CLUB-MINDESTVERSION), damit alle die Nachfrage zur gemeinsamen Genesungskarte bekommen. Dazu Server 2.978.0: `MINDEST_APP_VERSION` ebenfalls 2.977.0 (ältere Apps bekommen beim Start die Bitte zum Aktualisieren; Admin ausgenommen).
 
 ## 2.977.0 – 2026-11-18 – 20-Uhr-Bündel: 📉 Weniger Datenverkehr (KC-CLUB-ANHANG-MERKEN, KC-CLUB-UNTERHALTUNGEN-TEILEN) · 💐 Gemeinsame Genesungskarte mit Nachfrage und Gesichtern (KC-CLUB-GK-NACHFRAGE, KC-CLUB-GK-GESICHTER) · Server 2.977.0
 
