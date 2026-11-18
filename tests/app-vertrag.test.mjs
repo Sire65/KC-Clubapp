@@ -975,7 +975,9 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/api\("wetter", \{\}, \{ warten: !!sichtbar \}\)/.test(html) && /wetterLaden\(erzwingen\)/.test(html), "Wetter ohne Kochmütze");
   assert.ok(/infoDatenLaden\(f, erzwingen\)/.test(html) && /const warte = sichtbar && wartenStart\(f\.id, true\)/.test(html) && /finally \{ if \(warte\) wartenEnde\(\); \}/.test(html), "Info-Karten ohne Kochmütze");
   assert.ok(/infoDatenLaden\(INFO_FELDER\[INFO_I\], true\)/.test(html), "Admin „Neu prüfen“ ohne Kochmütze");
-  for (const a of ["pinnwand", "unterhaltungen", "kalender"]) assert.ok(new RegExp(`api\\("${a}"[^)]*\\{ warten: true \\}\\)`).test(html), `${a}: Öffnen ohne Kochmütze`);
+  for (const a of ["pinnwand", "kalender"]) assert.ok(new RegExp(`api\\("${a}"[^)]*\\{ warten: true \\}\\)`).test(html), `${a}: Öffnen ohne Kochmütze`);
+  // 2.977.0 KC-CLUB-UNTERHALTUNGEN-TEILEN: die Chat-Übersicht läuft über den gemeinsamen Abruf – er reicht „warten“ unverändert an api() durch
+  assert.ok(/function unterhaltungenHolen\(frisch = false, opt = \{\}\) \{[^]{0,300}api\("unterhaltungen", \{\}, opt\)/.test(html) && /unterhaltungenHolen\(true, \{ warten: true \}\)/.test(html), "unterhaltungen: gemeinsamer Abruf reicht warten durch");
   // Hintergrund-Takt bleibt still: online-Ping ohne warten
   assert.ok(/const r = await api\("online"\);/.test(html), "Online-Takt zeigt Kochmütze");
   for (const k of ["init", "wetter", "admin_lage", "admin", "fotos", "demnaechst"]) assert.ok(new RegExp(`\\b${k}: "`).test(html.slice(html.indexOf("const WARTEN_TEXT"), html.indexOf("let wartenZahl"))), `Warte-Text für ${k} fehlt`);

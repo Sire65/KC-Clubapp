@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.977.0 – 2026-11-18 – 📉 Weniger Datenverkehr: Anlagen merken, Chat-Übersicht teilen (KC-CLUB-ANHANG-MERKEN, KC-CLUB-UNTERHALTUNGEN-TEILEN)
+Hansi 18.11.: „Wir müssen den Verbraucher identifizieren und drosseln. Das Kontingent muss unbedingt reichen – auch nächsten Monat beim Echtbetrieb Weihnachtsmarkt.“ – „Paket 1 und 2 … dann testen und prüfen.“
+- Anlass: Supabase-Ausgang (Egress) 4,00 von 5 GB am 17.11. (Zeitraum bis 26.11.), Schonfrist abgelaufen. Messung 17.11.: Speicher-Downloads ~39 MB/Tag, Chat-Übersicht ~66 KB je Abruf.
+- **Anlagen und Fotos merken (KC-CLUB-ANHANG-MERKEN, sw.js):** signierte Speicher-Adressen bekamen je Ansicht einen neuen token – kein Zwischenspeicher griff, jedes Öffnen lud neu. Jetzt merkt der Service Worker jede Datei nach ihrem Pfad (ohne token; Pfade enthalten eine Zufallskennung und ändern sich nie) im eigenen Speicher `kcclub-anhaenge` (höchstens 300 Dateien, je höchstens 8 MB, älteste zuerst weg; ein Update löscht ihn nicht). Nicht gemerkt: „Herunterladen“ (?download=) und Teilabrufe (Videos). Fehler → wie bisher direkt aus dem Netz. „Von diesem Gerät abmelden“ und eine Sperre löschen den Speicher mit.
+- **Chat-Übersicht teilen (KC-CLUB-UNTERHALTUNGEN-TEILEN, app.js):** ein gemeinsamer Abruf statt vieler einzelner. Nebenstellen (Kachel „Kommunikationszentrale“, Gruppenlisten, Weiterleiten, Tipp-Hinweis, Büro …) nehmen 60 s lang den letzten Stand; die Chat-Übersicht selbst und das Vorlesen ungelesener Nachrichten holen immer frisch. Kachel „Kommunikationszentrale“ alle 5 statt jede Minute. Gleichzeitige Abrufe werden zusammengelegt.
+- Dazu (ohne App-Version, im Zeitplaner, Protokoll `kc_db_mirror_audit`): Notfall-Paket stündlich statt alle 15 Min. (17.11.), Betriebs-Wächter alle 15 statt 5 Min. (18.11.), Neon-Spiegel bis 26.11. 1× täglich (automatische Rückstellung). `docs/NOTBETRIEB.md` angepasst.
+- Test: neu `tests/egress-sparen.test.mjs`. Rückweg: App 2.976.0 (der Speicher `kcclub-anhaenge` stört eine ältere Version nicht). Nur die App.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.976.0 – 2026-11-18 – ⏳ Beim Start sagen, warum es dauert – und wie lange noch (KC-CLUB-START-WARUM)
 Wunsch Hansi 18.11.: „Wichtig ist, dass der User eine Meldung bekommt, warum es gerade dauert, z. B. Notfall-Paket wird gerade gebaut, dauert noch ca. 3 Minuten, Spiegelung läuft noch ca. 4 Min. usw.“
 - Anlass: Am 17.11. hing zwischen 14:27 und 14:33 Uhr bei 7 Starts die Anmeldung über 12 s – genau während der Spiegelung. Fehlermeldungen nannten den Grund schon, **der Start aber nicht**: die Zeiten kamen erst mit der Anmeldung, und die hing ja gerade.
