@@ -1,6 +1,6 @@
 // KC Club-App – Service Worker: Seite zuerst aus dem Netz (offline aus dem Speicher), Push-Benachrichtigungen, Update.
 // VERSION muss bei jeder neuen Version mit version.json, APP_VERSION in app.js und app.js?v= in index.html übereinstimmen.
-const VERSION = "2.976.0";
+const VERSION = "2.977.0";
 const CACHE = "kc-club-" + VERSION;
 const DATEIEN = ["./", "index.html", "app.js?v=" + VERSION, "manifest.webmanifest", "magazin/premium.css", "kc-kochmuetze-weiss.webp", "icon-192.png", "icon-512.png", "badge-anruf.png", "badge-video.png", "badge-muetze.png", "kuckuck-ruf.mp3"]; // 2.406.0: Kuckucksruf (CC0-Aufnahme) // 2.237.0: Statusleisten-Symbole für laufende Gespräche
 // KC-CLUB-SCHNELLSTART-DATEI (2.24.8): das Programm app.js?v=<Version> ändert sich nie unter derselben Adresse → aus dem Speicher
@@ -62,8 +62,35 @@ async function geteiltAnnehmen(req) {
   await c.put("geteilt/info", new Response(JSON.stringify({ sw: VERSION, felder, anzahl: dateien.length, groesse: Number(req.headers.get("content-length")) || null, ...(fehler.length ? { fehler: fehler.join(" | ") } : {}), text: String(f.get("text") || "").slice(0, 4000), titel: String(f.get("titel") || "").slice(0, 200), url: String(f.get("url") || "").slice(0, 500), zeit: Date.now() })));
   return Response.redirect("./#geteilt", 303);
 }
+// KC-CLUB-ANHANG-MERKEN-START (2.977.0, Egress-Sparprogramm 18.11.2026, Freigabe Hansi „Paket 1 und 2“):
+// Anlagen und Fotos (Supabase-Speicher) kommen über signierte Adressen …/storage/v1/object/sign/<Bucket>/<Pfad>?token=… Der Server
+// erzeugt je Ansicht einen NEUEN token – darum griff kein Zwischenspeicher, jedes Öffnen lud die Datei neu (17.11.: ~39 MB/Tag).
+// Jeder Pfad enthält eine Zufallskennung und wird nie überschrieben → gleicher Pfad = gleicher Inhalt. Darum hier nach Pfad OHNE token merken.
+// Nur Speicher-Downloads per GET, nicht „Herunterladen“ (?download=), nicht Teilabrufe (Range: Videos), höchstens ANHANG_MAX_BYTES je Datei,
+// höchstens ANHANG_MAX_ANZAHL Dateien (älteste zuerst weg). Eigener Speicher „kcclub-anhaenge“ (nicht „kc-club-…“: ein Update löscht ihn nicht).
+// Der Zugriff bleibt geschützt: ohne gültigen token liefert der Server nichts; gemerkt wird nur, was dieses Gerät gerade rechtmäßig geladen hat.
+// Jeder Fehler → wie bisher direkt aus dem Netz (nie schlechter als vorher).
+const ANHANG = "kcclub-anhaenge", ANHANG_MAX_ANZAHL = 300, ANHANG_MAX_BYTES = 8 * 1024 * 1024;
+const anhangPfad = (url) => /^[a-z0-9-]+\.supabase\.co$/.test(url.hostname) && url.pathname.startsWith("/storage/v1/object/sign/") && url.searchParams.has("token") && !url.searchParams.has("download");
+const anhangSchluessel = (url) => url.origin + url.pathname;
+async function anhangKuerzen(c) {
+  const k = await c.keys();
+  for (let i = 0; i < k.length - ANHANG_MAX_ANZAHL; i++) await c.delete(k[i]);
+}
+async function anhangHolen(req, url) {
+  let c = null;
+  try { c = await caches.open(ANHANG); const da = await c.match(anhangSchluessel(url)); if (da) return da; } catch {}
+  let r;
+  try { r = await fetch(url.href, { mode: "cors", credentials: "omit" }); } catch { return fetch(req); }
+  const groesse = Number(r.headers.get("content-length")) || 0;
+  if (c && r.status === 200 && groesse > 0 && groesse <= ANHANG_MAX_BYTES)
+    try { await c.put(anhangSchluessel(url), r.clone()); await anhangKuerzen(c); } catch {}
+  return r;
+}
+// KC-CLUB-ANHANG-MERKEN-ENDE
 self.addEventListener("fetch", (e) => {
   const url = new URL(e.request.url);
+  if (e.request.method === "GET" && anhangPfad(url) && !e.request.headers.has("range")) { e.respondWith(anhangHolen(e.request, url)); return; } // KC-CLUB-ANHANG-MERKEN
   if (e.request.method === "POST" && url.origin === location.origin && url.pathname.endsWith("/teilen")) { e.respondWith(geteiltAnnehmen(e.request).catch(async (x) => { await geteiltInfo(await caches.open(GETEILT), { anzahl: 0, fehler: "abbruch:" + (x?.name || "Fehler") + ":" + String(x?.message || "").slice(0, 120) }); return Response.redirect("./#geteilt", 303); })); return; }
   if (e.request.method !== "GET" || url.origin !== location.origin || url.pathname.endsWith("version.json")) return;
   if (url.pathname.includes("/eltern/")) return; // 2.431.0 KC-CLUB-ELTERN: Elternseite hat ihren eigenen Service Worker – nichts merken, nichts dazwischen

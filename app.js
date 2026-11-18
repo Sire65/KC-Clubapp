@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.976.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.977.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -2868,7 +2868,7 @@ async function sbStufe3(b) {
     await antwort(t.id, b.a); t.meine = b.a; return;
   }
   if (b.art === "lies_nachrichten") {
-    let u = []; try { u = ((await api("unterhaltungen", {})).unterhaltungen || []).filter((x) => x.ungelesen > 0 && !(typeof stummAn === "function" && stummAn(x.id))); } catch (e) { return meldeFehler(e); }
+    let u = []; try { u = ((await unterhaltungenHolen(true)).unterhaltungen || []).filter((x) => x.ungelesen > 0 && !(typeof stummAn === "function" && stummAn(x.id))); } catch (e) { return meldeFehler(e); }
     if (!u.length) return sbSagen("Du hast keine neuen Nachrichten."), melde("💬 Keine neuen Nachrichten");
     const n = u.reduce((s, x) => s + x.ungelesen, 0), wo = u.slice(0, 4).map((x) => `${x.ungelesen} ${x.gruppe?.name ? "in" : "von"} ${sbChatName(x)}`).join(", ");
     const ok = await sbFrage("💬 " + (n === 1 ? "1 neue Nachricht" : `${n} neue Nachrichten`), `${wo}. Soll ich ${u.length === 1 ? "sie" : "die erste"} vorlesen?`, "🔊 Ja, vorlesen", "Nein");
@@ -3297,7 +3297,7 @@ async function sbtNamen(alle) {
   const mg = (MITGLIEDER || []).filter((m) => m.person_id !== ICH?.person_id);
   if (alle) return mg.map(sbtName).sort((a, b) => a.localeCompare(b, "de"));
   let top = [];
-  try { const l = (await api("unterhaltungen", {}, { warten: true })).unterhaltungen || [];
+  try { const l = (await unterhaltungenHolen(false, { warten: true })).unterhaltungen || [];
     for (const u of l) if (!u.gruppe && (u.teilnehmer || []).length === 1) { const m = mg.find((x) => x.name === u.teilnehmer[0]); if (m && !top.includes(m)) top.push(m); if (top.length >= 8) break; } } catch {}
   for (const m of mg) { if (top.length >= 8) break; if (!top.includes(m)) top.push(m); } // zu wenige Chats: mit weiteren Mitgliedern auffüllen
   return top.map(sbtName);
@@ -5856,7 +5856,7 @@ function tippHinweisSignal(s) {
 }
 async function tippHinweisZeigen(thread) {
   let u = UH.liste.find((x) => x.id === thread);
-  if (!u && Date.now() - TH.listeGeholt > 300000) { TH.listeGeholt = Date.now(); try { UH.liste = (await api("unterhaltungen", {})).unterhaltungen || UH.liste; } catch {} u = UH.liste.find((x) => x.id === thread); }
+  if (!u && Date.now() - TH.listeGeholt > 300000) { TH.listeGeholt = Date.now(); try { UH.liste = (await unterhaltungenHolen()).unterhaltungen || UH.liste; } catch {} u = UH.liste.find((x) => x.id === thread); }
   if (!u || u.gruppe || (u.teilnehmer || []).length !== 1 || (thread === chatId && aktuelleAnsicht === "chat") || document.hidden) return;
   const [sym, was] = TH_TEXT[TH.art.get(thread)?.art] || TH_TEXT.tippt, name = String(u.teilnehmer[0]).split(" ")[0];
   let el = $("schreibtHinweis");
@@ -8674,7 +8674,7 @@ async function apiRoh(action, daten = {}, zweiterVersuch = false, abbruch = null
   vbEnde(!leitungKaputt, performance.now() - t0, leitungKaputt ? "Serverfehler " + r.status : "");
   if (!j && !leitungKaputt && r.ok) throw new Error("Unerwartete Antwort vom Server.");
   if (r.status === 423 && j?.einspielen) { einspielenZeigen(j.vorname, j.fertig); throw Object.assign(new Error(j.error || "Kurze Wartung – gleich wieder da."), { einspielen: true }); } // 2.736.0 KC-CLUB-EINSPIELEN-FENSTER
-  if (r.status === 423 && j?.gesperrt) { try { localStorage.removeItem(STAND_KEY); localStorage.removeItem("kc_club_chat_merk"); } catch {} /* 2.540.0 KC-CLUB-SPERRE-OFFLINE: kein alter Stand für den Offline-Start */ sperreZeigen(j.gesperrt, j.error, j.bis); throw Object.assign(new Error(j.error || "Zurzeit nicht verfügbar."), { gesperrt: true }); } // KC-CLUB-PERSON-SPERRE (2.23.77)
+  if (r.status === 423 && j?.gesperrt) { try { localStorage.removeItem(STAND_KEY); localStorage.removeItem("kc_club_chat_merk"); } catch {} try { caches.delete("kcclub-anhaenge").catch(() => {}); } catch {} /* 2.977.0 KC-CLUB-ANHANG-MERKEN: gesperrt → gemerkte Anlagen weg · 2.540.0 KC-CLUB-SPERRE-OFFLINE: kein alter Stand für den Offline-Start */ sperreZeigen(j.gesperrt, j.error, j.bis); throw Object.assign(new Error(j.error || "Zurzeit nicht verfügbar."), { gesperrt: true }); } // KC-CLUB-PERSON-SPERRE (2.23.77)
   if (r.status === 401) { $("app").classList.add("versteckt"); $("gesperrt").classList.remove("versteckt"); $("linkUngueltig").classList.remove("versteckt"); try { if (window.KCFP) window.KCFP.ohneLink = true; zugangHilfeZeigen(j?.hilfe); } catch {} throw new Error(j?.error || "Kein Zugang"); } // KC-CLUB-ZUGANG-HILFE
   if (!r.ok) throw Object.assign(new Error(j?.error || (leitungKaputt ? schwerOder("Der Server ist gerade kurz nicht erreichbar – bitte gleich nochmal versuchen.") : FEHLER_KLARTEXT[r.status] || "Fehler " + r.status)), { leitung: leitungKaputt, status: r.status, dbWeg: r.status === 503 && j?.db === "weg" }); // 2.603.0: status (Sende-Schlange erkennt 409)
   return j;
@@ -12327,7 +12327,7 @@ const INFO_ALLE = [
   { id: "fuerdich", t: "Für dich", html: () => infoFuerDich() },
   { id: "demnaechst", t: "Demnächst", html: () => infoDemnaechst(), laden: () => api("kalender", { von: heuteIso(), bis: tagPlus(heuteIso(), DEMNAECHST_TAGE) }), neuMin: 10 },
   { id: "fotos", t: "Neueste Fotos", html: () => infoFotos(), laden: () => api("fotos_neueste", { anzahl: 4 }), neuMin: 20 },
-  { id: "zentrale", t: "Kommunikationszentrale", html: () => infoZentrale(), laden: () => api("unterhaltungen"), neuMin: 1 },
+  { id: "zentrale", t: "Kommunikationszentrale", html: () => infoZentrale(), laden: () => unterhaltungenHolen(), neuMin: 5 }, // 2.977.0 KC-CLUB-UNTERHALTUNGEN-TEILEN: gemeinsamer Abruf, alle 5 statt jede Minute
   { id: "admin", t: "Admin-Zentrale", html: () => infoAdmin(), laden: () => api("admin_lage"), neuMin: 2, nur: () => !!ICH?.admin },
   // KC-CLUB-STUDIO-KARTE (2.139.0, Wunsch Hansi „das Studio so aufbauen wie die Admin-Zentrale“): eigene Karte im Kopf, nur mit Studio-Recht
   { id: "studio", t: "Studio", html: () => infoStudio(), laden: () => (ICH?.admin ? api("studio_rechte") : Promise.resolve({ liste: [] })), neuMin: 2, nur: () => !!studioStufe() },
@@ -15179,7 +15179,7 @@ async function sperreAuswahl() {
       zeichnen(); }));
   };
   schnell();
-  if (!MG_GRUPPEN.length) api("unterhaltungen", {}).then((r) => { MG_GRUPPEN = (r.unterhaltungen || []).filter((u) => u.gruppe && Array.isArray(u.personen)); schnell(); }).catch(() => {});
+  if (!MG_GRUPPEN.length) unterhaltungenHolen().then((r) => { MG_GRUPPEN = (r.unterhaltungen || []).filter((u) => u.gruppe && Array.isArray(u.personen)); schnell(); }).catch(() => {});
   $("psSuche").oninput = zeichnen;
   $("psOk").onclick = async (e) => {
     if (!gew.size) return melde("Bitte bei ③ mindestens eine Person antippen.", true);
@@ -19771,7 +19771,7 @@ function vorschlagForm(art, paket, gegen) {
 // (Fenster mit allen Mitgliedern zum Anklicken). Nur die Ausgewählten sehen die Abstimmung, stimmen ab und bekommen Bescheid.
 let VF_ZIEL = { art: "alle", gruppe: null, ids: [] };
 async function vfGruppenLaden() {
-  if (!MG_GRUPPEN.length) try { MG_GRUPPEN = ((await api("unterhaltungen", {})).unterhaltungen || []).filter((u) => u.gruppe && Array.isArray(u.personen)); } catch {}
+  if (!MG_GRUPPEN.length) try { MG_GRUPPEN = ((await unterhaltungenHolen()).unterhaltungen || []).filter((u) => u.gruppe && Array.isArray(u.personen)); } catch {}
   if (!MITGLIEDER) try { await mitgliederHolen(); } catch {}
   vfZielZeigen();
 }
@@ -20001,7 +20001,7 @@ const bnnSchluessel = (u) => u.id + "|" + u.letzte.zeit;
 function buNeuPruefen() {
   if (aktuelleAnsicht !== "buero" || BNN.lauf || !ICH) return;
   BNN.zuletzt = Date.now();
-  BNN.lauf = api("unterhaltungen").then(({ unterhaltungen }) => {
+  BNN.lauf = unterhaltungenHolen().then(({ unterhaltungen }) => {
     if (aktuelleAnsicht !== "buero") return;
     buNeuZeigen((unterhaltungen || []).filter((u) => u.ungelesen && u.letzte && u.letzte.von !== "Du" && !stummAn(u.id)
       && Date.parse(u.letzte.zeit) >= BNN.seit && !BNN.weg.has(bnnSchluessel(u))).sort((a, b) => Date.parse(b.letzte.zeit) - Date.parse(a.letzte.zeit)));
@@ -21664,7 +21664,7 @@ async function dienstFreigabe(an) {
 // ---------- Nachrichten ----------
 async function unterhLaden() {
   try {
-    const { unterhaltungen } = await api("unterhaltungen", {}, { warten: true });
+    const { unterhaltungen } = await unterhaltungenHolen(true, { warten: true });
     UH.liste = unterhaltungen; if (!unterhaltungen.some((u) => u.id === UH.wahl)) UH.wahl = null;
     // KC-CLUB-KREISE: Zustandsfarben brauchen die Mitgliederliste – einmal nachladen, dann neu zeichnen
     if (!MITGLIEDER && !UH.kreiseGeholt) { UH.kreiseGeholt = true; mitgliederHolen().then(() => { if (aktuelleAnsicht === "nachrichten") unterhLaden(); }).catch(() => {}); }
@@ -21906,6 +21906,21 @@ function uhAmeisen() {
 // „Entfernen“ blendet nur für mich aus (Server: unterhaltung_ausblenden) – schreibt jemand wieder, erscheint sie erneut.
 // Für alle löschen bleibt Admin-Sache (unterhaltung_loeschen mit Sicherung).
 const UH = { liste: [], wahl: null, letzterTipp: { id: null, t: 0 }, mark: new Set(), langGerade: false };
+// 2.977.0 KC-CLUB-UNTERHALTUNGEN-TEILEN (Egress-Sparprogramm 18.11.2026, Freigabe Hansi): die Chat-Übersicht (~66 KB je Abruf) holten viele Stellen
+// unabhängig voneinander. Jetzt EIN gemeinsamer Abruf: Nebenstellen (Kachel, Gruppenlisten, Weiterleiten, Tipp-Hinweis, Büro …) nehmen 60 s lang den
+// letzten Stand mit; die Chat-Übersicht selbst und das Vorlesen ungelesener Nachrichten holen immer frisch (und frischen dabei den gemeinsamen Stand auf).
+// Gleichzeitige Abrufe werden zu einem zusammengelegt. Jede Stelle bekommt eine eigene Kopie (keine Stelle verändert die Liste einer anderen).
+const UH_TEILEN_MS = 60000;
+const UHH = { am: 0, daten: null, laeuft: null };
+const uhKopie = (r) => JSON.parse(JSON.stringify(r)); // eigene Kopie je Stelle (ohne neuere Schreibweisen – ältere Handys)
+function unterhaltungenHolen(frisch = false, opt = {}) {
+  if (!frisch && UHH.daten && Date.now() - UHH.am < UH_TEILEN_MS) return Promise.resolve(uhKopie(UHH.daten));
+  if (!UHH.laeuft) {
+    const p = api("unterhaltungen", {}, opt).then((r) => { UHH.daten = r; UHH.am = Date.now(); return r; });
+    UHH.laeuft = p; p.finally(() => { if (UHH.laeuft === p) UHH.laeuft = null; }).catch(() => {});
+  }
+  return UHH.laeuft.then(uhKopie);
+}
 // KC-CLUB-MEHRFACH-NACHRICHT (2.57.0, Wunsch Hansi): in der Chat-Übersicht Chats lange drücken = markieren (✓);
 // „＋ Neu“ schreibt dann EINE Nachricht, die jeder markierte Chat einzeln bekommt (wie „Weiterleiten an mehrere“, kein neuer Gruppenchat).
 const UH_LANG_MS = 550;
@@ -23199,6 +23214,7 @@ async function geraetAbmelden() {
   try { Object.keys(localStorage).filter((k) => /^(kc_club_|kc_buero_|kc-clubapp\.|kcclub)/.test(k) || /^(kc_wichtig_frage|kc_versand_immer|kc-einw-zu)/.test(k)).forEach((k) => localStorage.removeItem(k)); } catch {} // KC-CLUB-RC-PRUEFUNG (20.10.2026): auch „Wichtig“-Frage und Einweisung-zu
   try { sessionStorage.clear(); } catch {}
   try { await caches.delete("kcclub-geteilt"); } catch {}
+  try { await caches.delete("kcclub-anhaenge"); } catch {} // 2.977.0 KC-CLUB-ANHANG-MERKEN: gemerkte Anlagen/Fotos dieses Geräts mit löschen
   location.replace(location.pathname);
 }
 // 2.352.0 KC-CLUB-GERAETE-ABMELDEN (Sicherheits-Abgleich): Handy verloren oder gestohlen? Dieses Gerät bekommt einen neuen Schlüssel,
@@ -23896,7 +23912,7 @@ async function weiterleitenBlatt(id) {
   if ((CHAT?.nachrichten || []).find((x) => x.id === id)?.anlagen?.some((a) => a.einmal)) return melde("👁️ Ein Einmal-Foto kann nicht weitergeleitet werden.", true); // KC-CLUB-EINMAL-FOTO
   const m = NA.nachrichten.get(id); if (!m) return;
   WL.quelle = m;
-  try { await zeMitglieder(); WL.liste = ((await api("unterhaltungen")).unterhaltungen || []).slice(0, 12); } catch (e) { return meldeFehler(e); }
+  try { await zeMitglieder(); WL.liste = ((await unterhaltungenHolen()).unterhaltungen || []).slice(0, 12); } catch (e) { return meldeFehler(e); }
   document.getElementById("wlFenster")?.remove();
   const f = document.createElement("div"); f.id = "wlFenster"; f.className = "blatt"; f.setAttribute("role", "dialog"); f.setAttribute("aria-modal", "true");
   f.innerHTML = `<div class="blatt-innen" style="max-height:88vh;overflow-y:auto">
@@ -24729,7 +24745,7 @@ async function neueNachricht(ohneEntwurf = false) {
 async function neuGruppenZeigen(ziel = "neuGruppen", frisch = false) {
   const z = $(ziel); if (!z) return;
   let liste = frisch ? [] : UH.liste;
-  if (!liste?.length) try { liste = (await api("unterhaltungen", {}, { warten: true })).unterhaltungen || []; UH.liste = liste; } catch { liste = []; }
+  if (!liste?.length) try { liste = (await unterhaltungenHolen(frisch, { warten: true })).unterhaltungen || []; UH.liste = liste; } catch { liste = []; }
   const gruppen = (liste || []).filter((u) => u.gruppe);
   z.innerHTML = gruppen.length ? `<details class="karte" data-klappe="gruppen_${ziel}" data-ohne-unten open><summary>👥 Deine Gruppen</summary><p class="hinweis" style="margin:0 0 6px">Antippen – du schreibst direkt in die Gruppe.</p>
     <div class="knoepfe">${gruppen.map((u) => `<button class="knopf" onclick="chatOeffnen('${u.id}')">${esc(u.gruppe.symbol || "👥")} ${esc(u.gruppe.name)} <small>· ${u.anzahl || u.teilnehmer.length + 1} Mitgl.</small></button>`).join("")}</div>${ziel === "grVorhanden" ? '<p class="hinweis" style="margin:8px 0 0">Oder lege unten eine <b>weitere</b> Gruppe an.</p>' : ""}</details>` : "";
@@ -26020,7 +26036,7 @@ async function ablkInChatEinfuegen(x, kopie, text) { // Chat ist offen: Text + A
 }
 async function ablkChat(id) {
   const x = ablkEintrag(id); if (!x) return;
-  let liste = []; try { liste = (await api("unterhaltungen", {}, { warten: true })).unterhaltungen || []; } catch (e) { return meldeFehler(e); }
+  let liste = []; try { liste = (await unterhaltungenHolen(false, { warten: true })).unterhaltungen || []; } catch (e) { return meldeFehler(e); }
   blattAuf("ablkBlatt", `<h3 style="margin-top:0">💬 In welchen Chat weiterleiten?</h3>
     <div style="display:grid;gap:6px">${liste.slice(0, 30).map((u) => `<button class="knopf" style="text-align:left" onclick="ablkChatZiel('${id}', '${u.id}')">${u.gruppe ? esc(u.gruppe.symbol) + " " : ""}${esc(u.gruppe?.name || u.betreff || u.teilnehmer.join(", "))}</button>`).join("")}</div>
     <div class="knoepfe" style="margin-top:8px"><button class="knopf" onclick="ablkZeigen('${id}')">↩ Zurück</button></div>`);
@@ -26085,7 +26101,7 @@ function teilenWahl(text, dateien) {
 function teilenFotos() { document.getElementById("teilenBlatt")?.remove(); faFilter = {}; faPapierkorb = false; faGeteilt = TEILEN.dateien; zeige("fotos");
   melde(`📥 ${TEILEN.dateien.length} Foto${TEILEN.dateien.length > 1 ? "s" : ""} – Thema wählen und „Hochladen“ tippen`); }
 async function teilenChatWahl() {
-  let liste = []; try { liste = (await api("unterhaltungen", {}, { warten: true })).unterhaltungen || []; } catch (e) { return meldeFehler(e); }
+  let liste = []; try { liste = (await unterhaltungenHolen(false, { warten: true })).unterhaltungen || []; } catch (e) { return meldeFehler(e); }
   blattAuf("teilenBlatt", `<h3 style="margin-top:0">💬 In welchen Chat?</h3>
     <div style="display:grid;gap:6px">${liste.slice(0, 30).map((u) => `<button class="knopf" style="text-align:left" onclick="teilenInChat('${u.id}')">${u.gruppe ? esc(u.gruppe.symbol) + " " : ""}${esc(u.gruppe?.name || u.betreff || u.teilnehmer.join(", "))}</button>`).join("")}</div>
     <div class="knoepfe" style="margin-top:8px"><button class="knopf haupt" onclick="teilenInChat(null)">＋ Neue Nachricht</button><button class="knopf" onclick="document.getElementById('teilenBlatt').remove();TEILEN=null">Abbrechen</button></div>`);
@@ -28247,7 +28263,7 @@ function mgKachelnHtml(liste) {
 let MG_GRUPPEN = [], MG_GRUPPE = null;
 // 2.23.100 (Wunsch Hansi): Übersicht „zu welchen Gruppen gehöre ich“ – nur Gruppen, in denen man selbst ist (private Gruppen bleiben privat)
 async function mgGruppenLaden() {
-  if (!MG_GRUPPEN.length) try { MG_GRUPPEN = ((await api("unterhaltungen", {})).unterhaltungen || []).filter((u) => u.gruppe && Array.isArray(u.personen)); } catch {}
+  if (!MG_GRUPPEN.length) try { MG_GRUPPEN = ((await unterhaltungenHolen()).unterhaltungen || []).filter((u) => u.gruppe && Array.isArray(u.personen)); } catch {}
   if (!MITGLIEDER) try { await mitgliederHolen(); } catch {}
   return MG_GRUPPEN;
 }
@@ -28279,7 +28295,7 @@ async function mgAktualisieren(k) {
 }
 async function mitgliederLaden() {
   try { await mitgliederHolen(); mitgliederZeichnen(); } catch (e) { meldeFehler(e); ladeFehlerStand("mitgliederListe", e, "mitgliederLaden()"); }
-  try { MG_GRUPPEN = ((await api("unterhaltungen", {})).unterhaltungen || []).filter((u) => u.gruppe && Array.isArray(u.personen)); } catch { MG_GRUPPEN = []; }
+  try { MG_GRUPPEN = ((await unterhaltungenHolen()).unterhaltungen || []).filter((u) => u.gruppe && Array.isArray(u.personen)); } catch { MG_GRUPPEN = []; }
   if (MG_GRUPPE && !MG_GRUPPEN.some((g) => g.id === MG_GRUPPE)) MG_GRUPPE = null;
   if (MITGLIEDER) mitgliederZeichnen();
 }
@@ -29908,7 +29924,7 @@ async function taAbsagen(id) {
 }
 async function taGruppen() {
   if (TA.gruppen.length) return TA.gruppen;
-  try { TA.gruppen = ((await api("unterhaltungen")).unterhaltungen || []).filter((u) => u.gruppe).map((u) => ({ id: u.id, name: u.gruppe.name, symbol: u.gruppe.symbol, anzahl: u.anzahl })); } catch {}
+  try { TA.gruppen = ((await unterhaltungenHolen()).unterhaltungen || []).filter((u) => u.gruppe).map((u) => ({ id: u.id, name: u.gruppe.name, symbol: u.gruppe.symbol, anzahl: u.anzahl })); } catch {}
   return TA.gruppen;
 }
 function taAusZentrale() { taForm({ personen: ZE.gruppe ? [] : [...ZE.personen], gruppe: ZE.gruppe ? { ...ZE.gruppe } : null }); }
@@ -33182,7 +33198,7 @@ function kkGeburtstag() {
 }
 async function kkChatWahl() {
   const m = MD; if (!m) return;
-  let liste = []; try { liste = (await api("unterhaltungen", {}, { warten: true })).unterhaltungen || []; } catch (e) { return meldeFehler(e); }
+  let liste = []; try { liste = (await unterhaltungenHolen(false, { warten: true })).unterhaltungen || []; } catch (e) { return meldeFehler(e); }
   blattAuf("kkBlatt", `<h3 style="margin-top:0">💬 Kontaktkarte von ${esc(m.vorname || m.name)} – in welchen Chat?</h3>
     <p class="hinweis" style="margin:0 0 6px">Die anderen sehen nur, was ${esc(m.vorname || m.name)} selbst freigegeben hat.</p>
     <div style="display:grid;gap:6px">${liste.slice(0, 30).map((u) => `<button class="knopf" style="text-align:left" onclick="kkInChat('${esc(u.id)}')">${u.gruppe ? esc(u.gruppe.symbol) + " " : ""}${esc(u.gruppe?.name || u.betreff || u.teilnehmer.join(", "))}</button>`).join("") || '<p class="hinweis">Noch keine Chats.</p>'}</div>
@@ -33339,14 +33355,15 @@ async function gkZeichnen(k) { // k = { motiv, titel, text, von, namen? } – na
   const namen = (k.namen || []).filter(Boolean), mit = namen.length > 0;
   g.fillStyle = GK_BEIGE; g.fillRect(0, 0, B, H);
   g.strokeStyle = GK_ROT; g.lineWidth = 14; g.strokeRect(28, 28, B - 56, H - 56); g.lineWidth = 3; g.strokeRect(50, 50, B - 100, H - 100);
-  g.save(); g.lineCap = "round"; if (mit) { g.translate(cx, 90); g.scale(0.8, 0.8); g.translate(-cx, -90); } (GK_MOTIVE.find((m) => m.id === k.motiv) || GK_MOTIVE[0]).zeichnen(g, cx, 470); g.restore();
+  g.save(); g.lineCap = "round"; if (mit) { g.translate(cx, 90); g.scale(0.7, 0.7); g.translate(-cx, -90); } /* 2.977.0: 0,7 statt 0,8 – der Strauß ragte in die Überschrift */ (GK_MOTIVE.find((m) => m.id === k.motiv) || GK_MOTIVE[0]).zeichnen(g, cx, 470); g.restore();
   const yT = mit ? 680 : 935, yX = mit ? 745 : 1000;
   g.textAlign = "center"; g.fillStyle = GK_ROT; let gr = mit ? 80 : 92; do { g.font = `italic 700 ${gr}px Georgia, 'Times New Roman', serif`; gr -= 4; } while (g.measureText(k.titel).width > B - 160 && gr > 44);
   g.fillText(k.titel, cx, yT);
   const u = gkUmbruch(g, k.text, B - 200); g.fillStyle = "#4a2a20"; g.font = `400 ${u.gr}px Georgia, 'Times New Roman', serif`;
   u.zeilen.forEach((z, i) => g.fillText(z, cx, yX + i * (u.gr + 8)));
   let y = yX + u.zeilen.length * (u.gr + 8) + (mit ? 10 : 20);
-  if (mit) { // Unterschriften: „Es grüßen dich:“ + Vornamen, Schrift wird kleiner, wenn es viele sind
+  if (mit && k.leute?.length) { g.fillStyle = GK_ROT; g.font = "700 38px Georgia, 'Times New Roman', serif"; g.fillText("Es grüßen dich:", cx, y + 10); y = gkGesichterZeichnen(g, k.leute, y + 40, cx, B); } // 2.977.0 KC-CLUB-GK-GESICHTER
+  else if (mit) { // Unterschriften: „Es grüßen dich:“ + Vornamen, Schrift wird kleiner, wenn es viele sind
     g.fillStyle = GK_ROT; g.font = "700 38px Georgia, 'Times New Roman', serif"; g.fillText("Es grüßen dich:", cx, y + 10); y += 60;
     let ngr = 34, zeilen = [];
     for (ngr = 40; ngr >= 22; ngr -= 2) { g.font = `italic 400 ${ngr}px Georgia, 'Times New Roman', serif`; zeilen = []; let z = "";
@@ -33423,7 +33440,7 @@ const gkWahl = () => { // Auswahl aus dem offenen Karten-Fenster
 };
 async function gkGemeinsamStarten() {
   if (!GK) return; const w = gkWahl(); if (!w.text) return melde("Bitte zuerst deinen Text schreiben – oder einen Vorschlag antippen.", true);
-  if (!(await frage(`👥 Gemeinsame Karte für ${GK.vorname} starten?\n\nAlle Mitglieder (außer ${GK.vorname}) bekommen eine Push und können 2 Tage lang mit einem Tipp unterschreiben. ${GK.vorname} sieht davon nichts.\n\nDanach (oder schon früher) schickst du die Karte mit allen Namen in den Chat.`, { ja: "👥 Starten", nein: "Abbrechen" }))) return;
+  if (!(await frage(`👥 Gemeinsame Karte für ${GK.vorname} starten?\n\nAlle Mitglieder (außer ${GK.vorname}) bekommen eine Push und eine E-Mail und werden beim Start der App gefragt – 2 Tage lang, unterschreiben mit einem Tipp (Name und Gesicht). ${GK.vorname} sieht davon nichts.\n\nDanach (oder schon früher) schickst du die Karte mit allen Namen in den Chat.`, { ja: "👥 Starten", nein: "Abbrechen" }))) return;
   try {
     const r = await api("gk_gemeinsam_start", { fuer: GK.pid, ...w, tage: 2 }, { warten: true });
     fensterZu($("gkBlatt")); melde(`👥 Gestartet – ${r.empfaenger} Mitglieder bekommen Bescheid. Du hast schon unterschrieben.`);
@@ -33436,25 +33453,96 @@ async function gkLaeuftZeigen(pid) {
     <div style="margin-top:6px"><button type="button" class="knopf klein haupt" onclick="fensterZu($('gkBlatt'));gkGemeinsamOeffnen('${esc(k.id)}')">${k.darfSenden ? "👁️ Ansehen & verschicken" : k.ichDabei ? "👁️ Ansehen" : "✍️ Unterschreiben"}</button></div></div>`;
   if (!k.darfSenden) $("gkGemeinsam")?.remove();
 }
+// ---------- 2.977.0 KC-CLUB-GK-GESICHTER (Wunsch Hansi 18.11.2026 „draufklicken, dann wird der Name und das Gesicht eingesetzt“ – „mit Profilfoto, oder Avatar
+// oder Initialen“): jede Unterschrift auf der gemeinsamen Karte als rundes Gesicht mit Vornamen. Reihenfolge: eigenes Foto → Avatar (Galerie/zusammengestellt) →
+// Initialen auf weinrotem Kreis. Größe passt sich der Zahl an; was nicht mehr passt, steht als „… und N weitere“ darunter.
+const gkBildLaden = (src) => new Promise((ok, nein) => { const i = new Image(); i.onload = () => ok(i); i.onerror = nein; i.src = src; });
+async function gkGesichtBild(pid) {
+  const code = (MITGLIEDER || []).find((x) => x.person_id === pid)?.avatar || "";
+  try {
+    if (AVF_RE.test(code)) { // eigenes Foto – bei Bedarf nachladen (sammelt mehrere in einem Abruf)
+      if (!AVF.bild[code]) { avfMerken(pid, code); for (let i = 0; i < 20 && !AVF.bild[code]; i++) await new Promise((r) => setTimeout(r, 100)); }
+      return AVF.bild[code] ? await gkBildLaden(AVF.bild[code]) : null;
+    }
+    if (AVG_RE.test(code)) return await gkBildLaden(`avatare/${code}.webp`);
+    const svg = code ? avatarSvg(code, 128) : "";
+    if (/^<svg /.test(svg)) return await gkBildLaden("data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg.replace("<svg ", '<svg xmlns="http://www.w3.org/2000/svg" ')));
+  } catch {}
+  return null;
+}
+async function gkLeuteMitBild(leute) {
+  if (!MITGLIEDER) try { await mitgliederHolen(); } catch {}
+  return Promise.all((leute || []).map(async (x) => ({ ...x, bild: await gkGesichtBild(x.pid) })));
+}
+function gkGesichterZeichnen(g, leute, y, cx, B) {
+  const breite = B - 160, unten = 1130, n = leute.length;
+  const mass = (s) => { const gap = Math.round(s * 0.2), fg = Math.max(16, Math.round(s * 0.22)); return { gap, fg, hZ: s + fg + 18, sp: Math.max(1, Math.floor((breite + gap) / (s + gap))) }; };
+  let s = 132, m = mass(s);
+  for (s = 132; s > 44; s -= 4) { m = mass(s); if (y + Math.ceil(n / m.sp) * m.hZ <= unten) break; }
+  m = mass(s);
+  const reserve = 44, maxZ = Math.max(1, Math.floor((unten - y) / m.hZ)), alle = Math.ceil(n / m.sp) <= maxZ;
+  const zeilen = alle ? Math.ceil(n / m.sp) : Math.max(1, Math.floor((unten - y - reserve) / m.hZ)), platz = alle ? n : m.sp * zeilen;
+  const zeig = leute.slice(0, platz);
+  zeig.forEach((x, i) => {
+    const z = Math.floor(i / m.sp), inZeile = Math.min(m.sp, zeig.length - z * m.sp), sx = cx - (inZeile * (s + m.gap) - m.gap) / 2 + (i % m.sp) * (s + m.gap) + s / 2, sy = y + z * m.hZ + s / 2, r = s / 2;
+    g.save(); g.beginPath(); g.arc(sx, sy, r, 0, Math.PI * 2); g.closePath();
+    if (x.bild) { g.clip(); g.fillStyle = "#fff"; g.fill(); g.drawImage(x.bild, sx - r, sy - r, s, s); }
+    else { g.fillStyle = GK_ROT; g.fill(); g.fillStyle = "#fff"; g.font = `700 ${Math.round(s * 0.4)}px Georgia, 'Times New Roman', serif`; g.textAlign = "center"; g.textBaseline = "middle";
+      g.fillText(String(x.name || "?").split(/\s+/).map((w) => w[0] || "").join("").slice(0, 2).toUpperCase(), sx, sy + 2); }
+    g.restore();
+    g.save(); g.lineWidth = Math.max(3, s * 0.04); g.strokeStyle = "#fff"; g.beginPath(); g.arc(sx, sy, r, 0, Math.PI * 2); g.stroke(); g.restore();
+    g.fillStyle = "#4a2a20"; g.textAlign = "center"; g.textBaseline = "alphabetic"; let fg = m.fg;
+    do { g.font = `italic 400 ${fg}px Georgia, 'Times New Roman', serif`; fg -= 1; } while (g.measureText(x.name).width > s + m.gap - 2 && fg > 12);
+    g.fillText(x.name, sx, sy + r + m.fg + 4);
+  });
+  let yE = y + Math.ceil(zeig.length / m.sp) * m.hZ;
+  if (zeig.length < n) { g.fillStyle = "#4a2a20"; g.font = "italic 400 30px Georgia, 'Times New Roman', serif"; g.textAlign = "center"; g.fillText(`… und ${n - zeig.length} weitere`, cx, yE + 26); yE += reserve; }
+  return yE + 34; // Abstand zum Absender darunter
+}
+// ---------- 2.977.0 KC-CLUB-GK-NACHFRAGE (Wunsch Hansi 18.11.2026): beim Start der App fragen, ob man auf der gemeinsamen Karte dabei sein möchte.
+// Nur offene Karten, die ich noch nicht unterschrieben habe (Server: init → gkOffen; nie die Karte für mich). „Später“ fragt beim nächsten Start noch einmal
+// (höchstens 2×), „Nein, danke“ nie wieder für diese Karte – gemerkt nur auf diesem Gerät. Je Sitzung höchstens einmal je Karte.
+const GKN_KEY = "kc_club_gk_nachfrage";
+function gknStand() { try { const o = JSON.parse(localStorage.getItem(GKN_KEY) || "{}"); return o && typeof o === "object" ? o : {}; } catch { return {}; } }
+function gknMerken(id, w) { const st = gknStand(); st[id] = w; const k = Object.keys(st); if (k.length > 20) for (const x of k.slice(0, k.length - 20)) delete st[x]; try { localStorage.setItem(GKN_KEY, JSON.stringify(st)); } catch {} }
+function gkNachfragePruefen(versuch = 0) {
+  const st = gknStand(), k = (INIT?.gkOffen || []).find((x) => { const w = st[x.id] || {}; return !w.nein && (w.spaeter || 0) < 2; });
+  if (!k) return;
+  if (document.hidden || aktuelleAnsicht !== "start" || document.querySelector(FENSTER_OFFEN)) { if (versuch < 3) setTimeout(() => gkNachfragePruefen(versuch + 1), 12000); return; }
+  try { if (sessionStorage.getItem("kc_club_gkn_" + k.id)) return; sessionStorage.setItem("kc_club_gkn_" + k.id, "1"); } catch {}
+  const f = blattAuf("gknBlatt", `<h3 style="margin-top:0">💐 ${esc(k.fuerName)} braucht gerade gute Wünsche.</h3>
+    <p style="margin:6px 0">Möchtest du ${esc(k.fuerName)} mit der <b>Gemeinschaftskarte vom Club</b> auch gute Besserung wünschen?</p>
+    <p class="hinweis" style="margin:0 0 10px">Ein Tipp genügt – dein Name und dein Gesicht kommen auf die Karte. ${esc(k.fuerName)} sieht sie erst, wenn sie kommt 🤫</p>
+    <div style="display:grid;gap:8px"><button type="button" class="knopf haupt" data-w="ja">💐 Ja, zur Karte</button>
+      <button type="button" class="knopf" data-w="spaeter">Später</button><button type="button" class="knopf" data-w="nein">Nein, danke</button></div>`);
+  f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => {
+    const w = b.dataset.w, alt = gknStand()[k.id] || {}; fensterZu(f);
+    if (w === "ja") return gkGemeinsamOeffnen(k.id);
+    gknMerken(k.id, w === "nein" ? { ...alt, nein: true } : { ...alt, spaeter: (alt.spaeter || 0) + 1 });
+  }));
+}
 async function gkGemeinsamOeffnen(id) {
   let d; try { d = await api("gk_gemeinsam_liste", {}, { warten: true }); } catch (e) { return meldeFehler(e); }
   const k = (d?.karten || []).find((x) => x.id === id);
   if (!k) return melde("Diese Karte ist schon verschickt – danke fürs Mitmachen! 💐");
-  const daten = { motiv: k.motiv, titel: gkTitel(k.fuerName)[k.titel] || gkTitel(k.fuerName)[0], text: k.text, von: k.von, namen: k.namen };
+  const daten = { motiv: k.motiv, titel: gkTitel(k.fuerName)[k.titel] || gkTitel(k.fuerName)[0], text: k.text, von: k.von, namen: k.namen,
+    leute: k.leute ? await gkLeuteMitBild(k.leute) : null }; // 2.977.0 KC-CLUB-GK-GESICHTER (älterer Server ohne „leute“ → wie bisher nur Vornamen)
   const bis = new Date(k.bis).toLocaleString("de-DE", { weekday: "short", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
   const f = blattAuf("gkGemBlatt", `<h3 style="margin-top:0">👥 Gemeinsame Karte für ${esc(k.fuerName)}</h3>
     <p class="hinweis" style="margin:0 0 6px">Gestartet von ${esc(k.starter)} · unterschreiben bis ${esc(bis)} · ${esc(k.fuerName)} sieht die Karte erst, wenn sie kommt 🤫</p>
     <img id="gkGemBild" alt="Gemeinsame Genesungskarte" style="width:100%;max-width:420px;display:block;margin:0 auto 8px;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.2)">
     <p style="margin:4px 0 8px;text-align:center"><b>${k.namen.length}</b> Unterschrift${k.namen.length === 1 ? "" : "en"}${k.namen.length ? ": " + esc(k.namen.join(", ")) : ""}</p>
     <div style="display:grid;gap:8px">
-      ${k.ichDabei ? `<button type="button" class="knopf" data-w="zurueck">↩️ Meine Unterschrift zurücknehmen</button>` : `<button type="button" class="knopf haupt" data-w="ja">✍️ Ich unterschreibe</button>`}
+      ${k.ichDabei ? `<button type="button" class="knopf" data-w="zurueck">↩️ Meine Unterschrift zurücknehmen</button>` : `<button type="button" class="knopf haupt" data-w="ja">👆 Hier tippen – mit Name und Gesicht unterschreiben</button>`}
       ${k.darfSenden ? `<button type="button" class="knopf ${k.ichDabei ? "haupt" : ""}" data-w="senden">💬 Jetzt in ${esc(k.fuerName)}s Chat legen</button><button type="button" class="knopf" data-w="abbrechen">🗑️ Karte abbrechen</button>` : ""}
       <button type="button" class="knopf" data-w="">Schließen</button></div>`);
   try { $("gkGemBild").src = (await gkZeichnen(daten)).toDataURL("image/jpeg", 0.88); } catch {}
   f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => einmal(b, async () => {
     const w = b.dataset.w; if (!w) return fensterZu(f);
     try {
-      if (w === "ja" || w === "zurueck") { await api("gk_unterschreiben", { id, zurueck: w === "zurueck" }, { warten: true }); fensterZu(f); melde(w === "ja" ? "✍️ Unterschrieben – danke!" : "↩️ Unterschrift zurückgenommen"); return gkGemeinsamOeffnen(id); }
+      if (w === "ja" || w === "zurueck") { await api("gk_unterschreiben", { id, zurueck: w === "zurueck" }, { warten: true }); fensterZu(f); melde(w === "ja" ? "💐 Unterschrieben – dein Gesicht ist jetzt auf der Karte. Danke!" : "↩️ Unterschrift zurückgenommen");
+        if (w === "ja" && INIT?.gkOffen) INIT.gkOffen = INIT.gkOffen.filter((x) => x.id !== id); // 2.977.0 KC-CLUB-GK-NACHFRAGE: nicht mehr fragen
+        return gkGemeinsamOeffnen(id); }
       if (w === "abbrechen") { if (!(await frage("Die gemeinsame Karte abbrechen? Sie wird nicht verschickt."))) return; await api("gk_gemeinsam_ende", { id, abbrechen: true }, { warten: true }); fensterZu(f); return melde("🗑️ Karte abgebrochen"); }
       if (w === "senden") {
         if (!(await frage(`Die Karte mit ${k.namen.length} Unterschrift${k.namen.length === 1 ? "" : "en"} jetzt in ${k.fuerName}s Chat legen?\n\nDanach kann niemand mehr unterschreiben.`, { ja: "💬 Ja, jetzt", nein: "Noch warten" }))) return;
@@ -36302,7 +36390,7 @@ const FENSTER_NAMEN = {
   diktatBlatt: "✍️ Diktieren", druckBlatt: "🖨️ Drucken", dsBlatt: "🗓️ Dienstplan", dsOrteBlatt: "📍 Dienst-Orte", dsWerBlatt: "👥 Wer ist heute im Dienst",
   rundBlatt: "🪑 Runder Tisch", rundNeuBlatt: "🪑 Zum Runden Tisch einladen", rundTischBlatt: "🪑 Am Runden Tisch", rundTascheBlatt: "💼 Tasche für den Runden Tisch", rundArchivBlatt: "🗄️ Tasche: aus dem Archiv", // 2.762.0 KC-CLUB-RUNDER-TISCH
   dtBlatt: "🗓️ Dienst-Tausch", dvBlatt: "📊 Dienstzeiten-Übersicht", dwSperreBlatt: "💡 Sperrzeit nicht nötig", egBlatt: "📥 Mein Eingangskorb", eingangBlatt: "📥 In den Eingangskorb eines Mitglieds",
-  einlBlatt: "📥 Dokument einlesen", ekAblageBlatt: "🗄️ Eingangskorb: ablegen", ekDwBlatt: "📅 Dienstzeiten", ekErstBlatt: "💶 Erstattung", ekErstOkBlatt: "✅ Erstattung als erstattet markieren?", gkBlatt: "💐 Genesungskarte", tpBlatt: "⚽ Bundesliga-Tippspiel", gkGemBlatt: "👥 Gemeinsame Karte", ekHinweisBlatt: "📥 Hinweis: Eingangskorb",
+  einlBlatt: "📥 Dokument einlesen", ekAblageBlatt: "🗄️ Eingangskorb: ablegen", ekDwBlatt: "📅 Dienstzeiten", ekErstBlatt: "💶 Erstattung", ekErstOkBlatt: "✅ Erstattung als erstattet markieren?", gkBlatt: "💐 Genesungskarte", tpBlatt: "⚽ Bundesliga-Tippspiel", gkGemBlatt: "👥 Gemeinsame Karte", gknBlatt: "💐 Frage: Gemeinsame Karte", ekHinweisBlatt: "📥 Hinweis: Eingangskorb",
   ekNachBlatt: "🔎 Nachverfolgen", elternBlatt: "👪 Eltern-Handy", entwicklerBlatt: "👨‍💻 Über den Entwickler", erBlatt: "✅ Alles eingerichtet", ibBlatt: "🖼️ Installieren mit Bildern", erinBlatt: "🔔 Erinnerung für dich",
   erkBlatt: "💡 Vorschlag aus der Nachricht", khBlatt: "📌 Für dich (Chat)", khErinBlatt: "⏰ An Nachricht erinnern", khAufgabeBlatt: "📋 Nachricht als Aufgabe",ersBesBlatt: "🎓 Fahrten aus Besuchen", ersCsvBlatt: "📊 Erstattungen für Excel", eblBlatt: "📒 Buchungsliste", esTafelBlatt: "📤 Tafel sichern", ewBlatt: "🧭 Einstellungen erklärt",
   expressBlatt: "🏎️ Express-Sendung", externBlatt: "🌐 Externer Inhalt", faAlbenKorb: "🗑️ Gelöschte Alben", faAlbumBlatt: "📸 Foto in welches Album?", faAlbumForm: "📸 Album anlegen/ändern",
@@ -37854,6 +37942,7 @@ async function gastStart(token) {
     if ((!h || h === "#") && (buSchreiben() || (buDarf() && (ICH?.vorstand || ICH?.admin)))) setTimeout(() => buAufgabePruefen(), 4000); // 2.750.0 KC-CLUB-SITZUNG-AUFGABE-START: nächste Aufgabe für die Sitzung (2.797.0 Stufe 4: nur die Clubleitung lädt dafür das Büro-Teil)
     if (!h || h === "#") setTimeout(() => taHinweisPruefen(), 5000);
     if (!h || h === "#") setTimeout(() => { try { grPruefen(); } catch {} }, 6500); // KC-CLUB-GEMEINSCHAFTSGERICHT: Frage nach der Zutat
+    if (!h || h === "#") setTimeout(() => { try { gkNachfragePruefen(); } catch {} }, 8000); // 2.977.0 KC-CLUB-GK-NACHFRAGE: gemeinsame Genesungskarte
     setTimeout(() => { try { pulsStarten(); } catch {} }, 3000); // KC-CLUB-PULS: Datenverkehr-Säulen (nur Admin)
     if (!h || h === "#") setTimeout(() => bwEinladungPruefen(), 15000); // 2.314.0 KC-CLUB-BEWEGUNG-EINLADUNG
     if (!h || h === "#") setTimeout(() => nuVorschlagPruefen(), 25000); // 2.418.0 KC-CLUB-KACHEL-VORSCHLAG (nach der Einladung, nie darüber)
