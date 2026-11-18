@@ -76,7 +76,7 @@ function messen() {
   // 5. unruhige Knopfreihen (umgebrochen, sehr ungleich breit)
   const behaelter = new Set(knoepfe.map((b) => b.parentElement));
   out.unruhig = [...behaelter].filter((p) => { const s = getComputedStyle(p); if (!/flex/.test(s.display) || s.flexWrap !== "wrap") return false;
-    const k = [...p.children].filter((c) => sichtbar(c) && c.matches("button, .knopf, a.knopf")); if (k.length < 3) return false;
+    const k = [...p.children].filter((c) => sichtbar(c) && c.matches("button, .knopf, a.knopf") && !c.matches(".zurueck")); // der schmale Zurück-Pfeil zählt nicht if (k.length < 3) return false;
     const tops = new Set(k.map((c) => Math.round(c.getBoundingClientRect().top))), ws = k.map((c) => c.getBoundingClientRect().width);
     return tops.size >= 2 && Math.min(...ws) / Math.max(...ws) < 0.5; }).map((p) => ({ id: p.id || String(p.className).slice(0, 30), knoepfe: [...p.children].filter((c) => c.matches("button, .knopf")).length, beispiel: kurz(p).slice(0, 40) })).slice(0, 6);
   // 6. schwebende Knöpfe (fest am Rand)

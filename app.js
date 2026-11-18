@@ -26921,7 +26921,8 @@ async function protokolleLaden() {
       ${treffenOhneProtokoll.map((t) => `<div class="zeile"><div style="flex:1"><b>${esc(t.titel)}</b><div class="hinweis" style="font-size:.85rem">${esc(wann(t.beginn))}${t.ort ? " · " + esc(t.ort) : ""}</div></div>
         <button class="knopf haupt klein" onclick="einmal(this, () => protokollAnlegen('${t.id}'))">＋ Anlegen</button></div>`).join("")}</details>` : "";
     const suche = protokolle.length > 5 ? `<label class="feld" style="margin-top:12px"><input id="prSuche" placeholder="🔍 Protokoll suchen …" oninput="protokollFilter()"></label>` : "";
-    $("protokollListe").innerHTML = auf + neu + `<div class="abschnitt"><h3>📄 Protokolle</h3></div>` + suche
+    // KC-CLUB-ANORDNUNG (18.11.2026): Zwischenüberschrift nur, wenn oben Aufgaben/„Protokoll schreiben“ stehen – sonst stand „📄 Protokolle“ doppelt (Kopf + direkt darunter)
+    $("protokollListe").innerHTML = auf + neu + (auf || neu ? `<div class="abschnitt"><h3>📄 Protokolle</h3></div>` : "") + suche
       + (protokolle.length ? prGruppenHtml(protokolle) : "") + (protokolle.length ? "" : '<div class="karte hinweis">Noch keine Protokolle. Nach der nächsten Sitzung erscheint sie oben unter „Protokoll schreiben“.</div>');
     prAnsichtKnopf();
     klappenMerken($("protokollListe")); // 1.46.0: Klappbereiche mit Pfeil und Schloss wie überall

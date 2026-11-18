@@ -6070,6 +6070,24 @@
   html.kom-sym .kom-leiste .knopf:not(.versteckt) { max-width: none; min-width: 0; }
   /* 5. Status am Start: „verfügbar“ bricht mit Trennstrich statt mitten im Wort („verfüg / bar“) */
   #statusChip { hyphens: auto; -webkit-hyphens: auto; overflow-wrap: normal; }
+  /* --- 2. Runde (Hansi 18.11.: „Dann baue alles sorgfältig um“) --- */
+  /* 6. Knopfreihen am Handy ohne Lücken: die Knöpfe füllen jede Zeile ganz aus, statt dass einer allein am Rand hängt (Erklär-Videos: „Auswertung“
+        allein; Archiv: „Papierkorb“ allein; Schulungen: drei ungleiche) – Wörter werden dabei nie getrennt */
+  @media (max-width: 480px) {
+    .rgl-fuss, #v-archiv .ar-zeile > .knoepfe, #scBlatt .karte > .knoepfe { display: flex; flex-wrap: wrap; gap: 8px; }
+    :is(.rgl-fuss, #v-archiv .ar-zeile > .knoepfe, #scBlatt .karte > .knoepfe) > .knopf { flex: 1 1 auto; margin: 0; }
+    .rgl-fuss .knopf.haupt { flex-basis: 100%; }
+  }
+  /* 7. Abgeschnittene Texte: „KÖCHECLUB WERNE“ am Start bricht am Handy um statt „KÖCHECLUB …“ (wie schon in der einfachen Ansicht);
+        der Hinweis „Tippen: 🟢 Online (0)“ auf den Umschaltern darf zwei Zeilen haben */
+  @media (max-width: 420px) { #v-start .marke-klein { white-space: normal; } }
+  .zk-naechst { white-space: normal; hyphens: manual; -webkit-hyphens: manual; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; }
+  /* 8. 👆 ? 🔍 bleiben, wo Hansi sie hingestellt hat (2.380.0) und gleiten beim Lesen weg (2.725.0) – im Ruhezustand jetzt halb durchsichtig,
+        damit sie weniger verdecken; beim Antippen und im Zeige-Modus voll sichtbar */
+  @media (max-width: 1023px) {
+    body:not(.knoepfe-weg) :is(.su-klein, .hz-frage, .hz-klick) { opacity: .72; }
+    body:not(.knoepfe-weg) :is(.su-klein, .hz-frage, .hz-klick):is(:active, :focus-visible), body.klick-zeigen:not(.knoepfe-weg) .hz-klick { opacity: 1; }
+  }
 </style>
 <!-- Club-Küche: redaktionelles Premium-Design, nur für Magazin (nicht Weihnachtsmarkt-Prospekt) -->
 <link rel="stylesheet" href="magazin/premium.css">
