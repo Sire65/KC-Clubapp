@@ -177,7 +177,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 // Datenbank viel zu tun. Es wird gerade das Notfall-Paket gebaut. Das dauert ca. noch 4 Minuten. Versuche dein Anliegen bitte später noch einmal.“):
 // Registry der planmäßigen schweren Arbeiten (Uhrzeiten UTC wie die Zeitpläne in cron.job) – ohne zusätzliche Datenbank-Abfrage, die App bekommt sie beim Start mit.
 const SCHWER_ZEITEN = [
-  { art: "notpaket", was: "das Notfall-Paket gebaut", min: [9, 24, 39, 54], dauer: 2 },          // kc-club-notpaket-15min (ca. 30 s, mit Puffer)
+  { art: "notpaket", was: "das Notfall-Paket gebaut", min: [9], dauer: 2 },          // kc-club-notpaket-15min (ca. 30 s, mit Puffer) – seit 17.11.2026 stündlich (Egress-Sparprogramm)
   { art: "spiegel", was: "die Sicherheitskopie (Spiegelung) erstellt", std: [4, 13, 22], von: 10, bis: 45 }, // kc-neon-low-compute-cycle + kc-db-mirror-welle (KC-SPIEGEL-SCHONEND 15.11.2026: 04/13/22 UTC, Welle :11–:40 + Puffer)
   { art: "sicherung", was: "die nächtliche Sicherung gemacht", std: [1], von: 20, bis: 60 },    // kc-club-fra-sicherung (gemessen 01:26–01:56)
   { art: "aufraeumen", was: "nachts aufgeräumt", std: [3], von: 5, bis: 55 },                     // kc-…-aufraeumen / -rollup / -retention (03:05–03:50)
@@ -194,7 +194,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.975.0";
+const SERVER_VERSION = "2.977.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -650,6 +650,18 @@ async function nurGezieltStand() {
 async function nurGezielt(): Promise<Set<string>> { return (await nurGezieltStand()).ids; }
 // Passive zählen bei Treffen nicht als „noch offen“ (Liste nicht lesbar → niemand ausgenommen, gezählt wird wie bisher)
 async function passivIds(): Promise<Set<string>> { return (await nurGezieltStand().catch(() => null))?.passiv ?? new Set<string>(); }
+// 2.977.0 KC-CLUB-GK-NACHFRAGE (Wunsch Hansi 18.11.2026): beim Start der App fragen „Möchtest du … auch gute Besserung wünschen?“ – nur offene,
+// noch laufende gemeinsame Karten, die ich noch nicht unterschrieben habe; nie die Karte für mich selbst. Meist keine offene Karte → eine kleine Abfrage.
+async function gkOffenFuer(ich: Ich): Promise<{ id: string; fuerName: string }[]> {
+  if (ich.zugang !== "mitglied" && ich.zugang !== "aushilfe") return [];
+  const { data: karten } = await db.from("kc_club_gk_gemeinsam").select("id,fuer_person_id").eq("status", "offen").gt("bis", jetzt()).neq("fuer_person_id", ich.person_id).order("gestartet_am").limit(5);
+  if (!karten?.length) return [];
+  const { data: meine } = await db.from("kc_club_gk_unterschrift").select("karte_id").eq("person_id", ich.person_id).in("karte_id", karten.map((k: any) => k.id));
+  const schon = new Set((meine ?? []).map((u: any) => u.karte_id)), offen = karten.filter((k: any) => !schon.has(k.id));
+  if (!offen.length) return [];
+  const leute = await personen(offen.map((k: any) => k.fuer_person_id));
+  return offen.map((k: any) => ({ id: k.id, fuerName: vorname(leute.get(k.fuer_person_id)) || "einem Mitglied" }));
+}
 async function sammelEmpfaenger(): Promise<(Person & { birth_date?: string })[]> {
   const [leute, aus] = await Promise.all([aktiveMitglieder(), nurGezielt().catch((e) => { console.error("sammelEmpfaenger", String(e)); return null; })]);
   return aus ? leute.filter((m) => !aus.has(m.person_id)) : [];
@@ -10496,6 +10508,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             (kz as any).schulungFrei = sw ? sw.filter((w: any) => w.art === "gewaehlt" || w.art === "gegenvorschlag").length : null; } // 2.521.0 KC-CLUB-SCHULUNG-INFO: nur was eine Freigabe braucht
           return kz;
         });
+        const pGk = gkOffenFuer(ich).catch((e) => { console.error("gk_offen", String(e)); return []; }); // 2.977.0 KC-CLUB-GK-NACHFRAGE
         const pComm = communicatorStatus(ich).catch(() => null), pSos = sosFuerAlle(), pAdmin = adminVorname(), pThema = konfigZeile("thema").then((r) => { const w: any = r.data?.wert; return w?.id ? w : null; }).catch(() => null); // 2.323.0 KC-CLUB-THEMEN
         const pGedenken = gedenkenListe().catch(() => [] as any[]); // KC-CLUB-GEDENKEN (2.204.0)
         const pRzThema = rzThemaLage(ich).catch(() => null); // 2.730.0 KC-CLUB-REZEPT-WEIHNACHT: Hinweis fürs Info-Laufband (gemerkt, keine Abfrage je Start)
@@ -10708,7 +10721,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const express = await pExpress;
         const dienstwunschFehlt = await pDwFehlt; // KC-CLUB-DW-LAUFBAND
         const neuesGeraet = await siGeraetPruefen(ich, req).catch(() => null); // 2.726.0 KC-CLUB-NEUES-GERAET
-        return json({ meinGeburtstag, alarm, express, dienstwunschFehlt, schwerZeiten: SCHWER_ZEITEN, serverJetzt: Date.now(), /* KC-CLUB-ADVENT-SERVERUHR: Uhr des Servers für den Adventskalender */ gericht: await pGericht, /* KC-CLUB-GEMEINSCHAFTSGERICHT */ /* 2.806.0 KC-CLUB-DB-VIEL-ZU-TUN */ startnachrichtDarf: await pSnDarf, kz, hilfeTipps: await pTipps, /* 2.835.0 KC-CLUB-HILFE-TIPPS */ studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, neuesGeraet, meinGeraet: siGeraetKlasse(req.headers.get("user-agent")), /* 2.726.0 KC-CLUB-NEUES-GERAET */ ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtClub: ich.zugang === "tischgast" ? null : await rtClubKanal().catch(() => null), /* KC-CLUB-ANWESENHEIT */ rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, rezeptThema: await pRzThema, themenNaechste: await pThemenN, sitzungVorgaben: SV, /* 2.751.0 KC-CLUB-SITZUNG-VORGABEN */ naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, ablagekorb: await pAblk, clubjahr: await pCj, wartung, communicator, notfall: nf ?? null, einstellungen, rose, /* KC-CLUB-ROSE */ vertretung: await pVertretung, /* KC-CLUB-VERTRETUNG */ freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, protokollNeu, protokollPruefen, /* 2.818.0 KC-CLUB-PROTOKOLL-PRUEFUNG */ naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw, ab: await pAb, dienstStempel: await pDs, runderTisch: await pTisch, /* 2.762.0 KC-CLUB-RUNDER-TISCH */
+        return json({ meinGeburtstag, alarm, express, dienstwunschFehlt, schwerZeiten: SCHWER_ZEITEN, serverJetzt: Date.now(), /* KC-CLUB-ADVENT-SERVERUHR: Uhr des Servers für den Adventskalender */ gericht: await pGericht, /* KC-CLUB-GEMEINSCHAFTSGERICHT */ /* 2.806.0 KC-CLUB-DB-VIEL-ZU-TUN */ startnachrichtDarf: await pSnDarf, kz, hilfeTipps: await pTipps, /* 2.835.0 KC-CLUB-HILFE-TIPPS */ studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, neuesGeraet, meinGeraet: siGeraetKlasse(req.headers.get("user-agent")), /* 2.726.0 KC-CLUB-NEUES-GERAET */ ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtClub: ich.zugang === "tischgast" ? null : await rtClubKanal().catch(() => null), /* KC-CLUB-ANWESENHEIT */ rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, rezeptThema: await pRzThema, themenNaechste: await pThemenN, sitzungVorgaben: SV, /* 2.751.0 KC-CLUB-SITZUNG-VORGABEN */ naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, ablagekorb: await pAblk, clubjahr: await pCj, wartung, communicator, notfall: nf ?? null, einstellungen, rose, /* KC-CLUB-ROSE */ gkOffen: await pGk, /* 2.977.0 KC-CLUB-GK-NACHFRAGE */ vertretung: await pVertretung, /* KC-CLUB-VERTRETUNG */ freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, protokollNeu, protokollPruefen, /* 2.818.0 KC-CLUB-PROTOKOLL-PRUEFUNG */ naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw, ab: await pAb, dienstStempel: await pDs, runderTisch: await pTisch, /* 2.762.0 KC-CLUB-RUNDER-TISCH */
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
             ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen,
             // KC-CLUB-GERAETE-TIPP: wohin der Link ginge – nur teilweise (z. B. „h…@web.de“)
@@ -12369,8 +12382,10 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           await db.from("kc_club_gk_unterschrift").insert({ karte_id: k.id, person_id: ich.person_id });
           const vn = vorname(leute.get(fuer)) || "einem Mitglied";
           const ziel = (await sammelEmpfaenger()).map((m) => m.person_id).filter((id) => id !== ich.person_id && id !== fuer);
-          const versand = await sendenGewaehlt("club_nachricht", ziel, ["push"], { titel: `💐 Gemeinsame Karte für ${vn}`, kurz: `Unterschreib mit einem Tipp – ${vn} erfährt es erst, wenn die Karte kommt.`,
-            betreff: `Köcheclub Werne – gemeinsame Karte für ${vn}`, text: `Hallo,\n\nwir schicken ${vn} eine gemeinsame Gute-Besserung-Karte. Unterschreib mit einem Tipp in der App: ${APP_URL}#gk=${k.id}\n\nViele Grüße\n${ich.name}`,
+          // 2.977.0 KC-CLUB-GK-NACHFRAGE (Wunsch Hansi 18.11.2026 „ja Push und E-Mail an alle, damit die auch wissen, dass eine Karte da ist, die selten reingehen“):
+          // Push UND E-Mail (Kanal-Regel club_nachricht_beide); Mailtext nach Hansis Vorgabe. Die Nachfrage selbst kommt beim Start der App (gkOffen in init).
+          const versand = await sendenGewaehlt("club_nachricht", ziel, ["push", "email"], { titel: `💐 Gemeinsame Karte für ${vn}`, kurz: `${vn} braucht gerade gute Wünsche – unterschreib mit einem Tipp. ${vn} erfährt es erst, wenn die Karte kommt.`,
+            betreff: `Köcheclub Werne – Genesungskarte für ${vn}`, text: `Hallo,\n\nin der Club-App liegt eine Genesungskarte für ${vn} bereit. Wenn du auch drauf sein möchtest, geh in die Club-App – du bekommst die Anfrage dann beim Start der App.\n\nViele Grüße\n${ich.name}`,
             url: `${APP_URL}#gk=${k.id}` }, `club-gk:${k.id}`).catch(() => null);
           await protokoll(ich.person_id, "gk_gemeinsam_gestartet", { karte: k.id, empfaenger: ziel.length, versand });
           return json({ ok: true, id: k.id, empfaenger: ziel.length });
@@ -12401,7 +12416,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         return json({ ok: true, karten: (karten ?? []).map((k: any) => { const u = (us ?? []).filter((x: any) => x.karte_id === k.id);
           return { id: k.id, fuer: k.fuer_person_id, fuerName: vorname(leute.get(k.fuer_person_id)) || "Mitglied", motiv: k.motiv, titel: k.titel, text: k.text, von: k.von, bis: k.bis,
             starter: vorname(leute.get(k.gestartet_von)) || "", darfSenden: k.gestartet_von === ich.person_id || ich.admin, ichDabei: u.some((x: any) => x.person_id === ich.person_id),
-            namen: u.map((x: any) => vorname(leute.get(x.person_id)) || "").filter(Boolean) }; }) });
+            namen: u.map((x: any) => vorname(leute.get(x.person_id)) || "").filter(Boolean),
+            leute: u.map((x: any) => ({ pid: x.person_id, name: vorname(leute.get(x.person_id)) || "" })).filter((x: any) => x.name) }; }) }); // 2.977.0 KC-CLUB-GK-GESICHTER: Gesicht je Unterschrift
       }
       case "fl_informieren": {
         nurVorstand(ich);

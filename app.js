@@ -33355,14 +33355,15 @@ async function gkZeichnen(k) { // k = { motiv, titel, text, von, namen? } – na
   const namen = (k.namen || []).filter(Boolean), mit = namen.length > 0;
   g.fillStyle = GK_BEIGE; g.fillRect(0, 0, B, H);
   g.strokeStyle = GK_ROT; g.lineWidth = 14; g.strokeRect(28, 28, B - 56, H - 56); g.lineWidth = 3; g.strokeRect(50, 50, B - 100, H - 100);
-  g.save(); g.lineCap = "round"; if (mit) { g.translate(cx, 90); g.scale(0.8, 0.8); g.translate(-cx, -90); } (GK_MOTIVE.find((m) => m.id === k.motiv) || GK_MOTIVE[0]).zeichnen(g, cx, 470); g.restore();
+  g.save(); g.lineCap = "round"; if (mit) { g.translate(cx, 90); g.scale(0.7, 0.7); g.translate(-cx, -90); } /* 2.977.0: 0,7 statt 0,8 – der Strauß ragte in die Überschrift */ (GK_MOTIVE.find((m) => m.id === k.motiv) || GK_MOTIVE[0]).zeichnen(g, cx, 470); g.restore();
   const yT = mit ? 680 : 935, yX = mit ? 745 : 1000;
   g.textAlign = "center"; g.fillStyle = GK_ROT; let gr = mit ? 80 : 92; do { g.font = `italic 700 ${gr}px Georgia, 'Times New Roman', serif`; gr -= 4; } while (g.measureText(k.titel).width > B - 160 && gr > 44);
   g.fillText(k.titel, cx, yT);
   const u = gkUmbruch(g, k.text, B - 200); g.fillStyle = "#4a2a20"; g.font = `400 ${u.gr}px Georgia, 'Times New Roman', serif`;
   u.zeilen.forEach((z, i) => g.fillText(z, cx, yX + i * (u.gr + 8)));
   let y = yX + u.zeilen.length * (u.gr + 8) + (mit ? 10 : 20);
-  if (mit) { // Unterschriften: „Es grüßen dich:“ + Vornamen, Schrift wird kleiner, wenn es viele sind
+  if (mit && k.leute?.length) { g.fillStyle = GK_ROT; g.font = "700 38px Georgia, 'Times New Roman', serif"; g.fillText("Es grüßen dich:", cx, y + 10); y = gkGesichterZeichnen(g, k.leute, y + 40, cx, B); } // 2.977.0 KC-CLUB-GK-GESICHTER
+  else if (mit) { // Unterschriften: „Es grüßen dich:“ + Vornamen, Schrift wird kleiner, wenn es viele sind
     g.fillStyle = GK_ROT; g.font = "700 38px Georgia, 'Times New Roman', serif"; g.fillText("Es grüßen dich:", cx, y + 10); y += 60;
     let ngr = 34, zeilen = [];
     for (ngr = 40; ngr >= 22; ngr -= 2) { g.font = `italic 400 ${ngr}px Georgia, 'Times New Roman', serif`; zeilen = []; let z = "";
@@ -33439,7 +33440,7 @@ const gkWahl = () => { // Auswahl aus dem offenen Karten-Fenster
 };
 async function gkGemeinsamStarten() {
   if (!GK) return; const w = gkWahl(); if (!w.text) return melde("Bitte zuerst deinen Text schreiben – oder einen Vorschlag antippen.", true);
-  if (!(await frage(`👥 Gemeinsame Karte für ${GK.vorname} starten?\n\nAlle Mitglieder (außer ${GK.vorname}) bekommen eine Push und können 2 Tage lang mit einem Tipp unterschreiben. ${GK.vorname} sieht davon nichts.\n\nDanach (oder schon früher) schickst du die Karte mit allen Namen in den Chat.`, { ja: "👥 Starten", nein: "Abbrechen" }))) return;
+  if (!(await frage(`👥 Gemeinsame Karte für ${GK.vorname} starten?\n\nAlle Mitglieder (außer ${GK.vorname}) bekommen eine Push und eine E-Mail und werden beim Start der App gefragt – 2 Tage lang, unterschreiben mit einem Tipp (Name und Gesicht). ${GK.vorname} sieht davon nichts.\n\nDanach (oder schon früher) schickst du die Karte mit allen Namen in den Chat.`, { ja: "👥 Starten", nein: "Abbrechen" }))) return;
   try {
     const r = await api("gk_gemeinsam_start", { fuer: GK.pid, ...w, tage: 2 }, { warten: true });
     fensterZu($("gkBlatt")); melde(`👥 Gestartet – ${r.empfaenger} Mitglieder bekommen Bescheid. Du hast schon unterschrieben.`);
@@ -33452,25 +33453,96 @@ async function gkLaeuftZeigen(pid) {
     <div style="margin-top:6px"><button type="button" class="knopf klein haupt" onclick="fensterZu($('gkBlatt'));gkGemeinsamOeffnen('${esc(k.id)}')">${k.darfSenden ? "👁️ Ansehen & verschicken" : k.ichDabei ? "👁️ Ansehen" : "✍️ Unterschreiben"}</button></div></div>`;
   if (!k.darfSenden) $("gkGemeinsam")?.remove();
 }
+// ---------- 2.977.0 KC-CLUB-GK-GESICHTER (Wunsch Hansi 18.11.2026 „draufklicken, dann wird der Name und das Gesicht eingesetzt“ – „mit Profilfoto, oder Avatar
+// oder Initialen“): jede Unterschrift auf der gemeinsamen Karte als rundes Gesicht mit Vornamen. Reihenfolge: eigenes Foto → Avatar (Galerie/zusammengestellt) →
+// Initialen auf weinrotem Kreis. Größe passt sich der Zahl an; was nicht mehr passt, steht als „… und N weitere“ darunter.
+const gkBildLaden = (src) => new Promise((ok, nein) => { const i = new Image(); i.onload = () => ok(i); i.onerror = nein; i.src = src; });
+async function gkGesichtBild(pid) {
+  const code = (MITGLIEDER || []).find((x) => x.person_id === pid)?.avatar || "";
+  try {
+    if (AVF_RE.test(code)) { // eigenes Foto – bei Bedarf nachladen (sammelt mehrere in einem Abruf)
+      if (!AVF.bild[code]) { avfMerken(pid, code); for (let i = 0; i < 20 && !AVF.bild[code]; i++) await new Promise((r) => setTimeout(r, 100)); }
+      return AVF.bild[code] ? await gkBildLaden(AVF.bild[code]) : null;
+    }
+    if (AVG_RE.test(code)) return await gkBildLaden(`avatare/${code}.webp`);
+    const svg = code ? avatarSvg(code, 128) : "";
+    if (/^<svg /.test(svg)) return await gkBildLaden("data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg.replace("<svg ", '<svg xmlns="http://www.w3.org/2000/svg" ')));
+  } catch {}
+  return null;
+}
+async function gkLeuteMitBild(leute) {
+  if (!MITGLIEDER) try { await mitgliederHolen(); } catch {}
+  return Promise.all((leute || []).map(async (x) => ({ ...x, bild: await gkGesichtBild(x.pid) })));
+}
+function gkGesichterZeichnen(g, leute, y, cx, B) {
+  const breite = B - 160, unten = 1130, n = leute.length;
+  const mass = (s) => { const gap = Math.round(s * 0.2), fg = Math.max(16, Math.round(s * 0.22)); return { gap, fg, hZ: s + fg + 18, sp: Math.max(1, Math.floor((breite + gap) / (s + gap))) }; };
+  let s = 132, m = mass(s);
+  for (s = 132; s > 44; s -= 4) { m = mass(s); if (y + Math.ceil(n / m.sp) * m.hZ <= unten) break; }
+  m = mass(s);
+  const reserve = 44, maxZ = Math.max(1, Math.floor((unten - y) / m.hZ)), alle = Math.ceil(n / m.sp) <= maxZ;
+  const zeilen = alle ? Math.ceil(n / m.sp) : Math.max(1, Math.floor((unten - y - reserve) / m.hZ)), platz = alle ? n : m.sp * zeilen;
+  const zeig = leute.slice(0, platz);
+  zeig.forEach((x, i) => {
+    const z = Math.floor(i / m.sp), inZeile = Math.min(m.sp, zeig.length - z * m.sp), sx = cx - (inZeile * (s + m.gap) - m.gap) / 2 + (i % m.sp) * (s + m.gap) + s / 2, sy = y + z * m.hZ + s / 2, r = s / 2;
+    g.save(); g.beginPath(); g.arc(sx, sy, r, 0, Math.PI * 2); g.closePath();
+    if (x.bild) { g.clip(); g.fillStyle = "#fff"; g.fill(); g.drawImage(x.bild, sx - r, sy - r, s, s); }
+    else { g.fillStyle = GK_ROT; g.fill(); g.fillStyle = "#fff"; g.font = `700 ${Math.round(s * 0.4)}px Georgia, 'Times New Roman', serif`; g.textAlign = "center"; g.textBaseline = "middle";
+      g.fillText(String(x.name || "?").split(/\s+/).map((w) => w[0] || "").join("").slice(0, 2).toUpperCase(), sx, sy + 2); }
+    g.restore();
+    g.save(); g.lineWidth = Math.max(3, s * 0.04); g.strokeStyle = "#fff"; g.beginPath(); g.arc(sx, sy, r, 0, Math.PI * 2); g.stroke(); g.restore();
+    g.fillStyle = "#4a2a20"; g.textAlign = "center"; g.textBaseline = "alphabetic"; let fg = m.fg;
+    do { g.font = `italic 400 ${fg}px Georgia, 'Times New Roman', serif`; fg -= 1; } while (g.measureText(x.name).width > s + m.gap - 2 && fg > 12);
+    g.fillText(x.name, sx, sy + r + m.fg + 4);
+  });
+  let yE = y + Math.ceil(zeig.length / m.sp) * m.hZ;
+  if (zeig.length < n) { g.fillStyle = "#4a2a20"; g.font = "italic 400 30px Georgia, 'Times New Roman', serif"; g.textAlign = "center"; g.fillText(`… und ${n - zeig.length} weitere`, cx, yE + 26); yE += reserve; }
+  return yE + 34; // Abstand zum Absender darunter
+}
+// ---------- 2.977.0 KC-CLUB-GK-NACHFRAGE (Wunsch Hansi 18.11.2026): beim Start der App fragen, ob man auf der gemeinsamen Karte dabei sein möchte.
+// Nur offene Karten, die ich noch nicht unterschrieben habe (Server: init → gkOffen; nie die Karte für mich). „Später“ fragt beim nächsten Start noch einmal
+// (höchstens 2×), „Nein, danke“ nie wieder für diese Karte – gemerkt nur auf diesem Gerät. Je Sitzung höchstens einmal je Karte.
+const GKN_KEY = "kc_club_gk_nachfrage";
+function gknStand() { try { const o = JSON.parse(localStorage.getItem(GKN_KEY) || "{}"); return o && typeof o === "object" ? o : {}; } catch { return {}; } }
+function gknMerken(id, w) { const st = gknStand(); st[id] = w; const k = Object.keys(st); if (k.length > 20) for (const x of k.slice(0, k.length - 20)) delete st[x]; try { localStorage.setItem(GKN_KEY, JSON.stringify(st)); } catch {} }
+function gkNachfragePruefen(versuch = 0) {
+  const st = gknStand(), k = (INIT?.gkOffen || []).find((x) => { const w = st[x.id] || {}; return !w.nein && (w.spaeter || 0) < 2; });
+  if (!k) return;
+  if (document.hidden || aktuelleAnsicht !== "start" || document.querySelector(FENSTER_OFFEN)) { if (versuch < 3) setTimeout(() => gkNachfragePruefen(versuch + 1), 12000); return; }
+  try { if (sessionStorage.getItem("kc_club_gkn_" + k.id)) return; sessionStorage.setItem("kc_club_gkn_" + k.id, "1"); } catch {}
+  const f = blattAuf("gknBlatt", `<h3 style="margin-top:0">💐 ${esc(k.fuerName)} braucht gerade gute Wünsche.</h3>
+    <p style="margin:6px 0">Möchtest du ${esc(k.fuerName)} mit der <b>Gemeinschaftskarte vom Club</b> auch gute Besserung wünschen?</p>
+    <p class="hinweis" style="margin:0 0 10px">Ein Tipp genügt – dein Name und dein Gesicht kommen auf die Karte. ${esc(k.fuerName)} sieht sie erst, wenn sie kommt 🤫</p>
+    <div style="display:grid;gap:8px"><button type="button" class="knopf haupt" data-w="ja">💐 Ja, zur Karte</button>
+      <button type="button" class="knopf" data-w="spaeter">Später</button><button type="button" class="knopf" data-w="nein">Nein, danke</button></div>`);
+  f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => {
+    const w = b.dataset.w, alt = gknStand()[k.id] || {}; fensterZu(f);
+    if (w === "ja") return gkGemeinsamOeffnen(k.id);
+    gknMerken(k.id, w === "nein" ? { ...alt, nein: true } : { ...alt, spaeter: (alt.spaeter || 0) + 1 });
+  }));
+}
 async function gkGemeinsamOeffnen(id) {
   let d; try { d = await api("gk_gemeinsam_liste", {}, { warten: true }); } catch (e) { return meldeFehler(e); }
   const k = (d?.karten || []).find((x) => x.id === id);
   if (!k) return melde("Diese Karte ist schon verschickt – danke fürs Mitmachen! 💐");
-  const daten = { motiv: k.motiv, titel: gkTitel(k.fuerName)[k.titel] || gkTitel(k.fuerName)[0], text: k.text, von: k.von, namen: k.namen };
+  const daten = { motiv: k.motiv, titel: gkTitel(k.fuerName)[k.titel] || gkTitel(k.fuerName)[0], text: k.text, von: k.von, namen: k.namen,
+    leute: k.leute ? await gkLeuteMitBild(k.leute) : null }; // 2.977.0 KC-CLUB-GK-GESICHTER (älterer Server ohne „leute“ → wie bisher nur Vornamen)
   const bis = new Date(k.bis).toLocaleString("de-DE", { weekday: "short", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
   const f = blattAuf("gkGemBlatt", `<h3 style="margin-top:0">👥 Gemeinsame Karte für ${esc(k.fuerName)}</h3>
     <p class="hinweis" style="margin:0 0 6px">Gestartet von ${esc(k.starter)} · unterschreiben bis ${esc(bis)} · ${esc(k.fuerName)} sieht die Karte erst, wenn sie kommt 🤫</p>
     <img id="gkGemBild" alt="Gemeinsame Genesungskarte" style="width:100%;max-width:420px;display:block;margin:0 auto 8px;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.2)">
     <p style="margin:4px 0 8px;text-align:center"><b>${k.namen.length}</b> Unterschrift${k.namen.length === 1 ? "" : "en"}${k.namen.length ? ": " + esc(k.namen.join(", ")) : ""}</p>
     <div style="display:grid;gap:8px">
-      ${k.ichDabei ? `<button type="button" class="knopf" data-w="zurueck">↩️ Meine Unterschrift zurücknehmen</button>` : `<button type="button" class="knopf haupt" data-w="ja">✍️ Ich unterschreibe</button>`}
+      ${k.ichDabei ? `<button type="button" class="knopf" data-w="zurueck">↩️ Meine Unterschrift zurücknehmen</button>` : `<button type="button" class="knopf haupt" data-w="ja">👆 Hier tippen – mit Name und Gesicht unterschreiben</button>`}
       ${k.darfSenden ? `<button type="button" class="knopf ${k.ichDabei ? "haupt" : ""}" data-w="senden">💬 Jetzt in ${esc(k.fuerName)}s Chat legen</button><button type="button" class="knopf" data-w="abbrechen">🗑️ Karte abbrechen</button>` : ""}
       <button type="button" class="knopf" data-w="">Schließen</button></div>`);
   try { $("gkGemBild").src = (await gkZeichnen(daten)).toDataURL("image/jpeg", 0.88); } catch {}
   f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => einmal(b, async () => {
     const w = b.dataset.w; if (!w) return fensterZu(f);
     try {
-      if (w === "ja" || w === "zurueck") { await api("gk_unterschreiben", { id, zurueck: w === "zurueck" }, { warten: true }); fensterZu(f); melde(w === "ja" ? "✍️ Unterschrieben – danke!" : "↩️ Unterschrift zurückgenommen"); return gkGemeinsamOeffnen(id); }
+      if (w === "ja" || w === "zurueck") { await api("gk_unterschreiben", { id, zurueck: w === "zurueck" }, { warten: true }); fensterZu(f); melde(w === "ja" ? "💐 Unterschrieben – dein Gesicht ist jetzt auf der Karte. Danke!" : "↩️ Unterschrift zurückgenommen");
+        if (w === "ja" && INIT?.gkOffen) INIT.gkOffen = INIT.gkOffen.filter((x) => x.id !== id); // 2.977.0 KC-CLUB-GK-NACHFRAGE: nicht mehr fragen
+        return gkGemeinsamOeffnen(id); }
       if (w === "abbrechen") { if (!(await frage("Die gemeinsame Karte abbrechen? Sie wird nicht verschickt."))) return; await api("gk_gemeinsam_ende", { id, abbrechen: true }, { warten: true }); fensterZu(f); return melde("🗑️ Karte abgebrochen"); }
       if (w === "senden") {
         if (!(await frage(`Die Karte mit ${k.namen.length} Unterschrift${k.namen.length === 1 ? "" : "en"} jetzt in ${k.fuerName}s Chat legen?\n\nDanach kann niemand mehr unterschreiben.`, { ja: "💬 Ja, jetzt", nein: "Noch warten" }))) return;
@@ -36318,7 +36390,7 @@ const FENSTER_NAMEN = {
   diktatBlatt: "✍️ Diktieren", druckBlatt: "🖨️ Drucken", dsBlatt: "🗓️ Dienstplan", dsOrteBlatt: "📍 Dienst-Orte", dsWerBlatt: "👥 Wer ist heute im Dienst",
   rundBlatt: "🪑 Runder Tisch", rundNeuBlatt: "🪑 Zum Runden Tisch einladen", rundTischBlatt: "🪑 Am Runden Tisch", rundTascheBlatt: "💼 Tasche für den Runden Tisch", rundArchivBlatt: "🗄️ Tasche: aus dem Archiv", // 2.762.0 KC-CLUB-RUNDER-TISCH
   dtBlatt: "🗓️ Dienst-Tausch", dvBlatt: "📊 Dienstzeiten-Übersicht", dwSperreBlatt: "💡 Sperrzeit nicht nötig", egBlatt: "📥 Mein Eingangskorb", eingangBlatt: "📥 In den Eingangskorb eines Mitglieds",
-  einlBlatt: "📥 Dokument einlesen", ekAblageBlatt: "🗄️ Eingangskorb: ablegen", ekDwBlatt: "📅 Dienstzeiten", ekErstBlatt: "💶 Erstattung", ekErstOkBlatt: "✅ Erstattung als erstattet markieren?", gkBlatt: "💐 Genesungskarte", tpBlatt: "⚽ Bundesliga-Tippspiel", gkGemBlatt: "👥 Gemeinsame Karte", ekHinweisBlatt: "📥 Hinweis: Eingangskorb",
+  einlBlatt: "📥 Dokument einlesen", ekAblageBlatt: "🗄️ Eingangskorb: ablegen", ekDwBlatt: "📅 Dienstzeiten", ekErstBlatt: "💶 Erstattung", ekErstOkBlatt: "✅ Erstattung als erstattet markieren?", gkBlatt: "💐 Genesungskarte", tpBlatt: "⚽ Bundesliga-Tippspiel", gkGemBlatt: "👥 Gemeinsame Karte", gknBlatt: "💐 Frage: Gemeinsame Karte", ekHinweisBlatt: "📥 Hinweis: Eingangskorb",
   ekNachBlatt: "🔎 Nachverfolgen", elternBlatt: "👪 Eltern-Handy", entwicklerBlatt: "👨‍💻 Über den Entwickler", erBlatt: "✅ Alles eingerichtet", ibBlatt: "🖼️ Installieren mit Bildern", erinBlatt: "🔔 Erinnerung für dich",
   erkBlatt: "💡 Vorschlag aus der Nachricht", khBlatt: "📌 Für dich (Chat)", khErinBlatt: "⏰ An Nachricht erinnern", khAufgabeBlatt: "📋 Nachricht als Aufgabe",ersBesBlatt: "🎓 Fahrten aus Besuchen", ersCsvBlatt: "📊 Erstattungen für Excel", eblBlatt: "📒 Buchungsliste", esTafelBlatt: "📤 Tafel sichern", ewBlatt: "🧭 Einstellungen erklärt",
   expressBlatt: "🏎️ Express-Sendung", externBlatt: "🌐 Externer Inhalt", faAlbenKorb: "🗑️ Gelöschte Alben", faAlbumBlatt: "📸 Foto in welches Album?", faAlbumForm: "📸 Album anlegen/ändern",
@@ -37870,6 +37942,7 @@ async function gastStart(token) {
     if ((!h || h === "#") && (buSchreiben() || (buDarf() && (ICH?.vorstand || ICH?.admin)))) setTimeout(() => buAufgabePruefen(), 4000); // 2.750.0 KC-CLUB-SITZUNG-AUFGABE-START: nächste Aufgabe für die Sitzung (2.797.0 Stufe 4: nur die Clubleitung lädt dafür das Büro-Teil)
     if (!h || h === "#") setTimeout(() => taHinweisPruefen(), 5000);
     if (!h || h === "#") setTimeout(() => { try { grPruefen(); } catch {} }, 6500); // KC-CLUB-GEMEINSCHAFTSGERICHT: Frage nach der Zutat
+    if (!h || h === "#") setTimeout(() => { try { gkNachfragePruefen(); } catch {} }, 8000); // 2.977.0 KC-CLUB-GK-NACHFRAGE: gemeinsame Genesungskarte
     setTimeout(() => { try { pulsStarten(); } catch {} }, 3000); // KC-CLUB-PULS: Datenverkehr-Säulen (nur Admin)
     if (!h || h === "#") setTimeout(() => bwEinladungPruefen(), 15000); // 2.314.0 KC-CLUB-BEWEGUNG-EINLADUNG
     if (!h || h === "#") setTimeout(() => nuVorschlagPruefen(), 25000); // 2.418.0 KC-CLUB-KACHEL-VORSCHLAG (nach der Einladung, nie darüber)

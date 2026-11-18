@@ -1,13 +1,25 @@
 # Änderungen
 
-## 2.977.0 – 2026-11-18 – 📉 Weniger Datenverkehr: Anlagen merken, Chat-Übersicht teilen (KC-CLUB-ANHANG-MERKEN, KC-CLUB-UNTERHALTUNGEN-TEILEN)
+## 2.977.0 – 2026-11-18 – 20-Uhr-Bündel: 📉 Weniger Datenverkehr (KC-CLUB-ANHANG-MERKEN, KC-CLUB-UNTERHALTUNGEN-TEILEN) · 💐 Gemeinsame Genesungskarte mit Nachfrage und Gesichtern (KC-CLUB-GK-NACHFRAGE, KC-CLUB-GK-GESICHTER) · Server 2.977.0
+
+### 📉 Weniger Datenverkehr
 Hansi 18.11.: „Wir müssen den Verbraucher identifizieren und drosseln. Das Kontingent muss unbedingt reichen – auch nächsten Monat beim Echtbetrieb Weihnachtsmarkt.“ – „Paket 1 und 2 … dann testen und prüfen.“
 - Anlass: Supabase-Ausgang (Egress) 4,00 von 5 GB am 17.11. (Zeitraum bis 26.11.), Schonfrist abgelaufen. Messung 17.11.: Speicher-Downloads ~39 MB/Tag, Chat-Übersicht ~66 KB je Abruf.
 - **Anlagen und Fotos merken (KC-CLUB-ANHANG-MERKEN, sw.js):** signierte Speicher-Adressen bekamen je Ansicht einen neuen token – kein Zwischenspeicher griff, jedes Öffnen lud neu. Jetzt merkt der Service Worker jede Datei nach ihrem Pfad (ohne token; Pfade enthalten eine Zufallskennung und ändern sich nie) im eigenen Speicher `kcclub-anhaenge` (höchstens 300 Dateien, je höchstens 8 MB, älteste zuerst weg; ein Update löscht ihn nicht). Nicht gemerkt: „Herunterladen“ (?download=) und Teilabrufe (Videos). Fehler → wie bisher direkt aus dem Netz. „Von diesem Gerät abmelden“ und eine Sperre löschen den Speicher mit.
 - **Chat-Übersicht teilen (KC-CLUB-UNTERHALTUNGEN-TEILEN, app.js):** ein gemeinsamer Abruf statt vieler einzelner. Nebenstellen (Kachel „Kommunikationszentrale“, Gruppenlisten, Weiterleiten, Tipp-Hinweis, Büro …) nehmen 60 s lang den letzten Stand; die Chat-Übersicht selbst und das Vorlesen ungelesener Nachrichten holen immer frisch. Kachel „Kommunikationszentrale“ alle 5 statt jede Minute. Gleichzeitige Abrufe werden zusammengelegt.
-- Dazu (ohne App-Version, im Zeitplaner, Protokoll `kc_db_mirror_audit`): Notfall-Paket stündlich statt alle 15 Min. (17.11.), Betriebs-Wächter alle 15 statt 5 Min. (18.11.), Neon-Spiegel bis 26.11. 1× täglich (automatische Rückstellung). `docs/NOTBETRIEB.md` angepasst.
-- Test: neu `tests/egress-sparen.test.mjs`. Rückweg: App 2.976.0 (der Speicher `kcclub-anhaenge` stört eine ältere Version nicht). Nur die App.
-- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+- Dazu (ohne App-Version, im Zeitplaner, Protokoll `kc_db_mirror_audit`): Notfall-Paket stündlich statt alle 15 Min. (17.11.), Betriebs-Wächter alle 15 statt 5 Min. (18.11.), Neon-Spiegel bis 26.11. 1× täglich (automatische Rückstellung). `docs/NOTBETRIEB.md` und die Zeiten-Liste für „Warum dauert es?“ (Server `SCHWER_ZEITEN`: Notfall-Paket nur noch :09) angepasst.
+- Test: neu `tests/egress-sparen.test.mjs`. Rückweg: App 2.976.0 (der Speicher `kcclub-anhaenge` stört eine ältere Version nicht).
+
+### 💐 Gemeinsame Genesungskarte: Nachfrage beim Start, Push + E-Mail, Gesichter (KC-CLUB-GK-NACHFRAGE, KC-CLUB-GK-GESICHTER)
+Wunsch Hansi 18.11.: „Alle, die sich an der Club-App anmelden, sollen die Frage bekommen: Möchtest du Karla mit der Gemeinschaftskarte vom Club auch gute Besserung wünschen? Wenn ja, zur Karte geleiten und draufklicken, dann wird der Name und das Gesicht eingesetzt.“ – Antworten: „Karla braucht gerade gute Wünsche“, „mit Profilfoto oder Avatar oder Initialen“, „ja Push und E-Mail an alle … die selten reingehen“.
+- **Nachfrage beim Start:** Läuft eine gemeinsame Karte, die ich noch nicht unterschrieben habe, fragt die App nach dem Start: „💐 Karla braucht gerade gute Wünsche. Möchtest du Karla mit der Gemeinschaftskarte vom Club auch gute Besserung wünschen?“ – **Ja, zur Karte** · **Später** (beim nächsten Start noch einmal, höchstens 2×) · **Nein, danke** (nie wieder für diese Karte; gemerkt nur auf dem Gerät). Die beschenkte Person wird nie gefragt. Server: `init` liefert `gkOffen` (eine kleine Abfrage, meist leer).
+- **Unterschreiben mit Gesicht:** „👆 Hier tippen – mit Name und Gesicht unterschreiben“. Die Karte zeigt unter „Es grüßen dich:“ jedes Mitglied als rundes Gesicht mit Vornamen: eigenes Foto → Avatar → Initialen. Viele Unterschriften → kleinere Gesichter, notfalls „… und N weitere“. Die Karte für den Chat enthält die Gesichter. Server: `gk_gemeinsam_liste` liefert dazu `leute` (Kennung + Vorname).
+- **Push und E-Mail an alle** (außer der beschenkten Person) beim Start der Karte – Mailtext: „Hallo, in der Club-App liegt eine Genesungskarte für Karla bereit. Wenn du auch drauf sein möchtest, geh in die Club-App – du bekommst die Anfrage dann beim Start der App.“ Mails laufen über das Club-Postfach mit Versandbremse (3/Min., 20/Std.) – bei vielen Mitgliedern kommen sie über ein bis zwei Stunden verteilt an.
+- Weiterhin kein Grund und keine Krankheit auf Karte, Frage, Push oder Mail. Keine neuen Tabellen.
+- Nebenbei behoben: Auf der gemeinsamen Karte ragte die Vase des Blumenstraußes in die Überschrift (Motiv jetzt 70 % statt 80 %). Sichtprüfung im abgeschirmten Browser mit 5 und 45 Unterschriften.
+- Tests: neu `tests/gk-nachfrage.test.mjs`, `tests/genesungskarte.test.mjs` angepasst (Push + E-Mail). Rückweg: App + Server 2.976.0/2.975.0.
+
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“ (Regel Hansi 14.10.).
 
 ## 2.976.0 – 2026-11-18 – ⏳ Beim Start sagen, warum es dauert – und wie lange noch (KC-CLUB-START-WARUM)
 Wunsch Hansi 18.11.: „Wichtig ist, dass der User eine Meldung bekommt, warum es gerade dauert, z. B. Notfall-Paket wird gerade gebaut, dauert noch ca. 3 Minuten, Spiegelung läuft noch ca. 4 Min. usw.“
