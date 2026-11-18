@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.979.0 – 2026-11-18 – 💐 Gemeinsame Karte: Hinweis beim Öffnen der App (KC-CLUB-GK-HINWEIS)
+Hansi 18.11.: „Ich dachte, wenn man die App aufruft, bekommt man einen Hinweis?“
+- Läuft eine gemeinsame Gute-Besserung-Karte und man hat noch nicht unterschrieben, fragt die App nach dem Start: „💐 Gemeinsame Karte für Karla – Hansi hat eine Gute-Besserung-Karte gestartet – 2 haben schon unterschrieben. Magst du auch unterschreiben?“ → **„💐 Karte ansehen & unterschreiben“** zeigt die Karte mit allen Namen. „Später“ = heute nicht mehr fragen.
+- Dazu eine goldene Zeile im **Info-Laufband**, bis man unterschrieben hat. Die beschenkte Person sieht nichts (der Server gibt ihr die Karte nie heraus). Der Hinweis wartet, bis kein anderes Start-Fenster offen ist.
+- Test: `tests/genesungskarte.test.mjs` erweitert. Rückweg: App 2.978.0. Nur die App.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.978.0 – 2026-11-18 – 📐 Anordnung der Knöpfe (KC-CLUB-ANORDNUNG) · nur App (Server unverändert)
 Wunsch Hansi 18.11.: nach dem Vorbild Bachkreis erst prüfen, dann „Ja bauen, aber vorsichtig“. Gemessen: 84 Seiten/Fenster in 6 Rollen (Admin, Vorstand, Mitglied,
 Aushilfe, Gast, einfache Ansicht) auf Handy 360 px und Tablet 820 px – 4.877 Knöpfe. Nichts war zu breit; gezielt verbessert:
