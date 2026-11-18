@@ -1,5 +1,23 @@
 # Änderungen
 
+## (Version folgt) – 📡 Weniger Datenbank-Abfragen über die direkte Leitung (KC-CLUB-LEITUNG-SPARSAM) · nur App (Server unverändert)
+Wunsch Hansi 18.11.: „einsparen über die direkte Leitung“ – „ja setze alles so um“. Steht die direkte Leitung (Supabase Realtime), meldet sich Neues
+ohnehin sofort als Signal; die App fragt dann seltener selbst nach. **Ohne Leitung bleibt alles wie bisher** (Notweg).
+- **Online-Abgleich:** Stehen Leitung und Anwesenheit, fragt die App nur noch alle 10 Min. zur Sicherheit „wer ist online“ (vorher alle 90 s).
+  Sofort weiterhin: beim Start, beim Zurückkommen in die App, wenn jemand kommt oder geht (Anwesenheit), nach Neuaufbau der Leitung und bei
+  Anklopfen, Anruf, Spiel, Vorführen, Mitschauen. Ist laut Anwesenheit sonst niemand da, entfällt auch der Sicherheitsabgleich.
+  Warten auf eine Anklopf-Antwort: mit Leitung alle 15 s (die Antwort kommt als Signal), ohne Leitung wie bisher alle 4 s.
+  Ob jemand als „online“ angezeigt wird, hängt nicht daran: das Lebenszeichen (alle 60 s, unverändert) hält das beim Server frisch.
+- **Pinnwand:** mit Leitung alle 10 statt 3 Min. nachsehen (neue Zettel kommen als Signal); ohne Leitung unverändert alle 45 s.
+- **Terminanfragen:** mit Leitung alle 60 statt 30 Min. zur Sicherheit; beim Zurückkommen in die App nur, wenn sie länger als 10 Min. weg war
+  oder die Leitung zwischendurch unterbrochen war.
+- **Push bei offener App:** kein zusätzlicher Online- und Terminanfragen-Abgleich, wenn die Leitung steht.
+- **Countdowns oben rechts** (Reisen, Geburtstage …): die 6-Stunden-Regel gilt jetzt auch über App-Starts hinweg (vorher bei jedem Start neu geholt).
+- **Nutzung und Wege:** im Takt alle 5 statt 2 Min. gemeldet; beim Weglegen/Schließen weiterhin sofort, neue Wege weiterhin nach 15 s Ruhe.
+- Geschätzt je Gerät mit offener App und Leitung: rund 50 Abrufe weniger pro Stunde (Online ~34, Pinnwand ~14, Rest Terminanfragen/Nutzung/Wege),
+  dazu je App-Start 1 Abruf „countdowns“ und je Push bei offener App 2 Abrufe.
+- Test: `tests/leitung-sparsam.test.mjs` (angepasst: anwesenheit, online-echt, online-jede-anfrage, rt-terminanfrage, app-vertrag).
+
 ## 2.978.0 – 2026-11-18 – 📐 Anordnung der Knöpfe (KC-CLUB-ANORDNUNG) · nur App (Server unverändert)
 Wunsch Hansi 18.11.: nach dem Vorbild Bachkreis erst prüfen, dann „Ja bauen, aber vorsichtig“. Gemessen: 84 Seiten/Fenster in 6 Rollen (Admin, Vorstand, Mitglied,
 Aushilfe, Gast, einfache Ansicht) auf Handy 360 px und Tablet 820 px – 4.877 Knöpfe. Nichts war zu breit; gezielt verbessert:

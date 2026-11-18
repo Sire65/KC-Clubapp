@@ -1324,13 +1324,17 @@ async function pwStart(nurZaehlen) { // nurZaehlen: Begrüßung ist offen → Pi
 // KC-CLUB-PINNWAND-LIVE (0.57.0): bei geöffneter App alle PW_LIVE_MS nach neuen Zetteln schauen (Aktion pinnwand_neu markiert
 // nichts als gesehen). Jeder Zettel wird nur einmal eingeblendet (gemerkt je Gerät, reine Komfortfunktion).
 const PW_LIVE_MS = 45000, PW_GEMELDET_MAX = 200;
+// 18.11.2026 KC-CLUB-LEITUNG-SPARSAM (Wunsch Hansi „einsparen über die direkte Leitung“): mit stehender Leitung fragt der Takt nur alle 10 Min.
+// (vorher 3 Min.) – neue Zettel meldet das Signal „pinnwand“ sofort. Wurde die Leitung seitdem neu aufgebaut, gleich fragen (Lücke).
+const PW_RT_MS = 10 * 60000;
+let PW_AUFBAU = -1;
 const PW_GEMELDET = new Set((() => { try { return JSON.parse(localStorage.getItem("kc_club_pw_gemeldet") || "[]"); } catch { return []; } })());
 let PW_ZULETZT = 0; // 2.360.0 KC-CLUB-AKKU-5
 async function pwLive(takt) {
   if (document.hidden || !ICH) return;
   // 2.360.0 KC-CLUB-AKKU-5: steht die direkte Leitung, meldet sie neue Zettel sofort – der Takt fragt dann nur alle 3 Min. nach (vorher alle 45 s)
-  if (takt === true && RT.ok && Date.now() - PW_ZULETZT < 180000) return;
-  PW_ZULETZT = Date.now();
+  if (takt === true && RT.ok && PW_AUFBAU === RT.aufbauten && Date.now() - PW_ZULETZT < PW_RT_MS) return;
+  PW_ZULETZT = Date.now(); PW_AUFBAU = RT.aufbauten;
   let r; try { r = await api("pinnwand_neu"); } catch { return; }
   const neu = (r.neu || []).filter((z) => !PW_GEMELDET.has(z.id));
   const alt = PW.neu; PW.neu = r.anzahl ?? (r.neu || []).length; if (PW.neu !== alt) pwZahl(); // 2.763.0 KC-CLUB-PINNWAND-NEU-PULS
@@ -4818,13 +4822,16 @@ function zweiBrowserMelden(a) {
   f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => { f.remove(); merken(b.dataset.w === "anderes" ? "anderes" : String(Date.now() + 3600000));
     if (b.dataset.w === "anderes") melde("👍 Alles klar – dafür frage ich nicht mehr."); }));
 }
-async function onlinePing() {
+async function onlinePing(opt) {
   if (!KEY || !ICH || document.hidden) return;
+  // 18.11.2026 KC-CLUB-LEITUNG-SPARSAM: beim 10-Min.-Sicherheitsabgleich auslassen, wenn laut Anwesenheit außer diesem Gerät niemand da ist
+  // und die Liste ohnehin leer ist (nicht bei Start, Rückkehr, Signal) – der leere Stand gilt dann als bestätigt.
+  if (opt?.sicher === true && anwNurIch() && !ONL.liste.length && !ONL.wartet) { ONL.stand = ONL.echt = Date.now(); return; }
   try {
     const r = await api("online", { fenster: fensterKennung(), ...installStandMelden() }); // 2.859.0 KC-CLUB-INSTALL-STAND
     if (r.fensterAnders) zweiBrowserMelden(r.fensterAnders); // KC-CLUB-ZWEI-BROWSER
     const vorher = [...ONL.ids].sort().join(); // KC-CLUB-ONLINE-EINE-QUELLE (2.24.18)
-    ONL.zeigen = r.zeigen; ONL.liste = r.online || []; ONL.ids = new Set(ONL.liste.map((x) => x.person_id)); ONL.stand = Date.now();
+    ONL.zeigen = r.zeigen; ONL.liste = r.online || []; ONL.ids = new Set(ONL.liste.map((x) => x.person_id)); ONL.stand = ONL.echt = Date.now();
     ONL.gs = r.gespraeche || []; ONL.gsAnonym = r.gespraecheAnonym || 0; // KC-CLUB-GESPRAECHE
     dazuFrage(r.dazukommen); gsMeineStand(r.dazuMeine);
     if (vorher !== [...ONL.ids].sort().join() && aktuelleAnsicht === "mitglieder" && MITGLIEDER) { try { mitgliederZeichnen(); } catch {} }
@@ -4884,12 +4891,15 @@ async function onlinePing() {
 const RT_URL = "wss://ptblnpiroqftcvlsrhac.supabase.co/realtime/v1/websocket", RT_KEY = "sb_publishable_SqXIeGN-clcZ4gjmpLdSww_4DLfyy24";
 const RT_HERZ_MS = 25000, RT_WARTE_MAX_MS = 60000;
 const RT = { ws: null, ok: false, ref: 0, herz: null, neu: null, warte: 1000, kanal: null, zu: false, zaehlen: null, signale: 0,
-  anw: false, anwKey: "g" + Math.random().toString(36).slice(2, 12), anwUhr: null, anwLetzt: 0 }; // KC-CLUB-ANWESENHEIT
+  anw: false, anwKey: "g" + Math.random().toString(36).slice(2, 12), anwUhr: null, anwLetzt: 0, // KC-CLUB-ANWESENHEIT
+  aufbauten: 0, anwKeys: new Set(), anwStand: false }; // 18.11.2026 KC-CLUB-LEITUNG-SPARSAM: Zahl der (Neu-)Aufbauten · wer laut Anwesenheit da ist (nur Zufallskennungen)
 // KC-CLUB-ANWESENHEIT (03.11.2026, Wunsch Hansi): jedes Gerät meldet sich zusätzlich anonym im gemeinsamen Anwesenheits-Kanal (init.rtClub,
 // Supabase Presence) – nur Zufallskennung, kein Name. Kommt ein anderes Gerät dazu oder geht, fragt die App gleich beim Server nach, wer da ist
 // (der Server entscheidet die Sichtbarkeit). Darum genügt der regelmäßige Abgleich dann alle 2 statt jede Minute (spart Datenbank-Abfragen).
 // Höchstens ein Extra-Abgleich je 20 s und zufällig 2–6 s versetzt, damit nicht alle Geräte gleichzeitig fragen.
-const ANW_TAKT_MS = 90000, ANW_ABSTAND_MS = 20000; // KC-CLUB-ONLINE-JEDE-ANFRAGE (09.11.2026): 90 s statt 120 s – der Server zeigt „online“ nur 150 s nach der letzten Meldung
+// 18.11.2026 KC-CLUB-LEITUNG-SPARSAM: der feste Anwesenheits-Takt (zuletzt 90 s) entfällt – mit Leitung + Anwesenheit gilt der Sicherheitsabgleich
+// alle 10 Min. (ONL_SICHER_MS bei onlineTakt); „online“ beim Server hält das Lebenszeichen (60 s) frisch, nicht dieser Abgleich.
+const ANW_ABSTAND_MS = 20000;
 const ONLINE_TAKT_MAX_MS = 90000; // nie seltener als alle 90 s melden, auch im Sparmodus (vorher bis zu 6 Min. → Mitglied verschwand nach 2½ Min.)
 function anwAnders() {
   if (RT.anwUhr) return;
@@ -4916,19 +4926,23 @@ function rtVerbinden() {
     let d; try { d = JSON.parse(e.data); } catch { return; }
     RT.letzte = Date.now(); // jede Antwort (auch auf den Herzschlag) zeigt: Leitung lebt
     if (d.topic === "phoenix" && d.event === "phx_reply" && d.ref === RTM.herzRef && RTM.herzAb) { if (!document.hidden) rtMessWert("rtt", performance.now() - RTM.herzAb); RTM.herzAb = 0; } // 2.863.0
-    if (d.event === "phx_reply" && d.topic === "realtime:" + kanal && d.payload?.status === "ok" && !RT.ok) { if (RTM.aufbauAb && !document.hidden) rtMessWert("aufbau", performance.now() - RTM.aufbauAb); RTM.aufbauAb = 0; RT.ok = true; RT.warte = 1000; onlineTakt(); rtNachholen(); rtLedZeigen(); }
+    if (d.event === "phx_reply" && d.topic === "realtime:" + kanal && d.payload?.status === "ok" && !RT.ok) { if (RTM.aufbauAb && !document.hidden) rtMessWert("aufbau", performance.now() - RTM.aufbauAb); RTM.aufbauAb = 0; RT.ok = true; RT.aufbauten++; RT.warte = 1000; onlineTakt(); rtNachholen(); rtLedZeigen(); }
     else if (d.event === "broadcast" && d.payload?.event === "neu") rtSignal(d.payload.payload || {});
     else if (INIT?.rtClub && d.topic === "realtime:" + INIT.rtClub) { // KC-CLUB-ANWESENHEIT
       if (d.event === "phx_reply" && d.payload?.status === "ok" && !RT.anw) {
         RT.anw = true; senden({ topic: d.topic, event: "presence", payload: { type: "presence", event: "track", payload: { t: 1 } } }); onlineTakt();
+      } else if (d.event === "presence_state") { // 18.11.2026 KC-CLUB-LEITUNG-SPARSAM: wer ist gerade im Anwesenheits-Kanal (nur Kennungen zählen)
+        RT.anwKeys = new Set(Object.keys(d.payload || {})); RT.anwStand = true;
       } else if (d.event === "presence_diff") {
         const keys = [...Object.keys(d.payload?.joins || {}), ...Object.keys(d.payload?.leaves || {})];
+        for (const k of Object.keys(d.payload?.leaves || {})) RT.anwKeys.delete(k); // erst gehen, dann kommen (neu eintragen = gehen + kommen)
+        for (const k of Object.keys(d.payload?.joins || {})) RT.anwKeys.add(k);
         if (keys.some((k) => k !== RT.anwKey)) anwAnders();
       }
     }
   };
   ws.onclose = () => { if (RT.ws !== ws) return; const war = RT.ok; if (war && !RT.zu && !document.hidden) RTM.abbrueche++; // 2.863.0 KC-CLUB-LEITUNG-MESSUNG
-    RT.ok = false; RT.anw = false; RT.ws = null; clearInterval(RT.herz); if (war) onlineTakt(); if (!RT.zu) rtSpaeter(); rtLedZeigen(); };
+    RT.ok = false; RT.anw = false; RT.anwStand = false; RT.anwKeys = new Set(); RT.ws = null; clearInterval(RT.herz); if (war) onlineTakt(); if (!RT.zu) rtSpaeter(); rtLedZeigen(); };
   ws.onerror = () => {};
 }
 function rtSpaeter() { clearTimeout(RT.neu); RT.naechster = Date.now() + RT.warte; RT.neu = setTimeout(rtVerbinden, RT.warte); RT.warte = Math.min(RT.warte * 2, RT_WARTE_MAX_MS); }
@@ -5094,7 +5108,8 @@ function rtBlatt() {
   f.querySelector("[data-zu]").onclick = zu;
   f.querySelector("[data-neu]").onclick = () => { RT.warte = 1000; rtTrennen(); rtVerbinden(); zu(); setTimeout(rtLedZeigen, 1500); };
 }
-function rtTrennen() { RT.zu = true; clearTimeout(RT.neu); clearInterval(RT.herz); const ws = RT.ws; RT.ws = null; RT.ok = false; RT.anw = false; try { ws?.close(); } catch {} }
+function rtTrennen() { RT.zu = true; clearTimeout(RT.neu); clearInterval(RT.herz); const ws = RT.ws; RT.ws = null; RT.ok = false; RT.anw = false; RT.anwStand = false; RT.anwKeys = new Set(); try { ws?.close(); } catch {}
+  if (ONL.timer && ONL.sicher) onlineTakt(); } // 18.11.2026 KC-CLUB-LEITUNG-SPARSAM: ohne Leitung sofort wieder der alte Takt (Notweg), nicht der 10-Min.-Sicherheitsabgleich (nur dann neu stellen – sonst schöbe jeder Verbindungsversuch den Takt hinaus)
 // nach dem (Wieder-)Verbinden einmal nachsehen, damit in der Lücke nichts verloren geht
 function rtNachholen() { onlinePing(); dtSignalLaden(); if (typeof spNachsehen === "function" && typeof SP !== "undefined" && SP?.offen) spNachsehen(true); /* KC-CLUB-RT-DIENST, KC-CLUB-RT-SPIEL-SPARSAM: Lücke nachholen */ if (chatId && aktuelleAnsicht === "chat" && !chatTakt.laeuft) { chatTakt.laeuft = true; chatLaden(false).finally(() => { chatTakt.laeuft = false; }); } }
 function rtSignal(s) {
@@ -5197,12 +5212,25 @@ document.addEventListener("visibilitychange", () => {
   if (document.hidden) RT.hinterUhr = setTimeout(() => { if (document.hidden && RT.ws) rtTrennen(); }, 60000);
 });
 // Takt: normal 60 s; während ich auf eine Antwort warte alle 4 s (höchstens 3 Minuten)
+// 18.11.2026 KC-CLUB-LEITUNG-SPARSAM (Wunsch Hansi „einsparen über die direkte Leitung“): stehen Leitung UND Anwesenheit, meldet jede Änderung sich
+// selbst (Anwesenheit kommt/geht → anwAnders, Signale klopfen/anruf/spiel/vorfuehren/mitschauen/online) – der regelmäßige Abgleich ist dann nur
+// noch eine Sicherheit alle 10 Min. Sofort weiterhin: Start, Rückkehr in den Vordergrund, Neuaufbau der Leitung, jedes Signal. Warten auf eine
+// Anklopf-Antwort mit Leitung alle 15 s (die Antwort kommt als Signal „klopfen“), ohne Leitung alle 4 s. Ohne Leitung bleibt alles wie bisher (Notweg).
+// „Online“ bleibt trotzdem genau: das Lebenszeichen (alle 60 s, sichtbare App) hält zuletzt_gesehen/online_seit beim Server frisch (ONLINE_SEK 150 s).
+const ONL_SICHER_MS = 10 * 60000, ONL_WARTET_RT_MS = 15000;
+const onlLeitungVoll = () => rtAn() && RT.anw;
+const anwNurIch = () => RT.anw && RT.anwStand && ![...RT.anwKeys].some((k) => k !== RT.anwKey); // laut Anwesenheit ist sonst niemand da
 function onlineTakt() {
-  clearInterval(ONL.timer);
+  clearInterval(ONL.timer); ONL.sicher = !ONL.wartet && onlLeitungVoll();
+  if (ONL.sicher) { ONL.timer = setInterval(() => onlinePing({ sicher: true }), ONL_SICHER_MS); return; } // KC-CLUB-LEITUNG-SPARSAM
   // KC-CLUB-ANRUF-TAKT (0.80.0): ohne Push erfährt die App von einem Anruf nur über diesen Takt – ein Anruf klingelt 45 s,
   // darum dann alle 15 s nachsehen (mit Push weckt der Push die offene App sofort, 60 s reichen).
-  ONL.timer = setInterval(onlinePing, ONL.wartet ? 4000 : Math.min(ONLINE_TAKT_MAX_MS, sparTakt(rtAn() && RT.anw ? ANW_TAKT_MS : PUSH_AKTIV || rtAn() ? 60000 : 15000))); // KC-CLUB-SPARMODUS: seltener · KC-CLUB-REALTIME: Leitung steht → wie mit Push · KC-CLUB-ANWESENHEIT: Anwesenheit steht → alle 2 Min.
+  ONL.timer = setInterval(onlinePing, ONL.wartet ? (rtAn() ? ONL_WARTET_RT_MS : 4000) : Math.min(ONLINE_TAKT_MAX_MS, sparTakt(PUSH_AKTIV || rtAn() ? 60000 : 15000))); // KC-CLUB-SPARMODUS: seltener · KC-CLUB-REALTIME: Leitung steht → wie mit Push
 }
+// KC-CLUB-LEITUNG-SPARSAM: die Anzeigen werten einen Online-Stand nur 3 Min. als aktuell (ONL.stand). Solange Leitung und Anwesenheit stehen und
+// die Leitung antwortet, ist die Liste bestätigt (jede Änderung hätte einen Abgleich ausgelöst) – dann jede Minute als bestätigt markieren,
+// höchstens bis 90 s nach dem fälligen Sicherheitsabgleich (ONL.echt = letzte echte Antwort). Bricht die Leitung ab, veraltet der Stand wie bisher.
+setInterval(() => { try { if (onlLeitungVoll() && ONL.echt && Date.now() - ONL.echt < ONL_SICHER_MS + 90000 && Date.now() - (RT.letzte || 0) < RT_STILL_MS) ONL.stand = Date.now(); } catch {} }, 60000);
 document.addEventListener("visibilitychange", () => { // KC-CLUB-WER-IST-DA (2.454.0): nach ≥ 10 Min. im Hintergrund wieder „wer ist da“ – vor dem Ping
   if (document.hidden) WER_DA.weg = Date.now(); else if (WER_DA.weg && Date.now() - WER_DA.weg >= ANSAGE_PAUSE_MS) WER_DA.faellig = true;
 });
@@ -17399,7 +17427,14 @@ async function dgZeigen(vonHand = false) {
 // bleibt die Kachel beim Treffen. Jeder wählt unter ⚙️ → Startseite, was mitläuft; „Nur nächstes Clubtreffen“ = Standard ohne Wechsel.
 // Reisen und Geburtstage holt die App still im Hintergrund (Server „countdowns“, höchstens alle 6 Std., letzter Stand im Gerät).
 const CD_TAKT_MS = 5000, CD_NEU_MS = 6 * 3600000;
-const CD = { i: 0, daten: (() => { try { return JSON.parse(localStorage.getItem("kc_club_cd") || "null"); } catch { return null; } })(), laedt: false, stand: 0, uhr: null };
+// 18.11.2026 KC-CLUB-LEITUNG-SPARSAM (Wunsch Hansi „einsparen über die direkte Leitung“): der Abholzeitpunkt (CD.stand) steht
+// zusätzlich im Gerät – so greift die 6-Stunden-Regel auch über App-Starts hinweg (vorher: jeder Start = 1 Abfrage „countdowns“).
+const CD_STAND_KEY = "kc_club_cd_stand";
+// Gilt nur für dasselbe Gerät + denselben Zugang (Kurzzeichen der letzten 6 Stellen) – nach Wechsel des Zugangs wird neu geholt.
+const cdZugangZeichen = () => { try { return String(KEY || "").slice(-6); } catch { return ""; } };
+const cdStandLesen = () => { try { const [t, z] = String(localStorage.getItem(CD_STAND_KEY) || "").split("|"); const n = +t || 0; return n > 0 && n <= Date.now() && (z || "") === cdZugangZeichen() ? n : 0; } catch { return 0; } };
+const cdStandMerken = (t) => { CD.stand = t; try { if (t > 0) localStorage.setItem(CD_STAND_KEY, `${t}|${cdZugangZeichen()}`); else localStorage.removeItem(CD_STAND_KEY); } catch {} };
+const CD = { i: 0, daten: (() => { try { return JSON.parse(localStorage.getItem("kc_club_cd") || "null"); } catch { return null; } })(), laedt: false, stand: -1, uhr: null }; // -1 = noch nicht aus dem Gerät gelesen
 const cdTageBis = (iso) => Math.round((Date.parse(iso + "T12:00:00Z") - Date.parse(heuteIso() + "T12:00:00Z")) / 86400000);
 const cdNaechsterTag = (md) => { const h = heuteIso(), j = +h.slice(0, 4); for (const y of [j, j + 1]) { const schalt = new Date(Date.UTC(y, 1, 29)).getUTCDate() === 29; const d = `${y}-${md === "02-29" && !schalt ? "02-28" : md}`; if (d >= h) return d; } return null; };
 const cdNoch = (tage) => tage <= 0 ? "Heute!" : tage === 1 ? "Morgen" : `${tage} Tage`; // kurz – die Kachel ist schmal
@@ -17504,8 +17539,9 @@ function cdStil(stil) { try { localStorage.setItem("kc_club_cd_stil", stil); } c
 function cdTippen() { const l = cdListe(CD.bisTreffen || ""); (l[CD.i] || l[0]).los(); }
 function cdStart() {
   if (!CD.uhr) CD.uhr = setInterval(cdWeiter, CD_TAKT_MS);
+  if (CD.stand < 0) CD.stand = CD.daten ? cdStandLesen() : 0; // KC-CLUB-LEITUNG-SPARSAM: Stand vom letzten App-Start (ohne Daten im Gerät gleich holen)
   if (!CD.laedt && Date.now() - CD.stand > CD_NEU_MS) { CD.laedt = true; // 2.242.0: auch bei „Nur Clubtreffen“ (angehakte private Termine)
-    setTimeout(() => api("countdowns", {}, { still: true }).then((r) => { CD.daten = { reisen: r.reisen || [], geburtstage: r.geburtstage || [], veranstaltungen: r.veranstaltungen || [], privat: r.privat || [] }; CD.stand = Date.now(); try { localStorage.setItem("kc_club_cd", JSON.stringify(CD.daten)); } catch {} cdFrisch(); })
+    setTimeout(() => api("countdowns", {}, { still: true }).then((r) => { CD.daten = { reisen: r.reisen || [], geburtstage: r.geburtstage || [], veranstaltungen: r.veranstaltungen || [], privat: r.privat || [] }; try { localStorage.setItem("kc_club_cd", JSON.stringify(CD.daten)); } catch {} cdStandMerken(Date.now()); cdFrisch(); })
       .catch(() => { CD.stand = Date.now() - CD_NEU_MS + 600000; }).finally(() => { CD.laedt = false; }), 4000); } // nach dem Start, nicht mittendrin
 }
 function cdWeiter() {
@@ -18214,7 +18250,7 @@ function offlineStandZeigen(an) {
 window.addEventListener("online", () => { if (KEY) neuLaden(); owSenden(); }); // 2.1.1: INIT nicht leeren – das Neuladen ersetzt den Offline-Stand
 // 2.209.0 KC-CLUB-ONLINE-OFFLINE (Gesamtprüfung 5, AGENTS Regel 11): ohne Netz wissen wir nicht, wer online ist – Anzeige
 // „X sind gerade online“, grüne Zahl und Ameisenlauf verschwinden sofort statt grün stehen zu bleiben; mit Netz kommt der Stand neu
-window.addEventListener("offline", () => { try { ONL.liste = []; ONL.ids = new Set(); ONL.stand = 0; onlineLeisteZeigen(); if (INIT) heroZeigen(); } catch {} });
+window.addEventListener("offline", () => { try { ONL.liste = []; ONL.ids = new Set(); ONL.stand = ONL.echt = 0; onlineLeisteZeigen(); if (INIT) heroZeigen(); } catch {} });
 // 2.481.0 KC-CLUB-OFFLINE-KLARTEXT (TÜV B-16: ging das Netz während der Benutzung weg, sagte nur die rote LED etwas; Regel 11: veralteten Stand sichtbar
 // markieren): dieselbe Zeile wie beim Offline-Start – „Kein Netz – das ist dein Stand von …“; kommt das Netz zurück, ersetzt das Neuladen sie
 window.addEventListener("offline", () => { try { if (INIT && !INIT._offline && NEU_ZULETZT) { INIT._offline = NEU_ZULETZT; offlineStandZeigen(true); } } catch {} });
@@ -23176,7 +23212,7 @@ async function ntEintragen(q, ziel) {
   try {
     await api("privattermin_speichern", { titel, beginn, ende, ganztaegig: ganz, ort, notiz, erinnerung_min: Number($("ntErinnerung").value), wiederholung: "keine", wiederholung_bis: null, startseite: false });
   } catch (e) { return meldeFehler(e); }
-  const handy = $("ntHandy").checked; $("ntBlatt")?.remove(); CD.stand = 0;
+  const handy = $("ntHandy").checked; $("ntBlatt")?.remove(); cdStandMerken(0);
   melde(`📅 Eingetragen: ${titel} – in deinem Kalender (nur du siehst ihn)`);
   if (handy) { const k = "nt-" + Date.now(); TREFFEN_IDX.set(k, { id: k, titel, beginn, ende, ganztaegig: ganz, ort, beschreibung: notiz }); inKalender(k); }
 }
@@ -28487,7 +28523,7 @@ async function privatSpeichern(id) {
     await api("privattermin_speichern", { id: id || undefined, titel, beginn, ende, ganztaegig: ganz, ort: $("ptOrt").value.trim(), notiz: $("ptNotiz").value.trim(), erinnerung_min: Number($("ptErinnerung").value),
       wiederholung: $("ptWdh").value, wiederholung_bis: $("ptWdh").value !== "keine" ? $("ptWdhBis").value || null : null, startseite: $("ptStart").checked });
     $("treffenForm").classList.add("versteckt"); melde($("ptStart").checked ? "🔒 Gespeichert – 📌 läuft oben auf der Startseite mit" : "🔒 Privater Termin gespeichert – nur du siehst ihn"); treffenLaden();
-    CD.stand = 0; // KC-CLUB-PRIVAT-STARTSEITE: Countdown gleich neu holen
+    cdStandMerken(0); // KC-CLUB-PRIVAT-STARTSEITE: Countdown gleich neu holen
   } catch (e) { meldeFehler(e); }
 }
 async function privatLoeschen(id, reihe) {
@@ -29793,7 +29829,7 @@ async function taHinweisPruefen(versuch = 0) {
   if (!ICH || TAH_LAEUFT || document.hidden || $("taHinweisBlatt")) return;
   if (document.querySelector(FENSTER_OFFEN) || !["start", "nachrichten", "pinnwand", "mitglieder", "helfen"].includes(aktuelleAnsicht)) {
     if (versuch < 10) setTimeout(() => taHinweisPruefen(versuch + 1), 8000); return; }
-  if (Date.now() - TAH_ZULETZT < 20000) return; TAH_ZULETZT = Date.now();
+  if (Date.now() - TAH_ZULETZT < 20000) return; TAH_ZULETZT = Date.now(); TAH_AUFBAU = RT.aufbauten; // KC-CLUB-LEITUNG-SPARSAM: Stand der Leitung merken
   TAH_LAEUFT = true; let l = [];
   try { l = (await api("terminanfragen_liste")).anfragen || []; } catch { return; } finally { TAH_LAEUFT = false; }
   const offen = l.filter((a) => !a.vonMir && !a.spiel && a.status === "offen" && !a.meine && !a.meinVorschlag
@@ -29819,14 +29855,21 @@ async function taHinweisPruefen(versuch = 0) {
 }
 // 2.874.0 KC-CLUB-RT-TERMINANFRAGE (Wunsch Hansi 06.11. „mehr über die Standleitung“): neue Anfrage, Antwort, Gegenvorschlag oder Absage melden sich
 // selbst (Signal „terminanfrage“). Steht die Leitung, fragt der Takt nur noch jedes 6. Mal (alle 30 statt 5 Min.) zur Sicherheit; ohne Leitung wie bisher.
-let TAH_TICK = 0;
-setInterval(() => { if (rtAn() && ++TAH_TICK % 6) return; taHinweisPruefen(9); }, TAH_TAKT_MS);
+// 18.11.2026 KC-CLUB-LEITUNG-SPARSAM (Wunsch Hansi „einsparen über die direkte Leitung“): mit Leitung nur noch jedes 12. Mal (alle 60 Min.).
+// Zurück in den Vordergrund: bei stehender Leitung nur fragen, wenn die App > 10 Min. weg war oder die Leitung seit der letzten Frage neu
+// aufgebaut wurde (dann können Signale gefehlt haben – auch nach dem bewussten Trennen im Hintergrund); ohne Leitung wie bisher immer.
+const TAH_RT_JEDES = 12, TAH_WEG_MAX_MS = 10 * 60000;
+let TAH_TICK = 0, TAH_WEG_AM = 0, TAH_AUFBAU = -1;
+setInterval(() => { if (rtAn() && ++TAH_TICK % TAH_RT_JEDES) return; taHinweisPruefen(9); }, TAH_TAKT_MS);
+function taRueckkehrNoetig(wegMs) { return !rtAn() || wegMs > TAH_WEG_MAX_MS || TAH_AUFBAU !== RT.aufbauten; }
 function taSignal() {
   if (document.hidden) return; // beim Zurückkommen fragt die App ohnehin nach (visibilitychange)
   TAH_ZULETZT = 0; taHinweisPruefen(9);
   if ($("terminanfragen")?.offsetParent) taLaden(); // Liste gerade zu sehen → frisch holen
 }
-document.addEventListener("visibilitychange", () => { if (!document.hidden) setTimeout(() => taHinweisPruefen(9), 2500); });
+document.addEventListener("visibilitychange", () => { if (document.hidden) { TAH_WEG_AM = Date.now(); return; }
+  const weg = TAH_WEG_AM ? Date.now() - TAH_WEG_AM : Infinity; // KC-CLUB-LEITUNG-SPARSAM
+  setTimeout(() => { if (taRueckkehrNoetig(weg)) taHinweisPruefen(9); }, 2500); });
 async function taAntwort(id, antwort) {
   let notiz = "";
   if (antwort === "nein" || antwort === "vielleicht") {
@@ -36243,7 +36286,9 @@ function suLupenEinbauen() {
   if (!$("suLupe")) document.body.insertAdjacentHTML("beforeend", `<button class="su-klein" id="suLupe" onclick="sucheAuf()" title="Suchen" aria-label="Suchen">🔍</button>`);
 }
 
-const NZ_TAKT_MS = 120000;
+// 18.11.2026 KC-CLUB-LEITUNG-SPARSAM (Wunsch Hansi „einsparen über die direkte Leitung“): Nutzung und Wege im Takt alle 5 statt 2 Min. melden –
+// beim Weglegen/Schließen geht weiterhin sofort alles raus (keepalive), neue Wege weiterhin nach 15 s Ruhe (KC-CLUB-SPUR-LIVE).
+const NZ_TAKT_MS = 5 * 60000;
 let nzPuffer = (() => { try { return JSON.parse(localStorage.getItem("kc_club_nutzung") || "{}"); } catch { return {}; } })();
 // KC-CLUB-NUTZUNG-UHRZEIT (2.23.17, Wunsch Hansi): je Stunde (0–23, Berliner Zeit beim Antippen) nur die Anzahl – getrennt vom Bereich
 let nzStdPuffer = (() => { try { return Object.fromEntries(Object.entries(JSON.parse(localStorage.getItem("kc_club_nutzung_std") || "{}")).filter(([k]) => /^(\d|1\d|2[0-3])$/.test(k))); } catch { return {}; } })(); // 2.45.1: alte „NaN“-Einträge verwerfen
@@ -36269,7 +36314,7 @@ function nzZaehlen(v) {
   const h = nzHeuteLesen(); if (!h.offen.includes(v) && !h.gesendet.includes(v)) { h.offen.push(v); nzHeuteSchreiben(h); }
 }
 // ---------- KC-CLUB-NUTZUNG-PERSON (Wunsch Hansi 07./08.11.2026): Bildschirmzeit (App sichtbar) und Zeit im Hintergrund (App offen, aber weggelegt) je Tag –
-// nur Sekunden, im Gerät gemerkt (höchstens 4 Tage) und mit der Nutzungsmeldung geschickt (beim Weglegen; im 2-Minuten-Takt nur, wenn ohnehin etwas geht –
+// nur Sekunden, im Gerät gemerkt (höchstens 4 Tage) und mit der Nutzungsmeldung geschickt (beim Weglegen; im 5-Minuten-Takt (bis 18.11.2026: 2) nur, wenn ohnehin etwas geht –
 // kein zusätzlicher Aufruf). Ein Stück „sichtbar“ zählt höchstens 6 Std., „Hintergrund“ höchstens 12 Std. (danach hat das Handy die App meist beendet).
 const NP_SICHT_MAX = 6 * 3600, NP_WEG_MAX = 12 * 3600, NP_SPEICHER = "kc_club_np_zeit";
 const NP = { sichtAb: document.hidden ? 0 : Date.now(), wegAb: document.hidden ? Date.now() : 0 };
@@ -37927,8 +37972,8 @@ async function gastStart(token) {
   history.replaceState({ basis: true }, "", url.pathname);
   history.pushState({ v: "start", tiefe: 1 }, "", url.pathname);
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.addEventListener("message", (e) => { if (e.data?.typ === "push") { onlinePushGezeigt(e.data.titel); /* 2.383.0 */ pushNeuLaden(); onlinePing(); setTimeout(() => taHinweisPruefen(9), 1500); if (chatId && aktuelleAnsicht === "chat") chatSignalLaden(true); else if (chatId) chatLaden(false); ansageAusPush(e.data); if (aktuelleAnsicht === "spiele" && SP.tab === "mg") SP.offen ? spNachsehen() : spLaden(true); }
-      if (e.data?.typ === "online-ansage") { onlineAnsageSprechen([e.data.name]); onlinePing(); }
+    navigator.serviceWorker.addEventListener("message", (e) => { if (e.data?.typ === "push") { onlinePushGezeigt(e.data.titel); /* 2.383.0 */ pushNeuLaden(); if (!rtAn()) { onlinePing(); setTimeout(() => taHinweisPruefen(9), 1500); } /* 18.11.2026 KC-CLUB-LEITUNG-SPARSAM (Wunsch Hansi „einsparen über die direkte Leitung“): steht die Leitung, melden Anklopfen/Anruf/Terminanfrage sich selbst als Signal */ if (chatId && aktuelleAnsicht === "chat") chatSignalLaden(true); else if (chatId) chatLaden(false); ansageAusPush(e.data); if (aktuelleAnsicht === "spiele" && SP.tab === "mg") SP.offen ? spNachsehen() : spLaden(true); }
+      if (e.data?.typ === "online-ansage") { onlineAnsageSprechen([e.data.name]); if (!onlLeitungVoll()) onlinePing(); } // KC-CLUB-LEITUNG-SPARSAM: mit Leitung + Anwesenheit meldet die Anwesenheit das Kommen selbst
       if (e.data?.typ === "oeffnen") pushOeffnen(e.data.url); }); // 2.209.0 KC-CLUB-PUSH-SPRUNG // KC-CLUB-ONLINE-ANSAGE-PUSH; 2.24.18: LED/Zahl/Ring sofort mitziehen (Hinweis Hansi: Ansage kam immer zuerst)
     navigator.serviceWorker.addEventListener("message", (e) => { if (e.data?.typ === "push" && /^📥 Neu in deinem Eingangskorb/.test(e.data.titel || "")) eingangNeu(); }); // KC-CLUB-EINGANG-DURCHGEHEN (2.741.0): Hinweis sofort bei offener App
   }

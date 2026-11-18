@@ -186,6 +186,7 @@ jobs:
       - run: node tests/anbieter-neues.test.mjs
       - run: node tests/inst-bilder.test.mjs
       - run: node tests/rt-terminanfrage.test.mjs
+      - run: node tests/leitung-sparsam.test.mjs
       - run: node tests/nicht-rein.test.mjs
       - run: node tests/film-kurz.test.mjs
       - run: node tests/aufgabe-gemeinsam.test.mjs
