@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.975.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.976.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -8617,6 +8617,27 @@ function schwerLage(z = INIT?.schwerZeiten, d = new Date()) {
   }
   return null;
 }
+// 2.976.0 KC-CLUB-START-WARUM (Wunsch Hansi 18.11.2026: „Wichtig ist, dass der User eine Meldung bekommt, warum es gerade dauert, z. B. Notfall-Paket wird gerade
+// gebaut, dauert noch ca. 3 Minuten, Spiegelung läuft noch ca. 4 Min. usw.“): Beim Start fehlten die Zeiten (sie kommen erst mit der Anmeldung – und genau die
+// hängt dann). Darum merkt sich die App die Zeiten vom letzten Start und zeigt nach 3 s Warten oben einen Hinweis: was gerade läuft und wie lange noch
+// (zählt minütlich herunter). Ohne bekannten Grund nach 6 s: „Der Server antwortet gerade langsam“. Verschwindet von selbst, sobald die Anmeldung da ist.
+const SCHWER_MERK = "kc_club_schwer_zeiten";
+function schwerZeitenGemerkt() { try { const z = JSON.parse(localStorage.getItem(SCHWER_MERK) || "null"); return Array.isArray(z) ? z : null; } catch { return null; } }
+let START_WARTET = null;
+function startWartetText() {
+  let l = null; try { l = schwerLage(INIT?.schwerZeiten || schwerZeitenGemerkt()); } catch {}
+  if (l) return `⏳ Gerade wird ${l.was} – das dauert noch ca. ${l.rest} Minute${l.rest === 1 ? "" : "n"}. Die App lädt danach von selbst weiter.`;
+  return START_WARTET && !START_WARTET.fertig && Date.now() - START_WARTET.ab > 3000 ? "⏳ Der Server antwortet gerade langsam – einen Moment bitte, die App lädt von selbst weiter." : "";
+}
+function startWartetZeigen() {
+  if (ICH || START_WARTET?.fertig) return;
+  if (!START_WARTET) START_WARTET = { ab: Date.now(), takt: setInterval(startWartetZeigen, 15000) };
+  const t = startWartetText(); let el = $("startWartet");
+  if (!t) { setTimeout(startWartetZeigen, 3100); return; }
+  if (!el) { el = document.createElement("div"); el.id = "startWartet"; el.setAttribute("role", "status"); el.setAttribute("aria-live", "polite"); document.body.appendChild(el); }
+  el.textContent = t;
+}
+function startWartetWeg() { if (START_WARTET) clearInterval(START_WARTET.takt); START_WARTET = { ab: 0, takt: 0, fertig: true }; $("startWartet")?.remove(); }
 const schwerOder = (text) => { let l = null; try { l = schwerLage(); } catch {} /* nur Hinweis, darf die Fehlermeldung nie verhindern */ return l ? `Zurzeit hat die Datenbank viel zu tun: Es wird gerade ${l.was}. Das dauert ca. noch ${l.rest} Minute${l.rest === 1 ? "" : "n"}. Versuche dein Anliegen bitte später noch einmal. Danke für dein Verständnis.` : text; };
 async function apiRoh(action, daten = {}, zweiterVersuch = false, abbruch = null) {
   // KC-CLUB-NOTBETRIEB-ERNSTFALL: simulierter Ausfall – genau der Fehler, den ein unerreichbarer Club-Server liefert
@@ -18105,6 +18126,8 @@ async function neuLadenRoh(vonHand) {
   const tInit = performance.now(); // KC-CLUB-STARTZEIT: nur die erste Anfrage nach dem Öffnen zählt
   const initAnfrage = api("init", { fotosSeit: kzSeit("fotos"), dienstSeit: kzSeit("dienste") }, { warten: !!vonHand }); initAnfrage.catch(() => {}); // Fehler behandelt unten das await
   if (!INIT) sofortStart(); // KC-CLUB-SOFORTSTART (2.113.0): gespeicherten Stand sofort zeigen, frisch laden im Hintergrund
+  const swHinweis = !ICH ? setTimeout(startWartetZeigen, 3000) : 0; // 2.976.0 KC-CLUB-START-WARUM: nur beim ersten Anmelden
+  initAnfrage.then(() => { try { localStorage.setItem(SCHWER_MERK, JSON.stringify(INIT?.schwerZeiten || null)); } catch {} }, () => {}).finally(() => { clearTimeout(swHinweis); startWartetWeg(); });
   try {
     INIT = await initAnfrage; if (window.KCFP?.schlaeft) return; uhrAbgleich(INIT); /* KC-CLUB-ADVENT-SERVERUHR */ /* 2.394.0 Fenster inzwischen geleert */ if (!START_MESS.initBis) { START_MESS.initAb = tInit; START_MESS.initBis = performance.now(); } /* KC-CLUB-KACHEL-ZAHLEN */ ICH = INIT.ich; einstOffenAnwenden(); /* 2.6.1: noch laufende Speicherungen nicht überschreiben */ adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); inkognitoZeigen(); einwZeigen(aktuelleAnsicht); schluesselSichern(KEY); /* KC-CLUB-SCHLUESSEL-SICHERN */ if (document.body.classList.contains("rg-ohne-admin")) document.body.classList.remove("ist-admin"); /* KC-CLUB-ERKLAERVIDEOS-ROLLEN: im Video für alle bleibt Admin aus */ stKnopf(); /* KC-CLUB-STUDIO */ cfUebernehmen(INIT?.einstellungen?.chat_farben); /* KC-CLUB-CHAT-FARBEN */ // KC-CLUB-KOPF-EINFACH
     alarmPruefen(); /* KC-CLUB-NOTFALL-MELDUNG */ try { expressPruefen(); } catch {} /* 2.362.0 KC-CLUB-EXPRESS */ setTimeout(() => { try { irLaden(); } catch {} }, 3000); /* KC-CLUB-IST-RUECKFRAGE */ setTimeout(() => { try { abStandZeigen(INIT?.ab); } catch {} }, 2500); /* 2.568.0 KC-CLUB-ANRUFBEANTWORTER */ try { dsLageSetzen(INIT?.dienstStempel); } catch {} /* 2.590.0 KC-CLUB-DIENST-STEMPEL */ try { rundKarteZeichnen(); } catch {} /* 2.762.0 KC-CLUB-RUNDER-TISCH */ setTimeout(() => { try { snPruefen(); } catch {} }, 1500); /* 2.482.0 KC-CLUB-STARTNACHRICHT */ document.body.classList.toggle("sos-frei", sosDarf()); /* KC-CLUB-SOS-FREIGABE */ fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
@@ -18435,7 +18458,7 @@ function zeige(v, ausHistorie) {
   document.body.classList.remove("kt-aktiv"); /* 2.17.1: Fußleiste nach dem Quiz wieder zeigen */ if (v !== "start" && !BW.lauf) bwTrainingKnoepfe(false); /* 2.628.0: Bühnen-Auswahl blendet 👆 ❓ 🔍 aus – woanders sind sie wieder da */
   if (v !== "spiele") { $("spPause")?.classList.add("versteckt"); document.body.classList.remove("sch-fokus"); } /* 2.18.0, KC-CLUB-SCHACH-FOKUS: Fußleiste außerhalb der Spiele immer da */
   if (!ICH && !ZEIGE_OHNE_ICH.has(v)) {
-    if (!ZEIGE_WARTET) melde("⏳ Einen Moment – die App meldet dich noch an …");
+    if (!ZEIGE_WARTET) melde(startWartetText() || "⏳ Einen Moment – die App meldet dich noch an …"); // 2.976.0 KC-CLUB-START-WARUM: mit Grund, wenn bekannt
     ZEIGE_WARTET = { v, ausHistorie };
     startBereit.then(() => { const w = ZEIGE_WARTET; ZEIGE_WARTET = null; if (w) zeige(w.v, w.ausHistorie); });
     return;

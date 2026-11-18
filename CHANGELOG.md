@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.976.0 – 2026-11-18 – ⏳ Beim Start sagen, warum es dauert – und wie lange noch (KC-CLUB-START-WARUM)
+Wunsch Hansi 18.11.: „Wichtig ist, dass der User eine Meldung bekommt, warum es gerade dauert, z. B. Notfall-Paket wird gerade gebaut, dauert noch ca. 3 Minuten, Spiegelung läuft noch ca. 4 Min. usw.“
+- Anlass: Am 17.11. hing zwischen 14:27 und 14:33 Uhr bei 7 Starts die Anmeldung über 12 s – genau während der Spiegelung. Fehlermeldungen nannten den Grund schon, **der Start aber nicht**: die Zeiten kamen erst mit der Anmeldung, und die hing ja gerade.
+- Jetzt merkt sich die App die Zeiten vom letzten Start. Dauert die Anmeldung länger als 3 s, steht oben gelb: „⏳ Gerade wird die Sicherheitskopie (Spiegelung) erstellt – das dauert noch ca. 4 Minuten. Die App lädt danach von selbst weiter.“ (ebenso Notfall-Paket, nächtliche Sicherung, Aufräumen). Die Minuten zählen herunter; ohne bekannten Grund nach 6 s: „Der Server antwortet gerade langsam …“. Der Hinweis verschwindet von selbst, sobald die Anmeldung da ist.
+- Tippt man während des Wartens etwas an, nennt auch diese Meldung den Grund.
+- Test: neu `tests/start-warum.test.mjs`. Rückweg: App 2.975.0. Nur die App.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.975.0 – 2026-11-17 – 📇 Kontaktkarte auf der Mitgliedsseite (KC-CLUB-KONTAKTKARTE) · Server 2.975.0
 Wunsch Hansi 17.11.: „In den Stammdaten der Mitglieder einen Button, um eine Kontaktkarte zu erstellen und dann anbieten: per Nachricht versenden, in den Archivordner,
 per WhatsApp schicken, an den Kalender bzw. Kontakte senden usw.“
