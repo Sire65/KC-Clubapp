@@ -30,3 +30,13 @@ assert.ok(/k\.gestartet_von !== ich\.person_id && !ich\.admin/.test(fall), "vers
 assert.ok(/enable row level security/.test(mig) && /revoke all on public\.kc_club_gk_gemeinsam from public, anon, authenticated/.test(mig) && /kc_neon_resume_tables/.test(mig) && /where status = 'offen'/.test(mig), "Tabellen geschützt, gespiegelt, eine offene Karte je Person");
 assert.ok(!/^\s+(grund|krank\w*|diagnose)\s/im.test(mig), "keine Spalte für den Grund");
 console.log("genesungskarte: alle Prüfungen bestanden");
+// 2.979.0 KC-CLUB-GK-HINWEIS: beim Öffnen der App Hinweis + Laufband-Zeile, bis man unterschrieben hat
+{
+  const h = app.slice(app.indexOf("// 2.979.0 KC-CLUB-GK-HINWEIS"), app.indexOf("async function gkGemeinsamOeffnen(id) {"));
+  assert.ok(/GK_OFFEN = \(d\?\.karten \|\| \[\]\)\.filter\(\(k\) => !k\.ichDabei\)/.test(h), "nur Karten, die ich noch nicht unterschrieben habe");
+  assert.ok(/"💐 Karte ansehen & unterschreiben"/.test(h) && /nein: "Später"/.test(h) && /sp\[k\.id\] = heuteIso\(\)/.test(h), "Hinweis beim Start, „Später“ = heute nicht mehr");
+  assert.ok(/startBereit\.then\(\(\) => setTimeout\(\(\) => \{ try \{ gkStartHinweis\(\); \} catch \{\} \}, 4000\)\)/.test(app) && /if \(zugang\(\) !== "mitglied"\) return;/.test(h), "nach dem Start, nur Mitglieder");
+  assert.ok(/for \(const k of GK_OFFEN\) add\(\{ id: "gk:" \+ k\.id, stufe: "gold", sym: "💐"/.test(app), "Zeile im Info-Laufband");
+  assert.ok(/if \(w === "ja"\) \{ GK_OFFEN = GK_OFFEN\.filter\(\(x\) => x\.id !== id\)/.test(app), "nach dem Unterschreiben weg");
+  console.log("genesungskarte (Start-Hinweis): ok");
+}

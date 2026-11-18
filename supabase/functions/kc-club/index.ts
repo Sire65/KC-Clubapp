@@ -194,7 +194,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.977.0";
+const SERVER_VERSION = "2.980.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -4263,7 +4263,7 @@ const ANMELDUNGEN = new Map<string, { ich: Ich; bis: number; gesehen: number; ve
 const anmeldungenVergessen = () => ANMELDUNGEN.clear();
 const INSTANZ = crypto.randomUUID().slice(0, 8); let ANMELDUNG_TREFFER = false; // Messung: welche Instanz, Speicher getroffen?
 // KC-CLUB-MINDESTVERSION (RC 20.10.2026): ältere App-Versionen werden beim Start um ein Update gebeten (gleich halten mit "mindest" in version.json)
-const MINDEST_APP_VERSION = "2.500.0";
+const MINDEST_APP_VERSION = "2.977.0";
 const versionAelter = (a: string, b: string) => { const x = a.split(".").map(Number), y = b.split(".").map(Number); for (let i = 0; i < 3; i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) < (y[i] || 0); return false; };
 // ---------- 2.579.0 KC-CLUB-FREMDZUGRIFF (Wunsch Hansi „Fremde Anmeldeversuche: wann, mit welchem Schlüssel, Vermutung wer“) ----------
 // Jede abgelehnte Anmeldung wird im Hintergrund vermerkt (kc_club_fremdzugriff): Zeit, Kurzkennung des Schlüssels (nie der Schlüssel),

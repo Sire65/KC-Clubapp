@@ -1,10 +1,19 @@
 # Änderungen
 
-## Prüfregister-Abgleich – 2026-11-18 (KC-PRUEFREGISTER-ABGLEICH) · nur Datenbank + Wächter im Server, App unverändert
+## 2.980.0 – 2026-11-18 – 📋 Prüfregister-Abgleich (KC-PRUEFREGISTER-ABGLEICH) · 🚦 Lastanzeige alle 15 s (KC-CLUB-PULS-SPARSAM) · Server 2.980.0
 Wunsch Hansi 18.11.: „täglichen Abgleich einbauen, aber aufpassen mit Abfragen an die Datenbank – sparsam sein wegen Limit“. Anlass: Stand-Brücke (16.11.) und Stempel-Kasse (18.11.) wurden ohne Eintrag im Prüfregister angelegt.
 - Zeitplan `kc-pruefregister-abgleich` 1× täglich 06:20 UTC (07:20 Uhr): eine Katalog-Abfrage in der Datenbank, kein Netz; alles in Ordnung → nichts wird geschrieben.
 - Fehlt ein Eintrag: Protokollzeile `pruefregister_luecke` und der Lauf endet mit Fehler – der Text nennt Funktion und Migration (letzte 14 Tage). Neuer Wächter „📋 Prüfregister-Abgleich“ zeigt das rot und meldet es wie jeder Wächter.
 - Migration `20261118_kc_pruefregister_abgleich.sql`, Test `tests/pruefregister-abgleich.test.mjs`.
+- **Lastanzeige (LED-Säulen im Kopf, Admin):** fragt alle 15 s statt alle 4 s – das waren 7.000 DB-Aufrufe in 48 Std. allein für die Anzeige (Wunsch Hansi „einsparen“). Update-Hinweis: nur „Kleine Systemanpassung“.
+
+## 2.979.0 – 2026-11-18 – 💐 Gemeinsame Karte: Hinweis beim Öffnen der App (KC-CLUB-GK-HINWEIS)
+Hansi 18.11.: „Ich dachte, wenn man die App aufruft, bekommt man einen Hinweis?“
+- Läuft eine gemeinsame Gute-Besserung-Karte und man hat noch nicht unterschrieben, fragt die App nach dem Start: „💐 Gemeinsame Karte für Karla – Hansi hat eine Gute-Besserung-Karte gestartet – 2 haben schon unterschrieben. Magst du auch unterschreiben?“ → **„💐 Karte ansehen & unterschreiben“** zeigt die Karte mit allen Namen. „Später“ = heute nicht mehr fragen.
+- Dazu eine goldene Zeile im **Info-Laufband**, bis man unterschrieben hat. Die beschenkte Person sieht nichts (der Server gibt ihr die Karte nie heraus). Der Hinweis wartet, bis kein anderes Start-Fenster offen ist.
+- Test: `tests/genesungskarte.test.mjs` erweitert. Rückweg: App 2.978.0. Nur die App.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.978.0 – 2026-11-18 – 📐 Anordnung der Knöpfe (KC-CLUB-ANORDNUNG) · nur App (Server unverändert)
 Wunsch Hansi 18.11.: nach dem Vorbild Bachkreis erst prüfen, dann „Ja bauen, aber vorsichtig“. Gemessen: 84 Seiten/Fenster in 6 Rollen (Admin, Vorstand, Mitglied,
 Aushilfe, Gast, einfache Ansicht) auf Handy 360 px und Tablet 820 px – 4.877 Knöpfe. Nichts war zu breit; gezielt verbessert:
@@ -27,6 +36,8 @@ Aushilfe, Gast, einfache Ansicht) auf Handy 360 px und Tablet 820 px – 4.877 K
 - Messwerkzeug: `node tools/anordnung-pruefen.mjs` (abgeschirmt, nur Testdaten). Nachher: 0 abgeschnittene Titel, unruhige Reihen am Handy 6 → 1 (Verbindungs-Anzeige im Nachrichten-Kopf), Knöpfe unter 32 px 6 % → 4 %.
 - Test: `tests/anordnung.test.mjs`. Rückweg: App 2.977.0.
 - Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+- Nachtrag 18.11. (Hansi: „ja setzen und aktualisieren“): Mindestversion in `version.json` von 2.500.0 auf **2.977.0** – jede ältere App aktualisiert sich beim nächsten Öffnen von selbst (nicht mitten im Tippen/Anruf, KC-CLUB-MINDESTVERSION), damit alle die Nachfrage zur gemeinsamen Genesungskarte bekommen. Dazu Server 2.978.0: `MINDEST_APP_VERSION` ebenfalls 2.977.0 (ältere Apps bekommen beim Start die Bitte zum Aktualisieren; Admin ausgenommen).
 
 ## 2.977.0 – 2026-11-18 – 20-Uhr-Bündel: 📉 Weniger Datenverkehr (KC-CLUB-ANHANG-MERKEN, KC-CLUB-UNTERHALTUNGEN-TEILEN) · 💐 Gemeinsame Genesungskarte mit Nachfrage und Gesichtern (KC-CLUB-GK-NACHFRAGE, KC-CLUB-GK-GESICHTER) · Server 2.977.0
 
