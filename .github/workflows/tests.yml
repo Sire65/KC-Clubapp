@@ -134,6 +134,7 @@ jobs:
       - run: node tests/wa-holen.test.mjs
       - run: node tests/kontaktkarte.test.mjs
       - run: node tests/anordnung.test.mjs
+      - run: node tests/spur-online.test.mjs
       - run: node tests/anfrage-gegenvorschlag.test.mjs
       - run: node tests/netz-balken.test.mjs
       - run: node tests/muenze-gesicht.test.mjs

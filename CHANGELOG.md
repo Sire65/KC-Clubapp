@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.981.0 – 2026-11-18 – 🟢 Wege der Mitglieder: grüne LED, solange sie/er noch in der App ist (KC-CLUB-SPUR-ONLINE) · Server 2.981.0
+Wunsch Hansi 18.11.: „Wenn ich in der Liste Wege der Mitglieder bin, wo alles aufgelistet ist, was sie angesehen haben, oben noch die grüne LED anzeigen, dass sie noch online sind.“
+- In den Wegen eines Mitglieds (👥 Nutzung → 👣 Wege der Mitglieder → Name) steht oben eine **grüne, leuchtende LED „gerade in der App“**, solange es noch da ist
+  (letzte 3 Minuten, auch mit Online-Anzeige aus – dann mit 🙈). Ist es weg: graue LED „nicht mehr in der App · zuletzt hh:mm Uhr“. Aktualisiert sich mit den Wegen
+  alle 20 Sekunden. Nur für heute, nur für den Admin (wie die Wege).
+- Server: `spur_liste` für eine Person liefert dazu `online` (nur ja/nein + verborgen, gleiche Regel wie die Übersicht KC-CLUB-SPUR-ALLE-DA; keine Inhalte).
+- Test: `tests/spur-online.test.mjs`. Rückweg: App/Server 2.980.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.980.0 – 2026-11-18 – 📋 Prüfregister-Abgleich (KC-PRUEFREGISTER-ABGLEICH) · 🚦 Lastanzeige alle 15 s (KC-CLUB-PULS-SPARSAM) · Server 2.980.0
 Wunsch Hansi 18.11.: „täglichen Abgleich einbauen, aber aufpassen mit Abfragen an die Datenbank – sparsam sein wegen Limit“. Anlass: Stand-Brücke (16.11.) und Stempel-Kasse (18.11.) wurden ohne Eintrag im Prüfregister angelegt.
 - Zeitplan `kc-pruefregister-abgleich` 1× täglich 06:20 UTC (07:20 Uhr): eine Katalog-Abfrage in der Datenbank, kein Netz; alles in Ordnung → nichts wird geschrieben.
