@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.980.0 – 2026-11-18 – 📋 Prüfregister-Abgleich (KC-PRUEFREGISTER-ABGLEICH) · 🚦 Lastanzeige alle 15 s (KC-CLUB-PULS-SPARSAM) · Server 2.980.0
+Wunsch Hansi 18.11.: „täglichen Abgleich einbauen, aber aufpassen mit Abfragen an die Datenbank – sparsam sein wegen Limit“. Anlass: Stand-Brücke (16.11.) und Stempel-Kasse (18.11.) wurden ohne Eintrag im Prüfregister angelegt.
+- Zeitplan `kc-pruefregister-abgleich` 1× täglich 06:20 UTC (07:20 Uhr): eine Katalog-Abfrage in der Datenbank, kein Netz; alles in Ordnung → nichts wird geschrieben.
+- Fehlt ein Eintrag: Protokollzeile `pruefregister_luecke` und der Lauf endet mit Fehler – der Text nennt Funktion und Migration (letzte 14 Tage). Neuer Wächter „📋 Prüfregister-Abgleich“ zeigt das rot und meldet es wie jeder Wächter.
+- Migration `20261118_kc_pruefregister_abgleich.sql`, Test `tests/pruefregister-abgleich.test.mjs`.
+- **Lastanzeige (LED-Säulen im Kopf, Admin):** fragt alle 15 s statt alle 4 s – das waren 7.000 DB-Aufrufe in 48 Std. allein für die Anzeige (Wunsch Hansi „einsparen“). Update-Hinweis: nur „Kleine Systemanpassung“.
+
 ## 2.979.0 – 2026-11-18 – 💐 Gemeinsame Karte: Hinweis beim Öffnen der App (KC-CLUB-GK-HINWEIS)
 Hansi 18.11.: „Ich dachte, wenn man die App aufruft, bekommt man einen Hinweis?“
 - Läuft eine gemeinsame Gute-Besserung-Karte und man hat noch nicht unterschrieben, fragt die App nach dem Start: „💐 Gemeinsame Karte für Karla – Hansi hat eine Gute-Besserung-Karte gestartet – 2 haben schon unterschrieben. Magst du auch unterschreiben?“ → **„💐 Karte ansehen & unterschreiben“** zeigt die Karte mit allen Namen. „Später“ = heute nicht mehr fragen.

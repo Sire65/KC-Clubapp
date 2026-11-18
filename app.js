@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.979.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.980.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -14444,7 +14444,7 @@ KACHELN.admin.unshift({ id: "ad-startnachricht", sym: "📣", t: "Startnachricht
 // Zwei senkrechte LED-Säulen neben den LEDs: L = Lesen, S = Schreiben (Abfragen des Club-Servers je Sekunde, logarithmisch). Alle 4 s nur, solange die
 // Startseite sichtbar ist; der Server liefert nur Zählerstände (pg_stat_statements, nichts gespeichert), die App rechnet die Differenz. Spitze hält ~12 s.
 const PULS = { alt: null, wert: null, timer: null, fehler: 0, verlauf: [] };
-const PULS_TAKT = 4000, PULS_SEG = 8, PULS_MAX = { lesen: 15, schreiben: 4 }; // Abfragen/s für Vollausschlag
+const PULS_TAKT = 15000, PULS_SEG = 8, PULS_MAX = { lesen: 15, schreiben: 4 }; // Abfragen/s für Vollausschlag · 18.11.2026 KC-CLUB-PULS-SPARSAM (Wunsch Hansi „einsparen“): 15 s statt 4 s – waren 7.000 DB-Aufrufe in 48 Std. allein für die Anzeige
 const pulsAn = () => !!ICH?.admin && einst("puls", true);
 const pulsStufe = (v, max) => (v > 0 ? Math.max(1, Math.min(PULS_SEG, Math.round((PULS_SEG * Math.log10(1 + v)) / Math.log10(1 + max)))) : 0);
 const pulsSaeule = (k) => `<span class="pu-saeule" data-k="${k}">${Array.from({ length: PULS_SEG }, (_, i) => `<i class="pu-seg ${i >= PULS_SEG - 1 ? "rot" : i >= PULS_SEG - 3 ? "gelb" : "gruen"}"></i>`).join("")}</span>`;
