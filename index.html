@@ -6077,6 +6077,11 @@
     .rgl-fuss, #v-archiv .ar-zeile > .knoepfe, #scBlatt .karte > .knoepfe { display: flex; flex-wrap: wrap; gap: 8px; }
     :is(.rgl-fuss, #v-archiv .ar-zeile > .knoepfe, #scBlatt .karte > .knoepfe) > .knopf { flex: 1 1 auto; margin: 0; }
     .rgl-fuss .knopf.haupt { flex-basis: 100%; }
+    /* dasselbe für die Knopfreihen in allen Fenstern (z. B. Alarm an alle, Wächter: „Schließen“ allein) – nur normale Knöpfe, „klein“ bleibt kompakt */
+    .blatt .knoepfe > .knopf:not(.klein) { flex: 1 1 auto; }
+    /* Nachrichten beim Admin (mit SOS): Titel in Zeile 1, SOS und ＋ Neu zusammen rechts in Zeile 2 statt ＋ Neu allein */
+    body:is(.ist-admin, .sos-frei) #v-nachrichten .kopf2 > h2 { flex: 1 0 calc(100% - 104px); }
+    body:is(.ist-admin, .sos-frei) #v-nachrichten .kopf2 > #naSosKnopf + .knopf.haupt { margin-left: 0; }
   }
   /* 7. Abgeschnittene Texte: „KÖCHECLUB WERNE“ am Start bricht am Handy um statt „KÖCHECLUB …“ (wie schon in der einfachen Ansicht);
         der Hinweis „Tippen: 🟢 Online (0)“ auf den Umschaltern darf zwei Zeilen haben */
