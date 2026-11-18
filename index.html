@@ -6046,6 +6046,30 @@
   .ebl-tab th { position: sticky; top: 0; background: var(--karte); } .ebl-tab .re { text-align: right; } .ebl-tab .nr { color: var(--grau); }
   .ebl-sort { border: 0; background: none; padding: 0; font: inherit; font-weight: 700; color: var(--rot); cursor: pointer; } .ebl-offen { color: var(--textOrange, #b26a00); }
   .ebl-summe td { border-top: 2px solid var(--rot); font-weight: 700; } .ebl-m { cursor: pointer; } .ebl-m:hover, .ebl-m:focus-visible { background: var(--karte2); } .ebl-unter td { font-size: .84rem; color: var(--grau); background: var(--karte2); }
+  /* ---------- KC-CLUB-ANORDNUNG (Wunsch Hansi 18.11.2026 „Ja bauen, aber vorsichtig“ – nach der Messung aller Seiten in 6 Rollen auf Handy 360 px und
+     Tablet 820 px; nachmessen: node tools/anordnung-pruefen.mjs). Nur gezielte Stellen; 👆 ? 🔍 bleiben, wo Hansi sie hingestellt hat (2.380.0/2.725.0). */
+  /* 1. Titel nicht abschneiden (Nachrichten zeigte am Handy nur „💬 …“, Protokolle „Proto…“): der Titel behält seine Breite; passen die Knöpfe
+        nicht daneben, rutschen sie rechtsbündig in eine zweite Zeile */
+  #v-nachrichten .kopf2, #v-protokolle .kopf2 { gap: 6px; flex-wrap: wrap; } #v-protokolle .kopf2 { gap: 4px; }
+  #v-nachrichten .kopf2 > h2, #v-protokolle .kopf2 > h2 { flex: 1 0 auto; overflow: visible; text-overflow: clip; font-size: 1.2rem; }
+  #v-protokolle .kopf2 > h2 { font-size: 1.1rem; }
+  #v-nachrichten .kopf2 > h2 + *, #v-protokolle .kopf2 > h2 + *, #v-nachrichten .kopf2 > .knopf.haupt, #v-nachrichten .kopf2 > #naSosKnopf + .knopf.haupt { margin-left: auto; }
+  /* Fotos und Mitglieder am Handy: statt „＋ Neu“ bzw. ↻ allein in Zeile 2 steht der Titel in Zeile 1 und alle Knöpfe zusammen rechts in Zeile 2 */
+  @media (max-width: 480px) {
+    #v-fotos .kopf2 > h2, #v-mitglieder .kopf2 > h2 { flex: 1 0 calc(100% - 60px); }
+    #v-fotos .kopf2 > h2 ~ *, #v-mitglieder .kopf2 > h2 ~ * { margin-left: 0; margin-right: 0; } #v-mitglieder .kopf2 > h2 ~ .mg-neu { margin-left: 0; }
+    #v-fotos .kopf2 > h2 + *, #v-mitglieder .kopf2 > h2 + * { margin-left: auto; }
+  }
+  /* 2. Lange Reihen bleiben wischbar, laufen rechts aber sichtbar aus (Hilfe & Tipps: 12 Reiter, am Handy waren nur 2 zu sehen; Archiv-Filter) */
+  .hz-reg, .ar-chips { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent); padding-right: 32px; }
+  /* 3. Zu kleine Knöpfe: mindestens 36 px hoch („So nutzen wir die App“ → Noch zu entdecken 26 px, „Lieber ein Mitglied fragen“/Schulung 24 px) */
+  .nu-entdecken { min-height: 36px; padding-top: 6px; padding-bottom: 6px; }
+  .tw-nicht { min-height: 36px; padding: 8px 0 6px; }
+  /* 4. Nachrichten-Leiste mit Symbolen: alle Knöpfe gleich breit in Spalten (vorher 5 schmale oben, 2 sehr breite darunter) */
+  html.kom-sym .kom-leiste { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); }
+  html.kom-sym .kom-leiste .knopf:not(.versteckt) { max-width: none; min-width: 0; }
+  /* 5. Status am Start: „verfügbar“ bricht mit Trennstrich statt mitten im Wort („verfüg / bar“) */
+  #statusChip { hyphens: auto; -webkit-hyphens: auto; overflow-wrap: normal; }
 </style>
 <!-- Club-Küche: redaktionelles Premium-Design, nur für Magazin (nicht Weihnachtsmarkt-Prospekt) -->
 <link rel="stylesheet" href="magazin/premium.css">
