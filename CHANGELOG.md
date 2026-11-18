@@ -5,6 +5,29 @@ Wunsch Hansi 18.11.: „täglichen Abgleich einbauen, aber aufpassen mit Abfrage
 - Zeitplan `kc-pruefregister-abgleich` 1× täglich 06:20 UTC (07:20 Uhr): eine Katalog-Abfrage in der Datenbank, kein Netz; alles in Ordnung → nichts wird geschrieben.
 - Fehlt ein Eintrag: Protokollzeile `pruefregister_luecke` und der Lauf endet mit Fehler – der Text nennt Funktion und Migration (letzte 14 Tage). Neuer Wächter „📋 Prüfregister-Abgleich“ zeigt das rot und meldet es wie jeder Wächter.
 - Migration `20261118_kc_pruefregister_abgleich.sql`, Test `tests/pruefregister-abgleich.test.mjs`.
+## 2.978.0 – 2026-11-18 – 📐 Anordnung der Knöpfe (KC-CLUB-ANORDNUNG) · nur App (Server unverändert)
+Wunsch Hansi 18.11.: nach dem Vorbild Bachkreis erst prüfen, dann „Ja bauen, aber vorsichtig“. Gemessen: 84 Seiten/Fenster in 6 Rollen (Admin, Vorstand, Mitglied,
+Aushilfe, Gast, einfache Ansicht) auf Handy 360 px und Tablet 820 px – 4.877 Knöpfe. Nichts war zu breit; gezielt verbessert:
+- **Titel ganz:** „💬 Nachrichten“ (am Handy nur „💬 …“) und „📄 Protokolle“ („Proto…“) werden nicht mehr abgeschnitten. Passen die Knöpfe nicht daneben,
+  rutschen sie rechtsbündig in Zeile 2 (beim Admin „＋ Neu“ unter SOS). Fotos/Mitglieder am Handy: Titel in Zeile 1, alle Knöpfe zusammen rechts in Zeile 2.
+- **Lange Reihen laufen sichtbar aus:** Hilfe & Tipps (12 Reiter, am Handy nur 2 zu sehen) und Archiv-Filter blenden rechts weich aus – man sieht, dass es weitergeht.
+- **Größere Knöpfe:** „Noch zu entdecken“ (So nutzen wir die App) und „Lieber ein Mitglied fragen“/Schulung mindestens 36 px statt 24–26 px.
+- **Nachrichten-Leiste** (Symbole): alle Knöpfe gleich breit in Spalten statt 5 schmale + 2 sehr breite.
+- **Status am Start:** „verfügbar“ trennt mit Strich („verfüg-bar“) statt mitten im Wort.
+- **2. Runde** (Hansi: „Dann baue alles sorgfältig um“):
+  - Knopfreihen am Handy füllen jede Zeile ganz aus, statt dass ein Knopf allein am Rand hängt: in allen Fenstern (z. B. Alarm an alle, Wächter, Kasse),
+    Erklär-Videos (Fuß), Archiv (Ordner/Inhaltsverzeichnis/Papierkorb), Schulungen – ohne Worttrennung; kleine Knöpfe bleiben kompakt.
+  - Nachrichten beim Admin: SOS und ＋ Neu stehen zusammen rechts in Zeile 2.
+  - Messwerkzeug: „unruhig“ heißt jetzt genau „ein schmaler Knopf allein in einer Zeile“ (Zurück-Pfeil und Filter zählen nicht).
+  - Protokolle: „📄 Protokolle“ steht nicht mehr doppelt (Zwischenüberschrift nur, wenn darüber Aufgaben oder „Protokoll schreiben“ stehen).
+  - „KÖCHECLUB WERNE“ am Start bricht am Handy um statt „KÖCHECLUB …“; „Tippen: 🟢 Online (0)“ auf den Umschaltern darf zwei Zeilen haben.
+  - 👆 ? 🔍 bleiben an ihrem Platz (2.380.0) und gleiten beim Lesen weg (2.725.0) – im Ruhezustand jetzt halb durchsichtig, beim Antippen voll.
+- Bewusst nicht geändert: die kleinen Zeichen der Statusleiste am Start (Sprache, Verbindung, Version) – sie haben schon eine größere unsichtbare
+  Tippfläche (KC-CLUB-TIPPFLAECHEN-2); die Kurzzeile im Termin-Laufband am Start bleibt einzeilig (Laufband).
+- Messwerkzeug: `node tools/anordnung-pruefen.mjs` (abgeschirmt, nur Testdaten). Nachher: 0 abgeschnittene Titel, unruhige Reihen am Handy 6 → 1 (Verbindungs-Anzeige im Nachrichten-Kopf), Knöpfe unter 32 px 6 % → 4 %.
+- Test: `tests/anordnung.test.mjs`. Rückweg: App 2.977.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.977.0 – 2026-11-18 – 20-Uhr-Bündel: 📉 Weniger Datenverkehr (KC-CLUB-ANHANG-MERKEN, KC-CLUB-UNTERHALTUNGEN-TEILEN) · 💐 Gemeinsame Genesungskarte mit Nachfrage und Gesichtern (KC-CLUB-GK-NACHFRAGE, KC-CLUB-GK-GESICHTER) · Server 2.977.0
 
 ### 📉 Weniger Datenverkehr
