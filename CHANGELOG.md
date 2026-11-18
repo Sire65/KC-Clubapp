@@ -1,6 +1,6 @@
 # Änderungen
 
-## (Version folgt) – 📡 Weniger Datenbank-Abfragen über die direkte Leitung (KC-CLUB-LEITUNG-SPARSAM) · nur App (Server unverändert)
+## (Version folgt) – 📡 Weniger Datenbank-Abfragen über die direkte Leitung (KC-CLUB-LEITUNG-SPARSAM) · App + Server + Migration (Stufe 2)
 Wunsch Hansi 18.11.: „einsparen über die direkte Leitung“ – „ja setze alles so um“. Steht die direkte Leitung (Supabase Realtime), meldet sich Neues
 ohnehin sofort als Signal; die App fragt dann seltener selbst nach. **Ohne Leitung bleibt alles wie bisher** (Notweg).
 - **Online-Abgleich:** Stehen Leitung und Anwesenheit, fragt die App nur noch alle 10 Min. zur Sicherheit „wer ist online“ (vorher alle 90 s).
@@ -16,7 +16,15 @@ ohnehin sofort als Signal; die App fragt dann seltener selbst nach. **Ohne Leitu
 - **Nutzung und Wege:** im Takt alle 5 statt 2 Min. gemeldet; beim Weglegen/Schließen weiterhin sofort, neue Wege weiterhin nach 15 s Ruhe.
 - Geschätzt je Gerät mit offener App und Leitung: rund 50 Abrufe weniger pro Stunde (Online ~34, Pinnwand ~14, Rest Terminanfragen/Nutzung/Wege),
   dazu je App-Start 1 Abruf „countdowns“ und je Push bei offener App 2 Abrufe.
-- Test: `tests/leitung-sparsam.test.mjs` (angepasst: anwesenheit, online-echt, online-jede-anfrage, rt-terminanfrage, app-vertrag).
+- **Stufe 2 (Hansi: „so viel wie möglich über die direkte Leitung“) – braucht Server und Migration `20261119_kc_club_rt_gespraech.sql`:**
+  - Neues Signal **„gespraech“**: Wird ein Telefonat angenommen oder beendet, bekommen alle, die gerade in der App sind, ein kurzes Signal (nur die Art,
+    nie wer mit wem) – die Anzeige „telefoniert gerade“ ist damit sofort aktuell, ohne regelmäßiges Nachfragen.
+  - Neues Signal **„sichtbar“**: Ändert jemand Online-Anzeige, Inkognito oder Anklopfen, gleichen die anderen gleich ab.
+  - Signal **„online“** (jemand öffnet die App): steht die Anwesenheit, meldet sie das Kommen meist schon selbst – dann nur noch ein gemeinsamer,
+    gebremster Abgleich (höchstens alle 20 s) statt zwei.
+  - Sparbremse: „gespraech“ und „sichtbar“ gelten wie „online“ als „teuer“ – ab 70 % des Monatskontingents keine Signale mehr (dann Sicherheitstakt).
+  - Reihenfolge beim Einspielen: Migration vor dem Server (sonst zählen die neuen Arten bis 95 % – harmlos).
+- Test: `tests/leitung-sparsam.test.mjs` (angepasst: anwesenheit, online-echt, online-jede-anfrage, rt-terminanfrage, rt-clubabend-mitfahrt, app-vertrag).
 
 ## 2.978.0 – 2026-11-18 – 📐 Anordnung der Knöpfe (KC-CLUB-ANORDNUNG) · nur App (Server unverändert)
 Wunsch Hansi 18.11.: nach dem Vorbild Bachkreis erst prüfen, dann „Ja bauen, aber vorsichtig“. Gemessen: 84 Seiten/Fenster in 6 Rollen (Admin, Vorstand, Mitglied,

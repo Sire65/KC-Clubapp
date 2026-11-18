@@ -5120,7 +5120,12 @@ function rtSignal(s) {
   // KC-CLUB-RT-SPARBREMSE + weitere Bereiche (2.230.0): Alarm sofort (ohne Pause), Gelesen-Haken, Online, Pinnwand, Termine, Abstimmungen
   if (s.art === "alarm") { neuLaden(); return; } // Notfall-Meldung → init → alarmPruefen() zeigt sie groß in Rot
   if (s.art === "gelesen") { if (s.thread && s.thread === chatId && aktuelleAnsicht === "chat") chatSignalLaden(true); return; } // 2.596.0: gebündelt
-  if (s.art === "online") { onlinePing(); return; }
+  // 19.11.2026 KC-CLUB-LEITUNG-SPARSAM (Wunsch Hansi „so viel wie möglich über die direkte Leitung“): „online“ (neue Sitzung eines Mitglieds) meldet
+  // bei stehender Anwesenheit meist schon das Kommen im Anwesenheits-Kanal – dann zusammen gebremst (≤ 1×/20 s) statt doppelt; nie ganz ignoriert
+  // (Mitglieder ohne Leitung stehen nicht in der Anwesenheit). „gespraech“ (Telefonat angenommen/beendet) und „sichtbar“ (Online-Anzeige/Inkognito/
+  // Anklopfen geändert) kommen vom Club-Server an alle in der App – ebenfalls gebremst abgleichen.
+  if (s.art === "online") { if (onlLeitungVoll()) anwAnders(); else onlinePing(); return; }
+  if (s.art === "gespraech" || s.art === "sichtbar") { anwAnders(); return; }
   if (s.art === "livetermin") { ltHolen(); return; } // KC-CLUB-LIVE-TERMIN (2.231.0)
   if (s.art === "terminanfrage") { clearTimeout(RT.ta); RT.ta = setTimeout(taSignal, 600 + Math.random() * 1400); return; } // 2.874.0 KC-CLUB-RT-TERMINANFRAGE
   if (s.art === "eingang") { eingangNeu(); return; } // KC-CLUB-EINGANG-SOFORT (2.741.0): Unterlagen im Eingangskorb – sofort fragen

@@ -71,7 +71,7 @@ assert.ok(app.includes("if (takt === true && RT.ok && PW_AUFBAU === RT.aufbauten
   ctx.RT.anwStand = true; ctx.RT.anwKeys = new Set(["gich"]); assert.equal(f.anwNurIch(), true);
   ctx.RT.anwKeys.add("ganders"); assert.equal(f.anwNurIch(), false);
   // Signale und Rückkehr lösen weiter sofort aus
-  for (const s of ['if (s.art === "online") { onlinePing(); return; }', 'if (s.art === "klopfen" || s.art === "anruf") { onlinePing();', 'if (s.art === "mitschauen") { if (SS.id) ssHolen(true); else onlinePing(); return; }'])
+  for (const s of ['if (s.art === "online") { if (onlLeitungVoll()) anwAnders(); else onlinePing(); return; }', 'if (s.art === "klopfen" || s.art === "anruf") { onlinePing();', 'if (s.art === "mitschauen") { if (SS.id) ssHolen(true); else onlinePing(); return; }'])
     assert.ok(app.includes(s), "Signal: " + s);
   assert.ok(/else onlinePing\(\); return; \}/.test(app) && /\{ onlinePing\(\); if \(aktuelleAnsicht === "spiele"/.test(app), "vorfuehren/spiel");
   assert.ok(app.includes('document.addEventListener("visibilitychange", () => { if (!document.hidden) onlinePing(); });'), "Rückkehr in den Vordergrund");
@@ -100,6 +100,28 @@ assert.ok(/ZULETZT_TAKT_MS = 30_000/.test(server) && /update\(\{ zuletzt_gesehen
 assert.ok(/const NZ_TAKT_MS = 5 \* 60000;/.test(app) && app.includes("setInterval(nzSenden, sparTakt(NZ_TAKT_MS));") && app.includes("setInterval(spurSenden, sparTakt(NZ_TAKT_MS));"), "5 Min.");
 assert.ok(app.includes('document.addEventListener("visibilitychange", () => { if (document.hidden) nzSenden(); });') && app.includes('document.addEventListener("visibilitychange", () => { if (document.hidden) spurSenden(true); });') && app.includes('window.addEventListener("pagehide", () => spurSenden(true));'), "Weglegen/Schließen");
 assert.ok(app.includes("SPUR_BALD = setTimeout(spurSenden, 15000);"), "Wege-Live bleibt");
+
+// 19.11.2026 Stufe 2: Signale „gespraech“ und „sichtbar“ (nur die Art) statt Nachfragen im Takt; „online“ mit Anwesenheit gebremst
+{
+  const f = server.slice(server.indexOf("async function rtKlingelnInApp"), server.indexOf("async function onlineJetzt"));
+  assert.ok(f.includes('nebenbei(rtKlingelnInApp("gespraech", [a?.von, a?.an].filter(Boolean).map(String)).catch(() => {}));') && f.includes("GS_CACHE = { zeit: 0, d: [] };"), "gespraech an alle in der App außer den beiden, im Hintergrund");
+  assert.ok(/const SICHTBAR_SCHLUESSEL = new Set\(\["online", "inkognito", "anklopfen"\]\);/.test(f), "Sichtbarkeits-Einstellungen");
+  const an = server.slice(server.indexOf('case "anruf_annehmen": {'), server.indexOf('case "anruf_neu_angebot"'));
+  assert.ok(/update\(\{ status: "angenommen"[^\n]*\n\s*gespraechSignal\(a\);/.test(an), "angenommen → Signal");
+  const ende = server.slice(server.indexOf('case "anruf_ende": {'), server.indexOf('case "anruf_ende": {') + 1200);
+  assert.ok(ende.includes('if (a.status === "angenommen") gespraechSignal(a);'), "beendet → Signal (nur wenn es ein Gespräch war)");
+  const es = server.slice(server.indexOf('case "einstellung_setzen": {'), server.indexOf('case "feedback_meins"'));
+  assert.ok(es.includes('if (SICHTBAR_SCHLUESSEL.has(schluessel)) nebenbei(rtKlingelnInApp("sichtbar", ich.person_id).catch(() => {}));'), "Einstellung → sichtbar");
+  assert.ok(es.indexOf("SICHTBAR_SCHLUESSEL.has") > es.indexOf("if (error) throw"), "erst nach erfolgreichem Speichern");
+  assert.ok(app.includes('if (s.art === "gespraech" || s.art === "sichtbar") { anwAnders(); return; }'), "App: gebremst abgleichen");
+  const mig = fs.readFileSync(new URL("../supabase/migrations/20261119_kc_club_rt_gespraech.sql", import.meta.url), "utf8");
+  assert.ok(/'livetermin', 'gespraech', 'sichtbar'\) and v_n >= 1400000 then return;/.test(mig), "Sparbremse: beide ab 70 % aus");
+  assert.ok(mig.includes("revoke all on function public.kc_club_rt_klingeln(text[], text, uuid) from public, anon, authenticated;") && mig.includes("grant execute on function public.kc_club_rt_klingeln(text[], text, uuid) to service_role;"), "Rechte");
+  assert.ok(/jsonb_build_object\('art', p_art\)/.test(mig) && !/body|display_name|text_inhalt/.test(mig.replace(/--[^\n]*/g, "")), "nur die Art");
+  const alt = fs.readFileSync(new URL("../supabase/migrations/20261106_kc_club_rt_terminanfrage.sql", import.meta.url), "utf8");
+  const fn = (t) => t.slice(t.indexOf("create or replace function public.kc_club_rt_klingeln"), t.indexOf("revoke all on function public.kc_club_rt_klingeln")).replace(", 'gespraech', 'sichtbar'", "");
+  assert.equal(fn(mig), fn(alt), "sonst identisch mit der Fassung vom 06.11.");
+}
 
 assert.ok(fs.readFileSync(new URL("../.github/workflows/tests.yml", import.meta.url), "utf8").includes("node tests/leitung-sparsam.test.mjs"), "läuft in der CI");
 console.log("leitung-sparsam: ok");
