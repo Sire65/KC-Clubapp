@@ -41,9 +41,17 @@ assert.ok(app.includes('if (e.data?.typ === "online-ansage") { onlineAnsageSprec
   const noetig = new Function("ctx", `with (ctx) { ${teil} return taRueckkehrNoetig; }`)(ctx);
   assert.equal(noetig(60000), false, "Leitung steht, kurz weg → nicht fragen");
   assert.equal(noetig(11 * 60000), true, "länger als 10 Min. weg → fragen");
-  ctx.RT.aufbauten = 4; assert.equal(noetig(60000), true, "Leitung war unterbrochen → fragen");
+  ctx.RT.aufbauten = 4; assert.equal(noetig(60000), false, "KC-CLUB-SPARSAM-NACHBESSERN: Neuaufbau nach Hintergrund-Trennung allein → nicht fragen");
   ctx.RT.aufbauten = 3; ctx.RT.ok = false; assert.equal(noetig(1000), true, "ohne Leitung wie bisher immer");
-  assert.ok(app.includes("setTimeout(() => { if (taRueckkehrNoetig(weg)) taHinweisPruefen(9); }, 2500); });"), "Rückkehr in den Vordergrund");
+  assert.ok(app.includes("setTimeout(() => { if (!taRueckkehrNoetig(weg)) return; if (weg > TAH_WEG_MAX_MS) return taHinweisPruefen(9);") && app.includes("setTimeout(() => { if (taRueckkehrNoetig(weg)) taHinweisPruefen(9); }, 7500); }, 2500); });"), "Rückkehr: Leitung bis 10 s abwarten");
+  // KC-CLUB-SPARSAM-NACHBESSERN: Reise-Prüfung nutzt die Countdown-Daten im Gerät (6-Std.-Regel)
+  const rc = stueck("async function rcReisen(", "\n}") + "\n}";
+  let rufe = 0; const c2 = { RC: { reisen: null }, CD: { stand: Date.now() - 3600000, daten: { reisen: [{ id: "k", a: "🚢" }, { id: "x" }] } }, CD_NEU_MS: 6 * 3600000,
+    cdStandLesen: () => 0, rcIstKreuzfahrt: (a) => a.a === "🚢", api: async () => { rufe++; return { reisen: [] }; } };
+  const rcR = new Function("ctx", `with (ctx) { ${rc} return rcReisen; }`)(c2);
+  const l = await rcR(); assert.equal(rufe, 0, "frische Daten im Gerät → keine Abfrage"); assert.deepEqual(l.map((x) => x.id), ["k"]);
+  c2.RC.reisen = null; c2.CD.stand = Date.now() - 7 * 3600000; await rcR(); assert.equal(rufe, 1, "älter als 6 Std. → Server");
+  c2.CD.stand = Date.now(); await rcR(true); assert.equal(rufe, 2, "neu = true → Server");
 }
 
 // d) Pinnwand: mit Leitung 10 Min., ohne Leitung unverändert 45 s; nach Neuaufbau gleich

@@ -29887,7 +29887,11 @@ async function taHinweisPruefen(versuch = 0) {
 const TAH_RT_JEDES = 12, TAH_WEG_MAX_MS = 10 * 60000;
 let TAH_TICK = 0, TAH_WEG_AM = 0, TAH_AUFBAU = -1;
 setInterval(() => { if (rtAn() && ++TAH_TICK % TAH_RT_JEDES) return; taHinweisPruefen(9); }, TAH_TAKT_MS);
-function taRueckkehrNoetig(wegMs) { return !rtAn() || wegMs > TAH_WEG_MAX_MS || TAH_AUFBAU !== RT.aufbauten; }
+// 19.11.2026 KC-CLUB-SPARSAM-NACHBESSERN (Nachkontrolle 2.982.0: „terminanfragen_liste“ nur −19 %): die Leitung wird im Hintergrund nach 60 s
+// bewusst getrennt (KC-CLUB-AKKU-4) – beim Zurückkommen war sie damit IMMER „neu aufgebaut“ bzw. nach 2,5 s noch nicht wieder da, also wurde
+// fast jedes Mal gefragt. Jetzt: nur nach > 10 Min. weg oder wenn die Leitung auch nach 10 s nicht steht. Neue Anfragen im Hintergrund kommen
+// per Push (bzw. Mail), mit offener App sofort als Signal; der 60-Min.-Takt fragt zur Sicherheit.
+function taRueckkehrNoetig(wegMs) { return !rtAn() || wegMs > TAH_WEG_MAX_MS; }
 function taSignal() {
   if (document.hidden) return; // beim Zurückkommen fragt die App ohnehin nach (visibilitychange)
   TAH_ZULETZT = 0; taHinweisPruefen(9);
@@ -29895,7 +29899,8 @@ function taSignal() {
 }
 document.addEventListener("visibilitychange", () => { if (document.hidden) { TAH_WEG_AM = Date.now(); return; }
   const weg = TAH_WEG_AM ? Date.now() - TAH_WEG_AM : Infinity; // KC-CLUB-LEITUNG-SPARSAM
-  setTimeout(() => { if (taRueckkehrNoetig(weg)) taHinweisPruefen(9); }, 2500); });
+  setTimeout(() => { if (!taRueckkehrNoetig(weg)) return; if (weg > TAH_WEG_MAX_MS) return taHinweisPruefen(9);
+    setTimeout(() => { if (taRueckkehrNoetig(weg)) taHinweisPruefen(9); }, 7500); }, 2500); }); // Leitung noch im Aufbau → bis 10 s warten
 async function taAntwort(id, antwort) {
   let notiz = "";
   if (antwort === "nein" || antwort === "vielleicht") {
@@ -32032,6 +32037,11 @@ async function rcSichern(id, st) {
 }
 async function rcReisen(neu) {
   if (RC.reisen && !neu) return RC.reisen;
+  // 19.11.2026 KC-CLUB-SPARSAM-NACHBESSERN (Nachkontrolle 2.982.0: „countdowns“ +29 % statt weniger): die Reise-Prüfung beim Start holte
+  // „countdowns“ jedes Mal selbst vom Server – an der 6-Stunden-Regel der Countdown-Kachel vorbei. Jetzt dieselben Daten aus dem Gerät,
+  // solange sie jünger als 6 Std. sind; nur „Checkliste öffnen“ ohne Treffer (neu = true) fragt den Server.
+  const st = CD.stand >= 0 ? CD.stand : (CD.daten ? cdStandLesen() : 0);
+  if (!neu && CD.daten && st > 0 && Date.now() - st < CD_NEU_MS) { RC.reisen = (CD.daten.reisen || []).filter(rcIstKreuzfahrt); return RC.reisen; }
   const r = await api("countdowns", {}, { still: true });
   RC.reisen = (r.reisen || []).filter(rcIstKreuzfahrt);
   return RC.reisen;

@@ -1,5 +1,12 @@
 # Änderungen
 
+## (Version folgt) – 📡 Sparpaket nachgebessert: Countdowns und Terminanfragen (KC-CLUB-SPARSAM-NACHBESSERN)
+Nachkontrolle 2.982.0 (19.11., 8–11:30 Uhr gegenüber Vortag): „online“ −63 %, Pinnwand −65 %, aber „countdowns“ +29 % und „terminanfragen_liste“ nur −19 %. Frage Hansi: „eigentlich sollte alles sparsamer werden – warum hat es nicht geklappt?“
+- **Countdowns:** Die Countdown-Kachel hielt sich an die 6-Stunden-Regel – die Reise-Checkliste (Kreuzfahrt in ≤ 14 Tagen) fragte beim Start aber jedes Mal selbst „countdowns“ vom Server ab. Jetzt nutzt sie dieselben Daten aus dem Gerät, solange sie jünger als 6 Std. sind.
+  (Am 19.11. kam zusätzlich je Gerät einmal die erste Abfrage nach dem Update dazu, weil der neue Merker im Gerät noch fehlte.)
+- **Terminanfragen:** Die App trennt die direkte Leitung im Hintergrund nach 60 s (Akku). Beim Zurückkommen galt die Leitung darum immer als „neu aufgebaut“ (bzw. war nach 2,5 s noch nicht da) – und die App fragte fast jedes Mal nach. Jetzt nur noch nach mehr als 10 Min. weg oder wenn die Leitung auch nach 10 s nicht steht. Neue Anfragen kommen im Hintergrund per Push/Mail, bei offener App sofort als Signal; der 60-Min.-Takt fragt zur Sicherheit.
+- Test `tests/leitung-sparsam.test.mjs` erweitert.
+
 ## 2.983.0 – 2026-11-19 – 🐛 „Wer ist online?“ aus dem Schnellzugriff ohne Fehler · 🖨️ Drucken ist kein Hänger mehr · 📊 Detaillierter Sendebericht (KC-CLUB-MG-FILTER-LEER, KC-CLUB-HAENGER-DRUCK, KC-CLUB-SENDEBERICHT)
 Fund Hansi 19.11. 5:58 („Da hat in der App etwas nicht geklappt“): Wer im Schnellzugriff „🟢 Wer ist online?“ tippte, bevor die Mitgliederliste geladen war, bekam einen Programmfehler (die Liste war noch leer). Jetzt lädt die App zuerst die Liste und zeigt dann die Online-Ansicht. Test `tests/mg-filter-leer.test.mjs`. Update-Hinweis: nur „Kleine Systemanpassung“.
 - **Drucken (Fund Klaus 19.11. 9:30):** Solange der Druck-Dialog offen ist, hält der Browser die App an. Das wurde als Hänger „App hat selbst zu lange gerechnet (KC-F-101)“ gemeldet, samt Fenster und Alarm. Jetzt überspringt der Hänger-Wächter diese Zeit (Druck über 🖨️, Etiketten-Druck und Strg+P).
