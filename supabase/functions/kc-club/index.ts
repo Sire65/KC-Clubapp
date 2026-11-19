@@ -7735,6 +7735,149 @@ async function aufgabeHolen(ich: Ich, id: unknown) {
   const verwalten = ich.vorstand || a.erstellt_von === ich.person_id || (pr ? darfBearbeiten(ich, pr) : false);
   return { a, pr, verwalten };
 }
+// ---------- KC-CLUB-AUFGABEN-STAND (19.11.2026, Wunsch Hansi „Gib allen mit offenen Aufgaben eine Startmeldung mit der Aufgabe und ob sie erledigt ist:
+// Ja, teilweise, nein. Das Ergebnis muss dann im nächsten Protokoll erscheinen als erledigt am, oder teilweise oder noch nicht.“) ----------
+// Startmeldung „📌 Wie steht's mit deiner Aufgabe?“ (init → aufgabenDran, nur beim ersten Laden je App-Sitzung), Meldung ✅/🔶/❌ für die ganze Gruppe,
+// Erinnerung 2 Tage vor der Sitzung (Takt, nachgefragt_am), „🔔 Nachfragen“ der Clubleitung, Abschnitt „Stand der Aufgaben“ im Protokoll
+// (Entwurf lebendig, beim Veröffentlichen festgeschrieben in aufgaben_stand). Sitzung = nächstes Treffen mit art „treffen“ (wie Büro/Erinnerungen).
+const AST_TAG_MS = 86400000, AST_ZYKLUS_TAGE = 7, AST_ZWEITE_TAGE = 2, AST_SPAETER_STD = 24, AST_UEBERFAELLIG_TAGE = 7, AST_NACHFRAGEN_STD = 12, AST_VERLAUF_MAX = 20;
+const AST_STAENDE = ["teilweise", "nicht", "erledigt"];
+const AST_SPALTEN = "id,text,faellig,protokoll_id,gruppe,person_id,erledigt_am,stand,stand_am,stand_von,stand_text,stand_ziel,gefragt_am,spaeter_bis,nachgefragt_am";
+// Reine Funktion (tests/aufgaben-stand.test.mjs): ist die Aufgabe für die Startmeldung „dran“? → Grund oder null.
+// sitzungMs = Beginn der nächsten Sitzung (oder null), heute = „JJJJ-MM-TT“ (deutsche Zeit).
+function aufgabeStandDran(a: any, sitzungMs: any, jetztMs: any, heute: any) {
+  if (!a || a.erledigt_am || a.stand === "erledigt") return null;
+  const ms = (x: any) => (x ? Date.parse(x) : NaN);
+  if (ms(a.spaeter_bis) > jetztMs) return null; // „Später“: 24 Std. Ruhe
+  const standMs = ms(a.stand_am), gefragtMs = ms(a.gefragt_am), nachMs = ms(a.nachgefragt_am);
+  // Erinnerung 2 Tage vorher / „🔔 Nachfragen“ der Clubleitung: fragen, bis eine Meldung (oder „Später“) kommt
+  if (nachMs > 0 && !(standMs >= nachMs) && !(gefragtMs >= nachMs)) return "nachgefragt";
+  if (sitzungMs && sitzungMs > jetztMs && sitzungMs - jetztMs <= AST_ZYKLUS_TAGE * AST_TAG_MS) {
+    const zyklus = sitzungMs - AST_ZYKLUS_TAGE * AST_TAG_MS, zweite = sitzungMs - AST_ZWEITE_TAGE * AST_TAG_MS;
+    if (!(standMs >= zyklus)) { // in diesem Zyklus noch keine Meldung
+      if (!(gefragtMs >= zyklus)) return "sitzung";
+      if (jetztMs >= zweite && !(gefragtMs >= zweite)) return "sitzung2"; // zweites Mal ab 2 Tage vorher
+    }
+  }
+  const f = a.stand_ziel || a.faellig; // überfällig (bzw. neues Ziel überschritten), seitdem keine Meldung – höchstens alle 7 Tage
+  if (f && f < heute && !(a.stand_am && String(a.stand_am).slice(0, 10) >= f) && !(jetztMs - gefragtMs < AST_UEBERFAELLIG_TAGE * AST_TAG_MS)) return "faellig";
+  return null;
+}
+// Reine Funktion (Test): Abschnitt „Stand der Aufgaben“ für ein Protokoll vom Datum `datum`. protokolle = frühere Protokolle {id, datum, status}
+// (ohne dieses), zeilen = Aufgaben dieser Protokolle, name(person_id) → Vorname, tag(iso) → „JJJJ-MM-TT“ (deutsche Zeit).
+// Dabei: alle aus früheren (veröffentlichten) Protokollen, die zu Beginn noch offen waren – offen oder erst nach dem vorigen Protokoll erledigt.
+// Gemeinsame Aufgaben (gleiche Gruppe) einmal mit allen Namen. neu = Rückmeldung seit dem vorigen Protokoll (für „Rückmeldungen 3 von 5“).
+function aufgabenStandListe(zeilen: any, protokolle: any, datum: any, name: any, tag: any) {
+  const tg = tag || ((x: any) => String(x || "").slice(0, 10));
+  const frueher = (protokolle || []).filter((p: any) => p.datum < datum);
+  const vorher = frueher.map((p: any) => p.datum).sort().pop() || "";
+  const pub = new Map(frueher.filter((p: any) => p.status === "veroeffentlicht").map((p: any) => [p.id, p.datum]));
+  const vorherIds = new Set(frueher.filter((p: any) => p.datum === vorher).map((p: any) => p.id));
+  const rein = (zeilen || []).filter((a: any) => pub.has(a.protokoll_id) && (!a.erledigt_am || tg(a.erledigt_am) > vorher || (vorherIds.has(a.protokoll_id) && tg(a.erledigt_am) >= vorher)));
+  const gruppen = new Map();
+  for (const a of rein) { const k = a.gruppe || a.id; gruppen.set(k, [...(gruppen.get(k) || []), a]); }
+  const aus: any[] = [];
+  for (const alle of gruppen.values()) {
+    const a = alle[0], erl = alle.every((x: any) => x.erledigt_am);
+    const letzt = alle.filter((x: any) => x.stand_am && (x.stand === "teilweise" || x.stand === "nicht")).sort((x: any, y: any) => String(y.stand_am).localeCompare(String(x.stand_am)))[0];
+    const e: any = { text: a.text, namen: [...new Set(alle.map((x: any) => name(x.person_id) || "?"))], aus: pub.get(a.protokoll_id), faellig: a.faellig || null, gruppe: a.gruppe || a.id };
+    if (erl) Object.assign(e, { stand: "erledigt", am: alle.map((x: any) => x.erledigt_am).sort().pop(), notiz: alle.find((x: any) => x.bemerkung)?.bemerkung || null });
+    else if (letzt) Object.assign(e, { stand: letzt.stand, am: letzt.stand_am, notiz: letzt.stand_text || null, ziel: letzt.stand_ziel || null, von: letzt.stand_von ? name(letzt.stand_von) || null : null });
+    else e.stand = "keine";
+    e.neu = e.stand !== "keine" && (!vorher || tg(e.am) >= vorher);
+    if (!e.neu && !erl) e.fehlt = alle.map((x: any) => x.person_id); // wer noch melden sollte (nur für Nachfragen/Übersicht, wird nicht festgeschrieben)
+    aus.push(e);
+  }
+  return aus.sort((x: any, y: any) => String(x.aus).localeCompare(String(y.aus)) || String(x.text).localeCompare(String(y.text), "de"));
+}
+// Daten für den Abschnitt holen (2 kleine Abfragen + Namen) – nur beim Öffnen eines Entwurfs, beim Veröffentlichen und bei „Nachfragen“
+async function aufgabenStandBerechnen(pr: any) {
+  const { data: prs } = await db.from("kc_club_sitzungsprotokolle").select("id,datum,status").lt("datum", pr.datum).neq("id", pr.id).order("datum", { ascending: false }).limit(120);
+  const pubIds = (prs ?? []).filter((x: any) => x.status === "veroeffentlicht").map((x: any) => x.id);
+  if (!pubIds.length) return { liste: [] as any[], zeilen: [] as any[] };
+  const ab = tagDazu(String((prs ?? [])[0].datum), -1); // grob vorfiltern, genau rechnet aufgabenStandListe (deutsche Zeit)
+  const { data: zeilen, error } = await db.from("kc_club_aufgaben").select("id,protokoll_id,person_id,text,gruppe,faellig,erledigt_am,bemerkung,stand,stand_am,stand_von,stand_text,stand_ziel")
+    .in("protokoll_id", pubIds).or(`erledigt_am.is.null,erledigt_am.gte.${ab}`).limit(500);
+  if (error) throw new Fehler("Der Stand der Aufgaben konnte gerade nicht geladen werden.", 503);
+  const leute = await personen([...(zeilen ?? []).map((a: any) => a.person_id), ...(zeilen ?? []).map((a: any) => a.stand_von)]);
+  const name = (id: string) => vorname(leute.get(id) ?? null) || leute.get(id)?.display_name || "";
+  const liste = aufgabenStandListe(zeilen ?? [], prs ?? [], pr.datum, name, (x: string) => berlinTag(new Date(x)));
+  for (const e of liste) if (e.fehlt) e.fehltNamen = [...new Set(e.fehlt.map((id: string) => name(id) || "?"))];
+  return { liste, zeilen: zeilen ?? [] };
+}
+// festgeschriebene Fassung: ohne die Hilfsfelder für die Übersicht
+const aufgabenStandFest = (l: any[]) => l.map(({ fehlt: _f, fehltNamen: _n, gruppe: _g, ...e }: any) => e);
+// „aufgabe_erledigt“ (auch über die Startmeldung): Stand und Verlauf nachziehen – Fehler stören das Abhaken nie
+async function aufgabeStandNachErledigt(ich: Ich, ids: string[], erledigt: boolean, bemerkung: string) {
+  try {
+    const { data: zs, error } = await db.from("kc_club_aufgaben").select("id,stand_verlauf").in("id", ids);
+    if (error) return;
+    const am = jetzt(), e = { stand: erledigt ? "erledigt" : "offen", am, von: ich.person_id, text: erledigt ? bemerkung : null, ziel: null };
+    for (const z of zs ?? []) await db.from("kc_club_aufgaben").update({ stand: e.stand, stand_am: erledigt ? am : null, stand_von: erledigt ? ich.person_id : null, stand_text: null, stand_ziel: null,
+      gefragt_am: am, spaeter_bis: null, stand_verlauf: [...(Array.isArray(z.stand_verlauf) ? z.stand_verlauf : []), e].slice(-AST_VERLAUF_MAX) }).eq("id", z.id);
+  } catch (e) { console.error("aufgabe stand erledigt", String(e)); }
+}
+// Meldung in allen Zeilen der Gruppe eintragen (Verlauf je Zeile, höchstens 20 Einträge)
+async function aufgabeStandSchreiben(ich: Ich, zeilen: any[], stand: string, text: string | null, ziel: string | null) {
+  const am = jetzt(), eintrag = { stand, am, von: ich.person_id, text, ziel };
+  for (const z of zeilen) {
+    const verlauf = [...(Array.isArray(z.stand_verlauf) ? z.stand_verlauf : []), eintrag].slice(-AST_VERLAUF_MAX);
+    const { error } = await db.from("kc_club_aufgaben").update({ stand, stand_am: am, stand_von: ich.person_id, stand_text: text, stand_ziel: ziel, stand_verlauf: verlauf, gefragt_am: am, spaeter_bis: null }).eq("id", z.id);
+    if (error) throw new Fehler("Der Stand konnte gerade nicht gespeichert werden – bitte gleich noch einmal versuchen.", 503);
+  }
+}
+// Startmeldung: meine „dranen“ Aufgaben mit Herkunft, Mitbeteiligten und deren Meldung (nur eigene Aufgaben – Datenschutz)
+async function aufgabenDranFuer(ich: Ich, ids: string[], sitzung: any) {
+  if (!ids.length) return [];
+  const { data: rows, error } = await db.from("kc_club_aufgaben").select(AST_SPALTEN).in("id", ids.slice(0, 30));
+  if (error) return []; // z. B. Spalten noch nicht da → keine Startmeldung, sonst nichts
+  const jetztMs = Date.now(), heute = berlinTag(new Date()), sMs = sitzung?.beginn ? Date.parse(sitzung.beginn) : null;
+  const dran = (rows ?? []).map((a: any) => ({ a, grund: aufgabeStandDran(a, sMs, jetztMs, heute) })).filter((x: any) => x.grund);
+  if (!dran.length) return [];
+  const gr = [...new Set(dran.map((x: any) => x.a.gruppe).filter(Boolean))], pids = [...new Set(dran.map((x: any) => x.a.protokoll_id).filter(Boolean))];
+  const [{ data: mit }, { data: prs }] = await Promise.all([
+    gr.length ? db.from("kc_club_aufgaben").select("gruppe,person_id").in("gruppe", gr) : Promise.resolve({ data: [] as any[] }),
+    pids.length ? db.from("kc_club_sitzungsprotokolle").select("id,datum").in("id", pids) : Promise.resolve({ data: [] as any[] }),
+  ]);
+  const leute = await personen([...(mit ?? []).map((x: any) => x.person_id), ...dran.map((x: any) => x.a.stand_von)]);
+  const vn = (id: string) => vorname(leute.get(id) ?? null) || leute.get(id)?.display_name || "";
+  const datum = new Map((prs ?? []).map((x: any) => [x.id, x.datum]));
+  return dran.map(({ a, grund }: any) => ({ id: a.id, text: a.text, faellig: a.faellig, grund, aus: datum.get(a.protokoll_id) ?? null,
+    mit: [...new Set((mit ?? []).filter((x: any) => x.gruppe === a.gruppe && x.person_id !== ich.person_id).map((x: any) => vn(x.person_id)))],
+    stand: a.stand, stand_am: a.stand_am, stand_text: a.stand_text, stand_ziel: a.stand_ziel, stand_von: a.stand_von && a.stand_von !== ich.person_id ? vn(a.stand_von) : a.stand_von ? "ich" : null,
+    sitzung: sitzung && sMs && sMs - jetztMs <= AST_ZYKLUS_TAGE * AST_TAG_MS ? { titel: sitzung.titel, beginn: sitzung.beginn } : null }));
+}
+// Stand-Felder einer Aufgabe für die Listen – nur für eigene/gemeinsame Aufgaben und wer sie verwaltet (Datenschutz)
+const aufgabeStandFelder = (a: any, sichtbar: boolean) => sichtbar && a.stand ? { stand: a.stand, stand_am: a.stand_am ?? null, stand_text: a.stand_text ?? null, stand_ziel: a.stand_ziel ?? null } : {};
+// Erinnerung 2 Tage vor der Sitzung (Takt, stündlich 9–20 Uhr): wer im Zyklus noch nichts gemeldet hat, bekommt einmal je Zyklus eine Push (ohne App: Mail)
+async function aufgabenStandErinnern() {
+  const h = berlinStunde(new Date()); if (h < 9 || h >= 20) return 0;
+  const jetztMs = Date.now();
+  const { data: s } = await db.from("kc_club_treffen").select("id,titel,beginn").eq("status", "geplant").eq("art", "treffen")
+    .gt("beginn", new Date(jetztMs).toISOString()).lte("beginn", new Date(jetztMs + AST_ZWEITE_TAGE * AST_TAG_MS).toISOString()).order("beginn").limit(1).maybeSingle();
+  if (!s) return 0;
+  const zyklus = new Date(Date.parse(s.beginn) - AST_ZYKLUS_TAGE * AST_TAG_MS).toISOString();
+  const { data: roh, error } = await db.from("kc_club_aufgaben").select("id,person_id,text,nachgefragt_am").is("erledigt_am", null).not("mitgeteilt_am", "is", null).neq("stand", "erledigt")
+    .or(`stand_am.is.null,stand_am.lt.${zyklus}`).limit(300);
+  const offen = (roh ?? []).filter((x: any) => !x.nachgefragt_am || Date.parse(x.nachgefragt_am) < Date.parse(zyklus));
+  if (error || !offen.length) return 0;
+  const { data: ok } = await db.from("kc_club_aufgaben").update({ nachgefragt_am: jetzt() }).in("id", offen.map((x: any) => x.id))
+    .or(`nachgefragt_am.is.null,nachgefragt_am.lt.${zyklus}`).select("id,person_id,text");
+  return await aufgabenStandPush(ok ?? [], `club-aufgabe-stand:${s.id}`, s);
+}
+async function aufgabenStandPush(zeilen: any[], korrelation: string, s: any) {
+  const je = new Map<string, string[]>();
+  for (const z of zeilen) je.set(z.person_id, [...new Set([...(je.get(z.person_id) ?? []), String(z.text)])]);
+  for (const [pid, texte] of je) {
+    await senden("club_aufgabe", [pid], {
+      titel: "📌 Bitte kurz den Stand deiner Aufgabe melden", kurz: texte.length === 1 ? txt(texte[0], 120) : `${texte.length} Aufgaben – ${txt(texte.join(" · "), 110)}`,
+      betreff: "Köcheclub Werne – bitte kurz den Stand deiner Aufgabe melden",
+      text: `Hallo,\n\n${s ? `bald ist unsere Sitzung „${s.titel}“ (${wann(s.beginn)}). ` : ""}Bitte melde kurz, wie es mit ${texte.length === 1 ? "deiner Aufgabe" : "deinen Aufgaben"} steht:\n\n${texte.map((t) => "📌 " + t).join("\n")}\n\nErledigt, teilweise oder noch nicht – ein Tipp in der Köcheclub-App genügt: ${APP_URL}\n\nViele Grüße\nKöcheclub Werne`,
+      url: APP_URL,
+    }, `${korrelation}:${pid}`).catch((e) => console.error("aufgabe stand push", String(e)));
+  }
+  return je.size;
+}
 
 // ---------- Aktionen / Ausflüge (KC-CLUB-AKTIONEN) ----------
 // Quelle ist der KC Manager (Bereich „Aktivitäten / Ausflüge“) – die Club-App liest nur, keine zweite Datenhaltung.
@@ -10064,6 +10207,8 @@ Köcheclub Werne`,
           aufg++;
         }
       }
+      // KC-CLUB-AUFGABEN-STAND: 2 Tage vor der Sitzung einmal je Zyklus „📌 Bitte kurz den Stand deiner Aufgabe melden“ (nur 9–20 Uhr, eigene Spalte nachgefragt_am)
+      const aufStand = stuendlich ? await aufgabenStandErinnern().catch((e) => { console.error("aufgaben stand erinnern", String(e)); return 0; }) : 0;
       const { data: ts } = await db.from("kc_club_treffen").select("*").eq("status", "geplant").eq("art", "treffen").is("erinnerung_gesendet_am", null)
         .gte("beginn", new Date().toISOString()).lte("beginn", new Date(Date.now() + 2 * 86400000).toISOString());
       let n = 0;
@@ -10262,7 +10407,7 @@ Köcheclub Werne`,
       }
       const leiheErinnert = await leihErinnern().catch((e) => { console.error("leihe erinnern", String(e)); return 0; }); // KC-CLUB-LEIHEN
       const boerse = await boerseWartung().catch((e) => { console.error("boerse wartung", String(e)); return null; }); // KC-CLUB-BOERSE
-      return json({ ok: true, erinnerungen: n, beendet, dienst, geb, aufg, nachfass, fotosEntfernt, archivEntfernt, anfragenErinnert: anfr, standorteGeloescht: (stWeg ?? []).length, ruheMeldungen, privErinnert, leiheErinnert, boerse });
+      return json({ ok: true, erinnerungen: n, beendet, dienst, geb, aufg, aufStand, nachfass, fotosEntfernt, archivEntfernt, anfragenErinnert: anfr, standorteGeloescht: (stWeg ?? []).length, ruheMeldungen, privErinnert, leiheErinnert, boerse });
     }
 
     // ----- KC-CLUB-ZUGANG-SELBST: Link verloren → neuen Link an die hinterlegte Mail-Adresse (ohne Anmeldung) -----
@@ -10779,6 +10924,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const meinGeburtstag = geburtstageHeute.some((g) => g.person_id === ich.person_id);
         if (meinGeburtstag) await geburtstagZettel(ich, berlinTag(new Date())).catch((e) => console.error("geburtstag zettel", String(e)));
         const { meineAufgaben, protokolleUngelesen, protokollNeu, protokollPruefen } = await pAufgaben; // 2.155.0: früh gestartet
+        // KC-CLUB-AUFGABEN-STAND: Startmeldung – nur wenn die App danach fragt (erstes Laden je App-Sitzung) und ich offene Aufgaben habe (1 kleine Abfrage)
+        const aufgabenDran = p.aufStand && ich.protokolle && meineAufgaben.length
+          ? await aufgabenDranFuer(ich, meineAufgaben.map((x: any) => x.id), naechstes[0] ?? null).catch((e) => { console.error("aufgaben dran", String(e)); return []; }) : null;
         const { data: kf } = await pKf;
         const terminfindungOffen = await pTermin;
         const [{ data: nf }, { data: kab }, wartung, { data: pe }, pwFristen, starts, eiFristen, { count: fbAnzahl }, anrufAntw] = await pRest;
@@ -10799,7 +10947,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const express = await pExpress;
         const dienstwunschFehlt = await pDwFehlt; // KC-CLUB-DW-LAUFBAND
         const neuesGeraet = await siGeraetPruefen(ich, req).catch(() => null); // 2.726.0 KC-CLUB-NEUES-GERAET
-        return json({ meinGeburtstag, alarm, express, dienstwunschFehlt, schwerZeiten: SCHWER_ZEITEN, serverJetzt: Date.now(), /* KC-CLUB-ADVENT-SERVERUHR: Uhr des Servers für den Adventskalender */ gericht: await pGericht, /* KC-CLUB-GEMEINSCHAFTSGERICHT */ /* 2.806.0 KC-CLUB-DB-VIEL-ZU-TUN */ startnachrichtDarf: await pSnDarf, kz, hilfeTipps: await pTipps, /* 2.835.0 KC-CLUB-HILFE-TIPPS */ studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, neuesGeraet, meinGeraet: siGeraetKlasse(req.headers.get("user-agent")), /* 2.726.0 KC-CLUB-NEUES-GERAET */ ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtClub: ich.zugang === "tischgast" ? null : await rtClubKanal().catch(() => null), /* KC-CLUB-ANWESENHEIT */ rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, rezeptThema: await pRzThema, themenNaechste: await pThemenN, sitzungVorgaben: SV, /* 2.751.0 KC-CLUB-SITZUNG-VORGABEN */ naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, ablagekorb: await pAblk, clubjahr: await pCj, wartung, communicator, notfall: nf ?? null, einstellungen, rose, /* KC-CLUB-ROSE */ gkOffen: await pGk, /* 2.977.0 KC-CLUB-GK-NACHFRAGE */ vertretung: await pVertretung, /* KC-CLUB-VERTRETUNG */ freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, protokollNeu, protokollPruefen, /* 2.818.0 KC-CLUB-PROTOKOLL-PRUEFUNG */ naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw, ab: await pAb, dienstStempel: await pDs, runderTisch: await pTisch, /* 2.762.0 KC-CLUB-RUNDER-TISCH */
+        return json({ meinGeburtstag, alarm, express, dienstwunschFehlt, schwerZeiten: SCHWER_ZEITEN, serverJetzt: Date.now(), /* KC-CLUB-ADVENT-SERVERUHR: Uhr des Servers für den Adventskalender */ gericht: await pGericht, /* KC-CLUB-GEMEINSCHAFTSGERICHT */ /* 2.806.0 KC-CLUB-DB-VIEL-ZU-TUN */ startnachrichtDarf: await pSnDarf, kz, hilfeTipps: await pTipps, /* 2.835.0 KC-CLUB-HILFE-TIPPS */ studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, neuesGeraet, meinGeraet: siGeraetKlasse(req.headers.get("user-agent")), /* 2.726.0 KC-CLUB-NEUES-GERAET */ ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtClub: ich.zugang === "tischgast" ? null : await rtClubKanal().catch(() => null), /* KC-CLUB-ANWESENHEIT */ rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, rezeptThema: await pRzThema, themenNaechste: await pThemenN, sitzungVorgaben: SV, /* 2.751.0 KC-CLUB-SITZUNG-VORGABEN */ naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, ablagekorb: await pAblk, clubjahr: await pCj, wartung, communicator, notfall: nf ?? null, einstellungen, rose, /* KC-CLUB-ROSE */ gkOffen: await pGk, /* 2.977.0 KC-CLUB-GK-NACHFRAGE */ vertretung: await pVertretung, /* KC-CLUB-VERTRETUNG */ freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, protokollNeu, protokollPruefen, /* 2.818.0 KC-CLUB-PROTOKOLL-PRUEFUNG */ naechstesTreffen: naechstes[0] ?? null, ...(aufgabenDran ? { aufgabenDran } : {}), /* KC-CLUB-AUFGABEN-STAND */ mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw, ab: await pAb, dienstStempel: await pDs, runderTisch: await pTisch, /* 2.762.0 KC-CLUB-RUNDER-TISCH */
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
             ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen,
             // KC-CLUB-GERAETE-TIPP: wohin der Link ginge – nur teilweise (z. B. „h…@web.de“)
@@ -19091,6 +19239,7 @@ Köcheclub Werne`,
         // offene Aufgaben: aus veröffentlichten Protokollen, ohne Protokoll, oder aus Entwürfen, die ich bearbeiten darf
         const aufgaben = (auf ?? []).filter((a: any) => { const pr: any = a.protokoll_id ? prot.get(a.protokoll_id) : null; return !pr || pr.status === "veroeffentlicht" || darfBearbeiten(ich, pr); });
         const leute = await personen([...(alle ?? []).map((x: any) => x.verfasser), ...aufgaben.map((a: any) => a.person_id)]);
+        const meineGr = new Set(aufgaben.filter((a: any) => a.gruppe && a.person_id === ich.person_id).map((a: any) => a.gruppe)); // KC-CLUB-AUFGABEN-STAND
         const mitProtokoll = new Set((alle ?? []).map((x: any) => x.treffen_id).filter(Boolean));
         return json({
           darfOrganisieren: ich.vorstand,
@@ -19106,7 +19255,8 @@ Köcheclub Werne`,
           }),
           aufgaben: aufgaben.map((a: any) => ({ id: a.id, text: a.text, faellig: a.faellig, person_id: a.person_id, gruppe: a.gruppe ?? null, name: leute.get(a.person_id)?.display_name || a.person_id,
             protokoll: a.protokoll_id ? { id: a.protokoll_id, titel: (prot.get(a.protokoll_id) as any)?.titel ?? "" } : null, meine: a.person_id === ich.person_id,
-            verwalten: ich.vorstand || a.erstellt_von === ich.person_id || (a.protokoll_id && prot.get(a.protokoll_id) ? darfBearbeiten(ich, prot.get(a.protokoll_id)) : false) })),
+            verwalten: ich.vorstand || a.erstellt_von === ich.person_id || (a.protokoll_id && prot.get(a.protokoll_id) ? darfBearbeiten(ich, prot.get(a.protokoll_id)) : false),
+            ...aufgabeStandFelder(a, ich.vorstand || a.person_id === ich.person_id || a.erstellt_von === ich.person_id || meineGr.has(a.gruppe)) })), /* KC-CLUB-AUFGABEN-STAND: Stand nur für eigene/gemeinsame */
           treffenOhneProtokoll: (tr ?? []).filter((t: any) => !mitProtokoll.has(t.id)),
         });
       }
@@ -19306,17 +19456,13 @@ Köcheclub Werne`,
           if (vorh) return json({ ok: true, id: vorh.id, vorhanden: true });
           const { data: t } = await db.from("kc_club_treffen").select("*").eq("id", tid).maybeSingle();
           if (!t) throw new Fehler("Treffen nicht gefunden.", 404);
-          const [{ data: teil }, { data: vs }, { data: prep }, { data: letzt }] = await Promise.all([
+          const [{ data: teil }, { data: vs }, { data: prep }] = await Promise.all([
             db.from("kc_club_teilnahme").select("person_id,antwort").eq("treffen_id", tid),
             db.from("kc_club_vorschlaege").select("*").eq("treffen_id", tid).neq("status", "zurueckgezogen").order("erstellt_am"),
             db.from("kc_club_buero_sitzung").select("tagesordnung").eq("treffen_id", tid).maybeSingle(),
-            db.from("kc_club_sitzungsprotokolle").select("id,datum").lt("datum", berlinTag(new Date(t.beginn))).order("datum", { ascending: false }).limit(1).maybeSingle(),
           ]);
-          // 2.802.0 KC-CLUB-PROTOKOLL-AUFGABEN-STAND (Wunsch #50 Hansi „wenn Aufgaben abgehakt sind, müssen sie im Folgeprotokoll als erledigt drin stehen“)
-          const { data: aufL } = letzt ? await db.from("kc_club_aufgaben").select("person_id,text,erledigt_am").eq("protokoll_id", letzt.id).order("erstellt_am") : { data: [] as any[] };
-          const aufLeute = await personen((aufL ?? []).map((a: any) => a.person_id));
-          const aufZ = (a: any) => `${vorname(aufLeute.get(a.person_id) ?? null) || "?"}: ${a.text}`;
-          const aufStand = (aufL ?? []).length ? `Aufgaben aus dem Protokoll vom ${String(letzt.datum).split("-").reverse().join(".")}:\n${(aufL ?? []).map((a: any) => (a.erledigt_am ? "✓ erledigt – " : "☐ offen – ") + aufZ(a)).join("\n")}` : "";
+          // 2.802.0 KC-CLUB-PROTOKOLL-AUFGABEN-STAND stand als Einmal-Kopie in der Kurzfassung – seit KC-CLUB-AUFGABEN-STAND (19.11.2026) eigener Abschnitt
+          // „Stand der Aufgaben“ (lebendig bis zum Veröffentlichen, alle noch offenen aus allen früheren Protokollen) – darum hier nichts mehr (sonst doppelt)
           const g = t.gastgeber_person_id ? (await personen([t.gastgeber_person_id])).get(t.gastgeber_person_id) : null;
           const { data: ca } = await db.from("kc_club_clubabend").select("anwesend").eq("treffen_id", tid).maybeSingle(); // 2.569.0 KC-CLUB-CLUBABEND: vor Ort eingetragen
           const beschluesse: string[] = [];
@@ -19330,7 +19476,6 @@ Köcheclub Werne`,
             entschuldigt: (teil ?? []).filter((x: any) => x.antwort === "nein" && !(ca?.anwesend ?? []).includes(x.person_id)).map((x: any) => x.person_id),
             // 2.802.0: die im Büro festgelegte Tagesordnung (mit vertagten Punkten), sonst wie bisher die Vorschläge
             tagesordnung: (prep?.tagesordnung ?? []).length ? (prep.tagesordnung as any[]).map((x: any) => txt(x?.t, 300)).filter(Boolean).slice(0, 40) : (vs ?? []).filter((x: any) => unterstuetzbar(x.art)).map((x: any) => x.titel), beschluesse,
-            ...(aufStand ? { kurzfassung: aufStand } : {}),
           });
         }
         const { data: neu, error } = await db.from("kc_club_sitzungsprotokolle").insert(zeile).select("id").single();
@@ -19365,6 +19510,10 @@ Köcheclub Werne`,
           await db.from("kc_club_sitzungsprotokoll_gelesen").upsert({ protokoll_id: pr.id, person_id: ich.person_id, version: pr.version, gelesen_am: jetzt() });
         const aktuell = new Set((gel ?? []).filter((x: any) => x.version >= pr.version).map((x: any) => x.person_id));
         aktuell.add(ich.person_id);
+        // KC-CLUB-AUFGABEN-STAND: Abschnitt „Stand der Aufgaben“ – im Entwurf lebendig berechnet, veröffentlicht festgeschrieben (Korrektur rechnet nicht neu)
+        const astLebendig = pr.status === "entwurf" && !pr.aufgaben_stand;
+        const ast: any[] | null = astLebendig ? await aufgabenStandBerechnen(pr).then((r) => r.liste, () => null) : pr.aufgaben_stand ?? null;
+        const meineGr = new Set((auf ?? []).filter((a: any) => a.gruppe && a.person_id === ich.person_id).map((a: any) => a.gruppe));
         return json({
           protokoll: {
             id: pr.id, treffen_id: pr.treffen_id, titel: pr.titel, datum: pr.datum, ort: pr.ort, gaeste: pr.gaeste, kurzfassung: pr.kurzfassung, naechster_termin: pr.naechster_termin ?? null,
@@ -19376,7 +19525,9 @@ Köcheclub Werne`,
           anlagen: aids.map((id: string) => (att ?? []).find((y: any) => y.id === id)).filter(Boolean).map((y: any) => ({ id: y.id, name: y.file_name, mime: y.mime_type, groesse: y.size_bytes })),
           einwaende: (ew ?? []).map((x: any) => ({ id: x.id, name: name(x.person_id), text: x.text, erstellt_am: x.erstellt_am, erledigt_am: x.erledigt_am, eigen: x.person_id === ich.person_id })),
           aufgaben: (auf ?? []).map((a: any) => ({ id: a.id, person_id: a.person_id, gruppe: a.gruppe ?? null, name: name(a.person_id), text: a.text, faellig: a.faellig, erledigt_am: a.erledigt_am, bemerkung: a.bemerkung ?? null, meine: a.person_id === ich.person_id,
-            verwalten: bearb || a.erstellt_von === ich.person_id })),
+            verwalten: bearb || a.erstellt_von === ich.person_id, ...aufgabeStandFelder(a, bearb || a.person_id === ich.person_id || a.erstellt_von === ich.person_id || meineGr.has(a.gruppe)) })),
+          aufgabenStand: ast ? (bearb && astLebendig ? ast.map(({ fehlt: _f, ...e }: any) => e) : aufgabenStandFest(ast)) : null, aufgabenStandLebendig: astLebendig, /* KC-CLUB-AUFGABEN-STAND */
+          aufgabenNachgefragtAm: bearb ? pr.aufgaben_nachgefragt_am ?? null : null,
           // Lesestand nur für Verfasser/Organisation
           gelesen: leser.length ? { von: leser.filter((id) => aktuell.has(id)).map(name).sort(), fehlt: leser.filter((id) => !aktuell.has(id)).map(name).sort() } : null,
           fassungen: fa ?? [], darfBearbeiten: bearb, darfLoeschen: darfProtokollLoeschen(ich, pr), eigen: pr.verfasser === ich.person_id,
@@ -19538,6 +19689,9 @@ Köcheclub Werne`,
         }
         const { count } = await db.from("kc_club_sitzungsprotokoll_anlagen").select("attachment_id", { count: "exact", head: true }).eq("protokoll_id", pr.id);
         if (!count && !pr.kurzfassung && !pr.beschluesse.length) throw new Fehler("Bitte zuerst ein Foto oder eine Datei vom Protokoll anhängen (oder eine Kurzfassung schreiben).");
+        // KC-CLUB-AUFGABEN-STAND: „Stand der Aufgaben“ festschreiben (nach einer Korrektur bleibt der festgeschriebene Stand); Fehler halten das Veröffentlichen nicht auf
+        if (!pr.aufgaben_stand) await aufgabenStandBerechnen(pr).then(({ liste }) => db.from("kc_club_sitzungsprotokolle").update({ aufgaben_stand: aufgabenStandFest(liste) }).eq("id", pr.id).eq("status", "entwurf"))
+          .then((r: any) => { if (r?.error) console.error("aufgaben stand fest", r.error.message); }, (e) => console.error("aufgaben stand fest", String(e)));
         const bis = new Date(Date.now() + EINSPRUCH_TAGE * 86400000).toISOString();
         const { data: ok } = await db.from("kc_club_sitzungsprotokolle").update({ status: "veroeffentlicht", veroeffentlicht_am: jetzt(), einspruch_bis: bis, geaendert_am: jetzt(), ...(ohneFreigabe ? { pruefung: { ...pg, ohne_freigabe: true, verlauf: pruefVerlauf(pg, "ohne_freigabe", ich) } } : {}) })
           .eq("id", pr.id).eq("status", "entwurf").select("id");
@@ -19768,6 +19922,28 @@ Köcheclub Werne`,
         return json({ ok: true, id: a.id, ids: zeilen.map((x: any) => x.id) });
       }
 
+      // KC-CLUB-AUFGABEN-STAND: Stand melden (Startmeldung oder „📝 Stand melden“) – 🔶 teilweise / ❌ noch nicht gleich hier;
+      // ✅ erledigt läuft unten durch „aufgabe_erledigt“ (Bemerkung Pflicht, ganze Gruppe, Bescheid an wer eingetragen hat) – dieselbe Wirkung wie das Abhaken
+      case "aufgabe_stand_melden": {
+        nurProtokolle(ich);
+        const stand = String(p.stand || "");
+        if (!AST_STAENDE.includes(stand)) throw new Fehler("Bitte wählen: erledigt, teilweise oder noch nicht.");
+        if (stand !== "erledigt") {
+          const x = await aufgabeHolen(ich, p.id);
+          const zeilen: any[] = x.a.gruppe ? ((await db.from("kc_club_aufgaben").select("*").eq("gruppe", x.a.gruppe)).data ?? [x.a]) : [x.a];
+          if (!zeilen.some((z: any) => z.person_id === ich.person_id)) throw new Fehler("Den Stand meldet, wer die Aufgabe hat.", 403);
+          if (zeilen.every((z: any) => z.erledigt_am)) throw new Fehler("Diese Aufgabe ist schon erledigt.", 409);
+          const text = txt(p.text, 1000) || null;
+          if (stand === "teilweise" && (text ?? "").length < 3) throw new Fehler("Bitte kurz dazuschreiben, was noch fehlt.");
+          const ziel = stand === "nicht" && /^\d{4}-\d{2}-\d{2}$/.test(String(p.ziel || "")) ? String(p.ziel) : null;
+          if (ziel && ziel < berlinTag(new Date())) throw new Fehler("Das neue Zieldatum liegt in der Vergangenheit.");
+          await aufgabeStandSchreiben(ich, zeilen, stand, text, ziel);
+          await protokoll(ich.person_id, "aufgabe_stand", { aufgabe: x.a.id, stand, ...(zeilen.length > 1 ? { gruppe: x.a.gruppe, zeilen: zeilen.length } : {}), ...(ziel ? { ziel } : {}) });
+          return json({ ok: true, stand }); // keine Push bei teilweise/noch nicht (nicht nerven)
+        }
+        p.erledigt = true; p.bemerkung = p.text;
+      }
+      // falls through
       case "aufgabe_erledigt": {
         nurProtokolle(ich);
         const x = await aufgabeHolen(ich, p.id);
@@ -19780,6 +19956,7 @@ Köcheclub Werne`,
         const erledigt = p.erledigt !== false, bemerkung = txt(p.bemerkung, 1000);
         if (erledigt && bemerkung.length < 3) throw new Fehler("Bitte kurz dazuschreiben, was dabei herausgekommen ist.");
         await db.from("kc_club_aufgaben").update(erledigt ? { erledigt_am: jetzt(), bemerkung } : { erledigt_am: null }).in("id", ids);
+        await aufgabeStandNachErledigt(ich, ids, erledigt, bemerkung); // KC-CLUB-AUFGABEN-STAND: erledigt bzw. wieder offen (Stand zurück auf „offen“)
         await protokoll(ich.person_id, erledigt ? "aufgabe_erledigt" : "aufgabe_wieder_offen", { aufgabe: x.a.id, ...(ids.length > 1 ? { gruppe: x.a.gruppe, zeilen: ids.length } : {}), ...(erledigt ? { bemerkung } : { alte_bemerkung: x.a.bemerkung ?? null }) });
         // Bescheid: wer eingetragen hat + (gemeinsame Aufgabe) die anderen Beteiligten – nie an sich selbst
         const anInfo = [...new Set([x.a.erstellt_von, ...(ids.length > 1 ? beteiligt : [])].filter((id) => id && id !== ich.person_id))] as string[];
@@ -19804,6 +19981,36 @@ Köcheclub Werne`,
         for (const z of zeilen) await geloescht(ich, "aufgabe", { aufgabe: z });
         await db.from("kc_club_aufgaben").delete().in("id", zeilen.map((z: any) => z.id));
         return json({ ok: true });
+      }
+
+      // KC-CLUB-AUFGABEN-STAND: Startmeldung „Später“ (auch Schließen ohne Antwort) → 24 Std. Ruhe – nur eigene Aufgaben
+      case "aufgabe_stand_spaeter": {
+        nurProtokolle(ich);
+        const ids = [...new Set((Array.isArray(p.ids) ? p.ids : [p.id]).map((x: unknown) => String(x || "")).filter((x: string) => /^[0-9a-f-]{36}$/i.test(x)))].slice(0, 30);
+        if (ids.length) await db.from("kc_club_aufgaben").update({ gefragt_am: jetzt(), spaeter_bis: new Date(Date.now() + AST_SPAETER_STD * 3600000).toISOString() }).in("id", ids).eq("person_id", ich.person_id);
+        return json({ ok: true });
+      }
+      // KC-CLUB-AUFGABEN-STAND: „🔔 Nachfragen“ im Protokoll-Entwurf – Push an alle ohne Rückmeldung seit dem vorigen Protokoll, Startmeldung kommt beim
+      // nächsten Öffnen der App (gefragt_am/spaeter_bis zurückgesetzt). Höchstens 1× je 12 Std. je Protokoll.
+      case "aufgaben_nachfragen": {
+        nurProtokolle(ich);
+        const pr = await protokollHolen(p.id);
+        if (!darfBearbeiten(ich, pr)) throw new Fehler("Nachfragen darf, wer das Protokoll schreibt (oder Clubsprecher/Kassenwart).", 403);
+        if (pr.status !== "entwurf") throw new Fehler("Das Protokoll ist schon veröffentlicht.", 409);
+        const { liste, zeilen } = await aufgabenStandBerechnen(pr);
+        const offen = new Set(liste.filter((e: any) => e.fehlt).map((e: any) => e.gruppe));
+        const ziel = zeilen.filter((z: any) => !z.erledigt_am && offen.has(z.gruppe || z.id));
+        if (!ziel.length) return json({ ok: true, an: 0 });
+        const grenze = new Date(Date.now() - AST_NACHFRAGEN_STD * 3600000).toISOString();
+        const { data: frei } = await db.from("kc_club_sitzungsprotokolle").update({ aufgaben_nachgefragt_am: jetzt() }).eq("id", pr.id)
+          .or(`aufgaben_nachgefragt_am.is.null,aufgaben_nachgefragt_am.lt.${grenze}`).select("id");
+        if (!frei?.length) throw new Fehler(`Schon nachgefragt – wieder möglich ab ${wann(new Date(Date.parse(pr.aufgaben_nachgefragt_am) + AST_NACHFRAGEN_STD * 3600000).toISOString())}.`, 409);
+        await db.from("kc_club_aufgaben").update({ nachgefragt_am: jetzt(), gefragt_am: null, spaeter_bis: null }).in("id", ziel.map((z: any) => z.id));
+        const an = [...new Set(ziel.map((z: any) => z.person_id as string))];
+        const push = aufgabenStandPush(ziel, `club-aufgabe-nachfragen:${pr.id}:${Date.now()}`, null).catch((e) => console.error("aufgaben nachfragen", String(e)));
+        try { (globalThis as any).EdgeRuntime?.waitUntil?.(push); } catch { /* läuft trotzdem an */ }
+        await protokoll(ich.person_id, "aufgaben_nachgefragt", { protokoll: pr.id, personen: an.length, aufgaben: ziel.length });
+        return json({ ok: true, an: an.length });
       }
 
       // ----- Anlagen -----

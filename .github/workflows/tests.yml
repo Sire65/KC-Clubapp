@@ -268,6 +268,8 @@ jobs:
       - run: node tests/egress-sparen.test.mjs
       # 2.977.0 KC-CLUB-GK-NACHFRAGE + KC-CLUB-GK-GESICHTER
       - run: node tests/gk-nachfrage.test.mjs
+      # KC-CLUB-AUFGABEN-STAND (19.11.2026): Startmeldung „Wie steht's mit deiner Aufgabe?“ + Abschnitt „Stand der Aufgaben“ im Protokoll
+      - run: node tests/aufgaben-stand.test.mjs
   # 2.725.0 KC-CLUB-RUNDGANG: Klick-Rundgang im echten Browser (Testdaten, nichts nach draußen) – Programmfehler und Schutzschild-Sperren werden rot
   rundgang:
     runs-on: ubuntu-latest

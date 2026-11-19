@@ -18182,13 +18182,15 @@ async function neuLadenRoh(vonHand) {
   // 2.611.0 KC-CLUB-START-GLEICHZEITIG (Messung 23.10.: der Sofortstart zeichnete erst den gespeicherten Stand und schickte DANACH die Anfrage –
   // beide Wartezeiten liefen hintereinander): erst die Anfrage an den Server losschicken, dann – während sie unterwegs ist – den Stand zeichnen.
   const tInit = performance.now(); // KC-CLUB-STARTZEIT: nur die erste Anfrage nach dem Öffnen zählt
-  const initAnfrage = api("init", { fotosSeit: kzSeit("fotos"), dienstSeit: kzSeit("dienste") }, { warten: !!vonHand }); initAnfrage.catch(() => {}); // Fehler behandelt unten das await
+  const astF = astFragenJetzt(); // KC-CLUB-AUFGABEN-STAND: Startmeldung nur beim ersten Laden je App-Sitzung (bzw. nach 6 Std. / Push „Bitte Stand melden“) mitfragen
+  const initAnfrage = api("init", { fotosSeit: kzSeit("fotos"), dienstSeit: kzSeit("dienste"), aufStand: astF ? 1 : 0 }, { warten: !!vonHand }); initAnfrage.catch(() => {}); // Fehler behandelt unten das await
   if (!INIT) sofortStart(); // KC-CLUB-SOFORTSTART (2.113.0): gespeicherten Stand sofort zeigen, frisch laden im Hintergrund
   const swHinweis = !ICH ? setTimeout(startWartetZeigen, 3000) : 0; // 2.976.0 KC-CLUB-START-WARUM: nur beim ersten Anmelden
   initAnfrage.then(() => { try { localStorage.setItem(SCHWER_MERK, JSON.stringify(INIT?.schwerZeiten || null)); } catch {} }, () => {}).finally(() => { clearTimeout(swHinweis); startWartetWeg(); });
   try {
     INIT = await initAnfrage; if (window.KCFP?.schlaeft) return; uhrAbgleich(INIT); /* KC-CLUB-ADVENT-SERVERUHR */ /* 2.394.0 Fenster inzwischen geleert */ if (!START_MESS.initBis) { START_MESS.initAb = tInit; START_MESS.initBis = performance.now(); } /* KC-CLUB-KACHEL-ZAHLEN */ ICH = INIT.ich; einstOffenAnwenden(); /* 2.6.1: noch laufende Speicherungen nicht überschreiben */ adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); inkognitoZeigen(); einwZeigen(aktuelleAnsicht); schluesselSichern(KEY); /* KC-CLUB-SCHLUESSEL-SICHERN */ if (document.body.classList.contains("rg-ohne-admin")) document.body.classList.remove("ist-admin"); /* KC-CLUB-ERKLAERVIDEOS-ROLLEN: im Video für alle bleibt Admin aus */ stKnopf(); /* KC-CLUB-STUDIO */ cfUebernehmen(INIT?.einstellungen?.chat_farben); /* KC-CLUB-CHAT-FARBEN */ // KC-CLUB-KOPF-EINFACH
     alarmPruefen(); /* KC-CLUB-NOTFALL-MELDUNG */ try { expressPruefen(); } catch {} /* 2.362.0 KC-CLUB-EXPRESS */ setTimeout(() => { try { irLaden(); } catch {} }, 3000); /* KC-CLUB-IST-RUECKFRAGE */ setTimeout(() => { try { abStandZeigen(INIT?.ab); } catch {} }, 2500); /* 2.568.0 KC-CLUB-ANRUFBEANTWORTER */ try { dsLageSetzen(INIT?.dienstStempel); } catch {} /* 2.590.0 KC-CLUB-DIENST-STEMPEL */ try { rundKarteZeichnen(); } catch {} /* 2.762.0 KC-CLUB-RUNDER-TISCH */ setTimeout(() => { try { snPruefen(); } catch {} }, 1500); /* 2.482.0 KC-CLUB-STARTNACHRICHT */ document.body.classList.toggle("sos-frei", sosDarf()); /* KC-CLUB-SOS-FREIGABE */ fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
+    if (astF) try { astNachInit(INIT); } catch {} // KC-CLUB-AUFGABEN-STAND
     if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln);
     if ($("setLiveTippen")) $("setLiveTippen").checked = liveTippen();
     if ($("setWichtigFrage")) $("setWichtigFrage").checked = versandImmerAn(); // KC-CLUB-WICHTIGKEIT-FRAGE (2.287.0) → 2.524.0 KC-CLUB-VERSANDART: Leiste immer zeigen
@@ -27764,7 +27766,8 @@ function anlagenListe(bearbeiten) {
 function aufgabeZeile(a, darfAbhaken, darfLoeschen) {
   return `<div class="zeile">${darfAbhaken ? `<button class="knopf klein ${a.erledigt_am ? "gruen" : ""}" title="erledigt" onclick="aufgabeErledigt('${a.id}', ${!a.erledigt_am})">${a.erledigt_am ? "✔" : "☐"}</button>` : `<span>${a.erledigt_am ? "✔" : "📌"}</span>`}
     <div style="flex:1${a.erledigt_am ? ";text-decoration:line-through;opacity:.6" : ""}"><b>${esc(a.text)}</b>
-      <div class="hinweis" style="font-size:.85rem">${a.ids?.length > 1 ? '<span title="gemeinsame Aufgabe – erledigt, sobald einer sie abhakt">👥 </span>' : ""}${esc(a.name)}${a.mit?.length ? ` <span title="gemeinsame Aufgabe">· gemeinsam mit ${esc(a.mit.join(", "))}</span>` : ""} ${a.erledigt_am ? "" : faelligText(a.faellig)}${a.protokoll ? " · aus „" + esc(a.protokoll.titel) + "“" : ""}</div>${a.erledigt_am && a.bemerkung ? `<div class="hinweis" style="font-size:.85rem;text-decoration:none;opacity:1">💬 ${esc(a.bemerkung)}</div>` : ""}</div>
+      <div class="hinweis" style="font-size:.85rem">${a.ids?.length > 1 ? '<span title="gemeinsame Aufgabe – erledigt, sobald einer sie abhakt">👥 </span>' : ""}${esc(a.name)}${a.mit?.length ? ` <span title="gemeinsame Aufgabe">· gemeinsam mit ${esc(a.mit.join(", "))}</span>` : ""} ${a.erledigt_am ? "" : faelligText(a.faellig) + aufgabeStandMarke(a)}${a.protokoll ? " · aus „" + esc(a.protokoll.titel) + "“" : ""}</div>${a.erledigt_am && a.bemerkung ? `<div class="hinweis" style="font-size:.85rem;text-decoration:none;opacity:1">💬 ${esc(a.bemerkung)}</div>` : ""}${!a.erledigt_am && a.stand_text && (a.stand === "teilweise" || a.stand === "nicht") ? `<div class="hinweis" style="font-size:.85rem">${a.stand === "teilweise" ? "🔶" : "❌"} ${esc(a.stand_text)}</div>` : ""}
+      ${!a.erledigt_am && a.meine ? `<button type="button" class="knopf klein" style="margin-top:4px" onclick="astEinzeln('${esc(a.id)}')">📝 Stand melden</button>` : ""}</div>
     ${darfLoeschen ? `<button class="knopf klein" title="löschen" aria-label="Aufgabe löschen" onclick="aufgabeLoeschen('${a.id}')">🗑️</button>` : ""}</div>`;
 }
 // ---------- 2.499.0 KC-CLUB-PROTOKOLL-NACHTRAG (Wunsch Hansi „Ich will nicht manuell eintragen“): Texte, die Hansi diktiert hat (über Claude abgelegt),
@@ -27821,6 +27824,7 @@ function protokollFormular() {
       <details style="margin-top:10px"${p.kurzfassung ? " open" : ""}><summary><b>✏️ Kurzfassung tippen</b> <small class="hinweis">(freiwillig)</small></summary>
         <label class="feld"><textarea id="prK" rows="5" oninput="prAendern()">${esc(p.kurzfassung || "")}</textarea></label></details>
     </div>
+    ${aufgabenStandHtml()}<!-- KC-CLUB-AUFGABEN-STAND -->
     <div class="karte"><h3>3 · Aufgaben <small class="hinweis">(wer macht was bis wann)</small></h3>
       <div id="prAufgaben">${PR.aufgaben.map((a) => aufgabeZeile(a, true, true)).join("") || '<p class="hinweis">Noch keine Aufgaben.</p>'}</div>
       <div class="feld">Wer? <small class="hinweis">(auch mehrere)</small><button type="button" class="knopf todower" id="aufWer" style="width:100%;margin-top:5px" onclick="aufgabeWerWaehlen()">${AUF_WER.length ? "👉 " + esc(todoNamen(AUF_WER)) : "👉 bitte wählen"}</button></div>
@@ -28055,7 +28059,9 @@ function aufgabenMitGruppe(liste) {
     if (alle[0] !== a) continue; // schon mit der ersten Zeile der Gruppe aufgenommen
     neu.push({ ...a, name: alle.map((x) => x.name || "?").join(", "), namen: alle.map((x) => x.name || "?"), ids: alle.map((x) => x.id), mit: [],
       meine: alle.some((x) => x.meine), verwalten: alle.some((x) => x.verwalten),
-      erledigt_am: alle.every((x) => x.erledigt_am) ? alle.map((x) => x.erledigt_am).sort().pop() : null, bemerkung: alle.find((x) => x.bemerkung)?.bemerkung ?? null });
+      erledigt_am: alle.every((x) => x.erledigt_am) ? alle.map((x) => x.erledigt_am).sort().pop() : null, bemerkung: alle.find((x) => x.bemerkung)?.bemerkung ?? null,
+      ...(() => { const st = alle.filter((x) => x.stand_am).sort((x, y) => String(y.stand_am).localeCompare(String(x.stand_am)))[0]; // KC-CLUB-AUFGABEN-STAND: eine Meldung gilt für die ganze Gruppe – die neueste zählt
+        return st ? { stand: st.stand, stand_am: st.stand_am, stand_text: st.stand_text ?? null, stand_ziel: st.stand_ziel ?? null } : {}; })() });
   }
   liste.splice(0, liste.length, ...neu);
   return liste;
@@ -28088,6 +28094,119 @@ async function aufgabeLoeschen(id) {
     else protokolleLaden();
     neuLaden();
   } catch (e) { meldeFehler(e); }
+}
+// ---------- KC-CLUB-AUFGABEN-STAND (19.11.2026, Wunsch Hansi „Gib allen mit offenen Aufgaben eine Startmeldung mit der Aufgabe und ob sie erledigt ist:
+// Ja, teilweise, nein. Das Ergebnis muss dann im nächsten Protokoll erscheinen als erledigt am, oder teilweise oder noch nicht.“) ----------
+// Startmeldung „📌 Wie steht's mit deiner Aufgabe?“: der Server liefert beim ersten Laden je App-Sitzung (init, aufStand) die Aufgaben, die „dran“ sind
+// (Sitzung in ≤ 7 Tagen ohne Meldung, nochmal 2 Tage vorher, überfällig, Nachfrage der Clubleitung). ✅ erledigt (Bemerkung Pflicht) wirkt wie das Abhaken,
+// 🔶 teilweise (was fehlt noch – Pflicht), ❌ noch nicht (Grund und neues Ziel freiwillig). „Später“ bzw. Schließen = 24 Std. Ruhe. Im Protokoll:
+// Abschnitt „Stand der Aufgaben“ (Entwurf lebendig, veröffentlicht festgeschrieben) – mit „Rückmeldungen 3 von 5“ und „🔔 Nachfragen“ für wer schreibt.
+var AST = { fragen: true, zuletzt: 0, dran: [], offen: false };
+const AST_TEXT = { erledigt: "Was ist dabei herausgekommen? (Pflicht – wer die Aufgabe eingetragen hat, bekommt es zu lesen)", teilweise: "Was fehlt noch? (Pflicht, ein paar Worte reichen)", nicht: "Warum noch nicht? (freiwillig)" };
+function astFragenJetzt() { return ICH?.protokolle !== false && !document.body.classList.contains("rg-ohne-admin") && (AST.fragen || Date.now() - AST.zuletzt > 6 * 3600000); }
+function astNachInit(d) {
+  AST.fragen = false; AST.zuletzt = Date.now(); AST.dran = Array.isArray(d?.aufgabenDran) ? d.aufgabenDran : [];
+  if (AST.dran.length && !AST.offen) setTimeout(() => astPruefen(0), 9500);
+}
+// „21.11.“ – Datum (JJJJ-MM-TT) bzw. Zeitpunkt (deutsche Zeit)
+function astTag(x) { const s = /^\d{4}-\d{2}-\d{2}$/.test(String(x || "")) ? String(x) : x ? TAG_ISO_FMT.format(new Date(x)) : ""; return s ? `${s.slice(8, 10)}.${s.slice(5, 7)}.` : ""; }
+// eine Zeile im Abschnitt „Stand der Aufgaben“ (Ansicht, Druck, Text) – „✅ erledigt am 21.11. – Frank, Christina: Tablets beschaffen – „2 Tablets gekauft““
+function aufgabeStandZeile(e) {
+  const kopf = { erledigt: `✅ erledigt${e.am ? " am " + astTag(e.am) : ""}`, teilweise: `🔶 teilweise${e.am ? ` (Stand ${astTag(e.am)})` : ""}`, nicht: `❌ noch nicht${e.am ? ` (Stand ${astTag(e.am)})` : ""}` }[e.stand] || "❔ keine Rückmeldung";
+  const namen = (e.namen || []).filter(Boolean);
+  return `${kopf} – ${namen.length ? namen.join(", ") + ": " : ""}${e.text}${e.notiz ? ` – „${e.notiz}“` : ""}${e.stand === "nicht" && e.ziel ? ` – neues Ziel ${astTag(e.ziel)}` : ""}${e.aus ? ` (aus dem Protokoll vom ${astTag(e.aus)})` : ""}`;
+}
+function aufgabeStandMarke(a) {
+  if (a.stand !== "teilweise" && a.stand !== "nicht") return "";
+  return ` <span class="marke ${a.stand === "teilweise" ? "gelb" : "rot"}">${a.stand === "teilweise" ? "🔶 teilweise" : "❌ noch nicht"}${a.stand_am ? " · " + esc(astTag(a.stand_am)) : ""}${a.stand === "nicht" && a.stand_ziel ? " · Ziel " + esc(astTag(a.stand_ziel)) : ""}</span>`;
+}
+// Abschnitt im Protokoll (Ansicht und Entwurf); wer schreibt, sieht im Entwurf die Rückmeldungen und kann nachfragen
+function aufgabenStandHtml() {
+  const l = PR?.aufgabenStand; if (!Array.isArray(l) || !l.length) return "";
+  const lebendig = !!PR.aufgabenStandLebendig, bearb = PR.darfBearbeiten && lebendig;
+  let ueber = "";
+  if (bearb) {
+    const gemeldet = l.filter((e) => e.neu).length, fehlen = [...new Set(l.flatMap((e) => e.fehltNamen || []))];
+    const seit = PR.aufgabenNachgefragtAm ? Date.parse(PR.aufgabenNachgefragtAm) : 0, gesperrt = seit && Date.now() - seit < 12 * 3600000;
+    ueber = `<div class="ast-ueber" style="margin-top:8px;padding:8px 10px;border-radius:10px;background:var(--flaeche2, rgba(0,0,0,.04))"><b>Rückmeldungen: ${gemeldet} von ${l.length}</b>${fehlen.length ? `<div class="hinweis" style="margin:2px 0 6px">Noch keine Rückmeldung: ${esc(fehlen.join(", "))}</div>` : '<div class="hinweis" style="margin:2px 0 0">Alle haben sich gemeldet 👍</div>'}
+      ${fehlen.length ? (gesperrt ? `<div class="hinweis" style="font-size:.85rem">🔔 Nachgefragt ${esc(zeitKurz(PR.aufgabenNachgefragtAm))} – wieder möglich nach 12 Stunden.</div>` : `<button type="button" class="knopf klein" onclick="einmal(this, astNachfragen)">🔔 Nachfragen</button>`) : ""}</div>`;
+  }
+  return `<div class="karte ast-karte"><h3 style="margin-top:0">📋 Stand der Aufgaben</h3><p class="hinweis" style="margin:0 0 6px;font-size:.85rem">Aufgaben aus früheren Protokollen, die noch offen waren${lebendig ? " – wird bis zum Veröffentlichen laufend aktualisiert" : ""}.</p>
+    <ul style="margin:0;padding-left:20px">${l.map((e) => `<li style="margin:0 0 4px">${esc(aufgabeStandZeile(e))}</li>`).join("")}</ul>${ueber}</div>`;
+}
+async function astNachfragen() {
+  const fehlen = [...new Set((PR?.aufgabenStand || []).flatMap((e) => e.fehltNamen || []))];
+  if (!(await frage(`🔔 Nachfragen?\n\n${fehlen.join(", ")} ${fehlen.length === 1 ? "bekommt" : "bekommen"} eine Push „Bitte kurz den Stand deiner Aufgabe melden“, und beim nächsten Öffnen der App kommt die Frage.`, { ja: "🔔 Nachfragen", nein: "Abbrechen" }))) return;
+  try { const r = await api("aufgaben_nachfragen", { id: prId }, { warten: true }); melde(r.an ? `🔔 ${r.an} ${r.an === 1 ? "Mitglied" : "Mitglieder"} gefragt` : "Alle haben sich schon gemeldet 👍"); protokollOeffnen(prId, true); }
+  catch (e) { meldeFehler(e); }
+}
+function astPruefen(n = 0) {
+  if (!AST.dran.length || AST.offen) return;
+  if (document.hidden || aktuelleAnsicht !== "start" || document.querySelector(FENSTER_OFFEN + ", .dlg")) { if (n < 40) setTimeout(() => astPruefen(n + 1), 5000); return; }
+  astFenster(AST.dran.slice(0, 10), true);
+}
+// „📝 Stand melden“ an der Aufgabe (Protokoll, Aufgabenliste) – dasselbe Fenster nur für diese Aufgabe
+function astEinzeln(id) {
+  const a = [...(PR?.aufgaben || []), ...(prListe?.aufgaben || [])].find((x) => x.id === id || (x.ids || []).includes(id)); if (!a) return;
+  const ich = ICH?.name || "";
+  astFenster([{ id: a.id, text: a.text, faellig: a.faellig, aus: a.protokoll ? null : PR?.protokoll?.datum || null, ausTitel: a.protokoll?.titel || null, mit: (a.namen || []).filter((n) => n !== ich),
+    stand: a.stand || "offen", stand_am: a.stand_am || null, stand_text: a.stand_text || null, stand_ziel: a.stand_ziel || null, stand_von: null }], false);
+}
+function astFenster(liste, start) {
+  if (!liste.length) return;
+  let i = 0, wahl = null; AST.offen = true;
+  const fertig = new Set();
+  const f = blattAuf("astBlatt", `<div id="astInhalt"></div>`);
+  const zu = (spaeter) => {
+    f._zu = null; f.remove(); AST.offen = false;
+    const rest = liste.filter((x) => !fertig.has(x.id)).map((x) => x.id);
+    if (start && spaeter && rest.length) api("aufgabe_stand_spaeter", { ids: rest }).catch(() => {}); // Schließen ohne Antwort = Später (24 Std. Ruhe)
+    AST.dran = AST.dran.filter((x) => !liste.some((y) => y.id === x.id));
+  };
+  f._zu = () => zu(true); // Handy-„Zurück“, ✕, daneben tippen
+  const zeichnen = () => {
+    const a = liste[i]; wahl = null;
+    const info = [a.mit?.length ? `👥 mit ${a.mit.join(", ")}` : "", a.aus ? `aus dem Protokoll vom ${astTag(a.aus)}` : a.ausTitel ? `aus „${a.ausTitel}“` : "", a.faellig ? `bis ${astTag(a.faellig)}` : ""].filter(Boolean).join(" · ");
+    const zuletzt = (a.stand === "teilweise" || a.stand === "nicht") && a.stand_am ? `<p class="ast-andere" style="margin:8px 0 0;padding:6px 8px;border-radius:8px;background:rgba(240,180,40,.15)">${a.stand_von && a.stand_von !== "ich" ? `${esc(a.stand_von)} hat gemeldet` : "Zuletzt gemeldet"}: ${a.stand === "teilweise" ? "🔶 teilweise" : "❌ noch nicht"}${a.stand_text ? ` – „${esc(a.stand_text)}“` : ""} <small>(${esc(astTag(a.stand_am))})</small>${a.stand_von && a.stand_von !== "ich" ? "<br><small>Du kannst ergänzen oder auf erledigt setzen.</small>" : ""}</p>` : "";
+    const gross = "font-size:1.15rem;padding:14px 10px;width:100%;text-align:left";
+    f.querySelector("#astInhalt").innerHTML = `<h3 style="margin:0 0 4px">📌 Wie steht's mit deiner Aufgabe?</h3>${liste.length > 1 ? `<p class="hinweis" style="margin:0 0 4px">Aufgabe ${i + 1} von ${liste.length}</p>` : ""}
+      <div class="ast-aufgabe" style="padding:10px;border-radius:10px;background:rgba(0,0,0,.05)"><b style="font-size:1.1rem;overflow-wrap:anywhere">${esc(a.text)}</b>${info ? `<div class="hinweis" style="margin-top:2px">${esc(info)}</div>` : ""}</div>${zuletzt}
+      <p style="margin:12px 0 6px;font-weight:700">Ist sie erledigt?</p>
+      <div class="ast-knoepfe" style="display:grid;gap:8px"><button type="button" class="knopf ast-k" data-s="erledigt" style="${gross}">✅ Ja, erledigt</button><button type="button" class="knopf ast-k" data-s="teilweise" style="${gross}">🔶 Teilweise</button><button type="button" class="knopf ast-k" data-s="nicht" style="${gross}">❌ Noch nicht</button></div>
+      <div id="astMehr" style="display:none;margin-top:10px">
+        <label class="feld"><span id="astTextLabel"></span><textarea id="astText" rows="3" maxlength="1000" style="width:100%;box-sizing:border-box"></textarea></label>
+        <label class="feld" id="astZielFeld" style="display:none">Neues Zieldatum (freiwillig)<input id="astZiel" type="date" min="${esc(heuteIso())}" style="width:100%;box-sizing:border-box"></label>
+        <p id="astHinweis" role="alert" style="display:none;margin:4px 0;color:#b3261e;font-weight:700"></p>
+        <button type="button" class="knopf haupt" id="astLos" style="width:100%;font-size:1.1rem;padding:12px">📨 Melden</button>
+      </div>
+      <div style="text-align:center;margin-top:12px"><button type="button" class="knopf klein" id="astSpaeter">${start ? "⏰ Später (morgen wieder)" : "Schließen"}</button></div>`;
+    f.querySelectorAll(".ast-k").forEach((b) => (b.onclick = () => {
+      wahl = b.dataset.s;
+      f.querySelectorAll(".ast-k").forEach((x) => { x.classList.toggle("haupt", x === b); x.setAttribute("aria-pressed", String(x === b)); });
+      $("astMehr").style.display = ""; $("astTextLabel").textContent = AST_TEXT[wahl]; $("astZielFeld").style.display = wahl === "nicht" ? "" : "none"; $("astHinweis").style.display = "none";
+      $("astLos").textContent = { erledigt: "✅ Erledigt melden", teilweise: "🔶 Teilweise melden", nicht: "❌ Noch nicht – melden" }[wahl];
+      try { $("astText").focus(); } catch {}
+    }));
+    $("astSpaeter").onclick = () => zu(start);
+    $("astLos").onclick = (ev) => einmal(ev.currentTarget, async () => {
+      if (!wahl) return;
+      const text = ($("astText").value || "").trim(), ziel = wahl === "nicht" ? $("astZiel").value || "" : "";
+      if ((wahl === "erledigt" || wahl === "teilweise") && text.length < 3) {
+        const h = wahl === "erledigt" ? "Bitte kurz dazuschreiben, was dabei herausgekommen ist." : "Bitte kurz dazuschreiben, was noch fehlt.";
+        $("astHinweis").textContent = h; $("astHinweis").style.display = ""; melde(h, true); try { $("astText").focus(); } catch {} return;
+      }
+      try { await api("aufgabe_stand_melden", { id: a.id, stand: wahl, text, ...(ziel ? { ziel } : {}) }, { warten: true }); }
+      catch (e) { return meldeFehler(e); }
+      fertig.add(a.id);
+      melde({ erledigt: "✔ Erledigt – danke!", teilweise: "🔶 Danke – Stand gemeldet", nicht: "❌ Danke – Stand gemeldet" }[wahl]);
+      if (wahl === "erledigt" && INIT?.meineAufgaben) INIT.meineAufgaben = INIT.meineAufgaben.filter((x) => x.id !== a.id);
+      if (++i < liste.length) return zeichnen();
+      zu(false);
+      if (aktuelleAnsicht === "protokoll" && prId) protokollOeffnen(prId, true); else if (aktuelleAnsicht === "protokolle") protokolleLaden();
+      if (wahl === "erledigt") neuLaden();
+    });
+  };
+  zeichnen();
 }
 // ---------- 2.818.0 KC-CLUB-PROTOKOLL-PRUEFUNG (Wunsch #57 Hansi, Konzept 02.11.2026 – „Ja, baue nach deinen Vorschlägen“) ----------
 // Hat jemand anderes als der Schriftführer das Protokoll eingetragen: „📨 Zur Prüfung an …“ → der Schriftführer liest es und tippt „✅ Stimmt so –
@@ -28197,6 +28316,7 @@ function protokollLesen() {
       ${p.kurzfassung ? `<p style="margin:10px 0 0"><b>Kurzfassung</b></p><p class="${neuF("kurzfassung", p.kurzfassung)}" style="white-space:pre-wrap;margin:4px 0 0">${esc(p.kurzfassung)}</p>` : ""}
       ${p.naechster_termin ? `<p class="${neuF("naechster_termin", p.naechster_termin)}" style="margin:10px 0 0"><b>📅 Nächster Termin:</b> ${esc(p.naechster_termin)}</p>` : ""}
     </div>
+    ${aufgabenStandHtml()}
     ${PR.anlagen.length ? `<div class="karte"><h3>📎 Das Protokoll</h3><p class="hinweis" style="margin-top:0;font-size:.85rem">Antippen zum Vergrößern bzw. Öffnen.</p>${anlagenListe(false)}</div>` : ""}
     <div class="knoepfe" style="margin:0 0 10px"><button class="knopf klein" onclick="einmal(this, prDrucken)">🖨️ Drucken / PDF</button>${PR.darfBearbeiten && p.roh !== "entwurf" ? '<button class="knopf klein" onclick="prInfoWahl()">📣 Info an Mitglieder</button>' : ""}${p.roh !== "entwurf" ? '<button class="knopf klein" onclick="protokollInsArchiv()">🗄️ In mein Archiv legen</button>' : ""}</div>
     ${PR.aufgaben.length ? `<div class="karte"><h3>📌 Aufgaben</h3>${PR.aufgaben.map((a) => aufgabeZeile(a, a.meine || PR.darfBearbeiten, a.verwalten)).join("")}</div>` : ""}
@@ -32642,6 +32762,7 @@ function druckProtokoll() {
         <tr><th>Stand</th><td>Fassung ${p.version} · ${esc(status)}</td></tr></tbody></table>
       <h2>Tagesordnung</h2>${liste(p.tagesordnung, "ol", p.tagesordnungVon)}<h2>Beschlüsse</h2>${liste(p.beschluesse, "ul")}
       ${p.kurzfassung ? `<h2>Kurzfassung</h2><p style="white-space:pre-wrap">${esc(p.kurzfassung)}</p>` : ""}
+      ${PR.aufgabenStand?.length ? `<h2>Stand der Aufgaben</h2><ul>${PR.aufgabenStand.map((e) => `<li>${esc(aufgabeStandZeile(e))}</li>`).join("")}</ul>` : ""}
       ${PR.aufgaben.length ? `<h2>Aufgaben</h2><table><thead><tr><th style="width:9mm">✓</th><th>Aufgabe</th><th style="width:44mm">Wer</th><th style="width:22mm">bis</th></tr></thead><tbody>${druckAufgabenZeilen(PR.aufgaben)}</tbody></table>` : ""}
       ${PR.anlagen.length ? `<h2>Anlagen</h2><ul>${PR.anlagen.map((a) => `<li>${esc(a.name)}</li>`).join("")}</ul>` : ""}
       ${PR.einwaende.length ? `<h2>Einwände</h2><ul>${PR.einwaende.map((e) => `<li><b>${esc(e.name)}:</b> ${esc(e.text)}${e.erledigt_am ? " (erledigt)" : ""}</li>`).join("")}</ul>` : ""}
@@ -36090,7 +36211,7 @@ function protokollText(p) {
   const l = (t, a, von) => a?.length ? [`${t}:`, ...a.map((x, i) => `  ${i + 1}. ${typeof x === "string" ? x : x.name}${von?.[i] ? ` – Vorschlag von ${von[i]}` : ""}`), ""] : [];
   return [`Köcheclub Werne – Protokoll`, p.titel, `${tagKurz(p.datum)}${p.ort ? " · " + p.ort : ""}${prSchreiber(p) ? " · geschrieben von " + prSchreiber(p) : ""}${p.version > 1 ? ` · Fassung ${p.version}` : ""}`, "────────────────────", "",
     ...(p.anwesend?.length ? [`Anwesend (${p.anwesend.length}): ${p.anwesend.map((x) => x.name).join(", ")}`] : []), ...(p.entschuldigt?.length ? [`Entschuldigt: ${p.entschuldigt.map((x) => x.name).join(", ")}`] : []),
-    ...(p.gaeste ? [`Gäste: ${p.gaeste}`] : []), "", ...l("Tagesordnung", p.tagesordnung, p.tagesordnungVon), ...l("Beschlüsse", p.beschluesse), ...(p.kurzfassung ? ["Kurzfassung:", p.kurzfassung, ""] : []), ...(p.naechster_termin ? [`Nächster Termin: ${p.naechster_termin}`, ""] : []),
+    ...(p.gaeste ? [`Gäste: ${p.gaeste}`] : []), "", ...l("Tagesordnung", p.tagesordnung, p.tagesordnungVon), ...l("Beschlüsse", p.beschluesse), ...(p.kurzfassung ? ["Kurzfassung:", p.kurzfassung, ""] : []), ...(PR?.aufgabenStand?.length ? ["Stand der Aufgaben:", ...PR.aufgabenStand.map((e) => "  " + aufgabeStandZeile(e)), ""] : []), ...(p.naechster_termin ? [`Nächster Termin: ${p.naechster_termin}`, ""] : []),
     ...l("Anlagen", PR.anlagen), `Abgelegt am ${zeitDe(new Date().toISOString())} von ${ICH.name}`, ""].join("\n");
 }
 function protokollInsArchiv() {
@@ -36488,7 +36609,7 @@ const FENSTER_NAMEN = {
   diktatBlatt: "✍️ Diktieren", druckBlatt: "🖨️ Drucken", dsBlatt: "🗓️ Dienstplan", dsOrteBlatt: "📍 Dienst-Orte", dsWerBlatt: "👥 Wer ist heute im Dienst",
   rundBlatt: "🪑 Runder Tisch", rundNeuBlatt: "🪑 Zum Runden Tisch einladen", rundTischBlatt: "🪑 Am Runden Tisch", rundTascheBlatt: "💼 Tasche für den Runden Tisch", rundArchivBlatt: "🗄️ Tasche: aus dem Archiv", // 2.762.0 KC-CLUB-RUNDER-TISCH
   dtBlatt: "🗓️ Dienst-Tausch", dvBlatt: "📊 Dienstzeiten-Übersicht", dwSperreBlatt: "💡 Sperrzeit nicht nötig", egBlatt: "📥 Mein Eingangskorb", eingangBlatt: "📥 In den Eingangskorb eines Mitglieds",
-  einlBlatt: "📥 Dokument einlesen", ekAblageBlatt: "🗄️ Eingangskorb: ablegen", ekDwBlatt: "📅 Dienstzeiten", ekErstBlatt: "💶 Erstattung", ekErstOkBlatt: "✅ Erstattung als erstattet markieren?", gkBlatt: "💐 Genesungskarte", tpBlatt: "⚽ Bundesliga-Tippspiel", gkGemBlatt: "👥 Gemeinsame Karte", gknBlatt: "💐 Frage: Gemeinsame Karte", ekHinweisBlatt: "📥 Hinweis: Eingangskorb",
+  einlBlatt: "📥 Dokument einlesen", ekAblageBlatt: "🗄️ Eingangskorb: ablegen", ekDwBlatt: "📅 Dienstzeiten", ekErstBlatt: "💶 Erstattung", ekErstOkBlatt: "✅ Erstattung als erstattet markieren?", gkBlatt: "💐 Genesungskarte", tpBlatt: "⚽ Bundesliga-Tippspiel", gkGemBlatt: "👥 Gemeinsame Karte", gknBlatt: "💐 Frage: Gemeinsame Karte", astBlatt: "📌 Wie steht's mit deiner Aufgabe?",ekHinweisBlatt: "📥 Hinweis: Eingangskorb",
   ekNachBlatt: "🔎 Nachverfolgen", elternBlatt: "👪 Eltern-Handy", entwicklerBlatt: "👨‍💻 Über den Entwickler", erBlatt: "✅ Alles eingerichtet", ibBlatt: "🖼️ Installieren mit Bildern", erinBlatt: "🔔 Erinnerung für dich",
   erkBlatt: "💡 Vorschlag aus der Nachricht", khBlatt: "📌 Für dich (Chat)", khErinBlatt: "⏰ An Nachricht erinnern", khAufgabeBlatt: "📋 Nachricht als Aufgabe",ersBesBlatt: "🎓 Fahrten aus Besuchen", ersCsvBlatt: "📊 Erstattungen für Excel", eblBlatt: "📒 Buchungsliste", esTafelBlatt: "📤 Tafel sichern", ewBlatt: "🧭 Einstellungen erklärt",
   expressBlatt: "🏎️ Express-Sendung", externBlatt: "🌐 Externer Inhalt", faAlbenKorb: "🗑️ Gelöschte Alben", faAlbumBlatt: "📸 Foto in welches Album?", faAlbumForm: "📸 Album anlegen/ändern",
@@ -38034,6 +38155,7 @@ async function gastStart(token) {
       if (e.data?.typ === "online-ansage") { onlineAnsageSprechen([e.data.name]); if (!onlLeitungVoll()) onlinePing(); } // KC-CLUB-LEITUNG-SPARSAM: mit Leitung + Anwesenheit meldet die Anwesenheit das Kommen selbst
       if (e.data?.typ === "oeffnen") pushOeffnen(e.data.url); }); // 2.209.0 KC-CLUB-PUSH-SPRUNG // KC-CLUB-ONLINE-ANSAGE-PUSH; 2.24.18: LED/Zahl/Ring sofort mitziehen (Hinweis Hansi: Ansage kam immer zuerst)
     navigator.serviceWorker.addEventListener("message", (e) => { if (e.data?.typ === "push" && /^📥 Neu in deinem Eingangskorb/.test(e.data.titel || "")) eingangNeu(); }); // KC-CLUB-EINGANG-DURCHGEHEN (2.741.0): Hinweis sofort bei offener App
+    navigator.serviceWorker.addEventListener("message", (e) => { if (e.data?.typ === "push" && /^📌 Bitte kurz den Stand/.test(e.data.titel || "")) AST.fragen = true; }); // KC-CLUB-AUFGABEN-STAND: beim nächsten Laden (gleich nach der Push) nachfragen
   }
   // Messung: wie wurde die App gestartet (einmal je Sitzung) – zeigt, ob die Installation geklappt hat
   try { if (!sessionStorage.getItem("kc_club_start_gemeldet")) { sessionStorage.setItem("kc_club_start_gemeldet", "1"); setTimeout(() => api("diagnose", { art: "start", daten: { start: START_ART, referrer: (document.referrer || "").slice(0, 80) } }).catch(() => {}), 1500); } } catch {}

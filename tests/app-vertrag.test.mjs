@@ -192,7 +192,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   // Leserecht aus der Rollen-Registry (Aushilfen nein), nicht hart codiert im Server
   assert.ok(/protokolle: r \? r\.protokolle_lesen !== false : true/.test(server), "Protokoll-Recht aus kc_club_rollen fehlt");
   assert.ok(!/["'`]Aushilfe/.test(server), "Server darf das Amt „Aushilfe“ nicht hart codieren");
-  assert.equal((server.match(/nurProtokolle\(ich\)/g) || []).length, 20, "jede Protokoll-/Aufgaben-Aktion prüft das Leserecht"); // 2.818.0: +4 Prüf-Aktionen (KC-CLUB-PROTOKOLL-PRUEFUNG)
+  assert.equal((server.match(/nurProtokolle\(ich\)/g) || []).length, 23, "jede Protokoll-/Aufgaben-Aktion prüft das Leserecht"); // 2.818.0: +4 Prüf-Aktionen (KC-CLUB-PROTOKOLL-PRUEFUNG); KC-CLUB-AUFGABEN-STAND: +3 (Stand melden, Später, Nachfragen)
   // 7 Tage Einspruch; genehmigt erst nach Fristablauf ohne offene Einwände
   assert.ok(/const EINSPRUCH_TAGE = 7;/.test(server), "Einspruchsfrist 7 Tage fehlt");
   assert.ok(/if \(offeneEinwaende > 0\) return "einwand";/.test(server), "offener Einwand darf nicht als genehmigt gelten");
@@ -3666,7 +3666,7 @@ assert.ok(/const UH_HERVOR = \["Innovation"\];/.test(html) && /function uhAmeise
   assert.ok(/catch \(e\) \{ console\.error\("kachel zahl", String\(e\)\); return null; \}/.test(server), "Fehler → null, keine falsche 0");
   assert.ok(/const kzZahl = \(k, plus = 0\) => \(einfach\(\) \|\| INIT\?\.kz\?\.\[k\] == null \? 0 :/.test(html), "nur erweiterte Ansicht, unbekannt → keine Zahl");
   assert.ok(/for \(const k of KACHELN\.verein\) if \(KZ_KACHELN\[k\.id\] && !k\.zahl\) k\.zahl = KZ_KACHELN\[k\.id\];/.test(html) && /termine: .*helfen: .*buero: [\s\S]{0,60}fotos: .*dienste:/.test(html), "fünf Kacheln");
-  assert.ok(/kzGesehen\(v\); \/\/ KC-CLUB-KACHEL-ZAHLEN/.test(html) && /api\("init", \{ fotosSeit: kzSeit\("fotos"\), dienstSeit: kzSeit\("dienste"\) \}/.test(html), "zuletzt geöffnet");
+  assert.ok(/kzGesehen\(v\); \/\/ KC-CLUB-KACHEL-ZAHLEN/.test(html) && /api\("init", \{ fotosSeit: kzSeit\("fotos"\), dienstSeit: kzSeit\("dienste"\)(, aufStand: astF \? 1 : 0)? \}/.test(html), "zuletzt geöffnet"); // KC-CLUB-AUFGABEN-STAND: + aufStand
 }
 // 339. 2.22.12: Mikrofon-Freigabe vor dem Diktieren (KC-CLUB-MIKRO-FREIGABE)
 {
