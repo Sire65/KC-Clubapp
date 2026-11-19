@@ -8016,6 +8016,10 @@ window.addEventListener("unhandledrejection", (ev) => { const r = ev?.reason, t 
   // (ein echter Hänger dieser Länge würde vom Browser beendet) – kein Eintrag, keine Meldung. Wieder-da-Ereignisse setzen den Takt zurück.
   const wiederDa = () => { sichtbarSeit = Date.now(); letzt = Date.now(); };
   ["pageshow", "focus", "resume"].forEach((t) => (t === "resume" ? document : window).addEventListener(t, wiederDa));
+  // 19.11.2026 KC-CLUB-HAENGER-DRUCK: Druck-Dialog (auch über Strg+P) hält die App an – keine Hänger-Meldung
+  window.addEventListener("beforeprint", () => { window.KC_DRUCKT = true; });
+  window.addEventListener("afterprint", () => { window.KC_DRUCKT = false; window.KC_DRUCK_ENDE = Date.now(); wiederDa(); });
+  const druckPause = (jetzt) => window.KC_DRUCKT || (window.KC_DRUCK_ENDE && jetzt - window.KC_DRUCK_ENDE < 3000);
   // 2.964.0 KC-CLUB-HAENGER-URSACHE (Wunsch Hansi 16.11. nach Klaus „27 s“: „Hänger-Meldung genauer machen, damit der User weiß, woran es liegt“):
   // Lange Aufgaben der App selbst meldet der Browser (PerformanceObserver „longtask“, Chrome/Edge). Rechnete die App in der Lücke selbst → KC-F-101
   // (Fehler der App). Rechnete sie NICHT, hat das Gerät ihr keine Zeit gegeben → KC-F-102; Speicher fast voll → KC-F-103; anderes Fenster aktiv →
@@ -8033,7 +8037,7 @@ window.addEventListener("unhandledrejection", (ev) => { const r = ev?.reason, t 
   setInterval(() => {
     const jetzt = Date.now(), luecke = jetzt - letzt - 1000, von = letzt, fokus = fokusVorher; letzt = jetzt;
     try { fokusVorher = document.hasFocus(); } catch {}
-    if (luecke > 60000) { sichtbarSeit = jetzt; return; } // eingefroren (Pause), kein Hänger
+    if (luecke > 60000 || druckPause(jetzt)) { sichtbarSeit = jetzt; return; } // eingefroren (Pause) oder Druck-Dialog – kein Hänger
     if (luecke > 5000 && !document.hidden && jetzt - sichtbarSeit > luecke + 1500) {
       setTimeout(() => { // die Meldung über lange Aufgaben kommt erst kurz nach deren Ende
         const u = ursacheVon(von, jetzt, luecke, fokus), k = fehlerKatalogEintrag(u.ursache), s = Math.round(luecke / 1000);
@@ -32509,7 +32513,10 @@ async function eigenTeilenEmpfangen(dateien) {
 }
 function druckVorschauAendern() { druckVorschauZu(); druckStarten(DRUCK.art, DRUCK.param); }
 // erst hier wird gedruckt – die Druckseite (#druck) ist schon gebaut und entspricht der Vorschau
-function druckJetzt() { setTimeout(() => window.print(), 60); }
+function druckJetzt() { setTimeout(() => druckMitPause(() => window.print()), 60); }
+// 19.11.2026 KC-CLUB-HAENGER-DRUCK (Fund Klaus 9:30: „App reagierte 24 s nicht – App hat selbst zu lange gerechnet (KC-F-101)“ nach 🖨️ Drucken):
+// Solange der Druck-Dialog offen ist, hält der Browser die App an – das ist kein Hänger. Der Hänger-Wächter überspringt diese Zeit.
+function druckMitPause(fn) { window.KC_DRUCKT = true; try { fn(); } finally { window.KC_DRUCKT = false; window.KC_DRUCK_ENDE = Date.now(); } }
 // iPhone: Druckseite als eigenständige HTML-Datei teilen (dort drucken oder als PDF sichern)
 async function druckTeilen() {
   const html = druckHtml(false);
@@ -35739,7 +35746,7 @@ async function arDrucken(x) {
     const url = URL.createObjectURL(t.datei), f = document.createElement("iframe");
     f.style.cssText = "position:fixed;width:0;height:0;border:0;opacity:0"; f.setAttribute("aria-hidden", "true");
     f.srcdoc = `<!doctype html><title>${esc(x.titel || "Bild")}</title><style>@page{margin:12mm}body{margin:0;text-align:center}img{max-width:100%;max-height:96vh}</style><img src="${url}">`;
-    f.onload = () => { const img = f.contentDocument?.querySelector("img"), los = () => { try { f.contentWindow.focus(); f.contentWindow.print(); } catch { extOeffnen(url); } setTimeout(() => { f.remove(); URL.revokeObjectURL(url); }, 60000); };
+    f.onload = () => { const img = f.contentDocument?.querySelector("img"), los = () => { try { f.contentWindow.focus(); druckMitPause(() => f.contentWindow.print()); } catch { extOeffnen(url); } setTimeout(() => { f.remove(); URL.revokeObjectURL(url); }, 60000); };
       if (img && !img.complete) img.onload = los; else los(); };
     return document.body.appendChild(f);
   }

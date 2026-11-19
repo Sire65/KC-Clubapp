@@ -1180,7 +1180,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 
 // 83. 0.61.0: Druckvorschau vor jedem Ausdruck (KC-CLUB-DRUCKVORSCHAU)
 {
-  assert.ok(!/window\.print\(\)/.test(html.replace("function druckJetzt() { setTimeout(() => window.print(), 60); }", "")), "Gedruckt wird nur aus der Vorschau");
+  assert.ok(!/window\.print\(\)/.test(html.replace("function druckJetzt() { setTimeout(() => druckMitPause(() => window.print()), 60); }", "")), "Gedruckt wird nur aus der Vorschau");
   assert.ok(/onclick="druckJetzt\(\)">🖨️ Drucken( \/ als PDF)?<\/button>/.test(html) /* 2.526.0: PDF eigener Knopf */ && /id="druckVorschau"/.test(html) && /id="druckVorschauRahmen"/.test(html), "Vorschau mit Druckknopf fehlt");
   assert.ok(/onclick="druckVorschau\(\)">👁️ Vorschau ansehen<\/button>/.test(html) && !/druckLos/.test(html), "Auswahlfenster druckt noch direkt");
   assert.ok(/rahmen\.srcdoc = druckHtml\(true\)/.test(html) && /const html = druckHtml\(false\);/.test(html), "Vorschau/Teilen nicht aus derselben Druckseite");
@@ -8825,7 +8825,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
 // 4xx. 2.100.0: Hänger-Wächter – Pause über 60 s (iPad friert ein) ist kein Hänger (KC-CLUB-HAENGER-PAUSE, Fund Hansi)
 {
   const f = programm.slice(programm.indexOf("// Hänger-Wächter:"), programm.indexOf("function meldeFehler(e)"));
-  assert.ok(/if \(luecke > 60000\) \{ sichtbarSeit = jetzt; return; \}/.test(f) && f.indexOf("luecke > 60000") < f.indexOf('neu("haenger"'), "lange Lücke = Pause, vor der Hänger-Meldung geprüft");
+  assert.ok(/if \(luecke > 60000( \|\| druckPause\(jetzt\))?\) \{ sichtbarSeit = jetzt; return; \}/.test(f) && f.indexOf("luecke > 60000") < f.indexOf('neu("haenger"'), "lange Lücke = Pause, vor der Hänger-Meldung geprüft");
   assert.ok(/\["pageshow", "focus", "resume"\]/.test(f), "Wieder-da-Ereignisse setzen den Takt zurück");
   assert.ok(/luecke > 5000 && !document\.hidden/.test(f), "kurze echte Hänger werden weiter erkannt");
 }

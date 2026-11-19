@@ -1,7 +1,8 @@
 # Änderungen
 
-## (Version folgt) – 🐛 „Wer ist online?“ aus dem Schnellzugriff ohne Fehler (KC-CLUB-MG-FILTER-LEER)
+## (Version folgt) – 🐛 „Wer ist online?“ aus dem Schnellzugriff ohne Fehler · 🖨️ Drucken ist kein Hänger mehr (KC-CLUB-MG-FILTER-LEER, KC-CLUB-HAENGER-DRUCK)
 Fund Hansi 19.11. 5:58 („Da hat in der App etwas nicht geklappt“): Wer im Schnellzugriff „🟢 Wer ist online?“ tippte, bevor die Mitgliederliste geladen war, bekam einen Programmfehler (die Liste war noch leer). Jetzt lädt die App zuerst die Liste und zeigt dann die Online-Ansicht. Test `tests/mg-filter-leer.test.mjs`. Update-Hinweis: nur „Kleine Systemanpassung“.
+- **Drucken (Fund Klaus 19.11. 9:30):** Solange der Druck-Dialog offen ist, hält der Browser die App an. Das wurde als Hänger „App hat selbst zu lange gerechnet (KC-F-101)“ gemeldet, samt Fenster und Alarm. Jetzt überspringt der Hänger-Wächter diese Zeit (Druck über 🖨️, Etiketten-Druck und Strg+P).
 
 ## 2.982.0 – 2026-11-19 – 📡 Weniger Datenbank-Abfragen über die direkte Leitung (KC-CLUB-LEITUNG-SPARSAM) · App + Server + Migration (Stufe 2)
 Wunsch Hansi 18.11.: „einsparen über die direkte Leitung“ – „ja setze alles so um“. Steht die direkte Leitung (Supabase Realtime), meldet sich Neues
