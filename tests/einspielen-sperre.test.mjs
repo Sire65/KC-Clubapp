@@ -58,3 +58,13 @@ assert.ok(/\n  rundgang:\n[\s\S]*?node tests\/rundgang\.browser\.mjs/.test(seite
 { const wf = fs.readFileSync(new URL("../.github/workflows/seite-veroeffentlichen.yml", import.meta.url), "utf8");
   assert.ok(/if \[ "\$neu" = nein \]; then[\s\S]{0,400}github\.io\/\$\{GITHUB_REPOSITORY#\*\/\}\/version\.json[\s\S]{0,200}if \[ -z "\$online" \] \|\| \[ "\$online" != "\$hier" \]; then[^\n]*neu=ja/.test(wf), "Vergleich mit der Version, die online läuft"); }
 console.log("einspielen-sperre: alle Prüfungen bestanden");
+// KC-EINSPIELEN-EINE-VERSION (19.11.2026, Wunsch Hansi „ja bündeln, EINE Version“): je Termin nur eine neue Version
+{ const skript = fs.readFileSync(wurzel + "tools/einspielen-ruhe.sh", "utf8");
+  const frei = { EINSPIEL_UHR: "2000", EINSPIEL_UTC: "1900", EINSPIEL_DRIN: "0", EINSPIEL_LETZTE_MIN: "30" };
+  assert.equal(lauf(["termin", "ja"], { ...frei, EINSPIEL_TERMIN_BELEGT: "" }), 0, "Termin frei → einspielen");
+  assert.equal(lauf(["termin", "ja"], { ...frei, EINSPIEL_TERMIN_BELEGT: "2.984.0" }), 1, "Termin schon belegt → nichts geht raus");
+  assert.equal(lauf(["hansi", "ja"], { ...frei, EINSPIEL_TERMIN_BELEGT: "2.984.0" }), 0, "[Hansi: einspielen] ausgenommen");
+  assert.equal(lauf(["notfall", "ja"], { ...frei, EINSPIEL_TERMIN_BELEGT: "2.984.0" }), 0, "[Notfall] ausgenommen");
+  assert.ok(skript.includes('[ "$v" != "$vor" ] && [ "$v" != "$meine" ]'), "nur Läufe mit anderer, neuer Version zählen");
+  assert.ok(/KC-EINSPIELEN-EINE-VERSION/.test(agents), "Regel steht in AGENTS.md"); }
+console.log("einspielen-sperre (eine Version je Termin): ok");
