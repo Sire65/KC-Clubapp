@@ -21,24 +21,28 @@ assert.ok(/git diff --quiet "\$VORHER" HEAD -- version\.json && neu=nein/.test(s
 // Skript wirklich ausführen (mit Testwerten, ohne Netz)
 const lauf = (args, env) => spawnSync("bash", [wurzel + "tools/einspielen-ruhe.sh", ...args], { env: { PATH: process.env.PATH, EINSPIEL_TAKT: "0", EINSPIEL_RUNDEN: "3", ...env }, encoding: "utf8" }).status;
 const ruhig = { EINSPIEL_UTC: "1900", EINSPIEL_DRIN: "2" };
-assert.equal(lauf(["termin", "ja"], { ...ruhig, EINSPIEL_UHR: "2000" }), 0, "20 Uhr, 2 drin → einspielen");
+assert.equal(lauf(["termin", "ja"], { ...ruhig, EINSPIEL_UHR: "2355" }), 0, "23:55 Uhr, 2 drin → einspielen");
+assert.equal(lauf(["termin", "ja"], { ...ruhig, EINSPIEL_UHR: "0020" }), 0, "00:20 Uhr (Abendtermin über Mitternacht) → einspielen");
+assert.equal(lauf(["termin", "ja"], { ...ruhig, EINSPIEL_UHR: "2000" }), 1, "KC-EINSPIELEN-ABENDTERMIN: 20 Uhr ist kein Termin mehr");
+assert.equal(lauf(["termin", "ja"], { ...ruhig, EINSPIEL_UHR: "2300" }), 1, "23:00 → nein (Spiegel)");
+assert.equal(lauf(["termin", "ja"], { ...ruhig, EINSPIEL_UHR: "0045" }), 1, "00:45 → nein");
 assert.equal(lauf(["termin", "ja"], { ...ruhig, EINSPIEL_UHR: "1216" }), 0, "12 Uhr → einspielen");
 assert.equal(lauf(["termin", "ja"], { ...ruhig, EINSPIEL_UHR: "1816" }), 1, "18:16 ohne Hansi → nein (Fall 2.858.0)");
 assert.equal(lauf(["termin", "ja"], { ...ruhig, EINSPIEL_UHR: "0905" }), 1, "09:05 → nein");
 assert.equal(lauf(["hansi", "ja"], { ...ruhig, EINSPIEL_UHR: "1816" }), 0, "Hansi sagt einspielen → ja");
 assert.equal(lauf(["hansi", "ja"], { EINSPIEL_UTC: "1716", EINSPIEL_DRIN: "3" }), 1, "3 drin → warten, dann Abbruch");
-assert.equal(lauf(["termin", "ja"], { EINSPIEL_UHR: "2000", EINSPIEL_UTC: "1315", EINSPIEL_DRIN: "0" }), 1, "Spiegelung läuft → warten");
+assert.equal(lauf(["termin", "ja"], { EINSPIEL_UHR: "2350", EINSPIEL_UTC: "1315", EINSPIEL_DRIN: "0" }), 1, "Spiegelung läuft → warten");
 // KC-SPIEGEL-SCHONEND (15.11.2026): Spiegel 04/13/22 UTC, Welle bis :40 → Sperre :05–:45; 16 UTC ist frei
-assert.equal(lauf(["termin", "ja"], { EINSPIEL_UHR: "2000", EINSPIEL_UTC: "2244", EINSPIEL_DRIN: "0" }), 1, "Welle läuft bis :40 → warten");
-assert.equal(lauf(["termin", "ja"], { EINSPIEL_UHR: "2000", EINSPIEL_UTC: "1615", EINSPIEL_DRIN: "0" }), 0, "16 UTC keine Spiegelung mehr");
+assert.equal(lauf(["termin", "ja"], { EINSPIEL_UHR: "2350", EINSPIEL_UTC: "2244", EINSPIEL_DRIN: "0" }), 1, "Welle läuft bis :40 → warten");
+assert.equal(lauf(["termin", "ja"], { EINSPIEL_UHR: "2350", EINSPIEL_UTC: "1615", EINSPIEL_DRIN: "0" }), 0, "16 UTC keine Spiegelung mehr");
 assert.ok(/case "\$h" in 4\|13\|22\)/.test(fs.readFileSync(wurzel + "tools/einspielen-ruhe.sh", "utf8")), "Sperrzeiten wie der Spiegel-Zeitplan");
 { const mig = fs.readFileSync(wurzel + "supabase/migrations/20261115_kc_spiegel_schonend.sql", "utf8");
   assert.ok(mig.includes("schedule => '10 4,13,22 * * *'") && mig.includes("schedule => '11-40 4,13,22 * * *'"), "Zeitplan und Sperre passen zusammen"); }
-assert.equal(lauf(["termin", "ja"], { EINSPIEL_UHR: "2000", EINSPIEL_UTC: "0150", EINSPIEL_DRIN: "0" }), 1, "FRA-Sicherung läuft → warten");
+assert.equal(lauf(["termin", "ja"], { EINSPIEL_UHR: "2350", EINSPIEL_UTC: "0150", EINSPIEL_DRIN: "0" }), 1, "FRA-Sicherung läuft → warten");
 assert.equal(lauf(["notfall", "ja"], { EINSPIEL_UHR: "1816", EINSPIEL_DRIN: "9" }), 0, "Notfall → sofort");
 assert.equal(lauf(["termin", "nein"], { EINSPIEL_UHR: "1816", EINSPIEL_DRIN: "9" }), 0, "keine neue Version → nichts abzuwarten");
 // KC-EINSPIELEN-ABSTAND (13.11.2026): höchstens eine Version je 15 Min. – auch bei [Hansi: einspielen], nicht bei [Notfall]
-const abst = (art, min) => spawnSync("bash", [wurzel + "tools/einspielen-ruhe.sh", art, "ja"], { env: { PATH: process.env.PATH, EINSPIEL_TAKT: "0", EINSPIEL_RUNDEN: "1", EINSPIEL_ABSTAND_SCHLAF: "0", EINSPIEL_UHR: "2000", ...ruhig, EINSPIEL_LETZTE_MIN: String(min) }, encoding: "utf8" });
+const abst = (art, min) => spawnSync("bash", [wurzel + "tools/einspielen-ruhe.sh", art, "ja"], { env: { PATH: process.env.PATH, EINSPIEL_TAKT: "0", EINSPIEL_RUNDEN: "1", EINSPIEL_ABSTAND_SCHLAF: "0", EINSPIEL_UHR: "2350", ...ruhig, EINSPIEL_LETZTE_MIN: String(min) }, encoding: "utf8" });
 assert.match(abst("termin", 5).stdout, /vor 5 Min\. live – warte noch 10 Min\./, "5 Min. nach der letzten Version → 10 Min. warten");
 assert.match(abst("hansi", 14).stdout, /warte noch 1 Min\./, "auch bei Hansi: einspielen");
 assert.match(abst("termin", 15).stdout, /Abstand eingehalten/, "ab 15 Min. kein Warten");
@@ -60,7 +64,7 @@ assert.ok(/\n  rundgang:\n[\s\S]*?node tests\/rundgang\.browser\.mjs/.test(seite
 console.log("einspielen-sperre: alle Prüfungen bestanden");
 // KC-EINSPIELEN-EINE-VERSION (19.11.2026, Wunsch Hansi „ja bündeln, EINE Version“): je Termin nur eine neue Version
 { const skript = fs.readFileSync(wurzel + "tools/einspielen-ruhe.sh", "utf8");
-  const frei = { EINSPIEL_UHR: "2000", EINSPIEL_UTC: "1900", EINSPIEL_DRIN: "0", EINSPIEL_LETZTE_MIN: "30" };
+  const frei = { EINSPIEL_UHR: "2350", EINSPIEL_UTC: "1900", EINSPIEL_DRIN: "0", EINSPIEL_LETZTE_MIN: "30" };
   assert.equal(lauf(["termin", "ja"], { ...frei, EINSPIEL_TERMIN_BELEGT: "" }), 0, "Termin frei → einspielen");
   assert.equal(lauf(["termin", "ja"], { ...frei, EINSPIEL_TERMIN_BELEGT: "2.984.0" }), 1, "Termin schon belegt → nichts geht raus");
   assert.equal(lauf(["hansi", "ja"], { ...frei, EINSPIEL_TERMIN_BELEGT: "2.984.0" }), 0, "[Hansi: einspielen] ausgenommen");
