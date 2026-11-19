@@ -28066,14 +28066,11 @@ function aufgabenMitGruppe(liste) {
   liste.splice(0, liste.length, ...neu);
   return liste;
 }
-// 2.508.0 KC-CLUB-AUFGABE-BEMERKUNG (Wunsch Hansi): Erledigt nur mit kurzer Bemerkung – „Was ist dabei herausgekommen?“
+// 2.508.0 KC-CLUB-AUFGABE-BEMERKUNG (Wunsch Hansi): beim Erledigen „Was ist dabei herausgekommen?“ –
+// KC-CLUB-AUFGABE-BEMERKUNG-FREI (19.11.2026, Wunsch Hansi „kein Pflichtfeld, sondern freiwillige Angabe“): leer lassen geht auch.
 async function aufgabeBemerkung() {
-  for (;;) {
-    const t = await eingabe("✔ Aufgabe erledigt\n\nWas ist dabei herausgekommen? Ein, zwei Sätze reichen – wer die Aufgabe eingetragen hat, bekommt sie zu lesen.", "", { mehrzeilig: true, ja: "✔ Erledigt melden", nein: "Abbrechen" });
-    if (t === null) return null;
-    if (t.trim().length >= 3) return t.trim();
-    melde("Bitte kurz dazuschreiben, was dabei herausgekommen ist.", true);
-  }
+  const t = await eingabe("✔ Aufgabe erledigt\n\nWas ist dabei herausgekommen? (freiwillig) – wer die Aufgabe eingetragen hat, bekommt es zu lesen.", "", { mehrzeilig: true, ja: "✔ Erledigt melden", nein: "Abbrechen" });
+  return t === null ? null : t.trim();
 }
 async function aufgabeErledigt(id, erledigt) {
   try {
@@ -28102,7 +28099,7 @@ async function aufgabeLoeschen(id) {
 // 🔶 teilweise (was fehlt noch – Pflicht), ❌ noch nicht (Grund und neues Ziel freiwillig). „Später“ bzw. Schließen = 24 Std. Ruhe. Im Protokoll:
 // Abschnitt „Stand der Aufgaben“ (Entwurf lebendig, veröffentlicht festgeschrieben) – mit „Rückmeldungen 3 von 5“ und „🔔 Nachfragen“ für wer schreibt.
 var AST = { fragen: true, zuletzt: 0, dran: [], offen: false };
-const AST_TEXT = { erledigt: "Was ist dabei herausgekommen? (Pflicht – wer die Aufgabe eingetragen hat, bekommt es zu lesen)", teilweise: "Was fehlt noch? (Pflicht, ein paar Worte reichen)", nicht: "Warum noch nicht? (freiwillig)" };
+const AST_TEXT = { erledigt: "Was ist dabei herausgekommen? (freiwillig – wer die Aufgabe eingetragen hat, bekommt es zu lesen)", teilweise: "Was fehlt noch? (freiwillig)", nicht: "Warum noch nicht? (freiwillig)" }; // KC-CLUB-AUFGABE-BEMERKUNG-FREI: alles freiwillig
 function astFragenJetzt() { return ICH?.protokolle !== false && !document.body.classList.contains("rg-ohne-admin") && (AST.fragen || Date.now() - AST.zuletzt > 6 * 3600000); }
 function astNachInit(d) {
   AST.fragen = false; AST.zuletzt = Date.now(); AST.dran = Array.isArray(d?.aufgabenDran) ? d.aufgabenDran : [];
@@ -28191,10 +28188,6 @@ function astFenster(liste, start) {
     $("astLos").onclick = (ev) => einmal(ev.currentTarget, async () => {
       if (!wahl) return;
       const text = ($("astText").value || "").trim(), ziel = wahl === "nicht" ? $("astZiel").value || "" : "";
-      if ((wahl === "erledigt" || wahl === "teilweise") && text.length < 3) {
-        const h = wahl === "erledigt" ? "Bitte kurz dazuschreiben, was dabei herausgekommen ist." : "Bitte kurz dazuschreiben, was noch fehlt.";
-        $("astHinweis").textContent = h; $("astHinweis").style.display = ""; melde(h, true); try { $("astText").focus(); } catch {} return;
-      }
       try { await api("aufgabe_stand_melden", { id: a.id, stand: wahl, text, ...(ziel ? { ziel } : {}) }, { warten: true }); }
       catch (e) { return meldeFehler(e); }
       fertig.add(a.id);

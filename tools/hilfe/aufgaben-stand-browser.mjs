@@ -1,5 +1,5 @@
 // KC-CLUB-AUFGABEN-STAND (19.11.2026): Browser-Prüfung mit dem echten app.js und AUSGEDACHTEN Aufgaben („Tablets beschaffen“ mit „Christina Beispiel“ usw.):
-// Startmeldung „📌 Wie steht's mit deiner Aufgabe?“ mit drei Knöpfen, 🔶 Teilweise ohne Text → Hinweis, Melden ruft die Aktion, „Später“ für den Rest,
+// Startmeldung „📌 Wie steht's mit deiner Aufgabe?“ mit drei Knöpfen, 🔶 Teilweise ohne Text geht (freiwillig), Melden ruft die Aktion, „Später“ für den Rest,
 // kein Überlauf bei 390 px, Protokoll-Ansicht/Entwurf/Druck mit „Stand der Aufgaben“. Nur Testdaten, nichts an den Server (KC-TESTS-OHNE-ECHTSERVER).
 // Start: PW_CORE=playwright PW_CHROME=/opt/pw-browsers/chromium-1243/chrome-linux64/chrome node tools/hilfe/aufgaben-stand-browser.mjs   (BILDER=<Ordner> für Bildschirmfotos)
 import http from "node:http"; import fs from "node:fs"; import path from "node:path"; import { createRequire } from "node:module";
@@ -64,16 +64,13 @@ const gross = await seite.evaluate(() => { const r = document.querySelector("#as
 ok(gross[0] >= 44 && gross[1] >= 250, "große Knöpfe: " + gross.join("×"));
 let ue = await ueberlauf(); ok(ue.seite <= 390 && ue.blatt <= 0, "kein Überlauf bei 390 px: " + JSON.stringify(ue));
 await bild("aufgaben-stand-1-start");
-// 🔶 Teilweise ohne Text → Hinweis, nichts gesendet
+// 🔶 Teilweise ohne Text → wird trotzdem gemeldet (KC-CLUB-AUFGABE-BEMERKUNG-FREI: Text freiwillig)
 await seite.click('#astBlatt .ast-k[data-s="teilweise"]'); await seite.waitForTimeout(200);
-await seite.click("#astLos"); await seite.waitForTimeout(300);
-const hinweis = await seite.evaluate(() => $("astHinweis").style.display !== "none" ? $("astHinweis").textContent : "");
-ok(/was noch fehlt/.test(hinweis) && !(await seite.evaluate(() => __api.some((x) => x.a === "aufgabe_stand_melden"))), "Teilweise ohne Text → Hinweis: " + hinweis);
-await bild("aufgaben-stand-2-hinweis"); await weg();
-// mit Text → Aktion
-await seite.fill("#astText", "Zweites Tablet bestellt"); await seite.click("#astLos"); await seite.waitForTimeout(500); await weg();
+ok(/freiwillig/.test(await seite.evaluate(() => $("astTextLabel").textContent)), "Teilweise: Text ist als freiwillig beschriftet");
+await bild("aufgaben-stand-2-teilweise");
+await seite.click("#astLos"); await seite.waitForTimeout(500); await weg();
 const m = await seite.evaluate(() => __api.find((x) => x.a === "aufgabe_stand_melden")?.p);
-ok(m && m.id === "A1" && m.stand === "teilweise" && m.text === "Zweites Tablet bestellt", "Melden ruft aufgabe_stand_melden: " + JSON.stringify(m));
+ok(m && m.id === "A1" && m.stand === "teilweise" && m.text === "", "Teilweise ohne Text ruft aufgabe_stand_melden: " + JSON.stringify(m));
 // nächste Aufgabe: ❌ Noch nicht mit Zieldatum (Grund freiwillig)
 const zweite = await seite.evaluate(() => $("astBlatt")?.textContent.replace(/\s+/g, " ") || "");
 ok(/Aufgabe 2 von 2/.test(zweite) && /Saal anfragen/.test(zweite), "zweite Aufgabe folgt");

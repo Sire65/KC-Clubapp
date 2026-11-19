@@ -82,9 +82,9 @@ assert.ok(fs.existsSync(new URL("../tools/db-test/116_aufgaben_stand_test.sql", 
 
 // ---- 5. Server: Aktionen, Start ohne zusätzlichen Aufruf, Takt, Protokoll
 const melden = srv.slice(srv.indexOf('case "aufgabe_stand_melden": {'), srv.indexOf('case "aufgabe_erledigt": {'));
-assert.ok(/if \(stand === "teilweise" && \(text \?\? ""\)\.length < 3\) throw new Fehler\(/.test(melden), "teilweise nur mit Text (Server prüft)");
+assert.ok(!/length < 3/.test(melden), "KC-CLUB-AUFGABE-BEMERKUNG-FREI: teilweise auch ohne Text");
 assert.ok(/if \(!zeilen\.some\(\(z: any\) => z\.person_id === ich\.person_id\)\) throw/.test(melden), "melden nur, wer die Aufgabe hat");
-assert.ok(/p\.erledigt = true; p\.bemerkung = p\.text;\n      \}\n      \/\/ falls through\n      case "aufgabe_erledigt": \{/.test(srv), "✅ erledigt = dieselbe Aktion wie das Abhaken (Bemerkung Pflicht, ganze Gruppe, Bescheid)");
+assert.ok(/p\.erledigt = true; p\.bemerkung = p\.text;\n      \}\n      \/\/ falls through\n      case "aufgabe_erledigt": \{/.test(srv), "✅ erledigt = dieselbe Aktion wie das Abhaken (ganze Gruppe, Bescheid)");
 assert.ok(!/sendenGewaehlt|senden\(/.test(melden), "teilweise/noch nicht: keine Push");
 assert.ok(/await aufgabeStandNachErledigt\(ich, ids, erledigt, bemerkung\);/.test(srv) && /stand: erledigt \? "erledigt" : "offen"/.test(srv), "Abhaken/Wieder öffnen setzt den Stand");
 assert.ok(/case "aufgabe_stand_spaeter": \{[\s\S]{0,400}\.eq\("person_id", ich\.person_id\)/.test(srv), "Später nur für eigene Aufgaben");
@@ -107,7 +107,7 @@ assert.ok(/aufgabeStandFelder\(a, bearb \|\| a\.person_id === ich\.person_id/.te
 const fe = funktion(app, "function astFenster(");
 assert.ok(/✅ Ja, erledigt/.test(fe) && /🔶 Teilweise/.test(fe) && /❌ Noch nicht/.test(fe) && /Später/.test(fe), "drei große Knöpfe + Später");
 assert.ok(/f\._zu = \(\) => zu\(true\);/.test(fe) && /api\("aufgabe_stand_spaeter", \{ ids: rest \}\)/.test(fe), "Schließen ohne Antwort = Später");
-assert.ok(/\(wahl === "erledigt" \|\| wahl === "teilweise"\) && text\.length < 3/.test(fe) && /api\("aufgabe_stand_melden"/.test(fe), "Pflichttext vor dem Senden");
+assert.ok(!/text\.length < 3/.test(fe) && /api\("aufgabe_stand_melden"/.test(fe), "KC-CLUB-AUFGABE-BEMERKUNG-FREI: kein Pflichttext vor dem Senden");
 assert.ok(/aufStand: astF \? 1 : 0/.test(app) && /function astFragenJetzt\(\)/.test(app), "fragt nur beim ersten Laden je Sitzung mit");
 assert.ok(/onclick="astEinzeln\(/.test(app) && /aufgabeStandMarke\(a\)/.test(app), "Stand melden an der Aufgabe, Abzeichen");
 assert.ok(/\$\{aufgabenStandHtml\(\)\}<!-- KC-CLUB-AUFGABEN-STAND -->/.test(app) && /<h2>Stand der Aufgaben<\/h2>/.test(app) && /"Stand der Aufgaben:"/.test(app), "Protokoll: Ansicht, Druck, Text");

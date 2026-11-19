@@ -7076,7 +7076,8 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.ok(/add column if not exists bemerkung text check \(bemerkung is null or char_length\(bemerkung\) <= 1000\)/.test(lies("supabase/migrations/20261019_kc_club_aufgaben_bemerkung.sql")), "Spalte Bemerkung");
   const c = server.slice(server.indexOf('case "aufgabe_erledigt": {'), server.indexOf('case "aufgabe_loeschen": {'));
-  assert.ok(/if \(erledigt && bemerkung\.length < 3\) throw new Fehler\(/.test(c) && c.indexOf("bemerkung.length < 3") < c.indexOf('.update(erledigt'), "Erledigt nur mit Bemerkung – Server prüft");
+  assert.ok(!/bemerkung\.length < 3/.test(c) && /KC-CLUB-AUFGABE-BEMERKUNG-FREI/.test(c), "KC-CLUB-AUFGABE-BEMERKUNG-FREI (19.11.2026): Bemerkung freiwillig – Server verlangt sie nicht mehr");
+  assert.ok(/kurz: `\$\{txt\(x\.a\.text, 80\)\}\$\{bemerkung \? /.test(c) && /\$\{bemerkung \? `\\n\\nBemerkung: /.test(c), "ohne Bemerkung: Bescheid ohne leeres „“");
   assert.ok((/x\.a\.erstellt_von !== ich\.person_id/.test(c) || (/\[x\.a\.erstellt_von, \.\.\./.test(c) && /\.filter\(\(id\) => id && id !== ich\.person_id\)/.test(c))) && /EdgeRuntime\?\.waitUntil\?\.\(info\)/.test(c), "wer eingetragen hat, bekommt Bescheid (im Hintergrund) – 2.843.0: dazu die anderen Beteiligten, nie man selbst");
   assert.ok(/bemerkung: a\.bemerkung \?\? null,/.test(server), "Bemerkung kommt in der Protokoll-Ansicht an");
   assert.ok(/const bemerkung = erledigt \? await aufgabeBemerkung\(\) : null; if \(erledigt && bemerkung === null\) return;/.test(html) && /const bemerkung = await aufgabeBemerkung\(\); if \(bemerkung === null\) return;/.test(html), "App fragt an beiden Stellen (Protokoll, Büro) – Abbrechen hakt nicht ab");

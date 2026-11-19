@@ -19937,7 +19937,6 @@ Köcheclub Werne`,
           if (!zeilen.some((z: any) => z.person_id === ich.person_id)) throw new Fehler("Den Stand meldet, wer die Aufgabe hat.", 403);
           if (zeilen.every((z: any) => z.erledigt_am)) throw new Fehler("Diese Aufgabe ist schon erledigt.", 409);
           const text = txt(p.text, 1000) || null;
-          if (stand === "teilweise" && (text ?? "").length < 3) throw new Fehler("Bitte kurz dazuschreiben, was noch fehlt.");
           const ziel = stand === "nicht" && /^\d{4}-\d{2}-\d{2}$/.test(String(p.ziel || "")) ? String(p.ziel) : null;
           if (ziel && ziel < berlinTag(new Date())) throw new Fehler("Das neue Zieldatum liegt in der Vergangenheit.");
           await aufgabeStandSchreiben(ich, zeilen, stand, text, ziel);
@@ -19957,7 +19956,7 @@ Köcheclub Werne`,
         // 2.508.0 KC-CLUB-AUFGABE-BEMERKUNG (Wunsch Hansi „muss er sie bestätigen mit einem Bemerkungstext“): Erledigt nur mit kurzer Bemerkung;
         // wer die Aufgabe eingetragen hat, bekommt Bescheid (Push, ohne App per Mail). Wieder öffnen behält die alte Bemerkung im Protokoll.
         const erledigt = p.erledigt !== false, bemerkung = txt(p.bemerkung, 1000);
-        if (erledigt && bemerkung.length < 3) throw new Fehler("Bitte kurz dazuschreiben, was dabei herausgekommen ist.");
+        // KC-CLUB-AUFGABE-BEMERKUNG-FREI (19.11.2026, Wunsch Hansi „kein Pflichtfeld, sondern freiwillige Angabe“): Bemerkung darf leer sein
         await db.from("kc_club_aufgaben").update(erledigt ? { erledigt_am: jetzt(), bemerkung } : { erledigt_am: null }).in("id", ids);
         await aufgabeStandNachErledigt(ich, ids, erledigt, bemerkung); // KC-CLUB-AUFGABEN-STAND: erledigt bzw. wieder offen (Stand zurück auf „offen“)
         await protokoll(ich.person_id, erledigt ? "aufgabe_erledigt" : "aufgabe_wieder_offen", { aufgabe: x.a.id, ...(ids.length > 1 ? { gruppe: x.a.gruppe, zeilen: ids.length } : {}), ...(erledigt ? { bemerkung } : { alte_bemerkung: x.a.bemerkung ?? null }) });
@@ -19965,9 +19964,9 @@ Köcheclub Werne`,
         const anInfo = [...new Set([x.a.erstellt_von, ...(ids.length > 1 ? beteiligt : [])].filter((id) => id && id !== ich.person_id))] as string[];
         if (erledigt && anInfo.length) {
           const info = sendenGewaehlt("club_nachricht", anInfo, ["push"], {
-            titel: `✔ ${ich.name.split(" ")[0]} hat eine Aufgabe erledigt`, kurz: `${txt(x.a.text, 80)} – „${txt(bemerkung, 120)}“`,
+            titel: `✔ ${ich.name.split(" ")[0]} hat eine Aufgabe erledigt`, kurz: `${txt(x.a.text, 80)}${bemerkung ? ` – „${txt(bemerkung, 120)}“` : ""}`,
             betreff: `Köcheclub Werne – Aufgabe erledigt: ${txt(x.a.text, 80)}`,
-            text: `Hallo,\n\n${ich.name} hat die Aufgabe „${x.a.text}“ als erledigt abgehakt.\n\nBemerkung: ${bemerkung}\n\nKöcheclub Werne`,
+            text: `Hallo,\n\n${ich.name} hat die Aufgabe „${x.a.text}“ als erledigt abgehakt.${bemerkung ? `\n\nBemerkung: ${bemerkung}` : ""}\n\nKöcheclub Werne`,
             url: x.a.protokoll_id ? `${APP_URL}#protokoll=${x.a.protokoll_id}` : APP_URL }, `club-aufgabe-erledigt:${x.a.id}:${Date.now()}`)
             .catch((e) => console.error("aufgabe erledigt info", String(e)));
           try { (globalThis as any).EdgeRuntime?.waitUntil?.(info); } catch { /* läuft trotzdem an */ }
