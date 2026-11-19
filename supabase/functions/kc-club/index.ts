@@ -194,7 +194,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.978.0";
+const SERVER_VERSION = "2.982.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -8406,6 +8406,9 @@ const WAECHTER: { id: string; sym: string; name: string; job?: string; gh?: stri
   { id: "last", sym: "🚦", name: "Last-Wächter", job: "kc-traffic-guard-15m", befund: (d) => { const x = d.last; return !x || x.stufe === "normal" ? null : [x.stufe === "critical" ? "rot" : "gelb", x.stufe === "critical" ? "sehr hohe Last" : "erhöhte Last", x.ursache || ""]; } },
   { id: "betriebw", sym: "👁️", name: "Betriebs-Wächter", job: "kc-live-operations-watch-minute" },
   { id: "systemcheck", sym: "🚨", name: "System-Check", job: "kc-system-check-auto-15m" },
+  // KC-PRUEFREGISTER-ABGLEICH (18.11.2026, Wunsch Hansi „täglicher Abgleich, aber sparsam“): 1× am Tag, rot mit Funktion + Migration, wenn eine
+  // SECURITY-DEFINER-Funktion ohne Eintrag im Prüfregister angelegt wurde (Text kommt aus dem fehlgeschlagenen Lauf).
+  { id: "pruefregister", sym: "📋", name: "Prüfregister-Abgleich", job: "kc-pruefregister-abgleich" },
   // 2.862.0 KC-CLUB-NOTPAKET-ABBRUCH: Notfall-Paket (Kopie für den Ersatz-Server). Gelb erst, wenn auch der Neuversuch nach der Fehlerpause fehlt
   // (Fehler ≥ 45 Min. alt und kein neueres Paket) – ein einzelner Abbruch mit gelungenem Neuversuch steht nur im Protokoll und hier als Hinweis.
   { id: "notpaket", sym: "🧯", name: "Notfall-Paket", app: (d) => notpaketBefund(d.notpaket) },
@@ -15802,7 +15805,15 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           if (tl.length === 1) return `🧪 Unterhaltung nur mit sich selbst${betreff}`;
           return `💬 Runde${betreff} ${von} mit ${andere.slice(0, 5).join(", ")}${andere.length > 5 ? ` +${andere.length - 5}` : ""} (mit dabei)`.replace(/\s+/g, " ");
         };
-        return json({ tag, name: name(pid!), schritte: schritte.map((x: any) => ({ t: new Date(x.t).toISOString(), w: x.w,
+        // KC-CLUB-SPUR-ONLINE (Wunsch Hansi 18.11.2026 „in der Liste der Wege, wo alles aufgelistet ist, was sie angesehen haben, oben die grüne LED, dass sie noch online sind“):
+        // nur heute; gleiche Regel wie die Übersicht (KC-CLUB-SPUR-ALLE-DA: in den letzten 3 Min. in der App), „verborgen“ = Online-Anzeige aus. Nur ja/nein, keine Inhalte.
+        let online: { da: boolean; verborgen: boolean | null } | null = null;
+        if (pid && tag === berlinTag(new Date())) {
+          const { data: zg } = await db.from("kc_club_zugang").select("person_id").eq("person_id", pid).gt("zuletzt_gesehen", new Date(Date.now() - 180000).toISOString()).limit(1);
+          const da = !!zg?.length, sichtbar = da ? (await onlineJetztMit([]).catch(() => null))?.on ?? null : null;
+          online = { da, verborgen: da && sichtbar ? !sichtbar.has(pid) : null };
+        }
+        return json({ tag, name: name(pid!), online, schritte: schritte.map((x: any) => ({ t: new Date(x.t).toISOString(), w: x.w,
           mit: !x.mit ? null : x.mit.startsWith("KC-P-") ? name(x.mit) : spurUuid(x.mit) ? chatName(x.mit) : null, k: x.mit && !SPUR_MIT.test(x.mit) ? x.mit : null,
           // 2.796.0 KC-CLUB-WEGE-LINKS (Wunsch Hansi 31.10. „Eintrag anklicken – der Link geht direkt ins Programm zu dem Punkt“): Mitglied → Kennung;
           // Unterhaltung → Kennung NUR, wenn der Admin selbst Teilnehmer ist (fremde Chats bleiben zu – KC-CHATS-PRIVAT)

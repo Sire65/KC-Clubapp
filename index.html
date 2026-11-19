@@ -5621,6 +5621,13 @@
   :root.dunkel .spur-wege tr.spur-besuch td { border-top-color: var(--textRot); }
   .spur-jetzt-box { border: 2px solid #1e8449; margin: 8px 0; } .spur-jetzt-zeile { padding: 6px 0; border-top: 1px solid var(--linie); cursor: pointer; } /* 2.81.0 KC-CLUB-SPUR-JETZT */
   .spur-on { border: 2px solid #1e8449 !important; } .spur-jetzt { color: #1e8449; font-weight: 700; } /* 2.81.0 KC-CLUB-SPUR-LIVE */
+  /* KC-CLUB-SPUR-ONLINE (Wunsch Hansi 18.11.2026): grüne LED oben in den Wegen eines Mitglieds, solange es noch in der App ist – grau, wenn nicht mehr */
+  .spur-online { display: flex; align-items: center; gap: 8px; margin: 8px 0; padding: 8px 12px; border-radius: 12px; border: 2px solid var(--linie); background: var(--karte); font-size: .95rem; color: var(--grau, #777); }
+  .spur-online.an { border-color: #1e8449; color: var(--textGruen, #1e8449); }
+  .spur-led { flex: 0 0 auto; width: 14px; height: 14px; border-radius: 50%; background: #9aa0a6; box-shadow: inset 0 -2px 3px rgba(0,0,0,.25); }
+  .spur-online.an .spur-led { background: radial-gradient(circle at 35% 35%, #b9ffcf, #22c55e 55%, #15803d); box-shadow: 0 0 6px 2px rgba(34,197,94,.75), inset 0 -2px 3px rgba(0,0,0,.2); animation: spurLed 1.6s ease-in-out infinite; }
+  @keyframes spurLed { 50% { box-shadow: 0 0 12px 4px rgba(34,197,94,.9), inset 0 -2px 3px rgba(0,0,0,.2); } }
+  @media (prefers-reduced-motion: reduce) { .spur-online.an .spur-led { animation: none; } }
   .spur-stoerung { border: 2px dashed #b9770e !important; } /* KC-CLUB-SPUR-STOERUNG: nur eine Störung kam an – „war kurz da“ */
   .abl-vorschlag { border: 2px solid #2e7d4f; background: rgba(46,125,79,.08); margin: 0 0 4px; font-size: 1.02rem; } /* 2.80.0 KC-CLUB-ABLAGE-VORSCHLAG */
   .ar-anleitung summary { cursor: pointer; } .ar-anl { margin: 8px 0 0; padding-left: 22px; } .ar-anl li { margin: 4px 0; }
@@ -7177,7 +7184,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.978.0" data-v="2.978.0"></script>
+<script src="app.js?v=2.982.0" data-v="2.982.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

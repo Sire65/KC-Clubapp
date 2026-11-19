@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.978.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.982.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -14489,7 +14489,7 @@ KACHELN.admin.unshift({ id: "ad-startnachricht", sym: "📣", t: "Startnachricht
 // Zwei senkrechte LED-Säulen neben den LEDs: L = Lesen, S = Schreiben (Abfragen des Club-Servers je Sekunde, logarithmisch). Alle 4 s nur, solange die
 // Startseite sichtbar ist; der Server liefert nur Zählerstände (pg_stat_statements, nichts gespeichert), die App rechnet die Differenz. Spitze hält ~12 s.
 const PULS = { alt: null, wert: null, timer: null, fehler: 0, verlauf: [] };
-const PULS_TAKT = 4000, PULS_SEG = 8, PULS_MAX = { lesen: 15, schreiben: 4 }; // Abfragen/s für Vollausschlag
+const PULS_TAKT = 15000, PULS_SEG = 8, PULS_MAX = { lesen: 15, schreiben: 4 }; // Abfragen/s für Vollausschlag · 18.11.2026 KC-CLUB-PULS-SPARSAM (Wunsch Hansi „einsparen“): 15 s statt 4 s – waren 7.000 DB-Aufrufe in 48 Std. allein für die Anzeige
 const pulsAn = () => !!ICH?.admin && einst("puls", true);
 const pulsStufe = (v, max) => (v > 0 ? Math.max(1, Math.min(PULS_SEG, Math.round((PULS_SEG * Math.log10(1 + v)) / Math.log10(1 + max)))) : 0);
 const pulsSaeule = (k) => `<span class="pu-saeule" data-k="${k}">${Array.from({ length: PULS_SEG }, (_, i) => `<i class="pu-seg ${i >= PULS_SEG - 1 ? "rot" : i >= PULS_SEG - 3 ? "gelb" : "gruen"}"></i>`).join("")}</span>`;
@@ -17173,6 +17173,7 @@ function ilMeldungen() {
   if (INIT?.dienstwunschFehlt === true && !DW_LB.geoeffnet) add({ id: "dw-fehlt", stufe: "rot", sym: "🎄", t: "Dienstplan Weihnachtsmarkt: Wünsche eingeben?", u: "Twinkey führt dich Schritt für Schritt durch", auf: "dwLaufbandAuf()", knoepfe: [["📝 Mit Twinkey eingeben", "dwLaufbandAuf()"]], fertig: "Dienstwünsche Weihnachtsmarkt eingegeben" });
   if (PW.neu > 0) add({ id: "pw-neu:" + PW.neu, stufe: "gold", sym: "📌", t: PW.neu === 1 ? "Ein neuer Zettel an der Pinnwand" : `${PW.neu} neue Zettel an der Pinnwand`, u: "Antippen zum Lesen", auf: "zeige('pinnwand')" }); // KC-CLUB-PINNWAND-NIE-AUTO
   { const tp = tpLaufband(); if (tp) add(tp); } // 2.971.0 KC-CLUB-TIPPSPIEL
+  for (const k of GK_OFFEN) add({ id: "gk:" + k.id, stufe: "gold", sym: "💐", t: `Gemeinsame Karte für ${k.fuerName}`, u: `${k.namen.length} haben unterschrieben – du auch? Antippen`, auf: `gkGemeinsamOeffnen('${k.id}')` }); // 2.979.0 KC-CLUB-GK-HINWEIS
   tippLaufband(add); // 2.835.0 KC-CLUB-HILFE-TIPPS: grün → gelb → rot, bis geantwortet
   // 2.492.0 KC-CLUB-UNTERSTUETZUNG-ANFRAGE: Admin – offene Anfragen (orange); alle anderen – Angebot „Unterstützung?“ (ausblendbar, 30 Tage Pause nach dem Senden)
   if (ICH?.admin && kz.unterstuetzung > 0) add({ id: "ua-admin", stufe: "orange", sym: "🙋", t: kz.unterstuetzung === 1 ? "Eine Unterstützungs-Anfrage wartet" : `${kz.unterstuetzung} Unterstützungs-Anfragen warten`, u: "Antippen und Kontakt aufnehmen", auf: "uaAdmin()" });
@@ -18500,6 +18501,7 @@ const ZEIGE_OHNE_ICH = new Set(["start", "sos"]);
 let startBereitLoesen; const startBereit = new Promise((ok) => { startBereitLoesen = ok; });
 // 2.923.0 KC-CLUB-FRAGE-AB-START: das „?“ unten rechts kam bisher erst mit dem ersten Seitenwechsel (hzFrageEinsetzen läuft in zeige) – auf der Startseite direkt nach dem Öffnen fehlte es
 startBereit.then(() => { try { if (aktuelleAnsicht === "start" && !$("hzFrage")) hzFrageEinsetzen("start"); } catch {} });
+startBereit.then(() => setTimeout(() => { try { gkStartHinweis(); } catch {} }, 4000)); // 2.979.0 KC-CLUB-GK-HINWEIS: gemeinsame Karte → Hinweis nach dem Start
 let ZEIGE_WARTET = null;
 function zeige(v, ausHistorie) {
   if (v !== "dokansicht" && DOKA.zurueck) dokFensterZurueck(); // 2.822.0 KC-CLUB-ANLAGE-UEBER-FENSTER
@@ -33582,6 +33584,27 @@ function gkNachfragePruefen(versuch = 0) {
     gknMerken(k.id, w === "nein" ? { ...alt, nein: true } : { ...alt, spaeter: (alt.spaeter || 0) + 1 });
   }));
 }
+// 2.979.0 KC-CLUB-GK-HINWEIS (Hansi 18.11.2026: „Ich dachte, wenn man die App aufruft, bekommt man einen Hinweis?“): läuft eine gemeinsame Karte und ich habe
+// noch nicht unterschrieben, fragt die App nach dem Start einmal „💐 Gemeinsame Karte für Karla – magst du auch unterschreiben?“ → zeigt die Karte mit allen
+// Namen. „Später“ = heute nicht mehr fragen. Dazu eine Zeile im Info-Laufband, bis man unterschrieben hat. Die beschenkte Person sieht nichts (Server).
+var GK_OFFEN = []; // var: das Info-Laufband darf schon vorher danach fragen
+const GK_SPAETER = "kc_club_gk_spaeter";
+async function gkStartHinweis() {
+  if (zugang() !== "mitglied") return;
+  let d; try { d = await api("gk_gemeinsam_liste"); } catch { return; }
+  GK_OFFEN = (d?.karten || []).filter((k) => !k.ichDabei);
+  if (GK_OFFEN.length) try { ilZeigen(); } catch {}
+  let sp = {}; try { sp = JSON.parse(localStorage.getItem(GK_SPAETER) || "{}") || {}; } catch {}
+  const k = GK_OFFEN.find((x) => sp[x.id] !== heuteIso()); if (k) gkHinweisZeigen(k, 0);
+}
+function gkHinweisZeigen(k, n) {
+  if (document.querySelector(FENSTER_OFFEN + ", .dlg") || aktuelleAnsicht !== "start") { if (n < 20) setTimeout(() => gkHinweisZeigen(k, n + 1), 3000); return; }
+  frage(`💐 Gemeinsame Karte für ${k.fuerName}\n\n${k.starter ? k.starter + " hat" : "Der Club hat"} eine Gute-Besserung-Karte gestartet – ${k.namen.length} ${k.namen.length === 1 ? "hat" : "haben"} schon unterschrieben. Magst du auch unterschreiben? ${k.fuerName} erfährt es erst, wenn die Karte kommt.`,
+    { ja: "💐 Karte ansehen & unterschreiben", nein: "Später" }).then((ja) => {
+    if (ja) return gkGemeinsamOeffnen(k.id);
+    try { const sp = JSON.parse(localStorage.getItem(GK_SPAETER) || "{}") || {}; sp[k.id] = heuteIso(); localStorage.setItem(GK_SPAETER, JSON.stringify(sp)); } catch {}
+  });
+}
 async function gkGemeinsamOeffnen(id) {
   let d; try { d = await api("gk_gemeinsam_liste", {}, { warten: true }); } catch (e) { return meldeFehler(e); }
   const k = (d?.karten || []).find((x) => x.id === id);
@@ -33601,6 +33624,7 @@ async function gkGemeinsamOeffnen(id) {
   f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => einmal(b, async () => {
     const w = b.dataset.w; if (!w) return fensterZu(f);
     try {
+      if (w === "ja") { GK_OFFEN = GK_OFFEN.filter((x) => x.id !== id); try { ilZeigen(); } catch {} } // 2.979.0: Hinweiszeile weg
       if (w === "ja" || w === "zurueck") { await api("gk_unterschreiben", { id, zurueck: w === "zurueck" }, { warten: true }); fensterZu(f); melde(w === "ja" ? "💐 Unterschrieben – dein Gesicht ist jetzt auf der Karte. Danke!" : "↩️ Unterschrift zurückgenommen");
         if (w === "ja" && INIT?.gkOffen) INIT.gkOffen = INIT.gkOffen.filter((x) => x.id !== id); // 2.977.0 KC-CLUB-GK-NACHFRAGE: nicht mehr fragen
         return gkGemeinsamOeffnen(id); }
@@ -36633,7 +36657,13 @@ async function spurAdmin(tag, person) {
       + (liste.length ? `<div style="display:grid;gap:6px">${liste.map((x) => x.stoerung && !on(x.person_id) ? `<button class="knopf spur-stoerung" style="text-align:left" onclick="spurAdmin(null, '${esc(x.person_id)}')">⚠️ <b>${esc(x.name)}</b> <small class="hinweis">· war kurz da · ${esc(zeitKurz(x.erste))}${x.erste !== x.letzte ? "–" + esc(zeitKurz(x.letzte)) : ""} Uhr</small><br><small>${x.stoerung === "netz" ? "📶 Verbindung gestört – die Wege kommen nach, sobald die App wieder Netz hat" : "⚠️ Störung in der App – weitere Wege sind nicht angekommen"}</small></button>` : `<button class="knopf${on(x.person_id) ? " spur-on" : ""}" style="text-align:left" onclick="spurAdmin(null, '${esc(x.person_id)}')">${on(x.person_id) ? "🟢 " : ""}<b>${esc(x.name)}</b>${on(x.person_id) ? ' <small class="spur-jetzt">gerade in der App</small>' : ""} <small class="hinweis">· ${x.anzahl} Schritte · ${esc(zeitKurz(x.erste))}–${esc(zeitKurz(x.letzte))} Uhr</small>${x.zuletzt ? `<br><small>${on(x.person_id) ? "👉 jetzt" : "zuletzt"}: ${esc(was(x.zuletzt, x.zk))} · ${esc(vor(x.letzte))}</small>` : ""}</button>`).join("")}</div>`
       : `<p class="hinweis">An diesem Tag nichts aufgezeichnet (gezählt ab Version 2.23.88).</p>`);
   } else {
-    inhalt = `${ICH?.admin && SPW.person !== ICH?.person_id ? `<span style="float:right;display:flex;gap:4px"><button class="knopf klein" onclick="ssStart('${esc(SPW.person)}', ${esc(JSON.stringify(r.name || ""))})">📸 Bild</button><button class="knopf klein" onclick="ssStart('${esc(SPW.person)}', ${esc(JSON.stringify(r.name || ""))}, true)">🔴 Live mitschauen</button></span>` : ""}<b>${esc(r.name || "")}</b>${r.schritte.length ? `<table class="vb-tabelle spur-wege">${(SPW.schritte = r.schritte).map((x, i) => { const z = !!spurZiel(x), bl = spurBloecke(r.schritte), b = bl.nr[i]; return `${bl.start[i] ? spurBlockKopf(bl, b) : ""}<tr class="spur-b${b % 2}${z ? " spur-link" : ""}"${z ? ` role="button" tabindex="0" title="Antippen = dorthin" onclick="spurGehe(${i})"` : ""}><td style="white-space:nowrap;vertical-align:top">${esc(zeitKurz(x.t))}</td><td style="text-align:left">${x.w === "fenster" || x.k ? esc(spurZeile(x)) : `${esc(spurWas(x.w))}${x.mit ? ` <b>${esc(x.mit)}</b>` : ""}`}${z ? ' <span class="spur-pfeil" aria-hidden="true">›</span>' : ""}</td></tr>`; }).join("")}</table><p class="hinweis" style="margin:6px 0 0">Einträge mit <b>›</b> antippen – dann springt die App genau dorthin. Fremde Unterhaltungen bleiben zu.</p>` : `<p class="hinweis">An diesem Tag nichts aufgezeichnet.</p>`}`;
+    // KC-CLUB-SPUR-ONLINE (Wunsch Hansi 18.11.2026): oben die grüne LED, solange sie/er noch in der App ist (Server: letzte 3 Min., auch mit Online-Anzeige aus;
+    // dazu der Online-Takt der App) – aktualisiert sich mit den Wegen alle 20 s. Nur heute; sonst grau mit dem letzten Schritt.
+    const onP = heuteDa && (!!r.online?.da || (ONL.stand && Date.now() - ONL.stand < 3 * 60000 && ONL.ids.has(SPW.person)));
+    const letzter = r.schritte?.length ? r.schritte[r.schritte.length - 1].t : null;
+    const led = heuteDa ? `<div class="spur-online${onP ? " an" : ""}" role="status"><span class="spur-led" aria-hidden="true"></span>${onP ? `<b>gerade in der App</b>${r.online?.verborgen ? ' <small class="hinweis" title="Online-Anzeige aus – nur du als Admin siehst das hier">🙈 Online-Anzeige aus</small>' : ""}`
+      : `<span>nicht mehr in der App${letzter ? ` · zuletzt ${esc(zeitKurz(letzter))} Uhr` : ""}</span>`}</div>` : "";
+    inhalt = led + `${ICH?.admin && SPW.person !== ICH?.person_id ? `<span style="float:right;display:flex;gap:4px"><button class="knopf klein" onclick="ssStart('${esc(SPW.person)}', ${esc(JSON.stringify(r.name || ""))})">📸 Bild</button><button class="knopf klein" onclick="ssStart('${esc(SPW.person)}', ${esc(JSON.stringify(r.name || ""))}, true)">🔴 Live mitschauen</button></span>` : ""}<b>${esc(r.name || "")}</b>${r.schritte.length ? `<table class="vb-tabelle spur-wege">${(SPW.schritte = r.schritte).map((x, i) => { const z = !!spurZiel(x), bl = spurBloecke(r.schritte), b = bl.nr[i]; return `${bl.start[i] ? spurBlockKopf(bl, b) : ""}<tr class="spur-b${b % 2}${z ? " spur-link" : ""}"${z ? ` role="button" tabindex="0" title="Antippen = dorthin" onclick="spurGehe(${i})"` : ""}><td style="white-space:nowrap;vertical-align:top">${esc(zeitKurz(x.t))}</td><td style="text-align:left">${x.w === "fenster" || x.k ? esc(spurZeile(x)) : `${esc(spurWas(x.w))}${x.mit ? ` <b>${esc(x.mit)}</b>` : ""}`}${z ? ' <span class="spur-pfeil" aria-hidden="true">›</span>' : ""}</td></tr>`; }).join("")}</table><p class="hinweis" style="margin:6px 0 0">Einträge mit <b>›</b> antippen – dann springt die App genau dorthin. Fremde Unterhaltungen bleiben zu.</p>` : `<p class="hinweis">An diesem Tag nichts aufgezeichnet.</p>`}`;
   }
   $("adminBlattInhalt").innerHTML = kopf + inhalt + fuss;
   $("adminBlatt").classList.remove("versteckt");

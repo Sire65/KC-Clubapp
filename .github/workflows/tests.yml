@@ -76,6 +76,7 @@ jobs:
       - run: node tests/online-frage.test.mjs
       - run: node tests/aenderung-erbitten.test.mjs
       - run: node tests/spiegel-schonend.test.mjs
+      - run: node tests/pruefregister-abgleich.test.mjs
       - run: node tests/stand-pruefregister.test.mjs
       - run: node tests/fehlerkatalog.test.mjs
       - run: node tests/lastwaechter-arbeitszeit.test.mjs
@@ -133,6 +134,7 @@ jobs:
       - run: node tests/wa-holen.test.mjs
       - run: node tests/kontaktkarte.test.mjs
       - run: node tests/anordnung.test.mjs
+      - run: node tests/spur-online.test.mjs
       - run: node tests/anfrage-gegenvorschlag.test.mjs
       - run: node tests/netz-balken.test.mjs
       - run: node tests/muenze-gesicht.test.mjs
