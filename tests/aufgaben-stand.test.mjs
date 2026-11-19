@@ -139,4 +139,6 @@ assert.ok(/OHNE_ECHTSERVER/.test(br) && /--no-proxy-server/.test(br) && /r\.abor
   assert.ok(/\.\.\.aufgabeErledigtVon\(a, \(id\) => vorname\(leute\.get\(id\) \?\? null\)\)/.test(pl) && /map\(\(x: any\) => x\.stand_von\)\.filter\(Boolean\)/.test(pl), "protokoll_laden gibt erledigt_von_name (Vorname) für alle Leser");
   assert.ok(/aufgabeErledigtText\(a\)/.test(funktion(app, "function aufgabeZeile(")) && /erledigt_von_name: alle\.find/.test(app) && /aufgabeErledigtText\(\{ erledigt_am:/.test(funktion(app, "function druckAufgabenZeilen(")), "App: Zeile, gemeinsame Aufgabe, Druck");
 }
+// KC-CLUB-AUFGABEN-STAND-ZURUECK (19.11.2026): Startmeldung auch beim Zurückkommen auf die Startseite
+assert.ok(app.includes('if (v === "start" && vorher !== "start" && typeof AST !== "undefined" && AST.dran.length && !AST.offen) setTimeout(() => astPruefen(0), 1500);'), "Startmeldung beim Zurückkommen auf Start");
 console.log("✅ aufgaben-stand: alle Prüfungen bestanden");

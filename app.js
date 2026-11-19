@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.985.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.986.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -18541,6 +18541,9 @@ function zeige(v, ausHistorie) {
   if (v !== "chat") $("nachUnten")?.classList.add("versteckt");
   try { stromAbschnitt(); } catch {} // 2.799.0 KC-CLUB-STROM-MESSUNG: Abschnitt dem alten Bereich zurechnen
   aktuelleAnsicht = v; if (window.KCFP) KCFP.sicht = v;
+  // 19.11.2026 KC-CLUB-AUFGABEN-STAND-ZURUECK (Wunsch Hansi): wer nach dem Öffnen gleich in den Chat o. Ä. ging, verpasste die Startmeldung
+  // (die App versuchte es nur ~3½ Min.) – jetzt erscheint sie auch beim Zurückkommen auf die Startseite, solange sie noch offen ist (keine Abfrage)
+  if (v === "start" && vorher !== "start" && typeof AST !== "undefined" && AST.dran.length && !AST.offen) setTimeout(() => astPruefen(0), 1500);
   // 2.192.0 KC-CLUB-NUR-START-AUFFRISCHEN (Fund Hansi): „von oben nach unten ziehen = neu laden“ nur auf der Startseite – sonst lädt die App
   // mitten in Einstellungen o. Ä. neu (und meldet bei mehrfachem Neustart sogar „Startprobleme?“)
   document.documentElement.classList.toggle("kein-ptr", v !== "start");
