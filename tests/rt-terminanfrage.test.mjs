@@ -18,7 +18,7 @@ const erw = lies("tools/db-test/111_erwartet.txt");
 for (const z of ["neu=1", "gelesen=0", "antwort=1", "absage=2", "inhalt=0", "bremse70_spricht=0", "bremse70_terminanfrage=1"]) assert.ok(erw.includes(z), "erwartet " + z);
 // App: Signal → Hinweis/Liste frisch; Takt mit Leitung nur jedes 6. Mal
 assert.ok(app.includes('if (s.art === "terminanfrage") { clearTimeout(RT.ta); RT.ta = setTimeout(taSignal, 600 + Math.random() * 1400); return; }'), "Signal-Handler");
-assert.ok(app.includes("setInterval(() => { if (rtAn() && ++TAH_TICK % 6) return; taHinweisPruefen(9); }, TAH_TAKT_MS);"), "Takt mit Leitung seltener");
+assert.ok(app.includes("setInterval(() => { if (rtAn() && ++TAH_TICK % TAH_RT_JEDES) return; taHinweisPruefen(9); }, TAH_TAKT_MS);") && /const TAH_RT_JEDES = 12,/.test(app), "Takt mit Leitung seltener (18.11.2026: jedes 12. Mal = 60 Min.)");
 assert.ok(/function taSignal\(\) \{\n  if \(document\.hidden\) return;[^]{0,200}TAH_ZULETZT = 0; taHinweisPruefen\(9\);\n  if \(\$\("terminanfragen"\)\?\.offsetParent\) taLaden\(\);/.test(app), "taSignal");
 // Notfall-Ablauf auf Node 22
 assert.ok(/node-version: "22"/.test(lies(".github/workflows/notfall-sicherung-lesen.yml")), "Node 22");

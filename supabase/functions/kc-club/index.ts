@@ -194,7 +194,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.981.0";
+const SERVER_VERSION = "2.982.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -1543,11 +1543,24 @@ async function geradeInDerApp(ids: string[]): Promise<Set<string>> {
 }
 // KC-CLUB-RT-CLUBABEND-MITFAHRT (10.11.2026, Wunsch Hansi „ja beides bauen“): kurzes Signal über die direkte Leitung an alle, die gerade in der App sind
 // (ohne den, der es ausgelöst hat) – deren offenes Fenster lädt sich still neu. Nur die Art geht raus, kein Inhalt; Zähler/Sparbremse in kc_club_rt_klingeln.
-async function rtKlingelnInApp(art: string, ohne?: string) {
+// 19.11.2026 KC-CLUB-LEITUNG-SPARSAM: „ohne“ darf auch mehrere sein (z. B. beide Gesprächspartner – sie haben ihr eigenes Signal „anruf“).
+async function rtKlingelnInApp(art: string, ohne?: string | string[]) {
   const { data } = await db.from("kc_club_zugang").select("person_id").eq("aktiv", true).gte("zuletzt_gesehen", new Date(Date.now() - IN_APP_SEK * 1000).toISOString()).limit(300);
-  const ids = [...new Set((data ?? []).map((x: any) => String(x.person_id)))].filter((id) => id !== ohne);
+  const weg = new Set(Array.isArray(ohne) ? ohne : ohne ? [ohne] : []);
+  const ids = [...new Set((data ?? []).map((x: any) => String(x.person_id)))].filter((id) => !weg.has(id));
   if (ids.length) await db.rpc("kc_club_rt_klingeln", { p_personen: ids, p_art: art }).then(() => {}, () => {});
 }
+// 19.11.2026 KC-CLUB-LEITUNG-SPARSAM (Wunsch Hansi „so viel wie möglich über die direkte Leitung“): Telefonat angenommen oder beendet → Signal
+// „gespraech“ (nur die Art, nie wer mit wem) an alle, die gerade in der App sind (ohne die beiden – sie bekommen „anruf“). Deren App fragt dann
+// gebremst beim Online-Abgleich nach (der entscheidet wie bisher, wer welches Gespräch sehen darf). Statt im 90-s-Takt nachzufragen.
+// Im Hintergrund – das Annehmen/Auflegen wartet nie darauf; Fehler still. Sparbremse: „gespraech“ ist „teuer“ (ab 70 % aus, Migration 20261119).
+function gespraechSignal(a: any) {
+  try { GS_CACHE = { zeit: 0, d: [] }; } catch { /* nur Speicher */ }
+  nebenbei(rtKlingelnInApp("gespraech", [a?.von, a?.an].filter(Boolean).map(String)).catch(() => {}));
+}
+// Sichtbarkeit geändert (Online-Anzeige, Inkognito, Anklopfen/Gespräche zeigen) → Signal „sichtbar“ an alle in der App (ohne mich): deren App gleicht
+// gebremst ab. Eigene Art statt „online“, weil die App „online“ bei stehender Anwesenheit nur gebremst behandelt.
+const SICHTBAR_SCHLUESSEL = new Set(["online", "inkognito", "anklopfen"]);
 async function onlineJetzt(mitInkognito = false): Promise<Set<string>> {
   const seit = new Date(Date.now() - ONLINE_SEK * 1000).toISOString();
   const { data } = await db.from("kc_club_zugang").select("person_id").eq("aktiv", true).gte("zuletzt_gesehen", seit).not("person_id", "like", "KC-P-TEST%");
@@ -17121,6 +17134,7 @@ Köcheclub-App`,
         if (a.an !== ich.person_id) throw new Fehler("Nur der Angerufene kann annehmen.", 403);
         if (a.status !== "klingelt") throw new Fehler(a.status === "verpasst" ? "Der Anruf ist schon vorbei." : "Der Anruf wurde schon beendet.", 409);
         await db.from("kc_club_anruf").update({ status: "angenommen", antwort: sdpText(p.antwort), angenommen_am: jetzt() }).eq("id", a.id);
+        gespraechSignal(a); // 19.11.2026 KC-CLUB-LEITUNG-SPARSAM
         return json({ ok: true });
       }
 
@@ -17256,6 +17270,7 @@ Köcheclub-App`,
         if (["klingelt", "angenommen"].includes(a.status)) {
           const status = a.status === "klingelt" ? (a.an === ich.person_id ? "abgelehnt" : "verpasst") : "beendet";
           await db.from("kc_club_anruf").update({ status, beendet_am: jetzt(), beendet_von: ich.person_id }).eq("id", a.id);
+          if (a.status === "angenommen") gespraechSignal(a); // 19.11.2026 KC-CLUB-LEITUNG-SPARSAM: Gespräch zu Ende → die anderen sehen es gleich
           if (a.status === "angenommen") await protokoll(ich.person_id, "anruf_beendet", { dauer_s: a.angenommen_am ? Math.round((Date.now() - new Date(a.angenommen_am).getTime()) / 1000) : 0, verbunden: !!p.verbunden });
           return json({ ok: true, status });
         }
@@ -21418,6 +21433,7 @@ Köcheclub-App`,
         const { error } = await db.from("kc_club_person_einstellung").upsert({ person_id: ich.person_id, schluessel, wert, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
         if (error) throw new Fehler("Einstellung konnte nicht gespeichert werden.", 500);
         if (schluessel === "inkognito") await protokoll(ich.person_id, "inkognito_geaendert", { an: (wert as any).an });
+        if (SICHTBAR_SCHLUESSEL.has(schluessel)) nebenbei(rtKlingelnInApp("sichtbar", ich.person_id).catch(() => {})); // 19.11.2026 KC-CLUB-LEITUNG-SPARSAM
         if (vorherAv) await avVerlaufMerken(ich.person_id, vorherAv, (wert as any).figur ?? null).catch((e) => console.error("avVerlauf", String(e))); // 2.449.0
         return json({ ok: true, wert });
       }

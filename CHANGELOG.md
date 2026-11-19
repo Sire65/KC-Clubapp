@@ -1,5 +1,36 @@
 # Änderungen
 
+## 2.982.0 – 2026-11-19 – 📡 Weniger Datenbank-Abfragen über die direkte Leitung (KC-CLUB-LEITUNG-SPARSAM) · App + Server + Migration (Stufe 2)
+Wunsch Hansi 18.11.: „einsparen über die direkte Leitung“ – „ja setze alles so um“. Steht die direkte Leitung (Supabase Realtime), meldet sich Neues
+ohnehin sofort als Signal; die App fragt dann seltener selbst nach. **Ohne Leitung bleibt alles wie bisher** (Notweg).
+- **Online-Abgleich:** Stehen Leitung und Anwesenheit, fragt die App nur noch alle 10 Min. zur Sicherheit „wer ist online“ (vorher alle 90 s).
+  Sofort weiterhin: beim Start, beim Zurückkommen in die App, wenn jemand kommt oder geht (Anwesenheit), nach Neuaufbau der Leitung und bei
+  Anklopfen, Anruf, Spiel, Vorführen, Mitschauen. Ist laut Anwesenheit sonst niemand da, entfällt auch der Sicherheitsabgleich.
+  Warten auf eine Anklopf-Antwort: mit Leitung alle 15 s (die Antwort kommt als Signal), ohne Leitung wie bisher alle 4 s.
+  Ob jemand als „online“ angezeigt wird, hängt nicht daran: das Lebenszeichen (alle 60 s, unverändert) hält das beim Server frisch.
+- **Pinnwand:** mit Leitung alle 10 statt 3 Min. nachsehen (neue Zettel kommen als Signal); ohne Leitung unverändert alle 45 s.
+- **Terminanfragen:** mit Leitung alle 60 statt 30 Min. zur Sicherheit; beim Zurückkommen in die App nur, wenn sie länger als 10 Min. weg war
+  oder die Leitung zwischendurch unterbrochen war.
+- **Push bei offener App:** kein zusätzlicher Online- und Terminanfragen-Abgleich, wenn die Leitung steht.
+- **Countdowns oben rechts** (Reisen, Geburtstage …): die 6-Stunden-Regel gilt jetzt auch über App-Starts hinweg (vorher bei jedem Start neu geholt).
+- **Nutzung und Wege:** im Takt alle 5 statt 2 Min. gemeldet; beim Weglegen/Schließen weiterhin sofort, neue Wege weiterhin nach 15 s Ruhe.
+- Geschätzt je Gerät mit offener App und Leitung: rund 50 Abrufe weniger pro Stunde (Online ~34, Pinnwand ~14, Rest Terminanfragen/Nutzung/Wege),
+  dazu je App-Start 1 Abruf „countdowns“ und je Push bei offener App 2 Abrufe.
+- **Stufe 2 (Hansi: „so viel wie möglich über die direkte Leitung“) – braucht Server und Migration `20261119_kc_club_rt_gespraech.sql`:**
+  - Neues Signal **„gespraech“**: Wird ein Telefonat angenommen oder beendet, bekommen alle, die gerade in der App sind, ein kurzes Signal (nur die Art,
+    nie wer mit wem) – die Anzeige „telefoniert gerade“ ist damit sofort aktuell, ohne regelmäßiges Nachfragen.
+  - Neues Signal **„sichtbar“**: Ändert jemand Online-Anzeige, Inkognito oder Anklopfen, gleichen die anderen gleich ab.
+  - Signal **„online“** (jemand öffnet die App): steht die Anwesenheit, meldet sie das Kommen meist schon selbst – dann nur noch ein gemeinsamer,
+    gebremster Abgleich (höchstens alle 20 s) statt zwei.
+  - Sparbremse: „gespraech“ und „sichtbar“ gelten wie „online“ als „teuer“ – ab 70 % des Monatskontingents keine Signale mehr (dann Sicherheitstakt).
+  - Reihenfolge beim Einspielen: Migration vor dem Server (sonst zählen die neuen Arten bis 95 % – harmlos).
+- **Absicherung „wer ist online / wer ist raus“** (Frage Hansi):
+  - Geht ein Gerät ohne Abmeldung (Absturz, Netz weg, Akku leer), fragt die App außer sofort noch einmal nach 165 s nach – dann ist die
+    Person beim Server sicher abgelaufen (150 s) und verschwindet aus der Liste. Immer nur ein solcher Nachlauf.
+  - Ist jemand online, der keine direkte Leitung hat (alte App), gleicht die App alle 3 statt 10 Min. ab, damit dessen Kommen und Gehen zügig erscheint.
+  - Geprüft: Wer die App weglegt („weg“), verschwindet beim Server sofort aus der Online-Liste.
+  - Neuer Browser-Test `tests/anwesenheit.browser.mjs` (abgeschirmt, Leitung nachgebaut, Uhr vorgespult): Kommen sofort, Gehen nach dem Nachlauf, Takt 10/3 Min.
+- Test: `tests/leitung-sparsam.test.mjs` (angepasst: anwesenheit, online-echt, online-jede-anfrage, rt-terminanfrage, rt-clubabend-mitfahrt, app-vertrag).
 ## 2.981.0 – 2026-11-18 – 🟢 Wege der Mitglieder: grüne LED, solange sie/er noch in der App ist (KC-CLUB-SPUR-ONLINE) · Server 2.981.0
 Wunsch Hansi 18.11.: „Wenn ich in der Liste Wege der Mitglieder bin, wo alles aufgelistet ist, was sie angesehen haben, oben noch die grüne LED anzeigen, dass sie noch online sind.“
 - In den Wegen eines Mitglieds (👥 Nutzung → 👣 Wege der Mitglieder → Name) steht oben eine **grüne, leuchtende LED „gerade in der App“**, solange es noch da ist
