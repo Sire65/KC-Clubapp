@@ -1,6 +1,6 @@
 # Änderungen
 
-## (Version folgt) – 📡 Sparpaket nachgebessert: Countdowns und Terminanfragen (KC-CLUB-SPARSAM-NACHBESSERN)
+## 2.984.0 – 2026-11-19 – 📡 Sparpaket nachgebessert: Countdowns und Terminanfragen (KC-CLUB-SPARSAM-NACHBESSERN)
 Nachkontrolle 2.982.0 (19.11., 8–11:30 Uhr gegenüber Vortag): „online“ −63 %, Pinnwand −65 %, aber „countdowns“ +29 % und „terminanfragen_liste“ nur −19 %. Frage Hansi: „eigentlich sollte alles sparsamer werden – warum hat es nicht geklappt?“
 - **Countdowns:** Die Countdown-Kachel hielt sich an die 6-Stunden-Regel – die Reise-Checkliste (Kreuzfahrt in ≤ 14 Tagen) fragte beim Start aber jedes Mal selbst „countdowns“ vom Server ab. Jetzt nutzt sie dieselben Daten aus dem Gerät, solange sie jünger als 6 Std. sind.
   (Am 19.11. kam zusätzlich je Gerät einmal die erste Abfrage nach dem Update dazu, weil der neue Merker im Gerät noch fehlte.)
