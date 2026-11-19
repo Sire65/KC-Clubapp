@@ -930,6 +930,43 @@ function routerWege(attempts: any[]): { push: string; mail: string } {
     return a.some((x: any) => /^(NO_ACTIVE_PUSH_DEVICE|NO_EMAIL|PUSH_NO_ACTIVE_SUBSCRIPTION|PUSH_SUBSCRIPTION_NOT_FOUND|EMAIL_RECIPIENT_MISSING)/.test(String(x.reason || ""))) ? "kein" : "fehler"; };
   return { push: weg("push"), mail: weg("email") };
 }
+// KC-CLUB-SENDEBERICHT: Zusammenfassung aus dem Bericht je Person – „echteFehler“ zählt nur Wege mit „fehler“, „nichtErreicht“ = kein einziger „ja“-Weg
+function sendeZusammen(b: Record<string, { push: string; mail: string; ruhe?: boolean }>) {
+  const w = Object.values(b || {});
+  return { personen: w.length, pushJa: w.filter((x) => x.push === "ja").length, mailJa: w.filter((x) => x.mail === "ja").length,
+    keinPush: w.filter((x) => x.push === "kein").length, keineMail: w.filter((x) => x.mail === "kein").length,
+    echteFehler: w.reduce((n, x) => n + (x.push === "fehler" ? 1 : 0) + (x.mail === "fehler" ? 1 : 0), 0), nichtErreicht: w.filter((x) => x.push !== "ja" && x.mail !== "ja").length };
+}
+const SENDEBERICHT_ARTEN: Record<string, string> = { einladung: "buero_einladung", erinnerung: "buero_erinnerung", aenderung: "buero_aenderung" };
+const SENDEBERICHT_KORR = /^club-buero-(einladung|erinnerung):[0-9a-f-]{8,40}:\d{10,15}$/;
+// Späterer Zustellstand je Person und Weg aus dem Versanddienst: Aufträge mit Kennung „<korr>:<person>[:ruhe|:push]“ (+ Gastgeber-Auftrag),
+// Ereignisse „displayed“/„opened“. Bester Stand je Weg: geoeffnet > angezeigt > gesendet > wartet > fehler.
+async function sendeStand(korr: string, gastKorr: string, gastId: string) {
+  const aus: Record<string, { push: string | null; mail: string | null }> = {};
+  if (!korr) return aus;
+  const [{ data: a }, { data: g }] = await Promise.all([
+    db.from("kc_communication_requests").select("id,correlation_id,channel,status").like("correlation_id", korr + ":%").limit(2000),
+    gastKorr && gastId ? db.from("kc_communication_requests").select("id,correlation_id,channel,status").like("correlation_id", gastKorr + "%").limit(20) : Promise.resolve({ data: [] as any[] })]);
+  const req = [...(a ?? []), ...(g ?? [])];
+  const ev: any[] = [];
+  for (let i = 0; i < req.length; i += 100) {
+    const ids = req.slice(i, i + 100).map((r: any) => r.id);
+    const { data } = await db.from("kc_communication_delivery_events").select("request_id,event_type").in("request_id", ids).in("event_type", ["displayed", "opened"]);
+    ev.push(...(data ?? []));
+  }
+  const RANG: Record<string, number> = { geoeffnet: 5, angezeigt: 4, gesendet: 3, wartet: 2, fehler: 1 };
+  for (const r of req as any[]) {
+    const cid = String(r.correlation_id || ""), pid = cid.startsWith(korr + ":") ? cid.slice(korr.length + 1).split(":")[0] : gastId;
+    if (!pid) continue;
+    const e = ev.filter((x) => x.request_id === r.id).map((x) => x.event_type);
+    const st = e.includes("opened") ? "geoeffnet" : e.includes("displayed") ? "angezeigt" : COMM_OK.includes(r.status) ? (r.status === "opened" ? "geoeffnet" : r.status === "displayed" ? "angezeigt" : "gesendet")
+      : COMM_FEHLER.includes(r.status) ? "fehler" : "wartet";
+    const k = r.channel === "email" ? "mail" : r.channel === "push" ? "push" : null; if (!k) continue;
+    const x = aus[pid] ?? (aus[pid] = { push: null, mail: null });
+    if ((RANG[st] ?? 0) > (RANG[x[k] ?? ""] ?? 0)) x[k] = st;
+  }
+  return aus;
+}
 // KC-CLUB-VORGANG-KOPIE (2.221.0, Wunsch Hansi „ich muss über alle Vorgänge Bescheid wissen und immer in BCC gesetzt werden, damit ich weiß,
 // dass alles gelaufen ist und geklappt hat“): bei jeder Benachrichtigung zu einem Vorgang (Änderungsmeldung, Erstattung, Dienstwunsch,
 // Zugang/Link, Leihen) bekommt der Admin eine eigene Kopie-Mail – mit Empfänger und Versandergebnis. Auch wenn das Mitglied nur Push bekam.
@@ -977,6 +1014,22 @@ async function ruhezeitVerpasst(ids: string[], titel: string) {
   }
 }
 
+// KC-CLUB-SENDEBERICHT (19.11.2026, Wunsch Hansi „genaue, wahrheitsgemäße Übersicht – ein detaillierter Sendebericht“): je Empfänger und Weg,
+// was wirklich passiert ist. Werte wie routerWege („ja“, „kein“, „fehler“, „-“) plus „aus“ (Benachrichtigung ausgeschaltet/gesperrt – nichts versucht)
+// und „?“ (Versanddienst hat kein Einzelergebnis geliefert). Mehrere Aufrufe für dieselbe Person (Ruhezeit-Mail, Push-Abo ohne App) werden gemischt:
+// das beste Ergebnis je Weg zählt (ja vor fehler vor ? vor kein vor aus vor -).
+const WEG_RANG: Record<string, number> = { ja: 5, fehler: 4, "?": 3, kein: 2, aus: 1, "-": 0 };
+type Zustellung = Record<string, { push: string; mail: string }>;
+function zustellungMischen(z: Zustellung, ids: string[], key: string, r: any) {
+  const kan = /_beide$/.test(key) ? ["push", "mail"] : /_push$/.test(key) ? ["push"] : /_mail$/.test(key) ? ["mail"] : ["push", "mail"];
+  for (const id of ids) {
+    const w = r?.wege?.[id] ?? Object.fromEntries(kan.map((k) => [k, r?.fehler ? "fehler" : r?.wege || !r?.gesendet ? "aus" : "?"]));
+    const alt = z[id] ?? { push: "-", mail: "-" };
+    for (const k of ["push", "mail"] as const) { const n = String(w[k] ?? "-"); if ((WEG_RANG[n] ?? 0) > (WEG_RANG[alt[k]] ?? 0)) alt[k] = n; }
+    z[id] = alt;
+  }
+}
+
 // KC-CLUB-OHNEAPP: Wer die Club-App noch nie geöffnet hat, bekommt nur eine Mail (Regel <eventKey>_mail) –
 // ein Push über eine Anmeldung aus einem anderen Programm würde auf die gesperrte App führen.
 async function senden(eventKey: string, personIds: string[], vars: Record<string, unknown>, korrelation: string) {
@@ -1008,12 +1061,15 @@ async function senden(eventKey: string, personIds: string[], vars: Record<string
     g.ids.push(id); gruppen.set(`${ohne}|${key}`, g);
   }
   let gesendet = 0, fehler = 0;
+  const zustellung: Zustellung = {}; // KC-CLUB-SENDEBERICHT
   for (const g of gruppen.values()) {
     const r = await routerSenden(g.key, g.ids, g.ohne ? { ...vars, text: String(vars.text ?? "") + hinweis } : vars, korrelation);
-    gesendet += r.gesendet; fehler += r.fehler;
+    gesendet += r.gesendet; fehler += r.fehler; zustellungMischen(zustellung, g.ids, g.key, r);
   }
+  for (const id of verpasst) zustellung[id] = { push: "-", mail: "-" }; // Ruhezeit ohne Mail: kommt später in der Sammelmeldung
+  for (const id of personIds) if (!zustellung[id]) zustellung[id] = { push: "aus", mail: "aus" }; // für diesen Bereich selbst ausgeschaltet
   if (verpasst.length) await ruhezeitVerpasst(verpasst, String(vars.titel ?? vars.kurz ?? "Meldung"));
-  return { gesendet, fehler, ruhezeit: verpasst.length };
+  return { gesendet, fehler, ruhezeit: verpasst.length, zustellung, ruhig: [...ruhe].filter((id) => personIds.includes(id)) };
 }
 
 // KC-CLUB-ZUSTELLWAHL: Absender wählt ausdrücklich, wie benachrichtigt wird (🔔 Push und/oder ✉️ E-Mail).
@@ -1023,14 +1079,17 @@ async function sendenGewaehlt(eventKey: string, personIds: string[], wege: strin
   const w = [...new Set(wege.filter((x) => ZUSTELLWEGE.includes(x)))];
   if (!w.length) return await senden(eventKey, personIds, vars, korrelation);
   if (!personIds.length) return { gesendet: 0 };
+  // KC-CLUB-SENDEBERICHT: zusätzlich je Person der Zustellweg (zustellung) und wer in der Ruhezeit war (ruhig) – „wege“ bleibt die gewählte Liste
+  const zustellung: Zustellung = {}, ruhig: string[] = [];
   // KC-CLUB-RUHEZEIT: wer gerade „Nicht stören“ hat, bekommt keinen Push – Mail, wenn gewählt; sonst später gesammelt
   if (w.includes("push") && !opt.notfall) { // KC-CLUB-NOTFALL-MELDUNG: Notfall kommt auch in der Ruhezeit
     const ruhe = await ruhendePersonen(personIds, !!opt.erwaehnung);
     if (ruhe.size) {
       const still = personIds.filter((id) => ruhe.has(id)); personIds = personIds.filter((id) => !ruhe.has(id));
-      if (w.includes("email")) await routerSenden(eventKey + "_mail", still, vars, korrelation + ":ruhe");
-      else await ruhezeitVerpasst(still, String(vars.titel ?? vars.kurz ?? "Meldung"));
-      if (!personIds.length) return { gesendet: 0, ruhezeit: still.length };
+      ruhig.push(...still);
+      if (w.includes("email")) zustellungMischen(zustellung, still, eventKey + "_mail", await routerSenden(eventKey + "_mail", still, vars, korrelation + ":ruhe"));
+      else { await ruhezeitVerpasst(still, String(vars.titel ?? vars.kurz ?? "Meldung")); for (const id of still) zustellung[id] = { push: "-", mail: "-" }; }
+      if (!personIds.length) return { gesendet: 0, ruhezeit: still.length, zustellung, ruhig };
     }
   }
   const { data: zug } = await db.from("kc_club_zugang").select("person_id").eq("aktiv", true).not("zuletzt_gesehen", "is", null).in("person_id", personIds);
@@ -1039,16 +1098,18 @@ async function sendenGewaehlt(eventKey: string, personIds: string[], wege: strin
   const hinweis = "\n\n(Die Köcheclub-App hast du noch nicht geöffnet – deinen persönlichen Link bekommst du von Hansi.)";
   const mit = personIds.filter((id) => mitApp.has(id)), ohne = personIds.filter((id) => !mitApp.has(id));
   let gesendet = 0, fehler = 0;
-  if (mit.length) { const r = await routerSenden(key, mit, vars, korrelation); gesendet += r.gesendet; fehler += r.fehler; }
-  if (ohne.length) { const r = await routerSenden(eventKey + "_mail", ohne, { ...vars, text: String(vars.text ?? "") + hinweis }, korrelation); gesendet += r.gesendet; fehler += r.fehler; }
+  if (mit.length) { const r = await routerSenden(key, mit, vars, korrelation); gesendet += r.gesendet; fehler += r.fehler; zustellungMischen(zustellung, mit, key, r); }
+  if (ohne.length) { const r = await routerSenden(eventKey + "_mail", ohne, { ...vars, text: String(vars.text ?? "") + hinweis }, korrelation); gesendet += r.gesendet; fehler += r.fehler; zustellungMischen(zustellung, ohne, eventKey + "_mail", r); }
   // 0.32.1: Push ausdrücklich gewählt → auch Mitglieder ohne geöffnete Club-App, die schon ein aktives Push-Abo haben
   // (z. B. von der früheren Push-Seite), bekommen den Push zusätzlich zur Mail. Der Text weist auf den persönlichen Link hin.
   if (ohne.length && w.includes("push")) {
     const { data: abo } = await db.from("kc_member_push_subscriptions").select("person_id").eq("active", true).in("person_id", ohne);
     const mitAbo = [...new Set((abo ?? []).map((x: any) => x.person_id))] as string[];
-    if (mitAbo.length) { const r = await routerSenden(eventKey + "_push", mitAbo, { ...vars, kurz: String(vars.kurz ?? "") + " (Club-App: bitte deinen persönlichen Link öffnen)" }, korrelation + ":push"); gesendet += r.gesendet; fehler += r.fehler; }
+    if (mitAbo.length) { const r = await routerSenden(eventKey + "_push", mitAbo, { ...vars, kurz: String(vars.kurz ?? "") + " (Club-App: bitte deinen persönlichen Link öffnen)" }, korrelation + ":push"); gesendet += r.gesendet; fehler += r.fehler; zustellungMischen(zustellung, mitAbo, eventKey + "_push", r); }
+    // ohne geöffnete App und ohne Push-Abo: Push wurde gar nicht versucht → „kein Gerät“ (nicht „nicht vorgesehen“)
+    for (const id of ohne) if (zustellung[id] && zustellung[id].push === "-") zustellung[id].push = "kein";
   }
-  return { gesendet, fehler, wege: w };
+  return { gesendet, fehler, wege: w, zustellung, ruhig };
 }
 const zustellwege = (v: unknown) => (Array.isArray(v) ? v : []).map(String).filter((x) => ZUSTELLWEGE.includes(x));
 // KC-CLUB-SAMMEL-ANSAGE (2.739.0, Wunsch Hansi „schreibt jemand an mehrere Empfänger, muss die Stimme sagen: Christina hat dir und 5 anderen Personen
@@ -8303,10 +8364,11 @@ async function gastgeberMitteilen(t: any, ich: string, art: "einladung" | "geaen
   if (!t.gastgeber_person_id || t.gastgeber_person_id === ich) return false;
   const { count } = await db.from("kc_club_teilnahme").select("person_id", { count: "exact", head: true }).eq("treffen_id", t.id).eq("antwort", "ja");
   const vorn = art === "abgesagt" ? "Du warst als Gastgeberin/Gastgeber eingetragen – das Treffen fällt aus." : `Du bist Gastgeberin/Gastgeber – aktuell ${count ?? 0} Zusage${count === 1 ? "" : "n"}. Am Vortag um 16 Uhr bekommst du den genauen Stand, danach jede Änderung – und am Tag selbst 2 Stunden vorher nochmal, falls sich etwas geändert hat.`;
-  await sendenGewaehlt("club_erinnerung", [t.gastgeber_person_id], ["push", "email"], { ...vars, titel: `🏠 ${vars.titel}`, kurz: `${vars.kurz}`,
-    text: String(vars.text).replace(/^(Hallo[^\n]*,)\n\n/, (_, h) => `${h}\n\n${vorn}\n\n`) }, `club-gastgeber-${art}:${t.id}:${Date.now()}`).catch((e) => console.error("gastgeber mitteilen", String(e)));
+  const korr = `club-gastgeber-${art}:${t.id}:${Date.now()}`;
+  const versand: any = await sendenGewaehlt("club_erinnerung", [t.gastgeber_person_id], ["push", "email"], { ...vars, titel: `🏠 ${vars.titel}`, kurz: `${vars.kurz}`,
+    text: String(vars.text).replace(/^(Hallo[^\n]*,)\n\n/, (_, h) => `${h}\n\n${vorn}\n\n`) }, korr).catch((e) => { console.error("gastgeber mitteilen", String(e)); return null; });
   await protokoll(ich, "gastgeber_mitgeteilt", { treffen: t.id, art });
-  return true;
+  return { korr, versand }; // KC-CLUB-SENDEBERICHT: wahr wie bisher (gesendet), dazu Kennung und Ergebnis für den Sendebericht
 }
 // ---------- 2.482.0 KC-CLUB-STARTNACHRICHT (Wunsch Hansi „als Admin direkt eine Startnachricht an alle, eine Gruppe oder ausgewählte Personen –
 // als wichtig markierbar; beim Programmstart bekommen die Ausgewählten sie; Pflicht-Knopf ‚Gelesen‘ und ein Rückfrage-Knopf, die Antwort kommt bei mir an;
@@ -11947,20 +12009,64 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const gast = !nurOffen && !aenderung && (!t.gastgeber_person_id || ziel.includes(t.gastgeber_person_id)) && await gastgeberMitteilen(t, ich.person_id, "einladung", { ...vars, text: brief(vorname(leute.get(t.gastgeber_person_id) ?? g ?? null)) }); // 2.481.0: Gastgeberin immer per Push + E-Mail, mit Gastgeber-Hinweis
         const an_ = gast ? ziel.filter((id) => id !== t.gastgeber_person_id) : ziel, korr = `club-buero-${nurOffen ? "erinnerung" : "einladung"}:${tid}:${Date.now()}`;
         // je Empfänger ein eigener Brief – im Hintergrund, je 4 gleichzeitig (die App wartet nicht auf alle Zustellungen)
+        // KC-CLUB-SENDEBERICHT (19.11.2026): je Empfänger der echte Zustellweg – „ohne Push-Gerät → per E-Mail“ ist KEIN Fehler.
+        // versand.fehler zählt nur noch echte Fehler (Weg versucht und gescheitert); der Communicator zählt „kein Push-Gerät“ als failed.
         const versenden = async () => {
-          let gesendet = 0, fehler = 0;
+          const bericht: Record<string, { push: string; mail: string; ruhe?: boolean; gast?: boolean }> = {};
+          const eintragen = (id: string, x: any, gastWeg = false) => {
+            const z = x?.zustellung?.[id] ?? (x ? { push: x.fehler ? "fehler" : "?", mail: x.fehler ? "fehler" : "?" } : { push: "fehler", mail: "fehler" });
+            bericht[id] = { push: z.push, mail: z.mail, ...((x?.ruhig ?? []).includes(id) ? { ruhe: true } : {}), ...(gastWeg ? { gast: true } : {}) };
+          };
+          if (gast && t.gastgeber_person_id) eintragen(t.gastgeber_person_id, (gast as any).versand, true); // Gastgeber-Sonderweg (immer Push + E-Mail)
           for (let k = 0; k < an_.length; k += 4) {
-            const r = await Promise.all(an_.slice(k, k + 4).map((id) => sendenGewaehlt("club_treffen", [id], wege, { ...vars, text: brief(vorname(leute.get(id) ?? null)) }, `${korr}:${id}`).catch(() => ({ gesendet: 0, fehler: 1 }))));
-            for (const x of r as any[]) { gesendet += x.gesendet || 0; fehler += x.fehler || 0; }
+            const ids = an_.slice(k, k + 4);
+            const r = await Promise.all(ids.map((id) => sendenGewaehlt("club_treffen", [id], wege, { ...vars, text: brief(vorname(leute.get(id) ?? null)) }, `${korr}:${id}`).catch(() => null)));
+            ids.forEach((id, i) => eintragen(id, r[i]));
           }
-          await protokoll(ich.person_id, nurOffen ? "buero_erinnerung" : aenderung ? "buero_aenderung" : "buero_einladung", { treffen: tid, empfaenger: ziel.length, an: an ? an.art : "alle", wege, versand: { gesendet, fehler } });
+          const zusammen = sendeZusammen(bericht);
+          await protokoll(ich.person_id, nurOffen ? "buero_erinnerung" : aenderung ? "buero_aenderung" : "buero_einladung", { treffen: tid, empfaenger: ziel.length, an: an ? an.art : "alle", wege, korr,
+            ...(gast ? { gast_korr: (gast as any).korr, gast_id: t.gastgeber_person_id } : {}),
+            versand: { gesendet: zusammen.pushJa + zusammen.mailJa, fehler: zusammen.echteFehler, bericht, zusammen } });
         };
         nebenbei(versenden().catch((e) => console.error("einladung versand", String(e))));
         // 2.749.0: „eingeladen“/„erinnert“ gilt erst, wenn es an alle ging; eine Änderung zählt als neuer Stand der Information (einladung_am)
         // 2.751.0 KC-CLUB-AENDERUNG-MELDUNG: die an alle verschickte Tagesordnung merken – Grundlage für „Neu / Entfällt“ und „Mitglieder informieren?“
         if (!an) await db.from("kc_club_buero_sitzung").upsert({ treffen_id: tid, ...(prep ? {} : { geaendert_von: ich.person_id }), [nurOffen ? "erinnerung_am" : "einladung_am"]: jetzt(),
           ...(nurOffen ? {} : { versandt_top: prep?.tagesordnung ?? [], informieren_nein_top: null }) }, { onConflict: "treffen_id" });
-        return json({ ok: true, versand: { hintergrund: true }, empfaenger: ziel.length, alle: !an });
+        return json({ ok: true, versand: { hintergrund: true }, empfaenger: ziel.length, alle: !an, korr }); // KC-CLUB-SENDEBERICHT: Kennung für den Sendebericht
+      }
+
+      // KC-CLUB-SENDEBERICHT (19.11.2026, Wunsch Hansi „genaue, wahrheitsgemäße Übersicht – sozusagen ein detaillierter Sendebericht“):
+      // je Empfänger einer Einladung/Erinnerung/Änderungsmeldung: Name, Push-/Mail-Weg, Ruhezeit und der spätere Zustellstand
+      // (gesendet/angezeigt/geöffnet/Fehler aus kc_communication_requests + Zustell-Ereignisse). Nur Namen und Zustände – keine Inhalte, keine Adressen.
+      // Sehen darf ihn, wer versendet hat, der Admin und die Clubleitung.
+      case "sendebericht": {
+        if (!ich.admin && !ich.vorstand) nurBueroLesen(ich);
+        const korr = String(p.korr || ""), tid = String(p.treffen_id || ""), art = String(p.art || "");
+        if (korr && !SENDEBERICHT_KORR.test(korr)) throw new Fehler("Unbekannter Sendebericht.", 400);
+        if (!korr && !tid) throw new Fehler("Welche Sitzung?", 400);
+        const arten = SENDEBERICHT_ARTEN[art] ? [SENDEBERICHT_ARTEN[art]] : Object.values(SENDEBERICHT_ARTEN);
+        let q = db.from("kc_club_protokoll").select("id,person_id,aktion,details,zeit").in("aktion", arten);
+        q = korr ? q.eq("details->>korr", korr) : q.eq("details->>treffen", tid);
+        const { data: eintr } = await q.order("zeit", { ascending: false }).limit(1);
+        const e: any = eintr?.[0];
+        if (!e) return json({ ok: true, laeuft: !!korr, leer: !korr }); // gerade gesendet: der Versand läuft noch im Hintergrund
+        if (!ich.admin && !ich.vorstand && e.person_id !== ich.person_id) throw new Fehler("Den Sendebericht sieht nur, wer versendet hat, der Admin und die Clubleitung.", 403);
+        const d = e.details || {}, b = d.versand?.bericht;
+        const { data: tr } = await db.from("kc_club_treffen").select("titel,beginn").eq("id", d.treffen).maybeSingle();
+        const kopf = { art: Object.keys(SENDEBERICHT_ARTEN).find((k) => SENDEBERICHT_ARTEN[k] === e.aktion) || "einladung", zeit: e.zeit, titel: tr?.titel || "", beginn: tr?.beginn || null,
+          von: e.person_id ? vorname((await personen([e.person_id])).get(e.person_id) ?? null) : "", empfaenger: Number(d.empfaenger || 0) };
+        if (!b || typeof b !== "object") return json({ ok: true, ...kopf, alt: true, versand: { gesendet: Number(d.versand?.gesendet || 0), fehler: Number(d.versand?.fehler || 0) } }); // vor KC-CLUB-SENDEBERICHT: nur die Summe
+        const ids = Object.keys(b).slice(0, 300);
+        const [leute, stand] = await Promise.all([personen(ids), sendeStand(String(d.korr || ""), d.gast_korr ? String(d.gast_korr) : "", d.gast_id ? String(d.gast_id) : "")]);
+        const liste = ids.map((id) => ({ person_id: id, name: leute.get(id)?.display_name || "Mitglied", push: String(b[id]?.push || "-"), mail: String(b[id]?.mail || "-"),
+          ruhe: !!b[id]?.ruhe, gast: !!b[id]?.gast, stand: { push: b[id]?.push === "ja" ? stand[id]?.push ?? null : null, mail: b[id]?.mail === "ja" ? stand[id]?.mail ?? null : null } })) // Zustellstand nur für Wege, die rausgingen („kein Gerät“ steht beim Versanddienst als failed)
+          .map((x) => ({ ...x, erreicht: x.push === "ja" || x.mail === "ja", fehler: x.push === "fehler" || x.mail === "fehler" }))
+          .sort((x, y) => Number(x.erreicht) - Number(y.erreicht) || Number(y.fehler) - Number(x.fehler) || x.name.localeCompare(y.name, "de"));
+        const zs = sendeZusammen(b);
+        return json({ ok: true, ...kopf, zusammen: { ...zs, pushAngezeigt: liste.filter((x) => ["angezeigt", "geoeffnet"].includes(String(x.stand.push))).length,
+          pushGeoeffnet: liste.filter((x) => x.stand.push === "geoeffnet").length, ruhe: liste.filter((x) => x.ruhe).length,
+          spaeterFehler: liste.reduce((n, x) => n + (x.stand.push === "fehler" ? 1 : 0) + (x.stand.mail === "fehler" ? 1 : 0), 0) }, liste });
       }
 
       // ----- KC-CLUB-BUERO-NACHHER (1.28.0): nach der Sitzung – Foto der Mitschrift, Aufgaben verteilen, veröffentlichen -----

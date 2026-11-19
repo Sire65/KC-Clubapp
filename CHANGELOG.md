@@ -1,8 +1,17 @@
 # Änderungen
 
-## (Version folgt) – 🐛 „Wer ist online?“ aus dem Schnellzugriff ohne Fehler · 🖨️ Drucken ist kein Hänger mehr (KC-CLUB-MG-FILTER-LEER, KC-CLUB-HAENGER-DRUCK)
+## (Version folgt) – 🐛 „Wer ist online?“ aus dem Schnellzugriff ohne Fehler · 🖨️ Drucken ist kein Hänger mehr · 📊 Detaillierter Sendebericht (KC-CLUB-MG-FILTER-LEER, KC-CLUB-HAENGER-DRUCK, KC-CLUB-SENDEBERICHT)
 Fund Hansi 19.11. 5:58 („Da hat in der App etwas nicht geklappt“): Wer im Schnellzugriff „🟢 Wer ist online?“ tippte, bevor die Mitgliederliste geladen war, bekam einen Programmfehler (die Liste war noch leer). Jetzt lädt die App zuerst die Liste und zeigt dann die Online-Ansicht. Test `tests/mg-filter-leer.test.mjs`. Update-Hinweis: nur „Kleine Systemanpassung“.
 - **Drucken (Fund Klaus 19.11. 9:30):** Solange der Druck-Dialog offen ist, hält der Browser die App an. Das wurde als Hänger „App hat selbst zu lange gerechnet (KC-F-101)“ gemeldet, samt Fenster und Alarm. Jetzt überspringt der Hänger-Wächter diese Zeit (Druck über 🖨️, Etiketten-Druck und Strg+P).
+- **📊 Detaillierter Sendebericht (KC-CLUB-SENDEBERICHT, Wunsch Hansi 19.11.: „genaue, wahrheitsgemäße Übersicht – sozusagen einen detaillierten Sendebericht“):**
+  Anlass: Büro → Einladung protokollierte „8 gesendet, 4 Fehler“ – die 4 waren Mitglieder ohne Push-Gerät, die automatisch die E-Mail bekamen. Jetzt:
+  der Server merkt sich je Empfänger von Einladung, Erinnerung und Änderungsmeldung den echten Weg (Push: gesendet/kein Gerät/Fehler, E-Mail:
+  gesendet/keine Adresse/Fehler, 🌙 Ruhezeit, 🏠 Gastgeber-Sonderweg). Als „Fehler“ zählt nur noch, was versucht wurde und scheiterte.
+  Nach dem Senden und im Büro („📊 Sendebericht der letzten Einladung“) zeigt ein Fenster die Kopfzeile, z. B. „12 von 12 erreicht · 6 per Push
+  (4 angezeigt, 1 geöffnet) · 10 per E-Mail · 4 ohne Push-Gerät → per E-Mail · 0 Fehler“, darunter je Person Push, Mail und Ruhezeit;
+  „nicht erreicht“ steht oben, echte Fehler rot, „↻ Aktualisieren“ holt den späteren Zustellstand (angezeigt/geöffnet). Nur Namen und Zustände –
+  keine Inhalte, keine Mail-Adressen; sehen dürfen ihn, wer versendet hat, der Admin und die Clubleitung. Neue Server-Aktion `sendebericht`,
+  Test `tests/sendebericht.test.mjs`.
 
 ## 2.982.0 – 2026-11-19 – 📡 Weniger Datenbank-Abfragen über die direkte Leitung (KC-CLUB-LEITUNG-SPARSAM) · App + Server + Migration (Stufe 2)
 Wunsch Hansi 18.11.: „einsparen über die direkte Leitung“ – „ja setze alles so um“. Steht die direkte Leitung (Supabase Realtime), meldet sich Neues
