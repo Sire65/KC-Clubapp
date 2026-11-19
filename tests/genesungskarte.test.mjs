@@ -34,7 +34,7 @@ console.log("genesungskarte: alle Prüfungen bestanden");
 {
   const h = app.slice(app.indexOf("// 2.979.0 KC-CLUB-GK-HINWEIS"), app.indexOf("async function gkGemeinsamOeffnen(id) {"));
   assert.ok(/GK_OFFEN = \(d\?\.karten \|\| \[\]\)\.filter\(\(k\) => !k\.ichDabei\)/.test(h), "nur Karten, die ich noch nicht unterschrieben habe");
-  assert.ok(/"💐 Karte ansehen & unterschreiben"/.test(h) && /nein: "Später"/.test(h) && /sp\[k\.id\] = heuteIso\(\)/.test(h), "Hinweis beim Start, „Später“ = heute nicht mehr");
+  assert.ok(!/function gkHinweisZeigen/.test(app) && !/GK_SPAETER/.test(app), "KC-CLUB-GK-NACHFRAGE-IMMER: keine zweite Frage nur auf der Startseite mehr");
   assert.ok(/startBereit\.then\(\(\) => setTimeout\(\(\) => \{ try \{ gkStartHinweis\(\); \} catch \{\} \}, 4000\)\)/.test(app) && /if \(zugang\(\) !== "mitglied"\) return;/.test(h), "nach dem Start, nur Mitglieder");
   assert.ok(/for \(const k of GK_OFFEN\) add\(\{ id: "gk:" \+ k\.id, stufe: "gold", sym: "💐"/.test(app), "Zeile im Info-Laufband");
   assert.ok(/if \(w === "ja"\) \{ GK_OFFEN = GK_OFFEN\.filter\(\(x\) => x\.id !== id\)/.test(app), "nach dem Unterschreiben weg");

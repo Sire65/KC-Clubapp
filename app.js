@@ -33699,10 +33699,14 @@ function gkGesichterZeichnen(g, leute, y, cx, B) {
 const GKN_KEY = "kc_club_gk_nachfrage";
 function gknStand() { try { const o = JSON.parse(localStorage.getItem(GKN_KEY) || "{}"); return o && typeof o === "object" ? o : {}; } catch { return {}; } }
 function gknMerken(id, w) { const st = gknStand(); st[id] = w; const k = Object.keys(st); if (k.length > 20) for (const x of k.slice(0, k.length - 20)) delete st[x]; try { localStorage.setItem(GKN_KEY, JSON.stringify(st)); } catch {} }
+// KC-CLUB-GK-NACHFRAGE-IMMER (19.11.2026, Fund Hansi: Thomas bekam die Frage nie – App öffnete bei ihm in „Termine“, Startseite erst nach 4 Min.;
+// Wunsch „wie eine Startnachricht, damit die Info öfter kommt“): auf JEDER Seite, sobald kein anderes Fenster offen ist; die App wartet dafür bis zu
+// 30 Min. (alle 5 Sek. prüfen). „Später“ = beim nächsten Öffnen der App wieder fragen (ohne Grenze), nur „Nein, danke“ beendet die Frage für diese Karte.
+const GKN_WARTEN_MS = 5000, GKN_VERSUCHE = 360;
 function gkNachfragePruefen(versuch = 0) {
-  const st = gknStand(), k = (INIT?.gkOffen || []).find((x) => { const w = st[x.id] || {}; return !w.nein && (w.spaeter || 0) < 2; });
+  const st = gknStand(), k = (INIT?.gkOffen || []).find((x) => !(st[x.id] || {}).nein);
   if (!k) return;
-  if (document.hidden || aktuelleAnsicht !== "start" || document.querySelector(FENSTER_OFFEN)) { if (versuch < 3) setTimeout(() => gkNachfragePruefen(versuch + 1), 12000); return; }
+  if (document.hidden || document.querySelector(FENSTER_OFFEN)) { if (versuch < GKN_VERSUCHE) setTimeout(() => gkNachfragePruefen(versuch + 1), GKN_WARTEN_MS); return; }
   try { if (sessionStorage.getItem("kc_club_gkn_" + k.id)) return; sessionStorage.setItem("kc_club_gkn_" + k.id, "1"); } catch {}
   const f = blattAuf("gknBlatt", `<h3 style="margin-top:0">💐 ${esc(k.fuerName)} braucht gerade gute Wünsche.</h3>
     <p style="margin:6px 0">Möchtest du ${esc(k.fuerName)} mit der <b>Gemeinschaftskarte vom Club</b> auch gute Besserung wünschen?</p>
@@ -33719,22 +33723,13 @@ function gkNachfragePruefen(versuch = 0) {
 // noch nicht unterschrieben, fragt die App nach dem Start einmal „💐 Gemeinsame Karte für Karla – magst du auch unterschreiben?“ → zeigt die Karte mit allen
 // Namen. „Später“ = heute nicht mehr fragen. Dazu eine Zeile im Info-Laufband, bis man unterschrieben hat. Die beschenkte Person sieht nichts (Server).
 var GK_OFFEN = []; // var: das Info-Laufband darf schon vorher danach fragen
-const GK_SPAETER = "kc_club_gk_spaeter";
 async function gkStartHinweis() {
   if (zugang() !== "mitglied") return;
   let d; try { d = await api("gk_gemeinsam_liste"); } catch { return; }
   GK_OFFEN = (d?.karten || []).filter((k) => !k.ichDabei);
   if (GK_OFFEN.length) try { ilZeigen(); } catch {}
-  let sp = {}; try { sp = JSON.parse(localStorage.getItem(GK_SPAETER) || "{}") || {}; } catch {}
-  const k = GK_OFFEN.find((x) => sp[x.id] !== heuteIso()); if (k) gkHinweisZeigen(k, 0);
-}
-function gkHinweisZeigen(k, n) {
-  if (document.querySelector(FENSTER_OFFEN + ", .dlg") || aktuelleAnsicht !== "start") { if (n < 20) setTimeout(() => gkHinweisZeigen(k, n + 1), 3000); return; }
-  frage(`💐 Gemeinsame Karte für ${k.fuerName}\n\n${k.starter ? k.starter + " hat" : "Der Club hat"} eine Gute-Besserung-Karte gestartet – ${k.namen.length} ${k.namen.length === 1 ? "hat" : "haben"} schon unterschrieben. Magst du auch unterschreiben? ${k.fuerName} erfährt es erst, wenn die Karte kommt.`,
-    { ja: "💐 Karte ansehen & unterschreiben", nein: "Später" }).then((ja) => {
-    if (ja) return gkGemeinsamOeffnen(k.id);
-    try { const sp = JSON.parse(localStorage.getItem(GK_SPAETER) || "{}") || {}; sp[k.id] = heuteIso(); localStorage.setItem(GK_SPAETER, JSON.stringify(sp)); } catch {}
-  });
+  // KC-CLUB-GK-NACHFRAGE-IMMER (19.11.2026): die Frage selbst stellt jetzt nur noch gkNachfragePruefen – auf jeder Seite, bei jedem Öffnen, bis
+  // unterschrieben oder „Nein, danke“ (vorher gab es hier eine zweite Frage nur auf der Startseite, die nach 1 Min. aufgab). Hier bleibt die Laufband-Zeile.
 }
 async function gkGemeinsamOeffnen(id) {
   let d; try { d = await api("gk_gemeinsam_liste", {}, { warten: true }); } catch (e) { return meldeFehler(e); }
@@ -38168,7 +38163,7 @@ async function gastStart(token) {
     if ((!h || h === "#") && (buSchreiben() || (buDarf() && (ICH?.vorstand || ICH?.admin)))) setTimeout(() => buAufgabePruefen(), 4000); // 2.750.0 KC-CLUB-SITZUNG-AUFGABE-START: nächste Aufgabe für die Sitzung (2.797.0 Stufe 4: nur die Clubleitung lädt dafür das Büro-Teil)
     if (!h || h === "#") setTimeout(() => taHinweisPruefen(), 5000);
     if (!h || h === "#") setTimeout(() => { try { grPruefen(); } catch {} }, 6500); // KC-CLUB-GEMEINSCHAFTSGERICHT: Frage nach der Zutat
-    if (!h || h === "#") setTimeout(() => { try { gkNachfragePruefen(); } catch {} }, 8000); // 2.977.0 KC-CLUB-GK-NACHFRAGE: gemeinsame Genesungskarte
+    setTimeout(() => { try { gkNachfragePruefen(); } catch {} }, 8000); // 2.977.0 KC-CLUB-GK-NACHFRAGE: gemeinsame Genesungskarte (KC-CLUB-GK-NACHFRAGE-IMMER: auch wenn die App nicht auf der Startseite öffnet)
     setTimeout(() => { try { pulsStarten(); } catch {} }, 3000); // KC-CLUB-PULS: Datenverkehr-Säulen (nur Admin)
     if (!h || h === "#") setTimeout(() => bwEinladungPruefen(), 15000); // 2.314.0 KC-CLUB-BEWEGUNG-EINLADUNG
     if (!h || h === "#") setTimeout(() => nuVorschlagPruefen(), 25000); // 2.418.0 KC-CLUB-KACHEL-VORSCHLAG (nach der Einladung, nie darüber)

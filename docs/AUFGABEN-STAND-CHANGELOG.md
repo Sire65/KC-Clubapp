@@ -17,3 +17,8 @@
 - Datenbank: nur neue Spalten (Migration `20261119_kc_club_aufgaben_stand.sql`, Probelauf `tools/db-test/116_…`); kein zusätzlicher Server-Aufruf beim
   App-Start – die Frage kommt mit den Startdaten (nur beim ersten Laden, 1 kleine Abfrage für Mitglieder mit offenen Aufgaben).
   Tests: `tests/aufgaben-stand.test.mjs`, Browser-Lauf `tools/hilfe/aufgaben-stand-browser.mjs`.
+
+### 💐 Gemeinsame Karte: die Frage kommt jetzt sicher (KC-CLUB-GK-NACHFRAGE-IMMER, Fund Hansi 19.11. „Thomas hat die Anfrage für die Genesungskarte nicht bekommen“)
+- Die Frage „💐 … braucht gerade gute Wünsche – magst du auch unterschreiben?“ kam bisher nur auf der **Startseite** und nur in der ersten Minute nach dem Öffnen. Öffnete die App z. B. in „Termine“ (so bei Thomas), kam sie nie.
+- Jetzt kommt sie **auf jeder Seite**, sobald kein anderes Fenster offen ist (die App wartet bis zu 30 Minuten), und **bei jedem Öffnen der App wieder**, bis man unterschrieben hat oder „Nein, danke“ tippt. „Später“ = beim nächsten Öffnen nochmal fragen.
+- Die zweite, ähnliche Frage nur auf der Startseite ist weg (sonst käme sie doppelt); die Zeile im Info-Laufband bleibt.
