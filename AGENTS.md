@@ -20,7 +20,9 @@ Jede neue Version startet alle gerade offenen Apps neu. Ein App-Start kostet run
 Funktion gedrosselt oder abgeschaltet wird:
 
 1. Neuerungen sammeln (Wunschliste, kleine Verbesserungen) und **gebündelt zu festen Terminen** einspielen:
-   **12 Uhr und 20 Uhr** (deutsche Zeit). Bis dahin auf einem Arbeitszweig fertigstellen und testen.
+   **12 Uhr und 23:50 Uhr** (deutsche Zeit). Bis dahin auf einem Arbeitszweig fertigstellen und testen.
+   (KC-EINSPIELEN-ABENDTERMIN, 19.11.2026, Wunsch Hansi „abends um 20 Uhr waren viele drin“: Abendtermin von 20 auf 23:50 Uhr verlegt –
+   App-Starts der letzten 14 Tage: 20 Uhr ≈ 2,1 je Tag, 23 Uhr ≈ 0,3, 0 Uhr ≈ 0,1; 23:00 geht nicht, da läuft im Winter der Neon-Spiegel 23:05–23:45.)
 2. **Außerhalb der Termine nur** (verschärft 04.11.2026, Hansi: „Ja bauen oder ich sage es explizit: Einspielen“):
    - wenn Hansi es **ausdrücklich** sagt („einspielen“, „sofort“, „jetzt einspielen“) → Commit-Text enthält `[Hansi: einspielen]`,
    - echte **Notfälle**: Sicherheitskorrektur, App für Mitglieder unbenutzbar (Start, Anmelden, Senden geht nicht), Datensicherung/Spiegelung/
@@ -55,10 +57,10 @@ Schnittstelle (supabase-js, PostgREST) mit „permission denied“ – auch dem 
 
 ## Vor dem Einspielen: Ruhe prüfen (KC-EINSPIELEN-RUHIG, 27.10.2026, Wunsch Hansi „nicht gerade mit einer Spiegelung oder Datensicherung und nicht, wenn mehr als 2 drin sind“)
 
-Gilt für jedes Einspielen (12-/20-Uhr-Bündel und „sofort“). Jede Sitzung prüft selbst direkt vor dem Push auf `main` – **und seit 04.11.2026
+Gilt für jedes Einspielen (12-Uhr-/23:50-Uhr-Bündel und „sofort“). Jede Sitzung prüft selbst direkt vor dem Push auf `main` – **und seit 04.11.2026
 gibt es zusätzlich eine technische Sperre (KC-EINSPIELEN-SPERRE):** `tools/einspielen-ruhe.sh` läuft in „Seite veröffentlichen“ und „Server hochladen“
 direkt vor dem Wartungsfenster, also kurz bevor die Version bei den Mitgliedern ankommt (zwischen Push und Ankommen liegen ~6 Minuten):
-- neue App-/Server-Version nur **11:45–13:00 und 19:45–21:00 Uhr** (deutsche Zeit), sonst roter Ablauf und nichts geht raus –
+- neue App-/Server-Version nur **11:45–13:00 und 23:50–00:30 Uhr** (deutsche Zeit), sonst roter Ablauf und nichts geht raus –
   außer `[Hansi: einspielen]` oder `[Notfall]` im **Titel** (erste Zeile) des Commits (bzw. „Run workflow“ mit art = hansi/notfall) –
   im übrigen Text wirken die Kennungen nicht (Fund 13.11.2026: eine bloße Erwähnung von „[Notfall]“ hatte alle Prüfungen übersprungen),
 - Spiegelung/Sicherung oder **mehr als 2 in der App** → alle 5 Min. neu prüfen, höchstens 60 Min., dann roter Ablauf (Hansi fragen,
@@ -68,7 +70,7 @@ direkt vor dem Wartungsfenster, also kurz bevor die Version bei den Mitgliedern 
   ging die letzte andere Version vor weniger als 15 Min. live, wartet der Ablauf den Rest ab (auch bei `[Hansi: einspielen]`, nicht bei `[Notfall]`).
   Darum: mehrere fertige Änderungen zu **einer** Version bündeln, nicht kurz hintereinander einspielen.
 - **Eine Version je Termin (KC-EINSPIELEN-EINE-VERSION, 19.11.2026, Wunsch Hansi „ja bündeln, EINE Version“ nach 2.984.0 und 2.985.0 aus zwei Sitzungen
-  innerhalb von 4 Min.):** je Einspiel-Termin (12 bzw. 20 Uhr) geht höchstens **eine** neue Version raus. Ist im laufenden Termin schon eine andere Version
+  innerhalb von 4 Min.):** je Einspiel-Termin (12 bzw. 23:50 Uhr) geht höchstens **eine** neue Version raus. Ist im laufenden Termin schon eine andere Version
   live gegangen, brechen beide Abläufe rot ab – nichts geht raus. Darum: **vor dem Einspielen** offene PRs/Zweige anderer Sitzungen prüfen und alles
   Fertige zu **einer** Version bündeln; was zu spät kommt, geht zum nächsten Termin („Run workflow“ für beide Abläufe). Ausgenommen: `[Hansi: einspielen]`, `[Notfall]`.
 - Test `tests/einspielen-sperre.test.mjs`.
@@ -79,7 +81,7 @@ Die eigene Prüfung jeder Sitzung vor dem Push bleibt:
    - Neon-Spiegel: **4:05–4:45, 13:05–13:45, 22:05–22:45** (Anstoß :10, Welle :11–:40, 1 Paket je Minute – seit 15.11.2026 KC-SPIEGEL-SCHONEND,
      vorher 4/10/16/22 UTC: die Datenbank brach am 15.11. um 16:16 UTC mitten in der Welle ab),
    - Neon-Nachtsicherung: **0:35–1:00**, FRA-Sicherung: **1:00–3:00**.
-   Fällt ein Termin hinein (z. B. Sommerzeit: 20 Uhr Berlin = 18 UTC – passt; Winter 17 Uhr Berlin = 16 UTC – nicht), danach einspielen.
+   Fällt ein Termin hinein (z. B. Sommerzeit: 0:05–0:45 Uhr Berlin = 22:05–22:45 UTC Spiegel – der Abendtermin wartet ihn ab; Winter 23:50 Uhr = 22:50 UTC – frei), danach einspielen.
 2. **Nicht, wenn mehr als 2 Mitglieder in der App sind:**
    `select count(*) from kc_club_zugang where zuletzt_gesehen > now() - interval '3 minutes';` (nur lesen) – Ergebnis **> 2** → warten,
    alle 10 Minuten neu prüfen, höchstens 60 Minuten; danach Hansi fragen (nicht ungefragt trotzdem einspielen).

@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
     inputs:
       art:
-        description: "termin (12/20 Uhr), hansi (Hansi hat „einspielen“ gesagt) oder notfall"
+        description: "termin (12 Uhr / 23:50 Uhr), hansi (Hansi hat „einspielen“ gesagt) oder notfall"
         default: "termin"
 permissions:
   contents: read
@@ -73,7 +73,7 @@ jobs:
       url: ${{ steps.seite.outputs.page_url }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-      # KC-EINSPIELEN-SPERRE (04.11.2026): nur zum Termin 12/20 Uhr (oder Hansi sagt ausdrücklich „einspielen“), nicht während
+      # KC-EINSPIELEN-SPERRE (04.11.2026): nur zum Termin 12 Uhr / 23:50 Uhr (oder Hansi sagt ausdrücklich „einspielen“), nicht während
       # Spiegelung/Sicherung, nicht wenn mehr als 2 in der App sind – geprüft direkt hier, kurz bevor die Version ankommt.
       - name: Termin und Ruhe abwarten
         env:
