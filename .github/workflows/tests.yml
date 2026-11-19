@@ -76,6 +76,7 @@ jobs:
       - run: node tests/online-frage.test.mjs
       - run: node tests/aenderung-erbitten.test.mjs
       - run: node tests/spiegel-schonend.test.mjs
+      - run: node tests/mg-filter-leer.test.mjs
       - run: node tests/pruefregister-abgleich.test.mjs
       - run: node tests/stand-pruefregister.test.mjs
       - run: node tests/fehlerkatalog.test.mjs

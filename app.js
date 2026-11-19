@@ -28255,7 +28255,9 @@ let MG_FILTER = (() => { try { const f = localStorage.getItem("kc_club_mg_filter
 // KC-CLUB-ONLINE-SEITE (1.91.0, Wunsch Hansi): Kachel „Mitglieder/online“ oben im Kopf öffnet IMMER die Mitglieder-Seite nur mit den
 // Online-Mitgliedern – einmalig, ohne die gemerkte Wahl (👥 Alle / 🟢 Online) für die untere Leiste zu ändern
 function mgNurOnline() { MG_EINMAL = "online"; zeige("mitglieder"); }
-function mgFilterSetzen(f) { MG_EINMAL = null; MG_FILTER = f === "online" || f === "fav" ? f : "alle"; try { localStorage.setItem("kc_club_mg_filter", MG_FILTER); } catch {} mitgliederZeichnen(); }
+function mgFilterSetzen(f) { MG_EINMAL = null; MG_FILTER = f === "online" || f === "fav" ? f : "alle"; try { localStorage.setItem("kc_club_mg_filter", MG_FILTER); } catch {}
+  if (!Array.isArray(MITGLIEDER)) return mitgliederLaden(); // 19.11.2026 KC-CLUB-MG-FILTER-LEER (Fund Hansi 5:58: „Wer ist online?“ aus dem Schnellzugriff, bevor die Liste geladen war → Programmfehler): erst laden, dann zeichnen
+  mitgliederZeichnen(); }
 // KC-CLUB-MG-KACHELN (1.45.0, Wunsch Hansi): Mitglieder als Kacheln oder Liste – jeder wählt selbst (⚙️ → Darstellung, je Gerät)
 const MG_ANSICHTEN = ["kacheln", "liste", "tafel", "kartei"]; // 2.185.0: „kartei“ = Rollkartei // KC-CLUB-ANWESENHEIT (2.23.89): „tafel“ = nur Name + LED
 let MG_ANSICHT = (() => { try { const a = localStorage.getItem("kc_club_mg_ansicht"); return MG_ANSICHTEN.includes(a) ? a : "kacheln"; } catch { return "kacheln"; } })();
@@ -28379,6 +28381,7 @@ function mgAnrufKnoepfe(m) {
     + `<button class="knopf klein${on ? "" : " mg-aus"}" title="Videoanruf" aria-label="Videoanruf" onclick="${on ? `anrufen('${m.person_id}', true)` : aus}">🎥</button>`;
 }
 function mitgliederZeichnen() {
+  if (!Array.isArray(MITGLIEDER)) return; // 19.11.2026 KC-CLUB-MG-FILTER-LEER: Liste noch nicht geladen – mitgliederLaden zeichnet danach selbst
   try {
     const sichtbar = ONLINE_SICHTBAR !== false, anzahl = MITGLIEDER.filter((m) => mgOn(m)).length, nurOnline = (MG_EINMAL || MG_FILTER) === "online" && sichtbar;
     const nurFav = !MG_EINMAL && MG_FILTER === "fav"; // 2.397.0 KC-CLUB-FAV-PERSONEN

@@ -1,5 +1,8 @@
 # Änderungen
 
+## (Version folgt) – 🐛 „Wer ist online?“ aus dem Schnellzugriff ohne Fehler (KC-CLUB-MG-FILTER-LEER)
+Fund Hansi 19.11. 5:58 („Da hat in der App etwas nicht geklappt“): Wer im Schnellzugriff „🟢 Wer ist online?“ tippte, bevor die Mitgliederliste geladen war, bekam einen Programmfehler (die Liste war noch leer). Jetzt lädt die App zuerst die Liste und zeigt dann die Online-Ansicht. Test `tests/mg-filter-leer.test.mjs`. Update-Hinweis: nur „Kleine Systemanpassung“.
+
 ## 2.982.0 – 2026-11-19 – 📡 Weniger Datenbank-Abfragen über die direkte Leitung (KC-CLUB-LEITUNG-SPARSAM) · App + Server + Migration (Stufe 2)
 Wunsch Hansi 18.11.: „einsparen über die direkte Leitung“ – „ja setze alles so um“. Steht die direkte Leitung (Supabase Realtime), meldet sich Neues
 ohnehin sofort als Signal; die App fragt dann seltener selbst nach. **Ohne Leitung bleibt alles wie bisher** (Notweg).
