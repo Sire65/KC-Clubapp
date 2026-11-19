@@ -76,6 +76,7 @@ jobs:
       - run: node tests/online-frage.test.mjs
       - run: node tests/aenderung-erbitten.test.mjs
       - run: node tests/spiegel-schonend.test.mjs
+      - run: node tests/mg-filter-leer.test.mjs
       - run: node tests/pruefregister-abgleich.test.mjs
       - run: node tests/stand-pruefregister.test.mjs
       - run: node tests/fehlerkatalog.test.mjs
@@ -160,6 +161,7 @@ jobs:
       - run: node tests/film-hinweis.test.mjs
       # KC-CLUB-EINLADUNG-AN, KC-CLUB-SAMMEL-ANSAGE (2.739.0)
       - run: node tests/einladung-an.test.mjs
+      - run: node tests/sendebericht.test.mjs
       # KC-CLUB-EINLADUNG-BRIEF (2.740.0)
       - run: node tests/einladung-brief.test.mjs
       # KC-CLUB-AKTENTASCHE-FREIGEBEN, KC-CLUB-EINGANG-DURCHGEHEN, KC-CLUB-ZIELWAHL (2.741.0)

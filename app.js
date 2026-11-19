@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.982.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.983.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -19,7 +19,7 @@ const TEILE_LISTE = {
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-NDuho5dgDL13uhtcTY8d0cGESAWhk+B+5qyWyvBuOxPgmADzmvY9YFCcwWM0s+kx" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
   spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-gD3q/2L9GT3oU74JreTUDAa1vJDESZ3irJ9nuzr2VuaVzNUREU4KIH2pROKYjUNn" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
   tischlive: { einstieg: ["tlStart", "tlStopp", "tlZeichnen", "tlPlatz", "tlRegeln"], sri: "sha384-RCmsKY+DTRfsCMRHkJVG2UJlySANNdHxnEdMps4tkL9kgf8DC5O/b1jMcwVeY3XB" }, // 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: Ton, Kamera, Bildschirm, Unterlagen zeigen am Tisch
-  buero: { einstieg: ["ersBuchOeffnen", "eblDruck", "buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-VPnvAguly/J0kMc0JZ7JWq36ymMqurBv176yx9CmcE6G2Y/5UF38fVO5bvRWOJTG" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
+  buero: { einstieg: ["ersBuchOeffnen", "eblDruck", "buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-5Mnq/dTPyN87mHs3EuaoDEyIeZu0qRFqy2mD1dIJe0Z6LYtktKup6IiuZIZUHhRe" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
   hilfe: { einstieg: ["twFrageStart", "twOffenStart", "sucheAuf", "suSucheKnopf"], sri: "sha384-kQ/pCEoGC36q1hgJ8LDEz49OXpMoLtqkmA7pqx4XNc3viLKWIngKuwOUPaRsTYxg" }, // Stufe 5: Hilfe-Werkzeuge (Frag Twinkey, Mitglied fragen, Schnellsuche) – beim ersten Antippen
   rechner: { einstieg: ["rechnerOeffnen"], sri: "sha384-UWrOf1EIXxhsoWWwxnLDzpzALsaxzNGXgeqoLAjVvqoQ6wbFnIGxYTkQPFpiRuQ4" }, // 2.811.0 KC-CLUB-RECHNER: Tischrechner im Büro, „rechne …“ per Sprache
   tippspiel: { einstieg: ["tpStart", "tpTag", "tpMitmachen", "tpTippen", "tpZeigen"], sri: "sha384-KNPQv0SkmN1bZrgFpl3dE1Osi/OcP0KUNKuIWQeEqe/98OM34+NRwv5m+2ePuBJ6" }, // 2.971.0 KC-CLUB-TIPPSPIEL (Wunschliste #96): Bundesliga-Tippspiel
@@ -8016,6 +8016,10 @@ window.addEventListener("unhandledrejection", (ev) => { const r = ev?.reason, t 
   // (ein echter Hänger dieser Länge würde vom Browser beendet) – kein Eintrag, keine Meldung. Wieder-da-Ereignisse setzen den Takt zurück.
   const wiederDa = () => { sichtbarSeit = Date.now(); letzt = Date.now(); };
   ["pageshow", "focus", "resume"].forEach((t) => (t === "resume" ? document : window).addEventListener(t, wiederDa));
+  // 19.11.2026 KC-CLUB-HAENGER-DRUCK: Druck-Dialog (auch über Strg+P) hält die App an – keine Hänger-Meldung
+  window.addEventListener("beforeprint", () => { window.KC_DRUCKT = true; });
+  window.addEventListener("afterprint", () => { window.KC_DRUCKT = false; window.KC_DRUCK_ENDE = Date.now(); wiederDa(); });
+  const druckPause = (jetzt) => window.KC_DRUCKT || (window.KC_DRUCK_ENDE && jetzt - window.KC_DRUCK_ENDE < 3000);
   // 2.964.0 KC-CLUB-HAENGER-URSACHE (Wunsch Hansi 16.11. nach Klaus „27 s“: „Hänger-Meldung genauer machen, damit der User weiß, woran es liegt“):
   // Lange Aufgaben der App selbst meldet der Browser (PerformanceObserver „longtask“, Chrome/Edge). Rechnete die App in der Lücke selbst → KC-F-101
   // (Fehler der App). Rechnete sie NICHT, hat das Gerät ihr keine Zeit gegeben → KC-F-102; Speicher fast voll → KC-F-103; anderes Fenster aktiv →
@@ -8033,7 +8037,7 @@ window.addEventListener("unhandledrejection", (ev) => { const r = ev?.reason, t 
   setInterval(() => {
     const jetzt = Date.now(), luecke = jetzt - letzt - 1000, von = letzt, fokus = fokusVorher; letzt = jetzt;
     try { fokusVorher = document.hasFocus(); } catch {}
-    if (luecke > 60000) { sichtbarSeit = jetzt; return; } // eingefroren (Pause), kein Hänger
+    if (luecke > 60000 || druckPause(jetzt)) { sichtbarSeit = jetzt; return; } // eingefroren (Pause) oder Druck-Dialog – kein Hänger
     if (luecke > 5000 && !document.hidden && jetzt - sichtbarSeit > luecke + 1500) {
       setTimeout(() => { // die Meldung über lange Aufgaben kommt erst kurz nach deren Ende
         const u = ursacheVon(von, jetzt, luecke, fokus), k = fehlerKatalogEintrag(u.ursache), s = Math.round(luecke / 1000);
@@ -28255,7 +28259,9 @@ let MG_FILTER = (() => { try { const f = localStorage.getItem("kc_club_mg_filter
 // KC-CLUB-ONLINE-SEITE (1.91.0, Wunsch Hansi): Kachel „Mitglieder/online“ oben im Kopf öffnet IMMER die Mitglieder-Seite nur mit den
 // Online-Mitgliedern – einmalig, ohne die gemerkte Wahl (👥 Alle / 🟢 Online) für die untere Leiste zu ändern
 function mgNurOnline() { MG_EINMAL = "online"; zeige("mitglieder"); }
-function mgFilterSetzen(f) { MG_EINMAL = null; MG_FILTER = f === "online" || f === "fav" ? f : "alle"; try { localStorage.setItem("kc_club_mg_filter", MG_FILTER); } catch {} mitgliederZeichnen(); }
+function mgFilterSetzen(f) { MG_EINMAL = null; MG_FILTER = f === "online" || f === "fav" ? f : "alle"; try { localStorage.setItem("kc_club_mg_filter", MG_FILTER); } catch {}
+  if (!Array.isArray(MITGLIEDER)) return mitgliederLaden(); // 19.11.2026 KC-CLUB-MG-FILTER-LEER (Fund Hansi 5:58: „Wer ist online?“ aus dem Schnellzugriff, bevor die Liste geladen war → Programmfehler): erst laden, dann zeichnen
+  mitgliederZeichnen(); }
 // KC-CLUB-MG-KACHELN (1.45.0, Wunsch Hansi): Mitglieder als Kacheln oder Liste – jeder wählt selbst (⚙️ → Darstellung, je Gerät)
 const MG_ANSICHTEN = ["kacheln", "liste", "tafel", "kartei"]; // 2.185.0: „kartei“ = Rollkartei // KC-CLUB-ANWESENHEIT (2.23.89): „tafel“ = nur Name + LED
 let MG_ANSICHT = (() => { try { const a = localStorage.getItem("kc_club_mg_ansicht"); return MG_ANSICHTEN.includes(a) ? a : "kacheln"; } catch { return "kacheln"; } })();
@@ -28379,6 +28385,7 @@ function mgAnrufKnoepfe(m) {
     + `<button class="knopf klein${on ? "" : " mg-aus"}" title="Videoanruf" aria-label="Videoanruf" onclick="${on ? `anrufen('${m.person_id}', true)` : aus}">🎥</button>`;
 }
 function mitgliederZeichnen() {
+  if (!Array.isArray(MITGLIEDER)) return; // 19.11.2026 KC-CLUB-MG-FILTER-LEER: Liste noch nicht geladen – mitgliederLaden zeichnet danach selbst
   try {
     const sichtbar = ONLINE_SICHTBAR !== false, anzahl = MITGLIEDER.filter((m) => mgOn(m)).length, nurOnline = (MG_EINMAL || MG_FILTER) === "online" && sichtbar;
     const nurFav = !MG_EINMAL && MG_FILTER === "fav"; // 2.397.0 KC-CLUB-FAV-PERSONEN
@@ -32506,7 +32513,10 @@ async function eigenTeilenEmpfangen(dateien) {
 }
 function druckVorschauAendern() { druckVorschauZu(); druckStarten(DRUCK.art, DRUCK.param); }
 // erst hier wird gedruckt – die Druckseite (#druck) ist schon gebaut und entspricht der Vorschau
-function druckJetzt() { setTimeout(() => window.print(), 60); }
+function druckJetzt() { setTimeout(() => druckMitPause(() => window.print()), 60); }
+// 19.11.2026 KC-CLUB-HAENGER-DRUCK (Fund Klaus 9:30: „App reagierte 24 s nicht – App hat selbst zu lange gerechnet (KC-F-101)“ nach 🖨️ Drucken):
+// Solange der Druck-Dialog offen ist, hält der Browser die App an – das ist kein Hänger. Der Hänger-Wächter überspringt diese Zeit.
+function druckMitPause(fn) { window.KC_DRUCKT = true; try { fn(); } finally { window.KC_DRUCKT = false; window.KC_DRUCK_ENDE = Date.now(); } }
 // iPhone: Druckseite als eigenständige HTML-Datei teilen (dort drucken oder als PDF sichern)
 async function druckTeilen() {
   const html = druckHtml(false);
@@ -35736,7 +35746,7 @@ async function arDrucken(x) {
     const url = URL.createObjectURL(t.datei), f = document.createElement("iframe");
     f.style.cssText = "position:fixed;width:0;height:0;border:0;opacity:0"; f.setAttribute("aria-hidden", "true");
     f.srcdoc = `<!doctype html><title>${esc(x.titel || "Bild")}</title><style>@page{margin:12mm}body{margin:0;text-align:center}img{max-width:100%;max-height:96vh}</style><img src="${url}">`;
-    f.onload = () => { const img = f.contentDocument?.querySelector("img"), los = () => { try { f.contentWindow.focus(); f.contentWindow.print(); } catch { extOeffnen(url); } setTimeout(() => { f.remove(); URL.revokeObjectURL(url); }, 60000); };
+    f.onload = () => { const img = f.contentDocument?.querySelector("img"), los = () => { try { f.contentWindow.focus(); druckMitPause(() => f.contentWindow.print()); } catch { extOeffnen(url); } setTimeout(() => { f.remove(); URL.revokeObjectURL(url); }, 60000); };
       if (img && !img.complete) img.onload = los; else los(); };
     return document.body.appendChild(f);
   }
@@ -36455,6 +36465,7 @@ const SPUR_WAS = { glueckskeks: "🥠 Glückskeks geöffnet", kontakt_extern: "�
 // Registry FENSTER_NAMEN: Fenster-ID → Name in den Wegen. Fehlt ein Name, steht dort „🪟 Fenster: „ID““ – tests/spur-voll.test.mjs meldet fehlende Namen.
 const FENSTER_NAMEN = {
   peBlatt: "🏷️ Preisetiketten", // KC-CLUB-PREISETIKETTEN
+  sendeBerichtBlatt: "📊 Sendebericht", // KC-CLUB-SENDEBERICHT (19.11.2026)
   // 2.794.0 KC-CLUB-FENSTER-NAMEN-NACHTRAG (Fund Hansi 31.10.: in den Wegen stand „Fenster: „niFenster““) – Fenster, die nicht über blattAuf entstehen
   niFenster: "ℹ️ Nachricht-Info: gelesen/zugestellt", naMenue: "💬 Nachricht: Menü", naLoeschen: "🗑️ Nachricht löschen?", wlFenster: "↪️ Nachricht weiterleiten",
   pwFenster: "📌 Pinnwand-Hinweis", ansFenster: "🗣️ Sprachansagen", geFenster: "📱 Meine Geräte mit Push", rsFenster: "🖍️ Tippfehler rot unterstreichen",
