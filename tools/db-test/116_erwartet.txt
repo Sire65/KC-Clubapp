@@ -1,0 +1,6 @@
+aufgaben_spalten=9
+protokoll_spalten=2
+stand_regel=t
+erledigte_mit_stand=t
+verlauf_leer=t
+rls=t
