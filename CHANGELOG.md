@@ -1,5 +1,10 @@
 # Änderungen
 
+## (Version folgt) – 📌 Aufgaben-Startmeldung auch beim Zurückkommen auf die Startseite (KC-CLUB-AUFGABEN-STAND-ZURUECK)
+Wunsch Hansi 19.11.: Wer nach dem Öffnen der App gleich in den Chat oder eine andere Seite ging, verpasste die Frage „📌 Wie steht's mit deiner Aufgabe?“ –
+die App versuchte es nur rund 3½ Minuten. Jetzt erscheint sie auch, sobald man wieder auf die Startseite kommt, solange die Frage noch offen ist
+(ohne zusätzliche Datenbank-Abfrage). Test `tests/aufgaben-stand.test.mjs`.
+
 ## 2.985.0 – 2026-11-19 – 📌 Aufgaben-Stand (Startmeldung ✅/🔶/❌ und Abschnitt im Protokoll) · 💐 Karten-Frage auf jeder Seite · 👣 Wege: wer gegangen ist, steht nicht mehr grün · Server 2.985.0 + Datenbank
 Hansi 19.11.: „Ja passt so, baue und spiele heute Abend ein.“
 

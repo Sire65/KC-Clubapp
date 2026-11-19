@@ -115,4 +115,6 @@ assert.ok(/Rückmeldungen: \$\{gemeldet\} von \$\{l\.length\}/.test(app) && /api
 assert.ok(lies(".github/workflows/tests.yml").includes("node tests/aufgaben-stand.test.mjs"), "läuft in der CI");
 const br = lies("tools/hilfe/aufgaben-stand-browser.mjs");
 assert.ok(/OHNE_ECHTSERVER/.test(br) && /--no-proxy-server/.test(br) && /r\.abort\(\)/.test(br), "Browser-Lauf abgeschirmt");
+// KC-CLUB-AUFGABEN-STAND-ZURUECK (19.11.2026): Startmeldung auch beim Zurückkommen auf die Startseite
+assert.ok(app.includes('if (v === "start" && vorher !== "start" && typeof AST !== "undefined" && AST.dran.length && !AST.offen) setTimeout(() => astPruefen(0), 1500);'), "Startmeldung beim Zurückkommen auf Start");
 console.log("✅ aufgaben-stand: alle Prüfungen bestanden");
