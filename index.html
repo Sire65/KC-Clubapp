@@ -2664,6 +2664,36 @@
   .blase img { max-width: 100%; border-radius: 10px; margin-top: 6px; display: block; cursor: pointer; }
   .anlage { display: inline-block; margin-top: 6px; padding: 7px 10px; border-radius: 10px; background: rgba(0,0,0,.08); cursor: pointer; font-weight: 700; }
   .blase.eigen .anlage { background: rgba(255,255,255,.18); }
+  /* KC-CLUB-CHAT-ANLAGEN-SICHTBAR (Wunsch Hansi 19.11.2026): Anlage-Leiste in der Nachricht, 📎 mit Zahl in der Chat-Liste, kurzes Aufleuchten, „Alle Anlagen“ */
+  .anl-leiste { margin-top: 6px; padding: 7px 9px; border-radius: 12px; border: 1.5px solid rgba(192,57,43,.45); background: rgba(192,57,43,.07); max-width: 100%; box-sizing: border-box; }
+  :root.dunkel .anl-leiste { border-color: rgba(240,140,120,.55); background: rgba(240,140,120,.10); }
+  .blase.eigen .anl-leiste { border-color: rgba(255,255,255,.6); background: rgba(255,255,255,.14); }
+  .anl-kopf { font-weight: 800; font-size: .92rem; }
+  .anl-klammer { display: inline-block; font-size: 1.1rem; }
+  .anl-teile { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 5px; }
+  .anl-teil { min-height: 42px; max-width: 100%; padding: 6px 10px; border-radius: 10px; border: 1px solid rgba(0,0,0,.18); background: var(--karte); color: inherit; font: inherit; font-weight: 700; text-align: left; overflow-wrap: anywhere; cursor: pointer; }
+  :root.dunkel .anl-teil { border-color: rgba(255,255,255,.25); }
+  .blase.eigen .anl-teil { background: rgba(255,255,255,.2); border-color: rgba(255,255,255,.45); color: #fff; }
+  .anl-teil.ungeoeffnet::after { content: " •"; color: var(--rot3); font-weight: 900; }
+  :root.dunkel .anl-teil.ungeoeffnet::after, :root.dunkel .anl-zeile.ungeoeffnet .anl-z-auf b::after { color: #f3b2a6; } .blase.eigen .anl-teil.ungeoeffnet::after { color: #fff; }
+  .anl-puls .anl-klammer { animation: anlPuls .5s ease-in-out 3; }
+  @keyframes anlPuls { 50% { transform: scale(1.5) rotate(-14deg); } }
+  @media (prefers-reduced-motion: reduce) { .anl-puls .anl-klammer { animation: none; } }
+  :root.ohne-anim .anl-puls .anl-klammer, .spar .anl-puls .anl-klammer { animation: none; }
+  .unterh .anl-marke { margin: 2px 4px 2px 0; } .uhk .anl-marke { flex: none; }
+  .anl-marke { display: inline-block; margin-left: 2px; padding: 0 6px; border-radius: 8px; font-size: .8rem; font-weight: 800; background: rgba(192,57,43,.12); color: var(--rot2); white-space: nowrap; }
+  :root.dunkel .anl-marke { background: rgba(240,140,120,.18); color: #f3b2a6; }
+  .anl-zeilen { display: grid; gap: 6px; }
+  .anl-zeile { display: flex; align-items: center; gap: 6px; padding: 4px; border-radius: 10px; background: rgba(0,0,0,.04); }
+  :root.dunkel .anl-zeile { background: rgba(255,255,255,.06); }
+  .anl-z-auf { flex: 1; min-width: 0; min-height: 48px; display: flex; align-items: center; gap: 8px; padding: 6px; border: none; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+  .anl-z-auf b { display: block; overflow-wrap: anywhere; } .anl-z-auf small { display: block; opacity: .75; } .anl-z-sym { font-size: 1.5rem; }
+  .anl-zeile.ungeoeffnet .anl-z-auf b::after { content: " •"; color: var(--rot3); }
+  .anl-kacheln { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+  .anl-kachel { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .anl-k-bild { padding: 0; border: none; background: rgba(0,0,0,.06); border-radius: 10px; aspect-ratio: 1; overflow: hidden; cursor: pointer; }
+  .anl-k-bild img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .anl-zur { min-height: 36px; border: none; background: none; color: inherit; font: inherit; font-size: .8rem; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   /* 2.196.0 KC-CLUB-TASTATUR-EINGABE: Tastatur offen → Schreibfeld direkt darüber, höchstens gut ⅓ des sichtbaren Bereichs, scrollt in sich */
   html.tastatur-offen .eingabe { bottom: var(--tastatur) !important; }
   html.tastatur-offen #v-chat { padding-bottom: var(--tastatur); } /* 2.197.0: die letzten Nachrichten lassen sich über das Schreibfeld hochscrollen */
@@ -7139,6 +7169,7 @@
     <button class="knopf versteckt" id="chatGruppeRaus" onclick="gruppeVerlassen()">🚪 Gruppe verlassen</button>
     <button class="knopf versteckt" id="chatGruppeWeg" onclick="gruppeLoeschen()">🗑️ Gruppe löschen (für alle)</button>
     <div id="chatStummBereich"></div>
+    <button class="knopf" id="chatAnlKnopf" onclick="anlAlleBlatt()">📎 Alle Anlagen (Fotos &amp; Dateien)</button> <!-- KC-CLUB-CHAT-ANLAGEN-SICHTBAR -->
     <button class="knopf" onclick="$('chatBlatt').classList.add('versteckt');chatVorlesenStart('neu')">🔊 Vorlesen ab den neuen Nachrichten</button>
     <button class="knopf" onclick="$('chatBlatt').classList.add('versteckt');chatVorlesenStart('alles')">🔊 Ganzen Chat vorlesen</button>
     <b style="margin:6px 4px 0;font-size:.95rem">Ganzer Chat</b> <!-- 2.23.80 (Wunsch Hansi „wo?“): alles für den ganzen Chat an einer Stelle -->

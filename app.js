@@ -2832,6 +2832,7 @@ const HILFE = [
   { id: "kom_symbole", thema: "nachrichten", sym: "🔣", t: "Die Knöpfe oben in Nachrichten", x: "Oben in 💬 Nachrichten stehen die Knöpfe als Symbol mit kleinem Wort darunter: 👥 Gruppe · ⭐ Favoriten · 🔖 Gemerkt und weitere. So bleibt mehr Platz für die Chats. Lieber mit Text daneben? ⚙️ → „🧩 Startseite &amp; Ansicht“ → <b>„🔣 Knöpfe oben in Nachrichten“</b> ausschalten.", zeig: () => suEinstellung("setKomSym"), seit: "2.855.0" },
   { id: "nachrichten_blinkt", thema: "nachrichten", sym: "💬", t: "Der Knopf „Nachrichten“ unten blinkt grün, orange oder rot", x: "Hast du ungelesene Nachrichten, blinken unten in der Leiste der Knopf <b>💬 Nachrichten</b>, die Kachel <b>Nachrichten</b> und oben das Feld <b>„Neue Nachr.“</b>. Die Farbe zeigt, wie alt die älteste ungelesene ist: <b>grün</b> bis 2 Tage, <b>orange</b> am 3. und 4. Tag, danach <b>rot</b>. Die kleine Zahl hat dieselbe Farbe. Sobald du gelesen hast, hört es auf. Ist ⚙️ → „✨ Effekte“ → „✨ Animierte Knöpfe“ aus, gibt es statt Blinken nur einen farbigen Rand.", zeig: () => zeige("nachrichten"), seit: "2.855.0" },
   { id: "grussformel", thema: "nachrichten", sym: "✍️", t: "Grußformel mit einem Tipp einsetzen", x: "Schnell gegrüßt: Im Chat über dem Schreibfeld in der kleinen Zeile auf <b>✍️</b> tippen – darunter stehen <b>„Danke und Gruß“</b>, <b>„Liebe Grüße“</b>, <b>„Bis bald mal wieder“</b> und <b>„Freundliche Grüße“</b>, jeweils mit deinem Vornamen. Antippen setzt die Formel an der Schreibstelle in einer eigenen Zeile ein; die Tastatur bleibt offen.", zeig: () => zeige("nachrichten"), seit: "2.855.0" },
+  { id: "chat_anlagen", thema: "nachrichten", sym: "📎", t: "Anlagen im Chat nicht übersehen", x: "Hängt an einer Nachricht eine Datei (z. B. ein PDF) oder mehrere Fotos, steht darunter ein umrandeter Kasten <b>„📎 2 Anlagen: …“</b> – antippen öffnet die Datei. Ein Punkt <b>•</b> heißt: noch nicht geöffnet. Bei neuen Nachrichten wackelt die 📎 kurz. In der Chat-Übersicht zeigt <b>„📎2“</b> neben dem Namen, wie viele Anlagen anderer du dort noch nicht geöffnet hast. Alle Fotos und Dateien eines Chats auf einen Blick: im Chat oben <b>⋮</b> → <b>„📎 Alle Anlagen“</b> – „↪“ springt zur Nachricht. Gemerkt wird das nur auf diesem Gerät.", zeig: () => zeige("nachrichten"), seit: "2.986.0" }, // KC-CLUB-CHAT-ANLAGEN-SICHTBAR
   { id: "online_namen", thema: "club", sym: "🟢", t: "Wer online ist, steht oben mit Namen", x: "Im Feld <b>Mitglieder</b> oben im Kopf stehen unter der Zahl die Vornamen derer, die gerade online sind – bei mehreren als Laufschrift (Berühren hält sie an). <b>Einen Namen antippen öffnet sofort den Chat</b> mit dieser Person. Das Feld selbst öffnet die Mitglieder-Liste mit allen, die gerade online sind. Bist du selbst unsichtbar, stehen dort keine Namen.", zeig: () => zeige("start"), seit: "2.855.0" },
   { id: "app_pin", thema: "privat", sym: "🔢", t: "Sichtschutz und App-PIN", x: "Liegt die App <b>15 Minuten</b> unbenutzt offen, wird sie verdeckt – antippen, und es geht weiter. Möchtest du mehr Schutz: ⚙️ → „🔒 Privatsphäre“ → <b>„🔢 App-PIN (freiwillig)“</b> → Einrichten (4 Ziffern). Die PIN bleibt nur auf diesem Gerät. <b>Vergessen?</b> Im Sperrbild „📧 Link per E-Mail schicken“ und die App über deinen persönlichen Link neu öffnen – dann ist die PIN gelöscht.", zeig: () => suEinstellung("pinKnopf"), seit: "2.855.0" },
   { id: "link_vorsicht", thema: "privat", sym: "⚠️", t: "„⚠️ Vorsicht“ an einem Link", x: "Sieht ein Link in einer Nachricht verdächtig aus – z. B. eine falsche Schreibweise wie „paypa1“, eine Zahlen-Adresse, ein Kurz-Link oder eine Seite, die nach dem Passwort fragt –, steht daneben <b>⚠️ Vorsicht:</b> mit dem Grund. Dann den Link lieber nicht öffnen und beim Absender nachfragen.", seit: "2.855.0" },
@@ -21834,7 +21835,7 @@ function uhZeile(u) {
   return `<div class="unterh${u.id === UH.wahl ? " gewaehlt" : ""}${UH.mark.has(u.id) ? " markiert" : ""}${u.wichtigNeu ? " wichtig-neu" : ""}${uhUngelesen(u) ? " uh-neu" : ""}" data-id="${u.id}" onclick="unterhTipp('${u.id}')">
       ${u.gruppe || u.anzahl > 2 ? uhRundeKreis(u) : kreis(MITGLIEDER?.find((m) => m.name === u.teilnehmer[0]) || null, u.teilnehmer[0], 46)}
       <div class="mitte"><div><b>${esc(u.gruppe?.name || u.betreff || u.teilnehmer.join(", "))}</b>${istFav(u) ? ' <span title="Favorit">⭐</span>' : UH.favAnsicht && u.haeufig ? ' <span class="hinweis" style="font-size:.8rem" title="Hier schreibst du am meisten">· oft</span>' : ""}${stummAn(u.id) ? ' <span title="stummgeschaltet">🔕</span>' : ""}${khOffenMarke(u) /* KC-CLUB-KLUGE-HELFER */}${u.gruppe ? ` <span class="hinweis" style="font-size:.8rem">· ${u.anzahl} Mitgl.</span>` : ""}</div><div class="hinweis">${entwurfAlle()[u.id]?.trim() ? `<span class="entwurf-marke">✏️ Entwurf:</span> ${esc(entwurfAlle()[u.id].trim().slice(0, 80))}` : u.letzte ? esc(u.letzte.von + ": " + vnKurz(u.letzte.text)) : "Noch keine Nachricht"}</div>${uhLesestand(u)}</div>
-      <div style="text-align:right"><div class="hinweis" style="font-size:.8rem">${u.letzte ? zeitKurz(u.letzte.zeit) : ""}</div>${u.nachrichten ? `<div class="hinweis uh-zahl" title="Nachrichten in dieser Unterhaltung">💬 ${u.nachrichten >= 1000 ? "999+" : u.nachrichten}</div>` : ""}${u.ungelesen ? `<span class="punkt${u.wichtigNeu ? " wichtig" : ""}" title="${u.wichtigNeu ? "darunter wichtige Nachricht" : ""}">${u.wichtigNeu ? "❗ " : ""}${u.ungelesen}</span>` : ""}</div><button type="button" class="uh-mehr" aria-label="Mehr zu diesem Chat: Favorit, archivieren, löschen" aria-expanded="${u.id === UH.wahl}" onclick="event.stopPropagation();uhMenue('${u.id}')">⋯</button></div>${u.id === UH.wahl ? unterhAktionen(u) : ""}`;
+      <div style="text-align:right"><div class="hinweis" style="font-size:.8rem">${u.letzte ? zeitKurz(u.letzte.zeit) : ""}</div>${u.nachrichten ? `<div class="hinweis uh-zahl" title="Nachrichten in dieser Unterhaltung">💬 ${u.nachrichten >= 1000 ? "999+" : u.nachrichten}</div>` : ""}${anlMarke(u) /* KC-CLUB-CHAT-ANLAGEN-SICHTBAR: rechts, damit ein langer Name sie nicht abschneidet */}${u.ungelesen ? `<span class="punkt${u.wichtigNeu ? " wichtig" : ""}" title="${u.wichtigNeu ? "darunter wichtige Nachricht" : ""}">${u.wichtigNeu ? "❗ " : ""}${u.ungelesen}</span>` : ""}</div><button type="button" class="uh-mehr" aria-label="Mehr zu diesem Chat: Favorit, archivieren, löschen" aria-expanded="${u.id === UH.wahl}" onclick="event.stopPropagation();uhMenue('${u.id}')">⋯</button></div>${u.id === UH.wahl ? unterhAktionen(u) : ""}`;
 }
 // ---------- KC-CLUB-CHAT-KARTEI (2.191.0) ----------
 // Je Chat eine Karteikarte; vorn (und die nächste) werden die letzten 6 Nachrichten gezeigt – als „Vorschau“, die NICHT als gelesen
@@ -21850,7 +21851,7 @@ function uhKarteiHtml(liste) {
   const uhOn = (u) => !u.gruppe && u.anzahl <= 2 && mgOn(MITGLIEDER?.find((m) => m.name === u.teilnehmer[0])); // Einzelchat mit jemandem, der online ist
   return `<div class="rk-box" id="uhKartei">${rkOnlineVorn(liste, uhOn).map((u) => { const titel = u.gruppe?.name || u.betreff || u.teilnehmer.join(", ");
     const bild = u.gruppe || u.anzahl > 2 ? uhRundeKreis(u) : kreis(MITGLIEDER?.find((m) => m.name === u.teilnehmer[0]) || null, u.teilnehmer[0], 30);
-    return `<details class="karte uhk${uhUngelesen(u) ? " uh-neu" : ""}" data-klappe="uhk" data-id="${esc(u.id)}" data-stand="${esc(u.letzte?.zeit || "")}" open><summary>${bild}<span>${esc(titel)}</span>${u.ungelesen ? `<span class="punkt">${u.ungelesen}</span>` : ""}</summary>
+    return `<details class="karte uhk${uhUngelesen(u) ? " uh-neu" : ""}" data-klappe="uhk" data-id="${esc(u.id)}" data-stand="${esc(u.letzte?.zeit || "")}" open><summary>${bild}<span>${esc(titel)}</span>${anlMarke(u) /* KC-CLUB-CHAT-ANLAGEN-SICHTBAR */}${u.ungelesen ?`<span class="punkt">${u.ungelesen}</span>` : ""}</summary>
       <div class="hinweis uhk-info">${u.gruppe ? `🔗 Feste Gruppe · ${u.anzahl} Mitgl.` : u.anzahl > 2 ? `Runde · ${u.anzahl} Personen` : "Einzelchat"}${uhOn(u) ? " · 🟢 online" : ""}${u.letzte ? ` · zuletzt ${esc(zeitKurz(u.letzte.zeit))}` : ""}${stummAn(u.id) ? " · 🔕" : ""}</div>${uhLesestand(u)}
       <div class="uhk-verlauf" data-teil="verlauf">${u.letzte ? '<p class="hinweis">Wird geladen …</p>' : '<p class="hinweis">Noch keine Nachricht.</p>'}</div>
       <div class="uhk-knoepfe"><button type="button" class="knopf haupt" onclick="chatOeffnen('${esc(u.id)}')">💬 Öffnen &amp; antworten${u.ungelesen ? ` (${u.ungelesen} neu)` : ""}</button></div>
@@ -22230,9 +22231,12 @@ async function chatLaden(scrollen, merk) {
       NA.trennerVor = erste && u.gelesenBis ? erste.id : null; NA.trennerSprung = !!NA.trennerVor;
     }
     NA.nachrichten = new Map(u.nachrichten.map((m) => [m.id, m]));
+    // KC-CLUB-CHAT-ANLAGEN-SICHTBAR: welche 📎 kurz aufleuchten (nur frische Daten), was „geöffnet“ ist
+    const anlPuls = merk ? new Set() : new Set([...anlPulsIds(u.nachrichten, ANLS.ids.get(fuer), u.gelesenBis, ANLS.gepulst, anlZaehlt),
+      ...[...ANLS.gepulst].filter(([, t]) => Date.now() - t < 1600).map(([id]) => id)]), anlAuf = anlAufSet(); // gleich wieder neu gezeichnet (z. B. Tag aufgeklappt): Aufleuchten nicht abschneiden
     const blaseHtml = (m) => `${m.id === NA.trennerVor ? '<div class="neu-trenner" id="neuTrenner">⬇ Neue Nachrichten</div>' : ""}<div data-id="${m.id}" class="blase${m.eigen ? " eigen" : ""}${istNotfall(m) ? " notfall" : ""}${m.erwaehntMich ? " erwaehnt-mich" : ""}${m.wichtig ? " wichtig" : ""}${!m.eigen && andere.length > 1 ? " farbig" : ""}"${!m.eigen && andere.length > 1 ? ` style="${gruppenFarbe(m.von)}"` : ""} id="msg-${m.id}" title="Antippen: reagieren, antworten, Details" onclick="if(!event.target.closest('button,img,a,audio,video,.sprache,.zitat'))nachrichtMenue('${m.id}')" oncontextmenu="if(!event.target.closest('a,img,audio,video,input,textarea')){event.preventDefault();nachrichtMenue('${m.id}')}">
       ${istNotfall(m) ? '<div class="notfall-marke">🚨 NOTFALL</div>' : m.wichtig ? '<div class="wichtig-marke">❗ WICHTIG</div>' : ""}${m.express ? '<div class="express-marke">🏎️ EXPRESS</div>' : ""}${!m.eigen && andere.length > 1 ? `<div class="von">${esc(m.von)}</div>` : ""}${m.antwortAuf ? `<div class="zitat" onclick="zuNachricht('${m.antwortAuf.id}')"><b>${esc(m.antwortAuf.von)}</b><span>${esc(vnKurz(m.antwortAuf.text))}</span></div>` : ""}${m.umfrage ? umfrageHtml(m) : m.kontakt ? kontaktKarteHtml(m) : (m.text === "📎" || (m.text === EINMAL_TEXT && m.anlagen.some((a) => a.einmal))) && m.anlagen.length ? "" : khSprachHtml(m) /* KC-CLUB-KLUGE-HELFER */ ?? `<div class="txt">${naText(istNotfall(m) ? m.text.replace(NOTFALL_RE, "") : m.text)}</div>`}${m.link ? lvKarteHtml(m.link) : ""}${ntKnopfHtml(m) /* 2.608.0 KC-CLUB-NACHRICHT-TERMIN */}${erkKnopfHtml(m) /* 2.666.0 KC-CLUB-ERKENNUNG-NACHRICHT */}
-      ${m.anlagen.map((a) => a.name === VN_ANL_NAME ? vnAnlHtml(a) : a.einmal ? einmalKachel(a) : /^image\//.test(a.mime || "") ? `<img data-anlage="${a.id}" alt="${esc(a.name)}" onclick="event.stopPropagation();anlageOeffnen('${a.id}')">` : /^audio\//.test(a.mime || "") ? `<div class="sprache" data-sprache="${a.id}"><button onclick="spracheAbspielen(this, '${a.id}', ${/^Sprachnachricht/i.test(a.name || "") ? "false" : "true"})">${/^Sprachnachricht/i.test(a.name || "") ? "▶️ Sprachnachricht anhören" : `▶️ 🎵 ${esc(a.name || "Musik")}`}</button></div>` : `<div class="anlage" onclick='event.stopPropagation();anlageAktion(${hlJs(a.id)}, ${hlJs(a.name || "Datei")}, ${hlJs(a.mime || "")})'>📄 ${esc(a.name)}</div>`).join("")}
+      ${m.anlagen.map((a) => a.name === VN_ANL_NAME ? vnAnlHtml(a) : a.einmal ? einmalKachel(a) : /^image\//.test(a.mime || "") ? `<img data-anlage="${a.id}" alt="${esc(a.name)}" onclick="event.stopPropagation();anlageOeffnen('${a.id}')">` : /^audio\//.test(a.mime || "") ? `<div class="sprache" data-sprache="${a.id}"><button onclick="spracheAbspielen(this, '${a.id}', ${/^Sprachnachricht/i.test(a.name || "") ? "false" : "true"})">${/^Sprachnachricht/i.test(a.name || "") ? "▶️ Sprachnachricht anhören" : `▶️ 🎵 ${esc(a.name || "Musik")}`}</button></div>` : anlZaehlt(a) ? "" /* KC-CLUB-CHAT-ANLAGEN-SICHTBAR: Dateien stehen in der Anlage-Leiste */ : `<div class="anlage" onclick='event.stopPropagation();anlageAktion(${hlJs(a.id)}, ${hlJs(a.name || "Datei")}, ${hlJs(a.mime || "")})'>📄 ${esc(a.name)}</div>`).join("")}${anlLeisteHtml(m, anlPuls.has(m.id), anlAuf)}
       <div class="na-seite"><button class="na-pfeil" title="Weiterleiten oder kopieren" aria-label="Weiterleiten oder kopieren" onclick="naPfeilMenue('${m.id}')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4.5l7.5 7.5-7.5 7.5v-4.3c-5.2 0-8.8 1.7-11.4 5.3 1-5.2 4.1-10.3 11.4-11.3V4.5z"/></svg></button><button class="na-info" title="Info: wer geschrieben, bekommen und gelesen hat" aria-label="Info zur Nachricht" onclick="nachrichtInfo('${m.id}')">i</button></div>
       ${m.eigen && m.express?.empfaenger ? expressStatusHtml(m.express) : m.express?.quittungen?.length ? `<div class="express-quittung">📬 Empfang bestätigt: ${m.express.quittungen.map((q) => `${esc(q.name)} ${esc(zeitKurz(q.am))}`).join(", ")}</div>` : m.eigen && m.express ? '<div class="express-quittung warte">📭 Empfang noch nicht bestätigt</div>' : ""}
       <div class="fuss">${m.loeschtAm ? `<span class="sl-marke" title="Löscht sich selbst – für alle">⏳ noch ${slRest(m.loeschtAm)}</span> ` : ""}${m.angeheftet ? '<span title="oben angeheftet">📌</span> ' : ""}${m.gemerkt ? '<span title="gemerkt">⭐</span> ' : ""}${m.bearbeitet ? '<span class="bearb" title="nachträglich geändert">bearbeitet</span>' : ""}${zeitKurz(m.zeit)}${m.eigen ? " " + hakenHtml(m, andere.length) : ""}${m.eigen || ICH.admin ? ` <button aria-label="Nachricht löschen" class="weg" title="Nachricht löschen" onclick="nachrichtLoeschen('${m.id}')">🗑️</button>` : ""}</div></div>`;
@@ -22242,6 +22246,7 @@ async function chatLaden(scrollen, merk) {
     naWischenEinrichten();
     naReaktionenZeigen(u.nachrichten);
     try { khNachZeichnen(u, andere); } catch (e) { console.warn("kluge helfer", e); } // KC-CLUB-KLUGE-HELFER: „Für dich“, Schnellantworten, „Noch nicht gelesen“
+    if (!merk) try { anlNachZeichnen(fuer, u, anlPuls); } catch (e) { console.warn("anlagen", e); } // KC-CLUB-CHAT-ANLAGEN-SICHTBAR: 📎 für die Chat-Liste merken
     if (CS.offen) chatSucheJetzt(false); // KC-CLUB-CHATSUCHE: Markierung nach dem Neuzeichnen behalten
     if (!merk && neuVonAnderen && einst("ton", true) && !stummAn(chatId)) ton();
     // KC-CLUB-NACH-UNTEN (1.12.0): beim Lesen älterer Nachrichten nicht nach unten reißen – stattdessen ⬇️ mit Punkt
@@ -23132,6 +23137,108 @@ function khTodoLink(todoId) { const z = khLesen("kh_todo", {})[todoId]; return z
 function khOffenMarke(u) {
   if (!khAn("khFragen")) return ""; const z = khLesen("kh_offen", {})[u.id];
   return z && u.letzte?.von === "Du" && Date.now() - Date.parse(z) >= KH_FRAGE_MS ? ' <span class="kh-offen-marke" title="Deine Frage ist seit über 12 Stunden unbeantwortet">❓</span>' : "";
+}
+// ---------- KC-CLUB-CHAT-ANLAGEN-SICHTBAR (19.11.2026, Wunsch Hansi „wenn dort eine Anlage drin liegt, muss die besser gekennzeichnet sein, z. B. durch eine
+// blinkende Büroklammer“ – „Ja alles bauen“) ----------
+// A Anlage-Leiste in der Nachricht („📎 2 Anlagen: Preisliste.pdf · Foto“, antippbar), B „📎2“ an der Unterhaltung in der Chat-Liste (Anlagen anderer, die ich
+// noch nicht geöffnet habe), C die 📎 der Leiste leuchtet bei neuen Nachrichten kurz auf (3×, ~1,5 s; nicht bei „✨ Animierte Knöpfe“ aus / weniger Bewegung),
+// D „📎 Alle Anlagen“ im Chat-Menü (Fotos als Kacheln, Dateien als Zeilen, „↪ zur Nachricht“).
+// KC-DB-SPARSAM: KEINE zusätzliche Server-Abfrage. Das Gerät merkt sich nur Kennungen und Zeiten (nie Namen oder Inhalte): welche Anlagen ich geöffnet habe
+// (kc_club_anl_auf, höchstens 500) und je Chat die noch nicht geöffneten Dateien anderer aus dem zuletzt geladenen Stand (kc_club_anl_chat, höchstens 60 Chats,
+// Anlagen der letzten 30 Tage). Fotos gelten als gesehen, sobald der Chat sie gezeigt hat (das Vorschaubild steht ja in der Nachricht). Kam seit dem letzten
+// Öffnen etwas Neues, zählt die Liste die letzte Nachricht mit, wenn sie eine reine Anlage („📎“) von jemand anderem ist. Eigene Anlagen zählen nie.
+const ANL_AUF_MAX = 500, ANL_CHATS_MAX = 60, ANL_TAGE = 30, ANL_PULS_LETZTE = 5;
+const ANLS = { gepulst: new Map(), ids: new Map() }; // gepulst: Nachricht → Zeitpunkt, an dem ihre 📎 aufgeleuchtet hat (diese Sitzung) · ids: Chat → Nachrichten beim letzten Zeichnen
+// zählt als Anlage: Fotos, PDFs, Dateien, Videos – nicht Sprachnachrichten/Musik (eigene ▶️-Knöpfe), nicht 🔒 verschlüsselte, nicht Einmal-Fotos (eigene Kachel)
+const anlZaehlt = (a) => !!a?.id && !a.einmal && a.name !== VN_ANL_NAME && !/^audio\//.test(a.mime || "");
+const anlIstBild = (a) => /^image\//.test(a?.mime || "");
+const anlSym = (a) => (anlIstBild(a) ? "🖼️" : /^video\//.test(a?.mime || "") ? "🎬" : "📄");
+// A: Daten der Leiste (rein) – null, wenn keine nötig ist (ein einzelnes Foto zeigt sich selbst). Sonst { n, dateien, fotos, text }
+function anlLeisteDaten(anlagen, zaehlt) {
+  const z = (anlagen || []).filter(zaehlt), dateien = z.filter((a) => !anlIstBild(a)), fotos = z.filter(anlIstBild);
+  if (!dateien.length && fotos.length < 2) return null;
+  const n = z.length, teile = [...dateien.map((a) => a.name || "Datei"), ...(fotos.length ? [fotos.length === 1 ? "Foto" : `${fotos.length} Fotos`] : [])];
+  return { n, dateien, fotos, text: `📎 ${n} ${n === 1 ? "Anlage" : "Anlagen"}: ${teile.join(" · ")}` };
+}
+function anlLeisteHtml(m, puls, auf) {
+  const d = anlLeisteDaten(m?.anlagen, anlZaehlt); if (!d) return "";
+  const neu = (a) => !m.eigen && !auf.has(a.id);
+  const knopf = (a) => `<button type="button" class="anl-teil${neu(a) ? " ungeoeffnet" : ""}" data-anl="${esc(a.id)}" title="${neu(a) ? "Noch nicht geöffnet – antippen" : "Antippen zum Öffnen"}" onclick="event.stopPropagation();anlTeilOeffnen('${esc(a.id)}')">${anlSym(a)} ${esc(a.name || "Datei")}</button>`;
+  const fotos = d.fotos.length ? `<button type="button" class="anl-teil" title="Alle Fotos und Dateien dieses Chats" onclick="event.stopPropagation();${d.fotos.length === 1 ? `anlTeilOeffnen('${esc(d.fotos[0].id)}')` : "anlAlleBlatt()"}">🖼️ ${d.fotos.length === 1 ? "Foto" : `${d.fotos.length} Fotos`}</button>` : "";
+  return `<div class="anl-leiste${puls ? " anl-puls" : ""}" role="group" aria-label="${esc(d.text)}"><div class="anl-kopf"><span class="anl-klammer" aria-hidden="true">📎</span> ${d.n} ${d.n === 1 ? "Anlage" : "Anlagen"}:</div><div class="anl-teile">${d.dateien.map(knopf).join("")}${fotos}</div></div>`;
+}
+// C: welche Nachrichten leuchten auf (rein)? Anlagen anderer, noch nicht aufgeleuchtet – beim ersten Zeichnen eines Chats die ungelesenen
+// (nach gelesenBis, höchstens die letzten 5), danach nur neu hinzugekommene
+function anlPulsIds(nachrichten, vorher, gelesenBis, gepulst, zaehlt) {
+  const l = nachrichten || [], aus = new Set();
+  l.forEach((m, i) => {
+    if (m.eigen || gepulst.has(m.id) || !(m.anlagen || []).some(zaehlt)) return;
+    if (vorher ? !vorher.has(m.id) : i >= l.length - ANL_PULS_LETZTE && (!gelesenBis || m.zeit > gelesenBis)) aus.add(m.id);
+  });
+  return aus;
+}
+// B: noch nicht geöffnete Dateien anderer in einem Chat (rein; Fotos zählen als gesehen, sobald der Chat gezeigt wurde)
+function anlChatOffen(nachrichten, auf, jetztMs, zaehlt) {
+  const grenze = jetztMs - ANL_TAGE * 86400000;
+  return (nachrichten || []).filter((m) => !m.eigen && Date.parse(m.zeit) >= grenze).flatMap((m) => (m.anlagen || []).filter((a) => zaehlt(a) && !anlIstBild(a) && !auf.has(a.id)).map((a) => a.id));
+}
+// B: Zahl für die Chat-Liste (rein) – gemerkter Stand + letzte Nachricht, wenn sie neuer ist und eine reine Anlage von jemand anderem
+function anlListeZahl(u, rec, auf) {
+  let n = rec ? (rec.offen || []).filter((id) => !auf.has(id)).length : 0;
+  const l = u?.letzte;
+  if (l && l.von !== "Du" && l.text === "📎" && (u.ungelesen || 0) > 0 && (!rec || String(l.zeit) > String(rec.bis || ""))) n += 1;
+  return n;
+}
+const anlAufSet = () => new Set(khLesen("anl_auf", []));
+function anlGeoeffnetMerken(id) {
+  if (!id) return; const l = khLesen("anl_auf", []);
+  if (!l.includes(id)) khSchreiben("anl_auf", [...l, id].slice(-ANL_AUF_MAX));
+  document.querySelectorAll(`.anl-teil.ungeoeffnet[data-anl="${CSS.escape(String(id))}"], .anl-zeile.ungeoeffnet[data-anl="${CSS.escape(String(id))}"]`).forEach((e) => e.classList.remove("ungeoeffnet"));
+}
+function anlNachZeichnen(chat, u, puls) {
+  for (const id of puls) if (!ANLS.gepulst.has(id)) ANLS.gepulst.set(id, Date.now());
+  ANLS.ids.set(chat, new Set(u.nachrichten.map((m) => m.id)));
+  const alle = khLesen("anl_chat", {}), letzte = u.nachrichten[u.nachrichten.length - 1];
+  delete alle[chat]; alle[chat] = { bis: letzte?.zeit || "", offen: anlChatOffen(u.nachrichten, anlAufSet(), Date.now(), anlZaehlt).slice(-50) };
+  const k = Object.keys(alle); for (const x of k.slice(0, Math.max(0, k.length - ANL_CHATS_MAX))) delete alle[x];
+  khSchreiben("anl_chat", alle);
+}
+function anlMarke(u) {
+  const n = anlListeZahl(u, khLesen("anl_chat", {})[u.id], anlAufSet());
+  return n ? ` <span class="anl-marke" title="${n === 1 ? "1 Anlage" : `${n} Anlagen`} – noch nicht geöffnet">📎${n}</span>` : "";
+}
+// Anlage aus einer Nachricht dieses Chats öffnen – wie bisher: Fotos groß (anlageOeffnen), Dateien mit Öffnen/Teilen/Speichern (anlageAktion)
+function anlTeilOeffnen(id) {
+  let a = null; for (const m of NA.nachrichten.values()) { a = (m.anlagen || []).find((x) => x.id === id); if (a) break; }
+  if (!a) return;
+  if (anlIstBild(a)) anlageOeffnen(a.id); else anlageAktion(a.id, a.name || "Datei", a.mime || "");
+}
+// D: alle Anlagen der geladenen Nachrichten (rein), neueste zuerst
+function anlAlleListe(nachrichten, zaehlt) {
+  return (nachrichten || []).flatMap((m) => (m.anlagen || []).filter(zaehlt).map((a) => ({ a, m }))).reverse();
+}
+function anlAlleBlatt() {
+  $("chatBlatt")?.classList.add("versteckt");
+  const l = anlAlleListe(CHAT?.id === chatId ? CHAT.nachrichten : [], anlZaehlt), auf = anlAufSet();
+  const fotos = l.filter((x) => anlIstBild(x.a)), dateien = l.filter((x) => !anlIstBild(x.a)), offen = dateien.filter((x) => !x.m.eigen && !auf.has(x.a.id));
+  const wer = (m) => (m.eigen ? "Du" : khVorname(m.von) || "?");
+  const kachel = (x) => `<div class="anl-kachel"><button type="button" class="anl-k-bild" aria-label="Foto von ${esc(wer(x.m))} öffnen" onclick="anlTeilOeffnen('${esc(x.a.id)}')"><img data-anlage="${esc(x.a.id)}" alt="${esc(x.a.name || "Foto")}"></button>
+    <button type="button" class="anl-zur" title="zur Nachricht" aria-label="Zur Nachricht springen" onclick="anlZur('${esc(x.m.id)}')">↪ ${esc(wer(x.m))}</button></div>`;
+  const zeile = (x) => `<div class="anl-zeile${!x.m.eigen && !auf.has(x.a.id) ? " ungeoeffnet" : ""}" data-anl="${esc(x.a.id)}"><button type="button" class="anl-z-auf" onclick="anlTeilOeffnen('${esc(x.a.id)}')"><span class="anl-z-sym" aria-hidden="true">${anlSym(x.a)}</span><span><b>${esc(x.a.name || "Datei")}</b><small>${esc(zeitKurz(x.m.zeit))} · ${esc(wer(x.m))}</small></span></button>
+    <button type="button" class="knopf klein" onclick="anlZur('${esc(x.m.id)}')">↪ zur Nachricht</button></div>`;
+  const f = blattAuf("anlAlleBlatt", `<h3 style="margin-top:0">📎 Alle Anlagen in diesem Chat</h3>
+    <p class="hinweis" style="margin:0 0 8px">${l.length ? `${fotos.length ? `${fotos.length} ${fotos.length === 1 ? "Foto" : "Fotos"}` : ""}${fotos.length && dateien.length ? " · " : ""}${dateien.length ? `${dateien.length} ${dateien.length === 1 ? "Datei" : "Dateien"}` : ""} – antippen öffnet, „↪“ springt zur Nachricht.${offen.length ? ` <b>• = noch nicht geöffnet</b>` : ""}` : "In den geladenen Nachrichten dieses Chats liegen keine Fotos oder Dateien."}</p>
+    ${dateien.length ? `<h4 style="margin:6px 0 4px">📄 Dateien</h4><div class="anl-zeilen">${dateien.map(zeile).join("")}</div>` : ""}
+    ${fotos.length ? `<h4 style="margin:10px 0 4px">🖼️ Fotos</h4><div class="anl-kacheln">${fotos.map(kachel).join("")}</div>` : ""}
+    <div class="dlg-knoepfe">${offen.length ? `<button type="button" class="knopf" onclick="anlAlleGesehen()">✓ Alle als geöffnet merken</button>` : ""}<button type="button" class="knopf haupt" onclick="$('anlAlleBlatt').remove()">Schließen</button></div>`);
+  f.querySelectorAll("img[data-anlage]").forEach(bildLaden);
+}
+function anlZur(id) { $("anlAlleBlatt")?.remove(); zuNachricht(id); }
+function anlAlleGesehen() {
+  const l = anlAlleListe(CHAT?.id === chatId ? CHAT.nachrichten : [], anlZaehlt);
+  for (const x of l) if (!x.m.eigen) anlGeoeffnetMerken(x.a.id);
+  if (CHAT?.id === chatId) anlNachZeichnen(chatId, CHAT, new Set());
+  $("anlAlleBlatt")?.remove(); melde("✓ Alle Anlagen als geöffnet gemerkt");
 }
 // 7 📸 Fotos ins Album – Clubtermine einmal je Sitzung holen (höchstens alle 6 Std.)
 async function khTreffen() {
@@ -24687,6 +24794,7 @@ function chatMenue() {
   $("chatSlKnopf").textContent = `⏳ Selbstlöschen: ${sl ? "nach " + slText(sl) : "Aus"}`; $("chatSlKnopf").classList.toggle("versteckt", !chatId);
   const vp = vbPartner(); $("chatVbKnopf").classList.toggle("versteckt", !vp); if (vp) $("chatVbKnopf").textContent = `🔑 Schlüsselbund mit ${vbVorname(vp)}: ${vbHolen(vp.person_id) ? "vorhanden" : "anlegen …"}`; // 2.518.0
   stummBereichZeigen();
+  if ($("chatAnlKnopf")) { const n = chatId && CHAT?.id === chatId ? anlAlleListe(CHAT.nachrichten, anlZaehlt).length : 0; $("chatAnlKnopf").textContent = `📎 Alle Anlagen (Fotos & Dateien)${n ? ` · ${n}` : ""}`; $("chatAnlKnopf").classList.toggle("versteckt", !chatId); } // KC-CLUB-CHAT-ANLAGEN-SICHTBAR
   $("chatBlatt").classList.remove("versteckt");
 }
 async function unterhaltungWeg(fuerAlle, gefragt) {
@@ -24726,6 +24834,7 @@ document.addEventListener("error", (ev) => {
 // ist es trotzdem gesperrt, kommt ein Knopf „↗ Jetzt öffnen“ (ein echter Link, den man selbst antippt).
 async function anlageOeffnen(id) {
   let w = null; try { w = window.open("", "_blank"); } catch {}
+  anlGeoeffnetMerken(id); // KC-CLUB-CHAT-ANLAGEN-SICHTBAR: „geöffnet“ nur auf diesem Gerät merken
   try {
     const r = await api("anlage_url", { id });
     if (w && !w.closed) { try { w.opener = null; } catch {} w.location.href = r.url; return; }
@@ -24763,7 +24872,7 @@ async function anlageDateiZeigen() {
 // direkt beim Antippen (iPhone verlangt das), ohne erneutes Laden.
 let ANL_T = null;
 function anlageAktion(id, name, mime) {
-  ANL_T = { id, name, mime, datei: null, fehler: null };
+  ANL_T = { id, name, mime, datei: null, fehler: null }; anlGeoeffnetMerken(id); // KC-CLUB-CHAT-ANLAGEN-SICHTBAR
   api("diagnose", { art: "anlage", daten: { schritt: "angetippt", mime: mime || "" } }).catch(() => {}); // 2.166.0: Diagnose „öffnet sich nicht“
   const lauf = ANL_T;
   lauf.warten = anlageAlsDatei({ id, name, mime }).then((d) => { lauf.datei = new File([d.blob], d.name, { type: d.mime || "application/octet-stream" }); }).catch((e) => { lauf.fehler = e; });
@@ -27765,7 +27874,7 @@ function anlagenListe(bearbeiten) {
 }
 function aufgabeZeile(a, darfAbhaken, darfLoeschen) {
   return `<div class="zeile">${darfAbhaken ? `<button class="knopf klein ${a.erledigt_am ? "gruen" : ""}" title="erledigt" onclick="aufgabeErledigt('${a.id}', ${!a.erledigt_am})">${a.erledigt_am ? "✔" : "☐"}</button>` : `<span>${a.erledigt_am ? "✔" : "📌"}</span>`}
-    <div style="flex:1${a.erledigt_am ? ";text-decoration:line-through;opacity:.6" : ""}"><b>${esc(a.text)}</b>
+    <div style="flex:1${a.erledigt_am ? ";opacity:.75" : ""}"><b${a.erledigt_am ? ' style="text-decoration:line-through"' : ""}>${esc(a.text)}</b>${a.erledigt_am ? `<div class="hinweis auf-erledigt-von" style="font-size:.85rem">${esc(aufgabeErledigtText(a))}</div>` : ""}<!-- KC-CLUB-AUFGABE-ERLEDIGT-VON -->
       <div class="hinweis" style="font-size:.85rem">${a.ids?.length > 1 ? '<span title="gemeinsame Aufgabe – erledigt, sobald einer sie abhakt">👥 </span>' : ""}${esc(a.name)}${a.mit?.length ? ` <span title="gemeinsame Aufgabe">· gemeinsam mit ${esc(a.mit.join(", "))}</span>` : ""} ${a.erledigt_am ? "" : faelligText(a.faellig) + aufgabeStandMarke(a)}${a.protokoll ? " · aus „" + esc(a.protokoll.titel) + "“" : ""}</div>${a.erledigt_am && a.bemerkung ? `<div class="hinweis" style="font-size:.85rem;text-decoration:none;opacity:1">💬 ${esc(a.bemerkung)}</div>` : ""}${!a.erledigt_am && a.stand_text && (a.stand === "teilweise" || a.stand === "nicht") ? `<div class="hinweis" style="font-size:.85rem">${a.stand === "teilweise" ? "🔶" : "❌"} ${esc(a.stand_text)}</div>` : ""}
       ${!a.erledigt_am && a.meine ? `<button type="button" class="knopf klein" style="margin-top:4px" onclick="astEinzeln('${esc(a.id)}')">📝 Stand melden</button>` : ""}</div>
     ${darfLoeschen ? `<button class="knopf klein" title="löschen" aria-label="Aufgabe löschen" onclick="aufgabeLoeschen('${a.id}')">🗑️</button>` : ""}</div>`;
@@ -28059,7 +28168,7 @@ function aufgabenMitGruppe(liste) {
     if (alle[0] !== a) continue; // schon mit der ersten Zeile der Gruppe aufgenommen
     neu.push({ ...a, name: alle.map((x) => x.name || "?").join(", "), namen: alle.map((x) => x.name || "?"), ids: alle.map((x) => x.id), mit: [],
       meine: alle.some((x) => x.meine), verwalten: alle.some((x) => x.verwalten),
-      erledigt_am: alle.every((x) => x.erledigt_am) ? alle.map((x) => x.erledigt_am).sort().pop() : null, bemerkung: alle.find((x) => x.bemerkung)?.bemerkung ?? null,
+      erledigt_am: alle.every((x) => x.erledigt_am) ? alle.map((x) => x.erledigt_am).sort().pop() : null, bemerkung: alle.find((x) => x.bemerkung)?.bemerkung ?? null, erledigt_von_name: alle.find((x) => x.erledigt_von_name)?.erledigt_von_name ?? null, /* KC-CLUB-AUFGABE-ERLEDIGT-VON */
       ...(() => { const st = alle.filter((x) => x.stand_am).sort((x, y) => String(y.stand_am).localeCompare(String(x.stand_am)))[0]; // KC-CLUB-AUFGABEN-STAND: eine Meldung gilt für die ganze Gruppe – die neueste zählt
         return st ? { stand: st.stand, stand_am: st.stand_am, stand_text: st.stand_text ?? null, stand_ziel: st.stand_ziel ?? null } : {}; })() });
   }
@@ -28109,10 +28218,13 @@ function astNachInit(d) {
 function astTag(x) { const s = /^\d{4}-\d{2}-\d{2}$/.test(String(x || "")) ? String(x) : x ? TAG_ISO_FMT.format(new Date(x)) : ""; return s ? `${s.slice(8, 10)}.${s.slice(5, 7)}.` : ""; }
 // eine Zeile im Abschnitt „Stand der Aufgaben“ (Ansicht, Druck, Text) – „✅ erledigt am 21.11. – Frank, Christina: Tablets beschaffen – „2 Tablets gekauft““
 function aufgabeStandZeile(e) {
-  const kopf = { erledigt: `✅ erledigt${e.am ? " am " + astTag(e.am) : ""}`, teilweise: `🔶 teilweise${e.am ? ` (Stand ${astTag(e.am)})` : ""}`, nicht: `❌ noch nicht${e.am ? ` (Stand ${astTag(e.am)})` : ""}` }[e.stand] || "❔ keine Rückmeldung";
+  const kopf = { erledigt: `✅ erledigt${e.am ? " am " + astTag(e.am) : ""}${e.von ? " von " + e.von : ""}`, /* KC-CLUB-AUFGABE-ERLEDIGT-VON */ teilweise: `🔶 teilweise${e.am ? ` (Stand ${astTag(e.am)})` : ""}`, nicht: `❌ noch nicht${e.am ? ` (Stand ${astTag(e.am)})` : ""}` }[e.stand] || "❔ keine Rückmeldung";
   const namen = (e.namen || []).filter(Boolean);
   return `${kopf} – ${namen.length ? namen.join(", ") + ": " : ""}${e.text}${e.notiz ? ` – „${e.notiz}“` : ""}${e.stand === "nicht" && e.ziel ? ` – neues Ziel ${astTag(e.ziel)}` : ""}${e.aus ? ` (aus dem Protokoll vom ${astTag(e.aus)})` : ""}`;
 }
+// KC-CLUB-AUFGABE-ERLEDIGT-VON (19.11.2026, Wunsch Hansi): unter erledigten Aufgaben „✔ erledigt am 19.11. von Frank“ – „von“ liefert der Server
+// (erledigt_von_name, Vorname); ältere Erledigungen vor dem Aufgaben-Stand haben keinen → nur „✔ erledigt am …“
+function aufgabeErledigtText(a) { return a?.erledigt_am ? `✔ erledigt am ${astTag(a.erledigt_am)}${a.erledigt_von_name ? " von " + a.erledigt_von_name : ""}` : ""; }
 function aufgabeStandMarke(a) {
   if (a.stand !== "teilweise" && a.stand !== "nicht") return "";
   return ` <span class="marke ${a.stand === "teilweise" ? "gelb" : "rot"}">${a.stand === "teilweise" ? "🔶 teilweise" : "❌ noch nicht"}${a.stand_am ? " · " + esc(astTag(a.stand_am)) : ""}${a.stand === "nicht" && a.stand_ziel ? " · Ziel " + esc(astTag(a.stand_ziel)) : ""}</span>`;
@@ -32778,7 +32890,7 @@ function druckAufgabenZeilen(liste) {
   for (const a of liste) {
     if (a.gruppe && gesehen.has(a.gruppe)) continue; if (a.gruppe) gesehen.add(a.gruppe);
     const alle = a.gruppe ? liste.filter((x) => x.gruppe === a.gruppe) : [a];
-    z.push(`<tr><td>${alle.every((x) => x.erledigt_am) ? "☑" : '<span class="kaestchen"></span>'}</td><td>${esc(a.text)}</td><td>${alle.map((x) => esc(x.name) + (x.erledigt_am && alle.length > 1 ? " ✓" : "")).join(", ")}</td><td>${a.faellig ? esc(dz(a.faellig)) : "–"}</td></tr>`);
+    z.push(`<tr><td>${alle.every((x) => x.erledigt_am) ? "☑" : '<span class="kaestchen"></span>'}</td><td>${esc(a.text)}${alle.every((x) => x.erledigt_am) ? `<br><small>${esc(aufgabeErledigtText({ erledigt_am: alle.map((x) => x.erledigt_am).sort().pop(), erledigt_von_name: alle.find((x) => x.erledigt_von_name)?.erledigt_von_name }))}</small>` : ""}</td><td>${alle.map((x) => esc(x.name) + (x.erledigt_am && alle.length > 1 ? " ✓" : "")).join(", ")}</td><!-- KC-CLUB-AUFGABE-ERLEDIGT-VON --><td>${a.faellig ? esc(dz(a.faellig)) : "–"}</td></tr>`);
   }
   return z.join("");
 }
@@ -36607,7 +36719,7 @@ const FENSTER_NAMEN = {
   diktatBlatt: "✍️ Diktieren", druckBlatt: "🖨️ Drucken", dsBlatt: "🗓️ Dienstplan", dsOrteBlatt: "📍 Dienst-Orte", dsWerBlatt: "👥 Wer ist heute im Dienst",
   rundBlatt: "🪑 Runder Tisch", rundNeuBlatt: "🪑 Zum Runden Tisch einladen", rundTischBlatt: "🪑 Am Runden Tisch", rundTascheBlatt: "💼 Tasche für den Runden Tisch", rundArchivBlatt: "🗄️ Tasche: aus dem Archiv", // 2.762.0 KC-CLUB-RUNDER-TISCH
   dtBlatt: "🗓️ Dienst-Tausch", dvBlatt: "📊 Dienstzeiten-Übersicht", dwSperreBlatt: "💡 Sperrzeit nicht nötig", egBlatt: "📥 Mein Eingangskorb", eingangBlatt: "📥 In den Eingangskorb eines Mitglieds",
-  einlBlatt: "📥 Dokument einlesen", ekAblageBlatt: "🗄️ Eingangskorb: ablegen", ekDwBlatt: "📅 Dienstzeiten", ekErstBlatt: "💶 Erstattung", ekErstOkBlatt: "✅ Erstattung als erstattet markieren?", gkBlatt: "💐 Genesungskarte", tpBlatt: "⚽ Bundesliga-Tippspiel", gkGemBlatt: "👥 Gemeinsame Karte", gknBlatt: "💐 Frage: Gemeinsame Karte", astBlatt: "📌 Wie steht's mit deiner Aufgabe?",ekHinweisBlatt: "📥 Hinweis: Eingangskorb",
+  einlBlatt: "📥 Dokument einlesen", ekAblageBlatt: "🗄️ Eingangskorb: ablegen", ekDwBlatt: "📅 Dienstzeiten", ekErstBlatt: "💶 Erstattung", ekErstOkBlatt: "✅ Erstattung als erstattet markieren?", gkBlatt: "💐 Genesungskarte", tpBlatt: "⚽ Bundesliga-Tippspiel", gkGemBlatt: "👥 Gemeinsame Karte", gknBlatt: "💐 Frage: Gemeinsame Karte", astBlatt: "📌 Wie steht's mit deiner Aufgabe?", anlAlleBlatt: "📎 Alle Anlagen im Chat", /* KC-CLUB-CHAT-ANLAGEN-SICHTBAR */ekHinweisBlatt: "📥 Hinweis: Eingangskorb",
   ekNachBlatt: "🔎 Nachverfolgen", elternBlatt: "👪 Eltern-Handy", entwicklerBlatt: "👨‍💻 Über den Entwickler", erBlatt: "✅ Alles eingerichtet", ibBlatt: "🖼️ Installieren mit Bildern", erinBlatt: "🔔 Erinnerung für dich",
   erkBlatt: "💡 Vorschlag aus der Nachricht", khBlatt: "📌 Für dich (Chat)", khErinBlatt: "⏰ An Nachricht erinnern", khAufgabeBlatt: "📋 Nachricht als Aufgabe",ersBesBlatt: "🎓 Fahrten aus Besuchen", ersCsvBlatt: "📊 Erstattungen für Excel", eblBlatt: "📒 Buchungsliste", esTafelBlatt: "📤 Tafel sichern", ewBlatt: "🧭 Einstellungen erklärt",
   expressBlatt: "🏎️ Express-Sendung", externBlatt: "🌐 Externer Inhalt", faAlbenKorb: "🗑️ Gelöschte Alben", faAlbumBlatt: "📸 Foto in welches Album?", faAlbumForm: "📸 Album anlegen/ändern",

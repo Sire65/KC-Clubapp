@@ -115,4 +115,28 @@ assert.ok(/Rückmeldungen: \$\{gemeldet\} von \$\{l\.length\}/.test(app) && /api
 assert.ok(lies(".github/workflows/tests.yml").includes("node tests/aufgaben-stand.test.mjs"), "läuft in der CI");
 const br = lies("tools/hilfe/aufgaben-stand-browser.mjs");
 assert.ok(/OHNE_ECHTSERVER/.test(br) && /--no-proxy-server/.test(br) && /r\.abort\(\)/.test(br), "Browser-Lauf abgeschirmt");
+// ---- 7. KC-CLUB-AUFGABE-ERLEDIGT-VON (19.11.2026, Wunsch Hansi): „✔ erledigt am 19.11. von Frank“ – Beispieldaten
+{
+  const astTag = new Function("TAG_ISO_FMT", funktion(app, "function astTag(") + "\nreturn astTag;")(new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Berlin" }));
+  const txt = new Function("astTag", funktion(app, "function aufgabeErledigtText(") + "\nreturn aufgabeErledigtText;")(astTag);
+  assert.equal(txt({ erledigt_am: "2026-11-19T10:00:00Z", erledigt_von_name: "Frank" }), "✔ erledigt am 19.11. von Frank");
+  assert.equal(txt({ erledigt_am: "2026-11-19T23:30:00Z" }), "✔ erledigt am 20.11.", "ältere Erledigung ohne „von“; Datum in deutscher Zeit");
+  assert.equal(txt({ erledigt_am: null, erledigt_von_name: "Frank" }), "", "offen → nichts");
+  const standZeile = new Function("astTag", funktion(app, "function aufgabeStandZeile(") + "\nreturn aufgabeStandZeile;")(astTag);
+  assert.equal(standZeile({ stand: "erledigt", am: "2026-11-21", von: "Frank", namen: ["Frank", "Christina"], text: "Tablets beschaffen" }), "✅ erledigt am 21.11. von Frank – Frank, Christina: Tablets beschaffen");
+  assert.equal(standZeile({ stand: "erledigt", am: "2026-11-21", namen: ["Frank"], text: "Tablets" }), "✅ erledigt am 21.11. – Frank: Tablets", "ohne „von“ wie bisher");
+  // Server: wer abgehakt hat, nur bei stand = erledigt mit stand_von
+  const vonF = new Function(ohneTypen(srv.slice(srv.indexOf("const aufgabeErledigtVon = "), srv.indexOf("\n", srv.indexOf("const aufgabeErledigtVon = "))).replace(/: \(id: string\) => string/, "")) + "\nreturn aufgabeErledigtVon;")();
+  const vn = (id) => ({ F: "Frank" })[id] || "";
+  assert.deepEqual(vonF({ erledigt_am: "2026-11-19T10:00:00Z", stand: "erledigt", stand_von: "F" }, vn), { erledigt_von_name: "Frank" });
+  assert.deepEqual(vonF({ erledigt_am: "2026-11-19T10:00:00Z", stand: null, stand_von: null }, vn), {}, "ältere Erledigung: kein „von“");
+  assert.deepEqual(vonF({ erledigt_am: null, stand: "teilweise", stand_von: "F" }, vn), {}, "nicht erledigt: kein „von“ (Stand bleibt geschützt)");
+  const L2 = liste([{ id: "e1", protokoll_id: "p3010", person_id: "C", text: "Tablets", gruppe: "G2", erledigt_am: "2026-11-21T10:00:00Z", stand: "erledigt", stand_von: "F" },
+    { id: "e2", protokoll_id: "p3010", person_id: "F", text: "Tablets", gruppe: "G2", erledigt_am: "2026-11-21T10:00:00Z", stand: "erledigt", stand_von: "F" }], P, "2026-11-24", (id) => N[id]);
+  assert.equal(L2[0].von, "Frank", "Stand der Aufgaben: erledigt von …");
+  assert.ok(!("von" in L.find((e) => e.text === "Tablets beschaffen")), "ältere Erledigung im Abschnitt: kein „von“");
+  const pl = srv.slice(srv.indexOf('case "protokoll_laden": {'), srv.indexOf("aufgabenNachgefragtAm:", srv.indexOf('case "protokoll_laden": {')));
+  assert.ok(/\.\.\.aufgabeErledigtVon\(a, \(id\) => vorname\(leute\.get\(id\) \?\? null\)\)/.test(pl) && /map\(\(x: any\) => x\.stand_von\)\.filter\(Boolean\)/.test(pl), "protokoll_laden gibt erledigt_von_name (Vorname) für alle Leser");
+  assert.ok(/aufgabeErledigtText\(a\)/.test(funktion(app, "function aufgabeZeile(")) && /erledigt_von_name: alle\.find/.test(app) && /aufgabeErledigtText\(\{ erledigt_am:/.test(funktion(app, "function druckAufgabenZeilen(")), "App: Zeile, gemeinsame Aufgabe, Druck");
+}
 console.log("✅ aufgaben-stand: alle Prüfungen bestanden");

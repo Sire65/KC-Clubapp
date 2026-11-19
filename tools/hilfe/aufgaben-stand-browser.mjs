@@ -30,7 +30,9 @@ await seite.evaluate(() => {
       version: 1, veroeffentlicht_am: entwurf ? null : tag(-1), einspruch_bis: entwurf ? null : tag(6), status: entwurf ? "entwurf" : "einspruch", roh: entwurf ? "entwurf" : "veroeffentlicht",
       verfasser: { person_id: "P1", name: "Frank Test", offen: false }, anwesend: [{ person_id: "P1", name: "Frank Test" }], entschuldigt: [] },
     anlagen: [], einwaende: [], fassungen: [], gelesen: null, darfBearbeiten: entwurf, darfLoeschen: false, eigen: true, pruefung: null, schreiber: ["P1"], naechsterVorschlag: null, nachtraege: [],
-    aufgaben: [{ id: "A9", person_id: "P1", gruppe: null, name: "Frank Test", text: "Grill reinigen", faellig: "2026-12-01", erledigt_am: null, bemerkung: null, meine: true, verwalten: true, stand: "nicht", stand_am: "2026-11-23T08:00:00Z", stand_text: "Ersatzteil fehlt", stand_ziel: "2026-12-10" }],
+    aufgaben: [{ id: "A9", person_id: "P1", gruppe: null, name: "Frank Test", text: "Grill reinigen", faellig: "2026-12-01", erledigt_am: null, bemerkung: null, meine: true, verwalten: true, stand: "nicht", stand_am: "2026-11-23T08:00:00Z", stand_text: "Ersatzteil fehlt", stand_ziel: "2026-12-10" },
+      { id: "A10", person_id: "P2", gruppe: null, name: "Christina Beispiel", text: "Schürzen bestellen", faellig: null, erledigt_am: "2026-11-19T10:00:00Z", bemerkung: null, meine: false, verwalten: true, erledigt_von_name: "Christina" }, /* KC-CLUB-AUFGABE-ERLEDIGT-VON */
+      { id: "A11", person_id: "P1", gruppe: null, name: "Frank Test", text: "Alte Kasse", faellig: null, erledigt_am: "2026-11-10T10:00:00Z", bemerkung: null, meine: true, verwalten: true }],
     aufgabenStand: stand, aufgabenStandLebendig: entwurf, aufgabenNachgefragtAm: null });
   window.__entwurf = false; window.__api = [];
   api = async (a, p) => { __api.push({ a, p: JSON.parse(JSON.stringify(p || {})) });
@@ -96,9 +98,11 @@ const pv = await seite.evaluate(() => $("protokollInhalt").textContent.replace(/
 ok(/Stand der Aufgaben/.test(pv) && /✅ erledigt am 21\.11\. – Frank, Christina: Tablets beschaffen – „2 Tablets gekauft“ \(aus dem Protokoll vom 30\.10\.\)/.test(pv), "Protokoll-Ansicht: Abschnitt „Stand der Aufgaben“");
 ok(/🔶 teilweise \(Stand 22\.11\.\) – Klaus: Glühwein bestellen/.test(pv) && /❔ keine Rückmeldung – Erika: Kasse prüfen/.test(pv) && !/Rückmeldungen:/.test(pv), "teilweise / keine Rückmeldung; ohne Übersicht (veröffentlicht)");
 ok(/❌ noch nicht · 23\.11\. · Ziel 10\.12\./.test(pv) && /📝 Stand melden/.test(pv), "Abzeichen und „📝 Stand melden“ an meiner Aufgabe");
+ok(/Schürzen bestellen✔ erledigt am 19\.11\. von Christina/.test(pv) && /Alte Kasse✔ erledigt am 10\.11\.(?! von)/.test(pv), "KC-CLUB-AUFGABE-ERLEDIGT-VON: „✔ erledigt am … von …“ (ältere ohne „von“)");
 ue = await ueberlauf(); ok(ue.seite <= 390, "Protokoll: kein Überlauf: " + JSON.stringify(ue));
 await bild("aufgaben-stand-4-protokoll", true);
 const druck = await seite.evaluate(() => druckProtokoll().html.replace(/\s+/g, " "));
+ok(/Schürzen bestellen<br><small>✔ erledigt am 19\.11\. von Christina<\/small>/.test(druck), "Druck: erledigt am … von …");
 ok(/<h2>Stand der Aufgaben<\/h2>/.test(druck) && /Glühwein bestellen – „Angebot fehlt noch“/.test(druck), "Druck/PDF mit Abschnitt");
 ok(await seite.evaluate(() => /Stand der Aufgaben:\n  ✅ erledigt am 21\.11\./.test(protokollText(PR.protokoll))), "Text (Archiv) mit Abschnitt");
 await seite.evaluate(() => astEinzeln("A9")); await seite.waitForTimeout(300);

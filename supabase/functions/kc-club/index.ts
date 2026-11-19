@@ -7781,7 +7781,8 @@ function aufgabenStandListe(zeilen: any, protokolle: any, datum: any, name: any,
     const a = alle[0], erl = alle.every((x: any) => x.erledigt_am);
     const letzt = alle.filter((x: any) => x.stand_am && (x.stand === "teilweise" || x.stand === "nicht")).sort((x: any, y: any) => String(y.stand_am).localeCompare(String(x.stand_am)))[0];
     const e: any = { text: a.text, namen: [...new Set(alle.map((x: any) => name(x.person_id) || "?"))], aus: pub.get(a.protokoll_id), faellig: a.faellig || null, gruppe: a.gruppe || a.id };
-    if (erl) Object.assign(e, { stand: "erledigt", am: alle.map((x: any) => x.erledigt_am).sort().pop(), notiz: alle.find((x: any) => x.bemerkung)?.bemerkung || null });
+    if (erl) { const ev = alle.find((x: any) => x.stand === "erledigt" && x.stand_von)?.stand_von; // KC-CLUB-AUFGABE-ERLEDIGT-VON: wer abgehakt hat (ältere Erledigungen: keiner)
+      Object.assign(e, { stand: "erledigt", am: alle.map((x: any) => x.erledigt_am).sort().pop(), notiz: alle.find((x: any) => x.bemerkung)?.bemerkung || null, ...(ev && name(ev) ? { von: name(ev) } : {}) }); }
     else if (letzt) Object.assign(e, { stand: letzt.stand, am: letzt.stand_am, notiz: letzt.stand_text || null, ziel: letzt.stand_ziel || null, von: letzt.stand_von ? name(letzt.stand_von) || null : null });
     else e.stand = "keine";
     e.neu = e.stand !== "keine" && (!vorher || tg(e.am) >= vorher);
@@ -7847,6 +7848,9 @@ async function aufgabenDranFuer(ich: Ich, ids: string[], sitzung: any) {
     stand: a.stand, stand_am: a.stand_am, stand_text: a.stand_text, stand_ziel: a.stand_ziel, stand_von: a.stand_von && a.stand_von !== ich.person_id ? vn(a.stand_von) : a.stand_von ? "ich" : null,
     sitzung: sitzung && sMs && sMs - jetztMs <= AST_ZYKLUS_TAGE * AST_TAG_MS ? { titel: sitzung.titel, beginn: sitzung.beginn } : null }));
 }
+// KC-CLUB-AUFGABE-ERLEDIGT-VON (19.11.2026, Wunsch Hansi „✔ erledigt am … von …“): wer abgehakt hat (Vorname) – ein Protokollvermerk, darum für alle,
+// die das Protokoll sehen (anders als die Stand-Felder). Nur bei stand = 'erledigt' mit stand_von; ältere Erledigungen (vor dem Aufgaben-Stand) haben keinen „von“.
+const aufgabeErledigtVon = (a: any, vn: (id: string) => string) => a?.erledigt_am && a.stand === "erledigt" && a.stand_von && vn(a.stand_von) ? { erledigt_von_name: vn(a.stand_von) } : {};
 // Stand-Felder einer Aufgabe für die Listen – nur für eigene/gemeinsame Aufgaben und wer sie verwaltet (Datenschutz)
 const aufgabeStandFelder = (a: any, sichtbar: boolean) => sichtbar && a.stand ? { stand: a.stand, stand_am: a.stand_am ?? null, stand_text: a.stand_text ?? null, stand_ziel: a.stand_ziel ?? null } : {};
 // Erinnerung 2 Tage vor der Sitzung (Takt, stündlich 9–20 Uhr): wer im Zyklus noch nichts gemeldet hat, bekommt einmal je Zyklus eine Push (ohne App: Mail)
@@ -19507,7 +19511,7 @@ Köcheclub Werne`,
         const aids = (pa ?? []).map((x: any) => x.attachment_id);
         const { data: att } = aids.length ? await db.from("kc_communication_attachments").select("id,file_name,mime_type,size_bytes").in("id", aids) : { data: [] as any[] };
         const leser = bearb && pr.status === "veroeffentlicht" ? await protokollLeser() : [];
-        const leute = await personen([pr.verfasser, ...pr.anwesend, ...pr.entschuldigt, ...(ew ?? []).map((x: any) => x.person_id), ...(auf ?? []).map((x: any) => x.person_id), ...leser]);
+        const leute = await personen([pr.verfasser, ...pr.anwesend, ...pr.entschuldigt, ...(ew ?? []).map((x: any) => x.person_id), ...(auf ?? []).map((x: any) => x.person_id), ...(auf ?? []).map((x: any) => x.stand_von).filter(Boolean), ...leser]); // stand_von: KC-CLUB-AUFGABE-ERLEDIGT-VON
         const name = (id: string) => leute.get(id)?.display_name || id;
         if (pr.status === "veroeffentlicht" && !(gel ?? []).some((x: any) => x.person_id === ich.person_id && x.version >= pr.version))
           await db.from("kc_club_sitzungsprotokoll_gelesen").upsert({ protokoll_id: pr.id, person_id: ich.person_id, version: pr.version, gelesen_am: jetzt() });
@@ -19528,7 +19532,8 @@ Köcheclub Werne`,
           anlagen: aids.map((id: string) => (att ?? []).find((y: any) => y.id === id)).filter(Boolean).map((y: any) => ({ id: y.id, name: y.file_name, mime: y.mime_type, groesse: y.size_bytes })),
           einwaende: (ew ?? []).map((x: any) => ({ id: x.id, name: name(x.person_id), text: x.text, erstellt_am: x.erstellt_am, erledigt_am: x.erledigt_am, eigen: x.person_id === ich.person_id })),
           aufgaben: (auf ?? []).map((a: any) => ({ id: a.id, person_id: a.person_id, gruppe: a.gruppe ?? null, name: name(a.person_id), text: a.text, faellig: a.faellig, erledigt_am: a.erledigt_am, bemerkung: a.bemerkung ?? null, meine: a.person_id === ich.person_id,
-            verwalten: bearb || a.erstellt_von === ich.person_id, ...aufgabeStandFelder(a, bearb || a.person_id === ich.person_id || a.erstellt_von === ich.person_id || meineGr.has(a.gruppe)) })),
+            verwalten: bearb || a.erstellt_von === ich.person_id, ...aufgabeStandFelder(a, bearb || a.person_id === ich.person_id || a.erstellt_von === ich.person_id || meineGr.has(a.gruppe)),
+            ...aufgabeErledigtVon(a, (id) => vorname(leute.get(id) ?? null)) })), /* KC-CLUB-AUFGABE-ERLEDIGT-VON: Vorname, für alle Leser */
           aufgabenStand: ast ? (bearb && astLebendig ? ast.map(({ fehlt: _f, ...e }: any) => e) : aufgabenStandFest(ast)) : null, aufgabenStandLebendig: astLebendig, /* KC-CLUB-AUFGABEN-STAND */
           aufgabenNachgefragtAm: bearb ? pr.aufgaben_nachgefragt_am ?? null : null,
           // Lesestand nur für Verfasser/Organisation
