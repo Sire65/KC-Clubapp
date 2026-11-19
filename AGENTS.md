@@ -67,6 +67,10 @@ direkt vor dem Wartungsfenster, also kurz bevor die Version bei den Mitgliedern 
 - **Abstand (KC-EINSPIELEN-ABSTAND, 13.11.2026, Wunsch Hansi nach 2.943.0 und 2.944.0 innerhalb von 7 Min.):** höchstens **eine Version je 15 Minuten** –
   ging die letzte andere Version vor weniger als 15 Min. live, wartet der Ablauf den Rest ab (auch bei `[Hansi: einspielen]`, nicht bei `[Notfall]`).
   Darum: mehrere fertige Änderungen zu **einer** Version bündeln, nicht kurz hintereinander einspielen.
+- **Eine Version je Termin (KC-EINSPIELEN-EINE-VERSION, 19.11.2026, Wunsch Hansi „ja bündeln, EINE Version“ nach 2.984.0 und 2.985.0 aus zwei Sitzungen
+  innerhalb von 4 Min.):** je Einspiel-Termin (12 bzw. 20 Uhr) geht höchstens **eine** neue Version raus. Ist im laufenden Termin schon eine andere Version
+  live gegangen, brechen beide Abläufe rot ab – nichts geht raus. Darum: **vor dem Einspielen** offene PRs/Zweige anderer Sitzungen prüfen und alles
+  Fertige zu **einer** Version bündeln; was zu spät kommt, geht zum nächsten Termin („Run workflow“ für beide Abläufe). Ausgenommen: `[Hansi: einspielen]`, `[Notfall]`.
 - Test `tests/einspielen-sperre.test.mjs`.
 
 Die eigene Prüfung jeder Sitzung vor dem Push bleibt:
