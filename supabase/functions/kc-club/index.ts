@@ -16027,7 +16027,10 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           // letzten 3 Min. in der App war (Zugangstabelle, gleiche Regel wie KC-EINSPIELEN-RUHIG) – unabhängig von der Online-Anzeige, nur hier für den Admin.
           // „verborgen“: Online-Anzeige aus oder inkognito – die App kennzeichnet sie. Nur Kennung, keine Inhalte.
           const { data: daZ } = tag === berlinTag(new Date()) ? await db.from("kc_club_zugang").select("person_id").gt("zuletzt_gesehen", new Date(Date.now() - 180000).toISOString()).limit(100) : { data: [] as any[] };
-          const daIds = (daZ ?? []).map((x: any) => String(x.person_id)).filter((id: string) => id.startsWith("KC-P-") && !id.startsWith("KC-P-TEST"));
+          // KC-CLUB-SPUR-WEG (19.11.2026, Fund Hansi „Christina hat lt. Push die App verlassen, im Wegeprotokoll steht sie aber grün drin“): wer die App
+          // weggelegt hat („weg“), ist nicht mehr „gerade in der App“ – auch wenn die letzte Meldung keine 3 Min. her ist (gleiche Regel wie Online-Liste und Offline-Push).
+          const daRoh = (daZ ?? []).map((x: any) => String(x.person_id)).filter((id: string) => id.startsWith("KC-P-") && !id.startsWith("KC-P-TEST"));
+          const weg0 = await wegSet(daRoh).catch(() => new Set<string>()), daIds = daRoh.filter((id: string) => !weg0.has(id));
           const sichtbar = daIds.length ? (await onlineJetztMit([]).catch(() => null))?.on ?? null : null;
           const jetztDa = daIds.map((id: string) => ({ person_id: id, verborgen: sichtbar ? !sichtbar.has(id) : null }));
           return json({ tag, jetztDa, personen: [...[...je.entries()].map(([id, e]) => ({ person_id: id, name: leute.get(id)?.display_name || id, anzahl: e.anzahl,
@@ -16064,7 +16067,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         let online: { da: boolean; verborgen: boolean | null } | null = null;
         if (pid && tag === berlinTag(new Date())) {
           const { data: zg } = await db.from("kc_club_zugang").select("person_id").eq("person_id", pid).gt("zuletzt_gesehen", new Date(Date.now() - 180000).toISOString()).limit(1);
-          const da = !!zg?.length, sichtbar = da ? (await onlineJetztMit([]).catch(() => null))?.on ?? null : null;
+          const da = !!zg?.length && !(await wegSet([pid]).catch(() => new Set<string>())).has(pid), sichtbar = da ? (await onlineJetztMit([]).catch(() => null))?.on ?? null : null; // KC-CLUB-SPUR-WEG
           online = { da, verborgen: da && sichtbar ? !sichtbar.has(pid) : null };
         }
         return json({ tag, name: name(pid!), online, schritte: schritte.map((x: any) => ({ t: new Date(x.t).toISOString(), w: x.w,

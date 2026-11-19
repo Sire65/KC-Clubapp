@@ -22,3 +22,6 @@
 - Die Frage „💐 … braucht gerade gute Wünsche – magst du auch unterschreiben?“ kam bisher nur auf der **Startseite** und nur in der ersten Minute nach dem Öffnen. Öffnete die App z. B. in „Termine“ (so bei Thomas), kam sie nie.
 - Jetzt kommt sie **auf jeder Seite**, sobald kein anderes Fenster offen ist (die App wartet bis zu 30 Minuten), und **bei jedem Öffnen der App wieder**, bis man unterschrieben hat oder „Nein, danke“ tippt. „Später“ = beim nächsten Öffnen nochmal fragen.
 - Die zweite, ähnliche Frage nur auf der Startseite ist weg (sonst käme sie doppelt); die Zeile im Info-Laufband bleibt.
+
+### 👣 Wege der Mitglieder: „gerade in der App“ stimmt nach dem Verlassen (KC-CLUB-SPUR-WEG, Fund Hansi 19.11. „Christina hat lt. Push die App verlassen, im Wegeprotokoll steht sie aber grün drin“)
+- Wer die App weggelegt hat, steht in „Wege der Mitglieder“ nicht mehr grün als „gerade in der App“ – vorher zählte dort jeder, dessen letzte Meldung keine 3 Minuten her war. Damit verschwindet auch das falsche „🙈 Online-Anzeige aus“ nach dem Verlassen. Gleiche Regel wie Online-Liste und „hat die App verlassen“-Push. Nur Server.
