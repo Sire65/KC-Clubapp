@@ -106,7 +106,8 @@ const dbFetch: typeof fetch = (input, init) => {
 // Auswertung: SQL auf kc_club_protokoll (aktion = 'egress_messung'), Feld db/aktion/antwort = { name: [Anzahl, Bytes, Bytes laut Content-Length] }.
 // 2.887.0: Messung 07./08.11. – App-Instanzen leben meist nur 20–75 s, darum kam alle 3 Min. kaum eine Zeile an (2 Tage: 1 Zeile von App-Aufrufen).
 // Jetzt alle 30 s; befristet bis EGRESS_BIS (danach misst der Server nicht mehr – Protokoll bleibt klein).
-const EGRESS_MS = 30000, EGRESS_MAX_NAMEN = 300, EGRESS_TOP = 40, EGRESS_BIS = Date.parse("2026-11-21T00:00:00Z");
+// KC-CLUB-SCHLAFMODUS (20.11.2026, Wunsch Hansi): bis 05.12.2026 verlängert – Vorher/Nachher-Vergleich (vergessene offene Geräte schlafen jetzt ein).
+const EGRESS_MS = 30000, EGRESS_MAX_NAMEN = 300, EGRESS_TOP = 40, EGRESS_BIS = Date.parse("2026-12-05T00:00:00Z");
 type EgressMap = Map<string, [number, number, number]>;
 const EGRESS = { ab: Date.now(), db: new Map() as EgressMap, aktion: new Map() as EgressMap, antwort: new Map() as EgressMap };
 function egressDazu(m: EgressMap, k: string, b: number, cl = 0) {
@@ -194,7 +195,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.989.0";
+const SERVER_VERSION = "2.990.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -2493,6 +2494,11 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
   kontakt_extern: (w) => ({ an: w?.an === true }),
   // KC-CLUB-WA-LIEBER (Wunsch Hansi 16.11.2026: „einige nutzen lieber WhatsApp als die Club-App“): ich lese lieber WhatsApp – Standard aus
   wa_lieber: (w) => ({ an: w?.an === true }),
+  // KC-CLUB-SCHLAFMODUS (20.11.2026, Wunsch Hansi): unbediente, sichtbar offene App schläft nach 15 Min. ein – „immer“ (Standard), „zeit“ (nur von–bis, über Mitternacht möglich) oder „aus“
+  schlafmodus: (w) => {
+    const zeit = (x: unknown, std: string) => /^([01]\d|2[0-3]):[0-5]\d$/.test(String(x)) ? String(x) : std;
+    return { art: w?.art === "zeit" || w?.art === "aus" ? w.art : "immer", von: zeit(w?.von, "22:00"), bis: zeit(w?.bis, "07:00") };
+  },
   ruhezeit: (w) => {
     const zeit = (x: unknown, std: string) => /^([01]\d|2[0-3]):[0-5]\d$/.test(String(x)) ? String(x) : std;
     return { an: w?.an === true, von: zeit(w?.von, "22:00"), bis: zeit(w?.bis, "07:00"), erwaehnung: w?.erwaehnung !== false };

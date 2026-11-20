@@ -12,7 +12,7 @@ assert.ok(app.includes('RTM.herzRef = String(RT.ref); RTM.herzAb = document.hidd
 assert.ok(app.includes('if (d.topic === "phoenix" && d.event === "phx_reply" && d.ref === RTM.herzRef && RTM.herzAb) { if (!document.hidden) rtMessWert("rtt", performance.now() - RTM.herzAb); RTM.herzAb = 0; }'), "Herzschlag-Antwort gemessen");
 assert.ok(app.includes('if (war && !RT.zu && !document.hidden) RTM.abbrueche++;'), "nur echte Abbrüche zählen");
 assert.ok(/function rtMessTakt\(\) \{[\s\S]{0,600}if \(RT\.ok && j - \(RT\.letzte \|\| 0\) < RT_STILL_MS\) RTM\.steht \+= d;/.test(app), "„antwortet nicht“ zählt nicht als steht (Regel 11)");
-assert.ok(app.includes("setInterval(() => { if (!document.hidden) { rtLedZeigen(); rtMessTakt(); } }, 3000);"), "Takt nur bei sichtbarer App, im vorhandenen 3-s-Takt");
+assert.ok(app.includes("setInterval(() => { if (!ruht()) { rtLedZeigen(); rtMessTakt(); } }, 3000);"), "Takt nur bei sichtbarer App, im vorhandenen 3-s-Takt");
 const melden = app.slice(app.indexOf("function rtMessMelden()"), app.indexOf("document.addEventListener(\"visibilitychange\", () => { if (!document.hidden) return; rtMessMelden();"));
 assert.ok(/fpNeu\("leitung", \{ sek: /.test(melden), "Meldung über das Geräte-Protokoll");
 const felder = [...melden.matchAll(/\b([a-z_0-9]+): (?=[A-Za-z(nM])/g)].map((m) => m[1]);

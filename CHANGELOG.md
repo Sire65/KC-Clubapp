@@ -1,6 +1,23 @@
 # Änderungen
 
-## (Version folgt) – 🚗 Mitfahrt in der Laufschrift antippen → direkt zu „Mitfahren“ (KC-CLUB-MITFAHRT-SPRUNG)
+## 2.990.0 – 2026-11-20 – 💤 Schlafmodus mit Bildschirmschoner · 🚗 Mitfahrt antippen → direkt zu „Mitfahren“ · Server 2.990.0 · [Hansi: einspielen]
+Hansi 20.11.: „Einspielen und checke, ob ein anderes Bündel wartet, um es mitzunehmen.“ – Bündel aus #217 (KC-CLUB-SCHLAFMODUS) und #218 (KC-CLUB-MITFAHRT-SPRUNG).
+
+### 💤 Schlafmodus mit Bildschirmschoner (KC-CLUB-SCHLAFMODUS)
+Wunsch Hansi 20.11.: Vergessene, sichtbar offene Geräte (PC ohne Bildschirmsperre, Tablet mit „Bildschirm an“) sollen keine Abfragen mehr machen. Im Hintergrund ruhte die App schon – eine unbediente, sichtbare Startseite fragte aber weiter (mit Leitung ≈ 1.100, ohne ≈ 2.500 Datenbank-Abfragen je Stunde).
+- **Nach 15 Minuten ohne Tippen, Taste, Scrollen oder Mausbewegung schläft die App ein:** dunkler Bildschirm mit Club-Logo, „💤 Die App schläft – Hier tippen zum Aufwecken“ und der Uhrzeit. Logo und Text wandern langsam (Einbrennschutz; bei „Bewegung reduzieren“ am Gerät nur alle 3 Minuten ein neuer Platz).
+- Im Schlaf **keine Abfragen**: alle Abfrage-Takte (Neuladen, Online, Lebenszeichen, Chat, Pinnwand, Terminanfragen, Update-Prüfung, Puls, Nutzung/Wege …) prüfen jetzt „ruht“ (Hintergrund **oder** Schlaf); die direkte Leitung wird getrennt und die App meldet sich einmal als „weg“ (die anderen sehen dich nicht mehr als online). Auch das Fehlerprotokoll sammelt nur noch.
+- **Push kommt weiter an** (die Mitteilung zeigt das Handy wie gewohnt). Kam etwas, steht im Bildschirmschoner „🔔 Neues eingegangen“. Ein **Anruf/Anklopfen**, das Antippen der Mitteilung oder ein klingelnder **Wecker** wecken die App von selbst.
+- **Aufwachen:** Antippen, Taste oder Zurückkommen in die App → genau **ein** Neuladen und die Leitung steht wieder; du bleibst, wo du warst.
+- **Schläft nicht** während eines Anrufs, eines Videos/Erklär-Videos, der Bühne, Live zeigen/Mitschauen, Tisch live, wenn sich im offenen Chat in den letzten 5 Minuten etwas getan hat, bei offenem Dienst-Stempel und solange du den Standort teilst.
+- **Einstellbar je Mitglied** (gilt auf allen Geräten): ⚙️ → „🎨 Darstellung“ → **„💤 Schlafmodus“**: An – immer (Standard) / Nur zu bestimmten Zeiten (z. B. 22:00–07:00, auch über Mitternacht) / Aus. Dort auch **„💤 Jetzt schlafen legen“**. Bei „Aus“ oder außerhalb der Zeit schläft die App nicht von selbst ein – im Hintergrund ruht sie wie bisher.
+- **Sichtschutz und Schlafmodus zusammengelegt** (Wunsch Hansi „Ja zusammenlegen“): Solange die App schläft, verdeckt der Bildschirmschoner alles – der Sichtschutz öffnet keine zweite Schicht. **Ein Tipp genügt:** ohne App-PIN ist man sofort wieder drin (kein zusätzliches „👆 Weiter“), **mit App-PIN kommt direkt die PIN-Abfrage** (die PIN bleibt Pflicht, gleiche Zeiten wie bisher: 15 Min., in Büro/Mitglieder/Sicherheit/Admin 10 Min.). Weckt ein Anruf oder der Wecker, liegt die PIN-Abfrage nicht über dem Anruf – sie kommt danach. Ist der Schlafmodus aus (oder außerhalb seiner Zeit), bleibt der Sichtschutz wie bisher.
+- Messung: Die Egress-Messung des Servers läuft bis 05.12.2026 (vorher 21.11.) – Vorher/Nachher-Vergleich; jedes Einschlafen steht als Schritt „💤 App eingeschlafen“ in den Wegen (ohne zusätzliche Abfrage).
+- Neuer Tipp in der Hilfe („Der Schlafmodus“), Suchbegriff „Schlafmodus“/„Bildschirmschoner“ in den Einstellungen. Test `tests/schlafmodus.test.mjs`, Browser-Prüfung `tools/hilfe/schlafmodus-browser.mjs` (abgeschirmt).
+
+- **Sichtschutz-Fehler behoben (KC-CLUB-LS-VIDEO):** Lag irgendwo in der App ein Video im Seitenbaum (auch angehalten), griff der Sichtschutz nach 15 Min. nie. Jetzt zählt nur ein wirklich laufendes Video als Ausnahme.
+
+### 🚗 Mitfahrt in der Laufschrift antippen → direkt zu „Mitfahren“ (KC-CLUB-MITFAHRT-SPRUNG)
 Fund Hansi 20.11.: „Wenn ich sie antippe, gelangt man in den Kalender, aber nicht genau zur Mitfahrgelegenheit.“
 - Antippen der Mitfahrt-Meldung (in der Laufschrift und in der ▾-Liste) öffnet jetzt **den Termin** und rollt **direkt zum Abschnitt „🚗 Mitfahren“**, der kurz aufleuchtet – auch wenn der Kalender ein paar Sekunden zum Laden braucht (vorher gab die App nach 1,8 Sekunden auf und man blieb im Kalender). Bei Aktionen genauso.
 

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.989.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.990.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -17,7 +17,7 @@ const TEILE_LISTE = {
   szenen: { einstieg: ["jahreszeitVorschau"], sri: "sha384-mAuFkYPP7UnZNUqE/gD38eJ/THfwNSgLrJyvGLQUb5PBmCArQZ8wIH5DiImNHvlj" }, // Stufe 3b: Kopf-Szenen (Jahreszeiten, Sim-Jü, Themen) – kurz nach dem Start über szenenSpaeter
   sprache: { einstieg: ["spracheEnglisch", "spracheDeutsch"], sri: "sha384-ClAyep1YzwEniJlCEsh1IBmuGtitUSrdvupHqcasL5jZH2Dmq6pi+/IZYyAoZrem" }, // KC-CLUB-SPRACHE: Bedienung auf Englisch – nur geladen, wenn jemand 🇬🇧 wählt
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-NDuho5dgDL13uhtcTY8d0cGESAWhk+B+5qyWyvBuOxPgmADzmvY9YFCcwWM0s+kx" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
-  spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-gD3q/2L9GT3oU74JreTUDAa1vJDESZ3irJ9nuzr2VuaVzNUREU4KIH2pROKYjUNn" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
+  spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-NJ7DJt5uvf95NJ5rn9MLHZr1dmZK0XLZYNYM5Frr2Pt/wetRMf4ARaCPhe/O30Zz" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
   tischlive: { einstieg: ["tlStart", "tlStopp", "tlZeichnen", "tlPlatz", "tlRegeln"], sri: "sha384-RCmsKY+DTRfsCMRHkJVG2UJlySANNdHxnEdMps4tkL9kgf8DC5O/b1jMcwVeY3XB" }, // 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: Ton, Kamera, Bildschirm, Unterlagen zeigen am Tisch
   buero: { einstieg: ["ersBuchOeffnen", "eblDruck", "buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-5Mnq/dTPyN87mHs3EuaoDEyIeZu0qRFqy2mD1dIJe0Z6LYtktKup6IiuZIZUHhRe" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
   hilfe: { einstieg: ["twFrageStart", "twOffenStart", "sucheAuf", "suSucheKnopf"], sri: "sha384-kQ/pCEoGC36q1hgJ8LDEz49OXpMoLtqkmA7pqx4XNc3viLKWIngKuwOUPaRsTYxg" }, // Stufe 5: Hilfe-Werkzeuge (Frag Twinkey, Mitglied fragen, Schnellsuche) – beim ersten Antippen
@@ -260,6 +260,123 @@ if (typeof history !== "undefined") for (const f of ["pushState", "replaceState"
 try { const u = new URL(location.href); if (u.searchParams.has("neu")) { u.searchParams.delete("neu"); history.replaceState(null, "", u.pathname + u.search + u.hash); } } catch {}
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
+// ---------- KC-CLUB-SCHLAFMODUS (20.11.2026, Wunsch Hansi: „vergessene, sichtbar offene Geräte sollen keine Abfragen mehr machen“) ----------
+// Im Hintergrund (document.hidden) ruhen die Takte schon lange. Lücke: eine unbediente, SICHTBARE App (PC ohne Bildschirmsperre, Tablet mit „Bildschirm an“)
+// fragte weiter – Startseite mit Leitung ≈ 1.100, ohne ≈ 2.500 Datenbank-Abfragen je Stunde. Jetzt: nach SCHLAF_MS ohne Eingabe schläft die App ein –
+// Bildschirmschoner (dunkel, wandert gegen Einbrennen), einmal „weg“ melden, Leitung trennen, KEINE Abfragen mehr (alle Takte prüfen ruht(), api() sperrt zusätzlich).
+// Aufwachen: Tipp/Taste auf die Schicht oder Rückkehr in den Vordergrund → genau EIN neuLaden (vorhandene Bündelung) + Leitung; man bleibt in der Ansicht.
+// Nicht einschlafen: laufender Anruf, Zuschauen (Video, Bühne, Vorführen, Mitschauen, Tisch live), lebhafter offener Chat (< 5 Min.), offener Dienst-Stempel,
+// Standort teilen, klingelnder Wecker. Je Mitglied einstellbar (⚙️ → 🎨 Darstellung → 💤 Schlafmodus): immer (Standard) / nur von–bis (über Mitternacht) / aus.
+const SCHLAF_MS = 15 * 60000, SCHLAF_CHAT_MS = 5 * 60000, SCHLAF_PRUEF_MS = 30000;
+const SCHLAF = { an: false, bedient: Date.now(), seit: 0, neu: false, uhr: null, maus: 0, grund: "" };
+function ruht() { return (typeof document !== "undefined" && !!document.hidden) || SCHLAF.an; } // gemeinsame Bedingung aller Abfrage-Takte
+const schlafWahl = () => { try { return INIT?.einstellungen?.schlafmodus || null; } catch { return null; } };
+// reine Funktion (Test): darf die App zu dieser Uhrzeit (min = Minuten seit Mitternacht) von selbst einschlafen? w = { art: "immer" | "zeit" | "aus", von, bis }
+function schlafZeitErlaubt(w, min) {
+  const art = w?.art === "zeit" || w?.art === "aus" ? w.art : "immer";
+  if (art === "aus") return false;
+  if (art === "immer") return true;
+  const hm = (s, std) => (/^([01]\d|2[0-3]):[0-5]\d$/.test(String(s)) ? +String(s).slice(0, 2) * 60 + +String(s).slice(3, 5) : std);
+  const v = hm(w.von, 1320), b = hm(w.bis, 420);
+  return v === b ? true : v < b ? min >= v && min < b : min >= v || min < b; // über Mitternacht (22:00–07:00): ab „von“ ODER vor „bis“
+}
+function schlafAusnahme() { // Gründe, NICHT einzuschlafen – man schaut zu oder es läuft etwas, das die App braucht
+  try {
+    if (RUF || document.querySelector("#anrufSchirm:not(.versteckt)")) return "anruf";
+    if (stromZuschauen()) return "zuschauen"; // Erklär-Video, Rückseite/Bühne, Vorführen (vf-an), Tisch live, laufendes Video/Ton
+    if (VF?.rolle || SS?.id) return "vorfuehren"; // Live zeigen / Mitschauen
+    if (aktuelleAnsicht === "chat" && chatId && Date.now() - Math.max(CHAT_AKTIV || 0, SCHLAF.bedient) < SCHLAF_CHAT_MS) return "chat"; // es tut sich etwas im offenen Chat
+    if (document.getElementById("dsBlatt")) return "dienst"; // Dienst-Stempel offen
+    if (ST?.eigen) return "standort"; // Standort teilen läuft
+    if (WKK?.art) return "wecker";
+    if (FENSTER?.schlaeft) return "fenster"; // App ist in einem anderen Fenster offen – hier ruht ohnehin alles
+  } catch {}
+  return "";
+}
+function schlafPruefen(jetzt = Date.now()) {
+  if (SCHLAF.an || typeof document === "undefined" || document.hidden) return false;
+  try { if (!KEY || !ICH) return false; } catch { return false; }
+  if (jetzt - SCHLAF.bedient < SCHLAF_MS) return false;
+  const d = new Date(jetzt);
+  if (!schlafZeitErlaubt(schlafWahl(), d.getHours() * 60 + d.getMinutes())) return false;
+  if (schlafAusnahme()) return false;
+  schlafEin("auto"); return true;
+}
+function schlafEin(grund) {
+  if (SCHLAF.an || typeof document === "undefined") return;
+  SCHLAF.an = true; SCHLAF.seit = Date.now(); SCHLAF.neu = false; SCHLAF.grund = grund || "auto";
+  try { if (window.KCFP) window.KCFP.ruht = true; } catch {} // Fehlerprotokoll (index.html) sammelt nur noch, sendet nach dem Aufwachen
+  try { spur("schlaf_ein", grund === "hand" ? "hand" : null); } catch {} // Zähler über die vorhandene Spur – geht mit der nächsten Sendung nach dem Aufwachen raus
+  try { onlineWegMelden(true); } catch {} // einmal „weg“ (keepalive) – die anderen sehen mich nicht mehr als online
+  try { rtTrennen(); clearTimeout(RT.zaehlen); clearTimeout(RT.hinterUhr); } catch {}
+  try { schlafSchichtZeigen(); } catch {}
+}
+function schlafJetzt() { if (schlafAusnahme() === "anruf") return melde("📞 Während eines Anrufs schläft die App nicht."); schlafEin("hand"); } // ⚙️ „💤 Jetzt schlafen legen“
+function schlafAufwachen(grund) {
+  if (!SCHLAF.an) return false;
+  SCHLAF.an = false; SCHLAF.bedient = Date.now(); clearTimeout(SCHLAF.uhr);
+  try { if (window.KCFP) window.KCFP.ruht = false; } catch {}
+  try { document.getElementById("schlafSchicht")?.remove(); document.documentElement.classList.remove("kc-schlaf"); } catch {}
+  try { lsNachSchlaf(grund); } catch {} // Liegen-Schutz: ohne PIN genügt dieser eine Tipp, mit PIN direkt die PIN-Abfrage
+  // Rückkehr aus dem Hintergrund: die vorhandenen Rückkehr-Wege (visibilitychange) laden genau einmal neu und bauen die Leitung auf
+  if (grund === "sicht" || document.hidden) return true;
+  try { if (INIT?.rtKanal && !RT.ok) { RT.warte = 1000; rtVerbinden(); } } catch {}
+  try { neuLaden(); } catch {} // genau EIN Laden (läuft schon eins, bündelt neuLaden)
+  try { if (chatId && aktuelleAnsicht === "chat") chatLaden(false); } catch {}
+  setTimeout(() => { try { if (!ruht()) onlinePing(); } catch {} }, 4000); // der Server nimmt ein „da“ erst 3 s nach „weg“ an
+  return true;
+}
+const schlafWenigBewegung = () => { try { return matchMedia("(prefers-reduced-motion: reduce)").matches; } catch { return false; } };
+function schlafStil() {
+  if (document.getElementById("schlafStil")) return;
+  const s = document.createElement("style"); s.id = "schlafStil";
+  // Die Wander-Bewegung läuft auch im Sparmodus / in der Strom-Ruhe (eigene, stärkere Regel) – nur „Bewegung reduzieren“ am Gerät stellt sie ab
+  s.textContent = `#schlafSchicht { position: fixed; inset: 0; z-index: 2147483000; background: #06080b; color: #ddd6cc; display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+  #schlafSchicht .sl-wander { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; padding: 16px; max-width: min(76vw, 440px); opacity: .85; transform: translate(var(--sl-x, 0), var(--sl-y, 0)); animation: slWandern 240s ease-in-out infinite alternate !important; animation-play-state: running !important; }
+  #schlafSchicht .sl-logo { width: 84px; height: 84px; border-radius: 22px; opacity: .75; }
+  #schlafSchicht .sl-text { font: 700 clamp(1.5rem, 6vw, 2.6rem)/1.2 system-ui, sans-serif; }
+  #schlafSchicht .sl-tipp { font-size: clamp(1rem, 3.6vw, 1.25rem); opacity: .7; }
+  #schlafSchicht .sl-uhr { font-size: .95rem; opacity: .5; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  #schlafSchicht .sl-neu { font-size: 1rem; color: #f0c660; }
+  @keyframes slWandern { 0% { transform: translate(0, 0); } 20% { transform: translate(-11vw, -20vh); } 40% { transform: translate(10vw, -9vh); } 60% { transform: translate(-8vw, 18vh); } 80% { transform: translate(11vw, 13vh); } 100% { transform: translate(0, -5vh); } }
+  @media (prefers-reduced-motion: reduce) { #schlafSchicht .sl-wander { animation: none !important; } }
+  :root.kc-schlaf body { overflow: hidden; }`;
+  document.head.appendChild(s);
+}
+function schlafSchichtZeigen() {
+  schlafStil(); document.getElementById("schlafSchicht")?.remove();
+  const d = document.createElement("div"); d.id = "schlafSchicht"; d.setAttribute("role", "button"); d.tabIndex = 0; d.setAttribute("aria-label", "Die App schläft – antippen zum Aufwecken");
+  d.innerHTML = `<div class="sl-wander"><img class="sl-logo" src="icon-192.png" alt=""><div class="sl-text">💤 Die App schläft</div><div class="sl-tipp">Hier tippen zum Aufwecken</div><div class="sl-uhr"></div><div class="sl-neu" hidden>🔔 Neues eingegangen</div></div>`;
+  d.addEventListener("pointerdown", (e) => { e.preventDefault(); e.stopPropagation(); }); // erst beim „click“ aufwachen – sonst landet der Tipp auf dem, was darunter liegt
+  d.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); schlafAufwachen("tipp"); });
+  document.body.appendChild(d); document.documentElement.classList.add("kc-schlaf");
+  schlafUhr();
+}
+function schlafUhr() { // jede volle Minute: Uhrzeit, „Neues eingegangen“, bei „Bewegung reduzieren“ alle 3 Min. neuer Platz – nur lokal, keine Abfrage
+  clearTimeout(SCHLAF.uhr); if (!SCHLAF.an) return;
+  const s = document.getElementById("schlafSchicht"); if (!s) return;
+  const j = new Date();
+  s.querySelector(".sl-uhr").textContent = `${String(j.getHours()).padStart(2, "0")}:${String(j.getMinutes()).padStart(2, "0")} Uhr`;
+  s.querySelector(".sl-neu").hidden = !SCHLAF.neu;
+  if (schlafWenigBewegung() && j.getMinutes() % 3 === 0) { const w = s.querySelector(".sl-wander"); w.style.setProperty("--sl-x", `${Math.round(Math.random() * 20 - 10)}vw`); w.style.setProperty("--sl-y", `${Math.round(Math.random() * 36 - 18)}vh`); }
+  try { if (RUF) return void schlafAufwachen("anruf"); } catch {}
+  SCHLAF.uhr = setTimeout(schlafUhr, 60000 - j.getSeconds() * 1000 - j.getMilliseconds() + 50);
+}
+if (typeof document !== "undefined" && typeof addEventListener === "function") {
+  const bedient = () => { if (!SCHLAF.an) SCHLAF.bedient = Date.now(); };
+  ["pointerdown", "wheel", "touchstart"].forEach((t) => addEventListener(t, bedient, { passive: true, capture: true }));
+  addEventListener("mousemove", () => { const j = Date.now(); if (!SCHLAF.an && j - SCHLAF.maus > 5000) { SCHLAF.maus = j; SCHLAF.bedient = j; } }, { passive: true, capture: true }); // gedrosselt
+  addEventListener("keydown", (e) => { if (!SCHLAF.an) return void (SCHLAF.bedient = Date.now()); e.preventDefault(); e.stopPropagation(); schlafAufwachen("taste"); }, { capture: true });
+  // vor allen anderen visibilitychange-Wegen eingetragen: erst aufwachen, dann laden die vorhandenen Rückkehr-Wege (ruht() ist dann schon false)
+  document.addEventListener("visibilitychange", () => { if (document.hidden) return; if (SCHLAF.an) schlafAufwachen("sicht"); else SCHLAF.bedient = Date.now(); });
+  setInterval(schlafPruefen, SCHLAF_PRUEF_MS);
+  // Push bei schlafender App: die Mitteilung zeigt der Service-Worker ohnehin; hier nur „🔔 Neues eingegangen“ – ein Anruf/Anklopfen oder das Antippen der Mitteilung weckt
+  try { navigator.serviceWorker?.addEventListener("message", (e) => { if (!SCHLAF.an) return; const m = e.data || {};
+    if (m.typ === "oeffnen") return void schlafAufwachen("push");
+    if (m.typ !== "push") return;
+    if (/ruft (per Video )?an$|holt dich in eine Konferenz|^👋/.test(String(m.titel || ""))) return void schlafAufwachen("anruf");
+    SCHLAF.neu = true; const n = document.querySelector("#schlafSchicht .sl-neu"); if (n) n.hidden = false; }); } catch {}
+}
 // 2.837.0 KC-CLUB-START-SCHNELLER (Gesamtprüfung #44 F): Datumsformat einmal bauen statt bei jedem Aufruf (neu bauen kostet je Aufruf spürbar Zeit –
 // heuteIso() lief beim Start hunderte Male). Gleiches Ergebnis, nur schneller.
 const TAG_ISO_FMT = new Intl.DateTimeFormat("sv-SE", { timeZone: TZ }), UHR_FMT_23 = new Intl.DateTimeFormat("en-GB", { timeZone: TZ, hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
@@ -1331,7 +1448,7 @@ let PW_AUFBAU = -1;
 const PW_GEMELDET = new Set((() => { try { return JSON.parse(localStorage.getItem("kc_club_pw_gemeldet") || "[]"); } catch { return []; } })());
 let PW_ZULETZT = 0; // 2.360.0 KC-CLUB-AKKU-5
 async function pwLive(takt) {
-  if (document.hidden || !ICH) return;
+  if (ruht() || !ICH) return; // KC-CLUB-SCHLAFMODUS
   // 2.360.0 KC-CLUB-AKKU-5: steht die direkte Leitung, meldet sie neue Zettel sofort – der Takt fragt dann nur alle 3 Min. nach (vorher alle 45 s)
   if (takt === true && RT.ok && PW_AUFBAU === RT.aufbauten && Date.now() - PW_ZULETZT < PW_RT_MS) return;
   PW_ZULETZT = Date.now(); PW_AUFBAU = RT.aufbauten;
@@ -2775,6 +2892,7 @@ const HILFE = [
   { id: "kopf_besucher", thema: "darstellung", sym: "🐿️", t: "Wer kommt im Kopf zu Besuch?", x: "Das Jahreszeiten-Bild im Kopf lebt: Im <b>Herbst</b> pustet ein Mann mit Laubbläser das Laub weg, ein <b>Eichhörnchen</b> holt sich Nüsse – und legt manchmal deinen <b>Vornamen aus Nüssen</b> – bis der <b>Laubbläser</b> kommt und ihn mit dem Laub aufwirbelt. Im <b>Winter</b> fahren eine Schneeraupe, Skifahrer, Kinder auf dem Schlitten und ein Hundeschlitten vorbei, ein Eskimo baut ein Iglu, und vom Eiszapfen fällt Eis – daraus wird dein <b>Name aus Glitzer-Eis</b>; schiebt die <b>Schneeraupe</b> darüber, zerspringt er in Stücke. Danach entsteht der Name von vorn. Kurz vor Sonnenuntergang rollt der <b>Hund</b> einen Kürbis herein, der abends mit flackernder Kerze leuchtet. Zu Festen und Lieblingsorten (Sim-Jü, Oktoberfest, Karneval, Halloween, Ostern, Karibik, Unterwasserwelt, Weltraum, Bauernhof, Kegelabend) gibt es eigene Bilder über ein <b>🎭 Thema</b>. Alles nur auf deinem Gerät. Ansehen: ⚙️ → „✨ Effekte“ → Vorschau.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.329.0" },
   { id: "deko_leiste", thema: "darstellung", sym: "🎏", t: "Wimpel, Lichterkette oder Laternen", x: "An der Leiste mit den Lämpchen oben kann eine <b>Deko</b> hängen: 🎏 Wimpel, 💡 Lichterkette oder 🏮 Laternen. <b>🔄 Automatisch</b> passt sie zur Jahreszeit (Herbst Laternen, Advent warmweiße Lichter, Oktoberfest blau-weiße Wimpel …). Wählen oder ausschalten: ⚙️ → „✨ Effekte“ → <b>„🎏 Deko an der Leiste“</b>. Sie ist ein stilles Bild und kostet keinen Akku.", zeig: () => einstiegHin("effekte", "jzDekoWahl"), seit: "2.335.0" },
   { id: "sparmodus", thema: "technik", sym: "🐢", t: "Effekte laufen nicht? Der Sparmodus", x: "Bei schwachem Netz, „Datensparen“ oder zwei langsamen Starts schaltet sich der <b>🐢 Sparmodus</b> von selbst ein: dann ruhen Effekte und das Jahreszeiten-Bild. Tippst du eine Vorschau an, sagt die App den Grund und bietet <b>„🐢 Sparmodus aus“</b> an. Einstellen: ⚙️ → „🎨 Darstellung“ → <b>„🐢 Sparmodus“</b>: Automatisch, Immer an oder Aus.", zeig: () => suEinstellung("sparWahl"), seit: "2.330.0" },
+  { id: "schlafmodus", thema: "technik", sym: "💤", t: "Der Schlafmodus: offene App schläft ein", x: "Vergessen, die App zuzumachen? Bleibt sie offen (PC, der einfach anbleibt, Tablet mit „Bildschirm an“) und niemand tippt <b>15 Minuten</b>, schläft sie ein: dunkler Bildschirm mit Club-Logo und Uhr, die App fragt nichts mehr ab – das spart Daten, Akku und die Club-Datenbank. Push-Mitteilungen kommen weiter an; kam etwas, steht dort <b>„🔔 Neues eingegangen“</b>. <b>Antippen</b> weckt sie, du bist wieder genau dort, wo du warst. Nicht während eines Anrufs, Videos, Live-Zeigens oder wenn sich im offenen Chat gerade etwas tut. Einstellen: ⚙️ → „🎨 Darstellung“ → <b>„💤 Schlafmodus“</b>: An – immer, nur zu bestimmten Zeiten (z. B. 22–7 Uhr) oder Aus; dort auch <b>„💤 Jetzt schlafen legen“</b>.", zeig: () => einstiegHin("darstellung", "schlafWahl") },
   { id: "akku", thema: "technik", sym: "🔋", t: "Akku sparen mit der Club-App", x: "Die App spart von selbst: Das Bild im Kopf malt höchstens 30 Bilder pro Sekunde, nach 45 Sekunden ohne Tippen nur noch 12 – und bei weniger als 30 % Akku immer sparsam. Im Hintergrund und auf anderen Seiten ruht es ganz. Noch sparsamer: ⚙️ → „🎨 Darstellung“ → <b>🐢 Sparmodus „An“</b> oder ⚙️ → „✨ Effekte“ → <b>„🍂 Jahreszeiten im Kopf“</b> aus. Läuft ein Erklär-Video in <b>Pause</b>, darf der Bildschirm nach 30 Sekunden wieder ausgehen; nach 10 Minuten Pause endet das Video von selbst. Eine <b>Jahreszeit-Vorschau</b> aus den Einstellungen läuft nur 2 Minuten mit voller Bildrate und endet nach 15 Minuten von selbst. Nach <b>3 Minuten ohne Tippen</b> stehen alle Bewegungen still – Kopfbild, Lichterkette, Rahmen und blinkende Knöpfe; beim ersten Tipp geht es weiter. Solange du zuschaust (Erklär-Video, Bühne, Video), läuft alles weiter.", zeig: () => suEinstellung("sparWahl"), seit: "2.855.0" },
   { id: "anpassen", thema: "darstellung", sym: "🎨", t: "Meine App nach meinem Geschmack – alle Möglichkeiten", x: "So viel kannst du einstellen: <b>🎭 Thema</b> (Farben, Kopf-Bild, Sende-Effekt und Schrift mit einem Tipp – oder „Nach Kalender“), <b>🎨 Farbdesign</b>, <b>🌗 Tag und Nacht</b>, <b>🔠 große Schrift</b> (alles unter ⚙️ → „🎨 Darstellung“); <b>🍂 Jahreszeiten-Bild</b>, <b>🎏 Deko an der Leiste</b>, <b>🪟 Kachel- und Sende-Effekt</b>, <b>✨ ruhige oder lebendige Knöpfe</b> (⚙️ → „✨ Effekte“); <b>📄 Eselsohr</b>, Kacheln und Ansicht (⚙️ → „🧩 Startseite &amp; Ansicht“). Alles zeigt dir das Erklär-Video <b>„🎨 Meine App nach meinem Geschmack“</b>.", zeig: () => rgListeAbspielen(["anpassen"]), seit: "2.344.0" },
   { id: "bw_einladung", thema: "start", sym: "🎭", t: "Twinkey lädt zur Bewegung ein", x: "Beim Öffnen der App fragt Twinkey höchstens einmal am Tag: <i>„Heute Lust auf eine Bewegungseinheit mit mir?“</i> <b>„💪 Ja“</b> führt direkt zur Bühne, <b>„⏰ Später“</b> fragt in etwa 2 Stunden wieder, <b>„🙂 Heute nicht“</b> erst morgen, <b>„🔕 Nicht mehr fragen“</b> schaltet es ab. Wieder einschalten: ⚙️ → „🧩 Startseite &amp; Ansicht“ → „🎭 Twinkey lädt zur Bewegung ein“.", zeig: () => einstiegHin("startseite", "setBwEinladung"), seit: "2.314.0" },
@@ -2995,6 +3113,7 @@ const SB_EINST = [
   { k: "ferien", re: /ferien|schulferien|bundesl/, klappe: "startseite", id: "setFerien", t: "Schulferien" }, // 2.484.0 KC-CLUB-FERIEN
   { k: "ansicht", re: /mitglieder ?ansicht|ansicht der mitglieder/, klappe: "startseite", id: "mgAnsichtWahl", t: "Mitglieder-Ansicht" },
   { k: "ruhezeit", re: /ruhe ?zeit|nachtruhe|nicht stören/, klappe: "benachrichtigung", id: "ruheVon", t: "Ruhezeit" },
+  { k: "schlafmodus", re: /schlaf ?modus|bildschirmschoner|einschlafen|schlafen legen/, klappe: "darstellung", id: "schlafWahl", t: "Schlafmodus" }, // KC-CLUB-SCHLAFMODUS
   { k: "vorlesen", re: /vorlesen|vorlese/, klappe: "ansagen", id: "setVorlesenZeile", t: "Vorlesen" },
   { k: "tipps", re: /tipps?\b|tagestipp/, klappe: "ansagen", id: "setTipps", t: "Tipps" },
   { k: "spiele", re: /spiel/, klappe: "privat", id: "setSpiele", t: "Spiele" },
@@ -4698,7 +4817,7 @@ function ansFolgen(wer, km) {
   if (st.stufe < 0) return (ANS.st = null);
   st.timer = setInterval(async () => {
     if (!ansAn("standort") || Date.now() - start > 3 * 3600000) { clearInterval(st.timer); return; }
-    if (document.hidden) return;
+    if (ruht()) return;
     const e = await ansEntfernung(wer); if (!e) return; if (e.weg) { clearInterval(st.timer); return; }
     const neu = ANS_STUFEN.findIndex((s) => e.km >= s), stufe = neu < 0 ? ANS_STUFEN.length : neu;
     if (stufe <= st.stufe) return;
@@ -4824,7 +4943,7 @@ function zweiBrowserMelden(a) {
     if (b.dataset.w === "anderes") melde("👍 Alles klar – dafür frage ich nicht mehr."); }));
 }
 async function onlinePing(opt) {
-  if (!KEY || !ICH || document.hidden) return;
+  if (!KEY || !ICH || ruht()) return; // KC-CLUB-SCHLAFMODUS
   // 18.11.2026 KC-CLUB-LEITUNG-SPARSAM: beim 10-Min.-Sicherheitsabgleich auslassen, wenn laut Anwesenheit außer diesem Gerät niemand da ist
   // und die Liste ohnehin leer ist (nicht bei Start, Rückkehr, Signal) – der leere Stand gilt dann als bestätigt.
   if (opt?.sicher === true && anwNurIch() && !ONL.liste.length && !ONL.wartet) { ONL.stand = ONL.echt = Date.now(); return; }
@@ -4975,7 +5094,7 @@ function rtLedZeigen() {
   const [farbe, text] = rtZustand();
   led.className = "led led-rt " + farbe; led.title = text; led.setAttribute("aria-label", text);
 }
-setInterval(() => { if (!document.hidden) { rtLedZeigen(); rtMessTakt(); } }, 3000); // 2.360.0: im Hintergrund nichts malen
+setInterval(() => { if (!ruht()) { rtLedZeigen(); rtMessTakt(); } }, 3000); // 2.360.0: im Hintergrund nichts malen
 // ---------- 2.863.0 KC-CLUB-LEITUNG-MESSUNG (Wunsch Hansi 05.11.2026 „prüfe, ob alles besser läuft mit der direkten Leitung – Informationen sollen schneller kommen“) ----------
 // Jedes Gerät misst nur Zahlen, nie Inhalte, nur solange die App sichtbar ist: Anteil der Zeit, in der die Leitung stand; Antwortzeit der Leitung
 // (Herzschlag hin und zurück – beide Zeiten vom Gerät, kein Uhrenproblem); Dauer des Aufbaus; Abbrüche einer stehenden Leitung; empfangene Signale.
@@ -5139,7 +5258,7 @@ function rtSignal(s) {
   if (s.art === "eingang") { eingangNeu(); return; } // KC-CLUB-EINGANG-SOFORT (2.741.0): Unterlagen im Eingangskorb – sofort fragen
   if (s.art === "pinnwand") { clearTimeout(RT.pw); RT.pw = setTimeout(() => { pwLive(); if (aktuelleAnsicht === "pinnwand") pwLaden(); }, 800); return; }
   if (s.art === "termin" || s.art === "abstimmung") {
-    clearTimeout(RT.zaehlen); RT.zaehlen = setTimeout(() => { if (!document.hidden) neuLaden(); }, 1500); // Zusagen/offene Abstimmungen auf der Startseite
+    clearTimeout(RT.zaehlen); RT.zaehlen = setTimeout(() => { if (!ruht()) neuLaden(); }, 1500); // Zusagen/offene Abstimmungen auf der Startseite
     if (s.art === "abstimmung" && aktuelleAnsicht === "vorschlaege") { clearTimeout(RT.vs); RT.vs = setTimeout(vorschlaegeLaden, 800); }
     return;
   }
@@ -5159,7 +5278,7 @@ function rtSignal(s) {
   // 2.594.0 KC-CLUB-CHAT-RUHE (Fund Hansi 22.10.: „Steven und ich schreiben schnell – das verträgt die App nicht“; Server-Messung: Aufrufe bis 24 s):
   // jede neue Nachricht lud bei JEDEM, der den Chat offen hat, zusätzlich nach 1,5 s die ganze Startseite (init, 37–72 Abfragen). Ist die
   // Nachricht aus dem gerade offenen Chat, ist das unnötig – der Chat lädt ohnehin; die Startseite wird beim nächsten Takt nach dem Chat frisch.
-  if (s.art === "chat" && !(s.thread && s.thread === chatId && aktuelleAnsicht === "chat")) { clearTimeout(RT.zaehlen); RT.zaehlen = setTimeout(() => { if (!document.hidden) neuLaden(); }, 1500); } // Zähler/Kachel frisch (mehrere Signale = einmal)
+  if (s.art === "chat" && !(s.thread && s.thread === chatId && aktuelleAnsicht === "chat")) { clearTimeout(RT.zaehlen); RT.zaehlen = setTimeout(() => { if (!ruht()) neuLaden(); }, 1500); } // Zähler/Kachel frisch (mehrere Signale = einmal)
   else if (s.art === "chat") NEU_NACH_CHAT = true;
 }
 document.addEventListener("visibilitychange", () => { if (!document.hidden && INIT?.rtKanal && !RT.ok) { RT.warte = 1000; rtVerbinden(); } });
@@ -5836,7 +5955,7 @@ let CHAT_AKTIV = 0;
 let HAKEN_SEIT = 0; // 2.367.0 KC-CLUB-HAKEN-SCHNELL
 function chatTakt() {
   ONL.takt++;
-  if (chatTakt.laeuft || document.hidden) return;
+  if (chatTakt.laeuft || ruht()) return; // KC-CLUB-SCHLAFMODUS
   const jemandDa = (CHAT?.teilnehmer || []).some((t) => t.person_id !== ICH?.person_id && ONL.ids.has(t.person_id));
   const frisch = Date.now() - CHAT_AKTIV < 90000, ruhig = rtAn() ? 30 : PUSH_AKTIV ? 10 : 6; // KC-CLUB-REALTIME: neue Nachrichten melden sich selbst – nur noch alle 60 s zur Sicherheit
   // 2.367.0 KC-CLUB-HAKEN-SCHNELL (Fund Hansi: Express an Steven war nach 20 s auf dessen Handy, die zwei grauen Haken kamen bei Hansi erst viel später):
@@ -6738,6 +6857,7 @@ async function anrufPruefen() {
 // Es ruft jemand an (aus dem Online-Takt oder aus dem Push-Link)
 async function anrufEingehend(id) {
   if (RUF) return;
+  schlafAufwachen("anruf"); // KC-CLUB-SCHLAFMODUS: das Anruf-Fenster liegt nie unter dem Bildschirmschoner
   try {
     const r = await api("anruf_status", { id });
     if (r.ichRufe || r.status !== "klingelt") { if (r.status === "verpasst") melde(`Verpasster Anruf von ${r.gegenueber.vorname}.`); return; }
@@ -6955,7 +7075,7 @@ async function herzSenden() {
 }
 function herzStarten() {
   if (HB) return;
-  HB = setInterval(() => { if (document.visibilityState !== "hidden") herzSenden(); }, HERZ.takt * 1000);
+  HB = setInterval(() => { if (!ruht()) herzSenden(); }, HERZ.takt * 1000); // KC-CLUB-SCHLAFMODUS
   setTimeout(herzSenden, 5000);
   document.addEventListener("visibilitychange", () => { if (!document.hidden) herzSenden(); });
 }
@@ -8301,7 +8421,7 @@ const vtListe = () => (Array.isArray(INIT?.vertretung) ? INIT.vertretung : []);
 const dbNochmalDarf = (e, action, n) => !!e?.dbWeg && (API_LESEN.test(action) || DB_NOCHMAL_LESEN.test(action)) && n < DB_NOCHMAL_MAX && !document.hidden;
 const DB_NOCHMAL_MAX = 2, DB_NOCHMAL_LESEN = /^(ungelesen_uebersicht|admin_verlauf|db_last|db_belegung|dp_einzelplan|dp_druck|mein_dienst|gemerkte_nachrichten|nachricht_details|spur_uebersicht)$/; // KC-CLUB-DB-AUSSETZER: zusätzlich zu API_LESEN – nur Lesen
 async function api(action, daten = {}, opt = {}) {
-  const sichtbar = ladeSichtbar(action, opt); // KC-CLUB-LADE-SICHERHEIT: vor wartenStart prüfen (Tipp-Zeitpunkt)
+  const sichtbar = ladeSichtbar(action, opt); /* KC-CLUB-LADE-SICHERHEIT: vor wartenStart prüfen (Tipp-Zeitpunkt) */ if (SCHLAF.an) throw Object.assign(new Error("💤 Die App schläft – zum Aufwecken antippen."), { schlaf: true, still: true }); // KC-CLUB-SCHLAFMODUS: schlafende App fragt nichts – Sicherheitsnetz hinter den Takten (die prüfen ruht() schon selbst); Aufwachen lädt danach frisch
   const warte = wartenStart(action, opt.warten, opt.still);
   try { for (let dbNochmal = 0; ; ) {
   // 2.422.0 KC-CLUB-ZUGANG: für Gäste/Aushilfen nicht freigegebene Aktionen gar nicht erst schicken (der Server lehnt sie ohnehin ab)
@@ -8531,7 +8651,7 @@ function notAus(meldung) {
   notNachtragVersuche = 0; setTimeout(notNachtragen, 1500); // KC-CLUB-NOTBETRIEB-STUFE2: Gespeichertes sofort übertragen lassen
 }
 async function notZurueckPruefen() {
-  if (!NOT.an) return;
+  if (!NOT.an || SCHLAF.an) return; // KC-CLUB-SCHLAFMODUS: schlafend nicht nachsehen (beim Aufwachen lädt die App ohnehin)
   if (NOT.grund === "probe") return; // Probe endet nur von Hand
   if (NOT.grund === "hand") { const k = await notKonfig(true); if (k?.modus === "an") return; }
   // KC-CLUB-NOT-ZURUECK-SCHNELL (2.234.0, nach dem Ausfall 11.10.): erste gute Antwort → nach 5 Sek. gleich bestätigen statt 1 Min. warten
@@ -11934,6 +12054,7 @@ function wkTimerPiep(st, jetzt) {
   if (k >= 1 && bis <= 1500 && WKK.mi !== schl && (t.dauer || 0) - k * 60000 > 3000) { WKK.mi = schl; wkPiep(bis, 740, 0.18); }
 }
 function wkKlingeln(art) {
+  schlafAufwachen("wecker"); // KC-CLUB-SCHLAFMODUS: Wecker/Timer läuft lokal weiter und weckt die App
   const st = wkStand(), timer = art === "timer", e = timer ? st.timer : st.wecker; if (!e) return;
   const spaet = Date.now() - (timer ? e.ende : e.um) > WK_SPAET_MS;
   wkServerWeg(e.sid); // App klingelt selbst → kein Push mehr hinterher
@@ -13631,7 +13752,7 @@ function kkDiagnose(h, n, gespielt, mitTon, uhr = "kuckuck") { // einmal je Sitz
   try { api("diagnose", { art: "kuckuck", daten: { stunde: h, rufe: n, gespielt, ton: !!mitTon, zustand: audio?.state || "kein", aufnahme: !!KK_AUFNAHME.puffer, uhr } }).catch(() => {}); } catch {}
 }
 function kuckuckPruefen() {
-  if (!ICH?.person_id || document.hidden || !einst("kuckuck", true)) return;
+  if (!ICH?.person_id || ruht() || !einst("kuckuck", true)) return;
   const { h, m } = kkJetzt(); if (m >= KK_FENSTER_MIN) return;
   const stunde = `${heuteIso()} ${h}`; // nur die zuletzt gezeigte Stunde merken (kein Sammeln von Schlüsseln)
   try { if (localStorage.getItem("kc_club_kuckuck_zuletzt") === stunde) return; localStorage.setItem("kc_club_kuckuck_zuletzt", stunde); } catch { return; }
@@ -14108,7 +14229,7 @@ async function adLaden(erzwingen) {
 }
 // 2.360.0 KC-CLUB-AKKU-5: Admin-Startseite holt ihre Zahlen (3 Abfragen) nur noch alle 3 Min. statt jede Minute – und nach 5 Min. ohne Bedienung gar nicht
 let AD_ZULETZT = 0;
-setInterval(() => { if (reg === "admin" && aktuelleAnsicht === "start" && !document.hidden && Date.now() - AD_ZULETZT >= 175000 && Date.now() - jzbBedient < 300000) { AD_ZULETZT = Date.now(); adLaden(); } }, 60000);
+setInterval(() => { if (reg === "admin" && aktuelleAnsicht === "start" && !ruht() && Date.now() - AD_ZULETZT >= 175000 && Date.now() - jzbBedient < 300000) { AD_ZULETZT = Date.now(); adLaden(); } }, 60000);
 const adStd = (iso) => (iso ? (Date.now() - new Date(iso)) / 3600000 : Infinity);
 const adGr = (b) => (b == null ? "unbekannt" : b < 1048576 ? Math.max(1, Math.round(b / 1024)) + " KB" : mb(b));
 const adPct = (b, g) => (b == null || !g ? null : (b / g) * 100);
@@ -14381,17 +14502,33 @@ function lsAktiv() { // Berührung, Tippen, Scrollen = „jemand ist da“
   LS.letzte = Date.now();
   if (Date.now() - LS.gemerkt > 30000) { LS.gemerkt = Date.now(); try { localStorage.setItem("kc_club_ls_letzt", String(LS.letzte)); } catch {} }
 }
-["pointerdown", "keydown", "touchstart", "wheel"].forEach((ev) => document.addEventListener(ev, () => { if (!LS.offen) lsAktiv(); }, { passive: true, capture: true }));
+["pointerdown", "keydown", "touchstart", "wheel"].forEach((ev) => document.addEventListener(ev, () => { if (!LS.offen && !SCHLAF.an) lsAktiv(); }, { passive: true, capture: true })); // KC-CLUB-SCHLAFMODUS: der Weck-Tipp zählt nicht als „war da“ – lsNachSchlaf entscheidet
+// KC-CLUB-SCHLAFMODUS + Liegen-Schutz zusammengelegt (Wunsch Hansi 20.11. „Ja zusammenlegen“): solange die App schläft, verdeckt der Bildschirmschoner alles –
+// der Liegen-Schutz öffnet dann keine eigene Schicht (lsPruefen). Beim Aufwachen gilt dieselbe Regel wie sonst (15 Min. bzw. 10 Min. in heiklen Ansichten):
+// ohne PIN hebt der eine Weck-Tipp den Sichtschutz mit auf (kein zweites „👆 Weiter“), mit PIN kommt direkt die PIN-Abfrage (PIN bleibt Pflicht).
+// Weckt ein Anruf oder der Wecker, liegt die PIN-Abfrage nicht über dem Anruf: LS.letzte bleibt alt, der Liegen-Takt sperrt danach wie gewohnt.
+function lsNachSchlaf(grund) {
+  if (!KEY) return;
+  const pin = lsLiegenPin(), min = (Date.now() - LS.letzte) / 60000;
+  const sperren = LS.offen || min >= LS.MIN_SICHT || (!!pin && min >= LS.MIN_PIN && lsHeikel());
+  if (!sperren) return lsAktiv();
+  // (nicht lsNichtSperren(): dessen „video:not([paused])“ trifft jedes <video> im Seitenbaum – im Schlaf schaut ohnehin niemand zu, s. schlafAusnahme)
+  if (pin) { if (grund !== "anruf" && grund !== "wecker" && !RUF && !document.querySelector("#anrufSchirm:not(.versteckt), #lsSperre .ls-punkte")) lsSperren(true); return; }
+  lsEntsperren(); // ohne PIN: der Weck-Tipp war das „Weiter“
+}
 function lsHeikel() { // Ansichten mit fremden Daten
   return ["buero", "mitglieder", "sicherheit"].includes(aktuelleAnsicht) || (aktuelleAnsicht === "start" && typeof reg !== "undefined" && reg === "admin")
     || !!document.querySelector("#mgBlatt:not(.versteckt), #mitgliedBlatt, #wchBlatt, #adBlatt");
 }
 function lsNichtSperren() { // Anruf, Video, Rundgang, Diashow/Bühne: dann liegt niemand „herum“
-  return !!(typeof RG !== "undefined" && RG.an) || !!document.querySelector("#anrufSchirm:not(.versteckt), video:not([paused])")
+  // 20.11.2026 KC-CLUB-LS-VIDEO (Fund beim Schlafmodus): „video:not([paused])“ traf JEDES <video> im Seitenbaum (das Attribut „paused“ gibt es nicht) –
+  // dann sperrte der Sichtschutz nie. Jetzt nur, wenn ein Video wirklich läuft.
+  return !!(typeof RG !== "undefined" && RG.an) || !!document.querySelector("#anrufSchirm:not(.versteckt)")
+    || [...document.querySelectorAll("video")].some((v) => !v.paused && !v.ended)
     || document.fullscreenElement || document.documentElement.classList.contains("kopf-um");
 }
 function lsPruefen(beimZurueckkommen) {
-  if (LS.offen || !KEY || lsNichtSperren()) return;
+  if (LS.offen || !KEY || lsNichtSperren() || SCHLAF.an) return; // KC-CLUB-SCHLAFMODUS: im Schlaf verdeckt der Bildschirmschoner – keine zweite Schicht
   const pin = lsLiegenPin(), min = (Date.now() - (beimZurueckkommen ? Math.max(LS.letzte, Number(localStorage.getItem("kc_club_ls_letzt") || 0) || LS.letzte) : LS.letzte)) / 60000;
   if (pin && min >= LS.MIN_PIN && lsHeikel()) return lsSperren(true);
   if (min >= LS.MIN_SICHT) lsSperren(!!pin);
@@ -14506,7 +14643,7 @@ function pulsStarten() {
 }
 async function pulsHolen() {
   clearTimeout(PULS.timer); if (!pulsAn()) return;
-  if (!document.hidden && aktuelleAnsicht === "start") {
+  if (!ruht() && aktuelleAnsicht === "start") {
     try { const r = await api("betrieb_puls", {}, { still: true });
       if (PULS.alt && r.t > PULS.alt.t) { const sek = (r.t - PULS.alt.t) / 1000;
         PULS.wert = { lesen: Math.max(0, r.lesen - PULS.alt.lesen) / sek, schreiben: Math.max(0, r.schreiben - PULS.alt.schreiben) / sek, online: r.online, t: r.t };
@@ -15588,7 +15725,7 @@ async function vfFhDaten(d) { // KC-CLUB-FERNHILFE F1: Bild und Zeiger kommen di
 }
 async function vfHolen(sofort) {
   if (VF.rolle !== "schaut") return;
-  if (document.hidden && sofort !== true) return; // 2.314.1 KC-CLUB-VORFUEHREN-HINTERGRUND: Fenster im Hintergrund (z. B. zweiter Browser) fragt nicht mit – Fund 10.10.: zwei Browser je 0,8 s
+  if (ruht() && sofort !== true) return; // 2.314.1 KC-CLUB-VORFUEHREN-HINTERGRUND: Fenster im Hintergrund (z. B. zweiter Browser) fragt nicht mit – Fund 10.10.: zwei Browser je 0,8 s
   if (VF.fhL?.ok && VF.fhBild && sofort !== true && Date.now() - (VF.fhPruef || 0) < FH_PRUEF_MS) return; // KC-CLUB-FERNHILFE F1: nur noch der Stand alle 15 s
   if (VF.fhL?.ok && VF.fhBild) VF.fhPruef = Date.now();
   if (VF.fhL?.ok && !VF.fhBild && Date.now() - (VF.fhHalloAm || 0) > 3000) { VF.fhHalloAm = Date.now(); VF.fhL.senden({ hallo: 1, f2: 1 }); } // bis das erste Bild direkt kommt
@@ -18208,7 +18345,7 @@ let NEU_NACH_CHAT = false; // 2.594.0 KC-CLUB-CHAT-RUHE: im offenen Chat kam Neu
 // Leitung (2.594.0): ist ein Chat offen, lädt nur der Chat (gebündelt) und die Startseite nach dem Chat; sonst mehrere Pushes = einmal Laden nach 1,5 s.
 function pushNeuLaden() {
   if (chatId && aktuelleAnsicht === "chat") { NEU_NACH_CHAT = true; return; }
-  clearTimeout(RT.zaehlen); RT.zaehlen = setTimeout(() => { if (!document.hidden) neuLaden(); }, 1500);
+  clearTimeout(RT.zaehlen); RT.zaehlen = setTimeout(() => { if (!ruht()) neuLaden(); }, 1500); // KC-CLUB-SCHLAFMODUS
 }
 function neuLaden(vonHand) {
   NEU_ZULETZT = Date.now(); NEU_NACH_CHAT = false;
@@ -18310,7 +18447,7 @@ function offlineStandZeigen(an) {
   el.innerHTML = INIT._vorab ? `🔄 <b>Stand von ${esc(fKurz.format(d))} ${esc(fZeit.format(d))} Uhr</b> – wird gerade aktualisiert …`
     : `📴 <b>Kein Netz – das ist dein Stand von ${esc(fKurz.format(d))} ${esc(fZeit.format(d))} Uhr.</b> Neues kommt, sobald du wieder Internet hast.`;
 }
-window.addEventListener("online", () => { if (KEY) neuLaden(); owSenden(); }); // 2.1.1: INIT nicht leeren – das Neuladen ersetzt den Offline-Stand
+window.addEventListener("online", () => { if (KEY && !ruht()) neuLaden(); owSenden(); }); // KC-CLUB-SCHLAFMODUS: schlafend/im Hintergrund nicht – Aufwachen bzw. Rückkehr lädt // 2.1.1: INIT nicht leeren – das Neuladen ersetzt den Offline-Stand
 // 2.209.0 KC-CLUB-ONLINE-OFFLINE (Gesamtprüfung 5, AGENTS Regel 11): ohne Netz wissen wir nicht, wer online ist – Anzeige
 // „X sind gerade online“, grüne Zahl und Ameisenlauf verschwinden sofort statt grün stehen zu bleiben; mit Netz kommt der Stand neu
 window.addEventListener("offline", () => { try { ONL.liste = []; ONL.ids = new Set(); ONL.stand = ONL.echt = 0; onlineLeisteZeigen(); if (INIT) heroZeigen(); } catch {} });
@@ -18643,7 +18780,7 @@ function zeige(v, ausHistorie) {
 // stehende werden versteckt, alle zur Laufzeit gebauten entfernt (Rückfragen über ihr „Abbrechen“). Gilt für Handy-Zurück und Escape.
 document.querySelectorAll(".blatt").forEach((b) => { b.dataset.fest = "1"; });
 // 2.24.6 (Fehlerprotokoll Hansi: avSetzen → fensterZu(null), wenn „Mein Bild“ schon zu war): ein nicht (mehr) offenes Fenster ist schon zu
-function einstFuellen() { leitungStartZeigen(); setTimeout(abhKlappen, 900); /* 2.469.0 KC-CLUB-EINST-ABHAENGIG (Häkchen kommen teils erst vom Server) */ notProbeZeigen(); infoStartZeigen(); cdEinstellungenZeigen(); try { schalterZeilen($("v-einstellungen")); } catch {} tippSchalterZeigen(); einwSchalterZeigen(); stimmeWahlZeigen(); ansageSchalterZeigen(); ansStandZeigen(); ruheZeigen(); if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); anrufAntwortenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); fristZeigen(); /* 2.883.0 KC-CLUB-FRIST-ERINNERUNG */ neuWahlZeigen(); meinWetterortZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); anklopfenZeigen(); zuletztSchalterZeigen(); inkognitoZeigen(); elternMeineZeigen(); spEinstZeigen(); schnellWahlZeigen(); mgAnsichtWahlZeigen(); }
+function einstFuellen() { leitungStartZeigen(); setTimeout(abhKlappen, 900); /* 2.469.0 KC-CLUB-EINST-ABHAENGIG (Häkchen kommen teils erst vom Server) */ notProbeZeigen(); infoStartZeigen(); cdEinstellungenZeigen(); try { schalterZeilen($("v-einstellungen")); } catch {} tippSchalterZeigen(); einwSchalterZeigen(); stimmeWahlZeigen(); ansageSchalterZeigen(); ansStandZeigen(); ruheZeigen(); schlafEinstZeigen(); /* KC-CLUB-SCHLAFMODUS */ if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); anrufAntwortenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); fristZeigen(); /* 2.883.0 KC-CLUB-FRIST-ERINNERUNG */ neuWahlZeigen(); meinWetterortZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); anklopfenZeigen(); zuletztSchalterZeigen(); inkognitoZeigen(); elternMeineZeigen(); spEinstZeigen(); schnellWahlZeigen(); mgAnsichtWahlZeigen(); }
 function fensterZu(b) { if (!b) return; if (b._zu) b._zu(); else if (b.dataset.fest) b.classList.add("versteckt"); else b.remove(); }
 // 2.425.0 KC-CLUB-GENERALCHECK (Eingaben schützen): wer in einem Fenster etwas getippt hat und es aus Versehen schließt (daneben tippen,
 // ✕, Escape, Handy-„Zurück“), wird gefragt – vorher war der Text (z. B. SOS-Text, Termin-Vorschlag, Schild) ohne Rückfrage weg.
@@ -20893,7 +21030,7 @@ async function mdStart() {
 let DTL = null;
 // KC-CLUB-RT-DIENST (03.11.2026, Wunsch Hansi): Signal „dienst“ → eine offene Tauschbörse lädt sich still neu (sonst nichts, beim Öffnen ist sie ohnehin frisch)
 async function dtSignalLaden() {
-  if (!$("dtBlatt") || document.hidden || !$("dtInhalt")) return;
+  if (!$("dtBlatt") || ruht() || !$("dtInhalt")) return;
   try { DTL = await api("dienst_tausch_liste", {}); dtZeichnen(); } catch { /* beim nächsten Signal oder Öffnen */ }
 }
 const DT_STATUS = { offen: "⏳ sucht Ersatz", uebernommen: "🙋 übernommen – wartet auf den Planer", bestaetigt: "✅ bestätigt", abgelehnt: "✖ abgelehnt", zurueckgezogen: "↩️ zurückgezogen" };
@@ -21197,7 +21334,7 @@ function rundHerzPlanen() {
   RUND.herz = setTimeout(() => {
     const t = rundTisch(id);
     if (!t || t.phase === "vorbei" || t.phase === "abgesagt") { if (rundLiveAn(id)) tlStopp(true); RUND.sitze = RUND.warte = null; rundKarteZeichnen(); rundTischZeichnen(); return; }
-    if (document.hidden) return rundHerzPlanen();
+    if (ruht()) return rundHerzPlanen();
     rundPlatz(id, false);
   }, RT_HERZ_TISCH_MS);
 }
@@ -21513,7 +21650,7 @@ function irKarteZeichnen() {
     <small>${esc(f.format(new Date(d.start)))}–${esc(u.format(new Date(d.ende)))} · ${d.zustand === "halb" ? "Wann bist du gegangen?" : "Ist-Zeit bestätigen"}${offen.length > 1 ? ` · ${offen.length} offen` : ""}</small></span></button>`;
 }
 document.addEventListener("visibilitychange", () => { if (!document.hidden && Date.now() - IR_ZULETZT > 10 * 60000) irLaden(); });
-setInterval(() => { try { dsKarteZeichnen(); dsWarteSenden(); } catch {} }, 60000);
+setInterval(() => { try { dsKarteZeichnen(); if (!ruht()) dsWarteSenden(); } catch {} }, 60000);
 // ohne Netz: Buchung merken und nachschicken (mit der gewählten Zeit)
 const DS_WARTE = "kc_club_ds_warte";
 function dsWarte() { try { return JSON.parse(localStorage.getItem(DS_WARTE) || "[]"); } catch { return []; } }
@@ -24170,6 +24307,21 @@ function ruheZeigen() {
     : "In dieser Zeit kein Push. Anrufe kommen trotzdem durch, danach eine Sammelmeldung.";
 }
 function ruheSchnell(an) { $("ruheAn").checked = an; ruheSpeichern(); }
+// 💤 Schlafmodus (KC-CLUB-SCHLAFMODUS, 20.11.2026) – je Mitglied über einstSpeichern (Server prüft „schlafmodus“): immer / nur von–bis / aus
+function schlafEinstZeigen() {
+  const z = $("schlafWahl"); if (!z) return;
+  const w = schlafWahl() || {}, art = w.art === "zeit" || w.art === "aus" ? w.art : "immer";
+  z.innerHTML = [["immer", "An – immer"], ["zeit", "Nur zu bestimmten Zeiten"], ["aus", "Aus"]].map(([k, t]) => `<button type="button" class="chip${art === k ? " an" : ""}" aria-pressed="${art === k}" onclick="schlafSetzen('${k}')">${t}</button>`).join("");
+  if ($("schlafVon")) $("schlafVon").value = w.von || "22:00";
+  if ($("schlafBis")) $("schlafBis").value = w.bis || "07:00";
+  $("schlafZeiten")?.classList.toggle("versteckt", art !== "zeit");
+}
+async function schlafSetzen(art) {
+  const wert = { art, von: $("schlafVon")?.value || "22:00", bis: $("schlafBis")?.value || "07:00" };
+  try { const r = await einstSpeichern("schlafmodus", wert), w = r?.wert || wert; if (INIT) INIT.einstellungen = { ...(INIT.einstellungen || {}), schlafmodus: w }; schlafEinstZeigen();
+    melde(w.art === "aus" ? "💤 Schlafmodus aus – die App schläft nicht mehr von selbst ein (im Hintergrund ruht sie weiter)" : w.art === "zeit" ? `💤 Schlafmodus nur von ${w.von} bis ${w.bis} Uhr` : "💤 Schlafmodus an – nach 15 Min. ohne Tippen schläft die App ein"); }
+  catch (e) { meldeFehler(e); schlafEinstZeigen(); }
+}
 async function ruheSpeichern() {
   const wert = { an: $("ruheAn").checked, von: $("ruheVon").value || "22:00", bis: $("ruheBis").value || "07:00", erwaehnung: $("ruheErw").checked };
   try { const r = await api("einstellung_setzen", { schluessel: "ruhezeit", wert }); INIT.einstellungen = { ...(INIT.einstellungen || {}), ruhezeit: r.wert }; ruheZeigen();
@@ -25751,8 +25903,8 @@ function sqZeigen() {
   if (alt) alt.outerHTML = html; else z.insertAdjacentHTML("beforeend", html);
 }
 const sqDarf = () => !!chatId && !anlagen.length && !neuEntwurf?.mehrfach; // nur Text in einem bestehenden Chat
-addEventListener("online", () => { try { if (SQ.liste.some((x) => x.status === "wartet")) { SQ.liste.forEach((x) => { if (x.status === "wartet") x.naechster = 0; }); sqWeiter(); } } catch {} });
-setInterval(() => { try { if (ICH && !SQ.laeuft) { sqLaden(); if (SQ.liste.some((x) => x.status === "wartet" && (x.naechster || 0) <= Date.now())) sqWeiter(); } } catch {} }, 15000); // nach dem Öffnen: Liegengebliebenes weiter senden
+addEventListener("online", () => { try { if (!ruht() && SQ.liste.some((x) => x.status === "wartet")) { SQ.liste.forEach((x) => { if (x.status === "wartet") x.naechster = 0; }); sqWeiter(); } } catch {} });
+setInterval(() => { try { if (ICH && !SQ.laeuft && !ruht()) { sqLaden(); if (SQ.liste.some((x) => x.status === "wartet" && (x.naechster || 0) <= Date.now())) sqWeiter(); } } catch {} }, 15000); // nach dem Öffnen: Liegengebliebenes weiter senden
 // ---------- 2.649.0 KC-CLUB-VERSANDWAHL (Wunsch Hansi „unter Nachrichten so wie im Büro wählen: Alles, Mail, Push, WhatsApp – mit Anlage“) ----------
 // Bei mehreren Empfängern oder mit Anlage fragt die App vor dem Senden „Wie verschicken?“ (genau eine Wahl) und zeigt vorher, was rausgeht.
 // „✉️ Nur E-Mail“ heißt nur E-Mail (Server: kein Push dazu, auch bei ❗ wichtig; auch an Empfänger, die gerade in der App sind).
@@ -27484,7 +27636,7 @@ async function caOeffnen(vorschau, treffenId) {
     CA.holen = async () => { if (!$("caBlatt")) return clearInterval(CA.takt); if (CA.laeuft) { CA.nochmal = true; return; } CA.laeuft = true;
       try { const n = await api("clubabend", daten()); if (n.aktiv && !n.auswahl && $("caBlatt")) { CA.stand = n; caZeichnen(); } } catch {}
       CA.laeuft = false; if (CA.nochmal) { CA.nochmal = false; CA.holen(); } };
-    CA.tick = 0; CA.takt = setInterval(() => { if (!$("caBlatt")) return clearInterval(CA.takt); if (document.hidden) return; if (rtAn() && ++CA.tick % 6) return; CA.holen(); }, CA_TAKT_MS);
+    CA.tick = 0; CA.takt = setInterval(() => { if (!$("caBlatt")) return clearInterval(CA.takt); if (ruht()) return; if (rtAn() && ++CA.tick % 6) return; CA.holen(); }, CA_TAKT_MS);
   } catch (e) { meldeFehler(e); }
 }
 function caAuswahl(vorschau, liste) {
@@ -30122,7 +30274,7 @@ async function scHinweisPruefen() {
 const TAH_KEY = "kc_club_ta_hinweis", TAH_SPAETER_MS = 2 * 3600000, TAH_TAKT_MS = 5 * 60000;
 let TAH_LAEUFT = false, TAH_ZULETZT = 0;
 async function taHinweisPruefen(versuch = 0) {
-  if (!ICH || TAH_LAEUFT || document.hidden || $("taHinweisBlatt")) return;
+  if (!ICH || TAH_LAEUFT || ruht() || $("taHinweisBlatt")) return;
   if (document.querySelector(FENSTER_OFFEN) || !["start", "nachrichten", "pinnwand", "mitglieder", "helfen"].includes(aktuelleAnsicht)) {
     if (versuch < 10) setTimeout(() => taHinweisPruefen(versuch + 1), 8000); return; }
   if (Date.now() - TAH_ZULETZT < 20000) return; TAH_ZULETZT = Date.now(); TAH_AUFBAU = RT.aufbauten; // KC-CLUB-LEITUNG-SPARSAM: Stand der Leitung merken
@@ -30156,7 +30308,7 @@ async function taHinweisPruefen(versuch = 0) {
 // aufgebaut wurde (dann können Signale gefehlt haben – auch nach dem bewussten Trennen im Hintergrund); ohne Leitung wie bisher immer.
 const TAH_RT_JEDES = 12, TAH_WEG_MAX_MS = 10 * 60000;
 let TAH_TICK = 0, TAH_WEG_AM = 0, TAH_AUFBAU = -1;
-setInterval(() => { if (rtAn() && ++TAH_TICK % TAH_RT_JEDES) return; taHinweisPruefen(9); }, TAH_TAKT_MS);
+setInterval(() => { if (rtAn() && ++TAH_TICK % TAH_RT_JEDES) return; taHinweisPruefen(9); }, TAH_TAKT_MS); // KC-CLUB-SCHLAFMODUS: taHinweisPruefen prüft ruht() selbst
 // 19.11.2026 KC-CLUB-SPARSAM-NACHBESSERN (Nachkontrolle 2.982.0: „terminanfragen_liste“ nur −19 %): die Leitung wird im Hintergrund nach 60 s
 // bewusst getrennt (KC-CLUB-AKKU-4) – beim Zurückkommen war sie damit IMMER „neu aufgebaut“ bzw. nach 2,5 s noch nicht wieder da, also wurde
 // fast jedes Mal gefragt. Jetzt: nur nach > 10 Min. weg oder wenn die Leitung auch nach 10 s nicht steht. Neue Anfragen im Hintergrund kommen
@@ -30393,7 +30545,7 @@ function stVerfolgen() {
   stBalken();
   if (!ST.eigen || ST.watch !== null || !navigator.geolocation) return;
   ST.watch = navigator.geolocation.watchPosition((p) => { ST.letzte = p; stMelden(false); }, () => {}, { enableHighAccuracy: true, maximumAge: 10000 });
-  clearInterval(ST.timer); ST.timer = setInterval(() => { stBalken(); stMelden(false); }, 15000);
+  clearInterval(ST.timer); ST.timer = setInterval(() => { stBalken(); if (!SCHLAF.an) stMelden(false); }, 15000); // KC-CLUB-SCHLAFMODUS (Standort teilen verhindert das Einschlafen; „Jetzt schlafen“ von Hand pausiert)
 }
 async function stMelden(sofort) {
   if (!ST.eigen) return;
@@ -30435,7 +30587,7 @@ async function stLaden(still) {
         <iframe loading="lazy" title="Karte ${esc(x.von.name)}" src="https://www.openstreetmap.org/export/embed.html?bbox=${x.lon - d},${x.lat - d * 0.6},${x.lon + d},${x.lat + d * 0.6}&layer=mapnik&marker=${x.lat},${x.lon}"></iframe>
         <div class="knoepfe"><a class="knopf" href="${stKarte(x.lat, x.lon)}" target="_blank" rel="noopener">🗺️ Große Karte</a><a class="knopf" href="https://www.openstreetmap.org/directions?route=%3B${x.lat}%2C${x.lon}" target="_blank" rel="noopener">🧭 Weg dorthin</a></div></div>`; }).join("")
       || (eigen ? "" : `<div class="karte hinweis">Gerade teilt niemand den Standort mit dir.</div>`));
-  clearInterval(stAnsichtTimer); stAnsichtTimer = setInterval(() => { if (!document.hidden) stLaden(true); }, 30000);
+  clearInterval(stAnsichtTimer); stAnsichtTimer = setInterval(() => { if (!ruht()) stLaden(true); }, 30000);
 }
 let stAnsichtTimer = null;
 function stAnsichtStopp() { clearInterval(stAnsichtTimer); stAnsichtTimer = null; }
@@ -36675,7 +36827,7 @@ async function nzSenden() {
     for (const [k, n] of Object.entries(std)) nzStdPuffer[k] = (nzStdPuffer[k] || 0) + n; nzStdSchreiben();
     if (zeit) { const zz = npZeitLesen(); for (const [t, w] of Object.entries(zeit)) npZeitDazu(zz, t, Number(w?.[0]) || 0, Number(w?.[1]) || 0); npZeitSchreiben(zz); } }
 }
-setInterval(nzSenden, sparTakt(NZ_TAKT_MS));
+setInterval(() => { if (!ruht()) nzSenden(); }, sparTakt(NZ_TAKT_MS)); // KC-CLUB-SCHLAFMODUS (beim Weglegen sendet visibilitychange)
 document.addEventListener("visibilitychange", () => { if (document.hidden) nzSenden(); });
 // ---------- KC-CLUB-SPUR (2.23.88, Wunsch Hansi): Wege durch die App – was geöffnet wurde und mit wem (Mitglied/Unterhaltung), mit Uhrzeit.
 // NIE Inhalte (kein Text, keine Suchbegriffe, keine Fotos). Getrennt von der namenlosen Nutzungsstatistik (die bleibt ohne Namen).
@@ -36713,8 +36865,8 @@ async function spurSenden(schliessen = false) {
 }
 // KC-CLUB-SPUR-LIVE (2.81.0, Wunsch Hansi „schnell sehen, wenn gerade einer drin ist“): neue Schritte schon nach 15 s schicken
 // (gebündelt – ein Aufruf je Ruhepause), nicht erst beim 2-Minuten-Takt. Im Sparmodus bleibt es beim langen Takt.
-function spurBaldSenden() { if (SPAR.an || document.hidden) return; clearTimeout(SPUR_BALD); SPUR_BALD = setTimeout(spurSenden, 15000); }
-setInterval(spurSenden, sparTakt(NZ_TAKT_MS));
+function spurBaldSenden() { if (SPAR.an || ruht()) return; clearTimeout(SPUR_BALD); SPUR_BALD = setTimeout(spurSenden, 15000); }
+setInterval(() => { if (!ruht()) spurSenden(); }, sparTakt(NZ_TAKT_MS)); // KC-CLUB-SCHLAFMODUS
 document.addEventListener("visibilitychange", () => { if (document.hidden) spurSenden(true); }); // KC-CLUB-SPUR-KEEPALIVE
 window.addEventListener("pagehide", () => spurSenden(true));
 // 2.729.0 KC-CLUB-SPUR-WIEDER: App kommt nach ≥ 5 Min. im Hintergrund wieder nach vorn → Schritt „wieder_<Minuten>“ („📲 wieder geöffnet (war 33 Min. im Hintergrund)“)
@@ -36728,7 +36880,7 @@ document.addEventListener("visibilitychange", () => {
   const weg = SPUR_HINTER_AB ? Date.now() - SPUR_HINTER_AB : 0; SPUR_HINTER_AB = 0;
   if (weg >= SPUR_WIEDER_MS && ICH && INIT) spur(spurWieder(weg));
 });
-const SPUR_WAS = { glueckskeks: "🥠 Glückskeks geöffnet", kontakt_extern: "📤 Kontakt nach außen weitergeleitet", vorfuehren: "📺 Live zeigen gestartet", vorfuehren_zuschauen: "📺 Bei Live zeigen zugeschaut", fitness: "🏋️ Fit bleiben geöffnet", probe_gesetzt: "🧪 Probephase gestartet/verlängert", probe_uebernommen: "✅ Probephase übernommen", probe_beendet: "🚪 Probephase beendet", geoeffnet: "📲 App geöffnet", mitglied: "👤 Mitglied angesehen", chat: "💬 Unterhaltung geöffnet", gesendet: "✉️ Nachricht gesendet", gesendet_anlage: "📎 Nachricht mit Anhang gesendet",
+const SPUR_WAS = { schlaf_ein: "💤 App eingeschlafen (Schlafmodus)", glueckskeks: "🥠 Glückskeks geöffnet",kontakt_extern: "📤 Kontakt nach außen weitergeleitet", vorfuehren: "📺 Live zeigen gestartet", vorfuehren_zuschauen: "📺 Bei Live zeigen zugeschaut", fitness: "🏋️ Fit bleiben geöffnet", probe_gesetzt: "🧪 Probephase gestartet/verlängert", probe_uebernommen: "✅ Probephase übernommen", probe_beendet: "🚪 Probephase beendet", geoeffnet: "📲 App geöffnet", mitglied: "👤 Mitglied angesehen", chat: "💬 Unterhaltung geöffnet", gesendet: "✉️ Nachricht gesendet", gesendet_anlage: "📎 Nachricht mit Anhang gesendet",
   anruf: "📞 Anruf (App) an", video: "🎥 Videoanruf an", anklopfen: "👋 Angeklopft bei", telefon: "☎️ Telefonnummer angetippt", whatsapp: "🟢 WhatsApp geöffnet", mail: "✉️ E-Mail-Adresse angetippt", meine_statistik: "📊 Eigene Nachrichten-Statistik angesehen",
   geplant: "⏰ Nachricht für später geplant", zurueckgeholt: "↩️ Nachricht zurückgeholt", mein_bild: "🧑‍🍳 „Mein Bild“ geöffnet", bild_gewaehlt: "🧑‍🍳 Koch-Figur als Bild gewählt", bild_gebaut: "🧩 Eigene Figur gespeichert", bild_foto: "📷 Eigenes Foto als Bild gesetzt", bild_entfernt: "🧑‍🍳 Bild entfernt (Buchstaben)", avatar_kombi: "ⓘ Figuren-Möglichkeiten angesehen", jacke_auto_an: "🔄 Kochjacke täglich wechselnd eingeschaltet", jacke_auto_aus: "🔄 Kochjacke täglich wechselnd ausgeschaltet",
   sprache_start: "🎙️ Sprache: Startseite", sprache_zurueck: "🎙️ Sprache: zurück", sprache_pinnwand: "🎙️ Sprache: neuer Zettel", sprache_nachricht: "🎙️ Sprache: neue Nachricht", sprache_termine: "🎙️ Sprache: Termine", sprache_naechster: "🎙️ Sprache: nächster Termin", sprache_suche: "🎙️ Sprache: Suche", sprache_hilfe: "🎙️ Sprache: Hilfe", sprache_unklar: "🎙️ Sprache: nicht verstanden", sensibel_gaeste_frage: "⚠️ Vertrauliches an Nicht-Mitglieder: nachgefragt", sprache_ziel: "🎙️ Sprache: Seite geöffnet", sprache_gelernt: "🎙️ Sprache: neuen Befehl gelernt", sprache_liste: "📋 Liste der Sprachbefehle geöffnet", sprache_training: "🎓 Sprach-Training gestartet", unterstuetzung_viel: "🙋 Unterstützung: viel Hilfe gewählt", unterstuetzung_etwas: "👌 Unterstützung: ein bisschen Hilfe", unterstuetzung_keine: "😎 Unterstützung: keine", inhaltsverzeichnis: "🗂️ Inhaltsverzeichnis gedruckt" }; // KC-CLUB-SPRACHSTEUERUNG (2.75.0)
@@ -37233,7 +37385,7 @@ function ssAbbrechen(still) {
   if (!still) melde("⏹ Beendet");
 }
 async function ssHolen(sofort) {
-  if (document.hidden && sofort !== true) return; // 2.364.0 KC-CLUB-AKKU-7: im Hintergrund nicht alle 0,8–1,5 s beim Server nachfragen (wie Live-Zeigen seit 2.314.1)
+  if (ruht() && sofort !== true) return; // 2.364.0 KC-CLUB-AKKU-7: im Hintergrund nicht alle 0,8–1,5 s beim Server nachfragen (wie Live-Zeigen seit 2.314.1)
   if (SS.laeuft && sofort === true) { SS.nochmal = true; return; }
   if (sofort !== true && rtAn() && SS.id && $("studioBlatt") && (SS.tn = (SS.tn || 0) + 1) % 3) return; // KC-CLUB-REALTIME-VORFUEHREN: Takt nur zur Sicherheit
   if (!SS.id || !$("studioBlatt")) { if (SS.id) api("schnappschuss_ende", { an: SS.an, id: SS.id }).catch(() => {}); clearInterval(SS.uhr); SS.id = null; ssFhZu(); return; } // Studio zu → Mitschauen beenden
@@ -37354,7 +37506,7 @@ function spgSenderStopp() {
   removeEventListener("scroll", spgSchmutz, { capture: true }); removeEventListener("input", spgSchmutz, true); removeEventListener("resize", spgSchmutz); document.removeEventListener("pointerdown", spgTippen, true);
 }
 async function spgSenderTakt() {
-  if (!SPG.an || SPG.laeuft || document.hidden) return;
+  if (!SPG.an || SPG.laeuft || ruht()) return;
   if (fhVollFaellig()) { SPG.letzt = ""; SPG.schmutzig = true; } // KC-CLUB-FERNHILFE F2: Selbstheilung
   const jetzt = Date.now(); if (!SPG.schmutzig && !(SPG.vorhang && !SPG.vorhangGesendet) && !SPG.mehr?.() && jetzt - SPG.ping < 4000) return;
   SPG.laeuft = true;
@@ -38306,7 +38458,7 @@ async function gastStart(token) {
   history.replaceState({ basis: true }, "", url.pathname);
   history.pushState({ v: "start", tiefe: 1 }, "", url.pathname);
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.addEventListener("message", (e) => { if (e.data?.typ === "push") { onlinePushGezeigt(e.data.titel); /* 2.383.0 */ pushNeuLaden(); if (!rtAn()) { onlinePing(); setTimeout(() => taHinweisPruefen(9), 1500); } /* 18.11.2026 KC-CLUB-LEITUNG-SPARSAM (Wunsch Hansi „einsparen über die direkte Leitung“): steht die Leitung, melden Anklopfen/Anruf/Terminanfrage sich selbst als Signal */ if (chatId && aktuelleAnsicht === "chat") chatSignalLaden(true); else if (chatId) chatLaden(false); ansageAusPush(e.data); if (aktuelleAnsicht === "spiele" && SP.tab === "mg") SP.offen ? spNachsehen() : spLaden(true); }
+    navigator.serviceWorker.addEventListener("message", (e) => { if (SCHLAF.an) return; /* KC-CLUB-SCHLAFMODUS: schlafend nichts laden/ansagen – Anruf und Antippen der Mitteilung wecken vorher (Schlaf-Block oben) */ if (e.data?.typ === "push") { onlinePushGezeigt(e.data.titel); /* 2.383.0 */ pushNeuLaden(); if (!rtAn()) { onlinePing(); setTimeout(() => taHinweisPruefen(9), 1500); } /* 18.11.2026 KC-CLUB-LEITUNG-SPARSAM (Wunsch Hansi „einsparen über die direkte Leitung“): steht die Leitung, melden Anklopfen/Anruf/Terminanfrage sich selbst als Signal */ if (chatId && aktuelleAnsicht === "chat") chatSignalLaden(true); else if (chatId) chatLaden(false); ansageAusPush(e.data); if (aktuelleAnsicht === "spiele" && SP.tab === "mg") SP.offen ? spNachsehen() : spLaden(true); }
       if (e.data?.typ === "online-ansage") { onlineAnsageSprechen([e.data.name]); if (!onlLeitungVoll()) onlinePing(); } // KC-CLUB-LEITUNG-SPARSAM: mit Leitung + Anwesenheit meldet die Anwesenheit das Kommen selbst
       if (e.data?.typ === "oeffnen") pushOeffnen(e.data.url); }); // 2.209.0 KC-CLUB-PUSH-SPRUNG // KC-CLUB-ONLINE-ANSAGE-PUSH; 2.24.18: LED/Zahl/Ring sofort mitziehen (Hinweis Hansi: Ansage kam immer zuerst)
     navigator.serviceWorker.addEventListener("message", (e) => { if (e.data?.typ === "push" && /^📥 Neu in deinem Eingangskorb/.test(e.data.titel || "")) eingangNeu(); }); // KC-CLUB-EINGANG-DURCHGEHEN (2.741.0): Hinweis sofort bei offener App
@@ -38338,11 +38490,11 @@ async function gastStart(token) {
   // KC-CLUB-UPDATE-AUTO (2.3.2, Wunsch Hansi): auch beim Start und alle 10 Min. (nur auf der Startseite, nichts offen,
   // nichts eingetippt) selbst aktualisieren – Schutz wie bisher in updateRuhig/updateSelbst (1× je 10 Min. und Version)
   updatePruefen(false).then(() => setTimeout(updateSelbst, updateFrisch() ? 0 : 4000)); // KC-CLUB-UPDATE-START: frisch geöffnet → sofort
-  setInterval(() => { if (!document.hidden && aktuelleAnsicht === "start" && !chatId) updatePruefen(false).then(updateSelbst); }, UPDATE_TAKT_MS);
+  setInterval(() => { if (!ruht() && aktuelleAnsicht === "start" && !chatId) updatePruefen(false).then(updateSelbst); }, UPDATE_TAKT_MS); // KC-CLUB-SCHLAFMODUS
   setTimeout(stStart, 2500); // KC-CLUB-STANDORT
   document.addEventListener("visibilitychange", () => { updWeg(document.hidden); if (!document.hidden) { if (ST.eigen) stMelden(true); if (Date.now() - NEU_ZULETZT >= 60000) neuLaden(); /* KC-CLUB-RC-PRUEFUNG (20.10.2026): höchstens 1× je 60 s neu laden (DB sparen) */ updatePruefen(false).then(updateSelbst); if (chatId) chatLaden(false); setTimeout(pwLive, 1500); } });
-  setInterval(() => { if (!document.hidden && aktuelleAnsicht !== "chat" && (NEU_NACH_CHAT || !(RT.ok && Date.now() - NEU_ZULETZT < 180000))) neuLaden(); }, sparTakt(60000)); // KC-CLUB-SPARMODUS · 2.359.0: steht die direkte Leitung, nur alle 3 Min. (Neues kommt sofort über die Leitung)
-  setInterval(() => pwLive(true), PW_LIVE_MS); // KC-CLUB-PINNWAND-LIVE: auch im Chat · 2.360.0: mit Leitung seltener
+  setInterval(() => { if (!ruht() && aktuelleAnsicht !== "chat" && (NEU_NACH_CHAT || !(RT.ok && Date.now() - NEU_ZULETZT < 180000))) neuLaden(); }, sparTakt(60000)); // KC-CLUB-SPARMODUS · 2.359.0: steht die direkte Leitung, nur alle 3 Min. (Neues kommt sofort über die Leitung)
+  setInterval(() => pwLive(true), PW_LIVE_MS); // KC-CLUB-SCHLAFMODUS: pwLive prüft ruht() selbst // KC-CLUB-PINNWAND-LIVE: auch im Chat · 2.360.0: mit Leitung seltener
 })();
 // ---------- 2.355.0 KC-CLUB-KOCH-EMOJI (Fund Hansi „am PC sieht Twinkey beim Fegen anders aus: laufende Beine, ein Gesicht daneben und eine
 // Pfanne mit Spiegelei – so sieht auch die Kachel ‚Mein Bild‘ aus“) ----------

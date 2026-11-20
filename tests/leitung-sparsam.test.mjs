@@ -111,7 +111,7 @@ assert.ok(/if \(p\?\._sichtbar !== 1 \|\| a === "online" \|\| a === "weg"/.test(
 assert.ok(/ZULETZT_TAKT_MS = 30_000/.test(server) && /update\(\{ zuletzt_gesehen: jetzt\(\), app_version: version \}\)/.test(server), "Server: zuletzt_gesehen bei jeder Anfrage (höchstens alle 30 s)");
 
 // g) Nutzung und Wege: Takt 5 statt 2 Min., Weglegen/Schließen sofort (keepalive), neue Wege nach 15 s
-assert.ok(/const NZ_TAKT_MS = 5 \* 60000;/.test(app) && app.includes("setInterval(nzSenden, sparTakt(NZ_TAKT_MS));") && app.includes("setInterval(spurSenden, sparTakt(NZ_TAKT_MS));"), "5 Min.");
+assert.ok(/const NZ_TAKT_MS = 5 \* 60000;/.test(app) && app.includes("setInterval(() => { if (!ruht()) nzSenden(); }, sparTakt(NZ_TAKT_MS));") && app.includes("setInterval(() => { if (!ruht()) spurSenden(); }, sparTakt(NZ_TAKT_MS));"), "5 Min.");
 assert.ok(app.includes('document.addEventListener("visibilitychange", () => { if (document.hidden) nzSenden(); });') && app.includes('document.addEventListener("visibilitychange", () => { if (document.hidden) spurSenden(true); });') && app.includes('window.addEventListener("pagehide", () => spurSenden(true));'), "Weglegen/Schließen");
 assert.ok(app.includes("SPUR_BALD = setTimeout(spurSenden, 15000);"), "Wege-Live bleibt");
 
