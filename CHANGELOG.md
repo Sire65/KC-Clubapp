@@ -1,5 +1,16 @@
 # Änderungen
 
+## (Version folgt) – 💤 Schlafmodus mit Bildschirmschoner (KC-CLUB-SCHLAFMODUS)
+Wunsch Hansi 20.11.: Vergessene, sichtbar offene Geräte (PC ohne Bildschirmsperre, Tablet mit „Bildschirm an“) sollen keine Abfragen mehr machen. Im Hintergrund ruhte die App schon – eine unbediente, sichtbare Startseite fragte aber weiter (mit Leitung ≈ 1.100, ohne ≈ 2.500 Datenbank-Abfragen je Stunde).
+- **Nach 15 Minuten ohne Tippen, Taste, Scrollen oder Mausbewegung schläft die App ein:** dunkler Bildschirm mit Club-Logo, „💤 Die App schläft – Hier tippen zum Aufwecken“ und der Uhrzeit. Logo und Text wandern langsam (Einbrennschutz; bei „Bewegung reduzieren“ am Gerät nur alle 3 Minuten ein neuer Platz).
+- Im Schlaf **keine Abfragen**: alle Abfrage-Takte (Neuladen, Online, Lebenszeichen, Chat, Pinnwand, Terminanfragen, Update-Prüfung, Puls, Nutzung/Wege …) prüfen jetzt „ruht“ (Hintergrund **oder** Schlaf); die direkte Leitung wird getrennt und die App meldet sich einmal als „weg“ (die anderen sehen dich nicht mehr als online). Auch das Fehlerprotokoll sammelt nur noch.
+- **Push kommt weiter an** (die Mitteilung zeigt das Handy wie gewohnt). Kam etwas, steht im Bildschirmschoner „🔔 Neues eingegangen“. Ein **Anruf/Anklopfen**, das Antippen der Mitteilung oder ein klingelnder **Wecker** wecken die App von selbst.
+- **Aufwachen:** Antippen, Taste oder Zurückkommen in die App → genau **ein** Neuladen und die Leitung steht wieder; du bleibst, wo du warst.
+- **Schläft nicht** während eines Anrufs, eines Videos/Erklär-Videos, der Bühne, Live zeigen/Mitschauen, Tisch live, wenn sich im offenen Chat in den letzten 5 Minuten etwas getan hat, bei offenem Dienst-Stempel und solange du den Standort teilst.
+- **Einstellbar je Mitglied** (gilt auf allen Geräten): ⚙️ → „🎨 Darstellung“ → **„💤 Schlafmodus“**: An – immer (Standard) / Nur zu bestimmten Zeiten (z. B. 22:00–07:00, auch über Mitternacht) / Aus. Dort auch **„💤 Jetzt schlafen legen“**. Bei „Aus“ oder außerhalb der Zeit schläft die App nicht von selbst ein – im Hintergrund ruht sie wie bisher.
+- Messung: Die Egress-Messung des Servers läuft bis 05.12.2026 (vorher 21.11.) – Vorher/Nachher-Vergleich; jedes Einschlafen steht als Schritt „💤 App eingeschlafen“ in den Wegen (ohne zusätzliche Abfrage).
+- Neuer Tipp in der Hilfe („Der Schlafmodus“), Suchbegriff „Schlafmodus“/„Bildschirmschoner“ in den Einstellungen. Test `tests/schlafmodus.test.mjs`, Browser-Prüfung `tools/hilfe/schlafmodus-browser.mjs` (abgeschirmt).
+
 ## 2.988.0 – 2026-11-20 – 🚗 Mitfahrgelegenheiten in der Laufschrift (KC-CLUB-MITFAHRT-LAUFBAND) · Server 2.988.0 · [Hansi: einspielen]
 Wunsch Hansi 20.11.: „Zeige in der Laufschrift an, wenn jemand eine Mitfahrgelegenheit sucht oder anbietet – z. B. biete ich eine an.“
 - Im Info-Laufband auf der Startseite steht jetzt z. B. **„🚗 Hansi bietet eine Mitfahrt an – Köcheclub-Sitzung · Di., 24.11. · 3 Plätze frei“** oder **„🙋 Anne sucht eine Mitfahrgelegenheit – Adventsmarkt“**. Antippen öffnet den Termin bzw. die Aktion, dort kann man mitfahren oder einen Platz anbieten.

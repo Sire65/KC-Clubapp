@@ -20,7 +20,7 @@ assert.ok(app.includes("Math.min(ONLINE_TAKT_MAX_MS, sparTakt("), "Sparmodus beg
 // bleibt das Mitglied über das Lebenszeichen (fester Takt, ohne Sparmodus, sichtbare App → _sichtbar → onlineBeiAnfrage)
 const herz = Number(app.match(/const HERZ = \{ takt: (\d+),/)[1]) * 1000;
 assert.ok(herz < ONLINE_SEK * 1000 && herz <= max, `Lebenszeichen ${herz} ms < ${ONLINE_SEK} s`);
-assert.ok(app.includes("HB = setInterval(() => { if (document.visibilityState !== \"hidden\") herzSenden(); }, HERZ.takt * 1000);"), "Lebenszeichen ohne Sparmodus-Dehnung");
+assert.ok(app.includes("HB = setInterval(() => { if (!ruht()) herzSenden(); }, HERZ.takt * 1000);"), "Lebenszeichen ohne Sparmodus-Dehnung");
 // Fehler der Online-Meldung einmal je Sitzung sichtbar
 assert.ok(app.includes('++ONL.fehlerFolge >= 2 && !ONL.fehlerGemeldet') && app.includes('fpNeu("api", { aktion: "online"'));
 assert.ok(fs.readFileSync(new URL("../.github/workflows/tests.yml", import.meta.url), "utf8").includes("node tests/online-jede-anfrage.test.mjs"), "läuft in der CI");

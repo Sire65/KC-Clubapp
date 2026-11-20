@@ -47,6 +47,7 @@
   function senden(sofort) {
     var l = lies(); if (!l.length || sendetGerade) return;
     if (!navigator.onLine && !sofort) return;
+    if (window.KCFP.ruht && !sofort) return; // KC-CLUB-SCHLAFMODUS: schlafende App sendet nichts – gesammelt geht es nach dem Aufwachen raus
     var k = window.KCFP.angemeldet ? schluessel() : "", teil = l.slice(0, 25);
     var body = JSON.stringify(k ? { action: "fehler_melden", eintraege: teil } : { action: "fehler_anonym", geraet: geraet(), eintraege: teil });
     var fertig = function (ok) { sendetGerade = false; if (ok) { var rest = lies().slice(teil.length); schreib(rest); if (rest.length) setTimeout(senden, 1500); } };
@@ -62,7 +63,7 @@
     neu("skript", { text: String(err && err.message || msg), datei: String(quelle || "").split("/").pop().split("?")[0], zeile: zeile || 0, spalte: spalte || 0,
       stapel: err && err.stack ? kurz(String(err.stack).split("\n").slice(0, 3).join(" | "), 280) : "" });
   };
-  window.addEventListener("unhandledrejection", function (ev) { var r = ev && ev.reason; neu("versprechen", { text: String(r && r.message || r), stapel: r && r.stack ? kurz(String(r.stack).split("\n").slice(0, 4).join(" | "), 400) : "" }); }); // 2.236.0: mit Fundstelle (Spielfehler 11.10. ohne Stapel nicht auffindbar)
+  window.addEventListener("unhandledrejection", function (ev) { var r = ev && ev.reason; if (r && r.schlaf) return; /* KC-CLUB-SCHLAFMODUS: „App schläft“ ist kein Fehler */ neu("versprechen", { text: String(r && r.message || r), stapel: r && r.stack ? kurz(String(r.stack).split("\n").slice(0, 4).join(" | "), 400) : "" }); }); // 2.236.0: mit Fundstelle (Spielfehler 11.10. ohne Stapel nicht auffindbar)
   // Dateien, die nicht laden (Skript, Stil, Bild) – z. B. schlechtes Netz oder alter Zwischenspeicher
   window.addEventListener("error", function (ev) {
     var t = ev && ev.target; if (!t || t === window || !t.tagName) return;
@@ -6732,6 +6733,11 @@
       <summary>🎨 Darstellung</summary>
       <!-- KC-CLUB-SPARMODUS (2.30.0): je Gerät -->
       <div class="schalter" style="display:block"><div><b>🐢 Sparmodus</b><div class="hinweis">Für schwaches Netz oder ältere Handys: keine Bewegungen, seltener im Hintergrund nachsehen. Automatisch = schaltet sich bei Bedarf selbst ein. <span id="sparStand"></span></div></div><div class="hl-chips" id="sparWahl" data-zyklus="Sparmodus" style="margin-top:6px"></div></div>
+      <!-- KC-CLUB-SCHLAFMODUS (20.11.2026): je Mitglied, gilt auf allen Geräten -->
+      <div class="schalter" style="display:block"><div><b>💤 Schlafmodus</b><div class="hinweis">Liegt die App offen da und niemand tippt 15 Minuten, schläft sie ein: dunkler Bildschirm mit Uhr, keine Abfragen mehr – spart Daten und Akku. Push kommt weiter an, Antippen weckt sie. Nicht während Anruf, Video oder Live zeigen. Gilt für alle deine Geräte.</div></div>
+        <div class="hl-chips" id="schlafWahl" style="margin-top:6px"></div>
+        <div class="zwei versteckt" id="schlafZeiten"><label class="feld">von<input type="time" id="schlafVon" value="22:00" onchange="schlafSetzen('zeit')"></label><label class="feld">bis<input type="time" id="schlafBis" value="07:00" onchange="schlafSetzen('zeit')"></label></div>
+        <div class="knoepfe" style="margin-top:6px"><button type="button" class="knopf klein" onclick="schlafJetzt()">💤 Jetzt schlafen legen</button></div></div>
       <details class="ds-mehr" id="wbKlappe" style="margin:2px 0 10px"><summary>⏳ Warte-Bild: <span id="wbAktName">Kochmütze</span></summary><div class="hinweis" style="margin-top:6px">Erscheint, wenn die App etwas länger braucht. Antippen wählt das Bild.</div><div id="wbWahl"></div></details> <!-- KC-CLUB-WARTEBILD 2.46.0 -->
       <div class="schalter"><div><b>🔠 Große Schrift</b><div class="hinweis">Gilt für dieses Gerät.</div></div><input type="checkbox" id="setGross" onchange="einstellung('gross', this.checked)"></div>
       <div class="schalter"><div><b>🔍 Schriftgröße</b><small class="hinweis" style="display:block">für Nachrichten und Texte – auch mit zwei Fingern auseinanderziehen</small></div><div class="sz-zeile"><button type="button" class="knopf" aria-label="Schrift kleiner" onclick="szAendern(-0.1)">A−</button><span class="sz-wert">100 %</span><button type="button" class="knopf" aria-label="Schrift größer" onclick="szAendern(0.1)">A+</button><button type="button" class="knopf sz-zurueck versteckt" onclick="szAendern(0)">↺ 100 %</button></div></div>

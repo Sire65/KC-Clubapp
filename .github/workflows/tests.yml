@@ -121,6 +121,7 @@ jobs:
       # KC-CLUB-ONLINE-ECHT + KC-CLUB-SPUR-START-SERVER
       - run: node tests/online-echt.test.mjs
       - run: node tests/egress-messung.test.mjs
+      - run: node tests/schlafmodus.test.mjs
       - run: node tests/frist-erinnerung.test.mjs
       - run: node tests/kontakt-extern.test.mjs
       - run: node tests/spar-kurz.test.mjs

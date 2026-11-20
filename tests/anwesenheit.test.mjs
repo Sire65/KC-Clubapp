@@ -19,7 +19,7 @@ assert.ok(/const ANW_ABSTAND_MS = 20000;/.test(app) && app.includes("Math.max(20
 // Die Regel KC-EINSPIELEN-RUHIG (3 Min.) und „online“ (150 s) hängen am Lebenszeichen (alle 60 s, sichtbare App, _sichtbar) – das bleibt.
 assert.ok(app.includes("ONL.sicher = !ONL.wartet && onlLeitungVoll();") && app.includes("if (ONL.sicher) { ONL.sicherMs = onlSicherMs(); ONL.timer = setInterval(() => onlinePing({ sicher: true }), ONL.sicherMs); return; }"), "Sicherheitsabgleich mit Leitung + Anwesenheit");
 assert.ok(app.includes("sparTakt(PUSH_AKTIV || rtAn() ? 60000 : 15000)"), "ohne Anwesenheit wie bisher");
-assert.ok(/const HERZ = \{ takt: 60,/.test(app) && app.includes("HB = setInterval(() => { if (document.visibilityState !== \"hidden\") herzSenden(); }, HERZ.takt * 1000);"), "Lebenszeichen alle 60 s bleibt");
+assert.ok(/const HERZ = \{ takt: 60,/.test(app) && app.includes("HB = setInterval(() => { if (!ruht()) herzSenden(); }, HERZ.takt * 1000);"), "Lebenszeichen alle 60 s bleibt");
 // Leitung weg → Anwesenheit weg (wieder alter Takt)
 assert.ok(app.includes("RT.ok = false; RT.anw = false; RT.anwStand = false; RT.anwKeys = new Set(); RT.ws = null;") && app.includes("RT.ws = null; RT.ok = false; RT.anw = false; RT.anwStand = false; RT.anwKeys = new Set(); try { ws?.close(); } catch {}"));
 assert.ok(fs.readFileSync(new URL("../.github/workflows/tests.yml", import.meta.url), "utf8").includes("node tests/anwesenheit.test.mjs"), "läuft in der CI");

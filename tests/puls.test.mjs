@@ -20,7 +20,7 @@ assert.ok(/id="leds"[^\n]*<\/button><button class="puls versteckt" id="pulsAnzei
 assert.ok(/\.pu-saeule \{ display: flex; flex-direction: column-reverse;/.test(html), "senkrecht, von unten nach oben");
 assert.ok(/id="setPuls" onchange="einstellung\('puls', this\.checked\);pulsStarten\(\)"/.test(html) && /\["setPuls", "puls"\]/.test(app), "Schalter unter ⚙️");
 assert.ok(/const pulsAn = \(\) => !!ICH\?\.admin && einst\("puls", true\);/.test(app) && /\$\("setPulsZeile"\)\.classList\.toggle\("versteckt", !ICH\?\.admin\)/.test(app), "nur Admin, Standard an");
-assert.ok(/if \(!document\.hidden && aktuelleAnsicht === "start"\) \{/.test(app) && /PULS_TAKT = 15000/.test(app), "nur sichtbar und auf der Startseite, alle 15 s (18.11. sparsam)");
+assert.ok(/if \(!ruht\(\) && aktuelleAnsicht === "start"\) \{/.test(app) && /PULS_TAKT = 15000/.test(app), "nur sichtbar und auf der Startseite, alle 15 s (18.11. sparsam)");
 // Ausschlag: logarithmisch, 8 Stufen (5 grün, 2 gelb, 1 rot)
 const R = new Function(app.slice(app.indexOf("const PULS_TAKT"), app.indexOf("const pulsSaeule")) + "; return { pulsStufe, PULS_MAX };")();
 assert.equal(R.pulsStufe(0, 15), 0); assert.equal(R.pulsStufe(0.1, 15), 1, "schon wenig leuchtet einmal");

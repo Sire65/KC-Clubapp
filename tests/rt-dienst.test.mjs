@@ -12,7 +12,7 @@ assert.ok(fn.includes('p_art: "dienst" }') && !/p_thread|titel|kurz/.test(fn), "
 assert.ok(fn.includes("probe ? await adminIds()") && fn.includes("catch {"), "Probe nur Admins, Fehler still");
 // App: offene Tauschbörse lädt still neu, gebremst; nach Wiederverbinden nachholen
 assert.ok(app.includes('if (s.art === "dienst") { clearTimeout(RT.dt); RT.dt = setTimeout(dtSignalLaden, 600 + Math.random() * 1400); return; }'));
-assert.ok(/async function dtSignalLaden\(\) \{\n  if \(!\$\("dtBlatt"\) \|\| document\.hidden/.test(app), "nur bei offener Tauschbörse");
+assert.ok(/async function dtSignalLaden\(\) \{\n  if \(!\$\("dtBlatt"\) \|\| ruht\(\)/.test(app), "nur bei offener Tauschbörse");
 assert.ok(app.includes("function rtNachholen() { onlinePing(); dtSignalLaden(); if (typeof spNachsehen === \"function\""), "Lücke nachholen");
 // Spiele: mit Leitung nur alle 2 Min. zur Sicherheit (3 s × 40), Schachuhr bleibt schnell
 assert.ok(app.includes("if (rtAn() && !SP.offen.uhr?.laeuft && SPT_TAKT.n % 40) return;") && app.includes("SP_TAKT_MS = 3000"));
