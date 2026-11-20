@@ -16940,7 +16940,7 @@ async function tippMeine() {
 // Hinweise (gold), schöne Infos (weiß); ist nichts da: „Alles erledigt 👍“ und der Tipp des Tages. Wechselt alle 6 s (sanft), Wischen blättert,
 // Berühren hält an, ✕ blendet eine Meldung für heute aus. Läuft nur, solange die Startseite sichtbar ist (in der Ruhephase steht es still).
 const IL_TAKT_MS = 6000, IL_AUS = "kc_club_il_aus";
-const IL = { liste: [], i: 0, uhr: 0, halt: 0, x0: null, gewischt: 0, schluessel: "", html: "", takt: 0 };
+const IL = { liste: [], i: 0, uhr: 0, halt: 0, x0: null, gewischt: 0, schluessel: "", html: "", takt: 0, alle: [] }; // alle: KC-CLUB-LAUFBAND-LISTE (alle Meldungen, auch die über 7)
 function ilAusgeblendet() { try { const a = JSON.parse(localStorage.getItem(IL_AUS) || "null"); return a && a.tag === heuteIso() ? a.ids : []; } catch { return []; } }
 function ilAusblenden(id) {
   const ids = [...new Set([...ilAusgeblendet(), id])]; try { localStorage.setItem(IL_AUS, JSON.stringify({ tag: heuteIso(), ids })); } catch {}
@@ -17205,9 +17205,10 @@ function ilMeldungen() {
   if (tipps.length) { const d = new Date(), h = tipps[(d.getFullYear() * 372 + d.getMonth() * 31 + d.getDate()) % tipps.length];
     sichtbar.push({ id: "_tipp", stufe: "weiss", sym: "💡", t: `Tipp: ${hzTxt(h.t)}`, u: String(hzTxt(h.x)).replace(/<[^>]+>/g, "").slice(0, 90), auf: `hzZuEintrag('h:${esc(h.id)}')`, ohneAus: true }); }
   // Wichtiges öfter zeigen: nach jeder Hinweis-/Info-Meldung kommt die nächste rote wieder dran
-  const tf = ilTreffen(t), rot = [...(tf.stufe === "rot" ? [tf] : []), ...sichtbar.filter((m) => m.stufe === "rot" || m.stufe === "orange")], rest = sichtbar.filter((m) => !rot.includes(m)).filter((m, i, l) => m.id === "_tipp" || l.indexOf(m) < 7); // übersichtlich: höchstens 7 + Tipp
+  const tf = ilTreffen(t), rot = [...(tf.stufe === "rot" ? [tf] : []), ...sichtbar.filter((m) => m.stufe === "rot" || m.stufe === "orange")], rest = sichtbar.filter((m) => !rot.includes(m)).filter((m, i, l) => m.id === "_tipp" || String(m.id).startsWith("mitfahrt:") || l.indexOf(m) < 7); // übersichtlich: höchstens 7 + Tipp (Mitfahrten immer – KC-CLUB-MITFAHRT-LAUFBAND)
   let folge = [...rot, ...rest];
   if (rot.length && rest.length > 2) { folge = [...rot]; rest.forEach((m, i) => { folge.push(m); if (i % 2 === 1) folge.push(rot[(i >> 1) % rot.length]); }); }
+  IL.alle = [tf, ...sichtbar.filter((m) => m.id !== tf.id)]; // KC-CLUB-LAUFBAND-LISTE: die Rollliste zeigt alle (nach Wichtigkeit), nicht nur die 7 im Laufband
   return tf.stufe === "rot" ? folge : [tf, ...folge]; // das Treffen steht immer vorn; ist die Antwort offen, kommt es als rote Meldung zwischendurch wieder
 }
 function ilThemaNeu(id) { zeige("vorschlaege"); VS_ZIEL = id; setTimeout(() => { if (aktuelleAnsicht === "vorschlaege") vorschlagForm("thema"); }, 500); } // 2.463.0: Formular mit der Sitzung vorgewählt
@@ -17218,7 +17219,8 @@ function ilMitfahrt(m) {
   const wer = m.eigen ? "Du" : m.name || "Jemand", tag = m.bezug_art === "aktion" ? fTag.format(new Date(m.beginn)) : wann(m.beginn);
   const t = m.art === "biete" ? `${wer} ${m.eigen ? "bietest" : "bietet"} eine Mitfahrt an` : `${wer} ${m.eigen ? "suchst" : "sucht"} eine Mitfahrgelegenheit`;
   const u = `${m.titel} · ${tag}${m.art === "biete" ? ` · ${m.frei === 1 ? "1 Platz" : m.frei + " Plätze"} frei` : ""}${m.eigen ? "" : m.art === "biete" ? " – mitfahren? Antippen" : " – Platz frei? Antippen"}`;
-  return { id: "mitfahrt:" + m.art + ":" + m.id, stufe: m.eigen ? "weiss" : "gold", sym: m.art === "biete" ? "🚗" : "🙋", t, u,
+  // Fund Hansi 20.11. „Habe ich nicht gesehen“: eigene waren „weiß“ und fielen hinter die 7 – jetzt gelb wie bei allen
+  return { id: "mitfahrt:" + m.art + ":" + m.id, stufe: "gold", sym: m.art === "biete" ? "🚗" : "🙋", t, u,
     auf: m.bezug_art === "aktion" ? `aktionOeffnen(${JSON.stringify(String(m.bezug_id))})` : `ilTerminOeffnen(${JSON.stringify(String(m.bezug_id))})` };
 }
 function ilTerminLink(id) { const l = (INIT?.laufbandTermine || []).find((x) => x.id === id)?.link; if (/^https:\/\//.test(l || "")) window.open(l, "_blank", "noopener"); }
@@ -17235,8 +17237,10 @@ function ilZeigen() {
   const s = IL.liste.map((m) => m.id + m.t).join("|"); if (s !== IL.schluessel) { IL.schluessel = s; const j = IL.liste.findIndex((m) => m.id === alt); IL.i = j >= 0 ? j : 0; }
   if (IL.i >= IL.liste.length) IL.i = 0;
   const m = IL.liste[IL.i]; if (!m) return;
-  const kl = `il il-${m.stufe} il-klick`, html = `<div class="il-inhalt${m.knoepfe ? " mit-knopf" : ""}${m.voll ? " il-voll" : ""}" role="button" tabindex="0">${ilHtml(m)}</div>`
-    + (IL.liste.length > 1 ? `<div class="il-punkte" aria-hidden="true">${IL.liste.map((_, i) => `<i${i === IL.i ? ' class="an"' : ""}></i>`).join("")}</div>` : "");
+  const offen = !!$("ilListe"), nAlle = IL.alle.length;
+  const kl = `il il-${m.stufe} il-klick${nAlle > 1 ? " mit-alle" : ""}`, html = `<div class="il-inhalt${m.knoepfe ? " mit-knopf" : ""}${m.voll ? " il-voll" : ""}" role="button" tabindex="0">${ilHtml(m)}</div>`
+    + (IL.liste.length > 1 ? `<div class="il-punkte" aria-hidden="true">${IL.liste.map((_, i) => `<i${i === IL.i ? ' class="an"' : ""}></i>`).join("")}</div>` : "")
+    + (nAlle > 1 ? `<button type="button" class="il-alle" aria-expanded="${offen}" aria-label="${offen ? "Liste schließen" : `Alle ${nAlle} Meldungen als Liste`}" onclick="event.stopPropagation();ilListeUmschalten()">${offen ? "▴" : "▾"} ${nAlle}</button>` : ""); // KC-CLUB-LAUFBAND-LISTE
   if (b.firstElementChild && IL.html === kl + html) return; // unverändert → nicht neu zeichnen (sonst stockt die Wisch-Animation)
   IL.html = kl + html; b.className = kl; b.innerHTML = html;
   const inh = b.firstElementChild;
@@ -17247,6 +17251,19 @@ function ilZeigen() {
     b.addEventListener("pointerdown", (e) => { IL.halt = Date.now() + 9000; IL.x0 = e.clientX; }, { passive: true });
     b.addEventListener("pointerup", (e) => { if (IL.x0 == null) return; const dx = e.clientX - IL.x0; IL.x0 = null; if (Math.abs(dx) > 40) { IL.gewischt = Date.now(); IL.uhr = 0; ilBlaettern(dx < 0 ? 1 : -1); } }, { passive: true });
   }
+}
+// KC-CLUB-LAUFBAND-LISTE (20.11.2026, Wunsch Hansi „oben im Rand der Laufschrift einen Pfeil nach unten wie beim Status – angeklickt geht eine Rollliste
+// nach unten auf, dort stehen Balken mit den Einträgen der Laufschrift, antippen geht sofort dorthin“): ▾ am oberen Rand öffnet unter dem Laufband alle
+// Meldungen als farbige Balken (Wichtigstes oben, auch die, die im Laufband wegen „höchstens 7“ nicht drankommen). Antippen = dorthin; ▴ schließt.
+function ilListeUmschalten() {
+  const b = document.getElementById("infoLaufband"); if (!b) return;
+  const alt = $("ilListe"); IL.halt = Date.now() + 9000;
+  if (alt) { alt.remove(); IL.html = ""; return ilZeigen(); }
+  try { IL.liste = ilMeldungen(); } catch {}
+  const l = document.createElement("div"); l.id = "ilListe"; l.className = "il-liste"; l.setAttribute("role", "list");
+  l.innerHTML = IL.alle.map((m, i) => `<button type="button" role="listitem" class="il-balken il-${m.stufe}" data-i="${i}"><span class="il-sym" aria-hidden="true">${m.sym || "ℹ️"}</span><span class="il-text"><b>${esc(m.t)}</b>${m.u ? `<small>${esc(String(m.u).replace(/<[^>]+>/g, ""))}</small>` : ""}</span><span class="il-pfeil" aria-hidden="true">›</span></button>`).join("");
+  l.querySelectorAll("[data-i]").forEach((k) => (k.onclick = () => { const m = IL.alle[+k.dataset.i]; l.remove(); IL.html = ""; ilZeigen(); if (!m) return; if (m.auf) { try { new Function(m.auf)(); } catch {} } else ilLesen(m); }));
+  b.insertAdjacentElement("afterend", l); IL.html = ""; ilZeigen();
 }
 function ilLesen(m) { // 2.589.0 KC-CLUB-INFO-LESEN: ganzer Text einer Info-Meldung (nichts abgeschnitten)
   IL.halt = Date.now() + 9000;

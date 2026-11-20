@@ -1,5 +1,11 @@
 # Änderungen
 
+## (Version folgt) – ▾ Alle Meldungen der Laufschrift als Liste · eigene Mitfahrt sichtbar (KC-CLUB-LAUFBAND-LISTE)
+Wunsch Hansi 20.11.: „Oben im Rand der Laufschrift einen Pfeil nach unten anbieten wie beim Status. Wird der geklickt, geht eine Rollliste nach unten auf, dort stehen Balken mit den Einträgen der Laufschrift. Antippen geht sofort dorthin.“ Und: „Habe ich nicht gesehen, das Mitfahrer-Angebot.“
+- Oben am Rand der Laufschrift hängt jetzt ein kleiner Reiter **„▾ 12“** (Anzahl der Meldungen). Antippen klappt darunter **alle Meldungen als farbige Balken** auf – die wichtigsten oben, auch die, die in der Laufschrift wegen „höchstens 7“ nicht drankommen. Ein Balken antippen = sofort dorthin; **„▴“** klappt die Liste wieder zu.
+- **Mitfahrten** stehen jetzt immer in der Laufschrift, auch das eigene Angebot („🚗 Du bietest eine Mitfahrt an …“) – vorher war es als unwichtigste Meldung hinter die 7 gerutscht.
+- Neue Prüfung: app.js und alle Programmteile müssen sich übersetzen lassen (KC-CLUB-APP-SYNTAX) – fängt Tippfehler, die die App am Start hindern würden.
+
 ## 2.988.0 – 2026-11-20 – 🚗 Mitfahrgelegenheiten in der Laufschrift (KC-CLUB-MITFAHRT-LAUFBAND) · Server 2.988.0 · [Hansi: einspielen]
 Wunsch Hansi 20.11.: „Zeige in der Laufschrift an, wenn jemand eine Mitfahrgelegenheit sucht oder anbietet – z. B. biete ich eine an.“
 - Im Info-Laufband auf der Startseite steht jetzt z. B. **„🚗 Hansi bietet eine Mitfahrt an – Köcheclub-Sitzung · Di., 24.11. · 3 Plätze frei“** oder **„🙋 Anne sucht eine Mitfahrgelegenheit – Adventsmarkt“**. Antippen öffnet den Termin bzw. die Aktion, dort kann man mitfahren oder einen Platz anbieten.

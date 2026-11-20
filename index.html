@@ -1456,6 +1456,17 @@
   .il-pfeil { grid-area: a; font-size: 1.6rem; line-height: 1; opacity: .75; padding: 0 2px; }
   .il-zu { grid-area: z; align-self: start; width: 26px; height: 26px; margin: -5px -3px 0 -6px; padding: 0; border: none; border-radius: 50%; background: none; color: #fff; opacity: .55; font-size: .8rem; line-height: 1; cursor: pointer; }
   .il-zu:hover, .il-zu:focus-visible { opacity: 1; background: rgba(255,255,255,.15); }
+  /* KC-CLUB-LAUFBAND-LISTE (20.11.2026, Wunsch Hansi): ▾ am oberen Rand → Rollliste aller Meldungen als Balken; antippen = dorthin */
+  .il.mit-alle { padding-top: 20px; }
+  .il-alle { position: absolute; top: -2px; left: 50%; transform: translateX(-50%); min-width: 54px; height: 22px; padding: 0 12px; border: none; border-radius: 0 0 12px 12px; background: var(--il-f); color: #3a0a10; font: inherit; font-size: .8rem; font-weight: 900; line-height: 22px; cursor: pointer; z-index: 2; }
+  .il-alle::before { content: ""; position: absolute; inset: -10px -8px; } /* großes Tippziel */
+  .il-alle:active { filter: brightness(.9); }
+  .il-liste { display: grid; gap: 6px; margin-top: 8px; max-height: 62vh; overflow-y: auto; overscroll-behavior: contain; animation: ilListeAuf .22s ease-out; }
+  @keyframes ilListeAuf { from { opacity: 0; transform: translateY(-6px); } }
+  .il-balken { --il-f: rgba(255,255,255,.55); --il-g: rgba(255,255,255,.16); display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; align-items: center; column-gap: 10px; min-height: 58px; width: 100%; padding: 7px 10px; border: 2px solid var(--il-f); border-left-width: 7px; border-radius: 14px; background: rgba(255,255,255,.1); color: #fff; font: inherit; text-align: left; cursor: pointer; box-shadow: none; animation: none; }
+  .il-balken:active { opacity: .8; }
+  .il-balken .il-sym, .il-balken .il-text, .il-balken .il-pfeil { grid-area: auto; }
+  @media (prefers-reduced-motion: reduce) { .il-liste { animation: none; } }
   .il-punkte { display: flex; justify-content: center; align-items: center; gap: 5px; margin-top: 6px; height: 6px; }
   .il-punkte i { width: 6px; height: 6px; border-radius: 3px; background: rgba(255,255,255,.35); transition: width .3s, background .3s; }
   .il-punkte i.an { width: 16px; background: var(--il-f); }

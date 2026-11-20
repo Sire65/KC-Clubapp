@@ -37,7 +37,20 @@ for (const c of ["mitfahrt_anbieten", "mitfahrt_platz", "mitfahrt_suchen", "mitf
   e = ilMitfahrt({ art: "suche", id: "x", name: "Anne", bezug_art: "aktion", bezug_id: "A1", titel: "Adventsmarkt", beginn: "x" });
   assert.equal(e.sym, "🙋"); assert.equal(e.t, "Anne sucht eine Mitfahrgelegenheit"); assert.equal(e.auf, 'aktionOeffnen("A1")');
   e = ilMitfahrt({ art: "biete", id: "M1", eigen: true, frei: 1, bezug_art: "treffen", bezug_id: "T1", titel: "Köcheclub-Sitzung", beginn: "x" });
-  assert.equal(e.t, "Du bietest eine Mitfahrt an"); assert.match(e.u, /1 Platz frei$/); assert.equal(e.stufe, "weiss");
+  assert.equal(e.t, "Du bietest eine Mitfahrt an"); assert.match(e.u, /1 Platz frei$/); assert.equal(e.stufe, "gold", "eigene auch gelb (Fund Hansi 20.11.)");
 }
 assert.ok(/for \(const m of INIT\?\.mitfahrtenOffen \|\| \[\]\) add\(ilMitfahrt\(m\)\);/.test(app), "Laufband nutzt die Startdaten (keine eigene Abfrage)");
 console.log("mitfahrt-laufband: alle Prüfungen bestanden");
+// KC-CLUB-LAUFBAND-LISTE (20.11.2026): ▾ am oberen Rand → Rollliste aller Meldungen; eigene Mitfahrt nicht mehr „weiß“ hinter den 7
+{
+  const { readFileSync } = await import("node:fs");
+  const a = readFileSync(new URL("../app.js", import.meta.url), "utf8"), h = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const chk = (b, t) => { if (!b) throw new Error(t); };
+  chk(/IL\.alle = \[tf, \.\.\.sichtbar\.filter\(\(m\) => m\.id !== tf\.id\)\];/.test(a), "Liste enthält alle Meldungen");
+  chk(/class="il-alle" aria-expanded=/.test(a) && /onclick="event\.stopPropagation\(\);ilListeUmschalten\(\)"/.test(a), "▾-Knopf am Laufband");
+  chk(/function ilListeUmschalten\(\)/.test(a) && /new Function\(m\.auf\)\(\)/.test(a.slice(a.indexOf("function ilListeUmschalten"))), "Antippen springt dorthin");
+  chk(/stufe: "gold", sym: m\.art === "biete" \? "🚗" : "🙋"/.test(a), "eigene Mitfahrt gelb, nicht weiß");
+  chk(/String\(m\.id\)\.startsWith\("mitfahrt:"\) \|\| l\.indexOf\(m\) < 7/.test(a), "Mitfahrten fallen nicht hinter die 7");
+  chk(/\.il-alle \{ position: absolute; top: -2px;/.test(h) && /\.il-liste \{[^}]*max-height: 62vh; overflow-y: auto;/.test(h), "CSS Pfeil und Rollliste");
+  console.log("mitfahrt-laufband (Liste): ok");
+}
