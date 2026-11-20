@@ -1,5 +1,19 @@
 # Änderungen
 
+## 2.995.0 – 2026-11-20 – 🛞 Rollkartei als Rolle wie am iPad – folgt dem Finger, rastet ein, mit Rastgeräusch (KC-CLUB-ROLLKARTEI-ROLLE) · nur App
+Wunsch Hansi 20.11.: „Auf dem iPad drehen die Meldungsfenster nach oben, wenn es mehr werden. Wir haben in der Club-App auch Drehregister (Rollkartei),
+die laufen aber nicht gut“ → „Ja, aber sorgfältig und bedienerfreundlich, mit flüssiger Bewegung und Rastgeräuschen – und so, dass du es wieder
+rückgängig machen kannst, wenn es mir nicht gefällt.“ Gilt überall, wo es die Rollkartei gibt (👥 Mitglieder, 💬 Chats, ⚙️ Einstellungen).
+- **Eine durchgehende Rolle:** die Karte folgt dem Finger (am PC der Maus/dem Mausrad), läuft mit Schwung aus und **rastet auf jeder Karte ein**.
+  Gelesene Karten rollen **nach oben** und legen sich verkleinert übereinander, die **nächste schaut unten heraus** (antippen = dorthin, Stapel oben = zurück).
+- **Lesen und Drehen in einem Zug:** hat eine Karte mehr Inhalt, scrollt der Finger erst den Inhalt – am Ende rollt er nahtlos zur nächsten Karte.
+- **Rastgeräusch:** leises, kurzes Klacken bei jeder Karte (kein Piepen), auf Android dazu ein kurzes Zucken. Aus mit ⚙️ „🔊 Rastgeräusch“ oder dem Ton der App.
+- **Mehr Platz:** das Rad unten entfällt; der Zähler „3 / 8“ mit ▲▼ steht oben rechts. Die Buchstaben-/Themen-Reiter oben gleiten direkt zur Karte.
+- **Rückgängig:** je Gerät ⚙️ → Rollkartei → „🛞 Neue Rolle“ aus = die bisherige Rollkartei mit Rad (vollständig erhalten); für alle: `RK_ROLLE_STANDARD = false`.
+- Geprüft im abgeschirmten Browser auf Handy und Tablet: Ziehen mit Finger/Maus, Schwung über mehrere Karten, ▲▼, Reiter, Knöpfe auf der Karte bleiben bedienbar,
+  Umschalten neu ↔ klassisch, keine Programmfehler. Test: `tests/rollkartei-rolle.test.mjs`. Rückweg: App 2.994.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.994.0 – 2026-11-20 – 🛰️ Störungsseite nur für unsere Region · Ablauf „Protokoll sparen“ (KC-CLUB-SB-REGION, KC-CLUB-PROTOKOLL-SPAREN) · nur App
 Wunsch Hansi 20.11.: „Check mal Supabase, ob es neue Sachen gibt, die wir gebrauchen können“ → „Ja, erstelle das mal“.
 - **Störungsseite (Verbindungsprüfung, Admin-Zentrale):** Supabase listet seit 08.10. (Umzug zu incident.io) einzelne Regionen. Bisher wurde jede Störung
