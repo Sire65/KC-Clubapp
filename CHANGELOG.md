@@ -1,5 +1,19 @@
 # Änderungen
 
+## 2.994.0 – 2026-11-20 – 🛰️ Störungsseite nur für unsere Region · Ablauf „Protokoll sparen“ (KC-CLUB-SB-REGION, KC-CLUB-PROTOKOLL-SPAREN) · nur App
+Wunsch Hansi 20.11.: „Check mal Supabase, ob es neue Sachen gibt, die wir gebrauchen können“ → „Ja, erstelle das mal“.
+- **Störungsseite (Verbindungsprüfung, Admin-Zentrale):** Supabase listet seit 08.10. (Umzug zu incident.io) einzelne Regionen. Bisher wurde jede Störung
+  irgendwo auf der Welt gelb – jetzt nur noch Störungen in **unserer Region London (eu-west-2)** oder ohne Regionsangabe. Sonst: „unsere Region (London) läuft –
+  Störung nur anderswo (…)“. Geplante Wartung unserer Region steht als 🛠️-Hinweis dabei. Ein Baustein `sbStatus` für alle drei Stellen.
+- **Neuer Ablauf „Protokoll sparen“** (GitHub → Actions → Run workflow): schaltet `cron.log_statement` ab – unsere ~40 Zeitpläne laufen rund 6.000-mal
+  am Tag und schrieben jedes Mal den ganzen Befehl ins Protokoll (Supabase rechnet Protokolle ab Anfang 2027 nach Menge ab und empfiehlt das Abschalten).
+  Alle Läufe stehen weiter in `cron.job_run_details`. Braucht einmalig den eingeschränkten Schlüssel `SUPABASE_DB_CONFIG_TOKEN` (Hansi).
+  Ohne Neustart wirkt es ab dem nächsten Neustart der Datenbank; mit Neustart sofort (wenige Sekunden Ausfall, nur nachts). Rückweg: wert = an.
+- Geprüft und in Ordnung (kein Umbau nötig): Postgres 17.11.0.003 schon aktiv (ltree/btree_gist/alte pgcrypto-Verfahren nicht genutzt), Rechte für neue
+  Tabellen (seit Oktober Regel + Test), Supabase-CLI fest auf 2.118.0 (v3 betrifft uns nicht), eigene Server-Protokollzeilen schon auf Ausreißer begrenzt (2.623.0).
+- Test: `tests/sb-region.test.mjs`. Rückweg: App 2.993.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.993.0 – 2026-11-20 – 🎵 Dienstplan rechnet den Konzert-Zuschlag aus DP2 mit (KC-CLUB-DP-ZUSCHLAG)
 Hansi 20.11.: „Codex hat den Bedarf an 4 Abenden erhöht – dann muss der Plan neu berechnet werden.“ DP2 legt den Zuschlag nicht im veröffentlichten Grundbedarf ab, sondern in der Programmfreigabe (`dienstplan_context.staffingAdjustment`: je eine Person mehr an vier Konzertabenden, 30 Min. Vor- und Nachlauf).
 - Der Club-Server liest den Zuschlag beim Rechnen des Dienstplans (`dpZuschlag`) und rechnet ihn auf den Grundbedarf dazu (insgesamt, nicht vorne/hinten). Grundbedarf und Wünsche bleiben unverändert.

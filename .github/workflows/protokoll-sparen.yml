@@ -1,0 +1,49 @@
+# KC-CLUB-PROTOKOLL-SPAREN (Wunsch Hansi 20.11.2026 nach dem Supabase-Check „Ja, erstelle das mal“):
+# Supabase rechnet Protokolle ab Anfang 2027 nach Menge ab (Changelog 25.09.2026). Unsere ~40 Zeitpläne laufen rund 6.000-mal am Tag; mit
+# cron.log_statement = on schreibt die Datenbank bei JEDEM Lauf den ganzen Befehl ins Protokoll. Supabase empfiehlt selbst, das abzuschalten –
+# alle Läufe stehen weiter in der Tabelle cron.job_run_details (die nutzen wir für Lagebilder, KC-SPARSAM-PROTOKOLLE).
+# Nur von Hand („Run workflow“). Schlüssel: Repository-Secret SUPABASE_DB_CONFIG_TOKEN – ein eigener, eingeschränkter Zugangsschlüssel
+# (supabase.com/dashboard/account/tokens → „Scoped token“: nur dieses Projekt, nur Datenbank-Einstellungen lesen/schreiben). Er wird nie ausgegeben.
+# neustart = nein: die Einstellung gilt ab dem nächsten Neustart der Datenbank (z. B. bei einer Supabase-Wartung) – kein Ausfall.
+# neustart = ja: sofort, die Datenbank ist dabei wenige Sekunden weg – nur nachts und nicht während Spiegelung/Sicherung (AGENTS.md KC-EINSPIELEN-RUHIG).
+# Rückweg: denselben Ablauf mit wert = an starten.
+name: Protokoll sparen
+on:
+  workflow_dispatch:
+    inputs:
+      wert:
+        description: "aus (sparen) oder an (Rückweg)"
+        default: "aus"
+      neustart:
+        description: "nein (wirkt beim nächsten Neustart) oder ja (sofort, wenige Sekunden Ausfall)"
+        default: "nein"
+permissions:
+  contents: read
+concurrency:
+  group: protokoll-sparen
+  cancel-in-progress: false
+jobs:
+  einstellen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      PROJEKT: ptblnpiroqftcvlsrhac
+      TOKEN: ${{ secrets.SUPABASE_DB_CONFIG_TOKEN }}
+      WERT: ${{ inputs.wert }}
+      NEUSTART: ${{ inputs.neustart }}
+    steps:
+      - name: Einstellung umstellen
+        run: |
+          set -euo pipefail
+          if [ -z "${TOKEN:-}" ]; then echo "::error::Secret SUPABASE_DB_CONFIG_TOKEN fehlt (siehe Kopf dieser Datei)"; exit 1; fi
+          case "$WERT" in aus) V=false ;; an) V=true ;; *) echo "::error::wert muss aus oder an sein"; exit 1 ;; esac
+          case "$NEUSTART" in ja) R=true ;; nein) R=false ;; *) echo "::error::neustart muss ja oder nein sein"; exit 1 ;; esac
+          API="https://api.supabase.com/v1/projects/$PROJEKT/config/database/postgres"
+          vorher=$(curl -sS --fail-with-body -H "Authorization: Bearer $TOKEN" "$API" | jq -c '{cron_log_statement: .["cron.log_statement"]}')
+          echo "Vorher: $vorher"
+          curl -sS --fail-with-body -X PUT "$API" -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+            --data "{\"cron.log_statement\": $V, \"restart_database\": $R}" | jq -c '{cron_log_statement: .["cron.log_statement"]}'
+          nachher=$(curl -sS --fail-with-body -H "Authorization: Bearer $TOKEN" "$API" | jq -r '.["cron.log_statement"]')
+          echo "Nachher (gespeichert): $nachher"
+          [ "$nachher" = "$V" ] || { echo "::error::Einstellung nicht übernommen"; exit 1; }
+          if [ "$R" = "true" ]; then echo "Datenbank wird neu gestartet – die Einstellung gilt in wenigen Minuten."; else echo "Gilt ab dem nächsten Neustart der Datenbank (kein Ausfall)."; fi

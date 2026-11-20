@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.993.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.994.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -8587,6 +8587,23 @@ async function diagMessen(url, opt = {}, ms = 10000) {
   try { const r = await fetch(url, { cache: "no-store", ...opt, signal: zeitSignal(ms) }); return { da: true, status: r.status, ms: Math.round(performance.now() - t0), r }; }
   catch (e) { return { da: false, zeit: e?.name === "TimeoutError" || e?.name === "AbortError", ms: Math.round(performance.now() - t0) }; }
 }
+// KC-CLUB-SB-REGION (Wunsch Hansi 20.11.2026, nach dem Supabase-Check): die Störungsseite liegt seit 08.10.2026 bei incident.io und listet einzelne
+// Regionen (z. B. „ap-east-1“) – bisher wurde jede Störung irgendwo auf der Welt gelb. Jetzt zählt nur unsere Region (London) oder eine Störung ohne
+// Regionsangabe; geplante Wartung unserer Region steht als Hinweis dabei. Ohne „incidents“-Feld (incident.io) geht es weiter wie bisher.
+const SB_REGION = "eu-west-2", SB_REGION_NAME = "London";
+function sbStatus(j) {
+  const reg = /^(af|ap|ca|eu|il|me|mx|sa|us)-[a-z]+-\d$/i;
+  const schlecht = (j?.components || []).filter((c) => c.status !== "operational" && !c.group).map((c) => String(c.name || ""));
+  const fremd = schlecht.length > 0 && schlecht.every((n) => reg.test(n) && n.toLowerCase() !== SB_REGION);
+  const meldet = !!j?.status?.indicator && j.status.indicator !== "none";
+  const gelb = meldet && !fremd;
+  const vorf = (j?.incidents || []).map((i) => i.name).filter(Boolean);
+  const wartung = (j?.scheduled_maintenances || []).filter((m) => String(m.name || "").toLowerCase().includes(SB_REGION)).map((m) => m.name);
+  const text = (gelb ? `meldet: ${j.status?.description || "Störung"}` + (schlecht.length ? ` · betroffen: ${schlecht.slice(0, 4).join(", ")}` : "") + (vorf.length ? ` · ${vorf[0]}` : "")
+    : fremd ? `unsere Region (${SB_REGION_NAME}) läuft – Störung nur anderswo (${schlecht.slice(0, 3).join(", ")})` : "meldet: alles in Ordnung")
+    + (wartung.length ? ` · 🛠️ ${wartung[0]}` : "");
+  return { gelb, fremd, text, wartung };
+}
 let DIAG_TEXT = "";
 async function serverDiagnose() {
   const zeilen = [["netz", "📶 Internet am Handy"], ["server", "🖥️ Club-Server"], ["db", "🗄️ Datenbank (Daten lesen/schreiben)"], ["not", "🛟 Notbetrieb-Server"], ["anbieter", "🌐 Störungsseite des Anbieters"]];
@@ -8613,11 +8630,10 @@ async function serverDiagnose() {
   let notUrl = NOT.konfig?.url; if (!notUrl) try { notUrl = (await (await fetch("notbetrieb.json?d=" + Date.now(), { cache: "no-store", signal: zeitSignal(6000) })).json()).url; } catch {}
   if (notUrl) { const o = await diagMessen(notUrl, {}, 8000); erg.not = o.da && o.status < 500 ? setze("not", "🟢", `erreichbar (${o.ms} ms) – springt ein, wenn der Club-Server fehlt`) : setze("not", "🔴", o.da ? `Fehler ${o.status}` : "nicht erreichbar"); }
   else erg.not = setze("not", "⚪", "nicht eingerichtet oder nicht prüfbar");
-  // 5) Störungsseite des Anbieters (öffentlich)
+  // 5) Störungsseite des Anbieters (öffentlich) – ausgewertet mit sbStatus (nur unsere Region zählt)
   const a = await diagMessen("https://status.supabase.com/api/v2/summary.json", {}, 8000);
   let aText = null, aStoerung = false;
-  try { if (a.da && a.status === 200) { const j = await a.r.json(), schlecht = (j.components || []).filter((c) => c.status !== "operational" && !c.group).map((c) => c.name), vorf = (j.incidents || []).map((i) => i.name);
-    aStoerung = j.status?.indicator !== "none"; aText = (aStoerung ? `meldet: ${j.status?.description || "Störung"}` : "meldet: alles in Ordnung") + (schlecht.length ? ` · betroffen: ${schlecht.slice(0, 4).join(", ")}` : "") + (vorf.length ? ` · ${vorf[0]}` : ""); } } catch {}
+  try { if (a.da && a.status === 200) { const s = sbStatus(await a.r.json()); aStoerung = s.gelb; aText = s.text; } } catch {}
   erg.anbieter = aText ? setze("anbieter", aStoerung ? "🟡" : "🟢", aText) : setze("anbieter", "⚪", "nicht abrufbar – bitte selbst nachsehen: status.supabase.com");
   // Fazit in einem Satz
   const rot = (k) => erg[k]?.ampel === "🔴";
@@ -14254,9 +14270,9 @@ function adZustand(id) {
     case "server": return !r ? gemessen() : gemessen(!r.server.ok ? ["rot", "Datenbank antwortet nicht"] : [r.server.dbMs > 1500 ? "gelb" : "gruen", `v${r.server.version} · ${r.server.dbMs} ms`]);
     case "supabase": {
       if (!r) return gemessen();
-      const p = adPct(r.datenbank.bytes, r.datenbank.grenze), st = e.status?.status?.indicator;
-      const f = !r.server.ok ? "rot" : p == null ? "grau" : p >= r.datenbank.kritPct ? "rot" : p >= r.datenbank.warnPct || (st && st !== "none") ? "gelb" : "gruen";
-      return gemessen([f, `${p == null ? "?" : String(Math.round(p * 10) / 10).replace(".", ",")} % belegt${st && st !== "none" ? " · Anbieter meldet Störung" : ""}`]);
+      const p = adPct(r.datenbank.bytes, r.datenbank.grenze), st = e.status ? sbStatus(e.status).gelb : false; // KC-CLUB-SB-REGION: nur Störungen unserer Region
+      const f = !r.server.ok ? "rot" : p == null ? "grau" : p >= r.datenbank.kritPct ? "rot" : p >= r.datenbank.warnPct || st ? "gelb" : "gruen";
+      return gemessen([f, `${p == null ? "?" : String(Math.round(p * 10) / 10).replace(".", ",")} % belegt${st ? " · Anbieter meldet Störung" : ""}`]);
     }
     case "neon": return gemessen(sf?.neon);
     case "backup": return gemessen(sf?.backup);
@@ -15132,10 +15148,10 @@ function adBlatt(id) {
         <div class="knoepfe">${adKnopf("🩺 Server-Diagnose", "serverDiagnose()", true)}${adKnopf("🔄 Update prüfen", "updateKachel()")}</div>${adLinks("supabase")}`;
       break;
     case "supabase": {
-      const st = e.status, schlecht = (st?.components || []).filter((k) => k.status !== "operational" && !k.group).map((k) => k.name);
+      const st = e.status, sb = st ? sbStatus(st) : null; // KC-CLUB-SB-REGION
       html = `${kopf("🗄️", "Supabase (Haupt-Datenbank)")}${adZeile(z[0], "Zustand", z[1])}
         ${r ? adminBalken("🗄️ Datenbank", r.datenbank.bytes, r.datenbank.grenze, r.datenbank.warnPct, r.datenbank.kritPct) : ""}
-        ${adZeile(!st ? "grau" : st.status?.indicator === "none" ? "gruen" : "gelb", "Störungsseite", !st ? "nicht abrufbar" : (st.status?.description || "?") + (schlecht.length ? " · " + schlecht.slice(0, 3).join(", ") : ""))}
+        ${adZeile(!sb ? "grau" : sb.gelb ? "gelb" : "gruen", "Störungsseite", !sb ? "nicht abrufbar" : sb.text)}
         ${r?.datenbank.check ? adZeile("keine", "Täglicher System-Check", `${r.datenbank.check.status} · ${seitText(r.datenbank.check.zeit)}`) : ""}
         <div class="knoepfe">${adKnopf("🩺 Server-Diagnose", "serverDiagnose()", true)}${adKnopf("🔄 Projekt neu starten …", "adNeustart()")}</div>
         <div class="ps-schritt"><b>🧹 Aufräumen</b>
