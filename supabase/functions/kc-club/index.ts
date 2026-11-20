@@ -194,7 +194,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.985.0";
+const SERVER_VERSION = "2.986.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -7781,7 +7781,8 @@ function aufgabenStandListe(zeilen: any, protokolle: any, datum: any, name: any,
     const a = alle[0], erl = alle.every((x: any) => x.erledigt_am);
     const letzt = alle.filter((x: any) => x.stand_am && (x.stand === "teilweise" || x.stand === "nicht")).sort((x: any, y: any) => String(y.stand_am).localeCompare(String(x.stand_am)))[0];
     const e: any = { text: a.text, namen: [...new Set(alle.map((x: any) => name(x.person_id) || "?"))], aus: pub.get(a.protokoll_id), faellig: a.faellig || null, gruppe: a.gruppe || a.id };
-    if (erl) Object.assign(e, { stand: "erledigt", am: alle.map((x: any) => x.erledigt_am).sort().pop(), notiz: alle.find((x: any) => x.bemerkung)?.bemerkung || null });
+    if (erl) { const ev = alle.find((x: any) => x.stand === "erledigt" && x.stand_von)?.stand_von; // KC-CLUB-AUFGABE-ERLEDIGT-VON: wer abgehakt hat (ältere Erledigungen: keiner)
+      Object.assign(e, { stand: "erledigt", am: alle.map((x: any) => x.erledigt_am).sort().pop(), notiz: alle.find((x: any) => x.bemerkung)?.bemerkung || null, ...(ev && name(ev) ? { von: name(ev) } : {}) }); }
     else if (letzt) Object.assign(e, { stand: letzt.stand, am: letzt.stand_am, notiz: letzt.stand_text || null, ziel: letzt.stand_ziel || null, von: letzt.stand_von ? name(letzt.stand_von) || null : null });
     else e.stand = "keine";
     e.neu = e.stand !== "keine" && (!vorher || tg(e.am) >= vorher);
@@ -7847,6 +7848,9 @@ async function aufgabenDranFuer(ich: Ich, ids: string[], sitzung: any) {
     stand: a.stand, stand_am: a.stand_am, stand_text: a.stand_text, stand_ziel: a.stand_ziel, stand_von: a.stand_von && a.stand_von !== ich.person_id ? vn(a.stand_von) : a.stand_von ? "ich" : null,
     sitzung: sitzung && sMs && sMs - jetztMs <= AST_ZYKLUS_TAGE * AST_TAG_MS ? { titel: sitzung.titel, beginn: sitzung.beginn } : null }));
 }
+// KC-CLUB-AUFGABE-ERLEDIGT-VON (19.11.2026, Wunsch Hansi „✔ erledigt am … von …“): wer abgehakt hat (Vorname) – ein Protokollvermerk, darum für alle,
+// die das Protokoll sehen (anders als die Stand-Felder). Nur bei stand = 'erledigt' mit stand_von; ältere Erledigungen (vor dem Aufgaben-Stand) haben keinen „von“.
+const aufgabeErledigtVon = (a: any, vn: (id: string) => string) => a?.erledigt_am && a.stand === "erledigt" && a.stand_von && vn(a.stand_von) ? { erledigt_von_name: vn(a.stand_von) } : {};
 // Stand-Felder einer Aufgabe für die Listen – nur für eigene/gemeinsame Aufgaben und wer sie verwaltet (Datenschutz)
 const aufgabeStandFelder = (a: any, sichtbar: boolean) => sichtbar && a.stand ? { stand: a.stand, stand_am: a.stand_am ?? null, stand_text: a.stand_text ?? null, stand_ziel: a.stand_ziel ?? null } : {};
 // Erinnerung 2 Tage vor der Sitzung (Takt, stündlich 9–20 Uhr): wer im Zyklus noch nichts gemeldet hat, bekommt einmal je Zyklus eine Push (ohne App: Mail)
@@ -19507,7 +19511,7 @@ Köcheclub Werne`,
         const aids = (pa ?? []).map((x: any) => x.attachment_id);
         const { data: att } = aids.length ? await db.from("kc_communication_attachments").select("id,file_name,mime_type,size_bytes").in("id", aids) : { data: [] as any[] };
         const leser = bearb && pr.status === "veroeffentlicht" ? await protokollLeser() : [];
-        const leute = await personen([pr.verfasser, ...pr.anwesend, ...pr.entschuldigt, ...(ew ?? []).map((x: any) => x.person_id), ...(auf ?? []).map((x: any) => x.person_id), ...leser]);
+        const leute = await personen([pr.verfasser, ...pr.anwesend, ...pr.entschuldigt, ...(ew ?? []).map((x: any) => x.person_id), ...(auf ?? []).map((x: any) => x.person_id), ...(auf ?? []).map((x: any) => x.stand_von).filter(Boolean), ...leser]); // stand_von: KC-CLUB-AUFGABE-ERLEDIGT-VON
         const name = (id: string) => leute.get(id)?.display_name || id;
         if (pr.status === "veroeffentlicht" && !(gel ?? []).some((x: any) => x.person_id === ich.person_id && x.version >= pr.version))
           await db.from("kc_club_sitzungsprotokoll_gelesen").upsert({ protokoll_id: pr.id, person_id: ich.person_id, version: pr.version, gelesen_am: jetzt() });
@@ -19528,7 +19532,8 @@ Köcheclub Werne`,
           anlagen: aids.map((id: string) => (att ?? []).find((y: any) => y.id === id)).filter(Boolean).map((y: any) => ({ id: y.id, name: y.file_name, mime: y.mime_type, groesse: y.size_bytes })),
           einwaende: (ew ?? []).map((x: any) => ({ id: x.id, name: name(x.person_id), text: x.text, erstellt_am: x.erstellt_am, erledigt_am: x.erledigt_am, eigen: x.person_id === ich.person_id })),
           aufgaben: (auf ?? []).map((a: any) => ({ id: a.id, person_id: a.person_id, gruppe: a.gruppe ?? null, name: name(a.person_id), text: a.text, faellig: a.faellig, erledigt_am: a.erledigt_am, bemerkung: a.bemerkung ?? null, meine: a.person_id === ich.person_id,
-            verwalten: bearb || a.erstellt_von === ich.person_id, ...aufgabeStandFelder(a, bearb || a.person_id === ich.person_id || a.erstellt_von === ich.person_id || meineGr.has(a.gruppe)) })),
+            verwalten: bearb || a.erstellt_von === ich.person_id, ...aufgabeStandFelder(a, bearb || a.person_id === ich.person_id || a.erstellt_von === ich.person_id || meineGr.has(a.gruppe)),
+            ...aufgabeErledigtVon(a, (id) => vorname(leute.get(id) ?? null)) })), /* KC-CLUB-AUFGABE-ERLEDIGT-VON: Vorname, für alle Leser */
           aufgabenStand: ast ? (bearb && astLebendig ? ast.map(({ fehlt: _f, ...e }: any) => e) : aufgabenStandFest(ast)) : null, aufgabenStandLebendig: astLebendig, /* KC-CLUB-AUFGABEN-STAND */
           aufgabenNachgefragtAm: bearb ? pr.aufgaben_nachgefragt_am ?? null : null,
           // Lesestand nur für Verfasser/Organisation
@@ -19937,7 +19942,6 @@ Köcheclub Werne`,
           if (!zeilen.some((z: any) => z.person_id === ich.person_id)) throw new Fehler("Den Stand meldet, wer die Aufgabe hat.", 403);
           if (zeilen.every((z: any) => z.erledigt_am)) throw new Fehler("Diese Aufgabe ist schon erledigt.", 409);
           const text = txt(p.text, 1000) || null;
-          if (stand === "teilweise" && (text ?? "").length < 3) throw new Fehler("Bitte kurz dazuschreiben, was noch fehlt.");
           const ziel = stand === "nicht" && /^\d{4}-\d{2}-\d{2}$/.test(String(p.ziel || "")) ? String(p.ziel) : null;
           if (ziel && ziel < berlinTag(new Date())) throw new Fehler("Das neue Zieldatum liegt in der Vergangenheit.");
           await aufgabeStandSchreiben(ich, zeilen, stand, text, ziel);
@@ -19957,7 +19961,7 @@ Köcheclub Werne`,
         // 2.508.0 KC-CLUB-AUFGABE-BEMERKUNG (Wunsch Hansi „muss er sie bestätigen mit einem Bemerkungstext“): Erledigt nur mit kurzer Bemerkung;
         // wer die Aufgabe eingetragen hat, bekommt Bescheid (Push, ohne App per Mail). Wieder öffnen behält die alte Bemerkung im Protokoll.
         const erledigt = p.erledigt !== false, bemerkung = txt(p.bemerkung, 1000);
-        if (erledigt && bemerkung.length < 3) throw new Fehler("Bitte kurz dazuschreiben, was dabei herausgekommen ist.");
+        // KC-CLUB-AUFGABE-BEMERKUNG-FREI (19.11.2026, Wunsch Hansi „kein Pflichtfeld, sondern freiwillige Angabe“): Bemerkung darf leer sein
         await db.from("kc_club_aufgaben").update(erledigt ? { erledigt_am: jetzt(), bemerkung } : { erledigt_am: null }).in("id", ids);
         await aufgabeStandNachErledigt(ich, ids, erledigt, bemerkung); // KC-CLUB-AUFGABEN-STAND: erledigt bzw. wieder offen (Stand zurück auf „offen“)
         await protokoll(ich.person_id, erledigt ? "aufgabe_erledigt" : "aufgabe_wieder_offen", { aufgabe: x.a.id, ...(ids.length > 1 ? { gruppe: x.a.gruppe, zeilen: ids.length } : {}), ...(erledigt ? { bemerkung } : { alte_bemerkung: x.a.bemerkung ?? null }) });
@@ -19965,9 +19969,9 @@ Köcheclub Werne`,
         const anInfo = [...new Set([x.a.erstellt_von, ...(ids.length > 1 ? beteiligt : [])].filter((id) => id && id !== ich.person_id))] as string[];
         if (erledigt && anInfo.length) {
           const info = sendenGewaehlt("club_nachricht", anInfo, ["push"], {
-            titel: `✔ ${ich.name.split(" ")[0]} hat eine Aufgabe erledigt`, kurz: `${txt(x.a.text, 80)} – „${txt(bemerkung, 120)}“`,
+            titel: `✔ ${ich.name.split(" ")[0]} hat eine Aufgabe erledigt`, kurz: `${txt(x.a.text, 80)}${bemerkung ? ` – „${txt(bemerkung, 120)}“` : ""}`,
             betreff: `Köcheclub Werne – Aufgabe erledigt: ${txt(x.a.text, 80)}`,
-            text: `Hallo,\n\n${ich.name} hat die Aufgabe „${x.a.text}“ als erledigt abgehakt.\n\nBemerkung: ${bemerkung}\n\nKöcheclub Werne`,
+            text: `Hallo,\n\n${ich.name} hat die Aufgabe „${x.a.text}“ als erledigt abgehakt.${bemerkung ? `\n\nBemerkung: ${bemerkung}` : ""}\n\nKöcheclub Werne`,
             url: x.a.protokoll_id ? `${APP_URL}#protokoll=${x.a.protokoll_id}` : APP_URL }, `club-aufgabe-erledigt:${x.a.id}:${Date.now()}`)
             .catch((e) => console.error("aufgabe erledigt info", String(e)));
           try { (globalThis as any).EdgeRuntime?.waitUntil?.(info); } catch { /* läuft trotzdem an */ }

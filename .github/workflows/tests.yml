@@ -271,6 +271,8 @@ jobs:
       - run: node tests/gk-nachfrage.test.mjs
       # KC-CLUB-AUFGABEN-STAND (19.11.2026): Startmeldung „Wie steht's mit deiner Aufgabe?“ + Abschnitt „Stand der Aufgaben“ im Protokoll
       - run: node tests/aufgaben-stand.test.mjs
+      # KC-CLUB-CHAT-ANLAGEN-SICHTBAR (19.11.2026): Anlage-Leiste, 📎 mit Zahl in der Chat-Liste, Aufleuchten, „Alle Anlagen“ – nur Beispieldaten
+      - run: node tests/chat-anlagen.test.mjs
   # 2.725.0 KC-CLUB-RUNDGANG: Klick-Rundgang im echten Browser (Testdaten, nichts nach draußen) – Programmfehler und Schutzschild-Sperren werden rot
   rundgang:
     runs-on: ubuntu-latest

@@ -1,5 +1,5 @@
 // KC-CLUB-AUFGABEN-STAND (19.11.2026): Browser-Prüfung mit dem echten app.js und AUSGEDACHTEN Aufgaben („Tablets beschaffen“ mit „Christina Beispiel“ usw.):
-// Startmeldung „📌 Wie steht's mit deiner Aufgabe?“ mit drei Knöpfen, 🔶 Teilweise ohne Text → Hinweis, Melden ruft die Aktion, „Später“ für den Rest,
+// Startmeldung „📌 Wie steht's mit deiner Aufgabe?“ mit drei Knöpfen, 🔶 Teilweise ohne Text geht (freiwillig), Melden ruft die Aktion, „Später“ für den Rest,
 // kein Überlauf bei 390 px, Protokoll-Ansicht/Entwurf/Druck mit „Stand der Aufgaben“. Nur Testdaten, nichts an den Server (KC-TESTS-OHNE-ECHTSERVER).
 // Start: PW_CORE=playwright PW_CHROME=/opt/pw-browsers/chromium-1243/chrome-linux64/chrome node tools/hilfe/aufgaben-stand-browser.mjs   (BILDER=<Ordner> für Bildschirmfotos)
 import http from "node:http"; import fs from "node:fs"; import path from "node:path"; import { createRequire } from "node:module";
@@ -30,7 +30,9 @@ await seite.evaluate(() => {
       version: 1, veroeffentlicht_am: entwurf ? null : tag(-1), einspruch_bis: entwurf ? null : tag(6), status: entwurf ? "entwurf" : "einspruch", roh: entwurf ? "entwurf" : "veroeffentlicht",
       verfasser: { person_id: "P1", name: "Frank Test", offen: false }, anwesend: [{ person_id: "P1", name: "Frank Test" }], entschuldigt: [] },
     anlagen: [], einwaende: [], fassungen: [], gelesen: null, darfBearbeiten: entwurf, darfLoeschen: false, eigen: true, pruefung: null, schreiber: ["P1"], naechsterVorschlag: null, nachtraege: [],
-    aufgaben: [{ id: "A9", person_id: "P1", gruppe: null, name: "Frank Test", text: "Grill reinigen", faellig: "2026-12-01", erledigt_am: null, bemerkung: null, meine: true, verwalten: true, stand: "nicht", stand_am: "2026-11-23T08:00:00Z", stand_text: "Ersatzteil fehlt", stand_ziel: "2026-12-10" }],
+    aufgaben: [{ id: "A9", person_id: "P1", gruppe: null, name: "Frank Test", text: "Grill reinigen", faellig: "2026-12-01", erledigt_am: null, bemerkung: null, meine: true, verwalten: true, stand: "nicht", stand_am: "2026-11-23T08:00:00Z", stand_text: "Ersatzteil fehlt", stand_ziel: "2026-12-10" },
+      { id: "A10", person_id: "P2", gruppe: null, name: "Christina Beispiel", text: "Schürzen bestellen", faellig: null, erledigt_am: "2026-11-19T10:00:00Z", bemerkung: null, meine: false, verwalten: true, erledigt_von_name: "Christina" }, /* KC-CLUB-AUFGABE-ERLEDIGT-VON */
+      { id: "A11", person_id: "P1", gruppe: null, name: "Frank Test", text: "Alte Kasse", faellig: null, erledigt_am: "2026-11-10T10:00:00Z", bemerkung: null, meine: true, verwalten: true }],
     aufgabenStand: stand, aufgabenStandLebendig: entwurf, aufgabenNachgefragtAm: null });
   window.__entwurf = false; window.__api = [];
   api = async (a, p) => { __api.push({ a, p: JSON.parse(JSON.stringify(p || {})) });
@@ -64,16 +66,13 @@ const gross = await seite.evaluate(() => { const r = document.querySelector("#as
 ok(gross[0] >= 44 && gross[1] >= 250, "große Knöpfe: " + gross.join("×"));
 let ue = await ueberlauf(); ok(ue.seite <= 390 && ue.blatt <= 0, "kein Überlauf bei 390 px: " + JSON.stringify(ue));
 await bild("aufgaben-stand-1-start");
-// 🔶 Teilweise ohne Text → Hinweis, nichts gesendet
+// 🔶 Teilweise ohne Text → wird trotzdem gemeldet (KC-CLUB-AUFGABE-BEMERKUNG-FREI: Text freiwillig)
 await seite.click('#astBlatt .ast-k[data-s="teilweise"]'); await seite.waitForTimeout(200);
-await seite.click("#astLos"); await seite.waitForTimeout(300);
-const hinweis = await seite.evaluate(() => $("astHinweis").style.display !== "none" ? $("astHinweis").textContent : "");
-ok(/was noch fehlt/.test(hinweis) && !(await seite.evaluate(() => __api.some((x) => x.a === "aufgabe_stand_melden"))), "Teilweise ohne Text → Hinweis: " + hinweis);
-await bild("aufgaben-stand-2-hinweis"); await weg();
-// mit Text → Aktion
-await seite.fill("#astText", "Zweites Tablet bestellt"); await seite.click("#astLos"); await seite.waitForTimeout(500); await weg();
+ok(/freiwillig/.test(await seite.evaluate(() => $("astTextLabel").textContent)), "Teilweise: Text ist als freiwillig beschriftet");
+await bild("aufgaben-stand-2-teilweise");
+await seite.click("#astLos"); await seite.waitForTimeout(500); await weg();
 const m = await seite.evaluate(() => __api.find((x) => x.a === "aufgabe_stand_melden")?.p);
-ok(m && m.id === "A1" && m.stand === "teilweise" && m.text === "Zweites Tablet bestellt", "Melden ruft aufgabe_stand_melden: " + JSON.stringify(m));
+ok(m && m.id === "A1" && m.stand === "teilweise" && m.text === "", "Teilweise ohne Text ruft aufgabe_stand_melden: " + JSON.stringify(m));
 // nächste Aufgabe: ❌ Noch nicht mit Zieldatum (Grund freiwillig)
 const zweite = await seite.evaluate(() => $("astBlatt")?.textContent.replace(/\s+/g, " ") || "");
 ok(/Aufgabe 2 von 2/.test(zweite) && /Saal anfragen/.test(zweite), "zweite Aufgabe folgt");
@@ -99,9 +98,11 @@ const pv = await seite.evaluate(() => $("protokollInhalt").textContent.replace(/
 ok(/Stand der Aufgaben/.test(pv) && /✅ erledigt am 21\.11\. – Frank, Christina: Tablets beschaffen – „2 Tablets gekauft“ \(aus dem Protokoll vom 30\.10\.\)/.test(pv), "Protokoll-Ansicht: Abschnitt „Stand der Aufgaben“");
 ok(/🔶 teilweise \(Stand 22\.11\.\) – Klaus: Glühwein bestellen/.test(pv) && /❔ keine Rückmeldung – Erika: Kasse prüfen/.test(pv) && !/Rückmeldungen:/.test(pv), "teilweise / keine Rückmeldung; ohne Übersicht (veröffentlicht)");
 ok(/❌ noch nicht · 23\.11\. · Ziel 10\.12\./.test(pv) && /📝 Stand melden/.test(pv), "Abzeichen und „📝 Stand melden“ an meiner Aufgabe");
+ok(/Schürzen bestellen✔ erledigt am 19\.11\. von Christina/.test(pv) && /Alte Kasse✔ erledigt am 10\.11\.(?! von)/.test(pv), "KC-CLUB-AUFGABE-ERLEDIGT-VON: „✔ erledigt am … von …“ (ältere ohne „von“)");
 ue = await ueberlauf(); ok(ue.seite <= 390, "Protokoll: kein Überlauf: " + JSON.stringify(ue));
 await bild("aufgaben-stand-4-protokoll", true);
 const druck = await seite.evaluate(() => druckProtokoll().html.replace(/\s+/g, " "));
+ok(/Schürzen bestellen<br><small>✔ erledigt am 19\.11\. von Christina<\/small>/.test(druck), "Druck: erledigt am … von …");
 ok(/<h2>Stand der Aufgaben<\/h2>/.test(druck) && /Glühwein bestellen – „Angebot fehlt noch“/.test(druck), "Druck/PDF mit Abschnitt");
 ok(await seite.evaluate(() => /Stand der Aufgaben:\n  ✅ erledigt am 21\.11\./.test(protokollText(PR.protokoll))), "Text (Archiv) mit Abschnitt");
 await seite.evaluate(() => astEinzeln("A9")); await seite.waitForTimeout(300);
