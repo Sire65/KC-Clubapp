@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.994.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.995.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -18088,12 +18088,13 @@ function rkIn(box, schluessel, opts = {}) {
 function rkSchalten(k, an) {
   try { localStorage.setItem("kc_club_rk_" + k, an ? "an" : "aus"); } catch {}
   if (k === "chats") { if (aktuelleAnsicht === "nachrichten") unterhLaden(); uhKarteiKnopf(); } else if (RK[k]) rkAufbauen(RK[k]);
-  melde(an ? "🗂️ Rollkartei an – wischen, antippen oder ▲▼ am Rad" : "☰ Gewohnte Liste – die Rollkartei ist aus");
+  melde(an ? `🗂️ Rollkartei an – ${rkBedienText()}` : "☰ Gewohnte Liste – die Rollkartei ist aus");
   if (an && RK[k]) { const d = $("setRk" + k[0].toUpperCase() + k.slice(1)); if (d) setTimeout(() => rkZu(RK[k], d), 80); }
 }
 function rkAufbauen(z) {
   const w = z.w, an = z.immer || rkAn(z.schluessel);
   const sch = $("setRk" + z.schluessel[0].toUpperCase() + z.schluessel.slice(1)); if (sch) sch.checked = an; // Schalter unter 🧩 Startseite & Ansicht
+  if ($("setRkRolle")) $("setRkRolle").checked = rkRolleAn(); if ($("setRkRast")) $("setRkRast").checked = einst("rkRast", true); // KC-CLUB-ROLLKARTEI-ROLLE
   if (z.knopf) { const tx = an ? (z.schluessel === "einst" ? "Übersicht" : "Liste") : "Kartei"; if (z.knopf.querySelector(".kl-i")) klSetzen(z.knopf, an ? "☰" : "🗂️", tx, tx); else z.knopf.textContent = (an ? "☰ " : "🗂️ ") + tx; /* 2.729.0 */ z.knopf.title = an ? "Als gewohnte Liste zeigen" : "Als Rollkartei zeigen"; }
   if (z.schluessel === "einst") setTimeout(() => { try { euModus(); } catch {} }, 0); // 2.552.0 KC-CLUB-EINST-UEBERSICHT: Übersicht ↔ Kartei
   if (!an) { if (z.an) rkAbbauen(z); return; }
@@ -18111,12 +18112,13 @@ function rkAufbauen(z) {
     // Karte erst am Ende/Anfang ihres Inhalts; schneller Wisch = Schwung über mehrere Karten
     w.addEventListener("touchstart", z.ts = (e) => { const t = e.touches[0], k = e.target.closest?.(".rk-vorn"), auf = e.target.closest?.(".rk-platz, .rk-karte, .rk-griff");
       z.t0 = auf && e.touches.length === 1 ? { x: t.clientX, y: t.clientY, zeit: Date.now(), karte: !!k, oben: !k || k.scrollTop <= 0, unten: !k || k.scrollTop + k.clientHeight >= k.scrollHeight - 2 } : null; }, { passive: true });
-    w.addEventListener("touchend", z.te = (e) => { const s0 = z.t0; z.t0 = null; if (!s0) return; const t = e.changedTouches[0], dx = t.clientX - s0.x, dy = t.clientY - s0.y, dt = Math.max(60, Date.now() - s0.zeit);
+    w.addEventListener("touchend", z.te = (e) => { const s0 = z.t0; z.t0 = null; if (!s0 || z.rolle) return; const t = e.changedTouches[0], dx = t.clientX - s0.x, dy = t.clientY - s0.y, dt = Math.max(60, Date.now() - s0.zeit);
       const quer = Math.abs(dx) > 50 && Math.abs(dx) > 1.4 * Math.abs(dy), hoch = Math.abs(dy) > 60 && Math.abs(dy) > 1.4 * Math.abs(dx);
       if (!quer && !hoch) return; const weg = quer ? dx : dy, schwung = Math.max(1, Math.min(5, Math.round(Math.abs(weg) / dt * 1.8))), r = weg < 0 ? 1 : -1;
       if (hoch && s0.karte && !(r > 0 ? s0.unten : s0.oben)) return; // erst den Karteninhalt scrollen
       rkGehe(z, z.i + r * schwung, r); }, { passive: true });
   }
+  rkRolleEinrichten(z); // KC-CLUB-ROLLKARTEI-ROLLE (2.995.0): neue Rolle wie am iPad – oder klassisch (⚙️ „🛞 Neue Rolle“)
   z.karten = rkKarten(w);
   z.karten.forEach((d) => { if (d.dataset.rkVorher === undefined) d.dataset.rkVorher = d.open ? "1" : "0"; d.open = true; d.classList.add("rk-karte"); });
   z.i = Math.max(0, Math.min(z.i, z.karten.length - 1));
@@ -18128,12 +18130,13 @@ function rkAufbauen(z) {
   rkMasse(z); rkStellen(z, true); setTimeout(() => rkJalousie(z, true), 60);
 }
 function rkAbbauen(z) {
-  const w = z.w; z.an = false; w.classList.remove("rk");
+  const w = z.w; z.an = false; w.classList.remove("rk"); rkRolleAbbauen(z); // KC-CLUB-ROLLKARTEI-ROLLE
   w.removeEventListener("wheel", z.rad); w.removeEventListener("touchstart", z.ts); w.removeEventListener("touchend", z.te);
   z.reiter?.remove(); z.platz?.remove(); z.griffe?.forEach((g) => g.remove());
   w.querySelectorAll(".rk-karte").forEach((d) => { d.classList.remove("rk-karte", "rk-vorn", "rk-weg"); d.removeAttribute("data-rk"); d.style.cssText = ""; d.inert = false; d.removeAttribute("aria-hidden"); /* 2.186.0 Fund Hansi: sonst blieben die Bereiche in der Liste gesperrt */ if (d.dataset.rkVorher !== undefined) { d.open = d.dataset.rkVorher === "1"; delete d.dataset.rkVorher; } });
 }
 function rkMasse(z) {
+  if (z.rolle) return rkRolleMasse(z); // KC-CLUB-ROLLKARTEI-ROLLE
   const nav = $("fuss")?.getBoundingClientRect().height || 76;
   const h = Math.max(300, Math.round(innerHeight * (z.immer ? 0.72 : 0.5)), innerHeight - (z.platz.getBoundingClientRect().top + scrollY) - nav - 12); // 2.185.0: in hohen Seiten (Mitglieder) mindestens ¾ Bildschirm – die Seite scrollt dann bis zur Kartei
   z.platz.style.height = h + "px";
@@ -18156,6 +18159,7 @@ function rkStellen(z, still) {
   z.reiter.querySelectorAll(".rk-tab").forEach((b, i) => { b.classList.toggle("an", i === z.i); b.setAttribute("aria-selected", i === z.i); });
   z.reiter.querySelector(".rk-tab.an")?.scrollIntoView({ block: "nearest", inline: "center" });
   z.platz.querySelector(".rk-zahl").textContent = `${z.i + 1} / ${n}`;
+  if (z.rolle) { z.griffe?.forEach((g) => (g.hidden = true)); if (!z.lauf) z.p = z.i; rkRolleZeichnen(z); } // KC-CLUB-ROLLKARTEI-ROLLE: Lage aus z.i (auch wenn andere Stellen z.i setzen)
   try { z.opts?.vorn?.(z.karten[z.i], z); } catch {}
 }
 // i darf über das Ende hinaus zeigen (Überlauf); richtung: 1 = vorwärts, -1 = rückwärts, ohne = kürzester Weg (Reiter)
@@ -18164,6 +18168,7 @@ function rkGehe(z, i, richtung) {
   const ziel = ((i % n) + n) % n; if (ziel === z.i) return false;
   const vor = (ziel - z.i + n) % n, zurueck = (z.i - ziel + n) % n;
   const r = richtung || (vor <= zurueck ? 1 : -1), schritte = r > 0 ? vor : zurueck;
+  if (z.rolle) { z.karten[ziel].scrollTop = 0; rkRolleFahren(z, Math.round(z.lauf ? z.lauf.ziel : z.p) + r * schritte); return true; } // KC-CLUB-ROLLKARTEI-ROLLE: gleitend statt Stufe für Stufe
   let rest = schritte; const weiter = () => { z.i = (z.i + r + n) % n; rkStellen(z); try { navigator.vibrate?.(6); } catch {} rkKlick(); if (--rest > 0) setTimeout(weiter, 90); else rkJalousie(z); };
   if (schritte > 1) z.w.classList.add("rk-schnell"); weiter();
   setTimeout(() => z.w.classList.remove("rk-schnell"), schritte * 90 + 500);
@@ -18179,7 +18184,7 @@ function rkZu(z, el) {
   const d = z.karten.find((k) => k.contains(el)); if (!d) return;
   const i = z.karten.indexOf(d); rkGehe(z, i);
   scrollTo({ top: 0 });
-  setTimeout(() => { d.scrollTop = Math.max(0, el.getBoundingClientRect().top - d.getBoundingClientRect().top + d.scrollTop - d.clientHeight / 3); }, Math.abs(i - z.i) * 90 + 120);
+  setTimeout(() => { d.scrollTop = Math.max(0, el.getBoundingClientRect().top - d.getBoundingClientRect().top + d.scrollTop - d.clientHeight / 3); }, z.rolle ? 760 : Math.abs(i - z.i) * 90 + 120);
 }
 // 2.552.0 KC-CLUB-EINST-UEBERSICHT: einmalig – wer früher die Kartei gewählt hatte, sieht zuerst die neue Übersicht (🗂️ Kartei oben geht weiter)
 try { if (typeof localStorage !== "undefined" && !localStorage.getItem("kc_club_eu_neu")) { if (localStorage.getItem("kc_club_rk_einst") === "an") localStorage.removeItem("kc_club_rk_einst"); localStorage.setItem("kc_club_eu_neu", "1"); } } catch {}
@@ -18211,6 +18216,142 @@ function rkKlick() {
   if (!einst("ton", true)) return;
   try { rkAudio = rkAudio || new (window.AudioContext || window.webkitAudioContext)(); const o = rkAudio.createOscillator(), g = rkAudio.createGain(), t = rkAudio.currentTime;
     o.type = "square"; o.frequency.value = 1900; g.gain.setValueAtTime(0.04, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.025); o.connect(g).connect(rkAudio.destination); o.start(t); o.stop(t + 0.03); } catch {}
+}
+// ---------- KC-CLUB-ROLLKARTEI-ROLLE (2.995.0, Wunsch Hansi 20.11.2026: „Die Rollkartei läuft nicht gut – wie die Meldungen am iPad, die nach oben drehen;
+// sorgfältig, bedienerfreundlich, flüssige Bewegung und Rastgeräusche – und so, dass du es wieder rückgängig machen kannst“) ----------
+// Eine durchgehende Rolle: die Karte folgt dem Finger (oder der Maus), läuft mit Schwung aus und rastet auf jeder Karte ein (leises Klacken,
+// auf Android ein kurzes Zucken). Gelesene Karten rollen nach oben und legen sich verkleinert übereinander, die nächste schaut unten heraus.
+// Reiter oben und ▲▼ am Zähler gleiten direkt dorthin. Hat die vordere Karte mehr Inhalt, als hineinpasst, scrollt sie innen wie gewohnt –
+// gedreht wird dann am Stapel oben, an der nächsten Karte unten, an den Reitern oder ▲▼. Inhalt und Funktionen der Karten bleiben unverändert.
+// RÜCKWEG: je Gerät ⚙️ → Rollkartei → „🛞 Neue Rolle“ aus (dann wieder die klassische Rollkartei 2.180.0 mit Rad); für alle: RK_ROLLE_STANDARD = false.
+const RK_ROLLE_STANDARD = true, RK_STAPEL = 14, RK_LUECKE = 10, RK_BLICK = 72; // Stapelstufe, Abstand zur nächsten Karte, sichtbarer Teil der nächsten Karte (px)
+const rkRolleAn = () => einst("rkRolle", RK_ROLLE_STANDARD);
+const rkBedienText = () => rkRolleAn() ? "mit dem Finger nach oben schieben, sie rastet auf jeder Karte ein (oder Buchstaben oben, ▲▼)" : "wischen, antippen oder ▲▼ am Rad";
+function rkRolleSetzen(an) {
+  einstellung("rkRolle", an);
+  for (const z of Object.values(RK)) if (z?.an) { const i = z.i; rkAbbauen(z); z.i = i; rkAufbauen(z); }
+  melde(an ? "🛞 Neue Rolle an – mit dem Finger nach oben schieben, sie rastet auf jeder Karte ein" : "🗂️ Klassische Rollkartei (mit Rad) – die neue Rolle ist aus");
+}
+let rkRastZeit = 0;
+function rkRast() { // weiches, kurzes Klacken wie eine Rastung – kein Piepen
+  const jetzt = performance.now(); if (jetzt - rkRastZeit < 35) return; rkRastZeit = jetzt;
+  try { navigator.vibrate?.(4); } catch {}
+  if (!einst("ton", true) || !einst("rkRast", true)) return;
+  try { rkAudio = rkAudio || new (window.AudioContext || window.webkitAudioContext)(); if (rkAudio.state === "suspended") rkAudio.resume().catch(() => {});
+    const t = rkAudio.currentTime, n = Math.round(rkAudio.sampleRate * 0.012), puf = rkAudio.createBuffer(1, n, rkAudio.sampleRate), d = puf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 4); // kurzes Rauschen, schnell abklingend
+    const q = rkAudio.createBufferSource(), f = rkAudio.createBiquadFilter(), g = rkAudio.createGain(); q.buffer = puf; f.type = "bandpass"; f.frequency.value = 2600; f.Q.value = 1.4; g.gain.value = 0.22;
+    q.connect(f).connect(g).connect(rkAudio.destination); q.start(t);
+    const o = rkAudio.createOscillator(), g2 = rkAudio.createGain(); o.type = "sine"; o.frequency.setValueAtTime(190, t); o.frequency.exponentialRampToValueAtTime(90, t + 0.03); // leiser „Tock“ darunter
+    g2.gain.setValueAtTime(0.05, t); g2.gain.exponentialRampToValueAtTime(0.0001, t + 0.04); o.connect(g2).connect(rkAudio.destination); o.start(t); o.stop(t + 0.05); } catch {}
+}
+function rkRolleEinrichten(z) {
+  const an = rkRolleAn(); if (an === !!z.rolle) return;
+  if (!an) return rkRolleAbbauen(z);
+  z.rolle = true; z.p = z.i; z.w.classList.add("rk-rolle");
+  z.zaehler = document.createElement("div"); z.zaehler.className = "rk-zaehler";
+  z.zaehler.innerHTML = `<button type="button" data-r="-1" aria-label="Vorige Karte">▲</button><span class="rk-z-zahl" aria-live="polite"></span><button type="button" data-r="1" aria-label="Nächste Karte">▼</button>`;
+  z.zaehler.querySelectorAll("[data-r]").forEach((b) => (b.onclick = (e) => { e.stopPropagation(); rkGehe(z, z.i + Number(b.dataset.r), Number(b.dataset.r)); }));
+  z.platz.appendChild(z.zaehler);
+  const w = z.w;
+  // Finger/Maus: senkrecht ziehen. Hat die vordere Karte mehr Inhalt, scrollt der Finger erst ihren Inhalt – am Ende rollt er nahtlos weiter
+  // zur nächsten Karte (wie am iPad); zurück genauso. So gibt es keinen Streit mehr zwischen „Karte lesen“ und „Rolle drehen“.
+  w.addEventListener("pointerdown", z.pd = (e) => {
+    if (!z.rolle || !z.an || e.button > 0 || !rkRolleImFeld(z, e.clientX, e.clientY)) return;
+    rkRolleInnenHalt(z);
+    z.zug = { id: e.pointerId, y0: e.clientY, x0: e.clientX, y: e.clientY, p0: z.p, zieht: false, gerollt: false, spur: [[performance.now(), e.clientY]], ziel: e.target };
+  });
+  w.addEventListener("pointermove", z.pm = (e) => {
+    const g = z.zug; if (!g || g.id !== e.pointerId) return;
+    if (!g.zieht) { const dy = e.clientY - g.y0, dx = e.clientX - g.x0; if (Math.abs(dy) < 7 || Math.abs(dy) < Math.abs(dx)) return;
+      g.zieht = true; rkRolleHalt(z); g.y = e.clientY; try { w.setPointerCapture(e.pointerId); } catch {} return; }
+    let rest = g.y - e.clientY; g.y = e.clientY; // Finger nach oben = positiv = vorwärts
+    const schritt = (z.kh || 300) + RK_LUECKE, k = z.karten[z.i], ganz = Math.abs(z.p - Math.round(z.p)) < 0.002;
+    if (ganz && k && k.scrollHeight > k.clientHeight + 2) { // erst den Karteninhalt
+      const t = rest > 0 ? Math.min(rest, k.scrollHeight - k.clientHeight - k.scrollTop) : Math.max(rest, -k.scrollTop);
+      if (t) { k.scrollTop += t; rest -= t; }
+    }
+    if (rest) { z.p += rest / schritt; g.gerollt = true; rkRolleZeichnen(z); }
+    g.spur.push([performance.now(), e.clientY]); if (g.spur.length > 6) g.spur.shift();
+  });
+  const los = (e) => {
+    const g = z.zug; if (!g || g.id !== e.pointerId) return; z.zug = null;
+    try { w.releasePointerCapture(e.pointerId); } catch {}
+    if (!g.zieht) { // Antippen: Stapel oben = zurück, nächste Karte unten = vor (Knöpfe, Reiter und Zähler regeln sich selbst)
+      if (e.type === "pointerup" && !z.karten[z.i]?.contains(g.ziel) && !g.ziel?.closest?.("button, a, input, select, textarea, .rk-zaehler, .rk-reiter")) {
+        const k = z.karten[z.i]?.getBoundingClientRect(); if (k && e.clientY < k.top) rkGehe(z, z.i - 1, -1); else if (k && e.clientY > k.bottom) rkGehe(z, z.i + 1, 1); }
+      return;
+    }
+    z.klickSperre = performance.now(); // nach dem Ziehen keinen Klick auslösen
+    const s = g.spur, a = s[0], b = s[s.length - 1], dt = Math.max(16, b[0] - a[0]), schritt = (z.kh || 300) + RK_LUECKE;
+    const vPx = performance.now() - b[0] > 90 ? 0 : -(b[1] - a[1]) / dt; // px je ms (nach oben = positiv)
+    if (!g.gerollt && Math.abs(z.p - Math.round(z.p)) < 0.002) return rkRolleInnen(z, vPx); // nur gelesen: Inhalt läuft mit Schwung aus
+    const weit = Math.max(-4, Math.min(4, vPx / schritt * 1000 * 0.22)); // Schwung: schneller Wisch läuft über mehrere Karten
+    let ziel = Math.round(z.p + weit); if (ziel === Math.round(g.p0) && Math.abs(z.p - g.p0) > 0.18) ziel += z.p > g.p0 ? 1 : -1; // kleiner, bewusster Zug reicht für eine Karte
+    rkRolleFahren(z, ziel);
+  };
+  w.addEventListener("pointerup", z.pu = los); w.addEventListener("pointercancel", z.pc = los);
+  w.addEventListener("click", z.kl = (e) => { if (z.klickSperre && performance.now() - z.klickSperre < 350) { e.stopPropagation(); e.preventDefault(); } }, true);
+}
+function rkRolleAbbauen(z) {
+  if (!z.rolle) return; rkRolleHalt(z); z.rolle = false; const w = z.w; w.classList.remove("rk-rolle");
+  for (const [t, f] of [["pointerdown", z.pd], ["pointermove", z.pm], ["pointerup", z.pu], ["pointercancel", z.pc]]) if (f) w.removeEventListener(t, f);
+  if (z.kl) w.removeEventListener("click", z.kl, true); z.zaehler?.remove(); z.zaehler = null; z.zug = null;
+  (z.karten || []).forEach((d) => { d.style.transform = d.style.opacity = d.style.zIndex = d.style.clipPath = d.style.visibility = ""; d.classList.remove("rk-scroll"); });
+}
+const rkRolleImFeld = (z, x, y) => { const r = z.platz?.getBoundingClientRect(); return !!r && y >= r.top && y <= r.bottom && x >= r.left && x <= r.right; };
+function rkRolleMasse(z) {
+  const nav = $("fuss")?.getBoundingClientRect().height || 76;
+  const h = Math.max(320, Math.round(innerHeight * (z.immer ? 0.74 : 0.56)), innerHeight - (z.platz.getBoundingClientRect().top + scrollY) - nav - 12);
+  z.platz.style.height = h + "px";
+  const oben = 3 * RK_STAPEL + 10; z.kh = Math.max(180, h - oben - RK_LUECKE - RK_BLICK);
+  z.w.style.setProperty("--rk-oben", z.platz.offsetTop + oben + "px"); z.w.style.setProperty("--rk-h", z.kh + "px");
+  z.platzUnten = z.platz.offsetTop + h; z.oben = z.platz.offsetTop + oben;
+  (z.karten || []).forEach((d) => d.classList.toggle("rk-scroll", d.scrollHeight > d.clientHeight + 2));
+  rkRolleZeichnen(z);
+}
+// Lage jeder Karte aus der (gebrochenen) Position p: 0 = vorn, >0 kommend (unten), <0 gelesen (oben im Stapel). Endlos wie bisher.
+function rkRolleZeichnen(z) {
+  const n = z.karten?.length || 0; if (!n || !z.rolle) return;
+  const H = z.kh || 300, schritt = H + RK_LUECKE, sichtUnten = (z.platzUnten || 0) - (z.oben || 0);
+  z.karten.forEach((d, i) => {
+    let a = (((i - z.p) % n) + n) % n; if (a > n / 2 + 0.0001) a -= n; // a: Abstand zur vorderen Stelle (−: gelesen/oben, +: kommend/unten)
+    let y, s = 1, o = 1, zi;
+    if (a >= 0) { y = a <= 1 ? a * schritt : schritt + (a - 1) * (RK_BLICK + 30); o = a <= 1 ? 1 : Math.max(0, 1 - (a - 1) * 2.5); zi = 200 - Math.round(a * 10); }
+    else { const t = Math.min(-a, 3); y = -t * RK_STAPEL; s = 1 - t * 0.045; o = -a > 3 ? Math.max(0, 1 - (-a - 3) * 2) : 1 - t * 0.14; zi = 150 - Math.round(-a * 10); }
+    const unten = Math.max(0, H - (sichtUnten - y)); // was unter den Platz ragt, abschneiden
+    d.style.transform = `translate3d(0, ${y.toFixed(1)}px, 0) scale(${s.toFixed(3)})`; d.style.opacity = o.toFixed(3); d.style.zIndex = zi;
+    d.style.clipPath = unten > 0 ? `inset(0 0 ${unten.toFixed(1)}px 0 round 0 0 16px 16px)` : ""; d.style.visibility = o < 0.02 ? "hidden" : "";
+  });
+  const i = ((Math.round(z.p) % n) + n) % n;
+  if (i !== z.i || !z.zaehler?.dataset.n) { const neu = i !== z.i; z.i = i; rkRolleStand(z); if (neu) { z.karten[i].scrollTop = 0; rkRast(); try { z.opts?.vorn?.(z.karten[z.i], z); } catch {} } }
+}
+function rkRolleStand(z) { // Reiter, Zähler, wer bedienbar ist – ohne die Lage anzufassen
+  const n = z.karten.length;
+  z.karten.forEach((d, i) => { const k = (i - z.i + n) % n; d.dataset.rk = k === 0 ? "vorn" : k === 1 && n > 1 ? "h1" : k === 2 && n > 2 ? "h2" : k === n - 1 ? "weg" : "rest";
+    d.classList.toggle("rk-vorn", k === 0); d.inert = k !== 0; d.setAttribute("aria-hidden", k === 0 ? "false" : "true"); });
+  z.reiter?.querySelectorAll(".rk-tab").forEach((b, i) => { b.classList.toggle("an", i === z.i); b.setAttribute("aria-selected", i === z.i); });
+  z.reiter?.querySelector(".rk-tab.an")?.scrollIntoView({ block: "nearest", inline: "center" });
+  if (z.zaehler) { z.zaehler.dataset.n = n; z.zaehler.querySelector(".rk-z-zahl").textContent = `${z.i + 1} / ${n}`; }
+  const zahl = z.platz?.querySelector(".rk-zahl"); if (zahl) zahl.textContent = `${z.i + 1} / ${n}`;
+}
+function rkRolleHalt(z) { if (z.lauf) { cancelAnimationFrame(z.lauf.raf); z.lauf = null; } }
+function rkRolleInnenHalt(z) { if (z.innen) { cancelAnimationFrame(z.innen); z.innen = 0; } }
+function rkRolleInnen(z, v) { // Karteninhalt mit Schwung auslaufen lassen (wie natürliches Scrollen)
+  rkRolleInnenHalt(z); const k = z.karten[z.i]; if (!k || Math.abs(v) < 0.05 || !fxAn()) return;
+  let t0 = performance.now(); const lauf = (jetzt) => { const dt = Math.min(40, jetzt - t0); t0 = jetzt; const vor = k.scrollTop; k.scrollTop += v * dt; v *= Math.pow(0.996, dt);
+    if (Math.abs(v) < 0.02 || k.scrollTop === vor) { z.innen = 0; return; } z.innen = requestAnimationFrame(lauf); };
+  z.innen = requestAnimationFrame(lauf);
+}
+// gleitet zur Karte „ziel“ (ganze Zahl, darf über n hinaus) – weich auslaufend, bei jeder Karte ein Rasten
+function rkRolleFahren(z, ziel) {
+  rkRolleHalt(z); const von = z.p, weg = ziel - von;
+  if (!fxAn() || Math.abs(weg) < 0.001) { z.p = ziel; rkRolleZeichnen(z); return; }
+  const dauer = Math.min(900, 260 + 150 * Math.sqrt(Math.abs(weg)) * Math.min(3, Math.abs(weg))), t0 = performance.now();
+  const lauf = (z.lauf = { ziel, raf: 0 });
+  const schritt = (jetzt) => { if (z.lauf !== lauf) return; const t = Math.min(1, (jetzt - t0) / dauer), e = 1 - Math.pow(1 - t, 3); // sanft auslaufen
+    z.p = von + weg * e; rkRolleZeichnen(z); if (t < 1) lauf.raf = requestAnimationFrame(schritt); else { z.lauf = null; z.p = ziel; rkRolleZeichnen(z); } };
+  lauf.raf = requestAnimationFrame(schritt);
 }
 // KC-CLUB-KLAPPEN-ALLE (2.23.40, Wunsch Hansi): oben ein Umschalter „▾ Alle auf / ▴ Alle zu“ für alle Bereiche einer Seite.
 // Festgestellte Bereiche (🔒) bleiben, wie sie sind; nur sichtbare oberste Bereiche zählen (keine inneren Klappen).
@@ -28710,7 +28851,7 @@ function mgAnsichtSetzen(a) {
   MG_ANSICHT = MG_ANSICHTEN.includes(a) ? a : "kacheln"; try { localStorage.setItem("kc_club_mg_ansicht", MG_ANSICHT); } catch {}
   mgAnsichtWahlZeigen(); if (MITGLIEDER && aktuelleAnsicht === "mitglieder") mitgliederZeichnen();
   if (aktuelleAnsicht === "sos") sosZeigen(); // KC-CLUB-SOS-KACHELN: gleiche Einstellung im SOS-Bereich
-  melde(MG_ANSICHT === "kartei" ? "🗂️ Mitglieder als Rollkartei – wischen, antippen oder ▲▼ am Rad" : MG_ANSICHT === "kacheln" ? "👥 Mitglieder werden als Kacheln gezeigt" : MG_ANSICHT === "tafel" ? "📋 Anwesenheitstafel: Name und Lämpchen – antippen öffnet das Mitglied" : "👥 Mitglieder werden als Liste gezeigt");
+  melde(MG_ANSICHT === "kartei" ? `🗂️ Mitglieder als Rollkartei – ${rkBedienText()}` : MG_ANSICHT === "kacheln" ? "👥 Mitglieder werden als Kacheln gezeigt" : MG_ANSICHT === "tafel" ? "📋 Anwesenheitstafel: Name und Lämpchen – antippen öffnet das Mitglied" : "👥 Mitglieder werden als Liste gezeigt");
 }
 function mgAnsichtWahlZeigen() { document.querySelectorAll("#mgAnsichtWahl button, #mgAnsichtOben button").forEach((b) => b.classList.toggle("an", b.dataset.a === MG_ANSICHT)); if ($("setRkMitgl")) $("setRkMitgl").checked = MG_ANSICHT === "kartei";
   document.querySelectorAll("#kachelGroesseWahl button").forEach((b) => b.classList.toggle("an", b.dataset.g === kachelStufe())); } // 2.23.87; 2.54.0: + sehr klein
