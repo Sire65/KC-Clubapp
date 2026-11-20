@@ -1,6 +1,6 @@
 # Änderungen
 
-## (Version folgt) – 📎 Büroklammer blinkt, bis die Datei geöffnet ist (KC-CLUB-CHAT-ANLAGEN-BLINKEN)
+## 2.987.0 – 2026-11-20 – 📎 Büroklammer blinkt, bis die Datei geöffnet ist (KC-CLUB-CHAT-ANLAGEN-BLINKEN) · Server 2.987.0 · [Hansi: einspielen]
 Fund Hansi 20.11.: „Die Büroklammer hat nicht geblinkt.“ Bisher wackelte die 📎 nur einmal kurz (1,5 Sekunden) beim ersten Öffnen des Chats – leicht zu übersehen.
 - Jetzt **blinkt die 📎 ruhig weiter, solange eine Datei in der Nachricht noch nicht geöffnet ist** (Punkt •). Sobald man sie antippt und öffnet, hört das Blinken auf.
 - Es ist ein Hinweis, kein Schmuck: läuft auch, wenn „✨ Animierte Knöpfe“ aus ist, und im Sparmodus. Wer am Handy „weniger Bewegung“ eingestellt hat, sieht stattdessen einen roten Ring um die 📎.
