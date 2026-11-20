@@ -23168,7 +23168,10 @@ function anlLeisteHtml(m, puls, auf) {
   const neu = (a) => !m.eigen && !auf.has(a.id);
   const knopf = (a) => `<button type="button" class="anl-teil${neu(a) ? " ungeoeffnet" : ""}" data-anl="${esc(a.id)}" title="${neu(a) ? "Noch nicht geöffnet – antippen" : "Antippen zum Öffnen"}" onclick="event.stopPropagation();anlTeilOeffnen('${esc(a.id)}')">${anlSym(a)} ${esc(a.name || "Datei")}</button>`;
   const fotos = d.fotos.length ? `<button type="button" class="anl-teil" title="Alle Fotos und Dateien dieses Chats" onclick="event.stopPropagation();${d.fotos.length === 1 ? `anlTeilOeffnen('${esc(d.fotos[0].id)}')` : "anlAlleBlatt()"}">🖼️ ${d.fotos.length === 1 ? "Foto" : `${d.fotos.length} Fotos`}</button>` : "";
-  return `<div class="anl-leiste${puls ? " anl-puls" : ""}" role="group" aria-label="${esc(d.text)}"><div class="anl-kopf"><span class="anl-klammer" aria-hidden="true">📎</span> ${d.n} ${d.n === 1 ? "Anlage" : "Anlagen"}:</div><div class="anl-teile">${d.dateien.map(knopf).join("")}${fotos}</div></div>`;
+  // KC-CLUB-CHAT-ANLAGEN-BLINKEN (20.11.2026, Fund Hansi „Die Büroklammer hat nicht geblinkt“ – nur 1,5 s beim ersten Öffnen war zu kurz): die 📎 blinkt ruhig weiter,
+  // solange eine Datei anderer noch nicht geöffnet ist (anl-blink); beim Öffnen hört es auf (anlGeoeffnetMerken). Neue Fotos wackeln wie bisher kurz (anl-puls).
+  const blink = d.dateien.some(neu);
+  return `<div class="anl-leiste${blink ? " anl-blink" : puls ? " anl-puls" : ""}" role="group" aria-label="${esc(d.text)}"><div class="anl-kopf"><span class="anl-klammer" aria-hidden="true">📎</span> ${d.n} ${d.n === 1 ? "Anlage" : "Anlagen"}:</div><div class="anl-teile">${d.dateien.map(knopf).join("")}${fotos}</div></div>`;
 }
 // C: welche Nachrichten leuchten auf (rein)? Anlagen anderer, noch nicht aufgeleuchtet – beim ersten Zeichnen eines Chats die ungelesenen
 // (nach gelesenBis, höchstens die letzten 5), danach nur neu hinzugekommene
@@ -23197,6 +23200,7 @@ function anlGeoeffnetMerken(id) {
   if (!id) return; const l = khLesen("anl_auf", []);
   if (!l.includes(id)) khSchreiben("anl_auf", [...l, id].slice(-ANL_AUF_MAX));
   document.querySelectorAll(`.anl-teil.ungeoeffnet[data-anl="${CSS.escape(String(id))}"], .anl-zeile.ungeoeffnet[data-anl="${CSS.escape(String(id))}"]`).forEach((e) => e.classList.remove("ungeoeffnet"));
+  document.querySelectorAll(".anl-leiste.anl-blink").forEach((l) => { if (!l.querySelector(".anl-teil.ungeoeffnet")) l.classList.remove("anl-blink"); }); // KC-CLUB-CHAT-ANLAGEN-BLINKEN: alles geöffnet → Ruhe
 }
 function anlNachZeichnen(chat, u, puls) {
   for (const id of puls) if (!ANLS.gepulst.has(id)) ANLS.gepulst.set(id, Date.now());

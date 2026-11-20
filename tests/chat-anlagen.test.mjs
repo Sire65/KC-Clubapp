@@ -81,3 +81,13 @@ assert.ok(lies(".github/workflows/tests.yml").includes("node tests/chat-anlagen.
 const br = lies("tools/hilfe/chat-anlagen-browser.mjs");
 assert.ok(/OHNE_ECHTSERVER/.test(br) && /--no-proxy-server/.test(br) && /r\.abort\(\)/.test(br), "Browser-Lauf abgeschirmt");
 console.log("✅ chat-anlagen: alle Prüfungen bestanden");
+// KC-CLUB-CHAT-ANLAGEN-BLINKEN (20.11.2026, Fund Hansi „Die Büroklammer hat nicht geblinkt“): blinkt, solange eine Datei ungeöffnet ist
+{
+  const { readFileSync } = await import("node:fs");
+  const a = readFileSync(new URL("../app.js", import.meta.url), "utf8"), h = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  if (!/const blink = d\.dateien\.some\(neu\);/.test(a) || !/blink \? " anl-blink" : puls \? " anl-puls" : ""/.test(a)) throw new Error("📎 blinkt bei ungeöffneten Dateien");
+  if (!/l\.querySelector\("\.anl-teil\.ungeoeffnet"\)\) l\.classList\.remove\("anl-blink"\)/.test(a)) throw new Error("nach dem Öffnen hört das Blinken auf");
+  if (!/\.anl-blink \.anl-klammer \{ animation: anlBlink 1\.4s ease-in-out infinite;/.test(h) || /\.ohne-anim[^{]*\.anl-blink/.test(h)) throw new Error("Blinken dauerhaft, auch bei Animationen aus");
+  if (!/prefers-reduced-motion: reduce\) \{ \.anl-blink \.anl-klammer \{ animation: none; box-shadow:/.test(h)) throw new Error("weniger Bewegung: roter Ring statt Blinken");
+  console.log("chat-anlagen (Blinken): ok");
+}

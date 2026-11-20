@@ -52,8 +52,8 @@ ok(m0 === "📎1", "Liste vor dem ersten Öffnen: " + (m0 || "(keine Marke)"));
 await seite.evaluate(() => { window.__nieGelesen = false; });
 // 1) Chat öffnen: Leiste, Aufleuchten nur bei der ungelesenen Nachricht
 await seite.evaluate(() => chatOeffnen("T-ANL")); await seite.waitForTimeout(300);
-ok(await seite.evaluate(() => document.querySelector("#msg-m3 .anl-leiste")?.classList.contains("anl-puls") && !document.querySelector("#msg-m1 .anl-puls") && document.querySelectorAll("#chat .anl-puls").length === 1), "📎 leuchtet nur bei der ungelesenen Nachricht auf");
-ok(await seite.evaluate(() => getComputedStyle(document.querySelector("#msg-m3 .anl-klammer")).animationName === "anlPuls"), "Animation läuft (anlPuls)");
+ok(await seite.evaluate(() => document.querySelector("#msg-m3 .anl-leiste")?.classList.contains("anl-blink")), "KC-CLUB-CHAT-ANLAGEN-BLINKEN: 📎 blinkt bei ungeöffneter Datei (m3)");
+ok(await seite.evaluate(() => getComputedStyle(document.querySelector("#msg-m3 .anl-klammer")).animationName === "anlBlink" && getComputedStyle(document.querySelector("#msg-m3 .anl-klammer")).animationIterationCount === "infinite"), "Blinken läuft dauerhaft (anlBlink)");
 await seite.waitForTimeout(1200); await weg();
 await seite.evaluate(() => [...document.querySelectorAll("#chat button, #chat a")].find((b) => /aufklappen/i.test(b.textContent || ""))?.click()); await seite.waitForTimeout(500);
 const l1 = await seite.evaluate(() => document.querySelector("#msg-m1 .anl-leiste")?.textContent.replace(/\s+/g, " ").trim() || "");
@@ -70,11 +70,12 @@ await seite.click('#msg-m1 .anl-teil[data-anl="A1"]'); await seite.waitForTimeou
 ok(await seite.evaluate(() => !!$("anlBlatt") && /Öffnen/.test($("anlBlatt").textContent)), "Antippen öffnet wie bisher (Öffnen / Teilen / Speichern)");
 await seite.evaluate(() => $("anlBlatt")?.remove());
 ok(await seite.evaluate(() => !document.querySelector('.anl-teil[data-anl="A1"]').classList.contains("ungeoeffnet") && JSON.parse(localStorage.getItem("kc_club_anl_auf")).includes("A1")), "danach als geöffnet gemerkt (nur Kennung)");
+ok(await seite.evaluate(() => !document.querySelector("#msg-m1 .anl-leiste").classList.contains("anl-blink") && document.querySelector("#msg-m3 .anl-leiste").classList.contains("anl-blink")), "nach dem Öffnen hört das Blinken in m1 auf, m3 blinkt weiter");
 // 3) Neue Nachricht kommt an → nur sie leuchtet auf
 await seite.evaluate(() => { __chat.nachrichten.push(__neu); chatStand = "x"; return chatLaden(false); }); await seite.waitForTimeout(600); await weg();
-ok(await seite.evaluate(() => document.querySelector("#msg-m4 .anl-leiste")?.classList.contains("anl-puls") && !document.querySelector("#msg-m3 .anl-leiste").classList.contains("anl-puls")), "neue Nachricht mit Anlage leuchtet auf, die vorige nicht nochmal");
+ok(await seite.evaluate(() => document.querySelector("#msg-m4 .anl-leiste")?.classList.contains("anl-blink")), "neue Nachricht mit ungeöffneter Datei blinkt");
 await seite.waitForTimeout(1700); await seite.evaluate(() => { chatStand = "y"; return chatLaden(false); }); await seite.waitForTimeout(300);
-ok(await seite.evaluate(() => !document.querySelector("#chat .anl-puls")), "beim nächsten Neuzeichnen ruhig");
+ok(await seite.evaluate(() => !document.querySelector("#chat .anl-puls") && !!document.querySelector("#msg-m4 .anl-blink")), "beim Neuzeichnen: kein einmaliges Aufleuchten mehr, ungeöffnete blinken weiter");
 // 4) „📎 Alle Anlagen“ aus dem Menü
 await seite.evaluate(() => chatMenue()); await seite.waitForTimeout(200);
 const mk = await seite.evaluate(() => $("chatAnlKnopf").textContent);
@@ -95,7 +96,8 @@ ok(!(await ueberlauf()), "Liste: kein Überlauf bei 390 px");
 await bild("chat-anlagen-3-liste");
 // 6) Dunkelmodus und „✨ Animierte Knöpfe“ aus
 await seite.evaluate(() => { document.documentElement.classList.add("dunkel", "ohne-anim"); ANLS.gepulst.clear(); ANLS.ids.delete("T-ANL"); chatStand = ""; return chatOeffnen("T-ANL"); }); await seite.waitForTimeout(1200); await weg();
-ok(await seite.evaluate(() => { const k = document.querySelector("#chat .anl-puls .anl-klammer"); return !k || getComputedStyle(k).animationName === "none"; }), "„✨ Animierte Knöpfe“ aus: kein Aufleuchten");
+ok(await seite.evaluate(() => { const k = document.querySelector("#chat .anl-puls .anl-klammer"); return !k || getComputedStyle(k).animationName === "none"; }), "„✨ Animierte Knöpfe“ aus: kein kurzes Aufleuchten");
+ok(await seite.evaluate(() => { const k = document.querySelector("#chat .anl-blink .anl-klammer"); return !!k && getComputedStyle(k).animationName === "anlBlink"; }), "„✨ Animierte Knöpfe“ aus: ungeöffnete Dateien blinken trotzdem (Hinweis)");
 await seite.evaluate(() => { window.scrollTo(0, document.body.scrollHeight); }); await seite.waitForTimeout(300);
 await bild("chat-anlagen-4-dunkel");
 ok(!(await ueberlauf()), "Dunkel: kein Überlauf bei 390 px");

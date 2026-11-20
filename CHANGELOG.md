@@ -1,5 +1,10 @@
 # Änderungen
 
+## (Version folgt) – 📎 Büroklammer blinkt, bis die Datei geöffnet ist (KC-CLUB-CHAT-ANLAGEN-BLINKEN)
+Fund Hansi 20.11.: „Die Büroklammer hat nicht geblinkt.“ Bisher wackelte die 📎 nur einmal kurz (1,5 Sekunden) beim ersten Öffnen des Chats – leicht zu übersehen.
+- Jetzt **blinkt die 📎 ruhig weiter, solange eine Datei in der Nachricht noch nicht geöffnet ist** (Punkt •). Sobald man sie antippt und öffnet, hört das Blinken auf.
+- Es ist ein Hinweis, kein Schmuck: läuft auch, wenn „✨ Animierte Knöpfe“ aus ist, und im Sparmodus. Wer am Handy „weniger Bewegung“ eingestellt hat, sieht stattdessen einen roten Ring um die 📎.
+
 ## 2.986.0 – 2026-11-19 – ✍️ Bemerkung beim Erledigen freiwillig · 📎 Anlagen im Chat besser sichtbar · ✔ „erledigt am … von …“ (KC-CLUB-AUFGABE-BEMERKUNG-FREI, KC-CLUB-CHAT-ANLAGEN-SICHTBAR, KC-CLUB-AUFGABE-ERLEDIGT-VON) · 📌 Startmeldung auch beim Zurückkommen auf die Startseite (KC-CLUB-AUFGABEN-STAND-ZURUECK)
 Wünsche Hansi 19.11.: „kein Pflichtfeld, sondern freiwillige Angabe“ · „Anlagen besser kennzeichnen … ja alles bauen, und erledigt am von auch rein“.
 
