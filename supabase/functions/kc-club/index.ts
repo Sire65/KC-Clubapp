@@ -12728,7 +12728,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           if (k.status !== "offen") throw new Fehler("Die Karte ist schon erledigt.", 409);
           const status = p.abbrechen === true ? "abgebrochen" : "gesendet";
           await db.from("kc_club_gk_gemeinsam").update({ status, erledigt_am: jetzt() }).eq("id", k.id).eq("status", "offen");
-          await protokoll(ich.person_id, "gk_gemeinsam_" + status, { karte: k.id });
+          await protokoll(ich.person_id, "gk_gemeinsam_" + status, { karte: k.id, ...(p.nachricht ? { nachricht: String(p.nachricht).slice(0, 40) } : {}) }); // KC-CLUB-GK-DIREKT-SENDEN: welche Nachricht die Karte trug (nur Kennung)
           return json({ ok: true, status });
         }
         // Liste: offene Karten – nie die für mich selbst
