@@ -147,6 +147,7 @@ jobs:
       - run: node tests/chat-wieder.test.mjs
       - run: node tests/zuletzt-weg.test.mjs
       - run: node tests/spur-weg.test.mjs
+      - run: node tests/mitfahrt-laufband.test.mjs
       - run: node tests/gastgeber-16uhr.test.mjs
       - run: node tests/spur-dienst.test.mjs
       - run: node tests/ta-protokoll.test.mjs

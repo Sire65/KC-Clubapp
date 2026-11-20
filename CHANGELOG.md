@@ -1,5 +1,11 @@
 # Änderungen
 
+## (Version folgt) – 🚗 Mitfahrgelegenheiten in der Laufschrift (KC-CLUB-MITFAHRT-LAUFBAND) · Server
+Wunsch Hansi 20.11.: „Zeige in der Laufschrift an, wenn jemand eine Mitfahrgelegenheit sucht oder anbietet – z. B. biete ich eine an.“
+- Im Info-Laufband auf der Startseite steht jetzt z. B. **„🚗 Hansi bietet eine Mitfahrt an – Köcheclub-Sitzung · Di., 24.11. · 3 Plätze frei“** oder **„🙋 Anne sucht eine Mitfahrgelegenheit – Adventsmarkt“**. Antippen öffnet den Termin bzw. die Aktion, dort kann man mitfahren oder einen Platz anbieten.
+- Nur kommende Termine; volle Fahrten erscheinen nicht. Eigene Angebote stehen als „Du bietest …“ dabei. Höchstens 6 Einträge.
+- Datenbank-sparsam: der Server merkt sich die Liste 5 Minuten für alle (und holt sie neu, sobald jemand eine Mitfahrt anbietet, bucht, sucht oder löscht) – keine zusätzliche Abfrage je App-Start.
+
 ## 2.987.0 – 2026-11-20 – 📎 Büroklammer blinkt, bis die Datei geöffnet ist (KC-CLUB-CHAT-ANLAGEN-BLINKEN) · Server 2.987.0 · [Hansi: einspielen]
 Fund Hansi 20.11.: „Die Büroklammer hat nicht geblinkt.“ Bisher wackelte die 📎 nur einmal kurz (1,5 Sekunden) beim ersten Öffnen des Chats – leicht zu übersehen.
 - Jetzt **blinkt die 📎 ruhig weiter, solange eine Datei in der Nachricht noch nicht geöffnet ist** (Punkt •). Sobald man sie antippt und öffnet, hört das Blinken auf.

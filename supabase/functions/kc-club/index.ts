@@ -7992,6 +7992,42 @@ async function mitfahrtenZu(ich: Ich, art: "treffen" | "aktion", ids: string[]) 
   }
   return aus;
 }
+// KC-CLUB-MITFAHRT-LAUFBAND (20.11.2026, Wunsch Hansi „zeige in der Laufschrift an, wenn jemand eine Mitfahrgelegenheit sucht oder anbietet“):
+// offene Angebote (mit freien Plätzen) und Suchen zu kommenden Terminen/Aktionen – für das Info-Laufband beim App-Start. Datenbank-sparsam: das Ergebnis
+// wird MITFAHRT_LB_MS für alle gemerkt (Server-Speicher) und bei jeder Mitfahrt-Änderung verworfen; nur Namen, Termin, freie Plätze – keine Notizen.
+const MITFAHRT_LB_MS = 5 * 60000, MITFAHRT_LB_MAX = 6;
+let MITFAHRT_LB: { t: number; v: Promise<any[]> } | null = null;
+function mitfahrtLaufbandVergessen() { MITFAHRT_LB = null; }
+function mitfahrtLaufbandListe(angebote: any[], suchen: any[], plaetzeBelegt: Map<string, number>, termine: Map<string, { titel: string; beginn: string }>, name: (pid: string) => string) {
+  const aus: any[] = [];
+  for (const m of angebote) { const t = termine.get(m.bezug_art + ":" + m.bezug_id); if (!t) continue;
+    const frei = Math.max(0, (Number(m.plaetze) || 0) - (plaetzeBelegt.get(m.id) || 0)); if (!frei) continue;
+    aus.push({ art: "biete", id: m.id, person_id: m.fahrer, name: name(m.fahrer), frei, bezug_art: m.bezug_art, bezug_id: m.bezug_id, titel: t.titel, beginn: t.beginn }); }
+  for (const x of suchen) { const t = termine.get(x.bezug_art + ":" + x.bezug_id); if (!t) continue;
+    aus.push({ art: "suche", id: x.bezug_art + ":" + x.bezug_id + ":" + x.person_id, person_id: x.person_id, name: name(x.person_id), bezug_art: x.bezug_art, bezug_id: x.bezug_id, titel: t.titel, beginn: t.beginn }); }
+  return aus.sort((a, b) => String(a.beginn).localeCompare(String(b.beginn)) || (a.art === b.art ? 0 : a.art === "suche" ? -1 : 1)).slice(0, MITFAHRT_LB_MAX);
+}
+async function mitfahrtLaufbandLaden(): Promise<any[]> {
+  const [{ data: mf }, { data: su }] = await Promise.all([
+    db.from("kc_club_mitfahrt").select("id,bezug_art,bezug_id,fahrer,plaetze").order("erstellt_am", { ascending: false }).limit(60),
+    db.from("kc_club_mitfahrt_suche").select("bezug_art,bezug_id,person_id").order("erstellt_am", { ascending: false }).limit(60)]);
+  if (!(mf ?? []).length && !(su ?? []).length) return [];
+  const alle = [...(mf ?? []), ...(su ?? [])], tIds = [...new Set(alle.filter((x: any) => x.bezug_art === "treffen").map((x: any) => String(x.bezug_id)))];
+  const termine = new Map<string, { titel: string; beginn: string }>(), ab = new Date(Date.now() - 3 * 3600000).toISOString();
+  if (tIds.length) { const { data: tr } = await db.from("kc_club_treffen").select("id,titel,beginn,status").in("id", tIds).gte("beginn", ab).eq("status", "geplant");
+    for (const t of tr ?? []) termine.set("treffen:" + t.id, { titel: t.titel, beginn: t.beginn }); }
+  if (alle.some((x: any) => x.bezug_art === "aktion")) { const heute = berlinTag(new Date());
+    for (const a of (await aktionenRoh()).liste as any[]) if (String(a.dateTo || a.dateFrom) >= heute) termine.set("aktion:" + String(a.id), { titel: txt(a.activity, 120) || "Aktion", beginn: String(a.dateFrom) + "T12:00:00Z" }); }
+  const mids = (mf ?? []).filter((m: any) => termine.has(m.bezug_art + ":" + m.bezug_id)).map((m: any) => m.id), belegt = new Map<string, number>();
+  if (mids.length) { const { data: pl } = await db.from("kc_club_mitfahrt_platz").select("mitfahrt_id").in("mitfahrt_id", mids); for (const x of pl ?? []) belegt.set(x.mitfahrt_id, (belegt.get(x.mitfahrt_id) || 0) + 1); }
+  const pids = alle.filter((x: any) => termine.has(x.bezug_art + ":" + x.bezug_id)).map((x: any) => x.fahrer || x.person_id), leute = await personen(pids);
+  return mitfahrtLaufbandListe(mf ?? [], su ?? [], belegt, termine, (pid) => vorname(leute.get(pid) ?? null) || "Jemand");
+}
+async function mitfahrtLaufband(ich: Ich): Promise<any[]> {
+  if (ich.zugang !== "mitglied" && ich.zugang !== "aushilfe") return [];
+  if (!MITFAHRT_LB || Date.now() - MITFAHRT_LB.t > MITFAHRT_LB_MS) { const m = { t: Date.now(), v: mitfahrtLaufbandLaden().catch((e) => { if (MITFAHRT_LB === m) MITFAHRT_LB = null; throw e; }) }; MITFAHRT_LB = m; }
+  return (await MITFAHRT_LB.v).map((x) => ({ ...x, eigen: x.person_id === ich.person_id }));
+}
 // KC-CLUB-MITFAHRT-SUCHE (0.87.0): wer zu einem Termin/einer Aktion eine Mitfahrgelegenheit sucht
 async function suchendeZu(ich: Ich, art: "treffen" | "aktion", ids: string[]) {
   const aus = new Map<string, any[]>();
@@ -10736,6 +10772,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           return kz;
         });
         const pGk = gkOffenFuer(ich).catch((e) => { console.error("gk_offen", String(e)); return []; }); // 2.977.0 KC-CLUB-GK-NACHFRAGE
+        const pMfLb = mitfahrtLaufband(ich).catch((e) => { console.error("mitfahrt_laufband", String(e)); return []; }); // KC-CLUB-MITFAHRT-LAUFBAND
         const pComm = communicatorStatus(ich).catch(() => null), pSos = sosFuerAlle(), pAdmin = adminVorname(), pThema = konfigZeile("thema").then((r) => { const w: any = r.data?.wert; return w?.id ? w : null; }).catch(() => null); // 2.323.0 KC-CLUB-THEMEN
         const pGedenken = gedenkenListe().catch(() => [] as any[]); // KC-CLUB-GEDENKEN (2.204.0)
         const pRzThema = rzThemaLage(ich).catch(() => null); // 2.730.0 KC-CLUB-REZEPT-WEIHNACHT: Hinweis fürs Info-Laufband (gemerkt, keine Abfrage je Start)
@@ -10951,7 +10988,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const express = await pExpress;
         const dienstwunschFehlt = await pDwFehlt; // KC-CLUB-DW-LAUFBAND
         const neuesGeraet = await siGeraetPruefen(ich, req).catch(() => null); // 2.726.0 KC-CLUB-NEUES-GERAET
-        return json({ meinGeburtstag, alarm, express, dienstwunschFehlt, schwerZeiten: SCHWER_ZEITEN, serverJetzt: Date.now(), /* KC-CLUB-ADVENT-SERVERUHR: Uhr des Servers für den Adventskalender */ gericht: await pGericht, /* KC-CLUB-GEMEINSCHAFTSGERICHT */ /* 2.806.0 KC-CLUB-DB-VIEL-ZU-TUN */ startnachrichtDarf: await pSnDarf, kz, hilfeTipps: await pTipps, /* 2.835.0 KC-CLUB-HILFE-TIPPS */ studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, neuesGeraet, meinGeraet: siGeraetKlasse(req.headers.get("user-agent")), /* 2.726.0 KC-CLUB-NEUES-GERAET */ ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtClub: ich.zugang === "tischgast" ? null : await rtClubKanal().catch(() => null), /* KC-CLUB-ANWESENHEIT */ rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, rezeptThema: await pRzThema, themenNaechste: await pThemenN, sitzungVorgaben: SV, /* 2.751.0 KC-CLUB-SITZUNG-VORGABEN */ naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, ablagekorb: await pAblk, clubjahr: await pCj, wartung, communicator, notfall: nf ?? null, einstellungen, rose, /* KC-CLUB-ROSE */ gkOffen: await pGk, /* 2.977.0 KC-CLUB-GK-NACHFRAGE */ vertretung: await pVertretung, /* KC-CLUB-VERTRETUNG */ freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, protokollNeu, protokollPruefen, /* 2.818.0 KC-CLUB-PROTOKOLL-PRUEFUNG */ naechstesTreffen: naechstes[0] ?? null, ...(aufgabenDran ? { aufgabenDran } : {}), /* KC-CLUB-AUFGABEN-STAND */ mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw, ab: await pAb, dienstStempel: await pDs, runderTisch: await pTisch, /* 2.762.0 KC-CLUB-RUNDER-TISCH */
+        return json({ meinGeburtstag, alarm, express, dienstwunschFehlt, schwerZeiten: SCHWER_ZEITEN, serverJetzt: Date.now(), /* KC-CLUB-ADVENT-SERVERUHR: Uhr des Servers für den Adventskalender */ gericht: await pGericht, /* KC-CLUB-GEMEINSCHAFTSGERICHT */ /* 2.806.0 KC-CLUB-DB-VIEL-ZU-TUN */ startnachrichtDarf: await pSnDarf, kz, hilfeTipps: await pTipps, /* 2.835.0 KC-CLUB-HILFE-TIPPS */ studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, neuesGeraet, meinGeraet: siGeraetKlasse(req.headers.get("user-agent")), /* 2.726.0 KC-CLUB-NEUES-GERAET */ ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtClub: ich.zugang === "tischgast" ? null : await rtClubKanal().catch(() => null), /* KC-CLUB-ANWESENHEIT */ rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, rezeptThema: await pRzThema, themenNaechste: await pThemenN, sitzungVorgaben: SV, /* 2.751.0 KC-CLUB-SITZUNG-VORGABEN */ naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, ablagekorb: await pAblk, clubjahr: await pCj, wartung, communicator, notfall: nf ?? null, einstellungen, rose, /* KC-CLUB-ROSE */ gkOffen: await pGk, mitfahrtenOffen: await pMfLb, /* KC-CLUB-MITFAHRT-LAUFBAND */ /* 2.977.0 KC-CLUB-GK-NACHFRAGE */ vertretung: await pVertretung, /* KC-CLUB-VERTRETUNG */ freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, protokollNeu, protokollPruefen, /* 2.818.0 KC-CLUB-PROTOKOLL-PRUEFUNG */ naechstesTreffen: naechstes[0] ?? null, ...(aufgabenDran ? { aufgabenDran } : {}), /* KC-CLUB-AUFGABEN-STAND */ mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw, ab: await pAb, dienstStempel: await pDs, runderTisch: await pTisch, /* 2.762.0 KC-CLUB-RUNDER-TISCH */
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
             ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen,
             // KC-CLUB-GERAETE-TIPP: wohin der Link ginge – nur teilweise (z. B. „h…@web.de“)
@@ -18956,6 +18993,7 @@ Köcheclub Werne`,
 
       // ----- Mitfahrgelegenheiten (KC-CLUB-MITFAHREN) -----
       case "mitfahrt_anbieten": {
+        mitfahrtLaufbandVergessen(); // KC-CLUB-MITFAHRT-LAUFBAND: Laufband-Liste neu holen
         const art = p.bezug_art === "aktion" ? "aktion" : "treffen", bid = String(p.bezug_id || "");
         const titel = await mitfahrtBezugTitel(art, bid);
         if (!titel) throw new Fehler("Termin nicht gefunden.", 404);
@@ -18985,6 +19023,7 @@ Köcheclub Werne`,
       }
 
       case "mitfahrt_platz": {
+        mitfahrtLaufbandVergessen(); // KC-CLUB-MITFAHRT-LAUFBAND: Laufband-Liste neu holen
         const { data: m } = await db.from("kc_club_mitfahrt").select("*").eq("id", String(p.id || "")).maybeSingle();
         if (!m) throw new Fehler("Mitfahrgelegenheit nicht gefunden.", 404);
         if (m.fahrer === ich.person_id) throw new Fehler("Das ist deine eigene Fahrt.");
@@ -19011,6 +19050,7 @@ Köcheclub Werne`,
 
       // KC-CLUB-MITFAHRT-SUCHE (0.87.0): „Ich suche eine Mitfahrgelegenheit“ an/aus – Fahrer mit freien Plätzen bekommen Bescheid
       case "mitfahrt_suchen": {
+        mitfahrtLaufbandVergessen(); // KC-CLUB-MITFAHRT-LAUFBAND: Laufband-Liste neu holen
         const art = p.bezug_art === "aktion" ? "aktion" : "treffen", bid = String(p.bezug_id || "");
         const titel = await mitfahrtBezugTitel(art, bid);
         if (!titel) throw new Fehler("Termin nicht gefunden.", 404);
@@ -19040,6 +19080,7 @@ Köcheclub Werne`,
       }
 
       case "mitfahrt_loeschen": {
+        mitfahrtLaufbandVergessen(); // KC-CLUB-MITFAHRT-LAUFBAND: Laufband-Liste neu holen
         const { data: m } = await db.from("kc_club_mitfahrt").select("*").eq("id", String(p.id || "")).maybeSingle();
         if (!m) throw new Fehler("Mitfahrgelegenheit nicht gefunden.", 404);
         if (m.fahrer !== ich.person_id && !ich.vorstand) throw new Fehler("Löschen darf nur, wer die Fahrt anbietet.", 403);

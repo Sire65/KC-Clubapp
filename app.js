@@ -17178,6 +17178,7 @@ function ilMeldungen() {
   if (INIT?.dienstwunschFehlt === true && !DW_LB.geoeffnet) add({ id: "dw-fehlt", stufe: "rot", sym: "🎄", t: "Dienstplan Weihnachtsmarkt: Wünsche eingeben?", u: "Twinkey führt dich Schritt für Schritt durch", auf: "dwLaufbandAuf()", knoepfe: [["📝 Mit Twinkey eingeben", "dwLaufbandAuf()"]], fertig: "Dienstwünsche Weihnachtsmarkt eingegeben" });
   if (PW.neu > 0) add({ id: "pw-neu:" + PW.neu, stufe: "gold", sym: "📌", t: PW.neu === 1 ? "Ein neuer Zettel an der Pinnwand" : `${PW.neu} neue Zettel an der Pinnwand`, u: "Antippen zum Lesen", auf: "zeige('pinnwand')" }); // KC-CLUB-PINNWAND-NIE-AUTO
   { const tp = tpLaufband(); if (tp) add(tp); } // 2.971.0 KC-CLUB-TIPPSPIEL
+  for (const m of INIT?.mitfahrtenOffen || []) add(ilMitfahrt(m)); // KC-CLUB-MITFAHRT-LAUFBAND
   for (const k of GK_OFFEN) add({ id: "gk:" + k.id, stufe: "gold", sym: "💐", t: `Gemeinsame Karte für ${k.fuerName}`, u: `${k.namen.length} haben unterschrieben – du auch? Antippen`, auf: `gkGemeinsamOeffnen('${k.id}')` }); // 2.979.0 KC-CLUB-GK-HINWEIS
   tippLaufband(add); // 2.835.0 KC-CLUB-HILFE-TIPPS: grün → gelb → rot, bis geantwortet
   // 2.492.0 KC-CLUB-UNTERSTUETZUNG-ANFRAGE: Admin – offene Anfragen (orange); alle anderen – Angebot „Unterstützung?“ (ausblendbar, 30 Tage Pause nach dem Senden)
@@ -17211,6 +17212,15 @@ function ilMeldungen() {
 }
 function ilThemaNeu(id) { zeige("vorschlaege"); VS_ZIEL = id; setTimeout(() => { if (aktuelleAnsicht === "vorschlaege") vorschlagForm("thema"); }, 500); } // 2.463.0: Formular mit der Sitzung vorgewählt
 function ilTerminOeffnen(id) { zeige("termine"); const auf = () => { if (TREFFEN_IDX.has(id) && !$("treffenInfo")) treffenInfo(id, false); }; setTimeout(auf, 700); setTimeout(auf, 1800); }
+// KC-CLUB-MITFAHRT-LAUFBAND (20.11.2026, Wunsch Hansi „zeige in der Laufschrift an, wenn jemand eine Mitfahrgelegenheit sucht oder anbietet“):
+// 🚗 „Hansi bietet eine Mitfahrt an“ / 🙋 „Anne sucht eine Mitfahrgelegenheit“ mit Termin, Tag und freien Plätzen – Antippen öffnet den Termin bzw. die Aktion.
+function ilMitfahrt(m) {
+  const wer = m.eigen ? "Du" : m.name || "Jemand", tag = m.bezug_art === "aktion" ? fTag.format(new Date(m.beginn)) : wann(m.beginn);
+  const t = m.art === "biete" ? `${wer} ${m.eigen ? "bietest" : "bietet"} eine Mitfahrt an` : `${wer} ${m.eigen ? "suchst" : "sucht"} eine Mitfahrgelegenheit`;
+  const u = `${m.titel} · ${tag}${m.art === "biete" ? ` · ${m.frei === 1 ? "1 Platz" : m.frei + " Plätze"} frei` : ""}${m.eigen ? "" : m.art === "biete" ? " – mitfahren? Antippen" : " – Platz frei? Antippen"}`;
+  return { id: "mitfahrt:" + m.art + ":" + m.id, stufe: m.eigen ? "weiss" : "gold", sym: m.art === "biete" ? "🚗" : "🙋", t, u,
+    auf: m.bezug_art === "aktion" ? `aktionOeffnen(${JSON.stringify(String(m.bezug_id))})` : `ilTerminOeffnen(${JSON.stringify(String(m.bezug_id))})` };
+}
 function ilTerminLink(id) { const l = (INIT?.laufbandTermine || []).find((x) => x.id === id)?.link; if (/^https:\/\//.test(l || "")) window.open(l, "_blank", "noopener"); }
 function ilHtml(m) {
   const k = (m.knoepfe || []).map(([t, f, kl]) => `<button type="button" class="il-knopf${kl || ""}" onclick="event.stopPropagation();${f}">${esc(t)}</button>`).join("");
