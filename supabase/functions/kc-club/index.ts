@@ -195,7 +195,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.993.0";
+const SERVER_VERSION = "2.994.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -12743,7 +12743,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           if (k.status !== "offen") throw new Fehler("Die Karte ist schon erledigt.", 409);
           const status = p.abbrechen === true ? "abgebrochen" : "gesendet";
           await db.from("kc_club_gk_gemeinsam").update({ status, erledigt_am: jetzt() }).eq("id", k.id).eq("status", "offen");
-          await protokoll(ich.person_id, "gk_gemeinsam_" + status, { karte: k.id });
+          await protokoll(ich.person_id, "gk_gemeinsam_" + status, { karte: k.id, ...(p.nachricht ? { nachricht: String(p.nachricht).slice(0, 40) } : {}) }); // KC-CLUB-GK-DIREKT-SENDEN: welche Nachricht die Karte trug (nur Kennung)
           return json({ ok: true, status });
         }
         // Liste: offene Karten – nie die für mich selbst

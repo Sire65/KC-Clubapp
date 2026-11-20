@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.993.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.994.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -34270,7 +34270,7 @@ async function gkGemeinsamOeffnen(id) {
     <p style="margin:4px 0 8px;text-align:center"><b>${k.namen.length}</b> Unterschrift${k.namen.length === 1 ? "" : "en"}${k.namen.length ? ": " + esc(k.namen.join(", ")) : ""}</p>
     <div style="display:grid;gap:8px">
       ${k.ichDabei ? `<button type="button" class="knopf" data-w="zurueck">↩️ Meine Unterschrift zurücknehmen</button>` : `<button type="button" class="knopf haupt" data-w="ja">👆 Hier tippen – mit Name und Gesicht unterschreiben</button>`}
-      ${k.darfSenden ? `<button type="button" class="knopf ${k.ichDabei ? "haupt" : ""}" data-w="senden">💬 Jetzt in ${esc(k.fuerName)}s Chat legen</button><button type="button" class="knopf" data-w="abbrechen">🗑️ Karte abbrechen</button>` : ""}
+      ${k.darfSenden ? `<button type="button" class="knopf ${k.ichDabei ? "haupt" : ""}" data-w="senden">💌 Jetzt an ${esc(k.fuerName)} schicken</button><button type="button" class="knopf" data-w="abbrechen">🗑️ Karte abbrechen</button>` : ""}
       <button type="button" class="knopf" data-w="">Schließen</button></div>`);
   try { $("gkGemBild").src = (await gkZeichnen(daten)).toDataURL("image/jpeg", 0.88); } catch {}
   f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => einmal(b, async () => {
@@ -34281,18 +34281,33 @@ async function gkGemeinsamOeffnen(id) {
         if (w === "ja" && INIT?.gkOffen) INIT.gkOffen = INIT.gkOffen.filter((x) => x.id !== id); // 2.977.0 KC-CLUB-GK-NACHFRAGE: nicht mehr fragen
         return gkGemeinsamOeffnen(id); }
       if (w === "abbrechen") { if (!(await frage("Die gemeinsame Karte abbrechen? Sie wird nicht verschickt."))) return; await api("gk_gemeinsam_ende", { id, abbrechen: true }, { warten: true }); fensterZu(f); return melde("🗑️ Karte abgebrochen"); }
-      if (w === "senden") {
-        if (!(await frage(`Die Karte mit ${k.namen.length} Unterschrift${k.namen.length === 1 ? "" : "en"} jetzt in ${k.fuerName}s Chat legen?\n\nDanach kann niemand mehr unterschreiben.`, { ja: "💬 Ja, jetzt", nein: "Noch warten" }))) return;
-        const c = await gkZeichnen(daten), blob = await new Promise((r) => c.toBlob(r, "image/jpeg", 0.88));
-        const name = gkDateiName(k.anlass, k.fuerName), r = await anlageHochladen(new File([blob], name, { type: "image/jpeg" }));
-        await api("gk_gemeinsam_ende", { id }, { warten: true }); fensterZu(f);
-        await direkt(k.fuer);
-        anlagen = [...anlagen.filter((a) => !a.laedt), { id: r.id, name: r.name || name, laedt: false }]; EINMAL = false; chipsZeigen();
-        textVorbelegen(`${KARTEN_ANLAESSE[kaAnlass(k.anlass)].gruss(k.fuerName)} Eine Karte vom ganzen Köcheclub – ${k.namen.length} haben unterschrieben.`); $("text")?.dispatchEvent(new Event("input")); $("text")?.focus();
-        melde("💌 Die gemeinsame Karte liegt im Chat bereit – jetzt ➤");
-      }
+      if (w === "senden") return await gkGemeinsamSenden(k, daten, f); // KC-CLUB-GK-DIREKT-SENDEN – „await“, damit Fehler unten als Meldung erscheinen
+
     } catch (e) { meldeFehler(e); }
   })));
+}
+// KC-CLUB-GK-DIREKT-SENDEN (20.11.2026, Fund Hansi: Karla bekam nur den Gruß-Text, das Bild der Karte fehlte – „sorgfältig umbauen, damit es nicht peinlich ist“):
+// vorher legte die App Bild + Text nur ins Schreibfeld und öffnete den Chat (dabei ging das Bild verloren), und die Karte galt schon VOR dem Senden als „verschickt“.
+// Jetzt in genau dieser Reihenfolge, jeder Schritt geprüft: 1. Karte zeichnen, 2. Bild hochladen (ohne Bild-Kennung kein Versand), 3. Bild + Gruß in EINER
+// Nachricht an die Person schicken (vorhandener Einzelchat, sonst neuer), 4. erst danach „verschickt“ markieren, 5. den Chat öffnen. Scheitert etwas, bleibt die
+// Karte offen und nichts Halbes geht raus; scheitert nur Schritt 4, ist die Karte trotzdem angekommen (Meldung sagt das).
+async function gkGemeinsamSenden(k, daten, f) {
+  const gruss = `${KARTEN_ANLAESSE[kaAnlass(k.anlass)].gruss(k.fuerName)} Eine Karte vom ganzen Köcheclub – ${k.namen.length} haben unterschrieben.`;
+  if (!(await frage(`Die Karte mit ${k.namen.length} Unterschrift${k.namen.length === 1 ? "" : "en"} jetzt an ${k.fuerName} schicken?\n\nSie kommt als Bild mit diesem Gruß in ${k.fuerName}s Chat:\n„${gruss}“\n\nDanach kann niemand mehr unterschreiben.`, { ja: "💌 Ja, jetzt schicken", nein: "Noch warten" }))) return;
+  melde(`💌 Karte wird verschickt …`);
+  const c = await gkZeichnen(daten), blob = await new Promise((r) => c.toBlob(r, "image/jpeg", 0.88));
+  if (!blob || !blob.size) throw new Error("Die Karte konnte nicht gezeichnet werden – bitte noch einmal versuchen. Es wurde nichts verschickt.");
+  const name = gkDateiName(k.anlass, k.fuerName), r = await anlageHochladen(new File([blob], name, { type: "image/jpeg" }));
+  if (!r?.id) throw new Error("Das Bild der Karte konnte nicht hochgeladen werden – bitte noch einmal versuchen. Es wurde nichts verschickt.");
+  let chat = null; try { chat = (await api("einzelchat_finden", { person_id: k.fuer }))?.id || null; } catch {}
+  const inhalt = { text: gruss, anlagen: [r.id], wege: ["push"] };
+  const s = chat ? await api("nachricht_senden", { id: chat, ...inhalt }, { warten: true })
+    : await api("nachricht_senden", { ...inhalt, empfaenger: { personen: [k.fuer], aemter: [], alle: false, vorstand: false }, betreff: "" }, { warten: true });
+  if (!s?.mid && !s?.doppelt) throw new Error("Die Karte ist nicht angekommen – bitte noch einmal versuchen.");
+  let markiert = true; try { await api("gk_gemeinsam_ende", { id: k.id, nachricht: s.mid || null }, { warten: true }); } catch { markiert = false; }
+  fensterZu(f); if (INIT?.gkOffen) INIT.gkOffen = INIT.gkOffen.filter((x) => x.id !== k.id); GK_OFFEN = GK_OFFEN.filter((x) => x.id !== k.id); try { ilZeigen(); } catch {}
+  melde(markiert ? `💌 Die Karte ist bei ${k.fuerName} angekommen – mit ${k.namen.length} Unterschriften` : `💌 Die Karte ist bei ${k.fuerName} angekommen. (Sie steht noch als „offen“ – bitte nicht noch einmal schicken.)`);
+  const ziel = s.id || chat; if (ziel) chatOeffnen(ziel); else direkt(k.fuer);
 }
 async function gkInDenChat() {
   if (!GK?.canvas) return;

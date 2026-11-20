@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.994.0 – 2026-11-20 – 💌 Gemeinsame Karte wird direkt verschickt – Bild und Gruß zusammen (KC-CLUB-GK-DIREKT-SENDEN)
+Fund Hansi 20.11.: Karla bekam zuerst nur den Gruß-Text, das Bild der Karte fehlte – „sorgfältig umbauen, damit es nicht peinlich ist“.
+- Der Knopf heißt jetzt **„💌 Jetzt an Karla schicken“**. Nach der Rückfrage (sie zeigt Empfänger und Gruß) schickt die App die Karte **selbst** – **Bild und Gruß in einer Nachricht**, ohne extra ➤. Vorher lag beides nur im Schreibfeld; das Bild ging verloren, wenn nicht sofort gesendet wurde, und die Karte galt schon vorher als „verschickt“.
+- Sorgfältige Reihenfolge: Karte zeichnen → Bild hochladen → senden → **erst dann** „verschickt“. Klappt ein Schritt nicht, geht **nichts** raus, die Karte bleibt offen und es kommt eine verständliche Meldung („… es wurde nichts verschickt“). Danach öffnet sich der Chat, damit man sieht, dass die Karte angekommen ist.
+
 ## 2.993.0 – 2026-11-20 – 🎵 Dienstplan rechnet den Konzert-Zuschlag aus DP2 mit (KC-CLUB-DP-ZUSCHLAG)
 Hansi 20.11.: „Codex hat den Bedarf an 4 Abenden erhöht – dann muss der Plan neu berechnet werden.“ DP2 legt den Zuschlag nicht im veröffentlichten Grundbedarf ab, sondern in der Programmfreigabe (`dienstplan_context.staffingAdjustment`: je eine Person mehr an vier Konzertabenden, 30 Min. Vor- und Nachlauf).
 - Der Club-Server liest den Zuschlag beim Rechnen des Dienstplans (`dpZuschlag`) und rechnet ihn auf den Grundbedarf dazu (insgesamt, nicht vorne/hinten). Grundbedarf und Wünsche bleiben unverändert.
