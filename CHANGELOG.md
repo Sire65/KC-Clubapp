@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.992.0 – 2026-11-20 – ✏️ Der Stift schreibt Buchstabe für Buchstabe (Wunschliste #100)
+
+### ✏️ Stift schreibt die Buchstaben (KC-CLUB-STIFT-BUCHSTABEN)
+Wunsch #100 „der gelbe Stift … kann der jeweils den Buchstaben schreiben … zum Wort zusammensetzen“. Antwort Hansi 20.11.: „A“.
+- Schreibt jemand im Chat, entsteht „schreibt …“ jetzt **Buchstabe für Buchstabe**; der ✏️ steht direkt dahinter und wandert mit. Nach einer kurzen Pause wird die Zeile weggewischt und neu geschrieben.
+- Reine Zier: **kein echter Text** des anderen (Chats bleiben privat), reine CSS-Animation ohne zusätzliche Abfragen. Bei „weniger Bewegung“ (Gerät) steht der Text ruhig da.
+
 ## 2.991.0 – 2026-11-20 – 💌 Karten-Baukasten für alle Anlässe (Wunschliste #98) · Server 2.991.0
 
 ### 💌 Karten-Baukasten (KC-CLUB-KARTEN-BAUKASTEN)

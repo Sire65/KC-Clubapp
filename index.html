@@ -2568,6 +2568,12 @@
     36% { transform: translate(3px, -2px) rotate(4deg); } 48% { transform: translate(5px, 0) rotate(-6deg); } 60% { transform: translate(6px, -3px) rotate(0deg); }
     80% { transform: translate(-3px, -3px) rotate(-4deg); } 100% { transform: translate(-3px, 0) rotate(-6deg); } }
   @media (prefers-reduced-motion: reduce) { .stift-schreibt { animation-duration: 3.2s; } }
+  /* 2.992.0 KC-CLUB-STIFT-BUCHSTABEN (Wunschliste #100): „schreibt …“ entsteht Buchstabe für Buchstabe, der Stift steht direkt dahinter und wandert mit;
+     nach einer Pause wird die Zeile weggewischt und neu geschrieben (3,6 s je Runde, je Buchstabe 0,12 s später) */
+  .stift-wort { white-space: nowrap; }
+  .stift-wort i { font-style: normal; display: inline-block; max-width: 0; overflow: hidden; vertical-align: bottom; animation: stiftBuchstabe 3.6s calc(var(--n) * .12s) infinite both; }
+  @keyframes stiftBuchstabe { 0% { max-width: 0; } 6%, 86% { max-width: 1em; } 92%, 100% { max-width: 0; } }
+  @media (prefers-reduced-motion: reduce) { .stift-wort i { animation: none; max-width: none; } }
   @keyframes tippWelle { 0%, 60%, 100% { transform: translateY(0) scale(1); opacity: .35; } 30% { transform: translateY(-8px) scale(1.15); opacity: 1; } }
   .tippt .zeile { display: flex; align-items: center; gap: 10px; font-size: .98rem; font-style: normal; font-weight: 600; margin: 2px 0; }
   /* KC-CLUB-SPRICHT (1.11.0): Oszilloskop – bei den anderen als laufende Welle, bei mir echt vom Mikrofon */
@@ -7239,7 +7245,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.991.0" data-v="2.991.0"></script>
+<script src="app.js?v=2.992.0" data-v="2.992.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

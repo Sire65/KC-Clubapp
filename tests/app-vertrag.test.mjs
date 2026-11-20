@@ -2469,7 +2469,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 {
   assert.match(html, /\["mein", "Meins"\]/, "Reiter heißt Meins");
   assert.doesNotMatch(html, /\["mein", "Mein Bereich"\]/, "alter Name weg");
-  assert.match(html, /<span class="punkte3"><i><\/i><i><\/i><i><\/i><\/span><span>(?:<span class="stift-schreibt" aria-hidden="true">✏️<\/span>|✏️) \$\{esc\(wer\)\}/, "Stift + Welle bleiben (2.509.0: Stift animiert)");
+  assert.match(html, /<span class="punkte3"><i><\/i><i><\/i><i><\/i><\/span><span>(?:(?:<span class="stift-schreibt" aria-hidden="true">✏️<\/span>|✏️) \$\{esc\(wer\)\}|\$\{esc\(wer\)\} \$\{stiftWort\([^`]*<span class="stift-schreibt" aria-hidden="true">✏️<\/span>)/, "Stift + Welle bleiben (2.509.0: Stift animiert; 2.992.0: Stift hinter den geschriebenen Buchstaben)");
 }
 
 // 220. 1.53.3/1.53.4: „Neue Nachr.“ mit laufender orange Ameisenstraße (KC-CLUB-NEU-AMEISEN)
@@ -12242,7 +12242,10 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 
 // 2.509.0 KC-CLUB-STIFT-SCHREIBT (Wunsch Hansi): der Stift neben den drei Punkten bewegt sich, als schreibe er
 {
-  assert.ok(/<span class="stift-schreibt" aria-hidden="true">✏️<\/span> \$\{esc\(wer\)\}/.test(programm), "Stift in der Schreibt-Anzeige");
+  assert.ok(/\$\{esc\(wer\)\} \$\{stiftWort\(namen\.length > 1 \? "schreiben …" : "schreibt …"\)\}<span class="stift-schreibt" aria-hidden="true">✏️<\/span>/.test(programm), "Stift in der Schreibt-Anzeige (2.992.0: hinter den Buchstaben)");
+  // 2.992.0 KC-CLUB-STIFT-BUCHSTABEN (Wunschliste #100): Buchstabe für Buchstabe, nur Zier, ruhig bei „weniger Bewegung“
+  assert.ok(/const stiftWort = \(t\) => `<span class="stift-wort">\$\{\[\.\.\.t\]\.map\(\(z, i\) => `<i style="--n:\$\{i\}">/.test(programm) && /esc\(z\)/.test(programm), "Buchstaben einzeln, maskiert");
+  assert.ok(/\.stift-wort i \{[^}]*animation: stiftBuchstabe 3\.6s calc\(var\(--n\) \* \.12s\) infinite both;/.test(seite) && /@keyframes stiftBuchstabe/.test(seite) && /prefers-reduced-motion: reduce\) \{ \.stift-wort i \{ animation: none; max-width: none; \}/.test(seite), "Buchstaben-Animation + weniger Bewegung");
   assert.ok(/\.stift-schreibt \{[^}]*animation: stiftSchreibt 1\.6s ease-in-out infinite;/.test(seite) && /@keyframes stiftSchreibt/.test(seite), "Schreibbewegung");
 }
 

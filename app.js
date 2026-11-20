@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.991.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.992.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -6275,6 +6275,7 @@ function tippGeraeusche(entwurf) {
   for (let i = 0; i < n; i++) tippAnschlag(w, i * abstand + Math.random() * abstand * .4);
   if (w === "schreibmaschine" && (TT.zeile += n) >= 40) { TT.zeile = 0; tippGlocke(n * abstand + .1); }
 }
+const stiftWort = (t) => `<span class="stift-wort">${[...t].map((z, i) => `<i style="--n:${i}">${z === " " ? "&nbsp;" : esc(z)}</i>`).join("")}</span>`; // KC-CLUB-STIFT-BUCHSTABEN
 function tipptZeigen(namen, entwurf = [], sprechen = [], diktiert = []) {
   const e = $("tipptAnzeige"); if (!e) return;
   tippGeraeusche(entwurf);
@@ -6287,7 +6288,9 @@ function tipptZeigen(namen, entwurf = [], sprechen = [], diktiert = []) {
   const entwuerfe = entwurf.map((x) => `<div class="entwurf">✍️ <b>${esc(x.name)}:</b> ${esc(kurz(x.text))}</div>`).join("");
   const wer = namen.length === 1 ? namen[0] : namen.length === 2 ? `${namen[0]} und ${namen[1]}` : `${namen.length} Personen`;
   // 1.21.5: nur neu zeichnen, wenn sich etwas geändert hat – sonst fängt die Punkte-Welle bei jedem Takt (2 s) von vorn an
-  const html = `<div class="zeile"><span class="punkte3"><i></i><i></i><i></i></span><span><span class="stift-schreibt" aria-hidden="true">✏️</span> ${esc(wer)} ${namen.length > 1 ? "schreiben" : "schreibt"} …</span></div>${entwuerfe}${sp}`;
+  // 2.992.0 KC-CLUB-STIFT-BUCHSTABEN (Wunschliste #100, Antwort Hansi „A“): der Stift schreibt „schreibt …“ Buchstabe für Buchstabe hin
+  // und wandert dabei mit – nur Zier, kein echter Text (Chats bleiben privat). Reine CSS-Animation, kein Takt.
+  const html = `<div class="zeile"><span class="punkte3"><i></i><i></i><i></i></span><span>${esc(wer)} ${stiftWort(namen.length > 1 ? "schreiben …" : "schreibt …")}<span class="stift-schreibt" aria-hidden="true">✏️</span></span></div>${entwuerfe}${sp}`;
   if (e.dataset.stand !== html) { e.innerHTML = html; e.dataset.stand = html; }
   e.classList.remove("versteckt");
 }
