@@ -13,7 +13,7 @@ assert.ok(/ich\.zugang !== "mitglied" && ich\.zugang !== "aushilfe"\) return \[\
 assert.ok(/rose, \/\* KC-CLUB-ROSE \*\/ gkOffen: await pGk,/.test(srv) && /const pGk = gkOffenFuer\(ich\)\.catch\(/.test(srv), "init liefert gkOffen, Fehler stören den Start nicht");
 const fall = srv.slice(srv.indexOf('case "gk_gemeinsam_start"'), srv.indexOf('case "fl_informieren"'));
 assert.ok(/sendenGewaehlt\("club_nachricht", ziel, \["push", "email"\]/.test(fall), "Push und E-Mail");
-assert.ok(/in der Club-App liegt eine Genesungskarte für \$\{vn\} bereit\. Wenn du auch drauf sein möchtest, geh in die Club-App – du bekommst die Anfrage dann beim Start der App\./.test(fall), "Mailtext nach Hansis Vorgabe");
+assert.ok(/in der Club-App liegt eine \$\{kname\} für \$\{vn\} bereit\. Wenn du auch drauf sein möchtest, geh in die Club-App – du bekommst die Anfrage dann beim Start der App\./.test(fall), "Mailtext nach Hansis Vorgabe");
 assert.ok(!/krank|diagnose|grund/i.test(fall.slice(fall.indexOf("KC-CLUB-GK-NACHFRAGE"), fall.indexOf("`club-gk:"))), "kein Grund/keine Krankheit in Push und Mail");
 assert.ok(/leute: u\.map\(\(x: any\) => \(\{ pid: x\.person_id, name: vorname\(/.test(fall), "Liste liefert Unterzeichner für die Gesichter");
 // gkOffenFuer ausführen (Datenbank nachgebildet)

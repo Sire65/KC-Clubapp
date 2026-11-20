@@ -195,7 +195,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.990.0";
+const SERVER_VERSION = "2.991.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -653,15 +653,19 @@ async function nurGezielt(): Promise<Set<string>> { return (await nurGezieltStan
 async function passivIds(): Promise<Set<string>> { return (await nurGezieltStand().catch(() => null))?.passiv ?? new Set<string>(); }
 // 2.977.0 KC-CLUB-GK-NACHFRAGE (Wunsch Hansi 18.11.2026): beim Start der App fragen „Möchtest du … auch gute Besserung wünschen?“ – nur offene,
 // noch laufende gemeinsame Karten, die ich noch nicht unterschrieben habe; nie die Karte für mich selbst. Meist keine offene Karte → eine kleine Abfrage.
-async function gkOffenFuer(ich: Ich): Promise<{ id: string; fuerName: string }[]> {
+// 2.991.0 KC-CLUB-KARTEN-BAUKASTEN: Anlässe der gemeinsamen Karte (gleiche Schlüssel wie KARTEN_ANLAESSE in der App)
+const GK_ANLAESSE: Record<string, { karte: string; sym: string }> = { genesung: { karte: "Genesungskarte", sym: "💐" }, geburtstag: { karte: "Geburtstagskarte", sym: "🎂" },
+  glueckwunsch: { karte: "Glückwunschkarte", sym: "🥂" }, danke: { karte: "Dankeskarte", sym: "🙏" }, hochzeit: { karte: "Hochzeitskarte", sym: "💍" },
+  geburt: { karte: "Karte zur Geburt", sym: "👶" }, beileid: { karte: "Beileidskarte", sym: "🕯️" } };
+async function gkOffenFuer(ich: Ich): Promise<{ id: string; fuerName: string; anlass?: string }[]> {
   if (ich.zugang !== "mitglied" && ich.zugang !== "aushilfe") return [];
-  const { data: karten } = await db.from("kc_club_gk_gemeinsam").select("id,fuer_person_id").eq("status", "offen").gt("bis", jetzt()).neq("fuer_person_id", ich.person_id).order("gestartet_am").limit(5);
+  const { data: karten } = await db.from("kc_club_gk_gemeinsam").select("id,fuer_person_id,anlass").eq("status", "offen").gt("bis", jetzt()).neq("fuer_person_id", ich.person_id).order("gestartet_am").limit(5);
   if (!karten?.length) return [];
   const { data: meine } = await db.from("kc_club_gk_unterschrift").select("karte_id").eq("person_id", ich.person_id).in("karte_id", karten.map((k: any) => k.id));
   const schon = new Set((meine ?? []).map((u: any) => u.karte_id)), offen = karten.filter((k: any) => !schon.has(k.id));
   if (!offen.length) return [];
   const leute = await personen(offen.map((k: any) => k.fuer_person_id));
-  return offen.map((k: any) => ({ id: k.id, fuerName: vorname(leute.get(k.fuer_person_id)) || "einem Mitglied" }));
+  return offen.map((k: any) => ({ id: k.id, fuerName: vorname(leute.get(k.fuer_person_id)) || "einem Mitglied", ...(k.anlass && k.anlass !== "genesung" ? { anlass: k.anlass } : {}) }));
 }
 async function sammelEmpfaenger(): Promise<(Person & { birth_date?: string })[]> {
   const [leute, aus] = await Promise.all([aktiveMitglieder(), nurGezielt().catch((e) => { console.error("sammelEmpfaenger", String(e)); return null; })]);
@@ -12693,16 +12697,18 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           const motiv = /^[a-z]{2,20}$/.test(String(p.motiv || "")) ? String(p.motiv) : "strauss", titel = Math.min(5, Math.max(0, Math.round(Number(p.titel) || 0)));
           const text = txt(p.text, 120), von = txt(p.von, 40) || "Dein Köcheclub"; if (!text) throw new Fehler("Bitte einen Text für die Karte wählen oder schreiben.");
           const tage = Math.min(7, Math.max(1, Math.round(Number(p.tage) || 2)));
+          // 2.991.0 KC-CLUB-KARTEN-BAUKASTEN (Wunschliste #98): gemeinsame Karte für jeden Anlass – nur bekannte Anlässe, sonst „Gute Besserung“
+          const anlass = GK_ANLAESSE[String(p.anlass || "")] ? String(p.anlass) : "genesung", kname = GK_ANLAESSE[anlass].karte, ksym = GK_ANLAESSE[anlass].sym;
           const leute = await personen([fuer]); if (!leute.get(fuer)) throw new Fehler("Mitglied nicht gefunden.", 404);
-          const { data: k, error } = await db.from("kc_club_gk_gemeinsam").insert({ fuer_person_id: fuer, motiv, titel, text, von, gestartet_von: ich.person_id, bis: new Date(Date.now() + tage * 86400000).toISOString() }).select("id").single();
+          const { data: k, error } = await db.from("kc_club_gk_gemeinsam").insert({ fuer_person_id: fuer, anlass, motiv, titel, text, von, gestartet_von: ich.person_id, bis: new Date(Date.now() + tage * 86400000).toISOString() }).select("id").single();
           if (error || !k) throw new Fehler(String(error?.code) === "23505" ? "Für dieses Mitglied läuft schon eine gemeinsame Karte." : "Die Karte konnte nicht gestartet werden.", String(error?.code) === "23505" ? 409 : 500);
           await db.from("kc_club_gk_unterschrift").insert({ karte_id: k.id, person_id: ich.person_id });
           const vn = vorname(leute.get(fuer)) || "einem Mitglied";
           const ziel = (await sammelEmpfaenger()).map((m) => m.person_id).filter((id) => id !== ich.person_id && id !== fuer);
           // 2.977.0 KC-CLUB-GK-NACHFRAGE (Wunsch Hansi 18.11.2026 „ja Push und E-Mail an alle, damit die auch wissen, dass eine Karte da ist, die selten reingehen“):
           // Push UND E-Mail (Kanal-Regel club_nachricht_beide); Mailtext nach Hansis Vorgabe. Die Nachfrage selbst kommt beim Start der App (gkOffen in init).
-          const versand = await sendenGewaehlt("club_nachricht", ziel, ["push", "email"], { titel: `💐 Gemeinsame Karte für ${vn}`, kurz: `${vn} braucht gerade gute Wünsche – unterschreib mit einem Tipp. ${vn} erfährt es erst, wenn die Karte kommt.`,
-            betreff: `Köcheclub Werne – Genesungskarte für ${vn}`, text: `Hallo,\n\nin der Club-App liegt eine Genesungskarte für ${vn} bereit. Wenn du auch drauf sein möchtest, geh in die Club-App – du bekommst die Anfrage dann beim Start der App.\n\nViele Grüße\n${ich.name}`,
+          const versand = await sendenGewaehlt("club_nachricht", ziel, ["push", "email"], { titel: `${ksym} Gemeinsame Karte für ${vn}`, kurz: `${anlass === "genesung" ? `${vn} braucht gerade gute Wünsche` : `${kname} für ${vn}`} – unterschreib mit einem Tipp. ${vn} erfährt es erst, wenn die Karte kommt.`,
+            betreff: `Köcheclub Werne – ${kname} für ${vn}`, text: `Hallo,\n\nin der Club-App liegt eine ${kname} für ${vn} bereit. Wenn du auch drauf sein möchtest, geh in die Club-App – du bekommst die Anfrage dann beim Start der App.\n\nViele Grüße\n${ich.name}`,
             url: `${APP_URL}#gk=${k.id}` }, `club-gk:${k.id}`).catch(() => null);
           await protokoll(ich.person_id, "gk_gemeinsam_gestartet", { karte: k.id, empfaenger: ziel.length, versand });
           return json({ ok: true, id: k.id, empfaenger: ziel.length });
@@ -12726,12 +12732,12 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           return json({ ok: true, status });
         }
         // Liste: offene Karten – nie die für mich selbst
-        const { data: karten } = await db.from("kc_club_gk_gemeinsam").select("id,fuer_person_id,motiv,titel,text,von,gestartet_von,bis").eq("status", "offen").neq("fuer_person_id", ich.person_id).order("gestartet_am").limit(20);
+        const { data: karten } = await db.from("kc_club_gk_gemeinsam").select("id,fuer_person_id,anlass,motiv,titel,text,von,gestartet_von,bis").eq("status", "offen").neq("fuer_person_id", ich.person_id).order("gestartet_am").limit(20);
         const ids = (karten ?? []).map((k: any) => k.id);
         const { data: us } = ids.length ? await db.from("kc_club_gk_unterschrift").select("karte_id,person_id,am").in("karte_id", ids).order("am").limit(2000) : { data: [] as any[] };
         const leute = await personen([...new Set([...(karten ?? []).flatMap((k: any) => [k.fuer_person_id, k.gestartet_von]), ...(us ?? []).map((u: any) => u.person_id)])]);
         return json({ ok: true, karten: (karten ?? []).map((k: any) => { const u = (us ?? []).filter((x: any) => x.karte_id === k.id);
-          return { id: k.id, fuer: k.fuer_person_id, fuerName: vorname(leute.get(k.fuer_person_id)) || "Mitglied", motiv: k.motiv, titel: k.titel, text: k.text, von: k.von, bis: k.bis,
+          return { id: k.id, fuer: k.fuer_person_id, fuerName: vorname(leute.get(k.fuer_person_id)) || "Mitglied", anlass: k.anlass || "genesung", motiv: k.motiv, titel: k.titel, text: k.text, von: k.von, bis: k.bis,
             starter: vorname(leute.get(k.gestartet_von)) || "", darfSenden: k.gestartet_von === ich.person_id || ich.admin, ichDabei: u.some((x: any) => x.person_id === ich.person_id),
             namen: u.map((x: any) => vorname(leute.get(x.person_id)) || "").filter(Boolean),
             leute: u.map((x: any) => ({ pid: x.person_id, name: vorname(leute.get(x.person_id)) || "" })).filter((x: any) => x.name) }; }) }); // 2.977.0 KC-CLUB-GK-GESICHTER: Gesicht je Unterschrift

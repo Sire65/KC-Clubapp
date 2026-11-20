@@ -2413,7 +2413,8 @@ function buFallHtml() {
     ${offen ? `<div class="mini-kacheln">
       <button class="mini-kachel" onclick="flInformieren('${f.id}')"><span class="mk-sym">📣</span><span class="mk-titel">Mitglieder informieren</span><span class="mk-unter">${f.informiert_am ? "✅ " + esc(zeitKurz(f.informiert_am)) : leid ? "nach Absprache mit der Familie" : "Push / E-Mail"}</span></button>
       <button class="mini-kachel" onclick="flKarte('${f.id}')"><span class="mk-sym">✉️</span><span class="mk-titel">Karte / Brief</span><span class="mk-unter">${leid ? "Beileid · Genesung" : "Glückwunsch"}</span></button>
-      ${f.person_id && ["krankheit", "unfall"].includes(f.art) ? `<button class="mini-kachel" onclick="genesungsKarte('${f.person_id}')"><span class="mk-sym">💐</span><span class="mk-titel">Genesungskarte in den Chat</span><span class="mk-unter">Blumenstrauß, mit einem Tipp</span></button>` : ""}
+      ${f.person_id && f.art !== "tod_mitglied" ? `<button class="mini-kachel" onclick="kartenBaukasten('${f.person_id}','${flKartenAnlass(f.art)}')"><span class="mk-sym">💌</span><span class="mk-titel">Karte in den Chat</span><span class="mk-unter">Motiv und Spruch wählen · auch drucken</span></button>`
+        : `<button class="mini-kachel" onclick="kartenBaukasten(null,'${flKartenAnlass(f.art)}',${esc(JSON.stringify(f.art === "tod_mitglied" ? "Familie " + (f.name || "").split(" ").slice(-1)[0] : (f.name || "").split(" ")[0]))})"><span class="mk-sym">💌</span><span class="mk-titel">Karte drucken</span><span class="mk-unter">Motiv und Spruch wählen</span></button>`}
       ${f.person_id && !leid ? `<button class="mini-kachel" onclick="direkt('${f.person_id}')"><span class="mk-sym">💬</span><span class="mk-titel">Nachricht an ${esc((f.name || "").split(" ")[0])}</span></button>` : ""}
       <button class="mini-kachel" onclick="flAngaben('${f.id}')"><span class="mk-sym">✏️</span><span class="mk-titel">Angaben ändern</span><span class="mk-unter">Termin · Ort · Betrag</span></button>
       <button class="mini-kachel" onclick="flAbschliessen('${f.id}')"><span class="mk-sym">✅</span><span class="mk-titel">Fall abschließen</span><span class="mk-unter">wird im Archiv abgelegt</span></button></div>` : '<p class="hinweis">Abgeschlossen – liegt im Archiv (Ordner „Admin“, Register „Freud & Leid“).</p>'}
@@ -2468,9 +2469,11 @@ async function flSenden(knopf) {
     } catch (e) { meldeFehler(e); }
   });
 }
+// 2.991.0 KC-CLUB-KARTEN-BAUKASTEN (Wunschliste #98): welcher Karten-Anlass passt zum Freud-&-Leid-Fall (gleiche Zuordnung wie beim Brief)
+const flKartenAnlass = (art) => (/^tod_/.test(art) ? "beileid" : ["krankheit", "unfall"].includes(art) ? "genesung" : art === "geburt" ? "geburt" : ["hochzeit", "ehejubilaeum"].includes(art) ? "hochzeit" : art === "geburtstag" ? "geburtstag" : "glueckwunsch");
 function flKarte(id) {
   const f = FL.d.faelle.find((x) => x.id === id); if (!f) return;
-  const k = /^tod_/.test(f.art) ? "beileid" : ["krankheit", "unfall"].includes(f.art) ? "genesung" : f.art === "geburt" ? "geburt" : ["hochzeit", "ehejubilaeum"].includes(f.art) ? "hochzeit" : "glueckwunsch";
+  const k = flKartenAnlass(f.art) === "geburtstag" ? "glueckwunsch" : flKartenAnlass(f.art);
   buBrief(); const v = BRIEF_VORLAGEN[k];
   Object.assign(BRIEF, { vorlage: k, empfaenger: f.art === "tod_mitglied" ? `Familie ${(f.name || "").split(" ").slice(-1)[0]}` : f.name, betreff: v.betreff, text: v.text,
     anrede: f.art === "tod_mitglied" ? "Liebe Familie,": `Liebe/r ${(f.name || "").split(" ")[0]},`, gruss: /^tod_/.test(f.art) ? "In stiller Anteilnahme" : "Herzliche Grüße" });

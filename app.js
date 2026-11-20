@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.990.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.991.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -19,7 +19,7 @@ const TEILE_LISTE = {
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-NDuho5dgDL13uhtcTY8d0cGESAWhk+B+5qyWyvBuOxPgmADzmvY9YFCcwWM0s+kx" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
   spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-NJ7DJt5uvf95NJ5rn9MLHZr1dmZK0XLZYNYM5Frr2Pt/wetRMf4ARaCPhe/O30Zz" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
   tischlive: { einstieg: ["tlStart", "tlStopp", "tlZeichnen", "tlPlatz", "tlRegeln"], sri: "sha384-RCmsKY+DTRfsCMRHkJVG2UJlySANNdHxnEdMps4tkL9kgf8DC5O/b1jMcwVeY3XB" }, // 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: Ton, Kamera, Bildschirm, Unterlagen zeigen am Tisch
-  buero: { einstieg: ["ersBuchOeffnen", "eblDruck", "buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-5Mnq/dTPyN87mHs3EuaoDEyIeZu0qRFqy2mD1dIJe0Z6LYtktKup6IiuZIZUHhRe" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
+  buero: { einstieg: ["ersBuchOeffnen", "eblDruck", "buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-T+Wdipj8BL+ttrwlyNfJ/PA/r5SSBU56NGAI4OrVNYCAyujH60jXQkkuHsqebIma" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
   hilfe: { einstieg: ["twFrageStart", "twOffenStart", "sucheAuf", "suSucheKnopf"], sri: "sha384-kQ/pCEoGC36q1hgJ8LDEz49OXpMoLtqkmA7pqx4XNc3viLKWIngKuwOUPaRsTYxg" }, // Stufe 5: Hilfe-Werkzeuge (Frag Twinkey, Mitglied fragen, Schnellsuche) – beim ersten Antippen
   rechner: { einstieg: ["rechnerOeffnen"], sri: "sha384-UWrOf1EIXxhsoWWwxnLDzpzALsaxzNGXgeqoLAjVvqoQ6wbFnIGxYTkQPFpiRuQ4" }, // 2.811.0 KC-CLUB-RECHNER: Tischrechner im Büro, „rechne …“ per Sprache
   tippspiel: { einstieg: ["tpStart", "tpTag", "tpMitmachen", "tpTippen", "tpZeigen"], sri: "sha384-KNPQv0SkmN1bZrgFpl3dE1Osi/OcP0KUNKuIWQeEqe/98OM34+NRwv5m+2ePuBJ6" }, // 2.971.0 KC-CLUB-TIPPSPIEL (Wunschliste #96): Bundesliga-Tippspiel
@@ -32643,6 +32643,8 @@ const DRUCKARTEN = {
   erstattung: { titel: "🖨️ Erstattungsantrag drucken", optionen: () => druckErstattungOptionen(), bauen: (o) => druckErstattung(o) },
   abstimmung: { titel: "🖨️ Ankreuzbogen drucken", optionen: () => abDruckOptionen(), bauen: (o, p) => druckAbstimmung({ ...p, art: "bogen" }) }, // 2.557.0 KC-CLUB-ABSTIMMUNG-DRUCK · 2.558.0 „Für wen?“
   abstimmungErgebnis: { bauen: (o, p) => druckAbstimmung({ ...p, art: "ergebnis" }) },
+  karte: { titel: "🖨️ Karte drucken", bauen: (o, d) => ({ titel: `${d.anlass} ${d.name || ""}`.trim(), ohneRahmen: true, // 2.991.0 KC-CLUB-KARTEN-BAUKASTEN: Karte A5 zum Ausschneiden
+    html: `<div style="text-align:center"><img src="${d.bild}" alt="" style="width:148mm;max-width:100%;display:block;margin:0 auto;border:0.2mm dashed #bbb"><p style="font:9pt Georgia,serif;color:#741521;margin:3mm 0 0">✂️ Entlang der Linie ausschneiden (A5) · Köcheclub Werne</p></div>` }) },
   erstattungBlatt: { titel: "📄 Erstattungsantrag", bauen: (o, d) => ({ titel: `Erstattungsantrag ${d.name}`.trim(), ohneRahmen: true, html: erstBlatt(d) }) }, // 2.526.0
   anleitung: { bauen: () => druckAnleitung() },
   einstwegweiser: { bauen: () => ewDruck() }, // 2.534.0 KC-CLUB-EINST-WEGWEISER
@@ -33451,7 +33453,7 @@ function mitgliedZeigen() {
       ${!m.selbst && !ONL.ids.has(m.person_id) ? mgKlopfKnopf(m, "knopf breit", (st) => `<span class="kt-ico">👋</span>Anklopfen – ${st === "verborgen" ? "zeigt nicht, wann online" : st === "ich" ? "du zeigst nicht, wann du online bist" : "gerade nicht online"}`) : ""}
       ${!m.selbst && !ONL.ids.has(m.person_id) ? `<p class="hinweis breit" style="margin:4px 0">📞 🎥 Anrufen und Video gehen, sobald ${esc(String(m.name || "").split(" ")[0])} die App offen hat (🟢 online).</p>` : ""}
       ${m.selbst ? "" : `<button class="knopf ${ONL.ids.has(m.person_id) ? "" : "haupt"}" onclick="direkt('${m.person_id}')"><span class="kt-ico">💬</span>Nachricht in der App${m.chatAnzahl ? `<small class="md-zahl">${m.chatAnzahl} ${m.chatAnzahl === 1 ? "Nachricht" : "Nachrichten"}</small>` : ""}</button><div id="mdSpiel" hidden></div>`}
-      ${m.selbst ? "" : `<button class="knopf" onclick="genesungsKarte('${m.person_id}')"><span class="kt-ico">💐</span>Gute-Besserung-Karte</button>`}
+      ${m.selbst ? "" : `<button class="knopf" onclick="kartenBaukasten('${m.person_id}')"><span class="kt-ico">💌</span>Karte schicken</button>`}
       ${ICH?.admin ? `<button class="knopf" onclick="nachrichtenStatistik('${m.person_id}')"><span class="kt-ico">📊</span>Statistik</button>` : ""}
       ${stDarf("zeigen") && !m.selbst ? `<button class="knopf" onclick="vfStart('${m.person_id}')"><span class="kt-ico">📺</span>Live zeigen</button>` : ""}
       ${ICH?.admin ? `<button class="knopf" onclick="linkTeilen('${m.person_id}')"><span class="kt-ico">🔗</span>App-Link</button><button class="knopf" onclick="einrichtungskarte('${m.person_id}')"><span class="kt-ico">🖨️</span>Einrichtungs&shy;karte</button><button class="knopf" onclick="rolleBearbeiten('${m.person_id}')"><span class="kt-ico">🎖️</span>Amt & Rechte</button><button class="knopf" onclick="ansageVorgabeSetzen('${m.person_id}', ${esc(JSON.stringify((m.name || "").split(" ")[0]))})"><span class="kt-ico">🗣️</span>Online-Ansagen einschalten</button>` : ""}
@@ -33845,8 +33847,168 @@ const GK_MOTIVE = [
       g.strokeStyle = "#f9a825"; g.lineWidth = 12; g.lineCap = "round"; for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; g.beginPath(); g.moveTo(cx + Math.cos(a) * 150, cy - 60 + Math.sin(a) * 150); g.lineTo(cx + Math.cos(a) * 200, cy - 60 + Math.sin(a) * 200); g.stroke(); }
       gkKreis(g, cx, cy - 60, 130, "#fdd835"); gkGesicht(g, cx, cy - 95, 45, null);
     } },
+  // ---------- 2.991.0 KC-CLUB-KARTEN-BAUKASTEN (Wunschliste #98): weitere Motive – alle in der App gezeichnet ----------
+  { id: "tulpen", sym: "🌷", name: "Tulpen", texte: [], zeichnen(g, cx, cy) {
+      for (const [dx, f, h] of [[-120, "#e53935", 300], [-40, "#f48fb1", 340], [40, "#fdd835", 320], [120, "#ab47bc", 290]]) {
+        g.strokeStyle = "#4f7a3a"; g.lineWidth = 10; g.beginPath(); g.moveTo(cx + dx, cy - h + 220); g.quadraticCurveTo(cx + dx * 0.6, cy + 60, cx + dx * 0.2, cy + 200); g.stroke();
+        const y = cy - h + 180; g.fillStyle = f; g.beginPath(); g.moveTo(cx + dx - 42, y - 30); g.quadraticCurveTo(cx + dx - 48, y + 50, cx + dx, y + 55); g.quadraticCurveTo(cx + dx + 48, y + 50, cx + dx + 42, y - 30);
+        g.lineTo(cx + dx + 22, y); g.lineTo(cx + dx, y - 40); g.lineTo(cx + dx - 22, y); g.closePath(); g.fill(); }
+      for (const s of [-1, 1]) { g.save(); g.translate(cx + s * 110, cy + 120); g.rotate(s * 0.7); gkOval(g, 0, 0, 90, 26, "#5f8f45"); g.restore(); }
+      g.fillStyle = "#e9d6bd"; g.beginPath(); g.moveTo(cx - 120, cy + 150); g.lineTo(cx + 120, cy + 150); g.lineTo(cx + 60, cy + 270); g.lineTo(cx - 60, cy + 270); g.closePath(); g.fill();
+      gkOval(g, cx, cy + 165, 50, 22, GK_ROT); } },
+  { id: "sonnenblume", sym: "🌻", name: "Sonnenblume", texte: [], zeichnen(g, cx, cy) {
+      g.strokeStyle = "#4f7a3a"; g.lineWidth = 16; g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx, cy + 290); g.stroke();
+      for (const s of [-1, 1]) { g.save(); g.translate(cx + s * 70, cy + 170); g.rotate(s * -0.5); gkOval(g, 0, 0, 80, 30, "#5f8f45"); g.restore(); }
+      for (let i = 0; i < 18; i++) { const a = i / 18 * Math.PI * 2; gkOval(g, cx + Math.cos(a) * 120, cy - 90 + Math.sin(a) * 120, 60, 24, "#fbc02d", a); }
+      gkKreis(g, cx, cy - 90, 95, "#6d4c2f"); for (let i = 0; i < 40; i++) { const a = i * 2.4, r = Math.sqrt(i) * 13; gkKreis(g, cx + Math.cos(a) * r, cy - 90 + Math.sin(a) * r, 5, "#3e2a18"); } } },
+  { id: "katze", sym: "🐱", name: "Katze", texte: [], zeichnen(g, cx, cy) {
+      gkOval(g, cx, cy + 130, 170, 120, "#f0a35e");
+      for (const s of [-1, 1]) { g.fillStyle = "#f0a35e"; g.beginPath(); g.moveTo(cx + s * 140, cy - 160); g.lineTo(cx + s * 60, cy - 240); g.lineTo(cx + s * 30, cy - 150); g.fill();
+        g.fillStyle = "#f8c9a0"; g.beginPath(); g.moveTo(cx + s * 120, cy - 165); g.lineTo(cx + s * 65, cy - 215); g.lineTo(cx + s * 50, cy - 160); g.fill(); }
+      gkOval(g, cx, cy - 70, 160, 135, "#f6b36f"); gkGesicht(g, cx, cy - 90, 55, [12, 9, "#e57b93"]);
+      g.strokeStyle = "#2b1b14"; g.lineWidth = 3; for (const s of [-1, 1]) for (const dy of [-10, 6]) { g.beginPath(); g.moveTo(cx + s * 30, cy - 40 + dy); g.lineTo(cx + s * 140, cy - 55 + dy * 2); g.stroke(); }
+      g.strokeStyle = "#f0a35e"; g.lineWidth = 28; g.lineCap = "round"; g.beginPath(); g.moveTo(cx + 150, cy + 180); g.quadraticCurveTo(cx + 290, cy + 150, cx + 250, cy + 20); g.stroke();
+      gkKreis(g, cx - 70, cy + 230, 40, "#f6b36f"); gkKreis(g, cx + 70, cy + 230, 40, "#f6b36f"); } },
+  { id: "igel", sym: "🦔", name: "Igel", texte: [], zeichnen(g, cx, cy) {
+      g.fillStyle = "#7b5a3e"; g.beginPath(); for (let i = 0; i <= 22; i++) { const a = Math.PI + i / 22 * Math.PI, r = i % 2 ? 230 : 280; g.lineTo(cx + 30 + Math.cos(a) * r * 1.05, cy + 120 + Math.sin(a) * r * 0.85); } g.closePath(); g.fill();
+      gkOval(g, cx + 30, cy + 140, 220, 110, "#8d6a4c"); gkOval(g, cx - 170, cy + 110, 110, 85, "#e9c9a3");
+      gkKreis(g, cx - 255, cy + 105, 16, "#2b1b14"); gkKreis(g, cx - 175, cy + 85, 12, "#2b1b14"); gkKreis(g, cx - 171, cy + 81, 4, "#fff"); gkOval(g, cx - 175, cy + 130, 18, 11, "rgba(240,120,140,.5)");
+      gkBluete(g, cx + 60, cy - 50, "#e53935", 34); gkBluete(g, cx + 150, cy - 10, "#fdd835", 26); } },
+  { id: "tee", sym: "☕", name: "Tee", texte: [], zeichnen(g, cx, cy) {
+      gkOval(g, cx, cy + 210, 260, 30, "rgba(0,0,0,.08)");
+      g.fillStyle = "#c2185b"; g.beginPath(); g.ellipse(cx, cy + 40, 200, 170, 0, 0, Math.PI * 2); g.fill();
+      gkOval(g, cx, cy - 125, 110, 28, "#a3134c"); gkKreis(g, cx, cy - 160, 26, "#a3134c");
+      g.strokeStyle = "#c2185b"; g.lineWidth = 30; g.lineCap = "round"; g.beginPath(); g.moveTo(cx + 190, cy - 20); g.quadraticCurveTo(cx + 300, cy + 20, cx + 190, cy + 130); g.stroke();
+      g.beginPath(); g.moveTo(cx - 180, cy + 40); g.quadraticCurveTo(cx - 280, cy - 10, cx - 300, cy - 90); g.stroke();
+      for (const [x, y] of [[-80, 20], [40, 80], [90, -20], [-20, -40]]) gkKreis(g, cx + x, cy + y, 16, "rgba(255,255,255,.7)");
+      g.strokeStyle = "rgba(130,130,130,.55)"; g.lineWidth = 6; for (const dx of [-330, -300]) { g.beginPath(); g.moveTo(cx + dx, cy - 130); g.bezierCurveTo(cx + dx - 20, cy - 170, cx + dx + 20, cy - 200, cx + dx, cy - 240); g.stroke(); } } },
+  { id: "torte", sym: "🎂", name: "Torte", texte: [], zeichnen(g, cx, cy) {
+      g.fillStyle = "#f8bbd0"; g.fillRect(cx - 220, cy + 30, 440, 170); g.fillStyle = "#fce4ec"; g.fillRect(cx - 160, cy - 100, 320, 140);
+      g.fillStyle = "#fff"; for (let i = 0; i < 9; i++) gkKreis(g, cx - 200 + i * 50, cy + 35, 26, "#fff"); for (let i = 0; i < 7; i++) gkKreis(g, cx - 150 + i * 50, cy - 95, 22, "#fff");
+      for (let i = 0; i < 5; i++) gkKreis(g, cx - 160 + i * 80, cy + 120, 14, "#e53935");
+      for (const dx of [-90, -30, 30, 90]) { g.fillStyle = ["#42a5f5", "#fdd835", "#66bb6a", "#ab47bc"][(dx + 90) / 60]; g.fillRect(cx + dx - 9, cy - 200, 18, 100);
+        g.fillStyle = "#ff9800"; g.beginPath(); g.ellipse(cx + dx, cy - 222, 11, 20, 0, 0, Math.PI * 2); g.fill(); gkKreis(g, cx + dx, cy - 215, 5, "#fff59d"); }
+      gkOval(g, cx, cy + 215, 270, 26, "#e9d6bd"); } },
+  { id: "ballons", sym: "🎈", name: "Ballons", texte: [], zeichnen(g, cx, cy) {
+      for (const [dx, dy, f] of [[-150, -60, "#e53935"], [0, -130, "#fdd835"], [150, -50, "#42a5f5"], [-70, 40, "#ab47bc"], [80, 40, "#66bb6a"]]) {
+        g.strokeStyle = "#8d7a66"; g.lineWidth = 3; g.beginPath(); g.moveTo(cx + dx, cy + dy + 95); g.quadraticCurveTo(cx + dx * 0.4, cy + 190, cx, cy + 260); g.stroke();
+        gkOval(g, cx + dx, cy + dy, 75, 95, f); gkOval(g, cx + dx - 25, cy + dy - 35, 14, 24, "rgba(255,255,255,.45)", -0.4);
+        g.fillStyle = f; g.beginPath(); g.moveTo(cx + dx - 10, cy + dy + 100); g.lineTo(cx + dx + 10, cy + dy + 100); g.lineTo(cx + dx, cy + dy + 88); g.fill(); }
+      gkOval(g, cx, cy + 262, 18, 10, GK_ROT); } },
+  { id: "geschenk", sym: "🎁", name: "Geschenk", texte: [], zeichnen(g, cx, cy) {
+      g.fillStyle = GK_ROT; g.fillRect(cx - 200, cy - 20, 400, 240); g.fillStyle = "#9c2a38"; g.fillRect(cx - 225, cy - 90, 450, 80);
+      g.fillStyle = "#fdd835"; g.fillRect(cx - 30, cy - 90, 60, 310); g.fillRect(cx - 225, cy - 70, 450, 40);
+      for (const s of [-1, 1]) { g.save(); g.translate(cx + s * 70, cy - 130); g.rotate(s * 0.35); gkOval(g, 0, 0, 90, 45, "#fdd835"); gkOval(g, 0, 0, 55, 22, "#f9a825"); g.restore(); }
+      gkKreis(g, cx, cy - 115, 34, "#f9a825");
+      for (const [x, y, f] of [[-300, -200, "#42a5f5"], [290, -170, "#ab47bc"], [-280, 160, "#66bb6a"], [300, 140, "#e53935"]]) { g.fillStyle = f; g.fillRect(cx + x, cy + y, 22, 22); } } },
+  { id: "sektglaeser", sym: "🥂", name: "Sektgläser", texte: [], zeichnen(g, cx, cy) {
+      for (const s of [-1, 1]) { g.save(); g.translate(cx + s * 75, cy + 40); g.rotate(s * 0.2);
+        g.fillStyle = "rgba(255,236,150,.85)"; g.beginPath(); g.moveTo(-55, -230); g.lineTo(55, -230); g.lineTo(30, -40); g.lineTo(-30, -40); g.closePath(); g.fill();
+        g.strokeStyle = "#9e9e9e"; g.lineWidth = 6; g.beginPath(); g.moveTo(-60, -260); g.lineTo(60, -260); g.lineTo(32, -40); g.lineTo(-32, -40); g.closePath(); g.stroke();
+        g.beginPath(); g.moveTo(0, -40); g.lineTo(0, 120); g.stroke(); gkOval(g, 0, 125, 60, 14, "#bdbdbd");
+        for (const [x, y] of [[-15, -180], [10, -130], [-5, -90], [20, -200]]) gkKreis(g, x, y, 6, "#fff"); g.restore(); }
+      g.fillStyle = "#fdd835"; for (let i = 0; i < 8; i++) { const a = -Math.PI / 2 + (i - 3.5) * 0.25; g.save(); g.translate(cx + Math.cos(a) * 250, cy - 230 + Math.sin(a) * 60); g.rotate(a); g.fillRect(-4, -18, 8, 36); g.restore(); } } },
+  { id: "stern", sym: "⭐", name: "Stern", texte: [], zeichnen(g, cx, cy) {
+      const stern = (x, y, r, f) => { g.fillStyle = f; g.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * 0.45 : r; g.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); } g.closePath(); g.fill(); };
+      stern(cx, cy, 230, "#fbc02d"); stern(cx, cy, 160, "#fdd835"); gkGesicht(g, cx, cy - 25, 40, null, 12);
+      stern(cx - 290, cy - 180, 45, "#ffe082"); stern(cx + 280, cy - 150, 55, "#ffe082"); stern(cx + 260, cy + 190, 35, "#ffe082"); stern(cx - 260, cy + 170, 40, "#ffe082"); } },
+  { id: "herz", sym: "❤️", name: "Herz", texte: [], zeichnen(g, cx, cy) {
+      const herz = (x, y, s, f) => { g.fillStyle = f; g.beginPath(); g.moveTo(x, y + 110 * s); g.bezierCurveTo(x - 200 * s, y - 10 * s, x - 110 * s, y - 170 * s, x, y - 70 * s); g.bezierCurveTo(x + 110 * s, y - 170 * s, x + 200 * s, y - 10 * s, x, y + 110 * s); g.fill(); };
+      herz(cx, cy + 20, 1.6, GK_ROT); herz(cx - 30, cy - 10, 0.5, "rgba(255,255,255,.18)");
+      herz(cx - 280, cy - 170, 0.35, "#f48fb1"); herz(cx + 280, cy - 120, 0.45, "#f48fb1"); herz(cx + 250, cy + 200, 0.3, "#f48fb1"); herz(cx - 260, cy + 180, 0.3, "#f48fb1"); } },
+  { id: "kochmuetze", sym: "👨‍🍳", name: "Kochmütze", texte: [], zeichnen(g, cx, cy) {
+      for (const [dx, dy, r] of [[-120, -60, 110], [0, -120, 135], [120, -60, 110], [-60, -10, 100], [60, -10, 100]]) gkKreis(g, cx + dx, cy + dy, r, "#fff", "#d7ccc8");
+      g.fillStyle = "#fff"; g.fillRect(cx - 170, cy, 340, 170); g.strokeStyle = "#d7ccc8"; g.lineWidth = 4; g.strokeRect(cx - 170, cy, 340, 170);
+      g.strokeStyle = "#e0d6cf"; for (const dx of [-90, 0, 90]) { g.beginPath(); g.moveTo(cx + dx, cy + 20); g.lineTo(cx + dx, cy + 150); g.stroke(); }
+      g.fillStyle = GK_ROT; g.beginPath(); const x = cx, y = cy + 80, s = 0.42; g.moveTo(x, y + 110 * s); g.bezierCurveTo(x - 200 * s, y - 10 * s, x - 110 * s, y - 170 * s, x, y - 70 * s); g.bezierCurveTo(x + 110 * s, y - 170 * s, x + 200 * s, y - 10 * s, x, y + 110 * s); g.fill(); } },
+  { id: "ringe", sym: "💍", name: "Ringe", texte: [], zeichnen(g, cx, cy) {
+      g.lineWidth = 34; for (const [dx, f] of [[-85, "#fbc02d"], [85, "#f9a825"]]) { g.strokeStyle = f; g.beginPath(); g.arc(cx + dx, cy + 40, 150, 0, Math.PI * 2); g.stroke(); g.strokeStyle = "rgba(255,255,255,.5)"; g.lineWidth = 8; g.beginPath(); g.arc(cx + dx, cy + 40, 150, 3.6, 4.4); g.stroke(); g.lineWidth = 34; }
+      g.fillStyle = "#b3e5fc"; g.beginPath(); g.moveTo(cx - 85, cy - 150); g.lineTo(cx - 125, cy - 190); g.lineTo(cx - 105, cy - 225); g.lineTo(cx - 65, cy - 225); g.lineTo(cx - 45, cy - 190); g.closePath(); g.fill();
+      for (const [x, y] of [[-290, -170], [280, -190], [270, 200]]) { g.fillStyle = GK_ROT; g.beginPath(); const s = 0.3, X = cx + x, Y = cy + y; g.moveTo(X, Y + 110 * s); g.bezierCurveTo(X - 200 * s, Y - 10 * s, X - 110 * s, Y - 170 * s, X, Y - 70 * s); g.bezierCurveTo(X + 110 * s, Y - 170 * s, X + 200 * s, Y - 10 * s, X, Y + 110 * s); g.fill(); } } },
+  { id: "rose", sym: "🌹", name: "Rose", texte: [], zeichnen(g, cx, cy) { gkRoseZeichnen(g, cx, cy, "#c62828", "#8e0000"); } },
+  { id: "rosew", sym: "🤍", name: "Weiße Rose", texte: [], zeichnen(g, cx, cy) { gkRoseZeichnen(g, cx, cy, "#f5f5f5", "#cfcfcf"); } },
+  { id: "kinderwagen", sym: "👶", name: "Kinderwagen", texte: [], zeichnen(g, cx, cy) {
+      g.fillStyle = "#90caf9"; g.beginPath(); g.moveTo(cx - 220, cy - 20); g.lineTo(cx + 180, cy - 20); g.quadraticCurveTo(cx + 180, cy + 160, cx - 20, cy + 160); g.quadraticCurveTo(cx - 220, cy + 160, cx - 220, cy - 20); g.fill();
+      g.fillStyle = "#64b5f6"; g.beginPath(); g.moveTo(cx - 220, cy - 20); g.quadraticCurveTo(cx - 220, cy - 220, cx - 20, cy - 220); g.lineTo(cx - 20, cy - 20); g.closePath(); g.fill();
+      g.strokeStyle = "#5d4037"; g.lineWidth = 10; g.beginPath(); g.moveTo(cx + 180, cy - 20); g.lineTo(cx + 260, cy - 120); g.stroke();
+      for (const dx of [-140, 100]) { gkKreis(g, cx + dx, cy + 220, 55, "#5d4037"); gkKreis(g, cx + dx, cy + 220, 22, "#bcaaa4"); }
+      for (const [x, y] of [[230, -220], [-290, 120], [280, 120]]) { g.fillStyle = "#fdd835"; g.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? 12 : 28; g.lineTo(cx + x + Math.cos(a) * r, cy + y + Math.sin(a) * r); } g.fill(); } } },
+  { id: "mond", sym: "🌙", name: "Mond & Sterne", texte: [], zeichnen(g, cx, cy) {
+      gkKreis(g, cx, cy, 210, "#fdd835"); gkKreis(g, cx + 95, cy - 60, 190, GK_BEIGE);
+      g.strokeStyle = "#2b1b14"; g.lineWidth = 5; g.beginPath(); g.arc(cx - 110, cy - 20, 18, 0.1 * Math.PI, 0.9 * Math.PI); g.stroke(); gkOval(g, cx - 120, cy + 30, 18, 10, "rgba(240,120,140,.5)");
+      for (const [x, y, r] of [[200, -170, 34], [260, 40, 24], [120, 200, 28], [-260, -200, 22], [-230, 200, 18]]) { g.fillStyle = "#ffe082"; g.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * 0.45 : r; g.lineTo(cx + x + Math.cos(a) * rr, cy + y + Math.sin(a) * rr); } g.fill(); } } },
+  { id: "kerze", sym: "🕯️", name: "Kerze", texte: [], zeichnen(g, cx, cy) {
+      const lg = g.createRadialGradient(cx, cy - 170, 10, cx, cy - 170, 200); lg.addColorStop(0, "rgba(255,213,79,.55)"); lg.addColorStop(1, "rgba(255,213,79,0)"); g.fillStyle = lg; g.fillRect(cx - 220, cy - 380, 440, 420);
+      g.fillStyle = "#f5f0e6"; g.fillRect(cx - 70, cy - 110, 140, 330); g.strokeStyle = "#e0d6c6"; g.lineWidth = 4; g.strokeRect(cx - 70, cy - 110, 140, 330);
+      g.strokeStyle = "#3e2a18"; g.lineWidth = 5; g.beginPath(); g.moveTo(cx, cy - 110); g.lineTo(cx, cy - 135); g.stroke();
+      g.fillStyle = "#ffb300"; g.beginPath(); g.moveTo(cx, cy - 230); g.quadraticCurveTo(cx + 40, cy - 160, cx, cy - 130); g.quadraticCurveTo(cx - 40, cy - 160, cx, cy - 230); g.fill();
+      gkOval(g, cx, cy - 158, 10, 20, "#fff59d"); gkOval(g, cx, cy + 225, 150, 22, "#9e9e9e"); } },
+  { id: "baum", sym: "🌳", name: "Baum", texte: [], zeichnen(g, cx, cy) {
+      g.fillStyle = "#6d4c41"; g.beginPath(); g.moveTo(cx - 35, cy + 250); g.lineTo(cx + 35, cy + 250); g.lineTo(cx + 22, cy); g.lineTo(cx - 22, cy); g.fill();
+      for (const [dx, dy, r, f] of [[-120, -40, 120, "#689f38"], [120, -40, 120, "#7cb342"], [0, -150, 150, "#8bc34a"], [-60, 40, 110, "#7cb342"], [70, 50, 105, "#689f38"]]) gkKreis(g, cx + dx, cy + dy, r, f);
+      for (const [x, y] of [[-260, 150], [240, 190], [-200, 230]]) gkOval(g, cx + x, cy + y, 22, 12, "#a5d6a7", 0.6);
+      gkOval(g, cx, cy + 255, 190, 22, "rgba(0,0,0,.08)"); } },
+  { id: "feder", sym: "🕊️", name: "Feder", texte: [], zeichnen(g, cx, cy) {
+      g.save(); g.translate(cx, cy); g.rotate(-0.5);
+      g.fillStyle = "#cfd8dc"; g.beginPath(); g.moveTo(0, -270); g.quadraticCurveTo(140, -80, 20, 230); g.lineTo(-20, 230); g.quadraticCurveTo(-140, -80, 0, -270); g.fill();
+      g.strokeStyle = "rgba(255,255,255,.7)"; g.lineWidth = 3; for (let i = -220; i < 200; i += 28) { g.beginPath(); g.moveTo(0, i); g.lineTo(-70 + Math.abs(i) * 0.1, i + 40); g.moveTo(0, i); g.lineTo(70 - Math.abs(i) * 0.1, i + 40); g.stroke(); }
+      g.strokeStyle = "#78909c"; g.lineWidth = 6; g.beginPath(); g.moveTo(0, -260); g.lineTo(0, 300); g.stroke(); g.restore(); } },
 ];
-const gkTitel = (vn) => [`Gute Besserung, ${vn}!`, `Werde schnell gesund, ${vn}!`, `Wir denken an dich, ${vn}!`];
+function gkRoseZeichnen(g, cx, cy, f, f2) { // Rose (rot oder weiß) – für Hochzeit, Danke und Beileid
+  g.strokeStyle = "#4f7a3a"; g.lineWidth = 12; g.beginPath(); g.moveTo(cx, cy - 20); g.quadraticCurveTo(cx - 30, cy + 140, cx + 10, cy + 280); g.stroke();
+  for (const [s, y] of [[-1, 110], [1, 190]]) { g.save(); g.translate(cx + s * 70, cy + y); g.rotate(s * -0.6); gkOval(g, 0, 0, 75, 28, "#5f8f45"); g.restore(); }
+  gkKreis(g, cx, cy - 110, 125, f2);
+  for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; gkOval(g, cx + Math.cos(a) * 55, cy - 110 + Math.sin(a) * 55, 80, 55, f, a); }
+  gkKreis(g, cx, cy - 110, 60, f2); g.strokeStyle = f; g.lineWidth = 10; g.beginPath(); g.arc(cx, cy - 110, 36, 0.3, 5.4); g.stroke(); g.beginPath(); g.arc(cx + 6, cy - 104, 16, 1, 6); g.stroke();
+}
+// 2.991.0 KC-CLUB-KARTEN-BAUKASTEN (Wunschliste #98, Antworten Hansi 20.11.2026: „alle Anlässe, Drucken ja, gemeinsame Karte auch für andere Anlässe ja, alle
+// Mitglieder dürfen alles“): je Anlass Überschriften, Motive (aus GK_MOTIVE) und eine Spruch-Sammlung in drei Gruppen – herzlich · lustig · kurz.
+// Neuer Anlass / Spruch / Motiv = Eintrag hier. Kein Grund und keine Krankheit auf den Karten (keine Gesundheitsdaten).
+const KARTEN_ANLAESSE = {
+  genesung: { sym: "💐", name: "Gute Besserung", gruss: (vn) => `💐 Gute Besserung, ${vn}! Werde schnell wieder gesund.`,
+    titel: (vn) => [`Gute Besserung, ${vn}!`, `Werde schnell gesund, ${vn}!`, `Wir denken an dich, ${vn}!`],
+    motive: ["strauss", "tulpen", "maus", "hase", "baer", "katze", "igel", "tee", "suppe", "sonne"],
+    texte: { herzlich: ["Werde schnell wieder gesund – wir freuen uns auf dich!", "Wir denken an dich und wünschen dir alles Gute!", "Ganz viel Kraft und gute Besserung von uns allen.", "Du fehlst uns – komm bald wieder zu Kräften!", "Wir drücken dir fest die Daumen.", "Schritt für Schritt wird es besser – wir sind bei dir.", "Ruh dich gut aus – wir halten deinen Platz frei."],
+      lustig: ["Die beste Medizin: eine Suppe vom Köcheclub!", "Erhol dich gut – die Küche wartet auf dich!", "Ohne dich fehlt uns die wichtigste Zutat!", "Bettruhe ist auch ein Rezept – mit viel Geduld abschmecken!", "Kuschel dich ein und werde schnell wieder gesund.", "Tee, Decke, Ruhe – und bald bist du wieder fit!", "Wir haben schon mal die Kochlöffel für dich poliert!"],
+      kurz: ["Gute Besserung!", "Alles Gute für dich!", "Werde schnell gesund!", "Wir denken an dich.", "Ganz viel Kraft!", "Bald geht's wieder bergauf!", "Komm bald wieder!"] } },
+  geburtstag: { sym: "🎂", name: "Geburtstag", gruss: (vn) => `🎂 Alles Gute zum Geburtstag, ${vn}! 🥳`,
+    titel: (vn) => [`Alles Gute, ${vn}!`, `Happy Birthday, ${vn}!`, `Herzlichen Glückwunsch, ${vn}!`],
+    motive: ["torte", "ballons", "geschenk", "baer", "sonnenblume", "kochmuetze", "sektglaeser"],
+    texte: { herzlich: ["Zum Geburtstag alles Liebe, Gesundheit und viele schöne Stunden!", "Wir wünschen dir ein wunderbares neues Lebensjahr.", "Schön, dass es dich gibt – und schön, dass du bei uns bist!", "Viel Glück, Gesundheit und Freude für das neue Lebensjahr.", "Lass dich heute richtig feiern – du hast es verdient!", "Möge das neue Jahr dir viele schöne Momente schenken.", "Alles Liebe von deinen Köchen aus Werne!"],
+      lustig: ["Ein Jahr älter – aber wie guter Wein: immer besser!", "Heute bleibt die Küche kalt – du wirst bekocht!", "Auf dich! Die Torte haben wir schon mal probiert …", "Noch ein Jahr Erfahrung am Herd – Glückwunsch, Meisterkoch!", "Kerzen auspusten nicht vergessen – wir halten den Feuerlöscher bereit!", "Alter ist nur eine Zahl – wie die Temperatur im Ofen.", "Zum Geburtstag das beste Rezept: Lachen, Feiern, Genießen!"],
+      kurz: ["Happy Birthday!", "Alles Gute!", "Feier schön!", "Herzlichen Glückwunsch!", "Lass dich feiern!", "Viel Glück im neuen Lebensjahr!", "Auf dich!"] } },
+  glueckwunsch: { sym: "🥂", name: "Glückwunsch", gruss: (vn) => `🥂 Herzlichen Glückwunsch, ${vn}!`,
+    titel: (vn) => [`Herzlichen Glückwunsch, ${vn}!`, `Bravo, ${vn}!`, `Wir gratulieren, ${vn}!`],
+    motive: ["sektglaeser", "stern", "strauss", "sonnenblume", "kochmuetze", "ballons"],
+    texte: { herzlich: ["Wir freuen uns riesig mit dir – herzlichen Glückwunsch!", "Das hast du dir wirklich verdient!", "Zu diesem besonderen Tag alles Gute von uns allen.", "Wir sind stolz auf dich!", "Auf viele weitere schöne Jahre!", "Herzlichen Glückwunsch zu diesem tollen Jubiläum!", "Danke, dass du so lange dabei bist – auf dich!"],
+      lustig: ["Darauf stoßen wir an – der Sekt ist schon kalt!", "Das muss gefeiert werden – wir bringen den Nachtisch!", "Ein Hoch auf dich – dreimal, mit Schlagsahne!", "Glückwunsch! Das Rezept dafür hätten wir auch gern.", "Sterneküche ist nichts gegen dich!", "Wir ziehen die Kochmütze vor dir!", "Ausgezeichnet – mit fünf Kochmützen!"],
+      kurz: ["Herzlichen Glückwunsch!", "Bravo!", "Toll gemacht!", "Wir gratulieren!", "Auf dich!", "Glückwunsch!", "Weiter so!"] } },
+  danke: { sym: "🙏", name: "Danke", gruss: (vn) => `🙏 Vielen Dank, ${vn}!`,
+    titel: (vn) => [`Danke, ${vn}!`, `Vielen Dank, ${vn}!`, `Danke für alles, ${vn}!`],
+    motive: ["herz", "strauss", "sonnenblume", "tulpen", "kochmuetze", "rose", "katze"],
+    texte: { herzlich: ["Danke für deine Hilfe – ohne dich hätten wir es nicht geschafft!", "Von Herzen Danke für deinen Einsatz.", "Schön, dass wir uns auf dich verlassen können.", "Danke, dass du immer für uns da bist.", "Dein Einsatz macht unseren Club so besonders.", "Wir sagen Danke – für alles, was du für uns tust.", "Ein großes Dankeschön von deinen Köchen!"],
+      lustig: ["Danke! Du bist das Salz in unserer Suppe.", "Ohne dich wäre unser Club nur halb so lecker!", "Für dich: eine extra große Portion Dankeschön!", "Danke – du hast echt was auf dem Kasten (und im Topf)!", "Unser Dank – frisch serviert und gut gewürzt!", "Du bist Gold wert – mindestens 24 Karat!", "Danke! Nachschlag gibt's beim nächsten Treffen."],
+      kurz: ["Danke!", "Vielen Dank!", "Tausend Dank!", "Danke für alles!", "Du bist super!", "Herzlichen Dank!", "Merci!"] } },
+  hochzeit: { sym: "💍", name: "Hochzeit & Ehejubiläum", gruss: (vn) => `💍 Herzlichen Glückwunsch, ${vn}!`,
+    titel: (vn) => [`Herzlichen Glückwunsch, ${vn}!`, `Alles Liebe, ${vn}!`, `Viel Glück zu zweit, ${vn}!`],
+    motive: ["ringe", "herz", "rose", "sektglaeser", "strauss"],
+    texte: { herzlich: ["Wir wünschen euch alles Liebe und Glück auf eurem gemeinsamen Weg.", "Herzlichen Glückwunsch zu eurem Hochzeitstag!", "Auf viele weitere glückliche Jahre zu zweit!", "Möge eure Liebe jeden Tag ein bisschen größer werden.", "Wir freuen uns von Herzen mit euch.", "Zum Ehejubiläum alles Liebe – ihr seid ein tolles Paar!", "Viel Glück, Gesundheit und Liebe für euch beide."],
+      lustig: ["Zusammen kocht es sich einfach besser – herzlichen Glückwunsch!", "Das beste Rezept: zwei Herzen, eine Prise Humor, viel Geduld!", "Auf euch – die beste Mischung im ganzen Club!", "Ihr zwei passt zusammen wie Pfeffer und Salz!", "Wir heben die Gläser – und die Kochlöffel!", "Glückwunsch! Wer kocht heute? Natürlich ihr beide zusammen!", "Liebe geht durch den Magen – bei euch ganz sicher!"],
+      kurz: ["Alles Liebe!", "Viel Glück zu zweit!", "Herzlichen Glückwunsch!", "Auf euch!", "Alles Gute euch beiden!", "Auf die Liebe!", "Viel Glück!"] } },
+  geburt: { sym: "👶", name: "Geburt", gruss: (vn) => `👶 Herzlichen Glückwunsch zum Nachwuchs, ${vn}!`,
+    titel: (vn) => [`Willkommen, kleiner Schatz!`, `Herzlichen Glückwunsch, ${vn}!`, `Hurra, das Baby ist da!`],
+    motive: ["kinderwagen", "mond", "hase", "baer", "stern"],
+    texte: { herzlich: ["Herzlichen Glückwunsch zur Geburt – wir freuen uns mit euch!", "Willkommen auf der Welt, kleiner Schatz!", "Alles Liebe und Gesundheit für den kleinen Erdenbürger.", "Wir wünschen euch eine wunderschöne Zeit zu dritt.", "Ein kleines Wunder ist da – herzlichen Glückwunsch!", "Viel Freude, Gesundheit und ruhige Nächte!", "Von Herzen alles Gute für eure kleine Familie."],
+      lustig: ["Willkommen im Club – der jüngste Koch ist da!", "Der erste Brei ist schon in Planung!", "Kleiner Mensch, große Freude – und bald viel Babybrei!", "Ein neuer Küchenchef ist geboren!", "Schlaflose Nächte? Wir bringen Kaffee vorbei!", "Herzlichen Glückwunsch – das Lätzchen mit Kochmütze ist bestellt!", "Der Club hat Nachwuchs – Glückwunsch!"],
+      kurz: ["Herzlich willkommen!", "Alles Gute!", "Herzlichen Glückwunsch!", "Willkommen, Baby!", "So viel Freude!", "Alles Liebe!", "Hurra!"] } },
+  beileid: { sym: "🕯️", name: "Beileid", gruss: (vn) => `🕯️ In Gedanken bei dir, ${vn}.`, ohneName: true,
+    titel: () => ["Herzliches Beileid", "In stiller Anteilnahme", "In Gedanken bei euch"],
+    motive: ["kerze", "rosew", "baum", "feder"],
+    texte: { herzlich: ["Wir sind in Gedanken bei euch und wünschen euch viel Kraft.", "In stiller Trauer fühlen wir mit euch.", "Wir werden ihn/sie immer in guter Erinnerung behalten.", "Unser tiefes Mitgefühl in dieser schweren Zeit.", "Möge die Erinnerung euch Trost und Kraft geben.", "Wir teilen eure Trauer und sind für euch da.", "In Liebe und Dankbarkeit erinnern wir uns."],
+      lustig: [], // bei Beileid bewusst keine lustigen Sprüche
+      kurz: ["In stiller Anteilnahme.", "Wir denken an euch.", "Unser herzliches Beileid.", "In Gedanken bei euch.", "Viel Kraft in dieser Zeit.", "Wir trauern mit euch.", "In Erinnerung."] } },
+};
+const KARTEN_GRUPPEN = [["herzlich", "💛 Herzlich"], ["lustig", "😄 Lustig"], ["kurz", "✏️ Kurz"]];
 const gkAbsender = () => { const vn = ICH?.vorname || String(ICH?.name || "").split(" ")[0] || "Hansi"; return ["Dein Köcheclub", `${vn} und der ganze Club`, `Von ${vn}`]; };
 function gkUmbruch(g, text, breite) { // Zeilen umbrechen; zu lang → Schrift kleiner (höchstens 3 Zeilen)
   for (let gr = 46; gr >= 30; gr -= 2) {
@@ -33883,66 +34045,113 @@ async function gkZeichnen(k) { // k = { motiv, titel, text, von, namen? } – na
   g.fillStyle = "#fff"; g.font = "700 50px Georgia, 'Times New Roman', serif"; g.fillText("Köcheclub Werne", cx + 40, H - 88);
   return c;
 }
+const kaAnlass = (a) => (KARTEN_ANLAESSE[a] ? a : "genesung");
+// Überschriften je Anlass; ohne Namen (z. B. Karte zum Drucken) fällt das „, …“ weg
+const gkTitel = (vn, anlass = "genesung") => KARTEN_ANLAESSE[kaAnlass(anlass)].titel(vn || "").map((t) => t.replace(/, !$/, "!"));
+const gkMotiveFuer = (anlass) => KARTEN_ANLAESSE[kaAnlass(anlass)].motive.map((id) => GK_MOTIVE.find((m) => m.id === id)).filter(Boolean);
+function gkTexte(anlass, gruppe, motiv) { // Spruch-Liste einer Gruppe; bei Gute Besserung kommen die Sprüche des Motivs vorne dazu
+  const a = kaAnlass(anlass), mo = GK_MOTIVE.find((m) => m.id === motiv), eig = a === "genesung" && gruppe === "herzlich" ? mo?.texte || [] : [];
+  return [...new Set([...eig, ...(KARTEN_ANLAESSE[a].texte[gruppe] || [])])];
+}
+const GK_DAUMEN = new Map(); // Motiv → kleines Vorschaubild (einmal gezeichnet)
+function gkDaumen(id) {
+  if (GK_DAUMEN.has(id)) return GK_DAUMEN.get(id);
+  const mo = GK_MOTIVE.find((m) => m.id === id), c = document.createElement("canvas"); c.width = c.height = 150; const g = c.getContext("2d");
+  g.fillStyle = GK_BEIGE; g.fillRect(0, 0, 150, 150); g.save(); g.lineCap = "round"; g.translate(75, 75); g.scale(0.165, 0.165); g.translate(-540, -440);
+  try { mo?.zeichnen(g, 540, 470); } catch {} g.restore();
+  const u = c.toDataURL("image/png"); GK_DAUMEN.set(id, u); return u;
+}
+const gkDateiName = (anlass, vn) => `${KARTEN_ANLAESSE[kaAnlass(anlass)].name.replace(/[^A-Za-zÄÖÜäöüß]+/g, "-")}-${vn || "Karte"}.jpg`.replace(/-+/g, "-");
 let GK = null;
 const GK_KEY = "kc_club_gk_wahl";
-async function genesungsKarte(pid) {
-  if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return meldeFehler(e); }
-  const m = MITGLIEDER.find((x) => x.person_id === pid); if (!m || pid === ICH?.person_id) return melde("Die Person ist nicht (mehr) in der Mitgliederliste.", true);
-  const vorname = m.vorname || String(m.name || "").split(" ")[0];
+function genesungsKarte(pid) { return kartenBaukasten(pid, "genesung"); } // ältere Knöpfe/Links öffnen den Baukasten mit „Gute Besserung“
+// Karten-Baukasten: pid = Mitglied (Chat + gemeinsame Karte möglich) oder null (nur Drucken, z. B. Beileid an die Familie; fuer = Name vorbelegt)
+async function kartenBaukasten(pid, anlass, fuer = "") {
+  let vorname = String(fuer || "").trim();
+  if (pid) {
+    if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return meldeFehler(e); }
+    const m = MITGLIEDER.find((x) => x.person_id === pid); if (!m || pid === ICH?.person_id) return melde("Die Person ist nicht (mehr) in der Mitgliederliste.", true);
+    vorname = m.vorname || String(m.name || "").split(" ")[0];
+    if (!anlass) anlass = m.geburtstag && m.geburtstag === heuteIso().slice(5) ? "geburtstag" : "genesung"; // heute Geburtstag → Geburtstagskarte
+  }
+  anlass = kaAnlass(anlass);
   let gemerkt = {}; try { gemerkt = JSON.parse(localStorage.getItem(GK_KEY) || "{}") || {}; } catch {}
-  const motiv = GK_MOTIVE.some((x) => x.id === gemerkt.motiv) ? gemerkt.motiv : "strauss";
-  GK = { pid, vorname, motiv, titel: 0, text: 0, eigenText: "", von: 0, eigenVon: "" };
-  const f = blattAuf("gkBlatt", `<h3 style="margin-top:0">💐 Gute-Besserung-Karte für ${esc(vorname)}</h3>
-    <img id="gkBild" alt="Genesungskarte" style="width:100%;max-width:420px;display:block;margin:0 auto 8px;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.2);touch-action:pan-y">
-    <div class="hl-chips gk-motive" style="justify-content:center">${GK_MOTIVE.map((x) => `<button type="button" class="chip" data-motiv="${x.id}" aria-label="${esc(x.name)}">${x.sym} ${esc(x.name)}</button>`).join("")}</div>
+  const motive = gkMotiveFuer(anlass), motiv = motive.some((x) => x.id === gemerkt.motiv) ? gemerkt.motiv : motive[0].id;
+  GK = { pid, vorname, motiv, titel: 0, text: 0, eigenText: "", von: 0, eigenVon: "", anlass, gruppe: "herzlich" };
+  const leitung = !!(ICH?.admin || ICH?.vorstand);
+  const f = blattAuf("gkBlatt", `<h3 style="margin-top:0" id="gkKopf"></h3>
+    <div class="hl-chips" id="gkAnlass" style="justify-content:center">${Object.entries(KARTEN_ANLAESSE).map(([id, a]) => `<button type="button" class="chip" data-anlass="${id}">${a.sym} ${esc(a.name)}</button>`).join("")}</div>
+    ${pid ? "" : `<label class="feld">Für wen? (Name auf der Karte, darf leer bleiben)<input id="gkFuer" maxlength="30" value="${esc(vorname)}" placeholder="z. B. Familie Müller"></label>`}
+    <img id="gkBild" alt="Karte" style="width:100%;max-width:420px;display:block;margin:8px auto;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.2);touch-action:pan-y">
+    <h4 class="gk-h">Motiv <span class="hinweis" style="font-weight:400">– oder auf der Karte wischen</span></h4>
+    <div class="gk-motive" id="gkMotive" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:6px"></div>
     <h4 class="gk-h">Überschrift</h4><div class="hl-chips" id="gkTitel"></div>
-    <h4 class="gk-h">Text</h4><div class="hl-chips" id="gkTexte"></div>
+    <h4 class="gk-h">Text</h4><div class="hl-chips" id="gkGruppen" style="margin-bottom:4px"></div><div class="hl-chips" id="gkTexte"></div>
     <label class="feld versteckt" id="gkEigenFeld">Dein Text (höchstens 120 Zeichen)<textarea id="gkEigen" rows="3" maxlength="120" placeholder="z. B. Liebe Karla, wir drücken dir die Daumen …"></textarea></label>
     <h4 class="gk-h">Absender</h4><div class="hl-chips" id="gkVon"></div>
     <label class="feld versteckt" id="gkVonFeld">Absender<input id="gkVonEigen" maxlength="40" placeholder="z. B. Deine Kochfreunde"></label>
-    <p class="hinweis" style="margin:6px 0">Die Karte kommt als Bild in den Chat mit ${esc(vorname)}. Ein paar eigene Worte schreibst du darunter – dann ➤.</p>
-    <div style="display:grid;gap:8px"><button type="button" class="knopf haupt" id="gkLos">💬 In ${esc(vorname)}s Chat legen</button>
-      ${ICH?.admin || ICH?.vorstand ? `<button type="button" class="knopf" id="gkGemeinsam">👥 Als gemeinsame Karte starten – alle unterschreiben</button>` : ""}
+    <p class="hinweis" style="margin:6px 0">${pid ? `In den Chat: die Karte kommt als Bild in den Chat mit ${esc(vorname)}, ein paar eigene Worte schreibst du darunter – dann ➤. ` : ""}Drucken: Karte in Club-Farben (A5) zum Ausschneiden.</p>
+    <div style="display:grid;gap:8px">${pid ? `<button type="button" class="knopf haupt" id="gkLos">💬 In ${esc(vorname)}s Chat legen</button>` : ""}
+      <button type="button" class="knopf${pid ? "" : " haupt"}" id="gkDruck">🖨️ Drucken</button>
+      ${pid && leitung ? `<button type="button" class="knopf" id="gkGemeinsam">👥 Als gemeinsame Karte starten – alle unterschreiben</button>` : ""}
       <button type="button" class="knopf" onclick="fensterZu($('gkBlatt'))">Abbrechen</button></div>
     <div id="gkLaeuft"></div>`);
-  gkLaeuftZeigen(pid); // 2.967.0 KC-CLUB-GK-GEMEINSAM: läuft schon eine gemeinsame Karte für diese Person?
+  if (pid) gkLaeuftZeigen(pid); // 2.967.0 KC-CLUB-GK-GEMEINSAM: läuft schon eine gemeinsame Karte für diese Person?
   let timer = 0;
   const malen = async () => {
-    const mo = GK_MOTIVE.find((x) => x.id === GK.motiv) || GK_MOTIVE[0];
-    const text = GK.text === -1 ? (GK.eigenText.trim() || "…") : mo.texte[GK.text] || mo.texte[0];
+    const mo = GK_MOTIVE.find((x) => x.id === GK.motiv) || GK_MOTIVE[0], A = KARTEN_ANLAESSE[GK.anlass];
+    const text = GK.text === -1 ? (GK.eigenText.trim() || "…") : gkTexte(GK.anlass, GK.gruppe, mo.id)[GK.text] || gkTexte(GK.anlass, "herzlich", mo.id)[0];
     const von = GK.von === -1 ? (GK.eigenVon.trim() || "Dein Köcheclub") : gkAbsender()[GK.von];
-    const c = await gkZeichnen({ motiv: mo.id, titel: gkTitel(vorname)[GK.titel], text, von });
-    const b = $("gkBild"); if (b) { b.src = c.toDataURL("image/jpeg", 0.88); b.alt = `Genesungskarte: ${mo.name}, ${gkTitel(vorname)[GK.titel]}`; } GK.canvas = c;
+    const titel = gkTitel(GK.vorname, GK.anlass)[GK.titel], c = await gkZeichnen({ motiv: mo.id, titel, text, von });
+    const b = $("gkBild"); if (b) { b.src = c.toDataURL("image/jpeg", 0.88); b.alt = `${A.name}-Karte: ${mo.name}, ${titel}`; } GK.canvas = c;
   };
   const spaeter = () => { clearTimeout(timer); timer = setTimeout(malen, 250); };
   const chips = (id, liste, wahl, eigen) => { $(id).innerHTML = liste.map((t, i) => `<button type="button" class="chip${wahl === i ? " an" : ""}" data-i="${i}">${esc(t)}</button>`).join("") + (eigen ? `<button type="button" class="chip${wahl === -1 ? " an" : ""}" data-i="-1">✏️ ${eigen}</button>` : ""); };
   const zeigen = () => {
-    const mo = GK_MOTIVE.find((x) => x.id === GK.motiv) || GK_MOTIVE[0];
-    f.querySelectorAll("[data-motiv]").forEach((b) => b.classList.toggle("an", b.dataset.motiv === GK.motiv));
-    chips("gkTitel", gkTitel(vorname), GK.titel); chips("gkTexte", mo.texte, GK.text, "Eigener Text"); chips("gkVon", gkAbsender(), GK.von, "Eigener");
+    const A = KARTEN_ANLAESSE[GK.anlass], gruppen = KARTEN_GRUPPEN.filter(([g]) => A.texte[g]?.length);
+    if (!gruppen.some(([g]) => g === GK.gruppe)) GK.gruppe = gruppen[0][0];
+    $("gkKopf").textContent = `${A.sym} ${A.name} – Karte${GK.vorname ? " für " + GK.vorname : ""}`;
+    f.querySelectorAll("[data-anlass]").forEach((b) => b.classList.toggle("an", b.dataset.anlass === GK.anlass));
+    $("gkMotive").innerHTML = gkMotiveFuer(GK.anlass).map((x) => `<button type="button" data-motiv="${x.id}" aria-label="${esc(x.name)}" aria-pressed="${x.id === GK.motiv}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px;border-radius:10px;background:#fff;cursor:pointer;font-size:.78rem;border:3px solid ${x.id === GK.motiv ? GK_ROT : "transparent"};box-shadow:0 1px 4px rgba(0,0,0,.15)"><img src="${gkDaumen(x.id)}" alt="" style="width:100%;max-width:70px;border-radius:6px"><span>${esc(x.name)}</span></button>`).join("");
+    chips("gkTitel", gkTitel(GK.vorname, GK.anlass), GK.titel);
+    $("gkGruppen").innerHTML = gruppen.map(([g, t]) => `<button type="button" class="chip${g === GK.gruppe && GK.text !== -1 ? " an" : ""}" data-gruppe="${g}">${esc(t)}</button>`).join("");
+    chips("gkTexte", gkTexte(GK.anlass, GK.gruppe, GK.motiv), GK.text, "Eigener Text"); chips("gkVon", gkAbsender(), GK.von, "Eigener");
     $("gkEigenFeld").classList.toggle("versteckt", GK.text !== -1); $("gkVonFeld").classList.toggle("versteckt", GK.von !== -1);
     malen();
   };
-  f.querySelectorAll("[data-motiv]").forEach((b) => (b.onclick = () => { GK.motiv = b.dataset.motiv; if (GK.text > 0) GK.text = 0; zeigen(); }));
+  const motivWahl = (id) => { GK.motiv = id; if (GK.text > 0 && GK.anlass === "genesung" && GK.gruppe === "herzlich") GK.text = 0; zeigen(); };
+  $("gkAnlass").onclick = (e) => { const b = e.target.closest("[data-anlass]"); if (!b || b.dataset.anlass === GK.anlass) return;
+    GK.anlass = b.dataset.anlass; const ms = gkMotiveFuer(GK.anlass); if (!ms.some((x) => x.id === GK.motiv)) GK.motiv = ms[0].id;
+    GK.titel = 0; GK.gruppe = "herzlich"; if (GK.text !== -1) GK.text = 0; zeigen(); };
+  $("gkMotive").onclick = (e) => { const b = e.target.closest("[data-motiv]"); if (b) motivWahl(b.dataset.motiv); };
   $("gkTitel").onclick = (e) => { const b = e.target.closest("[data-i]"); if (b) { GK.titel = +b.dataset.i; zeigen(); } };
+  $("gkGruppen").onclick = (e) => { const b = e.target.closest("[data-gruppe]"); if (b) { GK.gruppe = b.dataset.gruppe; GK.text = 0; zeigen(); } };
   $("gkTexte").onclick = (e) => { const b = e.target.closest("[data-i]"); if (b) { GK.text = +b.dataset.i; zeigen(); if (GK.text === -1) $("gkEigen").focus(); } };
   $("gkVon").onclick = (e) => { const b = e.target.closest("[data-i]"); if (b) { GK.von = +b.dataset.i; zeigen(); if (GK.von === -1) $("gkVonEigen").focus(); } };
   $("gkEigen").oninput = (e) => { GK.eigenText = e.target.value.slice(0, 120); spaeter(); };
   $("gkVonEigen").oninput = (e) => { GK.eigenVon = e.target.value.slice(0, 40); spaeter(); };
-  // Wischen auf der Karte = nächstes / voriges Motiv
+  if ($("gkFuer")) $("gkFuer").oninput = (e) => { GK.vorname = e.target.value.slice(0, 30).trim(); $("gkKopf").textContent = `${KARTEN_ANLAESSE[GK.anlass].sym} ${KARTEN_ANLAESSE[GK.anlass].name} – Karte${GK.vorname ? " für " + GK.vorname : ""}`; chips("gkTitel", gkTitel(GK.vorname, GK.anlass), GK.titel); spaeter(); };
+  // Wischen auf der Karte = nächstes / voriges Motiv (des Anlasses)
   let x0 = null; const bild = $("gkBild");
   bild.addEventListener("pointerdown", (e) => { x0 = e.clientX; });
   bild.addEventListener("pointerup", (e) => { if (x0 === null) return; const dx = e.clientX - x0; x0 = null; if (Math.abs(dx) < 40) return;
-    const i = GK_MOTIVE.findIndex((x) => x.id === GK.motiv), n = GK_MOTIVE.length; GK.motiv = GK_MOTIVE[(i + (dx < 0 ? 1 : -1) + n) % n].id; if (GK.text > 0) GK.text = 0; zeigen(); });
-  f.querySelector("#gkLos").onclick = (e) => einmal(e.target, gkInDenChat);
+    const ms = gkMotiveFuer(GK.anlass), i = ms.findIndex((x) => x.id === GK.motiv), n = ms.length; motivWahl(ms[(i + (dx < 0 ? 1 : -1) + n) % n].id); });
+  f.querySelector("#gkLos")?.addEventListener("click", (e) => einmal(e.target, gkInDenChat));
+  f.querySelector("#gkDruck").onclick = () => gkDrucken();
   f.querySelector("#gkGemeinsam")?.addEventListener("click", (e) => einmal(e.target, gkGemeinsamStarten));
   zeigen();
+}
+function gkDrucken() { // Karte (A5, Club-Farben) drucken oder als PDF sichern
+  if (!GK?.canvas) return;
+  if (GK.text === -1 && !GK.eigenText.trim()) return melde("Bitte zuerst deinen Text schreiben – oder einen Vorschlag antippen.", true);
+  try { localStorage.setItem(GK_KEY, JSON.stringify({ motiv: GK.motiv })); } catch {}
+  druckStarten("karte", { bild: GK.canvas.toDataURL("image/jpeg", 0.92), name: GK.vorname, anlass: KARTEN_ANLAESSE[GK.anlass].name });
 }
 // ---------- 2.967.0 KC-CLUB-GK-GEMEINSAM (Wunsch Hansi 16.11.2026 „Baue noch die gemeinsame Karte“): Clubleitung startet, alle bekommen eine Push und
 // unterschreiben mit einem Tipp, die beschenkte Person sieht nichts. Der Starter (oder Admin) schickt die Karte mit allen Vornamen in den Chat.
 const gkWahl = () => { // Auswahl aus dem offenen Karten-Fenster
   const mo = GK_MOTIVE.find((x) => x.id === GK.motiv) || GK_MOTIVE[0];
-  return { motiv: mo.id, titel: GK.titel, text: GK.text === -1 ? GK.eigenText.trim() : mo.texte[GK.text] || mo.texte[0], von: GK.von === -1 ? (GK.eigenVon.trim() || "Dein Köcheclub") : gkAbsender()[GK.von] };
+  return { motiv: mo.id, anlass: GK.anlass, titel: GK.titel, text: GK.text === -1 ? GK.eigenText.trim() : gkTexte(GK.anlass, GK.gruppe, mo.id)[GK.text] || gkTexte(GK.anlass, "herzlich", mo.id)[0], von: GK.von === -1 ? (GK.eigenVon.trim() || "Dein Köcheclub") : gkAbsender()[GK.von] };
 };
 async function gkGemeinsamStarten() {
   if (!GK) return; const w = gkWahl(); if (!w.text) return melde("Bitte zuerst deinen Text schreiben – oder einen Vorschlag antippen.", true);
@@ -34020,10 +34229,12 @@ function gkNachfragePruefen(versuch = 0) {
   if (!k) return;
   if (document.hidden || document.querySelector(FENSTER_OFFEN)) { if (versuch < GKN_VERSUCHE) setTimeout(() => gkNachfragePruefen(versuch + 1), GKN_WARTEN_MS); return; }
   try { if (sessionStorage.getItem("kc_club_gkn_" + k.id)) return; sessionStorage.setItem("kc_club_gkn_" + k.id, "1"); } catch {}
-  const f = blattAuf("gknBlatt", `<h3 style="margin-top:0">💐 ${esc(k.fuerName)} braucht gerade gute Wünsche.</h3>
-    <p style="margin:6px 0">Möchtest du ${esc(k.fuerName)} mit der <b>Gemeinschaftskarte vom Club</b> auch gute Besserung wünschen?</p>
+  // 2.991.0 KC-CLUB-KARTEN-BAUKASTEN: andere Anlässe → passende Frage (ohne Angabe wie bisher „gute Besserung“)
+  const wunsch = { geburtstag: "zum Geburtstag gratulieren", glueckwunsch: "gratulieren", danke: "Danke sagen", hochzeit: "gratulieren", geburt: "zum Nachwuchs gratulieren", beileid: "dein Mitgefühl zeigen" }[k.anlass];
+  const f = blattAuf("gknBlatt", `<h3 style="margin-top:0">${wunsch ? `💌 Für ${esc(k.fuerName)} gibt es eine gemeinsame Karte.` : `💐 ${esc(k.fuerName)} braucht gerade gute Wünsche.`}</h3>
+    <p style="margin:6px 0">Möchtest du ${esc(k.fuerName)} mit der <b>Gemeinschaftskarte vom Club</b> auch ${wunsch || "gute Besserung wünschen"}?</p>
     <p class="hinweis" style="margin:0 0 10px">Ein Tipp genügt – dein Name und dein Gesicht kommen auf die Karte. ${esc(k.fuerName)} sieht sie erst, wenn sie kommt 🤫</p>
-    <div style="display:grid;gap:8px"><button type="button" class="knopf haupt" data-w="ja">💐 Ja, zur Karte</button>
+    <div style="display:grid;gap:8px"><button type="button" class="knopf haupt" data-w="ja">${wunsch ? "💌" : "💐"} Ja, zur Karte</button>
       <button type="button" class="knopf" data-w="spaeter">Später</button><button type="button" class="knopf" data-w="nein">Nein, danke</button></div>`);
   f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => {
     const w = b.dataset.w, alt = gknStand()[k.id] || {}; fensterZu(f);
@@ -34047,12 +34258,12 @@ async function gkGemeinsamOeffnen(id) {
   let d; try { d = await api("gk_gemeinsam_liste", {}, { warten: true }); } catch (e) { return meldeFehler(e); }
   const k = (d?.karten || []).find((x) => x.id === id);
   if (!k) return melde("Diese Karte ist schon verschickt – danke fürs Mitmachen! 💐");
-  const daten = { motiv: k.motiv, titel: gkTitel(k.fuerName)[k.titel] || gkTitel(k.fuerName)[0], text: k.text, von: k.von, namen: k.namen,
+  const daten = { motiv: k.motiv, titel: gkTitel(k.fuerName, k.anlass)[k.titel] || gkTitel(k.fuerName, k.anlass)[0], text: k.text, von: k.von, namen: k.namen,
     leute: k.leute ? await gkLeuteMitBild(k.leute) : null }; // 2.977.0 KC-CLUB-GK-GESICHTER (älterer Server ohne „leute“ → wie bisher nur Vornamen)
   const bis = new Date(k.bis).toLocaleString("de-DE", { weekday: "short", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
   const f = blattAuf("gkGemBlatt", `<h3 style="margin-top:0">👥 Gemeinsame Karte für ${esc(k.fuerName)}</h3>
     <p class="hinweis" style="margin:0 0 6px">Gestartet von ${esc(k.starter)} · unterschreiben bis ${esc(bis)} · ${esc(k.fuerName)} sieht die Karte erst, wenn sie kommt 🤫</p>
-    <img id="gkGemBild" alt="Gemeinsame Genesungskarte" style="width:100%;max-width:420px;display:block;margin:0 auto 8px;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.2)">
+    <img id="gkGemBild" alt="Gemeinsame Karte" style="width:100%;max-width:420px;display:block;margin:0 auto 8px;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.2)">
     <p style="margin:4px 0 8px;text-align:center"><b>${k.namen.length}</b> Unterschrift${k.namen.length === 1 ? "" : "en"}${k.namen.length ? ": " + esc(k.namen.join(", ")) : ""}</p>
     <div style="display:grid;gap:8px">
       ${k.ichDabei ? `<button type="button" class="knopf" data-w="zurueck">↩️ Meine Unterschrift zurücknehmen</button>` : `<button type="button" class="knopf haupt" data-w="ja">👆 Hier tippen – mit Name und Gesicht unterschreiben</button>`}
@@ -34070,12 +34281,12 @@ async function gkGemeinsamOeffnen(id) {
       if (w === "senden") {
         if (!(await frage(`Die Karte mit ${k.namen.length} Unterschrift${k.namen.length === 1 ? "" : "en"} jetzt in ${k.fuerName}s Chat legen?\n\nDanach kann niemand mehr unterschreiben.`, { ja: "💬 Ja, jetzt", nein: "Noch warten" }))) return;
         const c = await gkZeichnen(daten), blob = await new Promise((r) => c.toBlob(r, "image/jpeg", 0.88));
-        const name = `Gute-Besserung-${k.fuerName}.jpg`, r = await anlageHochladen(new File([blob], name, { type: "image/jpeg" }));
+        const name = gkDateiName(k.anlass, k.fuerName), r = await anlageHochladen(new File([blob], name, { type: "image/jpeg" }));
         await api("gk_gemeinsam_ende", { id }, { warten: true }); fensterZu(f);
         await direkt(k.fuer);
         anlagen = [...anlagen.filter((a) => !a.laedt), { id: r.id, name: r.name || name, laedt: false }]; EINMAL = false; chipsZeigen();
-        textVorbelegen(`💐 Gute Besserung, ${k.fuerName}! Eine Karte vom ganzen Köcheclub – ${k.namen.length} haben unterschrieben.`); $("text")?.dispatchEvent(new Event("input")); $("text")?.focus();
-        melde("💐 Die gemeinsame Karte liegt im Chat bereit – jetzt ➤");
+        textVorbelegen(`${KARTEN_ANLAESSE[kaAnlass(k.anlass)].gruss(k.fuerName)} Eine Karte vom ganzen Köcheclub – ${k.namen.length} haben unterschrieben.`); $("text")?.dispatchEvent(new Event("input")); $("text")?.focus();
+        melde("💌 Die gemeinsame Karte liegt im Chat bereit – jetzt ➤");
       }
     } catch (e) { meldeFehler(e); }
   })));
@@ -34087,12 +34298,12 @@ async function gkInDenChat() {
   try { localStorage.setItem(GK_KEY, JSON.stringify({ motiv: GK.motiv })); } catch {}
   try {
     const blob = await new Promise((r) => GK.canvas.toBlob(r, "image/jpeg", 0.88));
-    const name = `Gute-Besserung-${vorname}.jpg`, r = await anlageHochladen(new File([blob], name, { type: "image/jpeg" }));
+    const name = gkDateiName(GK.anlass, vorname), A = KARTEN_ANLAESSE[GK.anlass], r = await anlageHochladen(new File([blob], name, { type: "image/jpeg" }));
     fensterZu($("gkBlatt")); GK = null;
     await direkt(pid);
     anlagen = [...anlagen.filter((a) => !a.laedt), { id: r.id, name: r.name || name, laedt: false }]; EINMAL = false; chipsZeigen();
-    textVorbelegen(`💐 Gute Besserung, ${vorname}! Werde schnell wieder gesund.`); $("text")?.dispatchEvent(new Event("input")); $("text")?.focus();
-    melde("💐 Die Karte liegt im Chat bereit – noch ein paar Worte dazu und ➤");
+    textVorbelegen(A.gruss(vorname)); $("text")?.dispatchEvent(new Event("input")); $("text")?.focus();
+    melde("💌 Die Karte liegt im Chat bereit – noch ein paar Worte dazu und ➤");
   } catch (e) { meldeFehler(e); }
 }
 // KC-CLUB-EINZELCHAT (2.40.0, Wunsch Hansi): gibt es schon einen Chat nur mit dieser Person, öffnet „💬 Nachricht in der App“ ihn

@@ -1,5 +1,17 @@
 # Änderungen
 
+## 2.991.0 – 2026-11-20 – 💌 Karten-Baukasten für alle Anlässe (Wunschliste #98) · Server 2.991.0
+
+### 💌 Karten-Baukasten (KC-CLUB-KARTEN-BAUKASTEN)
+Wunsch #98 „mehr Auswahl bei den Genesungskarten … auch für andere Anlässe, einfach und ordentlich“. Antwort Hansi 20.11.: „A alle, b ja, c ja, d ja“.
+- **7 Anlässe:** 💐 Gute Besserung · 🎂 Geburtstag · 🥂 Glückwunsch · 🙏 Danke · 💍 Hochzeit & Ehejubiläum · 👶 Geburt · 🕯️ Beileid (würdevoll, ohne Tiere, ohne lustige Sprüche).
+- **26 Motive** (20 neu, alle in der App gezeichnet) als Bildchen zum Antippen – je Anlass die passenden. Wischen auf der Karte geht weiter.
+- **Sprüche** je Anlass in drei Gruppen: 💛 Herzlich · 😄 Lustig (Küchen-Humor) · ✏️ Kurz – plus eigener Text (120 Zeichen).
+- **🖨️ Drucken:** Karte in Club-Farben (A5) zum Ausschneiden oder als PDF.
+- **👥 Gemeinsame Karte** jetzt für jeden Anlass; Push, E-Mail und Start-Frage sagen den passenden Anlass.
+- Beim Mitglied heißt der Knopf jetzt **„💌 Karte schicken“** (hat jemand heute Geburtstag, ist gleich die Geburtstagskarte gewählt). Im Büro → Freud & Leid gibt es die Karte bei jedem Fall; bei verstorbenen Mitgliedern zum Drucken für die Familie.
+- Datenbank: Spalte `anlass` an `kc_club_gk_gemeinsam` (nur additiv, Standard „genesung“). Keine Gesundheitsdaten auf den Karten.
+
 ## 2.990.0 – 2026-11-20 – 💤 Schlafmodus mit Bildschirmschoner · 🚗 Mitfahrt antippen → direkt zu „Mitfahren“ · Server 2.990.0 · [Hansi: einspielen]
 Hansi 20.11.: „Einspielen und checke, ob ein anderes Bündel wartet, um es mitzunehmen.“ – Bündel aus #217 (KC-CLUB-SCHLAFMODUS) und #218 (KC-CLUB-MITFAHRT-SPRUNG).
 
