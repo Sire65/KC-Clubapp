@@ -55,6 +55,14 @@ for (let t = 0; t < 8000; t += 500) { await seite.clock.fastForward(500); await 
 const nach = anfragen.slice(ab).map((x) => x[1]);
 ok(await seite.evaluate(() => !SCHLAF.an && !document.getElementById("schlafSchicht")), "Klick weckt, Schicht weg");
 ok(nach.filter((a) => a === "init").length === 1, `genau ein init nach dem Aufwachen (${nach.join(", ")})`);
+ok(await seite.evaluate(() => !document.getElementById("lsSperre") && !LS.offen), "ohne PIN: ein Tipp genügt – kein zweites „👆 Weiter“ (Liegen-Schutz zusammengelegt)");
+// mit App-PIN: nach dem Weck-Tipp direkt die PIN-Abfrage
+await seite.evaluate(() => { localStorage.setItem("kc_club_pin", JSON.stringify({ salz: "test", wert: "test", seit: "2026-11-20T08:00:00.000Z" })); });
+for (let t = 0; t < 25 * 60000; t += 15000) { await seite.clock.fastForward(15000); await seite.waitForTimeout(10); }
+ok(await seite.evaluate(() => SCHLAF.an && !document.getElementById("lsSperre")), "im Schlaf: keine zweite Sichtschutz-Schicht");
+await seite.click("#schlafSchicht"); await seite.waitForTimeout(100);
+ok(await seite.evaluate(() => !SCHLAF.an && !!document.querySelector("#lsSperre .ls-punkte")), "mit PIN: direkt die PIN-Abfrage");
+await seite.evaluate(() => { localStorage.removeItem("kc_club_pin"); lsEntsperren(); });
 // Einstellung „aus“: schläft nicht von selbst
 schlafEinst = { art: "aus", von: "22:00", bis: "07:00" }; await seite.evaluate(() => neuLaden());
 for (let t = 0; t < 20 * 60000; t += 15000) { await seite.clock.fastForward(15000); await seite.waitForTimeout(5); }

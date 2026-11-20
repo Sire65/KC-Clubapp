@@ -96,7 +96,7 @@ function sandbox({ wahl = null, jetzt = Date.now(), hidden = false, extra = {} }
     INIT: { einstellungen: wahl ? { schlafmodus: wahl } : {}, rtKanal: "k" }, KEY: "k", ICH: { person_id: "p" }, RT: { ok: false, warte: 0 }, RUF: null, VF: { rolle: null }, SS: { id: null }, ST: { eigen: null }, WKK: { art: "" },
     FENSTER: { schlaeft: false }, aktuelleAnsicht: "start", chatId: null, CHAT_AKTIV: 0, stromZuschauen: () => false, melde() {},
     neuLaden: () => { zaehler.neuLaden++; }, rtVerbinden: () => { zaehler.rtVerbinden++; ctx.RT.ok = true; }, rtTrennen: () => { zaehler.rtTrennen++; }, onlineWegMelden: () => { zaehler.weg++; },
-    onlinePing: () => { zaehler.onlinePing++; }, chatLaden: () => { zaehler.chatLaden++; }, spur: (w, m) => zaehler.spur.push(w), ...extra };
+    onlinePing: () => { zaehler.onlinePing++; }, lsNachSchlaf: (g) => { zaehler.ls = (zaehler.ls || []).concat(g); }, chatLaden: () => { zaehler.chatLaden++; }, spur: (w, m) => zaehler.spur.push(w), ...extra };
   ctx.Date = new Proxy(Date, { get: (t, k) => (k === "now" ? () => ctx.__jetzt : Reflect.get(t, k)), construct: (t, a) => new t(...(a.length ? a : [ctx.__jetzt])) });
   vm.createContext(ctx);
   vm.runInContext(block + "\n;globalThis.__S = { SCHLAF, ruht, schlafPruefen, schlafAufwachen, schlafZeitErlaubt, schlafEin, schlafAusnahme };", ctx);
@@ -122,6 +122,7 @@ function sandbox({ wahl = null, jetzt = Date.now(), hidden = false, extra = {} }
   s.dom.schlafSchicht.ev.click({ preventDefault() {}, stopPropagation() {} });
   assert.equal(s.S.SCHLAF.an, false); assert.equal(s.dom.schlafSchicht, undefined, "Schicht weg");
   assert.equal(s.zaehler.neuLaden, 1, "genau ein neuLaden"); assert.equal(s.zaehler.rtVerbinden, 1, "Leitung wieder auf");
+  assert.deepEqual(s.zaehler.ls, ["tipp"], "Liegen-Schutz wird beim Aufwachen einmal entschieden");
   assert.equal(s.S.schlafAufwachen("tipp"), false, "zweites Aufwachen tut nichts"); assert.equal(s.zaehler.neuLaden, 1);
   s.ctx.__jetzt += 60000; assert.equal(s.S.schlafPruefen(s.ctx.__jetzt), false, "nach dem Aufwachen zählt die Zeit neu"); }
 // Aufwachen über visibilitychange: kein eigenes neuLaden (die vorhandenen Rückkehr-Wege laden genau einmal)
@@ -145,6 +146,25 @@ for (const [name, extra] of [["Anruf", { RUF: { id: 1 } }], ["Video/Bühne", { s
   assert.equal(s.S.schlafPruefen(s.ctx.__jetzt), false, "12:30 außerhalb 22–7"); s.ctx.__jetzt = new Date(2026, 10, 20, 23, 30).getTime(); assert.equal(s.S.schlafPruefen(s.ctx.__jetzt), true, "23:30 im Bereich"); }
 { const s = sandbox({ hidden: true }); s.ctx.__jetzt += 60 * 60000; assert.equal(s.S.schlafPruefen(s.ctx.__jetzt), false, "im Hintergrund kein Bildschirmschoner"); assert.equal(s.S.ruht(), true, "ruht() im Hintergrund"); }
 
+// ---------- Liegen-Schutz zusammengelegt (Wunsch Hansi 20.11. „Ja zusammenlegen“): ein Tipp genügt ohne PIN, mit PIN direkt die PIN-Abfrage ----------
+assert.ok(/function lsPruefen\(beimZurueckkommen\) \{\n  if \(LS\.offen \|\| !KEY \|\| lsNichtSperren\(\) \|\| SCHLAF\.an\) return;/.test(haupt), "im Schlaf keine eigene Sichtschutz-Schicht");
+assert.ok(haupt.includes("if (!LS.offen && !SCHLAF.an) lsAktiv();"), "Weck-Tipp setzt den Liegen-Zeitgeber nicht zurück");
+assert.ok(block.includes("try { lsNachSchlaf(grund); } catch {}"), "Aufwachen entscheidet über den Sichtschutz");
+{ const q = rumpf("lsNachSchlaf"); assert.ok(q, "lsNachSchlaf");
+  const lauf = ({ pin = null, minuten = 20, offen = false, heikel = false, grund = "tipp", pinSchicht = false }) => {
+    const LS = { letzte: 1e9 - minuten * 60000, offen, MIN_SICHT: 15, MIN_PIN: 10 }, z = { sperren: [], entsperren: 0, aktiv: 0 };
+    const f = new Function("LS", "KEY", "RUF", "lsLiegenPin", "lsHeikel", "lsSperren", "lsEntsperren", "lsAktiv", "document", "Date", "grund", q + "\n");
+    f(LS, "k", null, () => pin, () => heikel, (m) => { z.sperren.push(m); LS.offen = true; }, () => { z.entsperren++; LS.offen = false; }, () => { z.aktiv++; },
+      { querySelector: () => (pinSchicht ? {} : null) }, { now: () => 1e9 }, grund);
+    return z; };
+  let z = lauf({}); assert.deepEqual([z.sperren, z.entsperren], [[], 1], "ohne PIN: ein Tipp hebt den Sichtschutz mit auf (kein „Weiter“)");
+  z = lauf({ offen: true }); assert.deepEqual([z.sperren, z.entsperren], [[], 1], "ohne PIN, Sichtschutz war schon offen: weg");
+  z = lauf({ pin: { h: "x" } }); assert.deepEqual([z.sperren, z.entsperren], [[true], 0], "mit PIN: direkt die PIN-Abfrage");
+  z = lauf({ pin: { h: "x" }, offen: true, pinSchicht: true }); assert.deepEqual([z.sperren, z.entsperren], [[], 0], "PIN-Abfrage steht schon: bleibt (nicht doppelt)");
+  z = lauf({ pin: { h: "x" }, grund: "anruf" }); assert.deepEqual([z.sperren, z.entsperren, z.aktiv], [[], 0, 0], "Anruf weckt: PIN nicht über den Anruf, Zeitgeber bleibt alt");
+  z = lauf({ minuten: 2 }); assert.deepEqual([z.sperren, z.entsperren, z.aktiv], [[], 0, 1], "kurz „Jetzt schlafen“: kein Sichtschutz");
+  z = lauf({ pin: { h: "x" }, minuten: 11, heikel: true }); assert.deepEqual(z.sperren, [true], "heikle Ansicht: PIN schon nach 10 Min. wie bisher");
+}
 // ---------- 3. Bildschirmschoner: wandert, reduzierte Bewegung, Uhr, Push-Hinweis, über allem ----------
 assert.ok(block.includes("@keyframes slWandern") && block.includes("@media (prefers-reduced-motion: reduce) { #schlafSchicht .sl-wander { animation: none !important; } }") && block.includes("j.getMinutes() % 3 === 0"), "Einbrennschutz");
 assert.ok(block.includes("z-index: 2147483000") && block.includes("🔔 Neues eingegangen") && block.includes("schlafAufwachen(\"anruf\")"), "Schicht oben, Push-Hinweis, Anruf weckt");

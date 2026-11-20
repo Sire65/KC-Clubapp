@@ -317,6 +317,7 @@ function schlafAufwachen(grund) {
   SCHLAF.an = false; SCHLAF.bedient = Date.now(); clearTimeout(SCHLAF.uhr);
   try { if (window.KCFP) window.KCFP.ruht = false; } catch {}
   try { document.getElementById("schlafSchicht")?.remove(); document.documentElement.classList.remove("kc-schlaf"); } catch {}
+  try { lsNachSchlaf(grund); } catch {} // Liegen-Schutz: ohne PIN genügt dieser eine Tipp, mit PIN direkt die PIN-Abfrage
   // Rückkehr aus dem Hintergrund: die vorhandenen Rückkehr-Wege (visibilitychange) laden genau einmal neu und bauen die Leitung auf
   if (grund === "sicht" || document.hidden) return true;
   try { if (INIT?.rtKanal && !RT.ok) { RT.warte = 1000; rtVerbinden(); } } catch {}
@@ -14501,7 +14502,20 @@ function lsAktiv() { // Berührung, Tippen, Scrollen = „jemand ist da“
   LS.letzte = Date.now();
   if (Date.now() - LS.gemerkt > 30000) { LS.gemerkt = Date.now(); try { localStorage.setItem("kc_club_ls_letzt", String(LS.letzte)); } catch {} }
 }
-["pointerdown", "keydown", "touchstart", "wheel"].forEach((ev) => document.addEventListener(ev, () => { if (!LS.offen) lsAktiv(); }, { passive: true, capture: true }));
+["pointerdown", "keydown", "touchstart", "wheel"].forEach((ev) => document.addEventListener(ev, () => { if (!LS.offen && !SCHLAF.an) lsAktiv(); }, { passive: true, capture: true })); // KC-CLUB-SCHLAFMODUS: der Weck-Tipp zählt nicht als „war da“ – lsNachSchlaf entscheidet
+// KC-CLUB-SCHLAFMODUS + Liegen-Schutz zusammengelegt (Wunsch Hansi 20.11. „Ja zusammenlegen“): solange die App schläft, verdeckt der Bildschirmschoner alles –
+// der Liegen-Schutz öffnet dann keine eigene Schicht (lsPruefen). Beim Aufwachen gilt dieselbe Regel wie sonst (15 Min. bzw. 10 Min. in heiklen Ansichten):
+// ohne PIN hebt der eine Weck-Tipp den Sichtschutz mit auf (kein zweites „👆 Weiter“), mit PIN kommt direkt die PIN-Abfrage (PIN bleibt Pflicht).
+// Weckt ein Anruf oder der Wecker, liegt die PIN-Abfrage nicht über dem Anruf: LS.letzte bleibt alt, der Liegen-Takt sperrt danach wie gewohnt.
+function lsNachSchlaf(grund) {
+  if (!KEY) return;
+  const pin = lsLiegenPin(), min = (Date.now() - LS.letzte) / 60000;
+  const sperren = LS.offen || min >= LS.MIN_SICHT || (!!pin && min >= LS.MIN_PIN && lsHeikel());
+  if (!sperren) return lsAktiv();
+  // (nicht lsNichtSperren(): dessen „video:not([paused])“ trifft jedes <video> im Seitenbaum – im Schlaf schaut ohnehin niemand zu, s. schlafAusnahme)
+  if (pin) { if (grund !== "anruf" && grund !== "wecker" && !RUF && !document.querySelector("#anrufSchirm:not(.versteckt), #lsSperre .ls-punkte")) lsSperren(true); return; }
+  lsEntsperren(); // ohne PIN: der Weck-Tipp war das „Weiter“
+}
 function lsHeikel() { // Ansichten mit fremden Daten
   return ["buero", "mitglieder", "sicherheit"].includes(aktuelleAnsicht) || (aktuelleAnsicht === "start" && typeof reg !== "undefined" && reg === "admin")
     || !!document.querySelector("#mgBlatt:not(.versteckt), #mitgliedBlatt, #wchBlatt, #adBlatt");
@@ -14511,7 +14525,7 @@ function lsNichtSperren() { // Anruf, Video, Rundgang, Diashow/Bühne: dann lieg
     || document.fullscreenElement || document.documentElement.classList.contains("kopf-um");
 }
 function lsPruefen(beimZurueckkommen) {
-  if (LS.offen || !KEY || lsNichtSperren()) return;
+  if (LS.offen || !KEY || lsNichtSperren() || SCHLAF.an) return; // KC-CLUB-SCHLAFMODUS: im Schlaf verdeckt der Bildschirmschoner – keine zweite Schicht
   const pin = lsLiegenPin(), min = (Date.now() - (beimZurueckkommen ? Math.max(LS.letzte, Number(localStorage.getItem("kc_club_ls_letzt") || 0) || LS.letzte) : LS.letzte)) / 60000;
   if (pin && min >= LS.MIN_PIN && lsHeikel()) return lsSperren(true);
   if (min >= LS.MIN_SICHT) lsSperren(!!pin);
