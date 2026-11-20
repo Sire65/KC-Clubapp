@@ -1,5 +1,187 @@
 # Änderungen
 
+## 2.994.0 – 2026-11-20 – 🛰️ Störungsseite nur für unsere Region · Ablauf „Protokoll sparen“ (KC-CLUB-SB-REGION, KC-CLUB-PROTOKOLL-SPAREN) · nur App
+Wunsch Hansi 20.11.: „Check mal Supabase, ob es neue Sachen gibt, die wir gebrauchen können“ → „Ja, erstelle das mal“.
+- **Störungsseite (Verbindungsprüfung, Admin-Zentrale):** Supabase listet seit 08.10. (Umzug zu incident.io) einzelne Regionen. Bisher wurde jede Störung
+  irgendwo auf der Welt gelb – jetzt nur noch Störungen in **unserer Region London (eu-west-2)** oder ohne Regionsangabe. Sonst: „unsere Region (London) läuft –
+  Störung nur anderswo (…)“. Geplante Wartung unserer Region steht als 🛠️-Hinweis dabei. Ein Baustein `sbStatus` für alle drei Stellen.
+- **Neuer Ablauf „Protokoll sparen“** (GitHub → Actions → Run workflow): schaltet `cron.log_statement` ab – unsere ~40 Zeitpläne laufen rund 6.000-mal
+  am Tag und schrieben jedes Mal den ganzen Befehl ins Protokoll (Supabase rechnet Protokolle ab Anfang 2027 nach Menge ab und empfiehlt das Abschalten).
+  Alle Läufe stehen weiter in `cron.job_run_details`. Braucht einmalig den eingeschränkten Schlüssel `SUPABASE_DB_CONFIG_TOKEN` (Hansi).
+  Ohne Neustart wirkt es ab dem nächsten Neustart der Datenbank; mit Neustart sofort (wenige Sekunden Ausfall, nur nachts). Rückweg: wert = an.
+- Geprüft und in Ordnung (kein Umbau nötig): Postgres 17.11.0.003 schon aktiv (ltree/btree_gist/alte pgcrypto-Verfahren nicht genutzt), Rechte für neue
+  Tabellen (seit Oktober Regel + Test), Supabase-CLI fest auf 2.118.0 (v3 betrifft uns nicht), eigene Server-Protokollzeilen schon auf Ausreißer begrenzt (2.623.0).
+- Test: `tests/sb-region.test.mjs`. Rückweg: App 2.993.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+## 2.993.0 – 2026-11-20 – 🎵 Dienstplan rechnet den Konzert-Zuschlag aus DP2 mit (KC-CLUB-DP-ZUSCHLAG)
+Hansi 20.11.: „Codex hat den Bedarf an 4 Abenden erhöht – dann muss der Plan neu berechnet werden.“ DP2 legt den Zuschlag nicht im veröffentlichten Grundbedarf ab, sondern in der Programmfreigabe (`dienstplan_context.staffingAdjustment`: je eine Person mehr an vier Konzertabenden, 30 Min. Vor- und Nachlauf).
+- Der Club-Server liest den Zuschlag beim Rechnen des Dienstplans (`dpZuschlag`) und rechnet ihn auf den Grundbedarf dazu (insgesamt, nicht vorne/hinten). Grundbedarf und Wünsche bleiben unverändert.
+- Ändert sich die Programmfreigabe, gilt der gespeicherte Plan als veraltet und rechnet sich beim nächsten Öffnen neu. Rechenregel 10 (statt 9) – der Plan rechnet sich darum einmal von selbst neu.
+- Test: Block in `tests/app-vertrag.test.mjs`. Rückweg: Server 2.991.0. Nur der Server (App-Version nur mitgezogen).
+
+## 2.992.0 – 2026-11-20 – ✏️ Der Stift schreibt Buchstabe für Buchstabe (Wunschliste #100)
+
+### ✏️ Stift schreibt die Buchstaben (KC-CLUB-STIFT-BUCHSTABEN)
+Wunsch #100 „der gelbe Stift … kann der jeweils den Buchstaben schreiben … zum Wort zusammensetzen“. Antwort Hansi 20.11.: „A“.
+- Schreibt jemand im Chat, entsteht „schreibt …“ jetzt **Buchstabe für Buchstabe**; der ✏️ steht direkt dahinter und wandert mit. Nach einer kurzen Pause wird die Zeile weggewischt und neu geschrieben.
+- Reine Zier: **kein echter Text** des anderen (Chats bleiben privat), reine CSS-Animation ohne zusätzliche Abfragen. Bei „weniger Bewegung“ (Gerät) steht der Text ruhig da.
+
+## 2.991.0 – 2026-11-20 – 💌 Karten-Baukasten für alle Anlässe (Wunschliste #98) · Server 2.991.0
+
+### 💌 Karten-Baukasten (KC-CLUB-KARTEN-BAUKASTEN)
+Wunsch #98 „mehr Auswahl bei den Genesungskarten … auch für andere Anlässe, einfach und ordentlich“. Antwort Hansi 20.11.: „A alle, b ja, c ja, d ja“.
+- **7 Anlässe:** 💐 Gute Besserung · 🎂 Geburtstag · 🥂 Glückwunsch · 🙏 Danke · 💍 Hochzeit & Ehejubiläum · 👶 Geburt · 🕯️ Beileid (würdevoll, ohne Tiere, ohne lustige Sprüche).
+- **26 Motive** (20 neu, alle in der App gezeichnet) als Bildchen zum Antippen – je Anlass die passenden. Wischen auf der Karte geht weiter.
+- **Sprüche** je Anlass in drei Gruppen: 💛 Herzlich · 😄 Lustig (Küchen-Humor) · ✏️ Kurz – plus eigener Text (120 Zeichen).
+- **🖨️ Drucken:** Karte in Club-Farben (A5) zum Ausschneiden oder als PDF.
+- **👥 Gemeinsame Karte** jetzt für jeden Anlass; Push, E-Mail und Start-Frage sagen den passenden Anlass.
+- Beim Mitglied heißt der Knopf jetzt **„💌 Karte schicken“** (hat jemand heute Geburtstag, ist gleich die Geburtstagskarte gewählt). Im Büro → Freud & Leid gibt es die Karte bei jedem Fall; bei verstorbenen Mitgliedern zum Drucken für die Familie.
+- Datenbank: Spalte `anlass` an `kc_club_gk_gemeinsam` (nur additiv, Standard „genesung“). Keine Gesundheitsdaten auf den Karten.
+
+## 2.990.0 – 2026-11-20 – 💤 Schlafmodus mit Bildschirmschoner · 🚗 Mitfahrt antippen → direkt zu „Mitfahren“ · Server 2.990.0 · [Hansi: einspielen]
+Hansi 20.11.: „Einspielen und checke, ob ein anderes Bündel wartet, um es mitzunehmen.“ – Bündel aus #217 (KC-CLUB-SCHLAFMODUS) und #218 (KC-CLUB-MITFAHRT-SPRUNG).
+
+### 💤 Schlafmodus mit Bildschirmschoner (KC-CLUB-SCHLAFMODUS)
+Wunsch Hansi 20.11.: Vergessene, sichtbar offene Geräte (PC ohne Bildschirmsperre, Tablet mit „Bildschirm an“) sollen keine Abfragen mehr machen. Im Hintergrund ruhte die App schon – eine unbediente, sichtbare Startseite fragte aber weiter (mit Leitung ≈ 1.100, ohne ≈ 2.500 Datenbank-Abfragen je Stunde).
+- **Nach 15 Minuten ohne Tippen, Taste, Scrollen oder Mausbewegung schläft die App ein:** dunkler Bildschirm mit Club-Logo, „💤 Die App schläft – Hier tippen zum Aufwecken“ und der Uhrzeit. Logo und Text wandern langsam (Einbrennschutz; bei „Bewegung reduzieren“ am Gerät nur alle 3 Minuten ein neuer Platz).
+- Im Schlaf **keine Abfragen**: alle Abfrage-Takte (Neuladen, Online, Lebenszeichen, Chat, Pinnwand, Terminanfragen, Update-Prüfung, Puls, Nutzung/Wege …) prüfen jetzt „ruht“ (Hintergrund **oder** Schlaf); die direkte Leitung wird getrennt und die App meldet sich einmal als „weg“ (die anderen sehen dich nicht mehr als online). Auch das Fehlerprotokoll sammelt nur noch.
+- **Push kommt weiter an** (die Mitteilung zeigt das Handy wie gewohnt). Kam etwas, steht im Bildschirmschoner „🔔 Neues eingegangen“. Ein **Anruf/Anklopfen**, das Antippen der Mitteilung oder ein klingelnder **Wecker** wecken die App von selbst.
+- **Aufwachen:** Antippen, Taste oder Zurückkommen in die App → genau **ein** Neuladen und die Leitung steht wieder; du bleibst, wo du warst.
+- **Schläft nicht** während eines Anrufs, eines Videos/Erklär-Videos, der Bühne, Live zeigen/Mitschauen, Tisch live, wenn sich im offenen Chat in den letzten 5 Minuten etwas getan hat, bei offenem Dienst-Stempel und solange du den Standort teilst.
+- **Einstellbar je Mitglied** (gilt auf allen Geräten): ⚙️ → „🎨 Darstellung“ → **„💤 Schlafmodus“**: An – immer (Standard) / Nur zu bestimmten Zeiten (z. B. 22:00–07:00, auch über Mitternacht) / Aus. Dort auch **„💤 Jetzt schlafen legen“**. Bei „Aus“ oder außerhalb der Zeit schläft die App nicht von selbst ein – im Hintergrund ruht sie wie bisher.
+- **Sichtschutz und Schlafmodus zusammengelegt** (Wunsch Hansi „Ja zusammenlegen“): Solange die App schläft, verdeckt der Bildschirmschoner alles – der Sichtschutz öffnet keine zweite Schicht. **Ein Tipp genügt:** ohne App-PIN ist man sofort wieder drin (kein zusätzliches „👆 Weiter“), **mit App-PIN kommt direkt die PIN-Abfrage** (die PIN bleibt Pflicht, gleiche Zeiten wie bisher: 15 Min., in Büro/Mitglieder/Sicherheit/Admin 10 Min.). Weckt ein Anruf oder der Wecker, liegt die PIN-Abfrage nicht über dem Anruf – sie kommt danach. Ist der Schlafmodus aus (oder außerhalb seiner Zeit), bleibt der Sichtschutz wie bisher.
+- Messung: Die Egress-Messung des Servers läuft bis 05.12.2026 (vorher 21.11.) – Vorher/Nachher-Vergleich; jedes Einschlafen steht als Schritt „💤 App eingeschlafen“ in den Wegen (ohne zusätzliche Abfrage).
+- Neuer Tipp in der Hilfe („Der Schlafmodus“), Suchbegriff „Schlafmodus“/„Bildschirmschoner“ in den Einstellungen. Test `tests/schlafmodus.test.mjs`, Browser-Prüfung `tools/hilfe/schlafmodus-browser.mjs` (abgeschirmt).
+
+- **Sichtschutz-Fehler behoben (KC-CLUB-LS-VIDEO):** Lag irgendwo in der App ein Video im Seitenbaum (auch angehalten), griff der Sichtschutz nach 15 Min. nie. Jetzt zählt nur ein wirklich laufendes Video als Ausnahme.
+
+### 🚗 Mitfahrt in der Laufschrift antippen → direkt zu „Mitfahren“ (KC-CLUB-MITFAHRT-SPRUNG)
+Fund Hansi 20.11.: „Wenn ich sie antippe, gelangt man in den Kalender, aber nicht genau zur Mitfahrgelegenheit.“
+- Antippen der Mitfahrt-Meldung (in der Laufschrift und in der ▾-Liste) öffnet jetzt **den Termin** und rollt **direkt zum Abschnitt „🚗 Mitfahren“**, der kurz aufleuchtet – auch wenn der Kalender ein paar Sekunden zum Laden braucht (vorher gab die App nach 1,8 Sekunden auf und man blieb im Kalender). Bei Aktionen genauso.
+
+## 2.989.0 – 2026-11-20 – ▾ Alle Meldungen der Laufschrift als Liste · eigene Mitfahrt sichtbar (KC-CLUB-LAUFBAND-LISTE) · Server 2.989.0 · [Hansi: einspielen]
+Wunsch Hansi 20.11.: „Oben im Rand der Laufschrift einen Pfeil nach unten anbieten wie beim Status. Wird der geklickt, geht eine Rollliste nach unten auf, dort stehen Balken mit den Einträgen der Laufschrift. Antippen geht sofort dorthin.“ Und: „Habe ich nicht gesehen, das Mitfahrer-Angebot.“
+- Oben am Rand der Laufschrift hängt jetzt ein kleiner Reiter **„▾ 12“** (Anzahl der Meldungen). Antippen klappt darunter **alle Meldungen als farbige Balken** auf – die wichtigsten oben, auch die, die in der Laufschrift wegen „höchstens 7“ nicht drankommen. Ein Balken antippen = sofort dorthin; **„▴“** klappt die Liste wieder zu.
+- **Mitfahrten** stehen jetzt immer in der Laufschrift, auch das eigene Angebot („🚗 Du bietest eine Mitfahrt an …“) – vorher war es als unwichtigste Meldung hinter die 7 gerutscht.
+- Neue Prüfung: app.js und alle Programmteile müssen sich übersetzen lassen (KC-CLUB-APP-SYNTAX) – fängt Tippfehler, die die App am Start hindern würden.
+
+## 2.988.0 – 2026-11-20 – 🚗 Mitfahrgelegenheiten in der Laufschrift (KC-CLUB-MITFAHRT-LAUFBAND) · Server 2.988.0 · [Hansi: einspielen]
+Wunsch Hansi 20.11.: „Zeige in der Laufschrift an, wenn jemand eine Mitfahrgelegenheit sucht oder anbietet – z. B. biete ich eine an.“
+- Im Info-Laufband auf der Startseite steht jetzt z. B. **„🚗 Hansi bietet eine Mitfahrt an – Köcheclub-Sitzung · Di., 24.11. · 3 Plätze frei“** oder **„🙋 Anne sucht eine Mitfahrgelegenheit – Adventsmarkt“**. Antippen öffnet den Termin bzw. die Aktion, dort kann man mitfahren oder einen Platz anbieten.
+- Nur kommende Termine; volle Fahrten erscheinen nicht. Eigene Angebote stehen als „Du bietest …“ dabei. Höchstens 6 Einträge.
+- Datenbank-sparsam: der Server merkt sich die Liste 5 Minuten für alle (und holt sie neu, sobald jemand eine Mitfahrt anbietet, bucht, sucht oder löscht) – keine zusätzliche Abfrage je App-Start.
+
+## 2.987.0 – 2026-11-20 – 📎 Büroklammer blinkt, bis die Datei geöffnet ist (KC-CLUB-CHAT-ANLAGEN-BLINKEN) · Server 2.987.0 · [Hansi: einspielen]
+Fund Hansi 20.11.: „Die Büroklammer hat nicht geblinkt.“ Bisher wackelte die 📎 nur einmal kurz (1,5 Sekunden) beim ersten Öffnen des Chats – leicht zu übersehen.
+- Jetzt **blinkt die 📎 ruhig weiter, solange eine Datei in der Nachricht noch nicht geöffnet ist** (Punkt •). Sobald man sie antippt und öffnet, hört das Blinken auf.
+- Es ist ein Hinweis, kein Schmuck: läuft auch, wenn „✨ Animierte Knöpfe“ aus ist, und im Sparmodus. Wer am Handy „weniger Bewegung“ eingestellt hat, sieht stattdessen einen roten Ring um die 📎.
+
+## 2.986.0 – 2026-11-19 – ✍️ Bemerkung beim Erledigen freiwillig · 📎 Anlagen im Chat besser sichtbar · ✔ „erledigt am … von …“ (KC-CLUB-AUFGABE-BEMERKUNG-FREI, KC-CLUB-CHAT-ANLAGEN-SICHTBAR, KC-CLUB-AUFGABE-ERLEDIGT-VON) · 📌 Startmeldung auch beim Zurückkommen auf die Startseite (KC-CLUB-AUFGABEN-STAND-ZURUECK)
+Wünsche Hansi 19.11.: „kein Pflichtfeld, sondern freiwillige Angabe“ · „Anlagen besser kennzeichnen … ja alles bauen, und erledigt am von auch rein“.
+
+### ✍️ Aufgabe erledigt: Bemerkung ist freiwillig (KC-CLUB-AUFGABE-BEMERKUNG-FREI, Wunsch Hansi 19.11. „beim Bestätigen Protokoll-Aufgaben kein Pflichtfeld, sondern freiwillige Angabe“)
+- Beim Abhaken einer Aufgabe („✔ Erledigt“ im Protokoll und im Büro) und in der Startmeldung „📌 Wie steht's mit deiner Aufgabe?“ (✅ erledigt und 🔶 teilweise) ist der Text jetzt **freiwillig** – leer lassen und melden geht.
+- Ohne Bemerkung bekommt, wer die Aufgabe eingetragen hat, den Bescheid ohne leeres „…“ bzw. ohne Zeile „Bemerkung:“.
+
+### 📎 Anlagen im Chat besser sichtbar (KC-CLUB-CHAT-ANLAGEN-SICHTBAR, Wunsch Hansi 19.11. „wenn dort eine Anlage drin liegt, muss die besser gekennzeichnet sein, z. B. durch eine blinkende Büroklammer“)
+- Hängt an einer Nachricht eine Datei (z. B. ein PDF) oder mehrere Fotos, steht darunter jetzt ein **umrandeter Kasten „📎 2 Anlagen: …“** mit großen Knöpfen – antippen öffnet die Datei wie bisher (Öffnen / Teilen / Speichern). Ein Punkt **•** heißt: noch nicht geöffnet. Fotos zeigen weiter ihr Vorschaubild.
+- Bei **neuen Nachrichten mit Anlage** wackelt die 📎 kurz (3×, etwa 1,5 Sekunden) – nicht, wenn „✨ Animierte Knöpfe“ aus ist oder das Handy „weniger Bewegung“ eingestellt hat.
+- In der **Chat-Übersicht** steht rechts **„📎2“**, wenn in dem Chat Dateien anderer liegen, die du noch nicht geöffnet hast. Das merkt sich nur dein Gerät – dafür gibt es **keine zusätzliche Abfrage** beim Server.
+- Im Chat oben **⋮ → „📎 Alle Anlagen (Fotos & Dateien)“**: alle Fotos als Kacheln und alle Dateien als Zeilen (Name, Zeit, Absender); antippen öffnet, **„↪ zur Nachricht“** springt hin und lässt sie kurz aufleuchten. „✓ Alle als geöffnet merken“ nimmt die Punkte weg.
+- Neuer Tipp in der Hilfe („Anlagen im Chat nicht übersehen“).
+
+### ✔ „Erledigt am … von …“ an Aufgaben (KC-CLUB-AUFGABE-ERLEDIGT-VON, Wunsch Hansi 19.11.)
+- Erledigte Aufgaben im Protokoll zeigen unter dem (durchgestrichenen) Text jetzt **„✔ erledigt am 19.11. von Frank“** – bei älteren Erledigungen, bei denen das noch nicht festgehalten wurde, nur „✔ erledigt am …“.
+- Im Abschnitt **„Stand der Aufgaben“** und im **Ausdruck/PDF** steht es ebenso („✅ erledigt am 21.11. von Frank – …“).
+- Server: `protokoll_laden` gibt dafür nur den Vornamen dessen heraus, der abgehakt hat (`erledigt_von_name`) – keine neue Datenbank-Spalte.
+
+### 📌 Aufgaben-Startmeldung auch beim Zurückkommen auf die Startseite (KC-CLUB-AUFGABEN-STAND-ZURUECK)
+Wunsch Hansi 19.11.: Wer nach dem Öffnen der App gleich in den Chat oder eine andere Seite ging, verpasste die Frage „📌 Wie steht's mit deiner Aufgabe?“ –
+die App versuchte es nur rund 3½ Minuten. Jetzt erscheint sie auch, sobald man wieder auf die Startseite kommt, solange die Frage noch offen ist
+(ohne zusätzliche Datenbank-Abfrage). Test `tests/aufgaben-stand.test.mjs`.
+
+## 2.985.0 – 2026-11-19 – 📌 Aufgaben-Stand (Startmeldung ✅/🔶/❌ und Abschnitt im Protokoll) · 💐 Karten-Frage auf jeder Seite · 👣 Wege: wer gegangen ist, steht nicht mehr grün · Server 2.985.0 + Datenbank
+Hansi 19.11.: „Ja passt so, baue und spiele heute Abend ein.“
+
+
+- 📌 **Wie steht's mit deiner Aufgabe?** (KC-CLUB-AUFGABEN-STAND, Wunsch Hansi „Gib allen mit offenen Aufgaben eine Startmeldung mit der Aufgabe und ob sie
+  erledigt ist: Ja, teilweise, nein“): Wer eine offene Aufgabe aus einem Protokoll hat, wird beim Öffnen der App gefragt – eine Woche vor der nächsten Sitzung
+  und noch einmal 2 Tage vorher, wenn noch keine Antwort kam (überfällige Aufgaben höchstens einmal pro Woche). Drei große Knöpfe:
+  **✅ Ja, erledigt** (kurz schreiben, was herausgekommen ist – wirkt wie das Abhaken, wer die Aufgabe eingetragen hat, bekommt Bescheid),
+  **🔶 Teilweise** (kurz schreiben, was noch fehlt), **❌ Noch nicht** (Grund und neues Zieldatum freiwillig). „Später“ oder Schließen = 24 Stunden Ruhe.
+  Gemeinsame Aufgaben: eine Meldung gilt für alle – der andere sieht „Frank hat gemeldet: 🔶 teilweise …“ und kann ergänzen. Wer 2 Tage vor der Sitzung
+  noch nichts gemeldet hat, bekommt einmal eine Push „📌 Bitte kurz den Stand deiner Aufgabe melden“ (ohne App: Mail, nur 9–20 Uhr).
+- 📝 **Stand melden** geht auch jederzeit direkt an der Aufgabe (Protokolle → Offene Aufgaben, im Protokoll); dort steht jetzt auch „🔶 teilweise“ bzw.
+  „❌ noch nicht“ mit Datum.
+- 📋 **Stand der Aufgaben im Protokoll**: Jedes neue Protokoll hat den Abschnitt „Stand der Aufgaben“ – alle noch offenen Aufgaben aus früheren Protokollen mit
+  „✅ erledigt am 21.11.“, „🔶 teilweise“, „❌ noch nicht – neues Ziel …“ oder „❔ keine Rückmeldung“. Nicht Erledigtes erscheint so lange wieder, bis es
+  erledigt ist. Im Entwurf aktualisiert er sich laufend, beim Veröffentlichen wird er festgeschrieben; auch im Ausdruck/PDF und im Archiv-Text.
+  Wer das Protokoll schreibt, sieht „Rückmeldungen: 3 von 5“ mit den Namen der Fehlenden und kann mit „🔔 Nachfragen“ erinnern (höchstens alle 12 Stunden).
+  Die bisherige Aufgaben-Liste in der Kurzfassung neuer Protokolle entfällt (sonst doppelt).
+- Datenbank: nur neue Spalten (Migration `20261119_kc_club_aufgaben_stand.sql`, Probelauf `tools/db-test/116_…`); kein zusätzlicher Server-Aufruf beim
+  App-Start – die Frage kommt mit den Startdaten (nur beim ersten Laden, 1 kleine Abfrage für Mitglieder mit offenen Aufgaben).
+  Tests: `tests/aufgaben-stand.test.mjs`, Browser-Lauf `tools/hilfe/aufgaben-stand-browser.mjs`.
+
+### 💐 Gemeinsame Karte: die Frage kommt jetzt sicher (KC-CLUB-GK-NACHFRAGE-IMMER, Fund Hansi 19.11. „Thomas hat die Anfrage für die Genesungskarte nicht bekommen“)
+- Die Frage „💐 … braucht gerade gute Wünsche – magst du auch unterschreiben?“ kam bisher nur auf der **Startseite** und nur in der ersten Minute nach dem Öffnen. Öffnete die App z. B. in „Termine“ (so bei Thomas), kam sie nie.
+- Jetzt kommt sie **auf jeder Seite**, sobald kein anderes Fenster offen ist (die App wartet bis zu 30 Minuten), und **bei jedem Öffnen der App wieder**, bis man unterschrieben hat oder „Nein, danke“ tippt. „Später“ = beim nächsten Öffnen nochmal fragen.
+- Die zweite, ähnliche Frage nur auf der Startseite ist weg (sonst käme sie doppelt); die Zeile im Info-Laufband bleibt.
+
+### 👣 Wege der Mitglieder: „gerade in der App“ stimmt nach dem Verlassen (KC-CLUB-SPUR-WEG, Fund Hansi 19.11. „Christina hat lt. Push die App verlassen, im Wegeprotokoll steht sie aber grün drin“)
+- Wer die App weggelegt hat, steht in „Wege der Mitglieder“ nicht mehr grün als „gerade in der App“ – vorher zählte dort jeder, dessen letzte Meldung keine 3 Minuten her war. Damit verschwindet auch das falsche „🙈 Online-Anzeige aus“ nach dem Verlassen. Gleiche Regel wie Online-Liste und „hat die App verlassen“-Push. Nur Server.
+
+## 2.984.0 – 2026-11-19 – 📡 Sparpaket nachgebessert: Countdowns und Terminanfragen (KC-CLUB-SPARSAM-NACHBESSERN)
+Nachkontrolle 2.982.0 (19.11., 8–11:30 Uhr gegenüber Vortag): „online“ −63 %, Pinnwand −65 %, aber „countdowns“ +29 % und „terminanfragen_liste“ nur −19 %. Frage Hansi: „eigentlich sollte alles sparsamer werden – warum hat es nicht geklappt?“
+- **Countdowns:** Die Countdown-Kachel hielt sich an die 6-Stunden-Regel – die Reise-Checkliste (Kreuzfahrt in ≤ 14 Tagen) fragte beim Start aber jedes Mal selbst „countdowns“ vom Server ab. Jetzt nutzt sie dieselben Daten aus dem Gerät, solange sie jünger als 6 Std. sind.
+  (Am 19.11. kam zusätzlich je Gerät einmal die erste Abfrage nach dem Update dazu, weil der neue Merker im Gerät noch fehlte.)
+- **Terminanfragen:** Die App trennt die direkte Leitung im Hintergrund nach 60 s (Akku). Beim Zurückkommen galt die Leitung darum immer als „neu aufgebaut“ (bzw. war nach 2,5 s noch nicht da) – und die App fragte fast jedes Mal nach. Jetzt nur noch nach mehr als 10 Min. weg oder wenn die Leitung auch nach 10 s nicht steht. Neue Anfragen kommen im Hintergrund per Push/Mail, bei offener App sofort als Signal; der 60-Min.-Takt fragt zur Sicherheit.
+- Test `tests/leitung-sparsam.test.mjs` erweitert.
+
+## 2.983.0 – 2026-11-19 – 🐛 „Wer ist online?“ aus dem Schnellzugriff ohne Fehler · 🖨️ Drucken ist kein Hänger mehr · 📊 Detaillierter Sendebericht (KC-CLUB-MG-FILTER-LEER, KC-CLUB-HAENGER-DRUCK, KC-CLUB-SENDEBERICHT)
+Fund Hansi 19.11. 5:58 („Da hat in der App etwas nicht geklappt“): Wer im Schnellzugriff „🟢 Wer ist online?“ tippte, bevor die Mitgliederliste geladen war, bekam einen Programmfehler (die Liste war noch leer). Jetzt lädt die App zuerst die Liste und zeigt dann die Online-Ansicht. Test `tests/mg-filter-leer.test.mjs`. Update-Hinweis: nur „Kleine Systemanpassung“.
+- **Drucken (Fund Klaus 19.11. 9:30):** Solange der Druck-Dialog offen ist, hält der Browser die App an. Das wurde als Hänger „App hat selbst zu lange gerechnet (KC-F-101)“ gemeldet, samt Fenster und Alarm. Jetzt überspringt der Hänger-Wächter diese Zeit (Druck über 🖨️, Etiketten-Druck und Strg+P).
+- **📊 Detaillierter Sendebericht (KC-CLUB-SENDEBERICHT, Wunsch Hansi 19.11.: „genaue, wahrheitsgemäße Übersicht – sozusagen einen detaillierten Sendebericht“):**
+  Anlass: Büro → Einladung protokollierte „8 gesendet, 4 Fehler“ – die 4 waren Mitglieder ohne Push-Gerät, die automatisch die E-Mail bekamen. Jetzt:
+  der Server merkt sich je Empfänger von Einladung, Erinnerung und Änderungsmeldung den echten Weg (Push: gesendet/kein Gerät/Fehler, E-Mail:
+  gesendet/keine Adresse/Fehler, 🌙 Ruhezeit, 🏠 Gastgeber-Sonderweg). Als „Fehler“ zählt nur noch, was versucht wurde und scheiterte.
+  Nach dem Senden und im Büro („📊 Sendebericht der letzten Einladung“) zeigt ein Fenster die Kopfzeile, z. B. „12 von 12 erreicht · 6 per Push
+  (4 angezeigt, 1 geöffnet) · 10 per E-Mail · 4 ohne Push-Gerät → per E-Mail · 0 Fehler“, darunter je Person Push, Mail und Ruhezeit;
+  „nicht erreicht“ steht oben, echte Fehler rot, „↻ Aktualisieren“ holt den späteren Zustellstand (angezeigt/geöffnet). Nur Namen und Zustände –
+  keine Inhalte, keine Mail-Adressen; sehen dürfen ihn, wer versendet hat, der Admin und die Clubleitung. Neue Server-Aktion `sendebericht`,
+  Test `tests/sendebericht.test.mjs`.
+
+## 2.982.0 – 2026-11-19 – 📡 Weniger Datenbank-Abfragen über die direkte Leitung (KC-CLUB-LEITUNG-SPARSAM) · App + Server + Migration (Stufe 2)
+Wunsch Hansi 18.11.: „einsparen über die direkte Leitung“ – „ja setze alles so um“. Steht die direkte Leitung (Supabase Realtime), meldet sich Neues
+ohnehin sofort als Signal; die App fragt dann seltener selbst nach. **Ohne Leitung bleibt alles wie bisher** (Notweg).
+- **Online-Abgleich:** Stehen Leitung und Anwesenheit, fragt die App nur noch alle 10 Min. zur Sicherheit „wer ist online“ (vorher alle 90 s).
+  Sofort weiterhin: beim Start, beim Zurückkommen in die App, wenn jemand kommt oder geht (Anwesenheit), nach Neuaufbau der Leitung und bei
+  Anklopfen, Anruf, Spiel, Vorführen, Mitschauen. Ist laut Anwesenheit sonst niemand da, entfällt auch der Sicherheitsabgleich.
+  Warten auf eine Anklopf-Antwort: mit Leitung alle 15 s (die Antwort kommt als Signal), ohne Leitung wie bisher alle 4 s.
+  Ob jemand als „online“ angezeigt wird, hängt nicht daran: das Lebenszeichen (alle 60 s, unverändert) hält das beim Server frisch.
+- **Pinnwand:** mit Leitung alle 10 statt 3 Min. nachsehen (neue Zettel kommen als Signal); ohne Leitung unverändert alle 45 s.
+- **Terminanfragen:** mit Leitung alle 60 statt 30 Min. zur Sicherheit; beim Zurückkommen in die App nur, wenn sie länger als 10 Min. weg war
+  oder die Leitung zwischendurch unterbrochen war.
+- **Push bei offener App:** kein zusätzlicher Online- und Terminanfragen-Abgleich, wenn die Leitung steht.
+- **Countdowns oben rechts** (Reisen, Geburtstage …): die 6-Stunden-Regel gilt jetzt auch über App-Starts hinweg (vorher bei jedem Start neu geholt).
+- **Nutzung und Wege:** im Takt alle 5 statt 2 Min. gemeldet; beim Weglegen/Schließen weiterhin sofort, neue Wege weiterhin nach 15 s Ruhe.
+- Geschätzt je Gerät mit offener App und Leitung: rund 50 Abrufe weniger pro Stunde (Online ~34, Pinnwand ~14, Rest Terminanfragen/Nutzung/Wege),
+  dazu je App-Start 1 Abruf „countdowns“ und je Push bei offener App 2 Abrufe.
+- **Stufe 2 (Hansi: „so viel wie möglich über die direkte Leitung“) – braucht Server und Migration `20261119_kc_club_rt_gespraech.sql`:**
+  - Neues Signal **„gespraech“**: Wird ein Telefonat angenommen oder beendet, bekommen alle, die gerade in der App sind, ein kurzes Signal (nur die Art,
+    nie wer mit wem) – die Anzeige „telefoniert gerade“ ist damit sofort aktuell, ohne regelmäßiges Nachfragen.
+  - Neues Signal **„sichtbar“**: Ändert jemand Online-Anzeige, Inkognito oder Anklopfen, gleichen die anderen gleich ab.
+  - Signal **„online“** (jemand öffnet die App): steht die Anwesenheit, meldet sie das Kommen meist schon selbst – dann nur noch ein gemeinsamer,
+    gebremster Abgleich (höchstens alle 20 s) statt zwei.
+  - Sparbremse: „gespraech“ und „sichtbar“ gelten wie „online“ als „teuer“ – ab 70 % des Monatskontingents keine Signale mehr (dann Sicherheitstakt).
+  - Reihenfolge beim Einspielen: Migration vor dem Server (sonst zählen die neuen Arten bis 95 % – harmlos).
+- **Absicherung „wer ist online / wer ist raus“** (Frage Hansi):
+  - Geht ein Gerät ohne Abmeldung (Absturz, Netz weg, Akku leer), fragt die App außer sofort noch einmal nach 165 s nach – dann ist die
+    Person beim Server sicher abgelaufen (150 s) und verschwindet aus der Liste. Immer nur ein solcher Nachlauf.
+  - Ist jemand online, der keine direkte Leitung hat (alte App), gleicht die App alle 3 statt 10 Min. ab, damit dessen Kommen und Gehen zügig erscheint.
+  - Geprüft: Wer die App weglegt („weg“), verschwindet beim Server sofort aus der Online-Liste.
+  - Neuer Browser-Test `tests/anwesenheit.browser.mjs` (abgeschirmt, Leitung nachgebaut, Uhr vorgespult): Kommen sofort, Gehen nach dem Nachlauf, Takt 10/3 Min.
+- Test: `tests/leitung-sparsam.test.mjs` (angepasst: anwesenheit, online-echt, online-jede-anfrage, rt-terminanfrage, rt-clubabend-mitfahrt, app-vertrag).
 ## 2.981.0 – 2026-11-18 – 🟢 Wege der Mitglieder: grüne LED, solange sie/er noch in der App ist (KC-CLUB-SPUR-ONLINE) · Server 2.981.0
 Wunsch Hansi 18.11.: „Wenn ich in der Liste Wege der Mitglieder bin, wo alles aufgelistet ist, was sie angesehen haben, oben noch die grüne LED anzeigen, dass sie noch online sind.“
 - In den Wegen eines Mitglieds (👥 Nutzung → 👣 Wege der Mitglieder → Name) steht oben eine **grüne, leuchtende LED „gerade in der App“**, solange es noch da ist

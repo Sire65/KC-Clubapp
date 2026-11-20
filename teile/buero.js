@@ -479,6 +479,7 @@ function buStartListeHtml() {
       ${S ? k("vorbereiten", "📝", "Tagesordnung festlegen", t ? (t.vorbereitet ? "✅ festgelegt – ändern" : "Vorschläge aufnehmen, Reihenfolge") : "keine Sitzung geplant", "buSitzungWahl()") : k("ansehen", "👁️", "Sitzung ansehen", t ? "Anwesenheit, Tagesordnung" : "keine Sitzung geplant", "buSitzungWahl()")}
       ${S ? k("einladung", "📨", "Mitglieder einladen", t?.geaendert_nach_einladung ? "⚠️ geändert – Mitglieder informieren?" : t?.einladung_am ? `✅ gesendet ${esc(zeitKurz(t.einladung_am))}` : "Brief mit Tagesordnung an alle", t?.geaendert_nach_einladung ? `buInformierenFragen('${t.id}')` : "buEinladungWahl(false)") : ""}
       ${S ? k("erinnerung", "🔔", "Erinnern", t ? `${t.ohne} ohne Antwort${t.erinnerung_am ? ` · zuletzt ${esc(zeitKurz(t.erinnerung_am))}` : ""}` : "–", "buEinladungWahl(true)") : ""}
+      ${(S || L || ICH?.admin) && t && (t.einladung_am || t.erinnerung_am) ? k("sendebericht", "📊", "Sendebericht der letzten Einladung", "wer hat sie wie bekommen – Push, E-Mail, Ruhezeit", `buSendebericht({ treffen_id: '${esc(t.id)}' })`) : ""}
       ${S ? k("unterlagen", "🖨️", "Sitzung vorbereiten", t?.unterlagen_am ? `✅ vorbereitet ${esc(zeitKurz(t.unterlagen_am))}` : "Anwesende, Anmerkung, Mitschreibbogen", "buVorbereitenWahl()") : ""}
       ${k("drucken", "🖨️", "Mitschreibbogen drucken", t?.vorbereitet ? "Tagesordnung mit Schreiblinien" : "erst Tagesordnung festlegen", "buDruckWahl()")}
       ${L ? k("vorgaben", "⚙️", "Sitzungs-Vorgaben", "Fristen, Uhrzeit, Ort, Monate ohne Sitzung", "svOeffnen()") : ""}
@@ -1396,13 +1397,56 @@ async function buSenden(knopf) {
       const ts = (BU.start?.sitzungen || []).find((y) => y.id === x.id), jetzt = new Date().toISOString();
       if (ts && r.alle) Object.assign(ts, x.nurOffen ? { erinnerung_am: jetzt } : { einladung_am: jetzt, geaendert_nach_einladung: false });
       const nurAuswahl = r.alle ? "" : ` Das war nur deine Auswahl – ${x.nurOffen ? "die Erinnerung" : "die Einladung"} an alle steht noch aus.`;
-      if (x.nurOffen) { melde(`🔔 Erinnerung an ${r.empfaenger} ${r.empfaenger === 1 ? "Mitglied" : "Mitglieder"} gesendet.${nurAuswahl}`); return buStart(); }
+      // KC-CLUB-SENDEBERICHT (19.11.2026): wahrheitsgemäß – der Versand läuft im Hintergrund; wer es wie bekommen hat, zeigt der Sendebericht
+      const kr = String(r.korr || "").replace(/[^\w:.-]/g, ""), berichtKnopf = kr ? [["📊 Sendebericht", `buSendebericht({ korr: '${kr}' })`]] : [];
+      const raus = `${x.nurOffen ? "Die Erinnerung" : x.aenderung ? "Die Änderungsmeldung" : "Die Einladung"} geht gerade an ${r.empfaenger} ${r.empfaenger === 1 ? "Mitglied" : "Mitglieder"} raus.${nurAuswahl} Im 📊 Sendebericht siehst du gleich, wer sie wie bekommen hat (Push, E-Mail, Ruhezeit).`;
+      if (x.nurOffen) return buWeiterFragen("🔔 Erinnerung gesendet", raus, [["🗂️ Zurück ins Büro", "buStart()", true], ...berichtKnopf]);
       // 2.751.0 KC-CLUB-SITZUNG-ABLAUF: nach der Einladung kommt (ein paar Tage später) „Sitzung vorbereiten“, zuletzt die Aktentasche – das Büro erinnert daran
       buWeiterFragen(x.aenderung ? "✅ Die Mitglieder wissen Bescheid" : "✅ Einladung gesendet",
-        `${r.empfaenger} ${r.empfaenger === 1 ? "Mitglied hat" : "Mitglieder haben"} ${x.aenderung ? "die Änderungsmeldung" : "die Einladung"} bekommen.${nurAuswahl}${x.aenderung ? "" : " Als Nächstes erinnert dich das Büro an alle, die noch nicht geantwortet haben, dann kommt „Sitzung vorbereiten“ (Anwesende, Anmerkung, Mitschreibbogen) und zuletzt die Aktentasche."}`,
-        [["🗂️ Zurück ins Büro", "buStart()", true], ...(x.aenderung ? [] : [["🖨️ Sitzung jetzt schon vorbereiten", `buSitzungOeffnen('${x.id}', 'vor')`]]), ["🏠 Zur Club-App", "zeige('start')"]]);
+        `${raus}${x.aenderung ? "" : " Als Nächstes erinnert dich das Büro an alle, die noch nicht geantwortet haben, dann kommt „Sitzung vorbereiten“ (Anwesende, Anmerkung, Mitschreibbogen) und zuletzt die Aktentasche."}`,
+        [["🗂️ Zurück ins Büro", "buStart()", true], ...berichtKnopf, ...(x.aenderung ? [] : [["🖨️ Sitzung jetzt schon vorbereiten", `buSitzungOeffnen('${x.id}', 'vor')`]]), ["🏠 Zur Club-App", "zeige('start')"]]);
     } catch (e) { meldeFehler(e); }
   });
+}
+// KC-CLUB-SENDEBERICHT (19.11.2026, Wunsch Hansi „genaue, wahrheitsgemäße Übersicht – sozusagen einen detaillierten Sendebericht“):
+// je Empfänger Push-Weg, Mail-Weg, Ruhezeit und der spätere Zustellstand (angezeigt/geöffnet). „Kein Push-Gerät → per E-Mail“ ist kein Fehler;
+// rot sind nur echte Fehler, „nicht erreicht“ steht ganz oben. ↻ Aktualisieren holt den neuen Zustellstand.
+const SB_PUSH = { geoeffnet: ["👆", "geöffnet"], angezeigt: ["👀", "angezeigt"], gesendet: ["✅", "gesendet"], wartet: ["⏳", "wartet"], fehler: ["❌", "Fehler"] };
+function sbPushText(x) {
+  if (x.push === "ja") { const s = SB_PUSH[x.stand?.push] || SB_PUSH.gesendet; return [s[0] + " " + s[1], x.stand?.push === "fehler"]; }
+  return x.push === "kein" ? ["📵 kein Gerät", false] : x.push === "fehler" ? ["❌ Fehler", true] : x.push === "aus" ? ["🔕 aus", false] : x.push === "?" ? ["❔ unbekannt", false] : x.ruhe ? ["🌙 Ruhezeit", false] : ["–", false];
+}
+function sbMailText(x) {
+  if (x.mail === "ja") return x.stand?.mail === "fehler" ? ["❌ Fehler", true] : x.stand?.mail === "wartet" ? ["⏳ wartet", false] : ["✅ gesendet", false];
+  return x.mail === "kein" ? ["📭 keine Adresse", false] : x.mail === "fehler" ? ["❌ Fehler", true] : x.mail === "aus" ? ["🔕 aus", false] : x.mail === "?" ? ["❔ unbekannt", false] : ["–", false];
+}
+function sbKopfzeile(r) {
+  const z = r.zusammen || {}, n = z.personen || 0, erreicht = n - (z.nichtErreicht || 0), fehler = (z.echteFehler || 0) + (z.spaeterFehler || 0);
+  const pushStand = [z.pushAngezeigt ? `${z.pushAngezeigt} angezeigt` : "", z.pushGeoeffnet ? `${z.pushGeoeffnet} geöffnet` : ""].filter(Boolean).join(", ");
+  return [`${erreicht} von ${n} erreicht`, `${z.pushJa || 0} per Push${pushStand ? ` (${pushStand})` : ""}`, `${z.mailJa || 0} per E-Mail`,
+    z.keinPush ? `${z.keinPush} ohne Push-Gerät${z.mailJa ? " → per E-Mail" : ""}` : "", z.ruhe ? `${z.ruhe} in der Ruhezeit 🌙` : "", z.keineMail ? `${z.keineMail} ohne Mail-Adresse` : "",
+    `${fehler} Fehler`].filter(Boolean).join(" · ");
+}
+async function buSendebericht(wer) {
+  window.__sbWer = wer;
+  const offen = document.getElementById("sendeBerichtBlatt");
+  if (!offen) blattAuf("sendeBerichtBlatt", `<h3 style="margin:0">📊 Sendebericht</h3><p class="hinweis">Wird geladen …</p>`);
+  let r;
+  try { r = await api("sendebericht", wer); } catch (e) { $("sendeBerichtBlatt")?.remove(); return meldeFehler(e); }
+  const knoepfe = `<div class="knoepfe"><button class="knopf haupt" onclick="buSendebericht(window.__sbWer)">↻ Aktualisieren</button><button class="knopf" onclick="$('sendeBerichtBlatt').remove()">Schließen</button></div>`;
+  if (r.laeuft || r.leer) return blattAuf("sendeBerichtBlatt", `<h3 style="margin:0">📊 Sendebericht</h3><p>${r.laeuft ? "⏳ Der Versand läuft noch – bitte in ein paar Sekunden ↻ Aktualisieren." : "Zu dieser Sitzung gibt es noch keinen Versand aus dem Büro."}</p>${knoepfe}`);
+  const was = r.art === "erinnerung" ? "Erinnerung" : r.art === "aenderung" ? "Änderungsmeldung" : "Einladung";
+  const unter = `${esc(was)}${r.titel ? ` · ${esc(r.titel)}` : ""}${r.beginn ? ` (${esc(wann(r.beginn))})` : ""} · gesendet ${esc(zeitKurz(r.zeit))}${r.von ? ` von ${esc(r.von)}` : ""}`;
+  if (r.alt) return blattAuf("sendeBerichtBlatt", `<h3 style="margin:0">📊 Sendebericht</h3><p class="hinweis" style="margin:2px 0 8px">${unter}</p>
+    <p>Dieser Versand war vor dem Sendebericht – es gibt nur die Summe: ${r.versand.gesendet} Zustellungen, ${r.versand.fehler} „Fehler“ laut Versanddienst (darin sind auch Mitglieder ohne Push-Gerät gezählt, die die E-Mail bekommen haben).</p>${knoepfe}`);
+  const zeilen = (r.liste || []).map((x) => {
+    const [p, pRot] = sbPushText(x), [m, mRot] = sbMailText(x), rot = (s, an) => (an ? `<b style="color:var(--rot,#c0392b)">${esc(s)}</b>` : esc(s));
+    return `<tr${x.erreicht ? "" : ' style="background:rgba(192,57,43,.08)"'}><td>${esc(x.name)}${x.gast ? " 🏠" : ""}${x.erreicht ? "" : ' <b style="color:var(--rot,#c0392b)">nicht erreicht</b>'}</td><td>${rot(p, pRot)}</td><td>${rot(m, mRot)}</td><td>${x.ruhe ? "🌙" : ""}</td></tr>`;
+  }).join("");
+  blattAuf("sendeBerichtBlatt", `<h3 style="margin:0">📊 Sendebericht</h3><p class="hinweis" style="margin:2px 0 6px">${unter}</p>
+    <p style="margin:0 0 8px;font-weight:600">${esc(sbKopfzeile(r))}</p>
+    <div style="overflow-x:auto"><table class="tabelle" style="width:100%;border-collapse:collapse;font-size:.95rem"><thead><tr><th style="text-align:left">Name</th><th style="text-align:left">📲 Push</th><th style="text-align:left">✉️ Mail</th><th>🌙</th></tr></thead><tbody>${zeilen}</tbody></table></div>
+    <p class="hinweis" style="margin:8px 0 0">📵 kein Gerät = Push nicht möglich (dann kommt die E-Mail) · 🌙 Ruhezeit („Nicht stören“): kein Push, E-Mail wenn gewählt · 🏠 Gastgeber (immer Push + E-Mail) · „angezeigt“/„geöffnet“ meldet das Handy später – ↻ Aktualisieren.</p>${knoepfe}`);
 }
 function buEingang() { BU.sicht = "eingang"; buZeigen(); buEingangLaden(); window.scrollTo(0, 0); }
 // 2.584.0 KC-CLUB-EINGANG-PAKET (Wunsch Hansi „Aufbau des Eingangskorbs dauert lange“): alle Listen in EINEM Aufruf (eine Anmeldung,
@@ -2369,7 +2413,8 @@ function buFallHtml() {
     ${offen ? `<div class="mini-kacheln">
       <button class="mini-kachel" onclick="flInformieren('${f.id}')"><span class="mk-sym">📣</span><span class="mk-titel">Mitglieder informieren</span><span class="mk-unter">${f.informiert_am ? "✅ " + esc(zeitKurz(f.informiert_am)) : leid ? "nach Absprache mit der Familie" : "Push / E-Mail"}</span></button>
       <button class="mini-kachel" onclick="flKarte('${f.id}')"><span class="mk-sym">✉️</span><span class="mk-titel">Karte / Brief</span><span class="mk-unter">${leid ? "Beileid · Genesung" : "Glückwunsch"}</span></button>
-      ${f.person_id && ["krankheit", "unfall"].includes(f.art) ? `<button class="mini-kachel" onclick="genesungsKarte('${f.person_id}')"><span class="mk-sym">💐</span><span class="mk-titel">Genesungskarte in den Chat</span><span class="mk-unter">Blumenstrauß, mit einem Tipp</span></button>` : ""}
+      ${f.person_id && f.art !== "tod_mitglied" ? `<button class="mini-kachel" onclick="kartenBaukasten('${f.person_id}','${flKartenAnlass(f.art)}')"><span class="mk-sym">💌</span><span class="mk-titel">Karte in den Chat</span><span class="mk-unter">Motiv und Spruch wählen · auch drucken</span></button>`
+        : `<button class="mini-kachel" onclick="kartenBaukasten(null,'${flKartenAnlass(f.art)}',${esc(JSON.stringify(f.art === "tod_mitglied" ? "Familie " + (f.name || "").split(" ").slice(-1)[0] : (f.name || "").split(" ")[0]))})"><span class="mk-sym">💌</span><span class="mk-titel">Karte drucken</span><span class="mk-unter">Motiv und Spruch wählen</span></button>`}
       ${f.person_id && !leid ? `<button class="mini-kachel" onclick="direkt('${f.person_id}')"><span class="mk-sym">💬</span><span class="mk-titel">Nachricht an ${esc((f.name || "").split(" ")[0])}</span></button>` : ""}
       <button class="mini-kachel" onclick="flAngaben('${f.id}')"><span class="mk-sym">✏️</span><span class="mk-titel">Angaben ändern</span><span class="mk-unter">Termin · Ort · Betrag</span></button>
       <button class="mini-kachel" onclick="flAbschliessen('${f.id}')"><span class="mk-sym">✅</span><span class="mk-titel">Fall abschließen</span><span class="mk-unter">wird im Archiv abgelegt</span></button></div>` : '<p class="hinweis">Abgeschlossen – liegt im Archiv (Ordner „Admin“, Register „Freud & Leid“).</p>'}
@@ -2424,9 +2469,11 @@ async function flSenden(knopf) {
     } catch (e) { meldeFehler(e); }
   });
 }
+// 2.991.0 KC-CLUB-KARTEN-BAUKASTEN (Wunschliste #98): welcher Karten-Anlass passt zum Freud-&-Leid-Fall (gleiche Zuordnung wie beim Brief)
+const flKartenAnlass = (art) => (/^tod_/.test(art) ? "beileid" : ["krankheit", "unfall"].includes(art) ? "genesung" : art === "geburt" ? "geburt" : ["hochzeit", "ehejubilaeum"].includes(art) ? "hochzeit" : art === "geburtstag" ? "geburtstag" : "glueckwunsch");
 function flKarte(id) {
   const f = FL.d.faelle.find((x) => x.id === id); if (!f) return;
-  const k = /^tod_/.test(f.art) ? "beileid" : ["krankheit", "unfall"].includes(f.art) ? "genesung" : f.art === "geburt" ? "geburt" : ["hochzeit", "ehejubilaeum"].includes(f.art) ? "hochzeit" : "glueckwunsch";
+  const k = flKartenAnlass(f.art) === "geburtstag" ? "glueckwunsch" : flKartenAnlass(f.art);
   buBrief(); const v = BRIEF_VORLAGEN[k];
   Object.assign(BRIEF, { vorlage: k, empfaenger: f.art === "tod_mitglied" ? `Familie ${(f.name || "").split(" ").slice(-1)[0]}` : f.name, betreff: v.betreff, text: v.text,
     anrede: f.art === "tod_mitglied" ? "Liebe Familie,": `Liebe/r ${(f.name || "").split(" ")[0]},`, gruss: /^tod_/.test(f.art) ? "In stiller Anteilnahme" : "Herzliche Grüße" });

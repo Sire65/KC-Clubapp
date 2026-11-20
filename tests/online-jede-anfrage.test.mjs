@@ -12,10 +12,15 @@ assert.ok(f.includes('p?._sichtbar !== 1 || a === "online" || a === "weg" || ich
 assert.ok(f.includes("t - l < ONLINE_ANFRAGE_MS") && server.includes("const ONLINE_ANFRAGE_MS = 30000"), "höchstens alle 30 s");
 assert.ok(f.includes("onlineSeitMerken(ich.person_id).catch(() => null)") && f.includes("waitUntil"), "im Hintergrund, Fehler still");
 assert.ok(server.includes("onlineBeiAnfrage(ich, a, p); // KC-CLUB-ONLINE-JEDE-ANFRAGE"), "nach der Anmeldung jeder Anfrage");
-// Takt: nie seltener als 90 s (Server zeigt 150 s) – auch nicht im Sparmodus
-const ONLINE_SEK = Number(server.match(/const ONLINE_SEK = (\d+)/)[1]), max = Number(app.match(/const ONLINE_TAKT_MAX_MS = (\d+)/)[1]), anw = Number(app.match(/const ANW_TAKT_MS = (\d+)/)[1]);
-assert.ok(max < ONLINE_SEK * 1000 && anw <= max, `Takt ${max} ms < ${ONLINE_SEK} s`);
+// Takt: ohne Leitung nie seltener als 90 s (Server zeigt 150 s) – auch nicht im Sparmodus
+const ONLINE_SEK = Number(server.match(/const ONLINE_SEK = (\d+)/)[1]), max = Number(app.match(/const ONLINE_TAKT_MAX_MS = (\d+)/)[1]);
+assert.ok(max < ONLINE_SEK * 1000, `Takt ${max} ms < ${ONLINE_SEK} s`);
 assert.ok(app.includes("Math.min(ONLINE_TAKT_MAX_MS, sparTakt("), "Sparmodus begrenzt");
+// 18.11.2026 KC-CLUB-LEITUNG-SPARSAM: mit Leitung + Anwesenheit ist der Online-Abgleich nur noch ein Sicherheitsabgleich (10 Min.) – sichtbar
+// bleibt das Mitglied über das Lebenszeichen (fester Takt, ohne Sparmodus, sichtbare App → _sichtbar → onlineBeiAnfrage)
+const herz = Number(app.match(/const HERZ = \{ takt: (\d+),/)[1]) * 1000;
+assert.ok(herz < ONLINE_SEK * 1000 && herz <= max, `Lebenszeichen ${herz} ms < ${ONLINE_SEK} s`);
+assert.ok(app.includes("HB = setInterval(() => { if (!ruht()) herzSenden(); }, HERZ.takt * 1000);"), "Lebenszeichen ohne Sparmodus-Dehnung");
 // Fehler der Online-Meldung einmal je Sitzung sichtbar
 assert.ok(app.includes('++ONL.fehlerFolge >= 2 && !ONL.fehlerGemeldet') && app.includes('fpNeu("api", { aktion: "online"'));
 assert.ok(fs.readFileSync(new URL("../.github/workflows/tests.yml", import.meta.url), "utf8").includes("node tests/online-jede-anfrage.test.mjs"), "läuft in der CI");

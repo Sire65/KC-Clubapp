@@ -192,7 +192,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   // Leserecht aus der Rollen-Registry (Aushilfen nein), nicht hart codiert im Server
   assert.ok(/protokolle: r \? r\.protokolle_lesen !== false : true/.test(server), "Protokoll-Recht aus kc_club_rollen fehlt");
   assert.ok(!/["'`]Aushilfe/.test(server), "Server darf das Amt „Aushilfe“ nicht hart codieren");
-  assert.equal((server.match(/nurProtokolle\(ich\)/g) || []).length, 20, "jede Protokoll-/Aufgaben-Aktion prüft das Leserecht"); // 2.818.0: +4 Prüf-Aktionen (KC-CLUB-PROTOKOLL-PRUEFUNG)
+  assert.equal((server.match(/nurProtokolle\(ich\)/g) || []).length, 23, "jede Protokoll-/Aufgaben-Aktion prüft das Leserecht"); // 2.818.0: +4 Prüf-Aktionen (KC-CLUB-PROTOKOLL-PRUEFUNG); KC-CLUB-AUFGABEN-STAND: +3 (Stand melden, Später, Nachfragen)
   // 7 Tage Einspruch; genehmigt erst nach Fristablauf ohne offene Einwände
   assert.ok(/const EINSPRUCH_TAGE = 7;/.test(server), "Einspruchsfrist 7 Tage fehlt");
   assert.ok(/if \(offeneEinwaende > 0\) return "einwand";/.test(server), "offener Einwand darf nicht als genehmigt gelten");
@@ -1063,7 +1063,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
     // 2.578.0 KC-CLUB-CHAT-SOFORT: „schreibt …“/„diktiert …“ stehen jetzt im Kopf-Schritt kopf(), der ebenfalls VOR dem frühen Ausstieg läuft
     || (/else if \(u\.tippt\?\.length && andere\.length === 1\) \$\("chatTeilnehmer"\)\.textContent = "✍️ schreibt …";/.test(html)
       && /kopf\(\); zustellZeigen\(\);[\s\S]{0,900}tipptZeigen\(u\.tippt \|\| \[\], u\.entwurf \|\| \[\], u\.spricht \|\| \[\], u\.diktiert \|\| \[\]\); chatAbstand\(\);\n    const stand = /.test(html)), "Anzeige muss vor dem frühen Ausstieg aktualisiert werden");
-  assert.ok(/if \(chatTakt\.laeuft( \|\| document\.hidden)?\) return;/.test(html) && !/setInterval\(chatTakt, 4000\)/.test(html), "Chat-Takt überlappt / alter Takt");
+  assert.ok(/if \(chatTakt\.laeuft( \|\| document\.hidden| \|\| ruht\(\))?\) return;/.test(html) && !/setInterval\(chatTakt, 4000\)/.test(html), "Chat-Takt überlappt / alter Takt");
   assert.ok(/if \(v !== "chat" && TIPP\.id\) tippenAus\(\);/.test(html), "Verlassen beendet „schreibt …“ nicht");
   assert.ok(/mirror_enabled, backup_enabled, note, updated_at\)\nvalues \('kc_club_tippen', 'Club-App', 'sensitive', false, false, false/.test(lies("supabase/migrations/20260929_kc_club_v54_tippen.sql")), "Spiegel-Regel für kc_club_tippen fehlt");
   // Neon-Größe
@@ -1180,7 +1180,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 
 // 83. 0.61.0: Druckvorschau vor jedem Ausdruck (KC-CLUB-DRUCKVORSCHAU)
 {
-  assert.ok(!/window\.print\(\)/.test(html.replace("function druckJetzt() { setTimeout(() => window.print(), 60); }", "")), "Gedruckt wird nur aus der Vorschau");
+  assert.ok(!/window\.print\(\)/.test(html.replace("function druckJetzt() { setTimeout(() => druckMitPause(() => window.print()), 60); }", "")), "Gedruckt wird nur aus der Vorschau");
   assert.ok(/onclick="druckJetzt\(\)">🖨️ Drucken( \/ als PDF)?<\/button>/.test(html) /* 2.526.0: PDF eigener Knopf */ && /id="druckVorschau"/.test(html) && /id="druckVorschauRahmen"/.test(html), "Vorschau mit Druckknopf fehlt");
   assert.ok(/onclick="druckVorschau\(\)">👁️ Vorschau ansehen<\/button>/.test(html) && !/druckLos/.test(html), "Auswahlfenster druckt noch direkt");
   assert.ok(/rahmen\.srcdoc = druckHtml\(true\)/.test(html) && /const html = druckHtml\(false\);/.test(html), "Vorschau/Teilen nicht aus derselben Druckseite");
@@ -1400,7 +1400,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/eq\("von", an\)\.eq\("an", ich\.person_id\)\.eq\("status", "klingelt"\)/.test(st) && /gegenanruf: gegen\[0\]\.id/.test(st) && st.indexOf("gegenanruf") < st.indexOf('from("kc_club_anruf").insert'), "Server: Gegenanruf vor dem Anlegen prüfen");
   assert.ok(/if \(r\.gegenanruf\) \{ anrufAufraeumen\(\); return gegenanrufAnnehmen\(r\.gegenanruf, mitBild\); \}/.test(html), "App: Gegenanruf annehmen");
   assert.ok(/RUF\.gegen\?\.person_id === ruf\.von\?\.person_id && ICH\?\.person_id > ruf\.von\.person_id/.test(html), "Fallback: feste Regel, wer nachgibt");
-  assert.ok(/ONL\.wartet \? 4000 : (Math\.min\(ONLINE_TAKT_MAX_MS, )?sparTakt\((rtAn\(\) && RT\.anw \? ANW_TAKT_MS : )?PUSH_AKTIV (\|\| rtAn\(\) )?\? 60000 : 15000\)/.test(html) && html.indexOf("let PUSH_AKTIV") < html.indexOf("let ONL ="), "Takt ohne Push 15 s (vor Nutzung deklariert)");
+  assert.ok(/ONL\.wartet \? (\(rtAn\(\) \? ONL_WARTET_RT_MS : 4000\)|4000) : (Math\.min\(ONLINE_TAKT_MAX_MS, )?sparTakt\((rtAn\(\) && RT\.anw \? ANW_TAKT_MS : )?PUSH_AKTIV (\|\| rtAn\(\) )?\? 60000 : 15000\)/.test(html) && html.indexOf("let PUSH_AKTIV") < html.indexOf("let ONL ="), "Takt ohne Push 15 s (vor Nutzung deklariert)");
 }
 
 // 102. 0.81.0: Anrufe – Kurzantwort, zweiter Anruf, verpasst (KC-CLUB-ANRUF-KURZANTWORT / -ZWEIT / -VERPASST)
@@ -1445,7 +1445,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/programId: "kc-clubapp"/.test(lz) && /schema: "kicc\.remote-program-heartbeat\.v1"/.test(lz) && /nonce: crypto\.randomUUID\(\)/.test(lz) && /functions\/v1\/kicc-program-heartbeat/.test(lz), "Weiterleitung im KICC-Format fehlt");
   assert.ok(!/kicc_program_heartbeats/.test(lz), "nicht an der Prüfung des Empfängers vorbei direkt in die Tabelle schreiben");
   assert.ok(/apiRoh\("lebenszeichen", \{ geraet: herzGeraet\(\), sichtbar:/.test(html) && /id="herzKnopf"/.test(html) && /max: 15/.test(html) && /@keyframes herzschlag/.test(html), "Herz / letzte 15");
-  assert.ok(/if \(document\.visibilityState !== "hidden"\) herzSenden\(\)/.test(html), "nur senden, wenn die App sichtbar ist");
+  assert.ok(/if \((document\.visibilityState !== "hidden"|!ruht\(\))\) herzSenden\(\)/.test(html), "nur senden, wenn die App sichtbar ist (KC-CLUB-SCHLAFMODUS: und wach)");
 }
 
 // 106. 0.85.0: Empfängerfehler färben die Versand-LED nicht (KC-CLUB-LED-EMPFAENGER)
@@ -2469,7 +2469,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 {
   assert.match(html, /\["mein", "Meins"\]/, "Reiter heißt Meins");
   assert.doesNotMatch(html, /\["mein", "Mein Bereich"\]/, "alter Name weg");
-  assert.match(html, /<span class="punkte3"><i><\/i><i><\/i><i><\/i><\/span><span>(?:<span class="stift-schreibt" aria-hidden="true">✏️<\/span>|✏️) \$\{esc\(wer\)\}/, "Stift + Welle bleiben (2.509.0: Stift animiert)");
+  assert.match(html, /<span class="punkte3"><i><\/i><i><\/i><i><\/i><\/span><span>(?:(?:<span class="stift-schreibt" aria-hidden="true">✏️<\/span>|✏️) \$\{esc\(wer\)\}|\$\{esc\(wer\)\} \$\{stiftWort\([^`]*<span class="stift-schreibt" aria-hidden="true">✏️<\/span>)/, "Stift + Welle bleiben (2.509.0: Stift animiert; 2.992.0: Stift hinter den geschriebenen Buchstaben)");
 }
 
 // 220. 1.53.3/1.53.4: „Neue Nachr.“ mit laufender orange Ameisenstraße (KC-CLUB-NEU-AMEISEN)
@@ -3666,7 +3666,7 @@ assert.ok(/const UH_HERVOR = \["Innovation"\];/.test(html) && /function uhAmeise
   assert.ok(/catch \(e\) \{ console\.error\("kachel zahl", String\(e\)\); return null; \}/.test(server), "Fehler → null, keine falsche 0");
   assert.ok(/const kzZahl = \(k, plus = 0\) => \(einfach\(\) \|\| INIT\?\.kz\?\.\[k\] == null \? 0 :/.test(html), "nur erweiterte Ansicht, unbekannt → keine Zahl");
   assert.ok(/for \(const k of KACHELN\.verein\) if \(KZ_KACHELN\[k\.id\] && !k\.zahl\) k\.zahl = KZ_KACHELN\[k\.id\];/.test(html) && /termine: .*helfen: .*buero: [\s\S]{0,60}fotos: .*dienste:/.test(html), "fünf Kacheln");
-  assert.ok(/kzGesehen\(v\); \/\/ KC-CLUB-KACHEL-ZAHLEN/.test(html) && /api\("init", \{ fotosSeit: kzSeit\("fotos"\), dienstSeit: kzSeit\("dienste"\) \}/.test(html), "zuletzt geöffnet");
+  assert.ok(/kzGesehen\(v\); \/\/ KC-CLUB-KACHEL-ZAHLEN/.test(html) && /api\("init", \{ fotosSeit: kzSeit\("fotos"\), dienstSeit: kzSeit\("dienste"\)(, aufStand: astF \? 1 : 0)? \}/.test(html), "zuletzt geöffnet"); // KC-CLUB-AUFGABEN-STAND: + aufStand
 }
 // 339. 2.22.12: Mikrofon-Freigabe vor dem Diktieren (KC-CLUB-MIKRO-FREIGABE)
 {
@@ -3768,7 +3768,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 }
 // 359. 2.23.9: Spar-Takt (KC-CLUB-SPARTAKT) – weniger Server-Aufrufe, damit die kostenlose Grenze sicher hält
 {
-  assert.ok(/if \(chatTakt\.laeuft \|\| document\.hidden\) return;/.test(html), "Chat im Hintergrund nicht nachfragen");
+  assert.ok(/if \(chatTakt\.laeuft \|\| (document\.hidden|ruht\(\))\) return;/.test(html), "Chat im Hintergrund nicht nachfragen");
   assert.ok(/const frisch = Date\.now\(\) - CHAT_AKTIV < 90000, ruhig = (rtAn\(\) \? 30 : )?PUSH_AKTIV \? 10 : 6;/.test(html) && (/CHAT\?\.tippt\?\.length \|\| (\(hakenWarten && ONL\.takt % 2 === 0\) \|\| )?\(jemandDa && ONL\.takt % \((rtAn\(\) \? 1?5 : )?frisch \? 2 : 4\) === 0\)/.test(html)
     // 2.510.0 KC-CLUB-CHAT-SPARSAM: ohne direkte Leitung wie bisher (Tippen jedes Mal, Haken alle 4 s); mit Leitung Tippen alle 6 s, Haken per Signal
     || (/const rt = rtAn\(\), tipptTakt = rt \? 3 : 1;/.test(html) && /\(CHAT\?\.tippt\?\.length && ONL\.takt % tipptTakt === 0\) \|\| \(hakenWarten && !rt && ONL\.takt % 2 === 0\) \|\| \(jemandDa && ONL\.takt % \(rt \? 15 : frisch \? 2 : 4\) === 0\)/.test(html))), "Tippen bleibt sofort, sonst seltener"); // 2.226.0: mit Realtime noch seltener
@@ -4115,7 +4115,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const k = html.slice(html.indexOf("// KC-CLUB-TERMINANFRAGE-HINWEIS (2.23.52"), html.indexOf("async function taAntwort("));
   for (const t of ["👀 Ja, jetzt ansehen", "⏰ Später", "🌙 Heute nicht mehr fragen"]) assert.ok(k.includes(t), "Knopf fehlt: " + t);
   assert.ok(/!a\.vonMir && !a\.spiel && a\.status === "offen" && !a\.meine && !a\.meinVorschlag/.test(k), "nur unbeantwortete Anfragen an mich");
-  assert.ok(/setInterval\(\(\) => \{ if \(rtAn\(\) && \+\+TAH_TICK % 6\) return; taHinweisPruefen\(9\); \}, TAH_TAKT_MS\)/.test(k) && /visibilitychange/.test(k) && /taHinweisPruefen\(\), 5000\)/.test(html) && /setTimeout\(\(\) => taHinweisPruefen\(9\), 1500\)/.test(html), "beim Start, zurück in der App, nach Push, alle 5 Min. (mit Leitung alle 30 Min. + Signal, 2.874.0)");
+  assert.ok(/setInterval\(\(\) => \{ if \(rtAn\(\) && \+\+TAH_TICK % TAH_RT_JEDES\) return; taHinweisPruefen\(9\); \}, TAH_TAKT_MS\)/.test(k) && /visibilitychange/.test(k) && /taHinweisPruefen\(\), 5000\)/.test(html) && /if \(!rtAn\(\)\) \{ onlinePing\(\); setTimeout\(\(\) => taHinweisPruefen\(9\), 1500\); \}/.test(html), "beim Start, zurück in der App, nach Push (ohne Leitung), alle 5 Min. (mit Leitung alle 60 Min. + Signal, 2.874.0 / 18.11.2026 KC-CLUB-LEITUNG-SPARSAM)");
   assert.ok(/document\.querySelector\(FENSTER_OFFEN\)/.test(k) && /if \(still && !neu\.length\) return/.test(k), "drängt sich nicht über Fenster, neue Anfrage durchbricht „später“"); // 2.789.0 KC-CLUB-EINGABE-RUHE: FENSTER_OFFEN = .blatt:not(.versteckt) + offene Dienstwünsche
 }
 // 402. 2.23.53: „Mikrofon ist gesperrt“ – sofort freischalten und weiter diktieren (KC-CLUB-MIKRO-SOFORT)
@@ -4780,7 +4780,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.24.18 KC-CLUB-ONLINE-EINE-QUELLE: Ring „gerade online“ aus dem Online-Takt (wie LED/Zahl), Mitgliederseite zieht beim Wechsel nach
 {
   assert.ok(/else if \(m\?\.person_id && !m\.verborgen\) \{ try \{ if \(ONL\.stand && Date\.now\(\) - ONL\.stand < 3 \* 60 \* 1000\) m = \{ \.\.\.m, online: ONL\.ids\.has\(m\.person_id\) \}; \} catch \{\} \}/.test(html), "Ring nutzt dieselbe Quelle wie LED und Zahl, alter Stand → Liste");
-  assert.ok(/if \(e\.data\?\.typ === "online-ansage"\) \{ onlineAnsageSprechen\(\[e\.data\.name\]\); onlinePing\(\); \}/.test(html), "Ansage per Push frischt LED/Zahl/Ring sofort auf");
+  assert.ok(/if \(e\.data\?\.typ === "online-ansage"\) \{ onlineAnsageSprechen\(\[e\.data\.name\]\); if \(!onlLeitungVoll\(\)\) onlinePing\(\); \}/.test(html) && /if \(keys\.some\(\(k\) => k !== RT\.anwKey\)\) anwAnders\(\);/.test(html), "Ansage per Push frischt LED/Zahl/Ring sofort auf (mit Leitung + Anwesenheit über anwAnders, 18.11.2026 KC-CLUB-LEITUNG-SPARSAM)");
   assert.ok(/const vorher = \[\.\.\.ONL\.ids\]\.sort\(\)\.join\(\);[^]{0,400}if \(vorher !== \[\.\.\.ONL\.ids\]\.sort\(\)\.join\(\) && aktuelleAnsicht === "mitglieder" && MITGLIEDER\)/.test(html), "Mitgliederseite wird bei Änderung neu gezeichnet");
 }
 // 2.24.19 KC-CLUB-GRUPPE-AUS-RUNDE + KC-CLUB-CHAT-KOPF-BILD
@@ -4932,7 +4932,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.equal(f({ connection: { effectiveType: "2g" } }, ls({ kc_club_sparmodus: "aus" }), doc, () => {}).SPAR.an, false, "„Aus“ gewinnt");
   const an = f({}, ls({ kc_club_sparmodus: "an" }), doc, () => {}); assert.equal(an.SPAR.an, true, "„Immer an“"); assert.equal(an.sparTakt(15000), 45000, "Takt ×3");
   assert.ok(/STARTMESS_SPEICHER = "kc_club_startmess"/.test(html), "gleicher Speicher wie die Startmessung");
-  assert.ok(/ONL\.wartet \? 4000 : (Math\.min\(ONLINE_TAKT_MAX_MS, )?sparTakt\(/.test(html) && /neuLaden\(\); \}, sparTakt\(60000\)\)/.test(html) && /setInterval\(nzSenden, sparTakt\(NZ_TAKT_MS\)\)/.test(html), "Hintergrund seltener");
+  assert.ok(/ONL\.wartet \? (\(rtAn\(\) \? ONL_WARTET_RT_MS : 4000\)|4000) : (Math\.min\(ONLINE_TAKT_MAX_MS, )?sparTakt\(/.test(html) && /neuLaden\(\); \}, sparTakt\(60000\)\)/.test(html) && /setInterval\((nzSenden|\(\) => \{ if \(!ruht\(\)\) nzSenden\(\); \}), sparTakt\(NZ_TAKT_MS\)\)/.test(html), "Hintergrund seltener");
   assert.ok(!/sparTakt\(CHAT_TAKT_MS|sparTakt\(SP_TAKT_MS|anrufPruefen, sparTakt/.test(html), "Chat, Spiele, Anrufe unverändert");
   // KC-CLUB-SPUR-OEFFNEN: auch ein kurzer Besuch nur auf der Startseite erscheint im Weg
   assert.ok(/spur\(window\.KCFP\?\.ausHinter \? spurWieder\(KCFP\.ausHinter\) : "geoeffnet"\); setTimeout\(spurSenden, 3000\);/.test(html) /* 2.729.0 KC-CLUB-SPUR-WIEDER */ && /geoeffnet: "📲 App geöffnet"/.test(html) && /const SPUR_WAS = \/\^\[a-z\]\[a-z0-9_\]\{0,29\}\$\/;/.test(server), "Öffnen zählt als Schritt");
@@ -5921,7 +5921,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\) \|\| Number\(r\.headers\?\.get\?\.\("x-club-ms"\)\);.{0,200}schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693|694|695|696|699|709|710|712|721|722|723|724|726|728|729|730|731|736|738|739|740|741|743|754|755|760|761|762|763|764|765|766|772|773|774|775|776|781|783|784|785|786|789|790|792|795|796|799|800|802|804|806|809|810|813|814|817|818|822|824|829|830|833|834|835|839|840|841|842|843|844|845|846|850|851|857|859|862|863|865|869|870|871|872|878|885|886|887|893|897|899|900|901|902|903|907|909|912|921|934|935|936|938|939|942|943|944|946|947|950|953|954|955|956|957|962|964|966|967|966|968|969|970|971|972|973|974|975|977|978|980|981)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693|694|695|696|699|709|710|712|721|722|723|724|726|728|729|730|731|736|738|739|740|741|743|754|755|760|761|762|763|764|765|766|772|773|774|775|776|781|783|784|785|786|789|790|792|795|796|799|800|802|804|806|809|810|813|814|817|818|822|824|829|830|833|834|835|839|840|841|842|843|844|845|846|850|851|857|859|862|863|865|869|870|871|872|878|885|886|887|893|897|899|900|901|902|903|907|909|912|921|934|935|936|938|939|942|943|944|946|947|950|953|954|955|956|957|962|964|966|967|966|968|969|970|971|972|973|974|975|977|978|980|981|982|983|984|985|986|987|988|989|990|991|993)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -6409,7 +6409,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.ok(/const kkRufe = \(h\) => \(h % 12\) \|\| 12;/.test(html), "12-Stunden-Zählung (0 Uhr → 12×)");
   assert.ok(/const KK_FENSTER_MIN = 2, KK_TAKT_MS = 1500;/.test(html) && /mitTon = einst\("ton", true\) && \(tonImmer \|\| !inRuheJetzt\(INIT\?\.einstellungen\?\.ruhezeit\)\)/.test(html), "nachts und mit Töne aus ohne Ton (2.404.0: außer Probe)");
-  assert.ok(/if \(!ICH\?\.person_id \|\| document\.hidden \|\| !einst\("kuckuck", true\)\) return;/.test(html) && /localStorage\.getItem\("kc_club_kuckuck_zuletzt"\) === stunde/.test(html), "nur offen + sichtbar, abschaltbar, einmal je Stunde");
+  assert.ok(/if \(!ICH\?\.person_id \|\| (document\.hidden|ruht\(\)) \|\| !einst\("kuckuck", true\)\) return;/.test(html) && /localStorage\.getItem\("kc_club_kuckuck_zuletzt"\) === stunde/.test(html), "nur offen + sichtbar, abschaltbar, einmal je Stunde");
   assert.ok(/<input type="checkbox" id="setKuckuck" onchange="einstellung\('kuckuck', this\.checked\)">/.test(html) && /\$\("setKuckuck"\)\.checked = einst\("kuckuck", true\)/.test(html), "Schalter in den Einstellungen");
   const kk = (h) => (h % 12) || 12; assert.deepEqual([0, 1, 12, 13, 23].map(kk), [12, 1, 12, 1, 11], "Rufe je Stunde");
 }
@@ -7076,7 +7076,8 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.ok(/add column if not exists bemerkung text check \(bemerkung is null or char_length\(bemerkung\) <= 1000\)/.test(lies("supabase/migrations/20261019_kc_club_aufgaben_bemerkung.sql")), "Spalte Bemerkung");
   const c = server.slice(server.indexOf('case "aufgabe_erledigt": {'), server.indexOf('case "aufgabe_loeschen": {'));
-  assert.ok(/if \(erledigt && bemerkung\.length < 3\) throw new Fehler\(/.test(c) && c.indexOf("bemerkung.length < 3") < c.indexOf('.update(erledigt'), "Erledigt nur mit Bemerkung – Server prüft");
+  assert.ok(!/bemerkung\.length < 3/.test(c) && /KC-CLUB-AUFGABE-BEMERKUNG-FREI/.test(c), "KC-CLUB-AUFGABE-BEMERKUNG-FREI (19.11.2026): Bemerkung freiwillig – Server verlangt sie nicht mehr");
+  assert.ok(/kurz: `\$\{txt\(x\.a\.text, 80\)\}\$\{bemerkung \? /.test(c) && /\$\{bemerkung \? `\\n\\nBemerkung: /.test(c), "ohne Bemerkung: Bescheid ohne leeres „“");
   assert.ok((/x\.a\.erstellt_von !== ich\.person_id/.test(c) || (/\[x\.a\.erstellt_von, \.\.\./.test(c) && /\.filter\(\(id\) => id && id !== ich\.person_id\)/.test(c))) && /EdgeRuntime\?\.waitUntil\?\.\(info\)/.test(c), "wer eingetragen hat, bekommt Bescheid (im Hintergrund) – 2.843.0: dazu die anderen Beteiligten, nie man selbst");
   assert.ok(/bemerkung: a\.bemerkung \?\? null,/.test(server), "Bemerkung kommt in der Protokoll-Ansicht an");
   assert.ok(/const bemerkung = erledigt \? await aufgabeBemerkung\(\) : null; if \(erledigt && bemerkung === null\) return;/.test(html) && /const bemerkung = await aufgabeBemerkung\(\); if \(bemerkung === null\) return;/.test(html), "App fragt an beiden Stellen (Protokoll, Büro) – Abbrechen hakt nicht ab");
@@ -8624,7 +8625,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/\["ablageBlatt", "ablage"\], \[\(\) => !!\$\("arDateiEin"\), "archivDok"\](\]|,)/.test(programm) && /typeof id === "function" \? id\(\) : \$\(id\)/.test(programm), "Fenster-Abläufe auch mit Prüfung");
   assert.ok(/const shErsForm = \(\) => !ERS\.pos\.length/.test(programm), "nach der ersten Position weiter zur Auszahlung");
   assert.ok(/id: "los", ziel: "#ersSendenKnopf"[^\n]*ende: true/.test(programm) && /id: "los", ziel: "#ablJa"[^\n]*ende: true/.test(programm), "Ende-Schritte");
-  assert.ok(/function spurBaldSenden\(\) \{ if \(SPAR\.an \|\| document\.hidden\) return; clearTimeout\(SPUR_BALD\); SPUR_BALD = setTimeout\(spurSenden, 15000\); \}/.test(programm) && /spurBaldSenden\(\); \/\/ KC-CLUB-SPUR-LIVE/.test(programm), "Schritte nach 15 s gebündelt senden");
+  assert.ok(/function spurBaldSenden\(\) \{ if \(SPAR\.an \|\| (document\.hidden|ruht\(\))\) return; clearTimeout\(SPUR_BALD\); SPUR_BALD = setTimeout\(spurSenden, 15000\); \}/.test(programm) && /spurBaldSenden\(\); \/\/ KC-CLUB-SPUR-LIVE/.test(programm), "Schritte nach 15 s gebündelt senden");
   assert.ok(/if \(!INIT \|\| !SPUR\.length \|\| SPUR_LAEUFT\) return;/.test(programm), "nie doppelt senden");
   assert.ok(/if \(heuteDa\) SPW\.uhr = setTimeout\(/.test(programm) && /aktualisiert sich alle 20 Sekunden von selbst/.test(programm) && /gerade in der App/.test(programm), "Wege: alle 20 s neu, wer gerade drin ist, oben mit 🟢");
 }
@@ -8825,7 +8826,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
 // 4xx. 2.100.0: Hänger-Wächter – Pause über 60 s (iPad friert ein) ist kein Hänger (KC-CLUB-HAENGER-PAUSE, Fund Hansi)
 {
   const f = programm.slice(programm.indexOf("// Hänger-Wächter:"), programm.indexOf("function meldeFehler(e)"));
-  assert.ok(/if \(luecke > 60000\) \{ sichtbarSeit = jetzt; return; \}/.test(f) && f.indexOf("luecke > 60000") < f.indexOf('neu("haenger"'), "lange Lücke = Pause, vor der Hänger-Meldung geprüft");
+  assert.ok(/if \(luecke > 60000( \|\| druckPause\(jetzt\))?\) \{ sichtbarSeit = jetzt; return; \}/.test(f) && f.indexOf("luecke > 60000") < f.indexOf('neu("haenger"'), "lange Lücke = Pause, vor der Hänger-Meldung geprüft");
   assert.ok(/\["pageshow", "focus", "resume"\]/.test(f), "Wieder-da-Ereignisse setzen den Takt zurück");
   assert.ok(/luecke > 5000 && !document\.hidden/.test(f), "kurze echte Hänger werden weiter erkannt");
 }
@@ -8867,7 +8868,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/an !== ich\.person_id && w\.von !== ich\.person_id/.test(e), "beenden darf Mitglied oder fragender Admin");
   const m = programm.slice(programm.indexOf("// ----- beim Mitglied -----"), programm.indexOf("// ---------- KC-CLUB-SPRACHE-LERNEN"));
   assert.ok(/id="ssLiveLeiste"/.test(m) && /onclick="mlEnde\(true\)">Beenden<\/button>/.test(m), "roter Balken mit Beenden");
-  assert.ok(/if \(!SPG\.an \|\| SPG\.laeuft \|\| document\.hidden\) return;/.test(programm) && /spgSenderStart\(mlSenden, false\);/.test(m) && /Date\.now\(\) \+ ST_LIVE_MIN \* 60000/.test(m), "2.136.0: echtes Live nur bei Änderung, nur sichtbar, 30 Min.");
+  assert.ok(/if \(!SPG\.an \|\| SPG\.laeuft \|\| (document\.hidden|ruht\(\))\) return;/.test(programm) && /spgSenderStart\(mlSenden, false\);/.test(m) && /Date\.now\(\) \+ ST_LIVE_MIN \* 60000/.test(m), "2.136.0: echtes Live nur bei Änderung, nur sichtbar, 30 Min.");
   assert.ok(m.indexOf("await frage(") < m.indexOf("mlStart(einl.id"), "erst fragen");
   assert.ok(/ssStart\('\$\{esc\(SPW\.person\)\}', \$\{esc\(JSON\.stringify\(r\.name \|\| ""\)\)\}, true\)">🔴 Live mitschauen/.test(programm), "Knopf bei den Wegen");
 }
@@ -10163,7 +10164,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/const sprungDef = \(id\) => \(Object\.hasOwn\(SPRUENGE, id\)/.test(html), "#zu=constructor kein Ziel");
   assert.ok(/function hashSprung\(h\)/.test(html) && /if \(e\.data\?\.typ === "oeffnen"\) pushOeffnen\(e\.data\.url\);/.test(html), "Push-Antippen bei offener App springt");
   assert.ok(/function ladeFehlerStand\(id, e, nochmal\)/.test(html) && /ladeFehlerStand\("mitgliederListe", e, "mitgliederLaden\(\)"\)/.test(html) && !/esc\(e\??\.message\)/.test(html), "kein ewiges „Wird geladen“, keine englischen Fehlertexte");
-  assert.ok(/window\.addEventListener\("offline", \(\) => \{ try \{ ONL\.liste = \[\]; ONL\.ids = new Set\(\); ONL\.stand = 0;/.test(html), "ohne Netz kein grünes Online");
+  assert.ok(/window\.addEventListener\("offline", \(\) => \{ try \{ ONL\.liste = \[\]; ONL\.ids = new Set\(\); ONL\.stand = (ONL\.echt = )?0;/.test(html), "ohne Netz kein grünes Online");
   assert.ok(/function schalterZeilen\(wurzel = document\)/.test(html), "Schalterzeilen antippbar + benannt");
   const sw = lies("sw.js");
   assert.ok(/ignoreSearch: !url\.pathname\.endsWith\("\/app\.js"\)/.test(sw) && /t\.includes\("app\.js\?v=" \+ VERSION\)/.test(sw) && /const NAVI_WARTEN_MS = 4000;/.test(sw), "SW: kein Mischstand, Seite nur passend gemerkt, 4 s Netzgrenze");
@@ -10939,7 +10940,7 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
 
 // KC-CLUB-VORFUEHREN-HINTERGRUND: Zuschauer im Hintergrund fragt nicht nach
 {
-  assert.ok(/async function vfHolen\(sofort\) \{\n  if \(VF\.rolle !== "schaut"\) return;\n  if \(document\.hidden && sofort !== true\) return;/.test(html), "Vorführung: kein Abfragen im Hintergrund");
+  assert.ok(/async function vfHolen\(sofort\) \{\n  if \(VF\.rolle !== "schaut"\) return;\n  if \((document\.hidden|ruht\(\)) && sofort !== true\) return;/.test(html), "Vorführung: kein Abfragen im Hintergrund");
 }
 
 // KC-CLUB-ZWEI-FENSTER + KC-CLUB-ZWEI-BROWSER (Wunsch Hansi)
@@ -11204,7 +11205,7 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
 
 // 2.360.0 KC-CLUB-AKKU-5: weniger Nachfragen und Malen in Ruhe
 {
-  assert.ok(/if \(takt === true && RT\.ok && Date\.now\(\) - PW_ZULETZT < 180000\) return;/.test(html) && /setInterval\(\(\) => pwLive\(true\), PW_LIVE_MS\)/.test(html), "Pinnwand-Takt mit Leitung alle 3 Min.");
+  assert.ok(/if \(takt === true && RT\.ok && PW_AUFBAU === RT\.aufbauten && Date\.now\(\) - PW_ZULETZT < PW_RT_MS\) return;/.test(html) && /const PW_RT_MS = 10 \* 60000;/.test(html) && /setInterval\(\(\) => pwLive\(true\), PW_LIVE_MS\)/.test(html), "Pinnwand-Takt mit Leitung alle 10 Min. (18.11.2026 KC-CLUB-LEITUNG-SPARSAM, vorher 3 Min.)");
   assert.ok(/Date\.now\(\) - AD_ZULETZT >= 175000 && Date\.now\(\) - jzbBedient < 300000/.test(html), "Admin-Startseite seltener");
   assert.ok(/setInterval\(\(\) => \{ if \(!document\.hidden\) vbStatusLed\(\); \}, 5000\)/.test(html), "LEDs im Hintergrund still");
 }
@@ -11281,7 +11282,7 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
 
 // 2.364.0 KC-CLUB-AKKU-7: Mitschauen im Hintergrund still
 {
-  assert.ok(/async function ssHolen\(sofort\) \{\n  if \(document\.hidden && sofort !== true\) return;/.test(html) && /if \(!document\.hidden && SS\?\.id\) ssHolen\(true\);/.test(html), "Mitschauen fragt im Hintergrund nicht nach");
+  assert.ok(/async function ssHolen\(sofort\) \{\n  if \((document\.hidden|ruht\(\)) && sofort !== true\) return;/.test(html) && /if \(!document\.hidden && SS\?\.id\) ssHolen\(true\);/.test(html), "Mitschauen fragt im Hintergrund nicht nach");
 }
 
 // 2.364.0 KC-CLUB-SCHRIFT-ZOOM: Zwei-Finger-Zoom der Schrift
@@ -12241,7 +12242,10 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 
 // 2.509.0 KC-CLUB-STIFT-SCHREIBT (Wunsch Hansi): der Stift neben den drei Punkten bewegt sich, als schreibe er
 {
-  assert.ok(/<span class="stift-schreibt" aria-hidden="true">✏️<\/span> \$\{esc\(wer\)\}/.test(programm), "Stift in der Schreibt-Anzeige");
+  assert.ok(/\$\{esc\(wer\)\} \$\{stiftWort\(namen\.length > 1 \? "schreiben …" : "schreibt …"\)\}<span class="stift-schreibt" aria-hidden="true">✏️<\/span>/.test(programm), "Stift in der Schreibt-Anzeige (2.992.0: hinter den Buchstaben)");
+  // 2.992.0 KC-CLUB-STIFT-BUCHSTABEN (Wunschliste #100): Buchstabe für Buchstabe, nur Zier, ruhig bei „weniger Bewegung“
+  assert.ok(/const stiftWort = \(t\) => `<span class="stift-wort">\$\{\[\.\.\.t\]\.map\(\(z, i\) => `<i style="--n:\$\{i\}">/.test(programm) && /esc\(z\)/.test(programm), "Buchstaben einzeln, maskiert");
+  assert.ok(/\.stift-wort i \{[^}]*animation: stiftBuchstabe 3\.6s calc\(var\(--n\) \* \.12s\) infinite both;/.test(seite) && /@keyframes stiftBuchstabe/.test(seite) && /prefers-reduced-motion: reduce\) \{ \.stift-wort i \{ animation: none; max-width: none; \}/.test(seite), "Buchstaben-Animation + weniger Bewegung");
   assert.ok(/\.stift-schreibt \{[^}]*animation: stiftSchreibt 1\.6s ease-in-out infinite;/.test(seite) && /@keyframes stiftSchreibt/.test(seite), "Schreibbewegung");
 }
 
@@ -12872,7 +12876,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 // 2.605.0 KC-CLUB-PUSH-RUHE: Push bei offenem Chat lädt nur den Chat (gebündelt), sonst mehrere Pushes = einmal Startseite nach 1,5 s
 {
   const fn = programm.slice(programm.indexOf("function pushNeuLaden()"), programm.indexOf("function pushNeuLaden()") + 400);
-  assert.ok(/if \(chatId && aktuelleAnsicht === "chat"\) \{ NEU_NACH_CHAT = true; return; \}/.test(fn) && /clearTimeout\(RT\.zaehlen\); RT\.zaehlen = setTimeout\(\(\) => \{ if \(!document\.hidden\) neuLaden\(\); \}, 1500\);/.test(fn), "Push gebündelt, im Chat nur der Chat");
+  assert.ok(/if \(chatId && aktuelleAnsicht === "chat"\) \{ NEU_NACH_CHAT = true; return; \}/.test(fn) && /clearTimeout\(RT\.zaehlen\); RT\.zaehlen = setTimeout\(\(\) => \{ if \(!(document\.hidden|ruht\(\))\) neuLaden\(\); \}, 1500\);/.test(fn), "Push gebündelt, im Chat nur der Chat");
   assert.ok(/if \(e\.data\?\.typ === "push"\) \{ onlinePushGezeigt\(e\.data\.titel\); \/\* 2\.383\.0 \*\/ pushNeuLaden\(\);/.test(programm) && /if \(chatId && aktuelleAnsicht === "chat"\) chatSignalLaden\(true\); else if \(chatId\) chatLaden\(false\); ansageAusPush\(e\.data\);/.test(programm), "Push-Handler nutzt die Bündelung, Ansage bleibt sofort");
 }
 // 2.606.0 KC-CLUB-DIENST-TAUSCH: Tauschbörse – nur Server-Regeln, Freigabe, Plan unverändert, Übergaben eingerechnet
@@ -13840,4 +13844,13 @@ assert.ok(/if \(!gezeigt && !nurZaehlen && !\(START_HASH && START_HASH !== "#"\)
   const i = server.indexOf('case "dienst_uebersicht": {'), teil = server.slice(i, i + 3200);
   assert.ok(i > 0 && /const aus = await dienstAusnahmen\(\);\s*const liste = \(rows \?\? \[\]\)\.filter\(\(x: any\) => !String\(x\.person_id\)\.startsWith\("KC-P-TEST"\) && !aus\.has\(x\.person_id\)/.test(teil), "wer ausfällt, erscheint nicht in der Übersicht");
   assert.ok(/!abgegeben\.has\(m\.person_id\) && !aus\.has\(m\.person_id\)/.test(teil), "und fehlt auch nicht");
+}
+// 2.993.0 KC-CLUB-DP-ZUSCHLAG (Hansi 20.11.: Konzert-Zuschlag aus DP2 im Dienstplan mitrechnen)
+{
+  const { dpRechnen } = await import("../supabase/functions/kc-club/dp-rechnen.js");
+  const tag = { d: "2026-12-04", art: "Markttag", baender: [{ start: 16, end: 23, total: 2, front: 1, back: 1 }] };
+  const ohne = dpRechnen({ tage: [tag], personen: [] }), mit = dpRechnen({ tage: [tag], personen: [], zuschlag: [{ d: "2026-12-04", von: 19.5, bis: 23, plus: 1 }, { d: "2026-12-05", von: 19, bis: 23, plus: 1 }] });
+  const b = (r, h) => r.tage[0].bedarf[(h - r.von) * 2];
+  assert.equal(b(ohne, 20), 2); assert.equal(b(mit, 19), 2); assert.equal(b(mit, 19.5), 3); assert.equal(b(mit, 22.5), 3);
+  assert.ok(/async function dpZuschlag\(\)/.test(server) && /section_key", "dienstplan_context"\)\.gt\("updated_at", seit\)/.test(server) && /fair: Number\(konf\.fair\) \|\| 1\.5, zuschlag,/.test(server), "Server liest den Zuschlag und rechnet bei Änderung neu");
 }

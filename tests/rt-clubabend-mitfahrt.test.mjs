@@ -7,7 +7,7 @@ const app = lies("app.js"), srv = lies("supabase/functions/kc-club/index.ts");
 // Server: nur an Leute, die gerade in der App sind, ohne den Auslöser, nur die Art (kein Inhalt), über kc_club_rt_klingeln (Zähler, Sparbremse)
 const f = srv.slice(srv.indexOf("async function rtKlingelnInApp"), srv.indexOf("async function onlineJetzt"));
 assert.match(f, /gte\("zuletzt_gesehen", new Date\(Date\.now\(\) - IN_APP_SEK \* 1000\)/);
-assert.match(f, /filter\(\(id\) => id !== ohne\)/);
+assert.match(f, /const weg = new Set\(Array\.isArray\(ohne\) \? ohne : ohne \? \[ohne\] : \[\]\);[^]*filter\(\(id\) => !weg\.has\(id\)\)/); // 19.11.2026: auch mehrere (KC-CLUB-LEITUNG-SPARSAM)
 assert.match(f, /db\.rpc\("kc_club_rt_klingeln", \{ p_personen: ids, p_art: art \}\)/);
 const ca = srv.slice(srv.indexOf('case "clubabend_setzen"'), srv.indexOf('case "protokoll_vorlage"'));
 assert.match(ca, /await rtKlingelnInApp\("clubabend", ich\.person_id\);/);

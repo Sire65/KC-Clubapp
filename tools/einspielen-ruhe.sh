@@ -3,7 +3,10 @@
 # waren drin“ – „Ja bauen oder ich sage es explizit: Einspielen“). Läuft in „Seite veröffentlichen“ und „Server hochladen“ direkt vor dem
 # Wartungsfenster, also kurz bevor die neue Version bei den Mitgliedern ankommt (nicht schon beim Push – dazwischen liegen Minuten).
 #
-#   1. Termin: neue App-/Server-Version nur 11:45–13:00 oder 19:45–21:00 Uhr (deutsche Zeit) – sonst Abbruch, nichts geht raus.
+#   1. Termin: neue App-/Server-Version nur 11:45–13:00 oder 23:50–00:30 Uhr (deutsche Zeit) – sonst Abbruch, nichts geht raus.
+#      KC-EINSPIELEN-ABENDTERMIN (Wunsch Hansi 19.11.2026 „abends um 20 Uhr waren viele drin – 23 Uhr oder eine passendere Zeit“): Abendtermin
+#      von 20 auf 23:50 Uhr verlegt – App-Starts 14 Tage: 20 Uhr ≈ 2,1/Tag, 23 Uhr ≈ 0,3, 0 Uhr ≈ 0,1. Nicht 23:00: der Neon-Spiegel läuft
+#      22:05–22:45 UTC (Winter 23:05–23:45 Uhr). Im Sommer (00:05–00:45 Uhr) wartet die Ruhe-Prüfung unten die Spiegelung ab.
 #      Ausnahme: Hansi hat ausdrücklich „einspielen“ gesagt → im Commit-Text „[Hansi: einspielen]“ (oder Run workflow, art = hansi).
 #   2. Ruhe: nicht während Spiegelung/Datensicherung und nicht, wenn mehr als 2 in der App sind – dann alle 5 Min. neu prüfen,
 #      höchstens 60 Min.; danach Abbruch (Hansi fragen, dann „Run workflow“).
@@ -26,10 +29,46 @@ if [ "$art" = "notfall" ]; then echo "NOTFALL – wird ohne Warten eingespielt (
 
 if [ "$art" != "hansi" ]; then
   hm=$((10#${EINSPIEL_UHR:-$(TZ=Europe/Berlin date +%H%M)}))
-  if ! { [ "$hm" -ge 1145 ] && [ "$hm" -le 1300 ]; } && ! { [ "$hm" -ge 1945 ] && [ "$hm" -le 2100 ]; }; then
-    echo "::error::Außerhalb der Einspiel-Termine (12 und 20 Uhr) – nichts wird eingespielt. Nur wenn Hansi ausdrücklich „einspielen“ sagt: [Hansi: einspielen] in den Commit-Text, sonst zum Termin per „Run workflow“."
+  if ! { [ "$hm" -ge 1145 ] && [ "$hm" -le 1300 ]; } && ! { [ "$hm" -ge 2350 ] || [ "$hm" -le 30 ]; }; then
+    echo "::error::Außerhalb der Einspiel-Termine (12 Uhr und 23:50 Uhr) – nichts wird eingespielt. Nur wenn Hansi ausdrücklich „einspielen“ sagt: [Hansi: einspielen] in den Commit-Text, sonst zum Termin per „Run workflow“."
     exit 1
   fi
+fi
+
+# 4. KC-EINSPIELEN-EINE-VERSION (Wunsch Hansi 19.11.2026 „ja bündeln, EINE Version“ – Anlass: Abendtermin 19.11. mit 2.984.0 und 2.985.0
+#    aus zwei Sitzungen innerhalb von 4 Min.): je Einspiel-Termin (12 bzw. 23:50 Uhr) geht höchstens EINE neue Version raus. Ist im laufenden
+#    Termin schon eine andere Version live gegangen, bricht dieser Ablauf ab (rot, nichts geht raus) → Änderungen zur nächsten Version bündeln
+#    und zum nächsten Termin per „Run workflow“ (beide Abläufe). [Hansi: einspielen] und [Notfall] sind ausgenommen.
+#    Erkennung: erfolgreiche „Seite veröffentlichen“-Läufe auf main seit Terminbeginn, deren version.json sich von der Version vor dem Termin
+#    und von der eigenen unterscheidet (Pushes ohne neue Version zählen nicht). Klappt die Abfrage bei GitHub nicht, wird nicht gesperrt.
+gh_api() { curl -sS -m 20 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/$GITHUB_REPOSITORY/$1"; }
+version_bei() { gh_api "contents/version.json?ref=$1" | jq -r '.content // empty' 2>/dev/null | base64 -d 2>/dev/null | jq -r '.version // empty' 2>/dev/null; }
+termin_belegt() { # gibt die andere Version aus, die in diesem Termin schon live ging; leer = frei oder unbekannt
+  if [ -n "${EINSPIEL_TERMIN_BELEGT+x}" ]; then echo "$EINSPIEL_TERMIN_BELEGT"; return; fi
+  [ -z "${GH_TOKEN:-}" ] || [ -z "${GITHUB_REPOSITORY:-}" ] && return
+  local hm start runs vor meine sha v
+  hm=$((10#$(TZ=Europe/Berlin date +%H%M)))
+  if [ "$hm" -ge 2350 ]; then start=$(TZ=Europe/Berlin date -d "today 23:50" +%s)
+  elif [ "$hm" -le 30 ]; then start=$(TZ=Europe/Berlin date -d "yesterday 23:50" +%s)
+  else start=$(TZ=Europe/Berlin date -d "today 11:45" +%s); fi
+  runs=$(gh_api "actions/workflows/seite-veroeffentlichen.yml/runs?branch=main&status=success&per_page=30") || return
+  meine=$(jq -r '.version // empty' "$(dirname "$0")/../version.json" 2>/dev/null)
+  vor=$(echo "$runs" | jq -r --argjson s "$start" '[.workflow_runs[] | select((.updated_at | fromdateiso8601) < $s)][0].head_sha // empty' 2>/dev/null)
+  [ -z "$vor" ] || [ -z "$meine" ] && return
+  vor=$(version_bei "$vor"); [ -z "$vor" ] && return
+  for sha in $(echo "$runs" | jq -r --argjson s "$start" --arg eigen "${GITHUB_SHA:-}" \
+      '.workflow_runs[] | select((.updated_at | fromdateiso8601) >= $s and .head_sha != $eigen) | .head_sha' 2>/dev/null | sort -u); do
+    v=$(version_bei "$sha")
+    if [ -n "$v" ] && [ "$v" != "$vor" ] && [ "$v" != "$meine" ]; then echo "$v"; return; fi
+  done
+}
+if [ "$art" = "termin" ]; then
+  belegt=$(termin_belegt)
+  if [ -n "$belegt" ]; then
+    echo "::error::In diesem Einspiel-Termin ist schon Version $belegt live gegangen – je Termin nur EINE Version (KC-EINSPIELEN-EINE-VERSION). Änderungen zur nächsten Version bündeln und zum nächsten Termin per „Run workflow“ (beide Abläufe) einspielen."
+    exit 1
+  fi
+  echo "Einspiel-Termin noch frei – diese Version ist die einzige in diesem Termin."
 fi
 
 ABSTAND_MIN=15

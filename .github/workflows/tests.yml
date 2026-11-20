@@ -76,6 +76,7 @@ jobs:
       - run: node tests/online-frage.test.mjs
       - run: node tests/aenderung-erbitten.test.mjs
       - run: node tests/spiegel-schonend.test.mjs
+      - run: node tests/mg-filter-leer.test.mjs
       - run: node tests/pruefregister-abgleich.test.mjs
       - run: node tests/stand-pruefregister.test.mjs
       - run: node tests/fehlerkatalog.test.mjs
@@ -120,6 +121,7 @@ jobs:
       # KC-CLUB-ONLINE-ECHT + KC-CLUB-SPUR-START-SERVER
       - run: node tests/online-echt.test.mjs
       - run: node tests/egress-messung.test.mjs
+      - run: node tests/schlafmodus.test.mjs
       - run: node tests/frist-erinnerung.test.mjs
       - run: node tests/kontakt-extern.test.mjs
       - run: node tests/spar-kurz.test.mjs
@@ -135,6 +137,7 @@ jobs:
       - run: node tests/kontaktkarte.test.mjs
       - run: node tests/anordnung.test.mjs
       - run: node tests/spur-online.test.mjs
+      - run: node tests/sb-region.test.mjs
       - run: node tests/anfrage-gegenvorschlag.test.mjs
       - run: node tests/netz-balken.test.mjs
       - run: node tests/muenze-gesicht.test.mjs
@@ -145,6 +148,9 @@ jobs:
       - run: node tests/lese-schreibtest.test.mjs
       - run: node tests/chat-wieder.test.mjs
       - run: node tests/zuletzt-weg.test.mjs
+      - run: node tests/spur-weg.test.mjs
+      - run: node tests/mitfahrt-laufband.test.mjs
+      - run: node tests/app-syntax.test.mjs
       - run: node tests/gastgeber-16uhr.test.mjs
       - run: node tests/spur-dienst.test.mjs
       - run: node tests/ta-protokoll.test.mjs
@@ -160,6 +166,7 @@ jobs:
       - run: node tests/film-hinweis.test.mjs
       # KC-CLUB-EINLADUNG-AN, KC-CLUB-SAMMEL-ANSAGE (2.739.0)
       - run: node tests/einladung-an.test.mjs
+      - run: node tests/sendebericht.test.mjs
       # KC-CLUB-EINLADUNG-BRIEF (2.740.0)
       - run: node tests/einladung-brief.test.mjs
       # KC-CLUB-AKTENTASCHE-FREIGEBEN, KC-CLUB-EINGANG-DURCHGEHEN, KC-CLUB-ZIELWAHL (2.741.0)
@@ -188,6 +195,7 @@ jobs:
       - run: node tests/anbieter-neues.test.mjs
       - run: node tests/inst-bilder.test.mjs
       - run: node tests/rt-terminanfrage.test.mjs
+      - run: node tests/leitung-sparsam.test.mjs
       - run: node tests/nicht-rein.test.mjs
       - run: node tests/film-kurz.test.mjs
       - run: node tests/aufgabe-gemeinsam.test.mjs
@@ -265,6 +273,10 @@ jobs:
       - run: node tests/egress-sparen.test.mjs
       # 2.977.0 KC-CLUB-GK-NACHFRAGE + KC-CLUB-GK-GESICHTER
       - run: node tests/gk-nachfrage.test.mjs
+      # KC-CLUB-AUFGABEN-STAND (19.11.2026): Startmeldung „Wie steht's mit deiner Aufgabe?“ + Abschnitt „Stand der Aufgaben“ im Protokoll
+      - run: node tests/aufgaben-stand.test.mjs
+      # KC-CLUB-CHAT-ANLAGEN-SICHTBAR (19.11.2026): Anlage-Leiste, 📎 mit Zahl in der Chat-Liste, Aufleuchten, „Alle Anlagen“ – nur Beispieldaten
+      - run: node tests/chat-anlagen.test.mjs
   # 2.725.0 KC-CLUB-RUNDGANG: Klick-Rundgang im echten Browser (Testdaten, nichts nach draußen) – Programmfehler und Schutzschild-Sperren werden rot
   rundgang:
     runs-on: ubuntu-latest
@@ -277,3 +289,4 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: node tests/rundgang.browser.mjs
       - run: node tests/bildschirmfoto-farben.browser.mjs
+      - run: node tests/anwesenheit.browser.mjs  # 19.11.2026 KC-CLUB-LEITUNG-SPARSAM: wer ist online / wer ist raus

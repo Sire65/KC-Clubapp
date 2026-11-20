@@ -33,7 +33,7 @@ assert.ok(a.includes("keepalive: true") && a.includes('body: JSON.stringify({ ac
 assert.ok(a.includes("if (!KEY || !ICH || ICH.gast || NOT.an || (!schliessen && !document.hidden) || Date.now() - ONL_WEG_AM < 2000) return;"), "nicht für Tischgäste, Notbetrieb, sichtbare App; nicht doppelt");
 assert.ok(a.includes('{ type: "presence", event: "untrack" }') && a.includes('{ type: "presence", event: "track", payload: { t: 1 } }'), "Leitung: austragen/eintragen");
 assert.ok(a.includes("if (document.hidden) return onlineWegMelden();") && a.includes("rtAnwesenheit(true);") && a.includes("setTimeout(onlinePing, 4000)"), "Zurückkommen");
-assert.ok(/async function onlinePing\(\) \{\n  if \(!KEY \|\| !ICH \|\| document\.hidden\) return;/.test(app), "Online-Ping nur bei sichtbarer App (sonst wäre „weg“ wertlos)");
+assert.ok(/async function onlinePing\(opt\) \{\n  if \(!KEY \|\| !ICH \|\| ruht\(\)\) return;/.test(app), "Online-Ping nur bei sichtbarer App (sonst wäre „weg“ wertlos)");
 
 // --- KC-CLUB-SPUR-START-SERVER: „geöffnet“ im Verlauf auch ohne Schritte vom Handy (Fund Hansi: Thomas online, Verlauf leer) ---
 const sl = server.slice(server.indexOf('case "spur_liste": {'), server.indexOf("if (!pid) {", server.indexOf('case "spur_liste": {')));

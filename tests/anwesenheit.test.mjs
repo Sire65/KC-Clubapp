@@ -14,12 +14,13 @@ const block = app.slice(app.indexOf("// KC-CLUB-ANWESENHEIT (03.11.2026"), app.i
 assert.ok(!/person_id|ICH\.|vorname|INIT\.ich/.test(block.replace(/\/\/[^\n]*/g, "")), "keine Person im Anwesenheits-Kanal");
 // Andere kommen/gehen → Server fragen (gebremst), eigener Schlüssel zählt nicht
 assert.ok(app.includes("if (keys.some((k) => k !== RT.anwKey)) anwAnders();"));
-assert.ok(/const ANW_TAKT_MS = \d+, ANW_ABSTAND_MS = 20000;/.test(app) && app.includes("Math.max(2000 + Math.random() * 4000, RT.anwLetzt + ANW_ABSTAND_MS - Date.now())"), "höchstens alle 20 s, versetzt");
-// Takt: nur mit Leitung + Anwesenheit alle 2 Min. (Regel KC-EINSPIELEN-RUHIG zählt 3 Min. – passt), sonst wie bisher
-assert.ok(app.includes("sparTakt(rtAn() && RT.anw ? ANW_TAKT_MS : PUSH_AKTIV || rtAn() ? 60000 : 15000)"));
-assert.ok(ANW() <= 180000, "Abgleich spätestens alle 3 Min.");
-function ANW() { return Number(app.match(/const ANW_TAKT_MS = (\d+)/)[1]); }
+assert.ok(/const ANW_ABSTAND_MS = 20000;/.test(app) && app.includes("Math.max(2000 + Math.random() * 4000, RT.anwLetzt + ANW_ABSTAND_MS - Date.now())"), "höchstens alle 20 s, versetzt");
+// Takt: 18.11.2026 KC-CLUB-LEITUNG-SPARSAM – mit Leitung + Anwesenheit nur noch Sicherheitsabgleich alle 10 Min., sonst wie bisher.
+// Die Regel KC-EINSPIELEN-RUHIG (3 Min.) und „online“ (150 s) hängen am Lebenszeichen (alle 60 s, sichtbare App, _sichtbar) – das bleibt.
+assert.ok(app.includes("ONL.sicher = !ONL.wartet && onlLeitungVoll();") && app.includes("if (ONL.sicher) { ONL.sicherMs = onlSicherMs(); ONL.timer = setInterval(() => onlinePing({ sicher: true }), ONL.sicherMs); return; }"), "Sicherheitsabgleich mit Leitung + Anwesenheit");
+assert.ok(app.includes("sparTakt(PUSH_AKTIV || rtAn() ? 60000 : 15000)"), "ohne Anwesenheit wie bisher");
+assert.ok(/const HERZ = \{ takt: 60,/.test(app) && app.includes("HB = setInterval(() => { if (!ruht()) herzSenden(); }, HERZ.takt * 1000);"), "Lebenszeichen alle 60 s bleibt");
 // Leitung weg → Anwesenheit weg (wieder alter Takt)
-assert.ok(app.includes("RT.ok = false; RT.anw = false; RT.ws = null;") && app.includes("RT.ws = null; RT.ok = false; RT.anw = false; try { ws?.close(); } catch {}"));
+assert.ok(app.includes("RT.ok = false; RT.anw = false; RT.anwStand = false; RT.anwKeys = new Set(); RT.ws = null;") && app.includes("RT.ws = null; RT.ok = false; RT.anw = false; RT.anwStand = false; RT.anwKeys = new Set(); try { ws?.close(); } catch {}"));
 assert.ok(fs.readFileSync(new URL("../.github/workflows/tests.yml", import.meta.url), "utf8").includes("node tests/anwesenheit.test.mjs"), "läuft in der CI");
 console.log("anwesenheit: ok");

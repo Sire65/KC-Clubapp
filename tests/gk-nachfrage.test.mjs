@@ -13,7 +13,7 @@ assert.ok(/ich\.zugang !== "mitglied" && ich\.zugang !== "aushilfe"\) return \[\
 assert.ok(/rose, \/\* KC-CLUB-ROSE \*\/ gkOffen: await pGk,/.test(srv) && /const pGk = gkOffenFuer\(ich\)\.catch\(/.test(srv), "init liefert gkOffen, Fehler stören den Start nicht");
 const fall = srv.slice(srv.indexOf('case "gk_gemeinsam_start"'), srv.indexOf('case "fl_informieren"'));
 assert.ok(/sendenGewaehlt\("club_nachricht", ziel, \["push", "email"\]/.test(fall), "Push und E-Mail");
-assert.ok(/in der Club-App liegt eine Genesungskarte für \$\{vn\} bereit\. Wenn du auch drauf sein möchtest, geh in die Club-App – du bekommst die Anfrage dann beim Start der App\./.test(fall), "Mailtext nach Hansis Vorgabe");
+assert.ok(/in der Club-App liegt eine \$\{kname\} für \$\{vn\} bereit\. Wenn du auch drauf sein möchtest, geh in die Club-App – du bekommst die Anfrage dann beim Start der App\./.test(fall), "Mailtext nach Hansis Vorgabe");
 assert.ok(!/krank|diagnose|grund/i.test(fall.slice(fall.indexOf("KC-CLUB-GK-NACHFRAGE"), fall.indexOf("`club-gk:"))), "kein Grund/keine Krankheit in Push und Mail");
 assert.ok(/leute: u\.map\(\(x: any\) => \(\{ pid: x\.person_id, name: vorname\(/.test(fall), "Liste liefert Unterzeichner für die Gesichter");
 // gkOffenFuer ausführen (Datenbank nachgebildet)
@@ -48,13 +48,15 @@ assert.ok(/leute: u\.map\(\(x: any\) => \(\{ pid: x\.person_id, name: vorname\(/
   t.gkNachfragePruefen(); assert.equal(blaetter.length, 1, "je Sitzung nur einmal");
   knoepfe.spaeter.onclick(); assert.equal(t.gknStand().k1.spaeter, 1, "Später gemerkt");
   ss.clear(); t = baue(INIT); t.gkNachfragePruefen(); assert.equal(blaetter.length, 2, "nächster Start: noch einmal");
-  knoepfe.spaeter.onclick(); ss.clear(); t = baue(INIT); t.gkNachfragePruefen(); assert.equal(blaetter.length, 2, "nach 2× Später nicht mehr");
+  knoepfe.spaeter.onclick(); ss.clear(); t = baue(INIT); t.gkNachfragePruefen(); assert.equal(blaetter.length, 3, "KC-CLUB-GK-NACHFRAGE-IMMER: auch nach 2× Später beim nächsten Öffnen wieder");
+  knoepfe.spaeter.onclick();
   ls.clear(); ss.clear(); t = baue(INIT); t.gkNachfragePruefen(); knoepfe.nein.onclick(); ss.clear(); t = baue(INIT); t.gkNachfragePruefen();
-  assert.equal(blaetter.length, 3, "Nein, danke: nie wieder");
+  assert.equal(blaetter.length, 4, "Nein, danke: nie wieder");
   ls.clear(); ss.clear(); t = baue(INIT); t.gkNachfragePruefen(); knoepfe.ja.onclick(); assert.deepEqual(geoeffnet, ["k1"], "Ja öffnet die Karte");
-  ls.clear(); ss.clear(); t = baue({ gkOffen: [] }); t.gkNachfragePruefen(); assert.equal(blaetter.length, 4, "keine offene Karte → keine Frage");
+  ls.clear(); ss.clear(); t = baue({ gkOffen: [] }); t.gkNachfragePruefen(); assert.equal(blaetter.length, 5, "keine offene Karte → keine Frage");
 }
-assert.ok(/setTimeout\(\(\) => \{ try \{ gkNachfragePruefen\(\); \} catch \{\} \}, 8000\);/.test(app), "beim Start angestoßen");
+assert.ok(/\n    setTimeout\(\(\) => \{ try \{ gkNachfragePruefen\(\); \} catch \{\} \}, 8000\);/.test(app), "beim Start angestoßen – auch wenn die App nicht auf der Startseite öffnet");
+assert.ok(/if \(document\.hidden \|\| document\.querySelector\(FENSTER_OFFEN\)\) \{ if \(versuch < GKN_VERSUCHE\)/.test(app) && /GKN_WARTEN_MS = 5000, GKN_VERSUCHE = 360;/.test(app), "KC-CLUB-GK-NACHFRAGE-IMMER: auf jeder Seite, wartet bis zu 30 Min. auf ein freies Fenster");
 assert.ok(/if \(w === "ja" && INIT\?\.gkOffen\) INIT\.gkOffen = INIT\.gkOffen\.filter/.test(app), "nach Unterschrift nicht mehr fragen");
 assert.ok(/👆 Hier tippen – mit Name und Gesicht unterschreiben/.test(app), "Knopf zum Unterschreiben");
 

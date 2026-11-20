@@ -18,7 +18,10 @@ const vb = server.slice(server.indexOf("async function vorschlaegeBehandelt("), 
 assert.ok(/status: "abgeschlossen", abgeschlossen_am: jetzt\(\), abgeschlossen_von: ich\.person_id, behandelt_in: pr\.id/.test(vb) && /\.eq\("art", "thema"\)\.eq\("status", "offen"\)/.test(vb) && /update\(\{ treffen_id: null \}\)/.test(vb), "Vorschläge behandelt / vertagt");
 assert.ok(/if \(pr\.treffen_id\) await vorschlaegeBehandelt\(ich, pr\)\.catch/.test(server), "beim Veröffentlichen, Fehler stoppen nichts");
 // Aufgaben: im Folgeprotokoll erledigt/offen, auf der Vorlage erledigte kurz
-assert.ok(/\(a\.erledigt_am \? "✓ erledigt – " : "☐ offen – "\)/.test(server) && /\.\.\.\(aufStand \? \{ kurzfassung: aufStand \} : \{\}\)/.test(server), "Folgeprotokoll");
+// KC-CLUB-AUFGABEN-STAND (19.11.2026): statt der Einmal-Kopie in der Kurzfassung ein eigener Abschnitt „Stand der Aufgaben“ (tests/aufgaben-stand.test.mjs)
+const vl = server.slice(server.indexOf('case "protokoll_vorlage": {'), server.indexOf('case "protokoll_laden": {'));
+assert.ok(!/kurzfassung: aufStand/.test(vl) && !/Aufgaben aus dem Protokoll vom/.test(vl), "Folgeprotokoll: keine Aufgaben-Kopie mehr in der Kurzfassung (sonst doppelt)");
+assert.ok(/aufgabenStand: ast \?/.test(server) && /aufgabenStandHtml\(\)/.test(app), "Folgeprotokoll: Abschnitt „Stand der Aufgaben“");
 assert.ok(/Erledigt seit dem letzten Protokoll:/.test(app), "Vorlage");
 assert.ok(/tagesordnung: \(prep\?\.tagesordnung \?\? \[\]\)\.length \?/.test(server), "Protokoll übernimmt die Büro-Tagesordnung");
 // Liste: Monate einklappbar; Jahr abschließen ohne Mitglieder-Kopien, doppelt-sicher

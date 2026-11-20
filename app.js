@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.981.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.994.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -17,9 +17,9 @@ const TEILE_LISTE = {
   szenen: { einstieg: ["jahreszeitVorschau"], sri: "sha384-mAuFkYPP7UnZNUqE/gD38eJ/THfwNSgLrJyvGLQUb5PBmCArQZ8wIH5DiImNHvlj" }, // Stufe 3b: Kopf-Szenen (Jahreszeiten, Sim-Jü, Themen) – kurz nach dem Start über szenenSpaeter
   sprache: { einstieg: ["spracheEnglisch", "spracheDeutsch"], sri: "sha384-ClAyep1YzwEniJlCEsh1IBmuGtitUSrdvupHqcasL5jZH2Dmq6pi+/IZYyAoZrem" }, // KC-CLUB-SPRACHE: Bedienung auf Englisch – nur geladen, wenn jemand 🇬🇧 wählt
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-NDuho5dgDL13uhtcTY8d0cGESAWhk+B+5qyWyvBuOxPgmADzmvY9YFCcwWM0s+kx" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
-  spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-gD3q/2L9GT3oU74JreTUDAa1vJDESZ3irJ9nuzr2VuaVzNUREU4KIH2pROKYjUNn" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
+  spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-NJ7DJt5uvf95NJ5rn9MLHZr1dmZK0XLZYNYM5Frr2Pt/wetRMf4ARaCPhe/O30Zz" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
   tischlive: { einstieg: ["tlStart", "tlStopp", "tlZeichnen", "tlPlatz", "tlRegeln"], sri: "sha384-RCmsKY+DTRfsCMRHkJVG2UJlySANNdHxnEdMps4tkL9kgf8DC5O/b1jMcwVeY3XB" }, // 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: Ton, Kamera, Bildschirm, Unterlagen zeigen am Tisch
-  buero: { einstieg: ["ersBuchOeffnen", "eblDruck", "buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-VPnvAguly/J0kMc0JZ7JWq36ymMqurBv176yx9CmcE6G2Y/5UF38fVO5bvRWOJTG" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
+  buero: { einstieg: ["ersBuchOeffnen", "eblDruck", "buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-T+Wdipj8BL+ttrwlyNfJ/PA/r5SSBU56NGAI4OrVNYCAyujH60jXQkkuHsqebIma" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
   hilfe: { einstieg: ["twFrageStart", "twOffenStart", "sucheAuf", "suSucheKnopf"], sri: "sha384-kQ/pCEoGC36q1hgJ8LDEz49OXpMoLtqkmA7pqx4XNc3viLKWIngKuwOUPaRsTYxg" }, // Stufe 5: Hilfe-Werkzeuge (Frag Twinkey, Mitglied fragen, Schnellsuche) – beim ersten Antippen
   rechner: { einstieg: ["rechnerOeffnen"], sri: "sha384-UWrOf1EIXxhsoWWwxnLDzpzALsaxzNGXgeqoLAjVvqoQ6wbFnIGxYTkQPFpiRuQ4" }, // 2.811.0 KC-CLUB-RECHNER: Tischrechner im Büro, „rechne …“ per Sprache
   tippspiel: { einstieg: ["tpStart", "tpTag", "tpMitmachen", "tpTippen", "tpZeigen"], sri: "sha384-KNPQv0SkmN1bZrgFpl3dE1Osi/OcP0KUNKuIWQeEqe/98OM34+NRwv5m+2ePuBJ6" }, // 2.971.0 KC-CLUB-TIPPSPIEL (Wunschliste #96): Bundesliga-Tippspiel
@@ -260,6 +260,123 @@ if (typeof history !== "undefined") for (const f of ["pushState", "replaceState"
 try { const u = new URL(location.href); if (u.searchParams.has("neu")) { u.searchParams.delete("neu"); history.replaceState(null, "", u.pathname + u.search + u.hash); } } catch {}
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
+// ---------- KC-CLUB-SCHLAFMODUS (20.11.2026, Wunsch Hansi: „vergessene, sichtbar offene Geräte sollen keine Abfragen mehr machen“) ----------
+// Im Hintergrund (document.hidden) ruhen die Takte schon lange. Lücke: eine unbediente, SICHTBARE App (PC ohne Bildschirmsperre, Tablet mit „Bildschirm an“)
+// fragte weiter – Startseite mit Leitung ≈ 1.100, ohne ≈ 2.500 Datenbank-Abfragen je Stunde. Jetzt: nach SCHLAF_MS ohne Eingabe schläft die App ein –
+// Bildschirmschoner (dunkel, wandert gegen Einbrennen), einmal „weg“ melden, Leitung trennen, KEINE Abfragen mehr (alle Takte prüfen ruht(), api() sperrt zusätzlich).
+// Aufwachen: Tipp/Taste auf die Schicht oder Rückkehr in den Vordergrund → genau EIN neuLaden (vorhandene Bündelung) + Leitung; man bleibt in der Ansicht.
+// Nicht einschlafen: laufender Anruf, Zuschauen (Video, Bühne, Vorführen, Mitschauen, Tisch live), lebhafter offener Chat (< 5 Min.), offener Dienst-Stempel,
+// Standort teilen, klingelnder Wecker. Je Mitglied einstellbar (⚙️ → 🎨 Darstellung → 💤 Schlafmodus): immer (Standard) / nur von–bis (über Mitternacht) / aus.
+const SCHLAF_MS = 15 * 60000, SCHLAF_CHAT_MS = 5 * 60000, SCHLAF_PRUEF_MS = 30000;
+const SCHLAF = { an: false, bedient: Date.now(), seit: 0, neu: false, uhr: null, maus: 0, grund: "" };
+function ruht() { return (typeof document !== "undefined" && !!document.hidden) || SCHLAF.an; } // gemeinsame Bedingung aller Abfrage-Takte
+const schlafWahl = () => { try { return INIT?.einstellungen?.schlafmodus || null; } catch { return null; } };
+// reine Funktion (Test): darf die App zu dieser Uhrzeit (min = Minuten seit Mitternacht) von selbst einschlafen? w = { art: "immer" | "zeit" | "aus", von, bis }
+function schlafZeitErlaubt(w, min) {
+  const art = w?.art === "zeit" || w?.art === "aus" ? w.art : "immer";
+  if (art === "aus") return false;
+  if (art === "immer") return true;
+  const hm = (s, std) => (/^([01]\d|2[0-3]):[0-5]\d$/.test(String(s)) ? +String(s).slice(0, 2) * 60 + +String(s).slice(3, 5) : std);
+  const v = hm(w.von, 1320), b = hm(w.bis, 420);
+  return v === b ? true : v < b ? min >= v && min < b : min >= v || min < b; // über Mitternacht (22:00–07:00): ab „von“ ODER vor „bis“
+}
+function schlafAusnahme() { // Gründe, NICHT einzuschlafen – man schaut zu oder es läuft etwas, das die App braucht
+  try {
+    if (RUF || document.querySelector("#anrufSchirm:not(.versteckt)")) return "anruf";
+    if (stromZuschauen()) return "zuschauen"; // Erklär-Video, Rückseite/Bühne, Vorführen (vf-an), Tisch live, laufendes Video/Ton
+    if (VF?.rolle || SS?.id) return "vorfuehren"; // Live zeigen / Mitschauen
+    if (aktuelleAnsicht === "chat" && chatId && Date.now() - Math.max(CHAT_AKTIV || 0, SCHLAF.bedient) < SCHLAF_CHAT_MS) return "chat"; // es tut sich etwas im offenen Chat
+    if (document.getElementById("dsBlatt")) return "dienst"; // Dienst-Stempel offen
+    if (ST?.eigen) return "standort"; // Standort teilen läuft
+    if (WKK?.art) return "wecker";
+    if (FENSTER?.schlaeft) return "fenster"; // App ist in einem anderen Fenster offen – hier ruht ohnehin alles
+  } catch {}
+  return "";
+}
+function schlafPruefen(jetzt = Date.now()) {
+  if (SCHLAF.an || typeof document === "undefined" || document.hidden) return false;
+  try { if (!KEY || !ICH) return false; } catch { return false; }
+  if (jetzt - SCHLAF.bedient < SCHLAF_MS) return false;
+  const d = new Date(jetzt);
+  if (!schlafZeitErlaubt(schlafWahl(), d.getHours() * 60 + d.getMinutes())) return false;
+  if (schlafAusnahme()) return false;
+  schlafEin("auto"); return true;
+}
+function schlafEin(grund) {
+  if (SCHLAF.an || typeof document === "undefined") return;
+  SCHLAF.an = true; SCHLAF.seit = Date.now(); SCHLAF.neu = false; SCHLAF.grund = grund || "auto";
+  try { if (window.KCFP) window.KCFP.ruht = true; } catch {} // Fehlerprotokoll (index.html) sammelt nur noch, sendet nach dem Aufwachen
+  try { spur("schlaf_ein", grund === "hand" ? "hand" : null); } catch {} // Zähler über die vorhandene Spur – geht mit der nächsten Sendung nach dem Aufwachen raus
+  try { onlineWegMelden(true); } catch {} // einmal „weg“ (keepalive) – die anderen sehen mich nicht mehr als online
+  try { rtTrennen(); clearTimeout(RT.zaehlen); clearTimeout(RT.hinterUhr); } catch {}
+  try { schlafSchichtZeigen(); } catch {}
+}
+function schlafJetzt() { if (schlafAusnahme() === "anruf") return melde("📞 Während eines Anrufs schläft die App nicht."); schlafEin("hand"); } // ⚙️ „💤 Jetzt schlafen legen“
+function schlafAufwachen(grund) {
+  if (!SCHLAF.an) return false;
+  SCHLAF.an = false; SCHLAF.bedient = Date.now(); clearTimeout(SCHLAF.uhr);
+  try { if (window.KCFP) window.KCFP.ruht = false; } catch {}
+  try { document.getElementById("schlafSchicht")?.remove(); document.documentElement.classList.remove("kc-schlaf"); } catch {}
+  try { lsNachSchlaf(grund); } catch {} // Liegen-Schutz: ohne PIN genügt dieser eine Tipp, mit PIN direkt die PIN-Abfrage
+  // Rückkehr aus dem Hintergrund: die vorhandenen Rückkehr-Wege (visibilitychange) laden genau einmal neu und bauen die Leitung auf
+  if (grund === "sicht" || document.hidden) return true;
+  try { if (INIT?.rtKanal && !RT.ok) { RT.warte = 1000; rtVerbinden(); } } catch {}
+  try { neuLaden(); } catch {} // genau EIN Laden (läuft schon eins, bündelt neuLaden)
+  try { if (chatId && aktuelleAnsicht === "chat") chatLaden(false); } catch {}
+  setTimeout(() => { try { if (!ruht()) onlinePing(); } catch {} }, 4000); // der Server nimmt ein „da“ erst 3 s nach „weg“ an
+  return true;
+}
+const schlafWenigBewegung = () => { try { return matchMedia("(prefers-reduced-motion: reduce)").matches; } catch { return false; } };
+function schlafStil() {
+  if (document.getElementById("schlafStil")) return;
+  const s = document.createElement("style"); s.id = "schlafStil";
+  // Die Wander-Bewegung läuft auch im Sparmodus / in der Strom-Ruhe (eigene, stärkere Regel) – nur „Bewegung reduzieren“ am Gerät stellt sie ab
+  s.textContent = `#schlafSchicht { position: fixed; inset: 0; z-index: 2147483000; background: #06080b; color: #ddd6cc; display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+  #schlafSchicht .sl-wander { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; padding: 16px; max-width: min(76vw, 440px); opacity: .85; transform: translate(var(--sl-x, 0), var(--sl-y, 0)); animation: slWandern 240s ease-in-out infinite alternate !important; animation-play-state: running !important; }
+  #schlafSchicht .sl-logo { width: 84px; height: 84px; border-radius: 22px; opacity: .75; }
+  #schlafSchicht .sl-text { font: 700 clamp(1.5rem, 6vw, 2.6rem)/1.2 system-ui, sans-serif; }
+  #schlafSchicht .sl-tipp { font-size: clamp(1rem, 3.6vw, 1.25rem); opacity: .7; }
+  #schlafSchicht .sl-uhr { font-size: .95rem; opacity: .5; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  #schlafSchicht .sl-neu { font-size: 1rem; color: #f0c660; }
+  @keyframes slWandern { 0% { transform: translate(0, 0); } 20% { transform: translate(-11vw, -20vh); } 40% { transform: translate(10vw, -9vh); } 60% { transform: translate(-8vw, 18vh); } 80% { transform: translate(11vw, 13vh); } 100% { transform: translate(0, -5vh); } }
+  @media (prefers-reduced-motion: reduce) { #schlafSchicht .sl-wander { animation: none !important; } }
+  :root.kc-schlaf body { overflow: hidden; }`;
+  document.head.appendChild(s);
+}
+function schlafSchichtZeigen() {
+  schlafStil(); document.getElementById("schlafSchicht")?.remove();
+  const d = document.createElement("div"); d.id = "schlafSchicht"; d.setAttribute("role", "button"); d.tabIndex = 0; d.setAttribute("aria-label", "Die App schläft – antippen zum Aufwecken");
+  d.innerHTML = `<div class="sl-wander"><img class="sl-logo" src="icon-192.png" alt=""><div class="sl-text">💤 Die App schläft</div><div class="sl-tipp">Hier tippen zum Aufwecken</div><div class="sl-uhr"></div><div class="sl-neu" hidden>🔔 Neues eingegangen</div></div>`;
+  d.addEventListener("pointerdown", (e) => { e.preventDefault(); e.stopPropagation(); }); // erst beim „click“ aufwachen – sonst landet der Tipp auf dem, was darunter liegt
+  d.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); schlafAufwachen("tipp"); });
+  document.body.appendChild(d); document.documentElement.classList.add("kc-schlaf");
+  schlafUhr();
+}
+function schlafUhr() { // jede volle Minute: Uhrzeit, „Neues eingegangen“, bei „Bewegung reduzieren“ alle 3 Min. neuer Platz – nur lokal, keine Abfrage
+  clearTimeout(SCHLAF.uhr); if (!SCHLAF.an) return;
+  const s = document.getElementById("schlafSchicht"); if (!s) return;
+  const j = new Date();
+  s.querySelector(".sl-uhr").textContent = `${String(j.getHours()).padStart(2, "0")}:${String(j.getMinutes()).padStart(2, "0")} Uhr`;
+  s.querySelector(".sl-neu").hidden = !SCHLAF.neu;
+  if (schlafWenigBewegung() && j.getMinutes() % 3 === 0) { const w = s.querySelector(".sl-wander"); w.style.setProperty("--sl-x", `${Math.round(Math.random() * 20 - 10)}vw`); w.style.setProperty("--sl-y", `${Math.round(Math.random() * 36 - 18)}vh`); }
+  try { if (RUF) return void schlafAufwachen("anruf"); } catch {}
+  SCHLAF.uhr = setTimeout(schlafUhr, 60000 - j.getSeconds() * 1000 - j.getMilliseconds() + 50);
+}
+if (typeof document !== "undefined" && typeof addEventListener === "function") {
+  const bedient = () => { if (!SCHLAF.an) SCHLAF.bedient = Date.now(); };
+  ["pointerdown", "wheel", "touchstart"].forEach((t) => addEventListener(t, bedient, { passive: true, capture: true }));
+  addEventListener("mousemove", () => { const j = Date.now(); if (!SCHLAF.an && j - SCHLAF.maus > 5000) { SCHLAF.maus = j; SCHLAF.bedient = j; } }, { passive: true, capture: true }); // gedrosselt
+  addEventListener("keydown", (e) => { if (!SCHLAF.an) return void (SCHLAF.bedient = Date.now()); e.preventDefault(); e.stopPropagation(); schlafAufwachen("taste"); }, { capture: true });
+  // vor allen anderen visibilitychange-Wegen eingetragen: erst aufwachen, dann laden die vorhandenen Rückkehr-Wege (ruht() ist dann schon false)
+  document.addEventListener("visibilitychange", () => { if (document.hidden) return; if (SCHLAF.an) schlafAufwachen("sicht"); else SCHLAF.bedient = Date.now(); });
+  setInterval(schlafPruefen, SCHLAF_PRUEF_MS);
+  // Push bei schlafender App: die Mitteilung zeigt der Service-Worker ohnehin; hier nur „🔔 Neues eingegangen“ – ein Anruf/Anklopfen oder das Antippen der Mitteilung weckt
+  try { navigator.serviceWorker?.addEventListener("message", (e) => { if (!SCHLAF.an) return; const m = e.data || {};
+    if (m.typ === "oeffnen") return void schlafAufwachen("push");
+    if (m.typ !== "push") return;
+    if (/ruft (per Video )?an$|holt dich in eine Konferenz|^👋/.test(String(m.titel || ""))) return void schlafAufwachen("anruf");
+    SCHLAF.neu = true; const n = document.querySelector("#schlafSchicht .sl-neu"); if (n) n.hidden = false; }); } catch {}
+}
 // 2.837.0 KC-CLUB-START-SCHNELLER (Gesamtprüfung #44 F): Datumsformat einmal bauen statt bei jedem Aufruf (neu bauen kostet je Aufruf spürbar Zeit –
 // heuteIso() lief beim Start hunderte Male). Gleiches Ergebnis, nur schneller.
 const TAG_ISO_FMT = new Intl.DateTimeFormat("sv-SE", { timeZone: TZ }), UHR_FMT_23 = new Intl.DateTimeFormat("en-GB", { timeZone: TZ, hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
@@ -1324,13 +1441,17 @@ async function pwStart(nurZaehlen) { // nurZaehlen: Begrüßung ist offen → Pi
 // KC-CLUB-PINNWAND-LIVE (0.57.0): bei geöffneter App alle PW_LIVE_MS nach neuen Zetteln schauen (Aktion pinnwand_neu markiert
 // nichts als gesehen). Jeder Zettel wird nur einmal eingeblendet (gemerkt je Gerät, reine Komfortfunktion).
 const PW_LIVE_MS = 45000, PW_GEMELDET_MAX = 200;
+// 18.11.2026 KC-CLUB-LEITUNG-SPARSAM (Wunsch Hansi „einsparen über die direkte Leitung“): mit stehender Leitung fragt der Takt nur alle 10 Min.
+// (vorher 3 Min.) – neue Zettel meldet das Signal „pinnwand“ sofort. Wurde die Leitung seitdem neu aufgebaut, gleich fragen (Lücke).
+const PW_RT_MS = 10 * 60000;
+let PW_AUFBAU = -1;
 const PW_GEMELDET = new Set((() => { try { return JSON.parse(localStorage.getItem("kc_club_pw_gemeldet") || "[]"); } catch { return []; } })());
 let PW_ZULETZT = 0; // 2.360.0 KC-CLUB-AKKU-5
 async function pwLive(takt) {
-  if (document.hidden || !ICH) return;
+  if (ruht() || !ICH) return; // KC-CLUB-SCHLAFMODUS
   // 2.360.0 KC-CLUB-AKKU-5: steht die direkte Leitung, meldet sie neue Zettel sofort – der Takt fragt dann nur alle 3 Min. nach (vorher alle 45 s)
-  if (takt === true && RT.ok && Date.now() - PW_ZULETZT < 180000) return;
-  PW_ZULETZT = Date.now();
+  if (takt === true && RT.ok && PW_AUFBAU === RT.aufbauten && Date.now() - PW_ZULETZT < PW_RT_MS) return;
+  PW_ZULETZT = Date.now(); PW_AUFBAU = RT.aufbauten;
   let r; try { r = await api("pinnwand_neu"); } catch { return; }
   const neu = (r.neu || []).filter((z) => !PW_GEMELDET.has(z.id));
   const alt = PW.neu; PW.neu = r.anzahl ?? (r.neu || []).length; if (PW.neu !== alt) pwZahl(); // 2.763.0 KC-CLUB-PINNWAND-NEU-PULS
@@ -2771,6 +2892,7 @@ const HILFE = [
   { id: "kopf_besucher", thema: "darstellung", sym: "🐿️", t: "Wer kommt im Kopf zu Besuch?", x: "Das Jahreszeiten-Bild im Kopf lebt: Im <b>Herbst</b> pustet ein Mann mit Laubbläser das Laub weg, ein <b>Eichhörnchen</b> holt sich Nüsse – und legt manchmal deinen <b>Vornamen aus Nüssen</b> – bis der <b>Laubbläser</b> kommt und ihn mit dem Laub aufwirbelt. Im <b>Winter</b> fahren eine Schneeraupe, Skifahrer, Kinder auf dem Schlitten und ein Hundeschlitten vorbei, ein Eskimo baut ein Iglu, und vom Eiszapfen fällt Eis – daraus wird dein <b>Name aus Glitzer-Eis</b>; schiebt die <b>Schneeraupe</b> darüber, zerspringt er in Stücke. Danach entsteht der Name von vorn. Kurz vor Sonnenuntergang rollt der <b>Hund</b> einen Kürbis herein, der abends mit flackernder Kerze leuchtet. Zu Festen und Lieblingsorten (Sim-Jü, Oktoberfest, Karneval, Halloween, Ostern, Karibik, Unterwasserwelt, Weltraum, Bauernhof, Kegelabend) gibt es eigene Bilder über ein <b>🎭 Thema</b>. Alles nur auf deinem Gerät. Ansehen: ⚙️ → „✨ Effekte“ → Vorschau.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.329.0" },
   { id: "deko_leiste", thema: "darstellung", sym: "🎏", t: "Wimpel, Lichterkette oder Laternen", x: "An der Leiste mit den Lämpchen oben kann eine <b>Deko</b> hängen: 🎏 Wimpel, 💡 Lichterkette oder 🏮 Laternen. <b>🔄 Automatisch</b> passt sie zur Jahreszeit (Herbst Laternen, Advent warmweiße Lichter, Oktoberfest blau-weiße Wimpel …). Wählen oder ausschalten: ⚙️ → „✨ Effekte“ → <b>„🎏 Deko an der Leiste“</b>. Sie ist ein stilles Bild und kostet keinen Akku.", zeig: () => einstiegHin("effekte", "jzDekoWahl"), seit: "2.335.0" },
   { id: "sparmodus", thema: "technik", sym: "🐢", t: "Effekte laufen nicht? Der Sparmodus", x: "Bei schwachem Netz, „Datensparen“ oder zwei langsamen Starts schaltet sich der <b>🐢 Sparmodus</b> von selbst ein: dann ruhen Effekte und das Jahreszeiten-Bild. Tippst du eine Vorschau an, sagt die App den Grund und bietet <b>„🐢 Sparmodus aus“</b> an. Einstellen: ⚙️ → „🎨 Darstellung“ → <b>„🐢 Sparmodus“</b>: Automatisch, Immer an oder Aus.", zeig: () => suEinstellung("sparWahl"), seit: "2.330.0" },
+  { id: "schlafmodus", thema: "technik", sym: "💤", t: "Der Schlafmodus: offene App schläft ein", x: "Vergessen, die App zuzumachen? Bleibt sie offen (PC, der einfach anbleibt, Tablet mit „Bildschirm an“) und niemand tippt <b>15 Minuten</b>, schläft sie ein: dunkler Bildschirm mit Club-Logo und Uhr, die App fragt nichts mehr ab – das spart Daten, Akku und die Club-Datenbank. Push-Mitteilungen kommen weiter an; kam etwas, steht dort <b>„🔔 Neues eingegangen“</b>. <b>Antippen</b> weckt sie, du bist wieder genau dort, wo du warst. Nicht während eines Anrufs, Videos, Live-Zeigens oder wenn sich im offenen Chat gerade etwas tut. Einstellen: ⚙️ → „🎨 Darstellung“ → <b>„💤 Schlafmodus“</b>: An – immer, nur zu bestimmten Zeiten (z. B. 22–7 Uhr) oder Aus; dort auch <b>„💤 Jetzt schlafen legen“</b>.", zeig: () => einstiegHin("darstellung", "schlafWahl") },
   { id: "akku", thema: "technik", sym: "🔋", t: "Akku sparen mit der Club-App", x: "Die App spart von selbst: Das Bild im Kopf malt höchstens 30 Bilder pro Sekunde, nach 45 Sekunden ohne Tippen nur noch 12 – und bei weniger als 30 % Akku immer sparsam. Im Hintergrund und auf anderen Seiten ruht es ganz. Noch sparsamer: ⚙️ → „🎨 Darstellung“ → <b>🐢 Sparmodus „An“</b> oder ⚙️ → „✨ Effekte“ → <b>„🍂 Jahreszeiten im Kopf“</b> aus. Läuft ein Erklär-Video in <b>Pause</b>, darf der Bildschirm nach 30 Sekunden wieder ausgehen; nach 10 Minuten Pause endet das Video von selbst. Eine <b>Jahreszeit-Vorschau</b> aus den Einstellungen läuft nur 2 Minuten mit voller Bildrate und endet nach 15 Minuten von selbst. Nach <b>3 Minuten ohne Tippen</b> stehen alle Bewegungen still – Kopfbild, Lichterkette, Rahmen und blinkende Knöpfe; beim ersten Tipp geht es weiter. Solange du zuschaust (Erklär-Video, Bühne, Video), läuft alles weiter.", zeig: () => suEinstellung("sparWahl"), seit: "2.855.0" },
   { id: "anpassen", thema: "darstellung", sym: "🎨", t: "Meine App nach meinem Geschmack – alle Möglichkeiten", x: "So viel kannst du einstellen: <b>🎭 Thema</b> (Farben, Kopf-Bild, Sende-Effekt und Schrift mit einem Tipp – oder „Nach Kalender“), <b>🎨 Farbdesign</b>, <b>🌗 Tag und Nacht</b>, <b>🔠 große Schrift</b> (alles unter ⚙️ → „🎨 Darstellung“); <b>🍂 Jahreszeiten-Bild</b>, <b>🎏 Deko an der Leiste</b>, <b>🪟 Kachel- und Sende-Effekt</b>, <b>✨ ruhige oder lebendige Knöpfe</b> (⚙️ → „✨ Effekte“); <b>📄 Eselsohr</b>, Kacheln und Ansicht (⚙️ → „🧩 Startseite &amp; Ansicht“). Alles zeigt dir das Erklär-Video <b>„🎨 Meine App nach meinem Geschmack“</b>.", zeig: () => rgListeAbspielen(["anpassen"]), seit: "2.344.0" },
   { id: "bw_einladung", thema: "start", sym: "🎭", t: "Twinkey lädt zur Bewegung ein", x: "Beim Öffnen der App fragt Twinkey höchstens einmal am Tag: <i>„Heute Lust auf eine Bewegungseinheit mit mir?“</i> <b>„💪 Ja“</b> führt direkt zur Bühne, <b>„⏰ Später“</b> fragt in etwa 2 Stunden wieder, <b>„🙂 Heute nicht“</b> erst morgen, <b>„🔕 Nicht mehr fragen“</b> schaltet es ab. Wieder einschalten: ⚙️ → „🧩 Startseite &amp; Ansicht“ → „🎭 Twinkey lädt zur Bewegung ein“.", zeig: () => einstiegHin("startseite", "setBwEinladung"), seit: "2.314.0" },
@@ -2828,6 +2950,7 @@ const HILFE = [
   { id: "kom_symbole", thema: "nachrichten", sym: "🔣", t: "Die Knöpfe oben in Nachrichten", x: "Oben in 💬 Nachrichten stehen die Knöpfe als Symbol mit kleinem Wort darunter: 👥 Gruppe · ⭐ Favoriten · 🔖 Gemerkt und weitere. So bleibt mehr Platz für die Chats. Lieber mit Text daneben? ⚙️ → „🧩 Startseite &amp; Ansicht“ → <b>„🔣 Knöpfe oben in Nachrichten“</b> ausschalten.", zeig: () => suEinstellung("setKomSym"), seit: "2.855.0" },
   { id: "nachrichten_blinkt", thema: "nachrichten", sym: "💬", t: "Der Knopf „Nachrichten“ unten blinkt grün, orange oder rot", x: "Hast du ungelesene Nachrichten, blinken unten in der Leiste der Knopf <b>💬 Nachrichten</b>, die Kachel <b>Nachrichten</b> und oben das Feld <b>„Neue Nachr.“</b>. Die Farbe zeigt, wie alt die älteste ungelesene ist: <b>grün</b> bis 2 Tage, <b>orange</b> am 3. und 4. Tag, danach <b>rot</b>. Die kleine Zahl hat dieselbe Farbe. Sobald du gelesen hast, hört es auf. Ist ⚙️ → „✨ Effekte“ → „✨ Animierte Knöpfe“ aus, gibt es statt Blinken nur einen farbigen Rand.", zeig: () => zeige("nachrichten"), seit: "2.855.0" },
   { id: "grussformel", thema: "nachrichten", sym: "✍️", t: "Grußformel mit einem Tipp einsetzen", x: "Schnell gegrüßt: Im Chat über dem Schreibfeld in der kleinen Zeile auf <b>✍️</b> tippen – darunter stehen <b>„Danke und Gruß“</b>, <b>„Liebe Grüße“</b>, <b>„Bis bald mal wieder“</b> und <b>„Freundliche Grüße“</b>, jeweils mit deinem Vornamen. Antippen setzt die Formel an der Schreibstelle in einer eigenen Zeile ein; die Tastatur bleibt offen.", zeig: () => zeige("nachrichten"), seit: "2.855.0" },
+  { id: "chat_anlagen", thema: "nachrichten", sym: "📎", t: "Anlagen im Chat nicht übersehen", x: "Hängt an einer Nachricht eine Datei (z. B. ein PDF) oder mehrere Fotos, steht darunter ein umrandeter Kasten <b>„📎 2 Anlagen: …“</b> – antippen öffnet die Datei. Ein Punkt <b>•</b> heißt: noch nicht geöffnet. Bei neuen Nachrichten wackelt die 📎 kurz. In der Chat-Übersicht zeigt <b>„📎2“</b> neben dem Namen, wie viele Anlagen anderer du dort noch nicht geöffnet hast. Alle Fotos und Dateien eines Chats auf einen Blick: im Chat oben <b>⋮</b> → <b>„📎 Alle Anlagen“</b> – „↪“ springt zur Nachricht. Gemerkt wird das nur auf diesem Gerät.", zeig: () => zeige("nachrichten"), seit: "2.986.0" }, // KC-CLUB-CHAT-ANLAGEN-SICHTBAR
   { id: "online_namen", thema: "club", sym: "🟢", t: "Wer online ist, steht oben mit Namen", x: "Im Feld <b>Mitglieder</b> oben im Kopf stehen unter der Zahl die Vornamen derer, die gerade online sind – bei mehreren als Laufschrift (Berühren hält sie an). <b>Einen Namen antippen öffnet sofort den Chat</b> mit dieser Person. Das Feld selbst öffnet die Mitglieder-Liste mit allen, die gerade online sind. Bist du selbst unsichtbar, stehen dort keine Namen.", zeig: () => zeige("start"), seit: "2.855.0" },
   { id: "app_pin", thema: "privat", sym: "🔢", t: "Sichtschutz und App-PIN", x: "Liegt die App <b>15 Minuten</b> unbenutzt offen, wird sie verdeckt – antippen, und es geht weiter. Möchtest du mehr Schutz: ⚙️ → „🔒 Privatsphäre“ → <b>„🔢 App-PIN (freiwillig)“</b> → Einrichten (4 Ziffern). Die PIN bleibt nur auf diesem Gerät. <b>Vergessen?</b> Im Sperrbild „📧 Link per E-Mail schicken“ und die App über deinen persönlichen Link neu öffnen – dann ist die PIN gelöscht.", zeig: () => suEinstellung("pinKnopf"), seit: "2.855.0" },
   { id: "link_vorsicht", thema: "privat", sym: "⚠️", t: "„⚠️ Vorsicht“ an einem Link", x: "Sieht ein Link in einer Nachricht verdächtig aus – z. B. eine falsche Schreibweise wie „paypa1“, eine Zahlen-Adresse, ein Kurz-Link oder eine Seite, die nach dem Passwort fragt –, steht daneben <b>⚠️ Vorsicht:</b> mit dem Grund. Dann den Link lieber nicht öffnen und beim Absender nachfragen.", seit: "2.855.0" },
@@ -2990,6 +3113,7 @@ const SB_EINST = [
   { k: "ferien", re: /ferien|schulferien|bundesl/, klappe: "startseite", id: "setFerien", t: "Schulferien" }, // 2.484.0 KC-CLUB-FERIEN
   { k: "ansicht", re: /mitglieder ?ansicht|ansicht der mitglieder/, klappe: "startseite", id: "mgAnsichtWahl", t: "Mitglieder-Ansicht" },
   { k: "ruhezeit", re: /ruhe ?zeit|nachtruhe|nicht stören/, klappe: "benachrichtigung", id: "ruheVon", t: "Ruhezeit" },
+  { k: "schlafmodus", re: /schlaf ?modus|bildschirmschoner|einschlafen|schlafen legen/, klappe: "darstellung", id: "schlafWahl", t: "Schlafmodus" }, // KC-CLUB-SCHLAFMODUS
   { k: "vorlesen", re: /vorlesen|vorlese/, klappe: "ansagen", id: "setVorlesenZeile", t: "Vorlesen" },
   { k: "tipps", re: /tipps?\b|tagestipp/, klappe: "ansagen", id: "setTipps", t: "Tipps" },
   { k: "spiele", re: /spiel/, klappe: "privat", id: "setSpiele", t: "Spiele" },
@@ -4693,7 +4817,7 @@ function ansFolgen(wer, km) {
   if (st.stufe < 0) return (ANS.st = null);
   st.timer = setInterval(async () => {
     if (!ansAn("standort") || Date.now() - start > 3 * 3600000) { clearInterval(st.timer); return; }
-    if (document.hidden) return;
+    if (ruht()) return;
     const e = await ansEntfernung(wer); if (!e) return; if (e.weg) { clearInterval(st.timer); return; }
     const neu = ANS_STUFEN.findIndex((s) => e.km >= s), stufe = neu < 0 ? ANS_STUFEN.length : neu;
     if (stufe <= st.stufe) return;
@@ -4818,13 +4942,16 @@ function zweiBrowserMelden(a) {
   f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => { f.remove(); merken(b.dataset.w === "anderes" ? "anderes" : String(Date.now() + 3600000));
     if (b.dataset.w === "anderes") melde("👍 Alles klar – dafür frage ich nicht mehr."); }));
 }
-async function onlinePing() {
-  if (!KEY || !ICH || document.hidden) return;
+async function onlinePing(opt) {
+  if (!KEY || !ICH || ruht()) return; // KC-CLUB-SCHLAFMODUS
+  // 18.11.2026 KC-CLUB-LEITUNG-SPARSAM: beim 10-Min.-Sicherheitsabgleich auslassen, wenn laut Anwesenheit außer diesem Gerät niemand da ist
+  // und die Liste ohnehin leer ist (nicht bei Start, Rückkehr, Signal) – der leere Stand gilt dann als bestätigt.
+  if (opt?.sicher === true && anwNurIch() && !ONL.liste.length && !ONL.wartet) { ONL.stand = ONL.echt = Date.now(); return; }
   try {
     const r = await api("online", { fenster: fensterKennung(), ...installStandMelden() }); // 2.859.0 KC-CLUB-INSTALL-STAND
     if (r.fensterAnders) zweiBrowserMelden(r.fensterAnders); // KC-CLUB-ZWEI-BROWSER
     const vorher = [...ONL.ids].sort().join(); // KC-CLUB-ONLINE-EINE-QUELLE (2.24.18)
-    ONL.zeigen = r.zeigen; ONL.liste = r.online || []; ONL.ids = new Set(ONL.liste.map((x) => x.person_id)); ONL.stand = Date.now();
+    ONL.zeigen = r.zeigen; ONL.liste = r.online || []; ONL.ids = new Set(ONL.liste.map((x) => x.person_id)); ONL.stand = ONL.echt = Date.now();
     ONL.gs = r.gespraeche || []; ONL.gsAnonym = r.gespraecheAnonym || 0; // KC-CLUB-GESPRAECHE
     dazuFrage(r.dazukommen); gsMeineStand(r.dazuMeine);
     if (vorher !== [...ONL.ids].sort().join() && aktuelleAnsicht === "mitglieder" && MITGLIEDER) { try { mitgliederZeichnen(); } catch {} }
@@ -4870,6 +4997,7 @@ async function onlinePing() {
       else if (a.status === "spaeter" && a.antwort) { melde(`👋 ${a.an.vorname}: „${a.antwort}“`); try { navigator.vibrate?.(60); } catch {} }
       else if (a.status === "spaeter") melde(`⏳ ${a.an.vorname} hat gerade keine Zeit – schreib eine Nachricht, sie/er meldet sich.`);
     }
+    if (ONL.sicher && ONL.sicherMs !== onlSicherMs()) onlineTakt(); // 19.11.2026 KC-CLUB-LEITUNG-SPARSAM: jemand ohne Leitung online → 3-Min.-Takt (und zurück)
     ONL.fehlerFolge = 0;
   } catch (e) {
     // KC-CLUB-ONLINE-JEDE-ANFRAGE (09.11.2026): Online-Meldung scheitert zweimal hintereinander → einmal je Sitzung ins Fehlerprotokoll (vorher völlig still)
@@ -4884,18 +5012,26 @@ async function onlinePing() {
 const RT_URL = "wss://ptblnpiroqftcvlsrhac.supabase.co/realtime/v1/websocket", RT_KEY = "sb_publishable_SqXIeGN-clcZ4gjmpLdSww_4DLfyy24";
 const RT_HERZ_MS = 25000, RT_WARTE_MAX_MS = 60000;
 const RT = { ws: null, ok: false, ref: 0, herz: null, neu: null, warte: 1000, kanal: null, zu: false, zaehlen: null, signale: 0,
-  anw: false, anwKey: "g" + Math.random().toString(36).slice(2, 12), anwUhr: null, anwLetzt: 0 }; // KC-CLUB-ANWESENHEIT
+  anw: false, anwKey: "g" + Math.random().toString(36).slice(2, 12), anwUhr: null, anwLetzt: 0, // KC-CLUB-ANWESENHEIT
+  aufbauten: 0, anwKeys: new Set(), anwStand: false }; // 18.11.2026 KC-CLUB-LEITUNG-SPARSAM: Zahl der (Neu-)Aufbauten · wer laut Anwesenheit da ist (nur Zufallskennungen)
 // KC-CLUB-ANWESENHEIT (03.11.2026, Wunsch Hansi): jedes Gerät meldet sich zusätzlich anonym im gemeinsamen Anwesenheits-Kanal (init.rtClub,
 // Supabase Presence) – nur Zufallskennung, kein Name. Kommt ein anderes Gerät dazu oder geht, fragt die App gleich beim Server nach, wer da ist
 // (der Server entscheidet die Sichtbarkeit). Darum genügt der regelmäßige Abgleich dann alle 2 statt jede Minute (spart Datenbank-Abfragen).
 // Höchstens ein Extra-Abgleich je 20 s und zufällig 2–6 s versetzt, damit nicht alle Geräte gleichzeitig fragen.
-const ANW_TAKT_MS = 90000, ANW_ABSTAND_MS = 20000; // KC-CLUB-ONLINE-JEDE-ANFRAGE (09.11.2026): 90 s statt 120 s – der Server zeigt „online“ nur 150 s nach der letzten Meldung
+// 18.11.2026 KC-CLUB-LEITUNG-SPARSAM: der feste Anwesenheits-Takt (zuletzt 90 s) entfällt – mit Leitung + Anwesenheit gilt der Sicherheitsabgleich
+// alle 10 Min. (ONL_SICHER_MS bei onlineTakt); „online“ beim Server hält das Lebenszeichen (60 s) frisch, nicht dieser Abgleich.
+const ANW_ABSTAND_MS = 20000;
 const ONLINE_TAKT_MAX_MS = 90000; // nie seltener als alle 90 s melden, auch im Sparmodus (vorher bis zu 6 Min. → Mitglied verschwand nach 2½ Min.)
 function anwAnders() {
   if (RT.anwUhr) return;
   const warte = Math.max(2000 + Math.random() * 4000, RT.anwLetzt + ANW_ABSTAND_MS - Date.now());
   RT.anwUhr = setTimeout(() => { RT.anwUhr = null; RT.anwLetzt = Date.now(); onlinePing(); }, warte);
 }
+// 19.11.2026 KC-CLUB-LEITUNG-SPARSAM (Hansi: „wird sichergestellt, dass die Anzeige wer ist online und wer ist raus funktioniert?“): geht ein Gerät
+// OHNE „weg“ (Absturz, Netz weg, Akku leer), zeigt der Server es noch bis ONLINE_SEK (150 s) nach seiner letzten Meldung als online. Darum nach
+// jedem Abgang zusätzlich ein Nachlauf-Abgleich nach 150 + 15 s – dann ist es sicher aus der Liste. Immer nur ein Nachlauf (neu stellen, nicht stapeln).
+const ANW_NACHLAUF_MS = 165000;
+function anwNachlauf() { clearTimeout(RT.nachlauf); RT.nachlauf = setTimeout(() => { RT.nachlauf = null; onlinePing(); }, ANW_NACHLAUF_MS); }
 const rtAn = () => RT.ok;
 function rtVerbinden() {
   const kanal = INIT?.rtKanal;
@@ -4916,19 +5052,24 @@ function rtVerbinden() {
     let d; try { d = JSON.parse(e.data); } catch { return; }
     RT.letzte = Date.now(); // jede Antwort (auch auf den Herzschlag) zeigt: Leitung lebt
     if (d.topic === "phoenix" && d.event === "phx_reply" && d.ref === RTM.herzRef && RTM.herzAb) { if (!document.hidden) rtMessWert("rtt", performance.now() - RTM.herzAb); RTM.herzAb = 0; } // 2.863.0
-    if (d.event === "phx_reply" && d.topic === "realtime:" + kanal && d.payload?.status === "ok" && !RT.ok) { if (RTM.aufbauAb && !document.hidden) rtMessWert("aufbau", performance.now() - RTM.aufbauAb); RTM.aufbauAb = 0; RT.ok = true; RT.warte = 1000; onlineTakt(); rtNachholen(); rtLedZeigen(); }
+    if (d.event === "phx_reply" && d.topic === "realtime:" + kanal && d.payload?.status === "ok" && !RT.ok) { if (RTM.aufbauAb && !document.hidden) rtMessWert("aufbau", performance.now() - RTM.aufbauAb); RTM.aufbauAb = 0; RT.ok = true; RT.aufbauten++; RT.warte = 1000; onlineTakt(); rtNachholen(); rtLedZeigen(); }
     else if (d.event === "broadcast" && d.payload?.event === "neu") rtSignal(d.payload.payload || {});
     else if (INIT?.rtClub && d.topic === "realtime:" + INIT.rtClub) { // KC-CLUB-ANWESENHEIT
       if (d.event === "phx_reply" && d.payload?.status === "ok" && !RT.anw) {
         RT.anw = true; senden({ topic: d.topic, event: "presence", payload: { type: "presence", event: "track", payload: { t: 1 } } }); onlineTakt();
+      } else if (d.event === "presence_state") { // 18.11.2026 KC-CLUB-LEITUNG-SPARSAM: wer ist gerade im Anwesenheits-Kanal (nur Kennungen zählen)
+        RT.anwKeys = new Set(Object.keys(d.payload || {})); RT.anwStand = true;
       } else if (d.event === "presence_diff") {
         const keys = [...Object.keys(d.payload?.joins || {}), ...Object.keys(d.payload?.leaves || {})];
+        for (const k of Object.keys(d.payload?.leaves || {})) RT.anwKeys.delete(k); // erst gehen, dann kommen (neu eintragen = gehen + kommen)
+        for (const k of Object.keys(d.payload?.joins || {})) RT.anwKeys.add(k);
         if (keys.some((k) => k !== RT.anwKey)) anwAnders();
+        if (Object.keys(d.payload?.leaves || {}).some((k) => k !== RT.anwKey)) anwNachlauf(); // KC-CLUB-LEITUNG-SPARSAM: Abgang ohne „weg“ sicher ausblenden
       }
     }
   };
   ws.onclose = () => { if (RT.ws !== ws) return; const war = RT.ok; if (war && !RT.zu && !document.hidden) RTM.abbrueche++; // 2.863.0 KC-CLUB-LEITUNG-MESSUNG
-    RT.ok = false; RT.anw = false; RT.ws = null; clearInterval(RT.herz); if (war) onlineTakt(); if (!RT.zu) rtSpaeter(); rtLedZeigen(); };
+    RT.ok = false; RT.anw = false; RT.anwStand = false; RT.anwKeys = new Set(); RT.ws = null; clearInterval(RT.herz); if (war) onlineTakt(); if (!RT.zu) rtSpaeter(); rtLedZeigen(); };
   ws.onerror = () => {};
 }
 function rtSpaeter() { clearTimeout(RT.neu); RT.naechster = Date.now() + RT.warte; RT.neu = setTimeout(rtVerbinden, RT.warte); RT.warte = Math.min(RT.warte * 2, RT_WARTE_MAX_MS); }
@@ -4953,7 +5094,7 @@ function rtLedZeigen() {
   const [farbe, text] = rtZustand();
   led.className = "led led-rt " + farbe; led.title = text; led.setAttribute("aria-label", text);
 }
-setInterval(() => { if (!document.hidden) { rtLedZeigen(); rtMessTakt(); } }, 3000); // 2.360.0: im Hintergrund nichts malen
+setInterval(() => { if (!ruht()) { rtLedZeigen(); rtMessTakt(); } }, 3000); // 2.360.0: im Hintergrund nichts malen
 // ---------- 2.863.0 KC-CLUB-LEITUNG-MESSUNG (Wunsch Hansi 05.11.2026 „prüfe, ob alles besser läuft mit der direkten Leitung – Informationen sollen schneller kommen“) ----------
 // Jedes Gerät misst nur Zahlen, nie Inhalte, nur solange die App sichtbar ist: Anteil der Zeit, in der die Leitung stand; Antwortzeit der Leitung
 // (Herzschlag hin und zurück – beide Zeiten vom Gerät, kein Uhrenproblem); Dauer des Aufbaus; Abbrüche einer stehenden Leitung; empfangene Signale.
@@ -5094,7 +5235,8 @@ function rtBlatt() {
   f.querySelector("[data-zu]").onclick = zu;
   f.querySelector("[data-neu]").onclick = () => { RT.warte = 1000; rtTrennen(); rtVerbinden(); zu(); setTimeout(rtLedZeigen, 1500); };
 }
-function rtTrennen() { RT.zu = true; clearTimeout(RT.neu); clearInterval(RT.herz); const ws = RT.ws; RT.ws = null; RT.ok = false; RT.anw = false; try { ws?.close(); } catch {} }
+function rtTrennen() { RT.zu = true; clearTimeout(RT.neu); clearInterval(RT.herz); const ws = RT.ws; RT.ws = null; RT.ok = false; RT.anw = false; RT.anwStand = false; RT.anwKeys = new Set(); try { ws?.close(); } catch {}
+  if (ONL.timer && ONL.sicher) onlineTakt(); } // 18.11.2026 KC-CLUB-LEITUNG-SPARSAM: ohne Leitung sofort wieder der alte Takt (Notweg), nicht der 10-Min.-Sicherheitsabgleich (nur dann neu stellen – sonst schöbe jeder Verbindungsversuch den Takt hinaus)
 // nach dem (Wieder-)Verbinden einmal nachsehen, damit in der Lücke nichts verloren geht
 function rtNachholen() { onlinePing(); dtSignalLaden(); if (typeof spNachsehen === "function" && typeof SP !== "undefined" && SP?.offen) spNachsehen(true); /* KC-CLUB-RT-DIENST, KC-CLUB-RT-SPIEL-SPARSAM: Lücke nachholen */ if (chatId && aktuelleAnsicht === "chat" && !chatTakt.laeuft) { chatTakt.laeuft = true; chatLaden(false).finally(() => { chatTakt.laeuft = false; }); } }
 function rtSignal(s) {
@@ -5105,13 +5247,18 @@ function rtSignal(s) {
   // KC-CLUB-RT-SPARBREMSE + weitere Bereiche (2.230.0): Alarm sofort (ohne Pause), Gelesen-Haken, Online, Pinnwand, Termine, Abstimmungen
   if (s.art === "alarm") { neuLaden(); return; } // Notfall-Meldung → init → alarmPruefen() zeigt sie groß in Rot
   if (s.art === "gelesen") { if (s.thread && s.thread === chatId && aktuelleAnsicht === "chat") chatSignalLaden(true); return; } // 2.596.0: gebündelt
-  if (s.art === "online") { onlinePing(); return; }
+  // 19.11.2026 KC-CLUB-LEITUNG-SPARSAM (Wunsch Hansi „so viel wie möglich über die direkte Leitung“): „online“ (neue Sitzung eines Mitglieds) meldet
+  // bei stehender Anwesenheit meist schon das Kommen im Anwesenheits-Kanal – dann zusammen gebremst (≤ 1×/20 s) statt doppelt; nie ganz ignoriert
+  // (Mitglieder ohne Leitung stehen nicht in der Anwesenheit). „gespraech“ (Telefonat angenommen/beendet) und „sichtbar“ (Online-Anzeige/Inkognito/
+  // Anklopfen geändert) kommen vom Club-Server an alle in der App – ebenfalls gebremst abgleichen.
+  if (s.art === "online") { if (onlLeitungVoll()) anwAnders(); else onlinePing(); return; }
+  if (s.art === "gespraech" || s.art === "sichtbar") { anwAnders(); return; }
   if (s.art === "livetermin") { ltHolen(); return; } // KC-CLUB-LIVE-TERMIN (2.231.0)
   if (s.art === "terminanfrage") { clearTimeout(RT.ta); RT.ta = setTimeout(taSignal, 600 + Math.random() * 1400); return; } // 2.874.0 KC-CLUB-RT-TERMINANFRAGE
   if (s.art === "eingang") { eingangNeu(); return; } // KC-CLUB-EINGANG-SOFORT (2.741.0): Unterlagen im Eingangskorb – sofort fragen
   if (s.art === "pinnwand") { clearTimeout(RT.pw); RT.pw = setTimeout(() => { pwLive(); if (aktuelleAnsicht === "pinnwand") pwLaden(); }, 800); return; }
   if (s.art === "termin" || s.art === "abstimmung") {
-    clearTimeout(RT.zaehlen); RT.zaehlen = setTimeout(() => { if (!document.hidden) neuLaden(); }, 1500); // Zusagen/offene Abstimmungen auf der Startseite
+    clearTimeout(RT.zaehlen); RT.zaehlen = setTimeout(() => { if (!ruht()) neuLaden(); }, 1500); // Zusagen/offene Abstimmungen auf der Startseite
     if (s.art === "abstimmung" && aktuelleAnsicht === "vorschlaege") { clearTimeout(RT.vs); RT.vs = setTimeout(vorschlaegeLaden, 800); }
     return;
   }
@@ -5131,7 +5278,7 @@ function rtSignal(s) {
   // 2.594.0 KC-CLUB-CHAT-RUHE (Fund Hansi 22.10.: „Steven und ich schreiben schnell – das verträgt die App nicht“; Server-Messung: Aufrufe bis 24 s):
   // jede neue Nachricht lud bei JEDEM, der den Chat offen hat, zusätzlich nach 1,5 s die ganze Startseite (init, 37–72 Abfragen). Ist die
   // Nachricht aus dem gerade offenen Chat, ist das unnötig – der Chat lädt ohnehin; die Startseite wird beim nächsten Takt nach dem Chat frisch.
-  if (s.art === "chat" && !(s.thread && s.thread === chatId && aktuelleAnsicht === "chat")) { clearTimeout(RT.zaehlen); RT.zaehlen = setTimeout(() => { if (!document.hidden) neuLaden(); }, 1500); } // Zähler/Kachel frisch (mehrere Signale = einmal)
+  if (s.art === "chat" && !(s.thread && s.thread === chatId && aktuelleAnsicht === "chat")) { clearTimeout(RT.zaehlen); RT.zaehlen = setTimeout(() => { if (!ruht()) neuLaden(); }, 1500); } // Zähler/Kachel frisch (mehrere Signale = einmal)
   else if (s.art === "chat") NEU_NACH_CHAT = true;
 }
 document.addEventListener("visibilitychange", () => { if (!document.hidden && INIT?.rtKanal && !RT.ok) { RT.warte = 1000; rtVerbinden(); } });
@@ -5197,12 +5344,30 @@ document.addEventListener("visibilitychange", () => {
   if (document.hidden) RT.hinterUhr = setTimeout(() => { if (document.hidden && RT.ws) rtTrennen(); }, 60000);
 });
 // Takt: normal 60 s; während ich auf eine Antwort warte alle 4 s (höchstens 3 Minuten)
+// 18.11.2026 KC-CLUB-LEITUNG-SPARSAM (Wunsch Hansi „einsparen über die direkte Leitung“): stehen Leitung UND Anwesenheit, meldet jede Änderung sich
+// selbst (Anwesenheit kommt/geht → anwAnders, Signale klopfen/anruf/spiel/vorfuehren/mitschauen/online) – der regelmäßige Abgleich ist dann nur
+// noch eine Sicherheit alle 10 Min. Sofort weiterhin: Start, Rückkehr in den Vordergrund, Neuaufbau der Leitung, jedes Signal. Warten auf eine
+// Anklopf-Antwort mit Leitung alle 15 s (die Antwort kommt als Signal „klopfen“), ohne Leitung alle 4 s. Ohne Leitung bleibt alles wie bisher (Notweg).
+// „Online“ bleibt trotzdem genau: das Lebenszeichen (alle 60 s, sichtbare App) hält zuletzt_gesehen/online_seit beim Server frisch (ONLINE_SEK 150 s).
+const ONL_SICHER_MS = 10 * 60000, ONL_WARTET_RT_MS = 15000;
+const onlLeitungVoll = () => rtAn() && RT.anw;
+const anwNurIch = () => RT.anw && RT.anwStand && ![...RT.anwKeys].some((k) => k !== RT.anwKey); // laut Anwesenheit ist sonst niemand da
+// 19.11.2026: Mitglieder ohne Leitung (alte App, kein WebSocket) stehen nicht in der Anwesenheit – ihr Kommen/Gehen meldet niemand. Zeigt die Online-Liste
+// mehr Personen, als fremde Geräte in der Anwesenheit sind (oder ist der Anwesenheits-Stand noch unbekannt), Sicherheitsabgleich alle 3 statt 10 Min.
+const ONL_SICHER_OHNE_MS = 3 * 60000;
+const anwFremde = () => [...RT.anwKeys].filter((k) => k !== RT.anwKey).length;
+const onlSicherMs = () => RT.anwStand && ONL.liste.length <= anwFremde() ? ONL_SICHER_MS : ONL_SICHER_OHNE_MS;
 function onlineTakt() {
-  clearInterval(ONL.timer);
+  clearInterval(ONL.timer); ONL.sicher = !ONL.wartet && onlLeitungVoll();
+  if (ONL.sicher) { ONL.sicherMs = onlSicherMs(); ONL.timer = setInterval(() => onlinePing({ sicher: true }), ONL.sicherMs); return; } // KC-CLUB-LEITUNG-SPARSAM
   // KC-CLUB-ANRUF-TAKT (0.80.0): ohne Push erfährt die App von einem Anruf nur über diesen Takt – ein Anruf klingelt 45 s,
   // darum dann alle 15 s nachsehen (mit Push weckt der Push die offene App sofort, 60 s reichen).
-  ONL.timer = setInterval(onlinePing, ONL.wartet ? 4000 : Math.min(ONLINE_TAKT_MAX_MS, sparTakt(rtAn() && RT.anw ? ANW_TAKT_MS : PUSH_AKTIV || rtAn() ? 60000 : 15000))); // KC-CLUB-SPARMODUS: seltener · KC-CLUB-REALTIME: Leitung steht → wie mit Push · KC-CLUB-ANWESENHEIT: Anwesenheit steht → alle 2 Min.
+  ONL.timer = setInterval(onlinePing, ONL.wartet ? (rtAn() ? ONL_WARTET_RT_MS : 4000) : Math.min(ONLINE_TAKT_MAX_MS, sparTakt(PUSH_AKTIV || rtAn() ? 60000 : 15000))); // KC-CLUB-SPARMODUS: seltener · KC-CLUB-REALTIME: Leitung steht → wie mit Push
 }
+// KC-CLUB-LEITUNG-SPARSAM: die Anzeigen werten einen Online-Stand nur 3 Min. als aktuell (ONL.stand). Solange Leitung und Anwesenheit stehen und
+// die Leitung antwortet, ist die Liste bestätigt (jede Änderung hätte einen Abgleich ausgelöst) – dann jede Minute als bestätigt markieren,
+// höchstens bis 90 s nach dem fälligen Sicherheitsabgleich (ONL.echt = letzte echte Antwort). Bricht die Leitung ab, veraltet der Stand wie bisher.
+setInterval(() => { try { if (onlLeitungVoll() && ONL.echt && Date.now() - ONL.echt < (ONL.sicherMs || ONL_SICHER_MS) + 90000 && Date.now() - (RT.letzte || 0) < RT_STILL_MS) ONL.stand = Date.now(); } catch {} }, 60000);
 document.addEventListener("visibilitychange", () => { // KC-CLUB-WER-IST-DA (2.454.0): nach ≥ 10 Min. im Hintergrund wieder „wer ist da“ – vor dem Ping
   if (document.hidden) WER_DA.weg = Date.now(); else if (WER_DA.weg && Date.now() - WER_DA.weg >= ANSAGE_PAUSE_MS) WER_DA.faellig = true;
 });
@@ -5790,7 +5955,7 @@ let CHAT_AKTIV = 0;
 let HAKEN_SEIT = 0; // 2.367.0 KC-CLUB-HAKEN-SCHNELL
 function chatTakt() {
   ONL.takt++;
-  if (chatTakt.laeuft || document.hidden) return;
+  if (chatTakt.laeuft || ruht()) return; // KC-CLUB-SCHLAFMODUS
   const jemandDa = (CHAT?.teilnehmer || []).some((t) => t.person_id !== ICH?.person_id && ONL.ids.has(t.person_id));
   const frisch = Date.now() - CHAT_AKTIV < 90000, ruhig = rtAn() ? 30 : PUSH_AKTIV ? 10 : 6; // KC-CLUB-REALTIME: neue Nachrichten melden sich selbst – nur noch alle 60 s zur Sicherheit
   // 2.367.0 KC-CLUB-HAKEN-SCHNELL (Fund Hansi: Express an Steven war nach 20 s auf dessen Handy, die zwei grauen Haken kamen bei Hansi erst viel später):
@@ -6110,6 +6275,7 @@ function tippGeraeusche(entwurf) {
   for (let i = 0; i < n; i++) tippAnschlag(w, i * abstand + Math.random() * abstand * .4);
   if (w === "schreibmaschine" && (TT.zeile += n) >= 40) { TT.zeile = 0; tippGlocke(n * abstand + .1); }
 }
+const stiftWort = (t) => `<span class="stift-wort">${[...t].map((z, i) => `<i style="--n:${i}">${z === " " ? "&nbsp;" : esc(z)}</i>`).join("")}</span>`; // KC-CLUB-STIFT-BUCHSTABEN
 function tipptZeigen(namen, entwurf = [], sprechen = [], diktiert = []) {
   const e = $("tipptAnzeige"); if (!e) return;
   tippGeraeusche(entwurf);
@@ -6122,7 +6288,9 @@ function tipptZeigen(namen, entwurf = [], sprechen = [], diktiert = []) {
   const entwuerfe = entwurf.map((x) => `<div class="entwurf">✍️ <b>${esc(x.name)}:</b> ${esc(kurz(x.text))}</div>`).join("");
   const wer = namen.length === 1 ? namen[0] : namen.length === 2 ? `${namen[0]} und ${namen[1]}` : `${namen.length} Personen`;
   // 1.21.5: nur neu zeichnen, wenn sich etwas geändert hat – sonst fängt die Punkte-Welle bei jedem Takt (2 s) von vorn an
-  const html = `<div class="zeile"><span class="punkte3"><i></i><i></i><i></i></span><span><span class="stift-schreibt" aria-hidden="true">✏️</span> ${esc(wer)} ${namen.length > 1 ? "schreiben" : "schreibt"} …</span></div>${entwuerfe}${sp}`;
+  // 2.992.0 KC-CLUB-STIFT-BUCHSTABEN (Wunschliste #100, Antwort Hansi „A“): der Stift schreibt „schreibt …“ Buchstabe für Buchstabe hin
+  // und wandert dabei mit – nur Zier, kein echter Text (Chats bleiben privat). Reine CSS-Animation, kein Takt.
+  const html = `<div class="zeile"><span class="punkte3"><i></i><i></i><i></i></span><span>${esc(wer)} ${stiftWort(namen.length > 1 ? "schreiben …" : "schreibt …")}<span class="stift-schreibt" aria-hidden="true">✏️</span></span></div>${entwuerfe}${sp}`;
   if (e.dataset.stand !== html) { e.innerHTML = html; e.dataset.stand = html; }
   e.classList.remove("versteckt");
 }
@@ -6692,6 +6860,7 @@ async function anrufPruefen() {
 // Es ruft jemand an (aus dem Online-Takt oder aus dem Push-Link)
 async function anrufEingehend(id) {
   if (RUF) return;
+  schlafAufwachen("anruf"); // KC-CLUB-SCHLAFMODUS: das Anruf-Fenster liegt nie unter dem Bildschirmschoner
   try {
     const r = await api("anruf_status", { id });
     if (r.ichRufe || r.status !== "klingelt") { if (r.status === "verpasst") melde(`Verpasster Anruf von ${r.gegenueber.vorname}.`); return; }
@@ -6909,7 +7078,7 @@ async function herzSenden() {
 }
 function herzStarten() {
   if (HB) return;
-  HB = setInterval(() => { if (document.visibilityState !== "hidden") herzSenden(); }, HERZ.takt * 1000);
+  HB = setInterval(() => { if (!ruht()) herzSenden(); }, HERZ.takt * 1000); // KC-CLUB-SCHLAFMODUS
   setTimeout(herzSenden, 5000);
   document.addEventListener("visibilitychange", () => { if (!document.hidden) herzSenden(); });
 }
@@ -7971,6 +8140,10 @@ window.addEventListener("unhandledrejection", (ev) => { const r = ev?.reason, t 
   // (ein echter Hänger dieser Länge würde vom Browser beendet) – kein Eintrag, keine Meldung. Wieder-da-Ereignisse setzen den Takt zurück.
   const wiederDa = () => { sichtbarSeit = Date.now(); letzt = Date.now(); };
   ["pageshow", "focus", "resume"].forEach((t) => (t === "resume" ? document : window).addEventListener(t, wiederDa));
+  // 19.11.2026 KC-CLUB-HAENGER-DRUCK: Druck-Dialog (auch über Strg+P) hält die App an – keine Hänger-Meldung
+  window.addEventListener("beforeprint", () => { window.KC_DRUCKT = true; });
+  window.addEventListener("afterprint", () => { window.KC_DRUCKT = false; window.KC_DRUCK_ENDE = Date.now(); wiederDa(); });
+  const druckPause = (jetzt) => window.KC_DRUCKT || (window.KC_DRUCK_ENDE && jetzt - window.KC_DRUCK_ENDE < 3000);
   // 2.964.0 KC-CLUB-HAENGER-URSACHE (Wunsch Hansi 16.11. nach Klaus „27 s“: „Hänger-Meldung genauer machen, damit der User weiß, woran es liegt“):
   // Lange Aufgaben der App selbst meldet der Browser (PerformanceObserver „longtask“, Chrome/Edge). Rechnete die App in der Lücke selbst → KC-F-101
   // (Fehler der App). Rechnete sie NICHT, hat das Gerät ihr keine Zeit gegeben → KC-F-102; Speicher fast voll → KC-F-103; anderes Fenster aktiv →
@@ -7988,7 +8161,7 @@ window.addEventListener("unhandledrejection", (ev) => { const r = ev?.reason, t 
   setInterval(() => {
     const jetzt = Date.now(), luecke = jetzt - letzt - 1000, von = letzt, fokus = fokusVorher; letzt = jetzt;
     try { fokusVorher = document.hasFocus(); } catch {}
-    if (luecke > 60000) { sichtbarSeit = jetzt; return; } // eingefroren (Pause), kein Hänger
+    if (luecke > 60000 || druckPause(jetzt)) { sichtbarSeit = jetzt; return; } // eingefroren (Pause) oder Druck-Dialog – kein Hänger
     if (luecke > 5000 && !document.hidden && jetzt - sichtbarSeit > luecke + 1500) {
       setTimeout(() => { // die Meldung über lange Aufgaben kommt erst kurz nach deren Ende
         const u = ursacheVon(von, jetzt, luecke, fokus), k = fehlerKatalogEintrag(u.ursache), s = Math.round(luecke / 1000);
@@ -8251,7 +8424,7 @@ const vtListe = () => (Array.isArray(INIT?.vertretung) ? INIT.vertretung : []);
 const dbNochmalDarf = (e, action, n) => !!e?.dbWeg && (API_LESEN.test(action) || DB_NOCHMAL_LESEN.test(action)) && n < DB_NOCHMAL_MAX && !document.hidden;
 const DB_NOCHMAL_MAX = 2, DB_NOCHMAL_LESEN = /^(ungelesen_uebersicht|admin_verlauf|db_last|db_belegung|dp_einzelplan|dp_druck|mein_dienst|gemerkte_nachrichten|nachricht_details|spur_uebersicht)$/; // KC-CLUB-DB-AUSSETZER: zusätzlich zu API_LESEN – nur Lesen
 async function api(action, daten = {}, opt = {}) {
-  const sichtbar = ladeSichtbar(action, opt); // KC-CLUB-LADE-SICHERHEIT: vor wartenStart prüfen (Tipp-Zeitpunkt)
+  const sichtbar = ladeSichtbar(action, opt); /* KC-CLUB-LADE-SICHERHEIT: vor wartenStart prüfen (Tipp-Zeitpunkt) */ if (SCHLAF.an) throw Object.assign(new Error("💤 Die App schläft – zum Aufwecken antippen."), { schlaf: true, still: true }); // KC-CLUB-SCHLAFMODUS: schlafende App fragt nichts – Sicherheitsnetz hinter den Takten (die prüfen ruht() schon selbst); Aufwachen lädt danach frisch
   const warte = wartenStart(action, opt.warten, opt.still);
   try { for (let dbNochmal = 0; ; ) {
   // 2.422.0 KC-CLUB-ZUGANG: für Gäste/Aushilfen nicht freigegebene Aktionen gar nicht erst schicken (der Server lehnt sie ohnehin ab)
@@ -8414,6 +8587,23 @@ async function diagMessen(url, opt = {}, ms = 10000) {
   try { const r = await fetch(url, { cache: "no-store", ...opt, signal: zeitSignal(ms) }); return { da: true, status: r.status, ms: Math.round(performance.now() - t0), r }; }
   catch (e) { return { da: false, zeit: e?.name === "TimeoutError" || e?.name === "AbortError", ms: Math.round(performance.now() - t0) }; }
 }
+// KC-CLUB-SB-REGION (Wunsch Hansi 20.11.2026, nach dem Supabase-Check): die Störungsseite liegt seit 08.10.2026 bei incident.io und listet einzelne
+// Regionen (z. B. „ap-east-1“) – bisher wurde jede Störung irgendwo auf der Welt gelb. Jetzt zählt nur unsere Region (London) oder eine Störung ohne
+// Regionsangabe; geplante Wartung unserer Region steht als Hinweis dabei. Ohne „incidents“-Feld (incident.io) geht es weiter wie bisher.
+const SB_REGION = "eu-west-2", SB_REGION_NAME = "London";
+function sbStatus(j) {
+  const reg = /^(af|ap|ca|eu|il|me|mx|sa|us)-[a-z]+-\d$/i;
+  const schlecht = (j?.components || []).filter((c) => c.status !== "operational" && !c.group).map((c) => String(c.name || ""));
+  const fremd = schlecht.length > 0 && schlecht.every((n) => reg.test(n) && n.toLowerCase() !== SB_REGION);
+  const meldet = !!j?.status?.indicator && j.status.indicator !== "none";
+  const gelb = meldet && !fremd;
+  const vorf = (j?.incidents || []).map((i) => i.name).filter(Boolean);
+  const wartung = (j?.scheduled_maintenances || []).filter((m) => String(m.name || "").toLowerCase().includes(SB_REGION)).map((m) => m.name);
+  const text = (gelb ? `meldet: ${j.status?.description || "Störung"}` + (schlecht.length ? ` · betroffen: ${schlecht.slice(0, 4).join(", ")}` : "") + (vorf.length ? ` · ${vorf[0]}` : "")
+    : fremd ? `unsere Region (${SB_REGION_NAME}) läuft – Störung nur anderswo (${schlecht.slice(0, 3).join(", ")})` : "meldet: alles in Ordnung")
+    + (wartung.length ? ` · 🛠️ ${wartung[0]}` : "");
+  return { gelb, fremd, text, wartung };
+}
 let DIAG_TEXT = "";
 async function serverDiagnose() {
   const zeilen = [["netz", "📶 Internet am Handy"], ["server", "🖥️ Club-Server"], ["db", "🗄️ Datenbank (Daten lesen/schreiben)"], ["not", "🛟 Notbetrieb-Server"], ["anbieter", "🌐 Störungsseite des Anbieters"]];
@@ -8440,11 +8630,10 @@ async function serverDiagnose() {
   let notUrl = NOT.konfig?.url; if (!notUrl) try { notUrl = (await (await fetch("notbetrieb.json?d=" + Date.now(), { cache: "no-store", signal: zeitSignal(6000) })).json()).url; } catch {}
   if (notUrl) { const o = await diagMessen(notUrl, {}, 8000); erg.not = o.da && o.status < 500 ? setze("not", "🟢", `erreichbar (${o.ms} ms) – springt ein, wenn der Club-Server fehlt`) : setze("not", "🔴", o.da ? `Fehler ${o.status}` : "nicht erreichbar"); }
   else erg.not = setze("not", "⚪", "nicht eingerichtet oder nicht prüfbar");
-  // 5) Störungsseite des Anbieters (öffentlich)
+  // 5) Störungsseite des Anbieters (öffentlich) – ausgewertet mit sbStatus (nur unsere Region zählt)
   const a = await diagMessen("https://status.supabase.com/api/v2/summary.json", {}, 8000);
   let aText = null, aStoerung = false;
-  try { if (a.da && a.status === 200) { const j = await a.r.json(), schlecht = (j.components || []).filter((c) => c.status !== "operational" && !c.group).map((c) => c.name), vorf = (j.incidents || []).map((i) => i.name);
-    aStoerung = j.status?.indicator !== "none"; aText = (aStoerung ? `meldet: ${j.status?.description || "Störung"}` : "meldet: alles in Ordnung") + (schlecht.length ? ` · betroffen: ${schlecht.slice(0, 4).join(", ")}` : "") + (vorf.length ? ` · ${vorf[0]}` : ""); } } catch {}
+  try { if (a.da && a.status === 200) { const s = sbStatus(await a.r.json()); aStoerung = s.gelb; aText = s.text; } } catch {}
   erg.anbieter = aText ? setze("anbieter", aStoerung ? "🟡" : "🟢", aText) : setze("anbieter", "⚪", "nicht abrufbar – bitte selbst nachsehen: status.supabase.com");
   // Fazit in einem Satz
   const rot = (k) => erg[k]?.ampel === "🔴";
@@ -8481,7 +8670,7 @@ function notAus(meldung) {
   notNachtragVersuche = 0; setTimeout(notNachtragen, 1500); // KC-CLUB-NOTBETRIEB-STUFE2: Gespeichertes sofort übertragen lassen
 }
 async function notZurueckPruefen() {
-  if (!NOT.an) return;
+  if (!NOT.an || SCHLAF.an) return; // KC-CLUB-SCHLAFMODUS: schlafend nicht nachsehen (beim Aufwachen lädt die App ohnehin)
   if (NOT.grund === "probe") return; // Probe endet nur von Hand
   if (NOT.grund === "hand") { const k = await notKonfig(true); if (k?.modus === "an") return; }
   // KC-CLUB-NOT-ZURUECK-SCHNELL (2.234.0, nach dem Ausfall 11.10.): erste gute Antwort → nach 5 Sek. gleich bestätigen statt 1 Min. warten
@@ -11884,6 +12073,7 @@ function wkTimerPiep(st, jetzt) {
   if (k >= 1 && bis <= 1500 && WKK.mi !== schl && (t.dauer || 0) - k * 60000 > 3000) { WKK.mi = schl; wkPiep(bis, 740, 0.18); }
 }
 function wkKlingeln(art) {
+  schlafAufwachen("wecker"); // KC-CLUB-SCHLAFMODUS: Wecker/Timer läuft lokal weiter und weckt die App
   const st = wkStand(), timer = art === "timer", e = timer ? st.timer : st.wecker; if (!e) return;
   const spaet = Date.now() - (timer ? e.ende : e.um) > WK_SPAET_MS;
   wkServerWeg(e.sid); // App klingelt selbst → kein Push mehr hinterher
@@ -13581,7 +13771,7 @@ function kkDiagnose(h, n, gespielt, mitTon, uhr = "kuckuck") { // einmal je Sitz
   try { api("diagnose", { art: "kuckuck", daten: { stunde: h, rufe: n, gespielt, ton: !!mitTon, zustand: audio?.state || "kein", aufnahme: !!KK_AUFNAHME.puffer, uhr } }).catch(() => {}); } catch {}
 }
 function kuckuckPruefen() {
-  if (!ICH?.person_id || document.hidden || !einst("kuckuck", true)) return;
+  if (!ICH?.person_id || ruht() || !einst("kuckuck", true)) return;
   const { h, m } = kkJetzt(); if (m >= KK_FENSTER_MIN) return;
   const stunde = `${heuteIso()} ${h}`; // nur die zuletzt gezeigte Stunde merken (kein Sammeln von Schlüsseln)
   try { if (localStorage.getItem("kc_club_kuckuck_zuletzt") === stunde) return; localStorage.setItem("kc_club_kuckuck_zuletzt", stunde); } catch { return; }
@@ -14058,7 +14248,7 @@ async function adLaden(erzwingen) {
 }
 // 2.360.0 KC-CLUB-AKKU-5: Admin-Startseite holt ihre Zahlen (3 Abfragen) nur noch alle 3 Min. statt jede Minute – und nach 5 Min. ohne Bedienung gar nicht
 let AD_ZULETZT = 0;
-setInterval(() => { if (reg === "admin" && aktuelleAnsicht === "start" && !document.hidden && Date.now() - AD_ZULETZT >= 175000 && Date.now() - jzbBedient < 300000) { AD_ZULETZT = Date.now(); adLaden(); } }, 60000);
+setInterval(() => { if (reg === "admin" && aktuelleAnsicht === "start" && !ruht() && Date.now() - AD_ZULETZT >= 175000 && Date.now() - jzbBedient < 300000) { AD_ZULETZT = Date.now(); adLaden(); } }, 60000);
 const adStd = (iso) => (iso ? (Date.now() - new Date(iso)) / 3600000 : Infinity);
 const adGr = (b) => (b == null ? "unbekannt" : b < 1048576 ? Math.max(1, Math.round(b / 1024)) + " KB" : mb(b));
 const adPct = (b, g) => (b == null || !g ? null : (b / g) * 100);
@@ -14080,9 +14270,9 @@ function adZustand(id) {
     case "server": return !r ? gemessen() : gemessen(!r.server.ok ? ["rot", "Datenbank antwortet nicht"] : [r.server.dbMs > 1500 ? "gelb" : "gruen", `v${r.server.version} · ${r.server.dbMs} ms`]);
     case "supabase": {
       if (!r) return gemessen();
-      const p = adPct(r.datenbank.bytes, r.datenbank.grenze), st = e.status?.status?.indicator;
-      const f = !r.server.ok ? "rot" : p == null ? "grau" : p >= r.datenbank.kritPct ? "rot" : p >= r.datenbank.warnPct || (st && st !== "none") ? "gelb" : "gruen";
-      return gemessen([f, `${p == null ? "?" : String(Math.round(p * 10) / 10).replace(".", ",")} % belegt${st && st !== "none" ? " · Anbieter meldet Störung" : ""}`]);
+      const p = adPct(r.datenbank.bytes, r.datenbank.grenze), st = e.status ? sbStatus(e.status).gelb : false; // KC-CLUB-SB-REGION: nur Störungen unserer Region
+      const f = !r.server.ok ? "rot" : p == null ? "grau" : p >= r.datenbank.kritPct ? "rot" : p >= r.datenbank.warnPct || st ? "gelb" : "gruen";
+      return gemessen([f, `${p == null ? "?" : String(Math.round(p * 10) / 10).replace(".", ",")} % belegt${st ? " · Anbieter meldet Störung" : ""}`]);
     }
     case "neon": return gemessen(sf?.neon);
     case "backup": return gemessen(sf?.backup);
@@ -14331,17 +14521,33 @@ function lsAktiv() { // Berührung, Tippen, Scrollen = „jemand ist da“
   LS.letzte = Date.now();
   if (Date.now() - LS.gemerkt > 30000) { LS.gemerkt = Date.now(); try { localStorage.setItem("kc_club_ls_letzt", String(LS.letzte)); } catch {} }
 }
-["pointerdown", "keydown", "touchstart", "wheel"].forEach((ev) => document.addEventListener(ev, () => { if (!LS.offen) lsAktiv(); }, { passive: true, capture: true }));
+["pointerdown", "keydown", "touchstart", "wheel"].forEach((ev) => document.addEventListener(ev, () => { if (!LS.offen && !SCHLAF.an) lsAktiv(); }, { passive: true, capture: true })); // KC-CLUB-SCHLAFMODUS: der Weck-Tipp zählt nicht als „war da“ – lsNachSchlaf entscheidet
+// KC-CLUB-SCHLAFMODUS + Liegen-Schutz zusammengelegt (Wunsch Hansi 20.11. „Ja zusammenlegen“): solange die App schläft, verdeckt der Bildschirmschoner alles –
+// der Liegen-Schutz öffnet dann keine eigene Schicht (lsPruefen). Beim Aufwachen gilt dieselbe Regel wie sonst (15 Min. bzw. 10 Min. in heiklen Ansichten):
+// ohne PIN hebt der eine Weck-Tipp den Sichtschutz mit auf (kein zweites „👆 Weiter“), mit PIN kommt direkt die PIN-Abfrage (PIN bleibt Pflicht).
+// Weckt ein Anruf oder der Wecker, liegt die PIN-Abfrage nicht über dem Anruf: LS.letzte bleibt alt, der Liegen-Takt sperrt danach wie gewohnt.
+function lsNachSchlaf(grund) {
+  if (!KEY) return;
+  const pin = lsLiegenPin(), min = (Date.now() - LS.letzte) / 60000;
+  const sperren = LS.offen || min >= LS.MIN_SICHT || (!!pin && min >= LS.MIN_PIN && lsHeikel());
+  if (!sperren) return lsAktiv();
+  // (nicht lsNichtSperren(): dessen „video:not([paused])“ trifft jedes <video> im Seitenbaum – im Schlaf schaut ohnehin niemand zu, s. schlafAusnahme)
+  if (pin) { if (grund !== "anruf" && grund !== "wecker" && !RUF && !document.querySelector("#anrufSchirm:not(.versteckt), #lsSperre .ls-punkte")) lsSperren(true); return; }
+  lsEntsperren(); // ohne PIN: der Weck-Tipp war das „Weiter“
+}
 function lsHeikel() { // Ansichten mit fremden Daten
   return ["buero", "mitglieder", "sicherheit"].includes(aktuelleAnsicht) || (aktuelleAnsicht === "start" && typeof reg !== "undefined" && reg === "admin")
     || !!document.querySelector("#mgBlatt:not(.versteckt), #mitgliedBlatt, #wchBlatt, #adBlatt");
 }
 function lsNichtSperren() { // Anruf, Video, Rundgang, Diashow/Bühne: dann liegt niemand „herum“
-  return !!(typeof RG !== "undefined" && RG.an) || !!document.querySelector("#anrufSchirm:not(.versteckt), video:not([paused])")
+  // 20.11.2026 KC-CLUB-LS-VIDEO (Fund beim Schlafmodus): „video:not([paused])“ traf JEDES <video> im Seitenbaum (das Attribut „paused“ gibt es nicht) –
+  // dann sperrte der Sichtschutz nie. Jetzt nur, wenn ein Video wirklich läuft.
+  return !!(typeof RG !== "undefined" && RG.an) || !!document.querySelector("#anrufSchirm:not(.versteckt)")
+    || [...document.querySelectorAll("video")].some((v) => !v.paused && !v.ended)
     || document.fullscreenElement || document.documentElement.classList.contains("kopf-um");
 }
 function lsPruefen(beimZurueckkommen) {
-  if (LS.offen || !KEY || lsNichtSperren()) return;
+  if (LS.offen || !KEY || lsNichtSperren() || SCHLAF.an) return; // KC-CLUB-SCHLAFMODUS: im Schlaf verdeckt der Bildschirmschoner – keine zweite Schicht
   const pin = lsLiegenPin(), min = (Date.now() - (beimZurueckkommen ? Math.max(LS.letzte, Number(localStorage.getItem("kc_club_ls_letzt") || 0) || LS.letzte) : LS.letzte)) / 60000;
   if (pin && min >= LS.MIN_PIN && lsHeikel()) return lsSperren(true);
   if (min >= LS.MIN_SICHT) lsSperren(!!pin);
@@ -14456,7 +14662,7 @@ function pulsStarten() {
 }
 async function pulsHolen() {
   clearTimeout(PULS.timer); if (!pulsAn()) return;
-  if (!document.hidden && aktuelleAnsicht === "start") {
+  if (!ruht() && aktuelleAnsicht === "start") {
     try { const r = await api("betrieb_puls", {}, { still: true });
       if (PULS.alt && r.t > PULS.alt.t) { const sek = (r.t - PULS.alt.t) / 1000;
         PULS.wert = { lesen: Math.max(0, r.lesen - PULS.alt.lesen) / sek, schreiben: Math.max(0, r.schreiben - PULS.alt.schreiben) / sek, online: r.online, t: r.t };
@@ -14942,10 +15148,10 @@ function adBlatt(id) {
         <div class="knoepfe">${adKnopf("🩺 Server-Diagnose", "serverDiagnose()", true)}${adKnopf("🔄 Update prüfen", "updateKachel()")}</div>${adLinks("supabase")}`;
       break;
     case "supabase": {
-      const st = e.status, schlecht = (st?.components || []).filter((k) => k.status !== "operational" && !k.group).map((k) => k.name);
+      const st = e.status, sb = st ? sbStatus(st) : null; // KC-CLUB-SB-REGION
       html = `${kopf("🗄️", "Supabase (Haupt-Datenbank)")}${adZeile(z[0], "Zustand", z[1])}
         ${r ? adminBalken("🗄️ Datenbank", r.datenbank.bytes, r.datenbank.grenze, r.datenbank.warnPct, r.datenbank.kritPct) : ""}
-        ${adZeile(!st ? "grau" : st.status?.indicator === "none" ? "gruen" : "gelb", "Störungsseite", !st ? "nicht abrufbar" : (st.status?.description || "?") + (schlecht.length ? " · " + schlecht.slice(0, 3).join(", ") : ""))}
+        ${adZeile(!sb ? "grau" : sb.gelb ? "gelb" : "gruen", "Störungsseite", !sb ? "nicht abrufbar" : sb.text)}
         ${r?.datenbank.check ? adZeile("keine", "Täglicher System-Check", `${r.datenbank.check.status} · ${seitText(r.datenbank.check.zeit)}`) : ""}
         <div class="knoepfe">${adKnopf("🩺 Server-Diagnose", "serverDiagnose()", true)}${adKnopf("🔄 Projekt neu starten …", "adNeustart()")}</div>
         <div class="ps-schritt"><b>🧹 Aufräumen</b>
@@ -15538,7 +15744,7 @@ async function vfFhDaten(d) { // KC-CLUB-FERNHILFE F1: Bild und Zeiger kommen di
 }
 async function vfHolen(sofort) {
   if (VF.rolle !== "schaut") return;
-  if (document.hidden && sofort !== true) return; // 2.314.1 KC-CLUB-VORFUEHREN-HINTERGRUND: Fenster im Hintergrund (z. B. zweiter Browser) fragt nicht mit – Fund 10.10.: zwei Browser je 0,8 s
+  if (ruht() && sofort !== true) return; // 2.314.1 KC-CLUB-VORFUEHREN-HINTERGRUND: Fenster im Hintergrund (z. B. zweiter Browser) fragt nicht mit – Fund 10.10.: zwei Browser je 0,8 s
   if (VF.fhL?.ok && VF.fhBild && sofort !== true && Date.now() - (VF.fhPruef || 0) < FH_PRUEF_MS) return; // KC-CLUB-FERNHILFE F1: nur noch der Stand alle 15 s
   if (VF.fhL?.ok && VF.fhBild) VF.fhPruef = Date.now();
   if (VF.fhL?.ok && !VF.fhBild && Date.now() - (VF.fhHalloAm || 0) > 3000) { VF.fhHalloAm = Date.now(); VF.fhL.senden({ hallo: 1, f2: 1 }); } // bis das erste Bild direkt kommt
@@ -16890,7 +17096,7 @@ async function tippMeine() {
 // Hinweise (gold), schöne Infos (weiß); ist nichts da: „Alles erledigt 👍“ und der Tipp des Tages. Wechselt alle 6 s (sanft), Wischen blättert,
 // Berühren hält an, ✕ blendet eine Meldung für heute aus. Läuft nur, solange die Startseite sichtbar ist (in der Ruhephase steht es still).
 const IL_TAKT_MS = 6000, IL_AUS = "kc_club_il_aus";
-const IL = { liste: [], i: 0, uhr: 0, halt: 0, x0: null, gewischt: 0, schluessel: "", html: "", takt: 0 };
+const IL = { liste: [], i: 0, uhr: 0, halt: 0, x0: null, gewischt: 0, schluessel: "", html: "", takt: 0, alle: [] }; // alle: KC-CLUB-LAUFBAND-LISTE (alle Meldungen, auch die über 7)
 function ilAusgeblendet() { try { const a = JSON.parse(localStorage.getItem(IL_AUS) || "null"); return a && a.tag === heuteIso() ? a.ids : []; } catch { return []; } }
 function ilAusblenden(id) {
   const ids = [...new Set([...ilAusgeblendet(), id])]; try { localStorage.setItem(IL_AUS, JSON.stringify({ tag: heuteIso(), ids })); } catch {}
@@ -17128,6 +17334,7 @@ function ilMeldungen() {
   if (INIT?.dienstwunschFehlt === true && !DW_LB.geoeffnet) add({ id: "dw-fehlt", stufe: "rot", sym: "🎄", t: "Dienstplan Weihnachtsmarkt: Wünsche eingeben?", u: "Twinkey führt dich Schritt für Schritt durch", auf: "dwLaufbandAuf()", knoepfe: [["📝 Mit Twinkey eingeben", "dwLaufbandAuf()"]], fertig: "Dienstwünsche Weihnachtsmarkt eingegeben" });
   if (PW.neu > 0) add({ id: "pw-neu:" + PW.neu, stufe: "gold", sym: "📌", t: PW.neu === 1 ? "Ein neuer Zettel an der Pinnwand" : `${PW.neu} neue Zettel an der Pinnwand`, u: "Antippen zum Lesen", auf: "zeige('pinnwand')" }); // KC-CLUB-PINNWAND-NIE-AUTO
   { const tp = tpLaufband(); if (tp) add(tp); } // 2.971.0 KC-CLUB-TIPPSPIEL
+  for (const m of INIT?.mitfahrtenOffen || []) add(ilMitfahrt(m)); // KC-CLUB-MITFAHRT-LAUFBAND
   for (const k of GK_OFFEN) add({ id: "gk:" + k.id, stufe: "gold", sym: "💐", t: `Gemeinsame Karte für ${k.fuerName}`, u: `${k.namen.length} haben unterschrieben – du auch? Antippen`, auf: `gkGemeinsamOeffnen('${k.id}')` }); // 2.979.0 KC-CLUB-GK-HINWEIS
   tippLaufband(add); // 2.835.0 KC-CLUB-HILFE-TIPPS: grün → gelb → rot, bis geantwortet
   // 2.492.0 KC-CLUB-UNTERSTUETZUNG-ANFRAGE: Admin – offene Anfragen (orange); alle anderen – Angebot „Unterstützung?“ (ausblendbar, 30 Tage Pause nach dem Senden)
@@ -17154,13 +17361,35 @@ function ilMeldungen() {
   if (tipps.length) { const d = new Date(), h = tipps[(d.getFullYear() * 372 + d.getMonth() * 31 + d.getDate()) % tipps.length];
     sichtbar.push({ id: "_tipp", stufe: "weiss", sym: "💡", t: `Tipp: ${hzTxt(h.t)}`, u: String(hzTxt(h.x)).replace(/<[^>]+>/g, "").slice(0, 90), auf: `hzZuEintrag('h:${esc(h.id)}')`, ohneAus: true }); }
   // Wichtiges öfter zeigen: nach jeder Hinweis-/Info-Meldung kommt die nächste rote wieder dran
-  const tf = ilTreffen(t), rot = [...(tf.stufe === "rot" ? [tf] : []), ...sichtbar.filter((m) => m.stufe === "rot" || m.stufe === "orange")], rest = sichtbar.filter((m) => !rot.includes(m)).filter((m, i, l) => m.id === "_tipp" || l.indexOf(m) < 7); // übersichtlich: höchstens 7 + Tipp
+  const tf = ilTreffen(t), rot = [...(tf.stufe === "rot" ? [tf] : []), ...sichtbar.filter((m) => m.stufe === "rot" || m.stufe === "orange")], rest = sichtbar.filter((m) => !rot.includes(m)).filter((m, i, l) => m.id === "_tipp" || String(m.id).startsWith("mitfahrt:") || l.indexOf(m) < 7); // übersichtlich: höchstens 7 + Tipp (Mitfahrten immer – KC-CLUB-MITFAHRT-LAUFBAND)
   let folge = [...rot, ...rest];
   if (rot.length && rest.length > 2) { folge = [...rot]; rest.forEach((m, i) => { folge.push(m); if (i % 2 === 1) folge.push(rot[(i >> 1) % rot.length]); }); }
+  IL.alle = [tf, ...sichtbar.filter((m) => m.id !== tf.id)]; // KC-CLUB-LAUFBAND-LISTE: die Rollliste zeigt alle (nach Wichtigkeit), nicht nur die 7 im Laufband
   return tf.stufe === "rot" ? folge : [tf, ...folge]; // das Treffen steht immer vorn; ist die Antwort offen, kommt es als rote Meldung zwischendurch wieder
 }
 function ilThemaNeu(id) { zeige("vorschlaege"); VS_ZIEL = id; setTimeout(() => { if (aktuelleAnsicht === "vorschlaege") vorschlagForm("thema"); }, 500); } // 2.463.0: Formular mit der Sitzung vorgewählt
 function ilTerminOeffnen(id) { zeige("termine"); const auf = () => { if (TREFFEN_IDX.has(id) && !$("treffenInfo")) treffenInfo(id, false); }; setTimeout(auf, 700); setTimeout(auf, 1800); }
+// KC-CLUB-MITFAHRT-LAUFBAND (20.11.2026, Wunsch Hansi „zeige in der Laufschrift an, wenn jemand eine Mitfahrgelegenheit sucht oder anbietet“):
+// 🚗 „Hansi bietet eine Mitfahrt an“ / 🙋 „Anne sucht eine Mitfahrgelegenheit“ mit Termin, Tag und freien Plätzen – Antippen öffnet den Termin bzw. die Aktion.
+function ilMitfahrt(m) {
+  const wer = m.eigen ? "Du" : m.name || "Jemand", tag = m.bezug_art === "aktion" ? fTag.format(new Date(m.beginn)) : wann(m.beginn);
+  const t = m.art === "biete" ? `${wer} ${m.eigen ? "bietest" : "bietet"} eine Mitfahrt an` : `${wer} ${m.eigen ? "suchst" : "sucht"} eine Mitfahrgelegenheit`;
+  const u = `${m.titel} · ${tag}${m.art === "biete" ? ` · ${m.frei === 1 ? "1 Platz" : m.frei + " Plätze"} frei` : ""}${m.eigen ? "" : m.art === "biete" ? " – mitfahren? Antippen" : " – Platz frei? Antippen"}`;
+  // Fund Hansi 20.11. „Habe ich nicht gesehen“: eigene waren „weiß“ und fielen hinter die 7 – jetzt gelb wie bei allen
+  return { id: "mitfahrt:" + m.art + ":" + m.id, stufe: "gold", sym: m.art === "biete" ? "🚗" : "🙋", t, u,
+    auf: `ilMitfahrtOeffnen(${JSON.stringify(m.bezug_art === "aktion" ? "aktion" : "treffen")}, ${JSON.stringify(String(m.bezug_id))})` };
+}
+// KC-CLUB-MITFAHRT-SPRUNG (20.11.2026, Fund Hansi „Wenn ich sie antippe, gelangt man in den Kalender, aber nicht genau zur Mitfahrgelegenheit“): vorher versuchte
+// ilTerminOeffnen den Termin nur nach 0,7 und 1,8 s – lud der Kalender länger, blieb man im Kalender. Jetzt: warten, bis der Termin da ist (bis ~9 s), Termin öffnen,
+// zum Abschnitt „🚗 Mitfahren“ rollen und ihn kurz aufleuchten lassen. Bei Aktionen genauso in der Aktion.
+function ilMitfahrtOeffnen(art, id) {
+  const hin = (w) => { const b = w?.querySelector(".mf-block"); if (!b) return false; try { b.scrollIntoView({ block: "center", behavior: "smooth" }); } catch {} b.classList.remove("mf-blitz"); void b.offsetWidth; b.classList.add("mf-blitz"); return true; };
+  let n = 0;
+  if (art === "aktion") { Promise.resolve(aktionOeffnen(id)).catch(() => {}).then(() => { const v = () => { if (!hin(document) && ++n < 30) setTimeout(v, 300); }; setTimeout(v, 300); }); return; }
+  zeige("termine");
+  const v = () => { if (TREFFEN_IDX.has(id)) { if (!$("treffenInfo") || $("treffenInfo").dataset.id !== id) treffenInfo(id, false); setTimeout(() => hin($("treffenInfo")), 250); return; } if (++n < 30) setTimeout(v, 300); };
+  setTimeout(v, 300);
+}
 function ilTerminLink(id) { const l = (INIT?.laufbandTermine || []).find((x) => x.id === id)?.link; if (/^https:\/\//.test(l || "")) window.open(l, "_blank", "noopener"); }
 function ilHtml(m) {
   const k = (m.knoepfe || []).map(([t, f, kl]) => `<button type="button" class="il-knopf${kl || ""}" onclick="event.stopPropagation();${f}">${esc(t)}</button>`).join("");
@@ -17175,8 +17404,10 @@ function ilZeigen() {
   const s = IL.liste.map((m) => m.id + m.t).join("|"); if (s !== IL.schluessel) { IL.schluessel = s; const j = IL.liste.findIndex((m) => m.id === alt); IL.i = j >= 0 ? j : 0; }
   if (IL.i >= IL.liste.length) IL.i = 0;
   const m = IL.liste[IL.i]; if (!m) return;
-  const kl = `il il-${m.stufe} il-klick`, html = `<div class="il-inhalt${m.knoepfe ? " mit-knopf" : ""}${m.voll ? " il-voll" : ""}" role="button" tabindex="0">${ilHtml(m)}</div>`
-    + (IL.liste.length > 1 ? `<div class="il-punkte" aria-hidden="true">${IL.liste.map((_, i) => `<i${i === IL.i ? ' class="an"' : ""}></i>`).join("")}</div>` : "");
+  const offen = !!$("ilListe"), nAlle = IL.alle.length;
+  const kl = `il il-${m.stufe} il-klick${nAlle > 1 ? " mit-alle" : ""}`, html = `<div class="il-inhalt${m.knoepfe ? " mit-knopf" : ""}${m.voll ? " il-voll" : ""}" role="button" tabindex="0">${ilHtml(m)}</div>`
+    + (IL.liste.length > 1 ? `<div class="il-punkte" aria-hidden="true">${IL.liste.map((_, i) => `<i${i === IL.i ? ' class="an"' : ""}></i>`).join("")}</div>` : "")
+    + (nAlle > 1 ? `<button type="button" class="il-alle" aria-expanded="${offen}" aria-label="${offen ? "Liste schließen" : `Alle ${nAlle} Meldungen als Liste`}" onclick="event.stopPropagation();ilListeUmschalten()">${offen ? "▴" : "▾"} ${nAlle}</button>` : ""); // KC-CLUB-LAUFBAND-LISTE
   if (b.firstElementChild && IL.html === kl + html) return; // unverändert → nicht neu zeichnen (sonst stockt die Wisch-Animation)
   IL.html = kl + html; b.className = kl; b.innerHTML = html;
   const inh = b.firstElementChild;
@@ -17187,6 +17418,19 @@ function ilZeigen() {
     b.addEventListener("pointerdown", (e) => { IL.halt = Date.now() + 9000; IL.x0 = e.clientX; }, { passive: true });
     b.addEventListener("pointerup", (e) => { if (IL.x0 == null) return; const dx = e.clientX - IL.x0; IL.x0 = null; if (Math.abs(dx) > 40) { IL.gewischt = Date.now(); IL.uhr = 0; ilBlaettern(dx < 0 ? 1 : -1); } }, { passive: true });
   }
+}
+// KC-CLUB-LAUFBAND-LISTE (20.11.2026, Wunsch Hansi „oben im Rand der Laufschrift einen Pfeil nach unten wie beim Status – angeklickt geht eine Rollliste
+// nach unten auf, dort stehen Balken mit den Einträgen der Laufschrift, antippen geht sofort dorthin“): ▾ am oberen Rand öffnet unter dem Laufband alle
+// Meldungen als farbige Balken (Wichtigstes oben, auch die, die im Laufband wegen „höchstens 7“ nicht drankommen). Antippen = dorthin; ▴ schließt.
+function ilListeUmschalten() {
+  const b = document.getElementById("infoLaufband"); if (!b) return;
+  const alt = $("ilListe"); IL.halt = Date.now() + 9000;
+  if (alt) { alt.remove(); IL.html = ""; return ilZeigen(); }
+  try { IL.liste = ilMeldungen(); } catch {}
+  const l = document.createElement("div"); l.id = "ilListe"; l.className = "il-liste"; l.setAttribute("role", "list");
+  l.innerHTML = IL.alle.map((m, i) => `<button type="button" role="listitem" class="il-balken il-${m.stufe}" data-i="${i}"><span class="il-sym" aria-hidden="true">${m.sym || "ℹ️"}</span><span class="il-text"><b>${esc(m.t)}</b>${m.u ? `<small>${esc(String(m.u).replace(/<[^>]+>/g, ""))}</small>` : ""}</span><span class="il-pfeil" aria-hidden="true">›</span></button>`).join("");
+  l.querySelectorAll("[data-i]").forEach((k) => (k.onclick = () => { const m = IL.alle[+k.dataset.i]; l.remove(); IL.html = ""; ilZeigen(); if (!m) return; if (m.auf) { try { new Function(m.auf)(); } catch {} } else ilLesen(m); }));
+  b.insertAdjacentElement("afterend", l); IL.html = ""; ilZeigen();
 }
 function ilLesen(m) { // 2.589.0 KC-CLUB-INFO-LESEN: ganzer Text einer Info-Meldung (nichts abgeschnitten)
   IL.halt = Date.now() + 9000;
@@ -17400,7 +17644,14 @@ async function dgZeigen(vonHand = false) {
 // bleibt die Kachel beim Treffen. Jeder wählt unter ⚙️ → Startseite, was mitläuft; „Nur nächstes Clubtreffen“ = Standard ohne Wechsel.
 // Reisen und Geburtstage holt die App still im Hintergrund (Server „countdowns“, höchstens alle 6 Std., letzter Stand im Gerät).
 const CD_TAKT_MS = 5000, CD_NEU_MS = 6 * 3600000;
-const CD = { i: 0, daten: (() => { try { return JSON.parse(localStorage.getItem("kc_club_cd") || "null"); } catch { return null; } })(), laedt: false, stand: 0, uhr: null };
+// 18.11.2026 KC-CLUB-LEITUNG-SPARSAM (Wunsch Hansi „einsparen über die direkte Leitung“): der Abholzeitpunkt (CD.stand) steht
+// zusätzlich im Gerät – so greift die 6-Stunden-Regel auch über App-Starts hinweg (vorher: jeder Start = 1 Abfrage „countdowns“).
+const CD_STAND_KEY = "kc_club_cd_stand";
+// Gilt nur für dasselbe Gerät + denselben Zugang (Kurzzeichen der letzten 6 Stellen) – nach Wechsel des Zugangs wird neu geholt.
+const cdZugangZeichen = () => { try { return String(KEY || "").slice(-6); } catch { return ""; } };
+const cdStandLesen = () => { try { const [t, z] = String(localStorage.getItem(CD_STAND_KEY) || "").split("|"); const n = +t || 0; return n > 0 && n <= Date.now() && (z || "") === cdZugangZeichen() ? n : 0; } catch { return 0; } };
+const cdStandMerken = (t) => { CD.stand = t; try { if (t > 0) localStorage.setItem(CD_STAND_KEY, `${t}|${cdZugangZeichen()}`); else localStorage.removeItem(CD_STAND_KEY); } catch {} };
+const CD = { i: 0, daten: (() => { try { return JSON.parse(localStorage.getItem("kc_club_cd") || "null"); } catch { return null; } })(), laedt: false, stand: -1, uhr: null }; // -1 = noch nicht aus dem Gerät gelesen
 const cdTageBis = (iso) => Math.round((Date.parse(iso + "T12:00:00Z") - Date.parse(heuteIso() + "T12:00:00Z")) / 86400000);
 const cdNaechsterTag = (md) => { const h = heuteIso(), j = +h.slice(0, 4); for (const y of [j, j + 1]) { const schalt = new Date(Date.UTC(y, 1, 29)).getUTCDate() === 29; const d = `${y}-${md === "02-29" && !schalt ? "02-28" : md}`; if (d >= h) return d; } return null; };
 const cdNoch = (tage) => tage <= 0 ? "Heute!" : tage === 1 ? "Morgen" : `${tage} Tage`; // kurz – die Kachel ist schmal
@@ -17505,8 +17756,9 @@ function cdStil(stil) { try { localStorage.setItem("kc_club_cd_stil", stil); } c
 function cdTippen() { const l = cdListe(CD.bisTreffen || ""); (l[CD.i] || l[0]).los(); }
 function cdStart() {
   if (!CD.uhr) CD.uhr = setInterval(cdWeiter, CD_TAKT_MS);
+  if (CD.stand < 0) CD.stand = CD.daten ? cdStandLesen() : 0; // KC-CLUB-LEITUNG-SPARSAM: Stand vom letzten App-Start (ohne Daten im Gerät gleich holen)
   if (!CD.laedt && Date.now() - CD.stand > CD_NEU_MS) { CD.laedt = true; // 2.242.0: auch bei „Nur Clubtreffen“ (angehakte private Termine)
-    setTimeout(() => api("countdowns", {}, { still: true }).then((r) => { CD.daten = { reisen: r.reisen || [], geburtstage: r.geburtstage || [], veranstaltungen: r.veranstaltungen || [], privat: r.privat || [] }; CD.stand = Date.now(); try { localStorage.setItem("kc_club_cd", JSON.stringify(CD.daten)); } catch {} cdFrisch(); })
+    setTimeout(() => api("countdowns", {}, { still: true }).then((r) => { CD.daten = { reisen: r.reisen || [], geburtstage: r.geburtstage || [], veranstaltungen: r.veranstaltungen || [], privat: r.privat || [] }; try { localStorage.setItem("kc_club_cd", JSON.stringify(CD.daten)); } catch {} cdStandMerken(Date.now()); cdFrisch(); })
       .catch(() => { CD.stand = Date.now() - CD_NEU_MS + 600000; }).finally(() => { CD.laedt = false; }), 4000); } // nach dem Start, nicht mittendrin
 }
 function cdWeiter() {
@@ -18112,7 +18364,7 @@ let NEU_NACH_CHAT = false; // 2.594.0 KC-CLUB-CHAT-RUHE: im offenen Chat kam Neu
 // Leitung (2.594.0): ist ein Chat offen, lädt nur der Chat (gebündelt) und die Startseite nach dem Chat; sonst mehrere Pushes = einmal Laden nach 1,5 s.
 function pushNeuLaden() {
   if (chatId && aktuelleAnsicht === "chat") { NEU_NACH_CHAT = true; return; }
-  clearTimeout(RT.zaehlen); RT.zaehlen = setTimeout(() => { if (!document.hidden) neuLaden(); }, 1500);
+  clearTimeout(RT.zaehlen); RT.zaehlen = setTimeout(() => { if (!ruht()) neuLaden(); }, 1500); // KC-CLUB-SCHLAFMODUS
 }
 function neuLaden(vonHand) {
   NEU_ZULETZT = Date.now(); NEU_NACH_CHAT = false;
@@ -18125,13 +18377,15 @@ async function neuLadenRoh(vonHand) {
   // 2.611.0 KC-CLUB-START-GLEICHZEITIG (Messung 23.10.: der Sofortstart zeichnete erst den gespeicherten Stand und schickte DANACH die Anfrage –
   // beide Wartezeiten liefen hintereinander): erst die Anfrage an den Server losschicken, dann – während sie unterwegs ist – den Stand zeichnen.
   const tInit = performance.now(); // KC-CLUB-STARTZEIT: nur die erste Anfrage nach dem Öffnen zählt
-  const initAnfrage = api("init", { fotosSeit: kzSeit("fotos"), dienstSeit: kzSeit("dienste") }, { warten: !!vonHand }); initAnfrage.catch(() => {}); // Fehler behandelt unten das await
+  const astF = astFragenJetzt(); // KC-CLUB-AUFGABEN-STAND: Startmeldung nur beim ersten Laden je App-Sitzung (bzw. nach 6 Std. / Push „Bitte Stand melden“) mitfragen
+  const initAnfrage = api("init", { fotosSeit: kzSeit("fotos"), dienstSeit: kzSeit("dienste"), aufStand: astF ? 1 : 0 }, { warten: !!vonHand }); initAnfrage.catch(() => {}); // Fehler behandelt unten das await
   if (!INIT) sofortStart(); // KC-CLUB-SOFORTSTART (2.113.0): gespeicherten Stand sofort zeigen, frisch laden im Hintergrund
   const swHinweis = !ICH ? setTimeout(startWartetZeigen, 3000) : 0; // 2.976.0 KC-CLUB-START-WARUM: nur beim ersten Anmelden
   initAnfrage.then(() => { try { localStorage.setItem(SCHWER_MERK, JSON.stringify(INIT?.schwerZeiten || null)); } catch {} }, () => {}).finally(() => { clearTimeout(swHinweis); startWartetWeg(); });
   try {
     INIT = await initAnfrage; if (window.KCFP?.schlaeft) return; uhrAbgleich(INIT); /* KC-CLUB-ADVENT-SERVERUHR */ /* 2.394.0 Fenster inzwischen geleert */ if (!START_MESS.initBis) { START_MESS.initAb = tInit; START_MESS.initBis = performance.now(); } /* KC-CLUB-KACHEL-ZAHLEN */ ICH = INIT.ich; einstOffenAnwenden(); /* 2.6.1: noch laufende Speicherungen nicht überschreiben */ adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); inkognitoZeigen(); einwZeigen(aktuelleAnsicht); schluesselSichern(KEY); /* KC-CLUB-SCHLUESSEL-SICHERN */ if (document.body.classList.contains("rg-ohne-admin")) document.body.classList.remove("ist-admin"); /* KC-CLUB-ERKLAERVIDEOS-ROLLEN: im Video für alle bleibt Admin aus */ stKnopf(); /* KC-CLUB-STUDIO */ cfUebernehmen(INIT?.einstellungen?.chat_farben); /* KC-CLUB-CHAT-FARBEN */ // KC-CLUB-KOPF-EINFACH
     alarmPruefen(); /* KC-CLUB-NOTFALL-MELDUNG */ try { expressPruefen(); } catch {} /* 2.362.0 KC-CLUB-EXPRESS */ setTimeout(() => { try { irLaden(); } catch {} }, 3000); /* KC-CLUB-IST-RUECKFRAGE */ setTimeout(() => { try { abStandZeigen(INIT?.ab); } catch {} }, 2500); /* 2.568.0 KC-CLUB-ANRUFBEANTWORTER */ try { dsLageSetzen(INIT?.dienstStempel); } catch {} /* 2.590.0 KC-CLUB-DIENST-STEMPEL */ try { rundKarteZeichnen(); } catch {} /* 2.762.0 KC-CLUB-RUNDER-TISCH */ setTimeout(() => { try { snPruefen(); } catch {} }, 1500); /* 2.482.0 KC-CLUB-STARTNACHRICHT */ document.body.classList.toggle("sos-frei", sosDarf()); /* KC-CLUB-SOS-FREIGABE */ fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
+    if (astF) try { astNachInit(INIT); } catch {} // KC-CLUB-AUFGABEN-STAND
     if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln);
     if ($("setLiveTippen")) $("setLiveTippen").checked = liveTippen();
     if ($("setWichtigFrage")) $("setWichtigFrage").checked = versandImmerAn(); // KC-CLUB-WICHTIGKEIT-FRAGE (2.287.0) → 2.524.0 KC-CLUB-VERSANDART: Leiste immer zeigen
@@ -18212,10 +18466,10 @@ function offlineStandZeigen(an) {
   el.innerHTML = INIT._vorab ? `🔄 <b>Stand von ${esc(fKurz.format(d))} ${esc(fZeit.format(d))} Uhr</b> – wird gerade aktualisiert …`
     : `📴 <b>Kein Netz – das ist dein Stand von ${esc(fKurz.format(d))} ${esc(fZeit.format(d))} Uhr.</b> Neues kommt, sobald du wieder Internet hast.`;
 }
-window.addEventListener("online", () => { if (KEY) neuLaden(); owSenden(); }); // 2.1.1: INIT nicht leeren – das Neuladen ersetzt den Offline-Stand
+window.addEventListener("online", () => { if (KEY && !ruht()) neuLaden(); owSenden(); }); // KC-CLUB-SCHLAFMODUS: schlafend/im Hintergrund nicht – Aufwachen bzw. Rückkehr lädt // 2.1.1: INIT nicht leeren – das Neuladen ersetzt den Offline-Stand
 // 2.209.0 KC-CLUB-ONLINE-OFFLINE (Gesamtprüfung 5, AGENTS Regel 11): ohne Netz wissen wir nicht, wer online ist – Anzeige
 // „X sind gerade online“, grüne Zahl und Ameisenlauf verschwinden sofort statt grün stehen zu bleiben; mit Netz kommt der Stand neu
-window.addEventListener("offline", () => { try { ONL.liste = []; ONL.ids = new Set(); ONL.stand = 0; onlineLeisteZeigen(); if (INIT) heroZeigen(); } catch {} });
+window.addEventListener("offline", () => { try { ONL.liste = []; ONL.ids = new Set(); ONL.stand = ONL.echt = 0; onlineLeisteZeigen(); if (INIT) heroZeigen(); } catch {} });
 // 2.481.0 KC-CLUB-OFFLINE-KLARTEXT (TÜV B-16: ging das Netz während der Benutzung weg, sagte nur die rote LED etwas; Regel 11: veralteten Stand sichtbar
 // markieren): dieselbe Zeile wie beim Offline-Start – „Kein Netz – das ist dein Stand von …“; kommt das Netz zurück, ersetzt das Neuladen sie
 window.addEventListener("offline", () => { try { if (INIT && !INIT._offline && NEU_ZULETZT) { INIT._offline = NEU_ZULETZT; offlineStandZeigen(true); } } catch {} });
@@ -18481,6 +18735,9 @@ function zeige(v, ausHistorie) {
   if (v !== "chat") $("nachUnten")?.classList.add("versteckt");
   try { stromAbschnitt(); } catch {} // 2.799.0 KC-CLUB-STROM-MESSUNG: Abschnitt dem alten Bereich zurechnen
   aktuelleAnsicht = v; if (window.KCFP) KCFP.sicht = v;
+  // 19.11.2026 KC-CLUB-AUFGABEN-STAND-ZURUECK (Wunsch Hansi): wer nach dem Öffnen gleich in den Chat o. Ä. ging, verpasste die Startmeldung
+  // (die App versuchte es nur ~3½ Min.) – jetzt erscheint sie auch beim Zurückkommen auf die Startseite, solange sie noch offen ist (keine Abfrage)
+  if (v === "start" && vorher !== "start" && typeof AST !== "undefined" && AST.dran.length && !AST.offen) setTimeout(() => astPruefen(0), 1500);
   // 2.192.0 KC-CLUB-NUR-START-AUFFRISCHEN (Fund Hansi): „von oben nach unten ziehen = neu laden“ nur auf der Startseite – sonst lädt die App
   // mitten in Einstellungen o. Ä. neu (und meldet bei mehrfachem Neustart sogar „Startprobleme?“)
   document.documentElement.classList.toggle("kein-ptr", v !== "start");
@@ -18542,7 +18799,7 @@ function zeige(v, ausHistorie) {
 // stehende werden versteckt, alle zur Laufzeit gebauten entfernt (Rückfragen über ihr „Abbrechen“). Gilt für Handy-Zurück und Escape.
 document.querySelectorAll(".blatt").forEach((b) => { b.dataset.fest = "1"; });
 // 2.24.6 (Fehlerprotokoll Hansi: avSetzen → fensterZu(null), wenn „Mein Bild“ schon zu war): ein nicht (mehr) offenes Fenster ist schon zu
-function einstFuellen() { leitungStartZeigen(); setTimeout(abhKlappen, 900); /* 2.469.0 KC-CLUB-EINST-ABHAENGIG (Häkchen kommen teils erst vom Server) */ notProbeZeigen(); infoStartZeigen(); cdEinstellungenZeigen(); try { schalterZeilen($("v-einstellungen")); } catch {} tippSchalterZeigen(); einwSchalterZeigen(); stimmeWahlZeigen(); ansageSchalterZeigen(); ansStandZeigen(); ruheZeigen(); if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); anrufAntwortenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); fristZeigen(); /* 2.883.0 KC-CLUB-FRIST-ERINNERUNG */ neuWahlZeigen(); meinWetterortZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); anklopfenZeigen(); zuletztSchalterZeigen(); inkognitoZeigen(); elternMeineZeigen(); spEinstZeigen(); schnellWahlZeigen(); mgAnsichtWahlZeigen(); }
+function einstFuellen() { leitungStartZeigen(); setTimeout(abhKlappen, 900); /* 2.469.0 KC-CLUB-EINST-ABHAENGIG (Häkchen kommen teils erst vom Server) */ notProbeZeigen(); infoStartZeigen(); cdEinstellungenZeigen(); try { schalterZeilen($("v-einstellungen")); } catch {} tippSchalterZeigen(); einwSchalterZeigen(); stimmeWahlZeigen(); ansageSchalterZeigen(); ansStandZeigen(); ruheZeigen(); schlafEinstZeigen(); /* KC-CLUB-SCHLAFMODUS */ if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); anrufAntwortenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); fristZeigen(); /* 2.883.0 KC-CLUB-FRIST-ERINNERUNG */ neuWahlZeigen(); meinWetterortZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); anklopfenZeigen(); zuletztSchalterZeigen(); inkognitoZeigen(); elternMeineZeigen(); spEinstZeigen(); schnellWahlZeigen(); mgAnsichtWahlZeigen(); }
 function fensterZu(b) { if (!b) return; if (b._zu) b._zu(); else if (b.dataset.fest) b.classList.add("versteckt"); else b.remove(); }
 // 2.425.0 KC-CLUB-GENERALCHECK (Eingaben schützen): wer in einem Fenster etwas getippt hat und es aus Versehen schließt (daneben tippen,
 // ✕, Escape, Handy-„Zurück“), wird gefragt – vorher war der Text (z. B. SOS-Text, Termin-Vorschlag, Schild) ohne Rückfrage weg.
@@ -20792,7 +21049,7 @@ async function mdStart() {
 let DTL = null;
 // KC-CLUB-RT-DIENST (03.11.2026, Wunsch Hansi): Signal „dienst“ → eine offene Tauschbörse lädt sich still neu (sonst nichts, beim Öffnen ist sie ohnehin frisch)
 async function dtSignalLaden() {
-  if (!$("dtBlatt") || document.hidden || !$("dtInhalt")) return;
+  if (!$("dtBlatt") || ruht() || !$("dtInhalt")) return;
   try { DTL = await api("dienst_tausch_liste", {}); dtZeichnen(); } catch { /* beim nächsten Signal oder Öffnen */ }
 }
 const DT_STATUS = { offen: "⏳ sucht Ersatz", uebernommen: "🙋 übernommen – wartet auf den Planer", bestaetigt: "✅ bestätigt", abgelehnt: "✖ abgelehnt", zurueckgezogen: "↩️ zurückgezogen" };
@@ -21096,7 +21353,7 @@ function rundHerzPlanen() {
   RUND.herz = setTimeout(() => {
     const t = rundTisch(id);
     if (!t || t.phase === "vorbei" || t.phase === "abgesagt") { if (rundLiveAn(id)) tlStopp(true); RUND.sitze = RUND.warte = null; rundKarteZeichnen(); rundTischZeichnen(); return; }
-    if (document.hidden) return rundHerzPlanen();
+    if (ruht()) return rundHerzPlanen();
     rundPlatz(id, false);
   }, RT_HERZ_TISCH_MS);
 }
@@ -21412,7 +21669,7 @@ function irKarteZeichnen() {
     <small>${esc(f.format(new Date(d.start)))}–${esc(u.format(new Date(d.ende)))} · ${d.zustand === "halb" ? "Wann bist du gegangen?" : "Ist-Zeit bestätigen"}${offen.length > 1 ? ` · ${offen.length} offen` : ""}</small></span></button>`;
 }
 document.addEventListener("visibilitychange", () => { if (!document.hidden && Date.now() - IR_ZULETZT > 10 * 60000) irLaden(); });
-setInterval(() => { try { dsKarteZeichnen(); dsWarteSenden(); } catch {} }, 60000);
+setInterval(() => { try { dsKarteZeichnen(); if (!ruht()) dsWarteSenden(); } catch {} }, 60000);
 // ohne Netz: Buchung merken und nachschicken (mit der gewählten Zeit)
 const DS_WARTE = "kc_club_ds_warte";
 function dsWarte() { try { return JSON.parse(localStorage.getItem(DS_WARTE) || "[]"); } catch { return []; } }
@@ -21775,7 +22032,7 @@ function uhZeile(u) {
   return `<div class="unterh${u.id === UH.wahl ? " gewaehlt" : ""}${UH.mark.has(u.id) ? " markiert" : ""}${u.wichtigNeu ? " wichtig-neu" : ""}${uhUngelesen(u) ? " uh-neu" : ""}" data-id="${u.id}" onclick="unterhTipp('${u.id}')">
       ${u.gruppe || u.anzahl > 2 ? uhRundeKreis(u) : kreis(MITGLIEDER?.find((m) => m.name === u.teilnehmer[0]) || null, u.teilnehmer[0], 46)}
       <div class="mitte"><div><b>${esc(u.gruppe?.name || u.betreff || u.teilnehmer.join(", "))}</b>${istFav(u) ? ' <span title="Favorit">⭐</span>' : UH.favAnsicht && u.haeufig ? ' <span class="hinweis" style="font-size:.8rem" title="Hier schreibst du am meisten">· oft</span>' : ""}${stummAn(u.id) ? ' <span title="stummgeschaltet">🔕</span>' : ""}${khOffenMarke(u) /* KC-CLUB-KLUGE-HELFER */}${u.gruppe ? ` <span class="hinweis" style="font-size:.8rem">· ${u.anzahl} Mitgl.</span>` : ""}</div><div class="hinweis">${entwurfAlle()[u.id]?.trim() ? `<span class="entwurf-marke">✏️ Entwurf:</span> ${esc(entwurfAlle()[u.id].trim().slice(0, 80))}` : u.letzte ? esc(u.letzte.von + ": " + vnKurz(u.letzte.text)) : "Noch keine Nachricht"}</div>${uhLesestand(u)}</div>
-      <div style="text-align:right"><div class="hinweis" style="font-size:.8rem">${u.letzte ? zeitKurz(u.letzte.zeit) : ""}</div>${u.nachrichten ? `<div class="hinweis uh-zahl" title="Nachrichten in dieser Unterhaltung">💬 ${u.nachrichten >= 1000 ? "999+" : u.nachrichten}</div>` : ""}${u.ungelesen ? `<span class="punkt${u.wichtigNeu ? " wichtig" : ""}" title="${u.wichtigNeu ? "darunter wichtige Nachricht" : ""}">${u.wichtigNeu ? "❗ " : ""}${u.ungelesen}</span>` : ""}</div><button type="button" class="uh-mehr" aria-label="Mehr zu diesem Chat: Favorit, archivieren, löschen" aria-expanded="${u.id === UH.wahl}" onclick="event.stopPropagation();uhMenue('${u.id}')">⋯</button></div>${u.id === UH.wahl ? unterhAktionen(u) : ""}`;
+      <div style="text-align:right"><div class="hinweis" style="font-size:.8rem">${u.letzte ? zeitKurz(u.letzte.zeit) : ""}</div>${u.nachrichten ? `<div class="hinweis uh-zahl" title="Nachrichten in dieser Unterhaltung">💬 ${u.nachrichten >= 1000 ? "999+" : u.nachrichten}</div>` : ""}${anlMarke(u) /* KC-CLUB-CHAT-ANLAGEN-SICHTBAR: rechts, damit ein langer Name sie nicht abschneidet */}${u.ungelesen ? `<span class="punkt${u.wichtigNeu ? " wichtig" : ""}" title="${u.wichtigNeu ? "darunter wichtige Nachricht" : ""}">${u.wichtigNeu ? "❗ " : ""}${u.ungelesen}</span>` : ""}</div><button type="button" class="uh-mehr" aria-label="Mehr zu diesem Chat: Favorit, archivieren, löschen" aria-expanded="${u.id === UH.wahl}" onclick="event.stopPropagation();uhMenue('${u.id}')">⋯</button></div>${u.id === UH.wahl ? unterhAktionen(u) : ""}`;
 }
 // ---------- KC-CLUB-CHAT-KARTEI (2.191.0) ----------
 // Je Chat eine Karteikarte; vorn (und die nächste) werden die letzten 6 Nachrichten gezeigt – als „Vorschau“, die NICHT als gelesen
@@ -21791,7 +22048,7 @@ function uhKarteiHtml(liste) {
   const uhOn = (u) => !u.gruppe && u.anzahl <= 2 && mgOn(MITGLIEDER?.find((m) => m.name === u.teilnehmer[0])); // Einzelchat mit jemandem, der online ist
   return `<div class="rk-box" id="uhKartei">${rkOnlineVorn(liste, uhOn).map((u) => { const titel = u.gruppe?.name || u.betreff || u.teilnehmer.join(", ");
     const bild = u.gruppe || u.anzahl > 2 ? uhRundeKreis(u) : kreis(MITGLIEDER?.find((m) => m.name === u.teilnehmer[0]) || null, u.teilnehmer[0], 30);
-    return `<details class="karte uhk${uhUngelesen(u) ? " uh-neu" : ""}" data-klappe="uhk" data-id="${esc(u.id)}" data-stand="${esc(u.letzte?.zeit || "")}" open><summary>${bild}<span>${esc(titel)}</span>${u.ungelesen ? `<span class="punkt">${u.ungelesen}</span>` : ""}</summary>
+    return `<details class="karte uhk${uhUngelesen(u) ? " uh-neu" : ""}" data-klappe="uhk" data-id="${esc(u.id)}" data-stand="${esc(u.letzte?.zeit || "")}" open><summary>${bild}<span>${esc(titel)}</span>${anlMarke(u) /* KC-CLUB-CHAT-ANLAGEN-SICHTBAR */}${u.ungelesen ?`<span class="punkt">${u.ungelesen}</span>` : ""}</summary>
       <div class="hinweis uhk-info">${u.gruppe ? `🔗 Feste Gruppe · ${u.anzahl} Mitgl.` : u.anzahl > 2 ? `Runde · ${u.anzahl} Personen` : "Einzelchat"}${uhOn(u) ? " · 🟢 online" : ""}${u.letzte ? ` · zuletzt ${esc(zeitKurz(u.letzte.zeit))}` : ""}${stummAn(u.id) ? " · 🔕" : ""}</div>${uhLesestand(u)}
       <div class="uhk-verlauf" data-teil="verlauf">${u.letzte ? '<p class="hinweis">Wird geladen …</p>' : '<p class="hinweis">Noch keine Nachricht.</p>'}</div>
       <div class="uhk-knoepfe"><button type="button" class="knopf haupt" onclick="chatOeffnen('${esc(u.id)}')">💬 Öffnen &amp; antworten${u.ungelesen ? ` (${u.ungelesen} neu)` : ""}</button></div>
@@ -22171,9 +22428,12 @@ async function chatLaden(scrollen, merk) {
       NA.trennerVor = erste && u.gelesenBis ? erste.id : null; NA.trennerSprung = !!NA.trennerVor;
     }
     NA.nachrichten = new Map(u.nachrichten.map((m) => [m.id, m]));
+    // KC-CLUB-CHAT-ANLAGEN-SICHTBAR: welche 📎 kurz aufleuchten (nur frische Daten), was „geöffnet“ ist
+    const anlPuls = merk ? new Set() : new Set([...anlPulsIds(u.nachrichten, ANLS.ids.get(fuer), u.gelesenBis, ANLS.gepulst, anlZaehlt),
+      ...[...ANLS.gepulst].filter(([, t]) => Date.now() - t < 1600).map(([id]) => id)]), anlAuf = anlAufSet(); // gleich wieder neu gezeichnet (z. B. Tag aufgeklappt): Aufleuchten nicht abschneiden
     const blaseHtml = (m) => `${m.id === NA.trennerVor ? '<div class="neu-trenner" id="neuTrenner">⬇ Neue Nachrichten</div>' : ""}<div data-id="${m.id}" class="blase${m.eigen ? " eigen" : ""}${istNotfall(m) ? " notfall" : ""}${m.erwaehntMich ? " erwaehnt-mich" : ""}${m.wichtig ? " wichtig" : ""}${!m.eigen && andere.length > 1 ? " farbig" : ""}"${!m.eigen && andere.length > 1 ? ` style="${gruppenFarbe(m.von)}"` : ""} id="msg-${m.id}" title="Antippen: reagieren, antworten, Details" onclick="if(!event.target.closest('button,img,a,audio,video,.sprache,.zitat'))nachrichtMenue('${m.id}')" oncontextmenu="if(!event.target.closest('a,img,audio,video,input,textarea')){event.preventDefault();nachrichtMenue('${m.id}')}">
       ${istNotfall(m) ? '<div class="notfall-marke">🚨 NOTFALL</div>' : m.wichtig ? '<div class="wichtig-marke">❗ WICHTIG</div>' : ""}${m.express ? '<div class="express-marke">🏎️ EXPRESS</div>' : ""}${!m.eigen && andere.length > 1 ? `<div class="von">${esc(m.von)}</div>` : ""}${m.antwortAuf ? `<div class="zitat" onclick="zuNachricht('${m.antwortAuf.id}')"><b>${esc(m.antwortAuf.von)}</b><span>${esc(vnKurz(m.antwortAuf.text))}</span></div>` : ""}${m.umfrage ? umfrageHtml(m) : m.kontakt ? kontaktKarteHtml(m) : (m.text === "📎" || (m.text === EINMAL_TEXT && m.anlagen.some((a) => a.einmal))) && m.anlagen.length ? "" : khSprachHtml(m) /* KC-CLUB-KLUGE-HELFER */ ?? `<div class="txt">${naText(istNotfall(m) ? m.text.replace(NOTFALL_RE, "") : m.text)}</div>`}${m.link ? lvKarteHtml(m.link) : ""}${ntKnopfHtml(m) /* 2.608.0 KC-CLUB-NACHRICHT-TERMIN */}${erkKnopfHtml(m) /* 2.666.0 KC-CLUB-ERKENNUNG-NACHRICHT */}
-      ${m.anlagen.map((a) => a.name === VN_ANL_NAME ? vnAnlHtml(a) : a.einmal ? einmalKachel(a) : /^image\//.test(a.mime || "") ? `<img data-anlage="${a.id}" alt="${esc(a.name)}" onclick="event.stopPropagation();anlageOeffnen('${a.id}')">` : /^audio\//.test(a.mime || "") ? `<div class="sprache" data-sprache="${a.id}"><button onclick="spracheAbspielen(this, '${a.id}', ${/^Sprachnachricht/i.test(a.name || "") ? "false" : "true"})">${/^Sprachnachricht/i.test(a.name || "") ? "▶️ Sprachnachricht anhören" : `▶️ 🎵 ${esc(a.name || "Musik")}`}</button></div>` : `<div class="anlage" onclick='event.stopPropagation();anlageAktion(${hlJs(a.id)}, ${hlJs(a.name || "Datei")}, ${hlJs(a.mime || "")})'>📄 ${esc(a.name)}</div>`).join("")}
+      ${m.anlagen.map((a) => a.name === VN_ANL_NAME ? vnAnlHtml(a) : a.einmal ? einmalKachel(a) : /^image\//.test(a.mime || "") ? `<img data-anlage="${a.id}" alt="${esc(a.name)}" onclick="event.stopPropagation();anlageOeffnen('${a.id}')">` : /^audio\//.test(a.mime || "") ? `<div class="sprache" data-sprache="${a.id}"><button onclick="spracheAbspielen(this, '${a.id}', ${/^Sprachnachricht/i.test(a.name || "") ? "false" : "true"})">${/^Sprachnachricht/i.test(a.name || "") ? "▶️ Sprachnachricht anhören" : `▶️ 🎵 ${esc(a.name || "Musik")}`}</button></div>` : anlZaehlt(a) ? "" /* KC-CLUB-CHAT-ANLAGEN-SICHTBAR: Dateien stehen in der Anlage-Leiste */ : `<div class="anlage" onclick='event.stopPropagation();anlageAktion(${hlJs(a.id)}, ${hlJs(a.name || "Datei")}, ${hlJs(a.mime || "")})'>📄 ${esc(a.name)}</div>`).join("")}${anlLeisteHtml(m, anlPuls.has(m.id), anlAuf)}
       <div class="na-seite"><button class="na-pfeil" title="Weiterleiten oder kopieren" aria-label="Weiterleiten oder kopieren" onclick="naPfeilMenue('${m.id}')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4.5l7.5 7.5-7.5 7.5v-4.3c-5.2 0-8.8 1.7-11.4 5.3 1-5.2 4.1-10.3 11.4-11.3V4.5z"/></svg></button><button class="na-info" title="Info: wer geschrieben, bekommen und gelesen hat" aria-label="Info zur Nachricht" onclick="nachrichtInfo('${m.id}')">i</button></div>
       ${m.eigen && m.express?.empfaenger ? expressStatusHtml(m.express) : m.express?.quittungen?.length ? `<div class="express-quittung">📬 Empfang bestätigt: ${m.express.quittungen.map((q) => `${esc(q.name)} ${esc(zeitKurz(q.am))}`).join(", ")}</div>` : m.eigen && m.express ? '<div class="express-quittung warte">📭 Empfang noch nicht bestätigt</div>' : ""}
       <div class="fuss">${m.loeschtAm ? `<span class="sl-marke" title="Löscht sich selbst – für alle">⏳ noch ${slRest(m.loeschtAm)}</span> ` : ""}${m.angeheftet ? '<span title="oben angeheftet">📌</span> ' : ""}${m.gemerkt ? '<span title="gemerkt">⭐</span> ' : ""}${m.bearbeitet ? '<span class="bearb" title="nachträglich geändert">bearbeitet</span>' : ""}${zeitKurz(m.zeit)}${m.eigen ? " " + hakenHtml(m, andere.length) : ""}${m.eigen || ICH.admin ? ` <button aria-label="Nachricht löschen" class="weg" title="Nachricht löschen" onclick="nachrichtLoeschen('${m.id}')">🗑️</button>` : ""}</div></div>`;
@@ -22183,6 +22443,7 @@ async function chatLaden(scrollen, merk) {
     naWischenEinrichten();
     naReaktionenZeigen(u.nachrichten);
     try { khNachZeichnen(u, andere); } catch (e) { console.warn("kluge helfer", e); } // KC-CLUB-KLUGE-HELFER: „Für dich“, Schnellantworten, „Noch nicht gelesen“
+    if (!merk) try { anlNachZeichnen(fuer, u, anlPuls); } catch (e) { console.warn("anlagen", e); } // KC-CLUB-CHAT-ANLAGEN-SICHTBAR: 📎 für die Chat-Liste merken
     if (CS.offen) chatSucheJetzt(false); // KC-CLUB-CHATSUCHE: Markierung nach dem Neuzeichnen behalten
     if (!merk && neuVonAnderen && einst("ton", true) && !stummAn(chatId)) ton();
     // KC-CLUB-NACH-UNTEN (1.12.0): beim Lesen älterer Nachrichten nicht nach unten reißen – stattdessen ⬇️ mit Punkt
@@ -23074,6 +23335,112 @@ function khOffenMarke(u) {
   if (!khAn("khFragen")) return ""; const z = khLesen("kh_offen", {})[u.id];
   return z && u.letzte?.von === "Du" && Date.now() - Date.parse(z) >= KH_FRAGE_MS ? ' <span class="kh-offen-marke" title="Deine Frage ist seit über 12 Stunden unbeantwortet">❓</span>' : "";
 }
+// ---------- KC-CLUB-CHAT-ANLAGEN-SICHTBAR (19.11.2026, Wunsch Hansi „wenn dort eine Anlage drin liegt, muss die besser gekennzeichnet sein, z. B. durch eine
+// blinkende Büroklammer“ – „Ja alles bauen“) ----------
+// A Anlage-Leiste in der Nachricht („📎 2 Anlagen: Preisliste.pdf · Foto“, antippbar), B „📎2“ an der Unterhaltung in der Chat-Liste (Anlagen anderer, die ich
+// noch nicht geöffnet habe), C die 📎 der Leiste leuchtet bei neuen Nachrichten kurz auf (3×, ~1,5 s; nicht bei „✨ Animierte Knöpfe“ aus / weniger Bewegung),
+// D „📎 Alle Anlagen“ im Chat-Menü (Fotos als Kacheln, Dateien als Zeilen, „↪ zur Nachricht“).
+// KC-DB-SPARSAM: KEINE zusätzliche Server-Abfrage. Das Gerät merkt sich nur Kennungen und Zeiten (nie Namen oder Inhalte): welche Anlagen ich geöffnet habe
+// (kc_club_anl_auf, höchstens 500) und je Chat die noch nicht geöffneten Dateien anderer aus dem zuletzt geladenen Stand (kc_club_anl_chat, höchstens 60 Chats,
+// Anlagen der letzten 30 Tage). Fotos gelten als gesehen, sobald der Chat sie gezeigt hat (das Vorschaubild steht ja in der Nachricht). Kam seit dem letzten
+// Öffnen etwas Neues, zählt die Liste die letzte Nachricht mit, wenn sie eine reine Anlage („📎“) von jemand anderem ist. Eigene Anlagen zählen nie.
+const ANL_AUF_MAX = 500, ANL_CHATS_MAX = 60, ANL_TAGE = 30, ANL_PULS_LETZTE = 5;
+const ANLS = { gepulst: new Map(), ids: new Map() }; // gepulst: Nachricht → Zeitpunkt, an dem ihre 📎 aufgeleuchtet hat (diese Sitzung) · ids: Chat → Nachrichten beim letzten Zeichnen
+// zählt als Anlage: Fotos, PDFs, Dateien, Videos – nicht Sprachnachrichten/Musik (eigene ▶️-Knöpfe), nicht 🔒 verschlüsselte, nicht Einmal-Fotos (eigene Kachel)
+const anlZaehlt = (a) => !!a?.id && !a.einmal && a.name !== VN_ANL_NAME && !/^audio\//.test(a.mime || "");
+const anlIstBild = (a) => /^image\//.test(a?.mime || "");
+const anlSym = (a) => (anlIstBild(a) ? "🖼️" : /^video\//.test(a?.mime || "") ? "🎬" : "📄");
+// A: Daten der Leiste (rein) – null, wenn keine nötig ist (ein einzelnes Foto zeigt sich selbst). Sonst { n, dateien, fotos, text }
+function anlLeisteDaten(anlagen, zaehlt) {
+  const z = (anlagen || []).filter(zaehlt), dateien = z.filter((a) => !anlIstBild(a)), fotos = z.filter(anlIstBild);
+  if (!dateien.length && fotos.length < 2) return null;
+  const n = z.length, teile = [...dateien.map((a) => a.name || "Datei"), ...(fotos.length ? [fotos.length === 1 ? "Foto" : `${fotos.length} Fotos`] : [])];
+  return { n, dateien, fotos, text: `📎 ${n} ${n === 1 ? "Anlage" : "Anlagen"}: ${teile.join(" · ")}` };
+}
+function anlLeisteHtml(m, puls, auf) {
+  const d = anlLeisteDaten(m?.anlagen, anlZaehlt); if (!d) return "";
+  const neu = (a) => !m.eigen && !auf.has(a.id);
+  const knopf = (a) => `<button type="button" class="anl-teil${neu(a) ? " ungeoeffnet" : ""}" data-anl="${esc(a.id)}" title="${neu(a) ? "Noch nicht geöffnet – antippen" : "Antippen zum Öffnen"}" onclick="event.stopPropagation();anlTeilOeffnen('${esc(a.id)}')">${anlSym(a)} ${esc(a.name || "Datei")}</button>`;
+  const fotos = d.fotos.length ? `<button type="button" class="anl-teil" title="Alle Fotos und Dateien dieses Chats" onclick="event.stopPropagation();${d.fotos.length === 1 ? `anlTeilOeffnen('${esc(d.fotos[0].id)}')` : "anlAlleBlatt()"}">🖼️ ${d.fotos.length === 1 ? "Foto" : `${d.fotos.length} Fotos`}</button>` : "";
+  // KC-CLUB-CHAT-ANLAGEN-BLINKEN (20.11.2026, Fund Hansi „Die Büroklammer hat nicht geblinkt“ – nur 1,5 s beim ersten Öffnen war zu kurz): die 📎 blinkt ruhig weiter,
+  // solange eine Datei anderer noch nicht geöffnet ist (anl-blink); beim Öffnen hört es auf (anlGeoeffnetMerken). Neue Fotos wackeln wie bisher kurz (anl-puls).
+  const blink = d.dateien.some(neu);
+  return `<div class="anl-leiste${blink ? " anl-blink" : puls ? " anl-puls" : ""}" role="group" aria-label="${esc(d.text)}"><div class="anl-kopf"><span class="anl-klammer" aria-hidden="true">📎</span> ${d.n} ${d.n === 1 ? "Anlage" : "Anlagen"}:</div><div class="anl-teile">${d.dateien.map(knopf).join("")}${fotos}</div></div>`;
+}
+// C: welche Nachrichten leuchten auf (rein)? Anlagen anderer, noch nicht aufgeleuchtet – beim ersten Zeichnen eines Chats die ungelesenen
+// (nach gelesenBis, höchstens die letzten 5), danach nur neu hinzugekommene
+function anlPulsIds(nachrichten, vorher, gelesenBis, gepulst, zaehlt) {
+  const l = nachrichten || [], aus = new Set();
+  l.forEach((m, i) => {
+    if (m.eigen || gepulst.has(m.id) || !(m.anlagen || []).some(zaehlt)) return;
+    if (vorher ? !vorher.has(m.id) : i >= l.length - ANL_PULS_LETZTE && (!gelesenBis || m.zeit > gelesenBis)) aus.add(m.id);
+  });
+  return aus;
+}
+// B: noch nicht geöffnete Dateien anderer in einem Chat (rein; Fotos zählen als gesehen, sobald der Chat gezeigt wurde)
+function anlChatOffen(nachrichten, auf, jetztMs, zaehlt) {
+  const grenze = jetztMs - ANL_TAGE * 86400000;
+  return (nachrichten || []).filter((m) => !m.eigen && Date.parse(m.zeit) >= grenze).flatMap((m) => (m.anlagen || []).filter((a) => zaehlt(a) && !anlIstBild(a) && !auf.has(a.id)).map((a) => a.id));
+}
+// B: Zahl für die Chat-Liste (rein) – gemerkter Stand + letzte Nachricht, wenn sie neuer ist und eine reine Anlage von jemand anderem
+function anlListeZahl(u, rec, auf) {
+  let n = rec ? (rec.offen || []).filter((id) => !auf.has(id)).length : 0;
+  const l = u?.letzte;
+  if (l && l.von !== "Du" && l.text === "📎" && (u.ungelesen || 0) > 0 && (!rec || String(l.zeit) > String(rec.bis || ""))) n += 1;
+  return n;
+}
+const anlAufSet = () => new Set(khLesen("anl_auf", []));
+function anlGeoeffnetMerken(id) {
+  if (!id) return; const l = khLesen("anl_auf", []);
+  if (!l.includes(id)) khSchreiben("anl_auf", [...l, id].slice(-ANL_AUF_MAX));
+  document.querySelectorAll(`.anl-teil.ungeoeffnet[data-anl="${CSS.escape(String(id))}"], .anl-zeile.ungeoeffnet[data-anl="${CSS.escape(String(id))}"]`).forEach((e) => e.classList.remove("ungeoeffnet"));
+  document.querySelectorAll(".anl-leiste.anl-blink").forEach((l) => { if (!l.querySelector(".anl-teil.ungeoeffnet")) l.classList.remove("anl-blink"); }); // KC-CLUB-CHAT-ANLAGEN-BLINKEN: alles geöffnet → Ruhe
+}
+function anlNachZeichnen(chat, u, puls) {
+  for (const id of puls) if (!ANLS.gepulst.has(id)) ANLS.gepulst.set(id, Date.now());
+  ANLS.ids.set(chat, new Set(u.nachrichten.map((m) => m.id)));
+  const alle = khLesen("anl_chat", {}), letzte = u.nachrichten[u.nachrichten.length - 1];
+  delete alle[chat]; alle[chat] = { bis: letzte?.zeit || "", offen: anlChatOffen(u.nachrichten, anlAufSet(), Date.now(), anlZaehlt).slice(-50) };
+  const k = Object.keys(alle); for (const x of k.slice(0, Math.max(0, k.length - ANL_CHATS_MAX))) delete alle[x];
+  khSchreiben("anl_chat", alle);
+}
+function anlMarke(u) {
+  const n = anlListeZahl(u, khLesen("anl_chat", {})[u.id], anlAufSet());
+  return n ? ` <span class="anl-marke" title="${n === 1 ? "1 Anlage" : `${n} Anlagen`} – noch nicht geöffnet">📎${n}</span>` : "";
+}
+// Anlage aus einer Nachricht dieses Chats öffnen – wie bisher: Fotos groß (anlageOeffnen), Dateien mit Öffnen/Teilen/Speichern (anlageAktion)
+function anlTeilOeffnen(id) {
+  let a = null; for (const m of NA.nachrichten.values()) { a = (m.anlagen || []).find((x) => x.id === id); if (a) break; }
+  if (!a) return;
+  if (anlIstBild(a)) anlageOeffnen(a.id); else anlageAktion(a.id, a.name || "Datei", a.mime || "");
+}
+// D: alle Anlagen der geladenen Nachrichten (rein), neueste zuerst
+function anlAlleListe(nachrichten, zaehlt) {
+  return (nachrichten || []).flatMap((m) => (m.anlagen || []).filter(zaehlt).map((a) => ({ a, m }))).reverse();
+}
+function anlAlleBlatt() {
+  $("chatBlatt")?.classList.add("versteckt");
+  const l = anlAlleListe(CHAT?.id === chatId ? CHAT.nachrichten : [], anlZaehlt), auf = anlAufSet();
+  const fotos = l.filter((x) => anlIstBild(x.a)), dateien = l.filter((x) => !anlIstBild(x.a)), offen = dateien.filter((x) => !x.m.eigen && !auf.has(x.a.id));
+  const wer = (m) => (m.eigen ? "Du" : khVorname(m.von) || "?");
+  const kachel = (x) => `<div class="anl-kachel"><button type="button" class="anl-k-bild" aria-label="Foto von ${esc(wer(x.m))} öffnen" onclick="anlTeilOeffnen('${esc(x.a.id)}')"><img data-anlage="${esc(x.a.id)}" alt="${esc(x.a.name || "Foto")}"></button>
+    <button type="button" class="anl-zur" title="zur Nachricht" aria-label="Zur Nachricht springen" onclick="anlZur('${esc(x.m.id)}')">↪ ${esc(wer(x.m))}</button></div>`;
+  const zeile = (x) => `<div class="anl-zeile${!x.m.eigen && !auf.has(x.a.id) ? " ungeoeffnet" : ""}" data-anl="${esc(x.a.id)}"><button type="button" class="anl-z-auf" onclick="anlTeilOeffnen('${esc(x.a.id)}')"><span class="anl-z-sym" aria-hidden="true">${anlSym(x.a)}</span><span><b>${esc(x.a.name || "Datei")}</b><small>${esc(zeitKurz(x.m.zeit))} · ${esc(wer(x.m))}</small></span></button>
+    <button type="button" class="knopf klein" onclick="anlZur('${esc(x.m.id)}')">↪ zur Nachricht</button></div>`;
+  const f = blattAuf("anlAlleBlatt", `<h3 style="margin-top:0">📎 Alle Anlagen in diesem Chat</h3>
+    <p class="hinweis" style="margin:0 0 8px">${l.length ? `${fotos.length ? `${fotos.length} ${fotos.length === 1 ? "Foto" : "Fotos"}` : ""}${fotos.length && dateien.length ? " · " : ""}${dateien.length ? `${dateien.length} ${dateien.length === 1 ? "Datei" : "Dateien"}` : ""} – antippen öffnet, „↪“ springt zur Nachricht.${offen.length ? ` <b>• = noch nicht geöffnet</b>` : ""}` : "In den geladenen Nachrichten dieses Chats liegen keine Fotos oder Dateien."}</p>
+    ${dateien.length ? `<h4 style="margin:6px 0 4px">📄 Dateien</h4><div class="anl-zeilen">${dateien.map(zeile).join("")}</div>` : ""}
+    ${fotos.length ? `<h4 style="margin:10px 0 4px">🖼️ Fotos</h4><div class="anl-kacheln">${fotos.map(kachel).join("")}</div>` : ""}
+    <div class="dlg-knoepfe">${offen.length ? `<button type="button" class="knopf" onclick="anlAlleGesehen()">✓ Alle als geöffnet merken</button>` : ""}<button type="button" class="knopf haupt" onclick="$('anlAlleBlatt').remove()">Schließen</button></div>`);
+  f.querySelectorAll("img[data-anlage]").forEach(bildLaden);
+}
+function anlZur(id) { $("anlAlleBlatt")?.remove(); zuNachricht(id); }
+function anlAlleGesehen() {
+  const l = anlAlleListe(CHAT?.id === chatId ? CHAT.nachrichten : [], anlZaehlt);
+  for (const x of l) if (!x.m.eigen) anlGeoeffnetMerken(x.a.id);
+  if (CHAT?.id === chatId) anlNachZeichnen(chatId, CHAT, new Set());
+  $("anlAlleBlatt")?.remove(); melde("✓ Alle Anlagen als geöffnet gemerkt");
+}
 // 7 📸 Fotos ins Album – Clubtermine einmal je Sitzung holen (höchstens alle 6 Std.)
 async function khTreffen() {
   if (KH.treffen && Date.now() - KH.treffenAm < 6 * 3600000) return KH.treffen;
@@ -23178,7 +23545,7 @@ async function ntEintragen(q, ziel) {
   try {
     await api("privattermin_speichern", { titel, beginn, ende, ganztaegig: ganz, ort, notiz, erinnerung_min: Number($("ntErinnerung").value), wiederholung: "keine", wiederholung_bis: null, startseite: false });
   } catch (e) { return meldeFehler(e); }
-  const handy = $("ntHandy").checked; $("ntBlatt")?.remove(); CD.stand = 0;
+  const handy = $("ntHandy").checked; $("ntBlatt")?.remove(); cdStandMerken(0);
   melde(`📅 Eingetragen: ${titel} – in deinem Kalender (nur du siehst ihn)`);
   if (handy) { const k = "nt-" + Date.now(); TREFFEN_IDX.set(k, { id: k, titel, beginn, ende, ganztaegig: ganz, ort, beschreibung: notiz }); inKalender(k); }
 }
@@ -23959,6 +24326,21 @@ function ruheZeigen() {
     : "In dieser Zeit kein Push. Anrufe kommen trotzdem durch, danach eine Sammelmeldung.";
 }
 function ruheSchnell(an) { $("ruheAn").checked = an; ruheSpeichern(); }
+// 💤 Schlafmodus (KC-CLUB-SCHLAFMODUS, 20.11.2026) – je Mitglied über einstSpeichern (Server prüft „schlafmodus“): immer / nur von–bis / aus
+function schlafEinstZeigen() {
+  const z = $("schlafWahl"); if (!z) return;
+  const w = schlafWahl() || {}, art = w.art === "zeit" || w.art === "aus" ? w.art : "immer";
+  z.innerHTML = [["immer", "An – immer"], ["zeit", "Nur zu bestimmten Zeiten"], ["aus", "Aus"]].map(([k, t]) => `<button type="button" class="chip${art === k ? " an" : ""}" aria-pressed="${art === k}" onclick="schlafSetzen('${k}')">${t}</button>`).join("");
+  if ($("schlafVon")) $("schlafVon").value = w.von || "22:00";
+  if ($("schlafBis")) $("schlafBis").value = w.bis || "07:00";
+  $("schlafZeiten")?.classList.toggle("versteckt", art !== "zeit");
+}
+async function schlafSetzen(art) {
+  const wert = { art, von: $("schlafVon")?.value || "22:00", bis: $("schlafBis")?.value || "07:00" };
+  try { const r = await einstSpeichern("schlafmodus", wert), w = r?.wert || wert; if (INIT) INIT.einstellungen = { ...(INIT.einstellungen || {}), schlafmodus: w }; schlafEinstZeigen();
+    melde(w.art === "aus" ? "💤 Schlafmodus aus – die App schläft nicht mehr von selbst ein (im Hintergrund ruht sie weiter)" : w.art === "zeit" ? `💤 Schlafmodus nur von ${w.von} bis ${w.bis} Uhr` : "💤 Schlafmodus an – nach 15 Min. ohne Tippen schläft die App ein"); }
+  catch (e) { meldeFehler(e); schlafEinstZeigen(); }
+}
 async function ruheSpeichern() {
   const wert = { an: $("ruheAn").checked, von: $("ruheVon").value || "22:00", bis: $("ruheBis").value || "07:00", erwaehnung: $("ruheErw").checked };
   try { const r = await api("einstellung_setzen", { schluessel: "ruhezeit", wert }); INIT.einstellungen = { ...(INIT.einstellungen || {}), ruhezeit: r.wert }; ruheZeigen();
@@ -24628,6 +25010,7 @@ function chatMenue() {
   $("chatSlKnopf").textContent = `⏳ Selbstlöschen: ${sl ? "nach " + slText(sl) : "Aus"}`; $("chatSlKnopf").classList.toggle("versteckt", !chatId);
   const vp = vbPartner(); $("chatVbKnopf").classList.toggle("versteckt", !vp); if (vp) $("chatVbKnopf").textContent = `🔑 Schlüsselbund mit ${vbVorname(vp)}: ${vbHolen(vp.person_id) ? "vorhanden" : "anlegen …"}`; // 2.518.0
   stummBereichZeigen();
+  if ($("chatAnlKnopf")) { const n = chatId && CHAT?.id === chatId ? anlAlleListe(CHAT.nachrichten, anlZaehlt).length : 0; $("chatAnlKnopf").textContent = `📎 Alle Anlagen (Fotos & Dateien)${n ? ` · ${n}` : ""}`; $("chatAnlKnopf").classList.toggle("versteckt", !chatId); } // KC-CLUB-CHAT-ANLAGEN-SICHTBAR
   $("chatBlatt").classList.remove("versteckt");
 }
 async function unterhaltungWeg(fuerAlle, gefragt) {
@@ -24667,6 +25050,7 @@ document.addEventListener("error", (ev) => {
 // ist es trotzdem gesperrt, kommt ein Knopf „↗ Jetzt öffnen“ (ein echter Link, den man selbst antippt).
 async function anlageOeffnen(id) {
   let w = null; try { w = window.open("", "_blank"); } catch {}
+  anlGeoeffnetMerken(id); // KC-CLUB-CHAT-ANLAGEN-SICHTBAR: „geöffnet“ nur auf diesem Gerät merken
   try {
     const r = await api("anlage_url", { id });
     if (w && !w.closed) { try { w.opener = null; } catch {} w.location.href = r.url; return; }
@@ -24704,7 +25088,7 @@ async function anlageDateiZeigen() {
 // direkt beim Antippen (iPhone verlangt das), ohne erneutes Laden.
 let ANL_T = null;
 function anlageAktion(id, name, mime) {
-  ANL_T = { id, name, mime, datei: null, fehler: null };
+  ANL_T = { id, name, mime, datei: null, fehler: null }; anlGeoeffnetMerken(id); // KC-CLUB-CHAT-ANLAGEN-SICHTBAR
   api("diagnose", { art: "anlage", daten: { schritt: "angetippt", mime: mime || "" } }).catch(() => {}); // 2.166.0: Diagnose „öffnet sich nicht“
   const lauf = ANL_T;
   lauf.warten = anlageAlsDatei({ id, name, mime }).then((d) => { lauf.datei = new File([d.blob], d.name, { type: d.mime || "application/octet-stream" }); }).catch((e) => { lauf.fehler = e; });
@@ -25538,8 +25922,8 @@ function sqZeigen() {
   if (alt) alt.outerHTML = html; else z.insertAdjacentHTML("beforeend", html);
 }
 const sqDarf = () => !!chatId && !anlagen.length && !neuEntwurf?.mehrfach; // nur Text in einem bestehenden Chat
-addEventListener("online", () => { try { if (SQ.liste.some((x) => x.status === "wartet")) { SQ.liste.forEach((x) => { if (x.status === "wartet") x.naechster = 0; }); sqWeiter(); } } catch {} });
-setInterval(() => { try { if (ICH && !SQ.laeuft) { sqLaden(); if (SQ.liste.some((x) => x.status === "wartet" && (x.naechster || 0) <= Date.now())) sqWeiter(); } } catch {} }, 15000); // nach dem Öffnen: Liegengebliebenes weiter senden
+addEventListener("online", () => { try { if (!ruht() && SQ.liste.some((x) => x.status === "wartet")) { SQ.liste.forEach((x) => { if (x.status === "wartet") x.naechster = 0; }); sqWeiter(); } } catch {} });
+setInterval(() => { try { if (ICH && !SQ.laeuft && !ruht()) { sqLaden(); if (SQ.liste.some((x) => x.status === "wartet" && (x.naechster || 0) <= Date.now())) sqWeiter(); } } catch {} }, 15000); // nach dem Öffnen: Liegengebliebenes weiter senden
 // ---------- 2.649.0 KC-CLUB-VERSANDWAHL (Wunsch Hansi „unter Nachrichten so wie im Büro wählen: Alles, Mail, Push, WhatsApp – mit Anlage“) ----------
 // Bei mehreren Empfängern oder mit Anlage fragt die App vor dem Senden „Wie verschicken?“ (genau eine Wahl) und zeigt vorher, was rausgeht.
 // „✉️ Nur E-Mail“ heißt nur E-Mail (Server: kein Push dazu, auch bei ❗ wichtig; auch an Empfänger, die gerade in der App sind).
@@ -27271,7 +27655,7 @@ async function caOeffnen(vorschau, treffenId) {
     CA.holen = async () => { if (!$("caBlatt")) return clearInterval(CA.takt); if (CA.laeuft) { CA.nochmal = true; return; } CA.laeuft = true;
       try { const n = await api("clubabend", daten()); if (n.aktiv && !n.auswahl && $("caBlatt")) { CA.stand = n; caZeichnen(); } } catch {}
       CA.laeuft = false; if (CA.nochmal) { CA.nochmal = false; CA.holen(); } };
-    CA.tick = 0; CA.takt = setInterval(() => { if (!$("caBlatt")) return clearInterval(CA.takt); if (document.hidden) return; if (rtAn() && ++CA.tick % 6) return; CA.holen(); }, CA_TAKT_MS);
+    CA.tick = 0; CA.takt = setInterval(() => { if (!$("caBlatt")) return clearInterval(CA.takt); if (ruht()) return; if (rtAn() && ++CA.tick % 6) return; CA.holen(); }, CA_TAKT_MS);
   } catch (e) { meldeFehler(e); }
 }
 function caAuswahl(vorschau, liste) {
@@ -27706,8 +28090,9 @@ function anlagenListe(bearbeiten) {
 }
 function aufgabeZeile(a, darfAbhaken, darfLoeschen) {
   return `<div class="zeile">${darfAbhaken ? `<button class="knopf klein ${a.erledigt_am ? "gruen" : ""}" title="erledigt" onclick="aufgabeErledigt('${a.id}', ${!a.erledigt_am})">${a.erledigt_am ? "✔" : "☐"}</button>` : `<span>${a.erledigt_am ? "✔" : "📌"}</span>`}
-    <div style="flex:1${a.erledigt_am ? ";text-decoration:line-through;opacity:.6" : ""}"><b>${esc(a.text)}</b>
-      <div class="hinweis" style="font-size:.85rem">${a.ids?.length > 1 ? '<span title="gemeinsame Aufgabe – erledigt, sobald einer sie abhakt">👥 </span>' : ""}${esc(a.name)}${a.mit?.length ? ` <span title="gemeinsame Aufgabe">· gemeinsam mit ${esc(a.mit.join(", "))}</span>` : ""} ${a.erledigt_am ? "" : faelligText(a.faellig)}${a.protokoll ? " · aus „" + esc(a.protokoll.titel) + "“" : ""}</div>${a.erledigt_am && a.bemerkung ? `<div class="hinweis" style="font-size:.85rem;text-decoration:none;opacity:1">💬 ${esc(a.bemerkung)}</div>` : ""}</div>
+    <div style="flex:1${a.erledigt_am ? ";opacity:.75" : ""}"><b${a.erledigt_am ? ' style="text-decoration:line-through"' : ""}>${esc(a.text)}</b>${a.erledigt_am ? `<div class="hinweis auf-erledigt-von" style="font-size:.85rem">${esc(aufgabeErledigtText(a))}</div>` : ""}<!-- KC-CLUB-AUFGABE-ERLEDIGT-VON -->
+      <div class="hinweis" style="font-size:.85rem">${a.ids?.length > 1 ? '<span title="gemeinsame Aufgabe – erledigt, sobald einer sie abhakt">👥 </span>' : ""}${esc(a.name)}${a.mit?.length ? ` <span title="gemeinsame Aufgabe">· gemeinsam mit ${esc(a.mit.join(", "))}</span>` : ""} ${a.erledigt_am ? "" : faelligText(a.faellig) + aufgabeStandMarke(a)}${a.protokoll ? " · aus „" + esc(a.protokoll.titel) + "“" : ""}</div>${a.erledigt_am && a.bemerkung ? `<div class="hinweis" style="font-size:.85rem;text-decoration:none;opacity:1">💬 ${esc(a.bemerkung)}</div>` : ""}${!a.erledigt_am && a.stand_text && (a.stand === "teilweise" || a.stand === "nicht") ? `<div class="hinweis" style="font-size:.85rem">${a.stand === "teilweise" ? "🔶" : "❌"} ${esc(a.stand_text)}</div>` : ""}
+      ${!a.erledigt_am && a.meine ? `<button type="button" class="knopf klein" style="margin-top:4px" onclick="astEinzeln('${esc(a.id)}')">📝 Stand melden</button>` : ""}</div>
     ${darfLoeschen ? `<button class="knopf klein" title="löschen" aria-label="Aufgabe löschen" onclick="aufgabeLoeschen('${a.id}')">🗑️</button>` : ""}</div>`;
 }
 // ---------- 2.499.0 KC-CLUB-PROTOKOLL-NACHTRAG (Wunsch Hansi „Ich will nicht manuell eintragen“): Texte, die Hansi diktiert hat (über Claude abgelegt),
@@ -27764,6 +28149,7 @@ function protokollFormular() {
       <details style="margin-top:10px"${p.kurzfassung ? " open" : ""}><summary><b>✏️ Kurzfassung tippen</b> <small class="hinweis">(freiwillig)</small></summary>
         <label class="feld"><textarea id="prK" rows="5" oninput="prAendern()">${esc(p.kurzfassung || "")}</textarea></label></details>
     </div>
+    ${aufgabenStandHtml()}<!-- KC-CLUB-AUFGABEN-STAND -->
     <div class="karte"><h3>3 · Aufgaben <small class="hinweis">(wer macht was bis wann)</small></h3>
       <div id="prAufgaben">${PR.aufgaben.map((a) => aufgabeZeile(a, true, true)).join("") || '<p class="hinweis">Noch keine Aufgaben.</p>'}</div>
       <div class="feld">Wer? <small class="hinweis">(auch mehrere)</small><button type="button" class="knopf todower" id="aufWer" style="width:100%;margin-top:5px" onclick="aufgabeWerWaehlen()">${AUF_WER.length ? "👉 " + esc(todoNamen(AUF_WER)) : "👉 bitte wählen"}</button></div>
@@ -27998,19 +28384,18 @@ function aufgabenMitGruppe(liste) {
     if (alle[0] !== a) continue; // schon mit der ersten Zeile der Gruppe aufgenommen
     neu.push({ ...a, name: alle.map((x) => x.name || "?").join(", "), namen: alle.map((x) => x.name || "?"), ids: alle.map((x) => x.id), mit: [],
       meine: alle.some((x) => x.meine), verwalten: alle.some((x) => x.verwalten),
-      erledigt_am: alle.every((x) => x.erledigt_am) ? alle.map((x) => x.erledigt_am).sort().pop() : null, bemerkung: alle.find((x) => x.bemerkung)?.bemerkung ?? null });
+      erledigt_am: alle.every((x) => x.erledigt_am) ? alle.map((x) => x.erledigt_am).sort().pop() : null, bemerkung: alle.find((x) => x.bemerkung)?.bemerkung ?? null, erledigt_von_name: alle.find((x) => x.erledigt_von_name)?.erledigt_von_name ?? null, /* KC-CLUB-AUFGABE-ERLEDIGT-VON */
+      ...(() => { const st = alle.filter((x) => x.stand_am).sort((x, y) => String(y.stand_am).localeCompare(String(x.stand_am)))[0]; // KC-CLUB-AUFGABEN-STAND: eine Meldung gilt für die ganze Gruppe – die neueste zählt
+        return st ? { stand: st.stand, stand_am: st.stand_am, stand_text: st.stand_text ?? null, stand_ziel: st.stand_ziel ?? null } : {}; })() });
   }
   liste.splice(0, liste.length, ...neu);
   return liste;
 }
-// 2.508.0 KC-CLUB-AUFGABE-BEMERKUNG (Wunsch Hansi): Erledigt nur mit kurzer Bemerkung – „Was ist dabei herausgekommen?“
+// 2.508.0 KC-CLUB-AUFGABE-BEMERKUNG (Wunsch Hansi): beim Erledigen „Was ist dabei herausgekommen?“ –
+// KC-CLUB-AUFGABE-BEMERKUNG-FREI (19.11.2026, Wunsch Hansi „kein Pflichtfeld, sondern freiwillige Angabe“): leer lassen geht auch.
 async function aufgabeBemerkung() {
-  for (;;) {
-    const t = await eingabe("✔ Aufgabe erledigt\n\nWas ist dabei herausgekommen? Ein, zwei Sätze reichen – wer die Aufgabe eingetragen hat, bekommt sie zu lesen.", "", { mehrzeilig: true, ja: "✔ Erledigt melden", nein: "Abbrechen" });
-    if (t === null) return null;
-    if (t.trim().length >= 3) return t.trim();
-    melde("Bitte kurz dazuschreiben, was dabei herausgekommen ist.", true);
-  }
+  const t = await eingabe("✔ Aufgabe erledigt\n\nWas ist dabei herausgekommen? (freiwillig) – wer die Aufgabe eingetragen hat, bekommt es zu lesen.", "", { mehrzeilig: true, ja: "✔ Erledigt melden", nein: "Abbrechen" });
+  return t === null ? null : t.trim();
 }
 async function aufgabeErledigt(id, erledigt) {
   try {
@@ -28031,6 +28416,118 @@ async function aufgabeLoeschen(id) {
     else protokolleLaden();
     neuLaden();
   } catch (e) { meldeFehler(e); }
+}
+// ---------- KC-CLUB-AUFGABEN-STAND (19.11.2026, Wunsch Hansi „Gib allen mit offenen Aufgaben eine Startmeldung mit der Aufgabe und ob sie erledigt ist:
+// Ja, teilweise, nein. Das Ergebnis muss dann im nächsten Protokoll erscheinen als erledigt am, oder teilweise oder noch nicht.“) ----------
+// Startmeldung „📌 Wie steht's mit deiner Aufgabe?“: der Server liefert beim ersten Laden je App-Sitzung (init, aufStand) die Aufgaben, die „dran“ sind
+// (Sitzung in ≤ 7 Tagen ohne Meldung, nochmal 2 Tage vorher, überfällig, Nachfrage der Clubleitung). ✅ erledigt (Bemerkung Pflicht) wirkt wie das Abhaken,
+// 🔶 teilweise (was fehlt noch – Pflicht), ❌ noch nicht (Grund und neues Ziel freiwillig). „Später“ bzw. Schließen = 24 Std. Ruhe. Im Protokoll:
+// Abschnitt „Stand der Aufgaben“ (Entwurf lebendig, veröffentlicht festgeschrieben) – mit „Rückmeldungen 3 von 5“ und „🔔 Nachfragen“ für wer schreibt.
+var AST = { fragen: true, zuletzt: 0, dran: [], offen: false };
+const AST_TEXT = { erledigt: "Was ist dabei herausgekommen? (freiwillig – wer die Aufgabe eingetragen hat, bekommt es zu lesen)", teilweise: "Was fehlt noch? (freiwillig)", nicht: "Warum noch nicht? (freiwillig)" }; // KC-CLUB-AUFGABE-BEMERKUNG-FREI: alles freiwillig
+function astFragenJetzt() { return ICH?.protokolle !== false && !document.body.classList.contains("rg-ohne-admin") && (AST.fragen || Date.now() - AST.zuletzt > 6 * 3600000); }
+function astNachInit(d) {
+  AST.fragen = false; AST.zuletzt = Date.now(); AST.dran = Array.isArray(d?.aufgabenDran) ? d.aufgabenDran : [];
+  if (AST.dran.length && !AST.offen) setTimeout(() => astPruefen(0), 9500);
+}
+// „21.11.“ – Datum (JJJJ-MM-TT) bzw. Zeitpunkt (deutsche Zeit)
+function astTag(x) { const s = /^\d{4}-\d{2}-\d{2}$/.test(String(x || "")) ? String(x) : x ? TAG_ISO_FMT.format(new Date(x)) : ""; return s ? `${s.slice(8, 10)}.${s.slice(5, 7)}.` : ""; }
+// eine Zeile im Abschnitt „Stand der Aufgaben“ (Ansicht, Druck, Text) – „✅ erledigt am 21.11. – Frank, Christina: Tablets beschaffen – „2 Tablets gekauft““
+function aufgabeStandZeile(e) {
+  const kopf = { erledigt: `✅ erledigt${e.am ? " am " + astTag(e.am) : ""}${e.von ? " von " + e.von : ""}`, /* KC-CLUB-AUFGABE-ERLEDIGT-VON */ teilweise: `🔶 teilweise${e.am ? ` (Stand ${astTag(e.am)})` : ""}`, nicht: `❌ noch nicht${e.am ? ` (Stand ${astTag(e.am)})` : ""}` }[e.stand] || "❔ keine Rückmeldung";
+  const namen = (e.namen || []).filter(Boolean);
+  return `${kopf} – ${namen.length ? namen.join(", ") + ": " : ""}${e.text}${e.notiz ? ` – „${e.notiz}“` : ""}${e.stand === "nicht" && e.ziel ? ` – neues Ziel ${astTag(e.ziel)}` : ""}${e.aus ? ` (aus dem Protokoll vom ${astTag(e.aus)})` : ""}`;
+}
+// KC-CLUB-AUFGABE-ERLEDIGT-VON (19.11.2026, Wunsch Hansi): unter erledigten Aufgaben „✔ erledigt am 19.11. von Frank“ – „von“ liefert der Server
+// (erledigt_von_name, Vorname); ältere Erledigungen vor dem Aufgaben-Stand haben keinen → nur „✔ erledigt am …“
+function aufgabeErledigtText(a) { return a?.erledigt_am ? `✔ erledigt am ${astTag(a.erledigt_am)}${a.erledigt_von_name ? " von " + a.erledigt_von_name : ""}` : ""; }
+function aufgabeStandMarke(a) {
+  if (a.stand !== "teilweise" && a.stand !== "nicht") return "";
+  return ` <span class="marke ${a.stand === "teilweise" ? "gelb" : "rot"}">${a.stand === "teilweise" ? "🔶 teilweise" : "❌ noch nicht"}${a.stand_am ? " · " + esc(astTag(a.stand_am)) : ""}${a.stand === "nicht" && a.stand_ziel ? " · Ziel " + esc(astTag(a.stand_ziel)) : ""}</span>`;
+}
+// Abschnitt im Protokoll (Ansicht und Entwurf); wer schreibt, sieht im Entwurf die Rückmeldungen und kann nachfragen
+function aufgabenStandHtml() {
+  const l = PR?.aufgabenStand; if (!Array.isArray(l) || !l.length) return "";
+  const lebendig = !!PR.aufgabenStandLebendig, bearb = PR.darfBearbeiten && lebendig;
+  let ueber = "";
+  if (bearb) {
+    const gemeldet = l.filter((e) => e.neu).length, fehlen = [...new Set(l.flatMap((e) => e.fehltNamen || []))];
+    const seit = PR.aufgabenNachgefragtAm ? Date.parse(PR.aufgabenNachgefragtAm) : 0, gesperrt = seit && Date.now() - seit < 12 * 3600000;
+    ueber = `<div class="ast-ueber" style="margin-top:8px;padding:8px 10px;border-radius:10px;background:var(--flaeche2, rgba(0,0,0,.04))"><b>Rückmeldungen: ${gemeldet} von ${l.length}</b>${fehlen.length ? `<div class="hinweis" style="margin:2px 0 6px">Noch keine Rückmeldung: ${esc(fehlen.join(", "))}</div>` : '<div class="hinweis" style="margin:2px 0 0">Alle haben sich gemeldet 👍</div>'}
+      ${fehlen.length ? (gesperrt ? `<div class="hinweis" style="font-size:.85rem">🔔 Nachgefragt ${esc(zeitKurz(PR.aufgabenNachgefragtAm))} – wieder möglich nach 12 Stunden.</div>` : `<button type="button" class="knopf klein" onclick="einmal(this, astNachfragen)">🔔 Nachfragen</button>`) : ""}</div>`;
+  }
+  return `<div class="karte ast-karte"><h3 style="margin-top:0">📋 Stand der Aufgaben</h3><p class="hinweis" style="margin:0 0 6px;font-size:.85rem">Aufgaben aus früheren Protokollen, die noch offen waren${lebendig ? " – wird bis zum Veröffentlichen laufend aktualisiert" : ""}.</p>
+    <ul style="margin:0;padding-left:20px">${l.map((e) => `<li style="margin:0 0 4px">${esc(aufgabeStandZeile(e))}</li>`).join("")}</ul>${ueber}</div>`;
+}
+async function astNachfragen() {
+  const fehlen = [...new Set((PR?.aufgabenStand || []).flatMap((e) => e.fehltNamen || []))];
+  if (!(await frage(`🔔 Nachfragen?\n\n${fehlen.join(", ")} ${fehlen.length === 1 ? "bekommt" : "bekommen"} eine Push „Bitte kurz den Stand deiner Aufgabe melden“, und beim nächsten Öffnen der App kommt die Frage.`, { ja: "🔔 Nachfragen", nein: "Abbrechen" }))) return;
+  try { const r = await api("aufgaben_nachfragen", { id: prId }, { warten: true }); melde(r.an ? `🔔 ${r.an} ${r.an === 1 ? "Mitglied" : "Mitglieder"} gefragt` : "Alle haben sich schon gemeldet 👍"); protokollOeffnen(prId, true); }
+  catch (e) { meldeFehler(e); }
+}
+function astPruefen(n = 0) {
+  if (!AST.dran.length || AST.offen) return;
+  if (document.hidden || aktuelleAnsicht !== "start" || document.querySelector(FENSTER_OFFEN + ", .dlg")) { if (n < 40) setTimeout(() => astPruefen(n + 1), 5000); return; }
+  astFenster(AST.dran.slice(0, 10), true);
+}
+// „📝 Stand melden“ an der Aufgabe (Protokoll, Aufgabenliste) – dasselbe Fenster nur für diese Aufgabe
+function astEinzeln(id) {
+  const a = [...(PR?.aufgaben || []), ...(prListe?.aufgaben || [])].find((x) => x.id === id || (x.ids || []).includes(id)); if (!a) return;
+  const ich = ICH?.name || "";
+  astFenster([{ id: a.id, text: a.text, faellig: a.faellig, aus: a.protokoll ? null : PR?.protokoll?.datum || null, ausTitel: a.protokoll?.titel || null, mit: (a.namen || []).filter((n) => n !== ich),
+    stand: a.stand || "offen", stand_am: a.stand_am || null, stand_text: a.stand_text || null, stand_ziel: a.stand_ziel || null, stand_von: null }], false);
+}
+function astFenster(liste, start) {
+  if (!liste.length) return;
+  let i = 0, wahl = null; AST.offen = true;
+  const fertig = new Set();
+  const f = blattAuf("astBlatt", `<div id="astInhalt"></div>`);
+  const zu = (spaeter) => {
+    f._zu = null; f.remove(); AST.offen = false;
+    const rest = liste.filter((x) => !fertig.has(x.id)).map((x) => x.id);
+    if (start && spaeter && rest.length) api("aufgabe_stand_spaeter", { ids: rest }).catch(() => {}); // Schließen ohne Antwort = Später (24 Std. Ruhe)
+    AST.dran = AST.dran.filter((x) => !liste.some((y) => y.id === x.id));
+  };
+  f._zu = () => zu(true); // Handy-„Zurück“, ✕, daneben tippen
+  const zeichnen = () => {
+    const a = liste[i]; wahl = null;
+    const info = [a.mit?.length ? `👥 mit ${a.mit.join(", ")}` : "", a.aus ? `aus dem Protokoll vom ${astTag(a.aus)}` : a.ausTitel ? `aus „${a.ausTitel}“` : "", a.faellig ? `bis ${astTag(a.faellig)}` : ""].filter(Boolean).join(" · ");
+    const zuletzt = (a.stand === "teilweise" || a.stand === "nicht") && a.stand_am ? `<p class="ast-andere" style="margin:8px 0 0;padding:6px 8px;border-radius:8px;background:rgba(240,180,40,.15)">${a.stand_von && a.stand_von !== "ich" ? `${esc(a.stand_von)} hat gemeldet` : "Zuletzt gemeldet"}: ${a.stand === "teilweise" ? "🔶 teilweise" : "❌ noch nicht"}${a.stand_text ? ` – „${esc(a.stand_text)}“` : ""} <small>(${esc(astTag(a.stand_am))})</small>${a.stand_von && a.stand_von !== "ich" ? "<br><small>Du kannst ergänzen oder auf erledigt setzen.</small>" : ""}</p>` : "";
+    const gross = "font-size:1.15rem;padding:14px 10px;width:100%;text-align:left";
+    f.querySelector("#astInhalt").innerHTML = `<h3 style="margin:0 0 4px">📌 Wie steht's mit deiner Aufgabe?</h3>${liste.length > 1 ? `<p class="hinweis" style="margin:0 0 4px">Aufgabe ${i + 1} von ${liste.length}</p>` : ""}
+      <div class="ast-aufgabe" style="padding:10px;border-radius:10px;background:rgba(0,0,0,.05)"><b style="font-size:1.1rem;overflow-wrap:anywhere">${esc(a.text)}</b>${info ? `<div class="hinweis" style="margin-top:2px">${esc(info)}</div>` : ""}</div>${zuletzt}
+      <p style="margin:12px 0 6px;font-weight:700">Ist sie erledigt?</p>
+      <div class="ast-knoepfe" style="display:grid;gap:8px"><button type="button" class="knopf ast-k" data-s="erledigt" style="${gross}">✅ Ja, erledigt</button><button type="button" class="knopf ast-k" data-s="teilweise" style="${gross}">🔶 Teilweise</button><button type="button" class="knopf ast-k" data-s="nicht" style="${gross}">❌ Noch nicht</button></div>
+      <div id="astMehr" style="display:none;margin-top:10px">
+        <label class="feld"><span id="astTextLabel"></span><textarea id="astText" rows="3" maxlength="1000" style="width:100%;box-sizing:border-box"></textarea></label>
+        <label class="feld" id="astZielFeld" style="display:none">Neues Zieldatum (freiwillig)<input id="astZiel" type="date" min="${esc(heuteIso())}" style="width:100%;box-sizing:border-box"></label>
+        <p id="astHinweis" role="alert" style="display:none;margin:4px 0;color:#b3261e;font-weight:700"></p>
+        <button type="button" class="knopf haupt" id="astLos" style="width:100%;font-size:1.1rem;padding:12px">📨 Melden</button>
+      </div>
+      <div style="text-align:center;margin-top:12px"><button type="button" class="knopf klein" id="astSpaeter">${start ? "⏰ Später (morgen wieder)" : "Schließen"}</button></div>`;
+    f.querySelectorAll(".ast-k").forEach((b) => (b.onclick = () => {
+      wahl = b.dataset.s;
+      f.querySelectorAll(".ast-k").forEach((x) => { x.classList.toggle("haupt", x === b); x.setAttribute("aria-pressed", String(x === b)); });
+      $("astMehr").style.display = ""; $("astTextLabel").textContent = AST_TEXT[wahl]; $("astZielFeld").style.display = wahl === "nicht" ? "" : "none"; $("astHinweis").style.display = "none";
+      $("astLos").textContent = { erledigt: "✅ Erledigt melden", teilweise: "🔶 Teilweise melden", nicht: "❌ Noch nicht – melden" }[wahl];
+      try { $("astText").focus(); } catch {}
+    }));
+    $("astSpaeter").onclick = () => zu(start);
+    $("astLos").onclick = (ev) => einmal(ev.currentTarget, async () => {
+      if (!wahl) return;
+      const text = ($("astText").value || "").trim(), ziel = wahl === "nicht" ? $("astZiel").value || "" : "";
+      try { await api("aufgabe_stand_melden", { id: a.id, stand: wahl, text, ...(ziel ? { ziel } : {}) }, { warten: true }); }
+      catch (e) { return meldeFehler(e); }
+      fertig.add(a.id);
+      melde({ erledigt: "✔ Erledigt – danke!", teilweise: "🔶 Danke – Stand gemeldet", nicht: "❌ Danke – Stand gemeldet" }[wahl]);
+      if (wahl === "erledigt" && INIT?.meineAufgaben) INIT.meineAufgaben = INIT.meineAufgaben.filter((x) => x.id !== a.id);
+      if (++i < liste.length) return zeichnen();
+      zu(false);
+      if (aktuelleAnsicht === "protokoll" && prId) protokollOeffnen(prId, true); else if (aktuelleAnsicht === "protokolle") protokolleLaden();
+      if (wahl === "erledigt") neuLaden();
+    });
+  };
+  zeichnen();
 }
 // ---------- 2.818.0 KC-CLUB-PROTOKOLL-PRUEFUNG (Wunsch #57 Hansi, Konzept 02.11.2026 – „Ja, baue nach deinen Vorschlägen“) ----------
 // Hat jemand anderes als der Schriftführer das Protokoll eingetragen: „📨 Zur Prüfung an …“ → der Schriftführer liest es und tippt „✅ Stimmt so –
@@ -28140,6 +28637,7 @@ function protokollLesen() {
       ${p.kurzfassung ? `<p style="margin:10px 0 0"><b>Kurzfassung</b></p><p class="${neuF("kurzfassung", p.kurzfassung)}" style="white-space:pre-wrap;margin:4px 0 0">${esc(p.kurzfassung)}</p>` : ""}
       ${p.naechster_termin ? `<p class="${neuF("naechster_termin", p.naechster_termin)}" style="margin:10px 0 0"><b>📅 Nächster Termin:</b> ${esc(p.naechster_termin)}</p>` : ""}
     </div>
+    ${aufgabenStandHtml()}
     ${PR.anlagen.length ? `<div class="karte"><h3>📎 Das Protokoll</h3><p class="hinweis" style="margin-top:0;font-size:.85rem">Antippen zum Vergrößern bzw. Öffnen.</p>${anlagenListe(false)}</div>` : ""}
     <div class="knoepfe" style="margin:0 0 10px"><button class="knopf klein" onclick="einmal(this, prDrucken)">🖨️ Drucken / PDF</button>${PR.darfBearbeiten && p.roh !== "entwurf" ? '<button class="knopf klein" onclick="prInfoWahl()">📣 Info an Mitglieder</button>' : ""}${p.roh !== "entwurf" ? '<button class="knopf klein" onclick="protokollInsArchiv()">🗄️ In mein Archiv legen</button>' : ""}</div>
     ${PR.aufgaben.length ? `<div class="karte"><h3>📌 Aufgaben</h3>${PR.aufgaben.map((a) => aufgabeZeile(a, a.meine || PR.darfBearbeiten, a.verwalten)).join("")}</div>` : ""}
@@ -28202,7 +28700,9 @@ let MG_FILTER = (() => { try { const f = localStorage.getItem("kc_club_mg_filter
 // KC-CLUB-ONLINE-SEITE (1.91.0, Wunsch Hansi): Kachel „Mitglieder/online“ oben im Kopf öffnet IMMER die Mitglieder-Seite nur mit den
 // Online-Mitgliedern – einmalig, ohne die gemerkte Wahl (👥 Alle / 🟢 Online) für die untere Leiste zu ändern
 function mgNurOnline() { MG_EINMAL = "online"; zeige("mitglieder"); }
-function mgFilterSetzen(f) { MG_EINMAL = null; MG_FILTER = f === "online" || f === "fav" ? f : "alle"; try { localStorage.setItem("kc_club_mg_filter", MG_FILTER); } catch {} mitgliederZeichnen(); }
+function mgFilterSetzen(f) { MG_EINMAL = null; MG_FILTER = f === "online" || f === "fav" ? f : "alle"; try { localStorage.setItem("kc_club_mg_filter", MG_FILTER); } catch {}
+  if (!Array.isArray(MITGLIEDER)) return mitgliederLaden(); // 19.11.2026 KC-CLUB-MG-FILTER-LEER (Fund Hansi 5:58: „Wer ist online?“ aus dem Schnellzugriff, bevor die Liste geladen war → Programmfehler): erst laden, dann zeichnen
+  mitgliederZeichnen(); }
 // KC-CLUB-MG-KACHELN (1.45.0, Wunsch Hansi): Mitglieder als Kacheln oder Liste – jeder wählt selbst (⚙️ → Darstellung, je Gerät)
 const MG_ANSICHTEN = ["kacheln", "liste", "tafel", "kartei"]; // 2.185.0: „kartei“ = Rollkartei // KC-CLUB-ANWESENHEIT (2.23.89): „tafel“ = nur Name + LED
 let MG_ANSICHT = (() => { try { const a = localStorage.getItem("kc_club_mg_ansicht"); return MG_ANSICHTEN.includes(a) ? a : "kacheln"; } catch { return "kacheln"; } })();
@@ -28326,6 +28826,7 @@ function mgAnrufKnoepfe(m) {
     + `<button class="knopf klein${on ? "" : " mg-aus"}" title="Videoanruf" aria-label="Videoanruf" onclick="${on ? `anrufen('${m.person_id}', true)` : aus}">🎥</button>`;
 }
 function mitgliederZeichnen() {
+  if (!Array.isArray(MITGLIEDER)) return; // 19.11.2026 KC-CLUB-MG-FILTER-LEER: Liste noch nicht geladen – mitgliederLaden zeichnet danach selbst
   try {
     const sichtbar = ONLINE_SICHTBAR !== false, anzahl = MITGLIEDER.filter((m) => mgOn(m)).length, nurOnline = (MG_EINMAL || MG_FILTER) === "online" && sichtbar;
     const nurFav = !MG_EINMAL && MG_FILTER === "fav"; // 2.397.0 KC-CLUB-FAV-PERSONEN
@@ -28489,7 +28990,7 @@ async function privatSpeichern(id) {
     await api("privattermin_speichern", { id: id || undefined, titel, beginn, ende, ganztaegig: ganz, ort: $("ptOrt").value.trim(), notiz: $("ptNotiz").value.trim(), erinnerung_min: Number($("ptErinnerung").value),
       wiederholung: $("ptWdh").value, wiederholung_bis: $("ptWdh").value !== "keine" ? $("ptWdhBis").value || null : null, startseite: $("ptStart").checked });
     $("treffenForm").classList.add("versteckt"); melde($("ptStart").checked ? "🔒 Gespeichert – 📌 läuft oben auf der Startseite mit" : "🔒 Privater Termin gespeichert – nur du siehst ihn"); treffenLaden();
-    CD.stand = 0; // KC-CLUB-PRIVAT-STARTSEITE: Countdown gleich neu holen
+    cdStandMerken(0); // KC-CLUB-PRIVAT-STARTSEITE: Countdown gleich neu holen
   } catch (e) { meldeFehler(e); }
 }
 async function privatLoeschen(id, reihe) {
@@ -29792,10 +30293,10 @@ async function scHinweisPruefen() {
 const TAH_KEY = "kc_club_ta_hinweis", TAH_SPAETER_MS = 2 * 3600000, TAH_TAKT_MS = 5 * 60000;
 let TAH_LAEUFT = false, TAH_ZULETZT = 0;
 async function taHinweisPruefen(versuch = 0) {
-  if (!ICH || TAH_LAEUFT || document.hidden || $("taHinweisBlatt")) return;
+  if (!ICH || TAH_LAEUFT || ruht() || $("taHinweisBlatt")) return;
   if (document.querySelector(FENSTER_OFFEN) || !["start", "nachrichten", "pinnwand", "mitglieder", "helfen"].includes(aktuelleAnsicht)) {
     if (versuch < 10) setTimeout(() => taHinweisPruefen(versuch + 1), 8000); return; }
-  if (Date.now() - TAH_ZULETZT < 20000) return; TAH_ZULETZT = Date.now();
+  if (Date.now() - TAH_ZULETZT < 20000) return; TAH_ZULETZT = Date.now(); TAH_AUFBAU = RT.aufbauten; // KC-CLUB-LEITUNG-SPARSAM: Stand der Leitung merken
   TAH_LAEUFT = true; let l = [];
   try { l = (await api("terminanfragen_liste")).anfragen || []; } catch { return; } finally { TAH_LAEUFT = false; }
   const offen = l.filter((a) => !a.vonMir && !a.spiel && a.status === "offen" && !a.meine && !a.meinVorschlag
@@ -29821,14 +30322,26 @@ async function taHinweisPruefen(versuch = 0) {
 }
 // 2.874.0 KC-CLUB-RT-TERMINANFRAGE (Wunsch Hansi 06.11. „mehr über die Standleitung“): neue Anfrage, Antwort, Gegenvorschlag oder Absage melden sich
 // selbst (Signal „terminanfrage“). Steht die Leitung, fragt der Takt nur noch jedes 6. Mal (alle 30 statt 5 Min.) zur Sicherheit; ohne Leitung wie bisher.
-let TAH_TICK = 0;
-setInterval(() => { if (rtAn() && ++TAH_TICK % 6) return; taHinweisPruefen(9); }, TAH_TAKT_MS);
+// 18.11.2026 KC-CLUB-LEITUNG-SPARSAM (Wunsch Hansi „einsparen über die direkte Leitung“): mit Leitung nur noch jedes 12. Mal (alle 60 Min.).
+// Zurück in den Vordergrund: bei stehender Leitung nur fragen, wenn die App > 10 Min. weg war oder die Leitung seit der letzten Frage neu
+// aufgebaut wurde (dann können Signale gefehlt haben – auch nach dem bewussten Trennen im Hintergrund); ohne Leitung wie bisher immer.
+const TAH_RT_JEDES = 12, TAH_WEG_MAX_MS = 10 * 60000;
+let TAH_TICK = 0, TAH_WEG_AM = 0, TAH_AUFBAU = -1;
+setInterval(() => { if (rtAn() && ++TAH_TICK % TAH_RT_JEDES) return; taHinweisPruefen(9); }, TAH_TAKT_MS); // KC-CLUB-SCHLAFMODUS: taHinweisPruefen prüft ruht() selbst
+// 19.11.2026 KC-CLUB-SPARSAM-NACHBESSERN (Nachkontrolle 2.982.0: „terminanfragen_liste“ nur −19 %): die Leitung wird im Hintergrund nach 60 s
+// bewusst getrennt (KC-CLUB-AKKU-4) – beim Zurückkommen war sie damit IMMER „neu aufgebaut“ bzw. nach 2,5 s noch nicht wieder da, also wurde
+// fast jedes Mal gefragt. Jetzt: nur nach > 10 Min. weg oder wenn die Leitung auch nach 10 s nicht steht. Neue Anfragen im Hintergrund kommen
+// per Push (bzw. Mail), mit offener App sofort als Signal; der 60-Min.-Takt fragt zur Sicherheit.
+function taRueckkehrNoetig(wegMs) { return !rtAn() || wegMs > TAH_WEG_MAX_MS; }
 function taSignal() {
   if (document.hidden) return; // beim Zurückkommen fragt die App ohnehin nach (visibilitychange)
   TAH_ZULETZT = 0; taHinweisPruefen(9);
   if ($("terminanfragen")?.offsetParent) taLaden(); // Liste gerade zu sehen → frisch holen
 }
-document.addEventListener("visibilitychange", () => { if (!document.hidden) setTimeout(() => taHinweisPruefen(9), 2500); });
+document.addEventListener("visibilitychange", () => { if (document.hidden) { TAH_WEG_AM = Date.now(); return; }
+  const weg = TAH_WEG_AM ? Date.now() - TAH_WEG_AM : Infinity; // KC-CLUB-LEITUNG-SPARSAM
+  setTimeout(() => { if (!taRueckkehrNoetig(weg)) return; if (weg > TAH_WEG_MAX_MS) return taHinweisPruefen(9);
+    setTimeout(() => { if (taRueckkehrNoetig(weg)) taHinweisPruefen(9); }, 7500); }, 2500); }); // Leitung noch im Aufbau → bis 10 s warten
 async function taAntwort(id, antwort) {
   let notiz = "";
   if (antwort === "nein" || antwort === "vielleicht") {
@@ -30051,7 +30564,7 @@ function stVerfolgen() {
   stBalken();
   if (!ST.eigen || ST.watch !== null || !navigator.geolocation) return;
   ST.watch = navigator.geolocation.watchPosition((p) => { ST.letzte = p; stMelden(false); }, () => {}, { enableHighAccuracy: true, maximumAge: 10000 });
-  clearInterval(ST.timer); ST.timer = setInterval(() => { stBalken(); stMelden(false); }, 15000);
+  clearInterval(ST.timer); ST.timer = setInterval(() => { stBalken(); if (!SCHLAF.an) stMelden(false); }, 15000); // KC-CLUB-SCHLAFMODUS (Standort teilen verhindert das Einschlafen; „Jetzt schlafen“ von Hand pausiert)
 }
 async function stMelden(sofort) {
   if (!ST.eigen) return;
@@ -30093,7 +30606,7 @@ async function stLaden(still) {
         <iframe loading="lazy" title="Karte ${esc(x.von.name)}" src="https://www.openstreetmap.org/export/embed.html?bbox=${x.lon - d},${x.lat - d * 0.6},${x.lon + d},${x.lat + d * 0.6}&layer=mapnik&marker=${x.lat},${x.lon}"></iframe>
         <div class="knoepfe"><a class="knopf" href="${stKarte(x.lat, x.lon)}" target="_blank" rel="noopener">🗺️ Große Karte</a><a class="knopf" href="https://www.openstreetmap.org/directions?route=%3B${x.lat}%2C${x.lon}" target="_blank" rel="noopener">🧭 Weg dorthin</a></div></div>`; }).join("")
       || (eigen ? "" : `<div class="karte hinweis">Gerade teilt niemand den Standort mit dir.</div>`));
-  clearInterval(stAnsichtTimer); stAnsichtTimer = setInterval(() => { if (!document.hidden) stLaden(true); }, 30000);
+  clearInterval(stAnsichtTimer); stAnsichtTimer = setInterval(() => { if (!ruht()) stLaden(true); }, 30000);
 }
 let stAnsichtTimer = null;
 function stAnsichtStopp() { clearInterval(stAnsichtTimer); stAnsichtTimer = null; }
@@ -30289,7 +30802,7 @@ function mitfahrtBlock(art, bezugId, liste, offen, suche = [], darf = true) {
     !ichFahre && !ichDabei ? `<button class="knopf klein" onclick="mitfahrtAnbieten('${art}', '${esc(bezugId)}')">🚗 Ich biete eine Mitfahrgelegenheit</button>` : "",
   ].filter(Boolean).join("") : "";
   const legende = liste.length ? '<div class="mf-legende"><span><i class="mf-q mf-frei"></i>frei – antippen</span><span><i class="mf-q mf-du"></i>dein Platz</span><span><i class="mf-q mf-belegt"></i>belegt</span></div>' : "";
-  return `<div style="margin-top:10px;border-top:1px solid var(--linie);padding-top:8px"><b>🚗 Mitfahren</b>${legende}${zeilen || '<p class="hinweis" style="margin:4px 0">Noch keine Mitfahrgelegenheit.</p>'}${suchZeile}
+  return `<div class="mf-block" style="margin-top:10px;border-top:1px solid var(--linie);padding-top:8px"><b>🚗 Mitfahren</b>${legende}${zeilen || '<p class="hinweis" style="margin:4px 0">Noch keine Mitfahrgelegenheit.</p>'}${suchZeile}
     ${knoepfe ? `<div class="knoepfe">${knoepfe}</div>` : ""}
     ${offen && !darf ? '<p class="hinweis" style="margin:6px 0 0;font-size:.85rem">Sag zuerst „✅ Ich komme“ – dann kannst du eine Mitfahrgelegenheit suchen, anbieten oder einen Platz buchen.</p>' : ""}</div>`;
 }
@@ -31965,6 +32478,11 @@ async function rcSichern(id, st) {
 }
 async function rcReisen(neu) {
   if (RC.reisen && !neu) return RC.reisen;
+  // 19.11.2026 KC-CLUB-SPARSAM-NACHBESSERN (Nachkontrolle 2.982.0: „countdowns“ +29 % statt weniger): die Reise-Prüfung beim Start holte
+  // „countdowns“ jedes Mal selbst vom Server – an der 6-Stunden-Regel der Countdown-Kachel vorbei. Jetzt dieselben Daten aus dem Gerät,
+  // solange sie jünger als 6 Std. sind; nur „Checkliste öffnen“ ohne Treffer (neu = true) fragt den Server.
+  const st = CD.stand >= 0 ? CD.stand : (CD.daten ? cdStandLesen() : 0);
+  if (!neu && CD.daten && st > 0 && Date.now() - st < CD_NEU_MS) { RC.reisen = (CD.daten.reisen || []).filter(rcIstKreuzfahrt); return RC.reisen; }
   const r = await api("countdowns", {}, { still: true });
   RC.reisen = (r.reisen || []).filter(rcIstKreuzfahrt);
   return RC.reisen;
@@ -32144,6 +32662,8 @@ const DRUCKARTEN = {
   erstattung: { titel: "🖨️ Erstattungsantrag drucken", optionen: () => druckErstattungOptionen(), bauen: (o) => druckErstattung(o) },
   abstimmung: { titel: "🖨️ Ankreuzbogen drucken", optionen: () => abDruckOptionen(), bauen: (o, p) => druckAbstimmung({ ...p, art: "bogen" }) }, // 2.557.0 KC-CLUB-ABSTIMMUNG-DRUCK · 2.558.0 „Für wen?“
   abstimmungErgebnis: { bauen: (o, p) => druckAbstimmung({ ...p, art: "ergebnis" }) },
+  karte: { titel: "🖨️ Karte drucken", bauen: (o, d) => ({ titel: `${d.anlass} ${d.name || ""}`.trim(), ohneRahmen: true, // 2.991.0 KC-CLUB-KARTEN-BAUKASTEN: Karte A5 zum Ausschneiden
+    html: `<div style="text-align:center"><img src="${d.bild}" alt="" style="width:148mm;max-width:100%;display:block;margin:0 auto;border:0.2mm dashed #bbb"><p style="font:9pt Georgia,serif;color:#741521;margin:3mm 0 0">✂️ Entlang der Linie ausschneiden (A5) · Köcheclub Werne</p></div>` }) },
   erstattungBlatt: { titel: "📄 Erstattungsantrag", bauen: (o, d) => ({ titel: `Erstattungsantrag ${d.name}`.trim(), ohneRahmen: true, html: erstBlatt(d) }) }, // 2.526.0
   anleitung: { bauen: () => druckAnleitung() },
   einstwegweiser: { bauen: () => ewDruck() }, // 2.534.0 KC-CLUB-EINST-WEGWEISER
@@ -32446,7 +32966,10 @@ async function eigenTeilenEmpfangen(dateien) {
 }
 function druckVorschauAendern() { druckVorschauZu(); druckStarten(DRUCK.art, DRUCK.param); }
 // erst hier wird gedruckt – die Druckseite (#druck) ist schon gebaut und entspricht der Vorschau
-function druckJetzt() { setTimeout(() => window.print(), 60); }
+function druckJetzt() { setTimeout(() => druckMitPause(() => window.print()), 60); }
+// 19.11.2026 KC-CLUB-HAENGER-DRUCK (Fund Klaus 9:30: „App reagierte 24 s nicht – App hat selbst zu lange gerechnet (KC-F-101)“ nach 🖨️ Drucken):
+// Solange der Druck-Dialog offen ist, hält der Browser die App an – das ist kein Hänger. Der Hänger-Wächter überspringt diese Zeit.
+function druckMitPause(fn) { window.KC_DRUCKT = true; try { fn(); } finally { window.KC_DRUCKT = false; window.KC_DRUCK_ENDE = Date.now(); } }
 // iPhone: Druckseite als eigenständige HTML-Datei teilen (dort drucken oder als PDF sichern)
 async function druckTeilen() {
   const html = druckHtml(false);
@@ -32572,6 +33095,7 @@ function druckProtokoll() {
         <tr><th>Stand</th><td>Fassung ${p.version} · ${esc(status)}</td></tr></tbody></table>
       <h2>Tagesordnung</h2>${liste(p.tagesordnung, "ol", p.tagesordnungVon)}<h2>Beschlüsse</h2>${liste(p.beschluesse, "ul")}
       ${p.kurzfassung ? `<h2>Kurzfassung</h2><p style="white-space:pre-wrap">${esc(p.kurzfassung)}</p>` : ""}
+      ${PR.aufgabenStand?.length ? `<h2>Stand der Aufgaben</h2><ul>${PR.aufgabenStand.map((e) => `<li>${esc(aufgabeStandZeile(e))}</li>`).join("")}</ul>` : ""}
       ${PR.aufgaben.length ? `<h2>Aufgaben</h2><table><thead><tr><th style="width:9mm">✓</th><th>Aufgabe</th><th style="width:44mm">Wer</th><th style="width:22mm">bis</th></tr></thead><tbody>${druckAufgabenZeilen(PR.aufgaben)}</tbody></table>` : ""}
       ${PR.anlagen.length ? `<h2>Anlagen</h2><ul>${PR.anlagen.map((a) => `<li>${esc(a.name)}</li>`).join("")}</ul>` : ""}
       ${PR.einwaende.length ? `<h2>Einwände</h2><ul>${PR.einwaende.map((e) => `<li><b>${esc(e.name)}:</b> ${esc(e.text)}${e.erledigt_am ? " (erledigt)" : ""}</li>`).join("")}</ul>` : ""}
@@ -32584,7 +33108,7 @@ function druckAufgabenZeilen(liste) {
   for (const a of liste) {
     if (a.gruppe && gesehen.has(a.gruppe)) continue; if (a.gruppe) gesehen.add(a.gruppe);
     const alle = a.gruppe ? liste.filter((x) => x.gruppe === a.gruppe) : [a];
-    z.push(`<tr><td>${alle.every((x) => x.erledigt_am) ? "☑" : '<span class="kaestchen"></span>'}</td><td>${esc(a.text)}</td><td>${alle.map((x) => esc(x.name) + (x.erledigt_am && alle.length > 1 ? " ✓" : "")).join(", ")}</td><td>${a.faellig ? esc(dz(a.faellig)) : "–"}</td></tr>`);
+    z.push(`<tr><td>${alle.every((x) => x.erledigt_am) ? "☑" : '<span class="kaestchen"></span>'}</td><td>${esc(a.text)}${alle.every((x) => x.erledigt_am) ? `<br><small>${esc(aufgabeErledigtText({ erledigt_am: alle.map((x) => x.erledigt_am).sort().pop(), erledigt_von_name: alle.find((x) => x.erledigt_von_name)?.erledigt_von_name }))}</small>` : ""}</td><td>${alle.map((x) => esc(x.name) + (x.erledigt_am && alle.length > 1 ? " ✓" : "")).join(", ")}</td><!-- KC-CLUB-AUFGABE-ERLEDIGT-VON --><td>${a.faellig ? esc(dz(a.faellig)) : "–"}</td></tr>`);
   }
   return z.join("");
 }
@@ -32948,7 +33472,7 @@ function mitgliedZeigen() {
       ${!m.selbst && !ONL.ids.has(m.person_id) ? mgKlopfKnopf(m, "knopf breit", (st) => `<span class="kt-ico">👋</span>Anklopfen – ${st === "verborgen" ? "zeigt nicht, wann online" : st === "ich" ? "du zeigst nicht, wann du online bist" : "gerade nicht online"}`) : ""}
       ${!m.selbst && !ONL.ids.has(m.person_id) ? `<p class="hinweis breit" style="margin:4px 0">📞 🎥 Anrufen und Video gehen, sobald ${esc(String(m.name || "").split(" ")[0])} die App offen hat (🟢 online).</p>` : ""}
       ${m.selbst ? "" : `<button class="knopf ${ONL.ids.has(m.person_id) ? "" : "haupt"}" onclick="direkt('${m.person_id}')"><span class="kt-ico">💬</span>Nachricht in der App${m.chatAnzahl ? `<small class="md-zahl">${m.chatAnzahl} ${m.chatAnzahl === 1 ? "Nachricht" : "Nachrichten"}</small>` : ""}</button><div id="mdSpiel" hidden></div>`}
-      ${m.selbst ? "" : `<button class="knopf" onclick="genesungsKarte('${m.person_id}')"><span class="kt-ico">💐</span>Gute-Besserung-Karte</button>`}
+      ${m.selbst ? "" : `<button class="knopf" onclick="kartenBaukasten('${m.person_id}')"><span class="kt-ico">💌</span>Karte schicken</button>`}
       ${ICH?.admin ? `<button class="knopf" onclick="nachrichtenStatistik('${m.person_id}')"><span class="kt-ico">📊</span>Statistik</button>` : ""}
       ${stDarf("zeigen") && !m.selbst ? `<button class="knopf" onclick="vfStart('${m.person_id}')"><span class="kt-ico">📺</span>Live zeigen</button>` : ""}
       ${ICH?.admin ? `<button class="knopf" onclick="linkTeilen('${m.person_id}')"><span class="kt-ico">🔗</span>App-Link</button><button class="knopf" onclick="einrichtungskarte('${m.person_id}')"><span class="kt-ico">🖨️</span>Einrichtungs&shy;karte</button><button class="knopf" onclick="rolleBearbeiten('${m.person_id}')"><span class="kt-ico">🎖️</span>Amt & Rechte</button><button class="knopf" onclick="ansageVorgabeSetzen('${m.person_id}', ${esc(JSON.stringify((m.name || "").split(" ")[0]))})"><span class="kt-ico">🗣️</span>Online-Ansagen einschalten</button>` : ""}
@@ -33342,8 +33866,168 @@ const GK_MOTIVE = [
       g.strokeStyle = "#f9a825"; g.lineWidth = 12; g.lineCap = "round"; for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; g.beginPath(); g.moveTo(cx + Math.cos(a) * 150, cy - 60 + Math.sin(a) * 150); g.lineTo(cx + Math.cos(a) * 200, cy - 60 + Math.sin(a) * 200); g.stroke(); }
       gkKreis(g, cx, cy - 60, 130, "#fdd835"); gkGesicht(g, cx, cy - 95, 45, null);
     } },
+  // ---------- 2.991.0 KC-CLUB-KARTEN-BAUKASTEN (Wunschliste #98): weitere Motive – alle in der App gezeichnet ----------
+  { id: "tulpen", sym: "🌷", name: "Tulpen", texte: [], zeichnen(g, cx, cy) {
+      for (const [dx, f, h] of [[-120, "#e53935", 300], [-40, "#f48fb1", 340], [40, "#fdd835", 320], [120, "#ab47bc", 290]]) {
+        g.strokeStyle = "#4f7a3a"; g.lineWidth = 10; g.beginPath(); g.moveTo(cx + dx, cy - h + 220); g.quadraticCurveTo(cx + dx * 0.6, cy + 60, cx + dx * 0.2, cy + 200); g.stroke();
+        const y = cy - h + 180; g.fillStyle = f; g.beginPath(); g.moveTo(cx + dx - 42, y - 30); g.quadraticCurveTo(cx + dx - 48, y + 50, cx + dx, y + 55); g.quadraticCurveTo(cx + dx + 48, y + 50, cx + dx + 42, y - 30);
+        g.lineTo(cx + dx + 22, y); g.lineTo(cx + dx, y - 40); g.lineTo(cx + dx - 22, y); g.closePath(); g.fill(); }
+      for (const s of [-1, 1]) { g.save(); g.translate(cx + s * 110, cy + 120); g.rotate(s * 0.7); gkOval(g, 0, 0, 90, 26, "#5f8f45"); g.restore(); }
+      g.fillStyle = "#e9d6bd"; g.beginPath(); g.moveTo(cx - 120, cy + 150); g.lineTo(cx + 120, cy + 150); g.lineTo(cx + 60, cy + 270); g.lineTo(cx - 60, cy + 270); g.closePath(); g.fill();
+      gkOval(g, cx, cy + 165, 50, 22, GK_ROT); } },
+  { id: "sonnenblume", sym: "🌻", name: "Sonnenblume", texte: [], zeichnen(g, cx, cy) {
+      g.strokeStyle = "#4f7a3a"; g.lineWidth = 16; g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx, cy + 290); g.stroke();
+      for (const s of [-1, 1]) { g.save(); g.translate(cx + s * 70, cy + 170); g.rotate(s * -0.5); gkOval(g, 0, 0, 80, 30, "#5f8f45"); g.restore(); }
+      for (let i = 0; i < 18; i++) { const a = i / 18 * Math.PI * 2; gkOval(g, cx + Math.cos(a) * 120, cy - 90 + Math.sin(a) * 120, 60, 24, "#fbc02d", a); }
+      gkKreis(g, cx, cy - 90, 95, "#6d4c2f"); for (let i = 0; i < 40; i++) { const a = i * 2.4, r = Math.sqrt(i) * 13; gkKreis(g, cx + Math.cos(a) * r, cy - 90 + Math.sin(a) * r, 5, "#3e2a18"); } } },
+  { id: "katze", sym: "🐱", name: "Katze", texte: [], zeichnen(g, cx, cy) {
+      gkOval(g, cx, cy + 130, 170, 120, "#f0a35e");
+      for (const s of [-1, 1]) { g.fillStyle = "#f0a35e"; g.beginPath(); g.moveTo(cx + s * 140, cy - 160); g.lineTo(cx + s * 60, cy - 240); g.lineTo(cx + s * 30, cy - 150); g.fill();
+        g.fillStyle = "#f8c9a0"; g.beginPath(); g.moveTo(cx + s * 120, cy - 165); g.lineTo(cx + s * 65, cy - 215); g.lineTo(cx + s * 50, cy - 160); g.fill(); }
+      gkOval(g, cx, cy - 70, 160, 135, "#f6b36f"); gkGesicht(g, cx, cy - 90, 55, [12, 9, "#e57b93"]);
+      g.strokeStyle = "#2b1b14"; g.lineWidth = 3; for (const s of [-1, 1]) for (const dy of [-10, 6]) { g.beginPath(); g.moveTo(cx + s * 30, cy - 40 + dy); g.lineTo(cx + s * 140, cy - 55 + dy * 2); g.stroke(); }
+      g.strokeStyle = "#f0a35e"; g.lineWidth = 28; g.lineCap = "round"; g.beginPath(); g.moveTo(cx + 150, cy + 180); g.quadraticCurveTo(cx + 290, cy + 150, cx + 250, cy + 20); g.stroke();
+      gkKreis(g, cx - 70, cy + 230, 40, "#f6b36f"); gkKreis(g, cx + 70, cy + 230, 40, "#f6b36f"); } },
+  { id: "igel", sym: "🦔", name: "Igel", texte: [], zeichnen(g, cx, cy) {
+      g.fillStyle = "#7b5a3e"; g.beginPath(); for (let i = 0; i <= 22; i++) { const a = Math.PI + i / 22 * Math.PI, r = i % 2 ? 230 : 280; g.lineTo(cx + 30 + Math.cos(a) * r * 1.05, cy + 120 + Math.sin(a) * r * 0.85); } g.closePath(); g.fill();
+      gkOval(g, cx + 30, cy + 140, 220, 110, "#8d6a4c"); gkOval(g, cx - 170, cy + 110, 110, 85, "#e9c9a3");
+      gkKreis(g, cx - 255, cy + 105, 16, "#2b1b14"); gkKreis(g, cx - 175, cy + 85, 12, "#2b1b14"); gkKreis(g, cx - 171, cy + 81, 4, "#fff"); gkOval(g, cx - 175, cy + 130, 18, 11, "rgba(240,120,140,.5)");
+      gkBluete(g, cx + 60, cy - 50, "#e53935", 34); gkBluete(g, cx + 150, cy - 10, "#fdd835", 26); } },
+  { id: "tee", sym: "☕", name: "Tee", texte: [], zeichnen(g, cx, cy) {
+      gkOval(g, cx, cy + 210, 260, 30, "rgba(0,0,0,.08)");
+      g.fillStyle = "#c2185b"; g.beginPath(); g.ellipse(cx, cy + 40, 200, 170, 0, 0, Math.PI * 2); g.fill();
+      gkOval(g, cx, cy - 125, 110, 28, "#a3134c"); gkKreis(g, cx, cy - 160, 26, "#a3134c");
+      g.strokeStyle = "#c2185b"; g.lineWidth = 30; g.lineCap = "round"; g.beginPath(); g.moveTo(cx + 190, cy - 20); g.quadraticCurveTo(cx + 300, cy + 20, cx + 190, cy + 130); g.stroke();
+      g.beginPath(); g.moveTo(cx - 180, cy + 40); g.quadraticCurveTo(cx - 280, cy - 10, cx - 300, cy - 90); g.stroke();
+      for (const [x, y] of [[-80, 20], [40, 80], [90, -20], [-20, -40]]) gkKreis(g, cx + x, cy + y, 16, "rgba(255,255,255,.7)");
+      g.strokeStyle = "rgba(130,130,130,.55)"; g.lineWidth = 6; for (const dx of [-330, -300]) { g.beginPath(); g.moveTo(cx + dx, cy - 130); g.bezierCurveTo(cx + dx - 20, cy - 170, cx + dx + 20, cy - 200, cx + dx, cy - 240); g.stroke(); } } },
+  { id: "torte", sym: "🎂", name: "Torte", texte: [], zeichnen(g, cx, cy) {
+      g.fillStyle = "#f8bbd0"; g.fillRect(cx - 220, cy + 30, 440, 170); g.fillStyle = "#fce4ec"; g.fillRect(cx - 160, cy - 100, 320, 140);
+      g.fillStyle = "#fff"; for (let i = 0; i < 9; i++) gkKreis(g, cx - 200 + i * 50, cy + 35, 26, "#fff"); for (let i = 0; i < 7; i++) gkKreis(g, cx - 150 + i * 50, cy - 95, 22, "#fff");
+      for (let i = 0; i < 5; i++) gkKreis(g, cx - 160 + i * 80, cy + 120, 14, "#e53935");
+      for (const dx of [-90, -30, 30, 90]) { g.fillStyle = ["#42a5f5", "#fdd835", "#66bb6a", "#ab47bc"][(dx + 90) / 60]; g.fillRect(cx + dx - 9, cy - 200, 18, 100);
+        g.fillStyle = "#ff9800"; g.beginPath(); g.ellipse(cx + dx, cy - 222, 11, 20, 0, 0, Math.PI * 2); g.fill(); gkKreis(g, cx + dx, cy - 215, 5, "#fff59d"); }
+      gkOval(g, cx, cy + 215, 270, 26, "#e9d6bd"); } },
+  { id: "ballons", sym: "🎈", name: "Ballons", texte: [], zeichnen(g, cx, cy) {
+      for (const [dx, dy, f] of [[-150, -60, "#e53935"], [0, -130, "#fdd835"], [150, -50, "#42a5f5"], [-70, 40, "#ab47bc"], [80, 40, "#66bb6a"]]) {
+        g.strokeStyle = "#8d7a66"; g.lineWidth = 3; g.beginPath(); g.moveTo(cx + dx, cy + dy + 95); g.quadraticCurveTo(cx + dx * 0.4, cy + 190, cx, cy + 260); g.stroke();
+        gkOval(g, cx + dx, cy + dy, 75, 95, f); gkOval(g, cx + dx - 25, cy + dy - 35, 14, 24, "rgba(255,255,255,.45)", -0.4);
+        g.fillStyle = f; g.beginPath(); g.moveTo(cx + dx - 10, cy + dy + 100); g.lineTo(cx + dx + 10, cy + dy + 100); g.lineTo(cx + dx, cy + dy + 88); g.fill(); }
+      gkOval(g, cx, cy + 262, 18, 10, GK_ROT); } },
+  { id: "geschenk", sym: "🎁", name: "Geschenk", texte: [], zeichnen(g, cx, cy) {
+      g.fillStyle = GK_ROT; g.fillRect(cx - 200, cy - 20, 400, 240); g.fillStyle = "#9c2a38"; g.fillRect(cx - 225, cy - 90, 450, 80);
+      g.fillStyle = "#fdd835"; g.fillRect(cx - 30, cy - 90, 60, 310); g.fillRect(cx - 225, cy - 70, 450, 40);
+      for (const s of [-1, 1]) { g.save(); g.translate(cx + s * 70, cy - 130); g.rotate(s * 0.35); gkOval(g, 0, 0, 90, 45, "#fdd835"); gkOval(g, 0, 0, 55, 22, "#f9a825"); g.restore(); }
+      gkKreis(g, cx, cy - 115, 34, "#f9a825");
+      for (const [x, y, f] of [[-300, -200, "#42a5f5"], [290, -170, "#ab47bc"], [-280, 160, "#66bb6a"], [300, 140, "#e53935"]]) { g.fillStyle = f; g.fillRect(cx + x, cy + y, 22, 22); } } },
+  { id: "sektglaeser", sym: "🥂", name: "Sektgläser", texte: [], zeichnen(g, cx, cy) {
+      for (const s of [-1, 1]) { g.save(); g.translate(cx + s * 75, cy + 40); g.rotate(s * 0.2);
+        g.fillStyle = "rgba(255,236,150,.85)"; g.beginPath(); g.moveTo(-55, -230); g.lineTo(55, -230); g.lineTo(30, -40); g.lineTo(-30, -40); g.closePath(); g.fill();
+        g.strokeStyle = "#9e9e9e"; g.lineWidth = 6; g.beginPath(); g.moveTo(-60, -260); g.lineTo(60, -260); g.lineTo(32, -40); g.lineTo(-32, -40); g.closePath(); g.stroke();
+        g.beginPath(); g.moveTo(0, -40); g.lineTo(0, 120); g.stroke(); gkOval(g, 0, 125, 60, 14, "#bdbdbd");
+        for (const [x, y] of [[-15, -180], [10, -130], [-5, -90], [20, -200]]) gkKreis(g, x, y, 6, "#fff"); g.restore(); }
+      g.fillStyle = "#fdd835"; for (let i = 0; i < 8; i++) { const a = -Math.PI / 2 + (i - 3.5) * 0.25; g.save(); g.translate(cx + Math.cos(a) * 250, cy - 230 + Math.sin(a) * 60); g.rotate(a); g.fillRect(-4, -18, 8, 36); g.restore(); } } },
+  { id: "stern", sym: "⭐", name: "Stern", texte: [], zeichnen(g, cx, cy) {
+      const stern = (x, y, r, f) => { g.fillStyle = f; g.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * 0.45 : r; g.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); } g.closePath(); g.fill(); };
+      stern(cx, cy, 230, "#fbc02d"); stern(cx, cy, 160, "#fdd835"); gkGesicht(g, cx, cy - 25, 40, null, 12);
+      stern(cx - 290, cy - 180, 45, "#ffe082"); stern(cx + 280, cy - 150, 55, "#ffe082"); stern(cx + 260, cy + 190, 35, "#ffe082"); stern(cx - 260, cy + 170, 40, "#ffe082"); } },
+  { id: "herz", sym: "❤️", name: "Herz", texte: [], zeichnen(g, cx, cy) {
+      const herz = (x, y, s, f) => { g.fillStyle = f; g.beginPath(); g.moveTo(x, y + 110 * s); g.bezierCurveTo(x - 200 * s, y - 10 * s, x - 110 * s, y - 170 * s, x, y - 70 * s); g.bezierCurveTo(x + 110 * s, y - 170 * s, x + 200 * s, y - 10 * s, x, y + 110 * s); g.fill(); };
+      herz(cx, cy + 20, 1.6, GK_ROT); herz(cx - 30, cy - 10, 0.5, "rgba(255,255,255,.18)");
+      herz(cx - 280, cy - 170, 0.35, "#f48fb1"); herz(cx + 280, cy - 120, 0.45, "#f48fb1"); herz(cx + 250, cy + 200, 0.3, "#f48fb1"); herz(cx - 260, cy + 180, 0.3, "#f48fb1"); } },
+  { id: "kochmuetze", sym: "👨‍🍳", name: "Kochmütze", texte: [], zeichnen(g, cx, cy) {
+      for (const [dx, dy, r] of [[-120, -60, 110], [0, -120, 135], [120, -60, 110], [-60, -10, 100], [60, -10, 100]]) gkKreis(g, cx + dx, cy + dy, r, "#fff", "#d7ccc8");
+      g.fillStyle = "#fff"; g.fillRect(cx - 170, cy, 340, 170); g.strokeStyle = "#d7ccc8"; g.lineWidth = 4; g.strokeRect(cx - 170, cy, 340, 170);
+      g.strokeStyle = "#e0d6cf"; for (const dx of [-90, 0, 90]) { g.beginPath(); g.moveTo(cx + dx, cy + 20); g.lineTo(cx + dx, cy + 150); g.stroke(); }
+      g.fillStyle = GK_ROT; g.beginPath(); const x = cx, y = cy + 80, s = 0.42; g.moveTo(x, y + 110 * s); g.bezierCurveTo(x - 200 * s, y - 10 * s, x - 110 * s, y - 170 * s, x, y - 70 * s); g.bezierCurveTo(x + 110 * s, y - 170 * s, x + 200 * s, y - 10 * s, x, y + 110 * s); g.fill(); } },
+  { id: "ringe", sym: "💍", name: "Ringe", texte: [], zeichnen(g, cx, cy) {
+      g.lineWidth = 34; for (const [dx, f] of [[-85, "#fbc02d"], [85, "#f9a825"]]) { g.strokeStyle = f; g.beginPath(); g.arc(cx + dx, cy + 40, 150, 0, Math.PI * 2); g.stroke(); g.strokeStyle = "rgba(255,255,255,.5)"; g.lineWidth = 8; g.beginPath(); g.arc(cx + dx, cy + 40, 150, 3.6, 4.4); g.stroke(); g.lineWidth = 34; }
+      g.fillStyle = "#b3e5fc"; g.beginPath(); g.moveTo(cx - 85, cy - 150); g.lineTo(cx - 125, cy - 190); g.lineTo(cx - 105, cy - 225); g.lineTo(cx - 65, cy - 225); g.lineTo(cx - 45, cy - 190); g.closePath(); g.fill();
+      for (const [x, y] of [[-290, -170], [280, -190], [270, 200]]) { g.fillStyle = GK_ROT; g.beginPath(); const s = 0.3, X = cx + x, Y = cy + y; g.moveTo(X, Y + 110 * s); g.bezierCurveTo(X - 200 * s, Y - 10 * s, X - 110 * s, Y - 170 * s, X, Y - 70 * s); g.bezierCurveTo(X + 110 * s, Y - 170 * s, X + 200 * s, Y - 10 * s, X, Y + 110 * s); g.fill(); } } },
+  { id: "rose", sym: "🌹", name: "Rose", texte: [], zeichnen(g, cx, cy) { gkRoseZeichnen(g, cx, cy, "#c62828", "#8e0000"); } },
+  { id: "rosew", sym: "🤍", name: "Weiße Rose", texte: [], zeichnen(g, cx, cy) { gkRoseZeichnen(g, cx, cy, "#f5f5f5", "#cfcfcf"); } },
+  { id: "kinderwagen", sym: "👶", name: "Kinderwagen", texte: [], zeichnen(g, cx, cy) {
+      g.fillStyle = "#90caf9"; g.beginPath(); g.moveTo(cx - 220, cy - 20); g.lineTo(cx + 180, cy - 20); g.quadraticCurveTo(cx + 180, cy + 160, cx - 20, cy + 160); g.quadraticCurveTo(cx - 220, cy + 160, cx - 220, cy - 20); g.fill();
+      g.fillStyle = "#64b5f6"; g.beginPath(); g.moveTo(cx - 220, cy - 20); g.quadraticCurveTo(cx - 220, cy - 220, cx - 20, cy - 220); g.lineTo(cx - 20, cy - 20); g.closePath(); g.fill();
+      g.strokeStyle = "#5d4037"; g.lineWidth = 10; g.beginPath(); g.moveTo(cx + 180, cy - 20); g.lineTo(cx + 260, cy - 120); g.stroke();
+      for (const dx of [-140, 100]) { gkKreis(g, cx + dx, cy + 220, 55, "#5d4037"); gkKreis(g, cx + dx, cy + 220, 22, "#bcaaa4"); }
+      for (const [x, y] of [[230, -220], [-290, 120], [280, 120]]) { g.fillStyle = "#fdd835"; g.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? 12 : 28; g.lineTo(cx + x + Math.cos(a) * r, cy + y + Math.sin(a) * r); } g.fill(); } } },
+  { id: "mond", sym: "🌙", name: "Mond & Sterne", texte: [], zeichnen(g, cx, cy) {
+      gkKreis(g, cx, cy, 210, "#fdd835"); gkKreis(g, cx + 95, cy - 60, 190, GK_BEIGE);
+      g.strokeStyle = "#2b1b14"; g.lineWidth = 5; g.beginPath(); g.arc(cx - 110, cy - 20, 18, 0.1 * Math.PI, 0.9 * Math.PI); g.stroke(); gkOval(g, cx - 120, cy + 30, 18, 10, "rgba(240,120,140,.5)");
+      for (const [x, y, r] of [[200, -170, 34], [260, 40, 24], [120, 200, 28], [-260, -200, 22], [-230, 200, 18]]) { g.fillStyle = "#ffe082"; g.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * 0.45 : r; g.lineTo(cx + x + Math.cos(a) * rr, cy + y + Math.sin(a) * rr); } g.fill(); } } },
+  { id: "kerze", sym: "🕯️", name: "Kerze", texte: [], zeichnen(g, cx, cy) {
+      const lg = g.createRadialGradient(cx, cy - 170, 10, cx, cy - 170, 200); lg.addColorStop(0, "rgba(255,213,79,.55)"); lg.addColorStop(1, "rgba(255,213,79,0)"); g.fillStyle = lg; g.fillRect(cx - 220, cy - 380, 440, 420);
+      g.fillStyle = "#f5f0e6"; g.fillRect(cx - 70, cy - 110, 140, 330); g.strokeStyle = "#e0d6c6"; g.lineWidth = 4; g.strokeRect(cx - 70, cy - 110, 140, 330);
+      g.strokeStyle = "#3e2a18"; g.lineWidth = 5; g.beginPath(); g.moveTo(cx, cy - 110); g.lineTo(cx, cy - 135); g.stroke();
+      g.fillStyle = "#ffb300"; g.beginPath(); g.moveTo(cx, cy - 230); g.quadraticCurveTo(cx + 40, cy - 160, cx, cy - 130); g.quadraticCurveTo(cx - 40, cy - 160, cx, cy - 230); g.fill();
+      gkOval(g, cx, cy - 158, 10, 20, "#fff59d"); gkOval(g, cx, cy + 225, 150, 22, "#9e9e9e"); } },
+  { id: "baum", sym: "🌳", name: "Baum", texte: [], zeichnen(g, cx, cy) {
+      g.fillStyle = "#6d4c41"; g.beginPath(); g.moveTo(cx - 35, cy + 250); g.lineTo(cx + 35, cy + 250); g.lineTo(cx + 22, cy); g.lineTo(cx - 22, cy); g.fill();
+      for (const [dx, dy, r, f] of [[-120, -40, 120, "#689f38"], [120, -40, 120, "#7cb342"], [0, -150, 150, "#8bc34a"], [-60, 40, 110, "#7cb342"], [70, 50, 105, "#689f38"]]) gkKreis(g, cx + dx, cy + dy, r, f);
+      for (const [x, y] of [[-260, 150], [240, 190], [-200, 230]]) gkOval(g, cx + x, cy + y, 22, 12, "#a5d6a7", 0.6);
+      gkOval(g, cx, cy + 255, 190, 22, "rgba(0,0,0,.08)"); } },
+  { id: "feder", sym: "🕊️", name: "Feder", texte: [], zeichnen(g, cx, cy) {
+      g.save(); g.translate(cx, cy); g.rotate(-0.5);
+      g.fillStyle = "#cfd8dc"; g.beginPath(); g.moveTo(0, -270); g.quadraticCurveTo(140, -80, 20, 230); g.lineTo(-20, 230); g.quadraticCurveTo(-140, -80, 0, -270); g.fill();
+      g.strokeStyle = "rgba(255,255,255,.7)"; g.lineWidth = 3; for (let i = -220; i < 200; i += 28) { g.beginPath(); g.moveTo(0, i); g.lineTo(-70 + Math.abs(i) * 0.1, i + 40); g.moveTo(0, i); g.lineTo(70 - Math.abs(i) * 0.1, i + 40); g.stroke(); }
+      g.strokeStyle = "#78909c"; g.lineWidth = 6; g.beginPath(); g.moveTo(0, -260); g.lineTo(0, 300); g.stroke(); g.restore(); } },
 ];
-const gkTitel = (vn) => [`Gute Besserung, ${vn}!`, `Werde schnell gesund, ${vn}!`, `Wir denken an dich, ${vn}!`];
+function gkRoseZeichnen(g, cx, cy, f, f2) { // Rose (rot oder weiß) – für Hochzeit, Danke und Beileid
+  g.strokeStyle = "#4f7a3a"; g.lineWidth = 12; g.beginPath(); g.moveTo(cx, cy - 20); g.quadraticCurveTo(cx - 30, cy + 140, cx + 10, cy + 280); g.stroke();
+  for (const [s, y] of [[-1, 110], [1, 190]]) { g.save(); g.translate(cx + s * 70, cy + y); g.rotate(s * -0.6); gkOval(g, 0, 0, 75, 28, "#5f8f45"); g.restore(); }
+  gkKreis(g, cx, cy - 110, 125, f2);
+  for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; gkOval(g, cx + Math.cos(a) * 55, cy - 110 + Math.sin(a) * 55, 80, 55, f, a); }
+  gkKreis(g, cx, cy - 110, 60, f2); g.strokeStyle = f; g.lineWidth = 10; g.beginPath(); g.arc(cx, cy - 110, 36, 0.3, 5.4); g.stroke(); g.beginPath(); g.arc(cx + 6, cy - 104, 16, 1, 6); g.stroke();
+}
+// 2.991.0 KC-CLUB-KARTEN-BAUKASTEN (Wunschliste #98, Antworten Hansi 20.11.2026: „alle Anlässe, Drucken ja, gemeinsame Karte auch für andere Anlässe ja, alle
+// Mitglieder dürfen alles“): je Anlass Überschriften, Motive (aus GK_MOTIVE) und eine Spruch-Sammlung in drei Gruppen – herzlich · lustig · kurz.
+// Neuer Anlass / Spruch / Motiv = Eintrag hier. Kein Grund und keine Krankheit auf den Karten (keine Gesundheitsdaten).
+const KARTEN_ANLAESSE = {
+  genesung: { sym: "💐", name: "Gute Besserung", gruss: (vn) => `💐 Gute Besserung, ${vn}! Werde schnell wieder gesund.`,
+    titel: (vn) => [`Gute Besserung, ${vn}!`, `Werde schnell gesund, ${vn}!`, `Wir denken an dich, ${vn}!`],
+    motive: ["strauss", "tulpen", "maus", "hase", "baer", "katze", "igel", "tee", "suppe", "sonne"],
+    texte: { herzlich: ["Werde schnell wieder gesund – wir freuen uns auf dich!", "Wir denken an dich und wünschen dir alles Gute!", "Ganz viel Kraft und gute Besserung von uns allen.", "Du fehlst uns – komm bald wieder zu Kräften!", "Wir drücken dir fest die Daumen.", "Schritt für Schritt wird es besser – wir sind bei dir.", "Ruh dich gut aus – wir halten deinen Platz frei."],
+      lustig: ["Die beste Medizin: eine Suppe vom Köcheclub!", "Erhol dich gut – die Küche wartet auf dich!", "Ohne dich fehlt uns die wichtigste Zutat!", "Bettruhe ist auch ein Rezept – mit viel Geduld abschmecken!", "Kuschel dich ein und werde schnell wieder gesund.", "Tee, Decke, Ruhe – und bald bist du wieder fit!", "Wir haben schon mal die Kochlöffel für dich poliert!"],
+      kurz: ["Gute Besserung!", "Alles Gute für dich!", "Werde schnell gesund!", "Wir denken an dich.", "Ganz viel Kraft!", "Bald geht's wieder bergauf!", "Komm bald wieder!"] } },
+  geburtstag: { sym: "🎂", name: "Geburtstag", gruss: (vn) => `🎂 Alles Gute zum Geburtstag, ${vn}! 🥳`,
+    titel: (vn) => [`Alles Gute, ${vn}!`, `Happy Birthday, ${vn}!`, `Herzlichen Glückwunsch, ${vn}!`],
+    motive: ["torte", "ballons", "geschenk", "baer", "sonnenblume", "kochmuetze", "sektglaeser"],
+    texte: { herzlich: ["Zum Geburtstag alles Liebe, Gesundheit und viele schöne Stunden!", "Wir wünschen dir ein wunderbares neues Lebensjahr.", "Schön, dass es dich gibt – und schön, dass du bei uns bist!", "Viel Glück, Gesundheit und Freude für das neue Lebensjahr.", "Lass dich heute richtig feiern – du hast es verdient!", "Möge das neue Jahr dir viele schöne Momente schenken.", "Alles Liebe von deinen Köchen aus Werne!"],
+      lustig: ["Ein Jahr älter – aber wie guter Wein: immer besser!", "Heute bleibt die Küche kalt – du wirst bekocht!", "Auf dich! Die Torte haben wir schon mal probiert …", "Noch ein Jahr Erfahrung am Herd – Glückwunsch, Meisterkoch!", "Kerzen auspusten nicht vergessen – wir halten den Feuerlöscher bereit!", "Alter ist nur eine Zahl – wie die Temperatur im Ofen.", "Zum Geburtstag das beste Rezept: Lachen, Feiern, Genießen!"],
+      kurz: ["Happy Birthday!", "Alles Gute!", "Feier schön!", "Herzlichen Glückwunsch!", "Lass dich feiern!", "Viel Glück im neuen Lebensjahr!", "Auf dich!"] } },
+  glueckwunsch: { sym: "🥂", name: "Glückwunsch", gruss: (vn) => `🥂 Herzlichen Glückwunsch, ${vn}!`,
+    titel: (vn) => [`Herzlichen Glückwunsch, ${vn}!`, `Bravo, ${vn}!`, `Wir gratulieren, ${vn}!`],
+    motive: ["sektglaeser", "stern", "strauss", "sonnenblume", "kochmuetze", "ballons"],
+    texte: { herzlich: ["Wir freuen uns riesig mit dir – herzlichen Glückwunsch!", "Das hast du dir wirklich verdient!", "Zu diesem besonderen Tag alles Gute von uns allen.", "Wir sind stolz auf dich!", "Auf viele weitere schöne Jahre!", "Herzlichen Glückwunsch zu diesem tollen Jubiläum!", "Danke, dass du so lange dabei bist – auf dich!"],
+      lustig: ["Darauf stoßen wir an – der Sekt ist schon kalt!", "Das muss gefeiert werden – wir bringen den Nachtisch!", "Ein Hoch auf dich – dreimal, mit Schlagsahne!", "Glückwunsch! Das Rezept dafür hätten wir auch gern.", "Sterneküche ist nichts gegen dich!", "Wir ziehen die Kochmütze vor dir!", "Ausgezeichnet – mit fünf Kochmützen!"],
+      kurz: ["Herzlichen Glückwunsch!", "Bravo!", "Toll gemacht!", "Wir gratulieren!", "Auf dich!", "Glückwunsch!", "Weiter so!"] } },
+  danke: { sym: "🙏", name: "Danke", gruss: (vn) => `🙏 Vielen Dank, ${vn}!`,
+    titel: (vn) => [`Danke, ${vn}!`, `Vielen Dank, ${vn}!`, `Danke für alles, ${vn}!`],
+    motive: ["herz", "strauss", "sonnenblume", "tulpen", "kochmuetze", "rose", "katze"],
+    texte: { herzlich: ["Danke für deine Hilfe – ohne dich hätten wir es nicht geschafft!", "Von Herzen Danke für deinen Einsatz.", "Schön, dass wir uns auf dich verlassen können.", "Danke, dass du immer für uns da bist.", "Dein Einsatz macht unseren Club so besonders.", "Wir sagen Danke – für alles, was du für uns tust.", "Ein großes Dankeschön von deinen Köchen!"],
+      lustig: ["Danke! Du bist das Salz in unserer Suppe.", "Ohne dich wäre unser Club nur halb so lecker!", "Für dich: eine extra große Portion Dankeschön!", "Danke – du hast echt was auf dem Kasten (und im Topf)!", "Unser Dank – frisch serviert und gut gewürzt!", "Du bist Gold wert – mindestens 24 Karat!", "Danke! Nachschlag gibt's beim nächsten Treffen."],
+      kurz: ["Danke!", "Vielen Dank!", "Tausend Dank!", "Danke für alles!", "Du bist super!", "Herzlichen Dank!", "Merci!"] } },
+  hochzeit: { sym: "💍", name: "Hochzeit & Ehejubiläum", gruss: (vn) => `💍 Herzlichen Glückwunsch, ${vn}!`,
+    titel: (vn) => [`Herzlichen Glückwunsch, ${vn}!`, `Alles Liebe, ${vn}!`, `Viel Glück zu zweit, ${vn}!`],
+    motive: ["ringe", "herz", "rose", "sektglaeser", "strauss"],
+    texte: { herzlich: ["Wir wünschen euch alles Liebe und Glück auf eurem gemeinsamen Weg.", "Herzlichen Glückwunsch zu eurem Hochzeitstag!", "Auf viele weitere glückliche Jahre zu zweit!", "Möge eure Liebe jeden Tag ein bisschen größer werden.", "Wir freuen uns von Herzen mit euch.", "Zum Ehejubiläum alles Liebe – ihr seid ein tolles Paar!", "Viel Glück, Gesundheit und Liebe für euch beide."],
+      lustig: ["Zusammen kocht es sich einfach besser – herzlichen Glückwunsch!", "Das beste Rezept: zwei Herzen, eine Prise Humor, viel Geduld!", "Auf euch – die beste Mischung im ganzen Club!", "Ihr zwei passt zusammen wie Pfeffer und Salz!", "Wir heben die Gläser – und die Kochlöffel!", "Glückwunsch! Wer kocht heute? Natürlich ihr beide zusammen!", "Liebe geht durch den Magen – bei euch ganz sicher!"],
+      kurz: ["Alles Liebe!", "Viel Glück zu zweit!", "Herzlichen Glückwunsch!", "Auf euch!", "Alles Gute euch beiden!", "Auf die Liebe!", "Viel Glück!"] } },
+  geburt: { sym: "👶", name: "Geburt", gruss: (vn) => `👶 Herzlichen Glückwunsch zum Nachwuchs, ${vn}!`,
+    titel: (vn) => [`Willkommen, kleiner Schatz!`, `Herzlichen Glückwunsch, ${vn}!`, `Hurra, das Baby ist da!`],
+    motive: ["kinderwagen", "mond", "hase", "baer", "stern"],
+    texte: { herzlich: ["Herzlichen Glückwunsch zur Geburt – wir freuen uns mit euch!", "Willkommen auf der Welt, kleiner Schatz!", "Alles Liebe und Gesundheit für den kleinen Erdenbürger.", "Wir wünschen euch eine wunderschöne Zeit zu dritt.", "Ein kleines Wunder ist da – herzlichen Glückwunsch!", "Viel Freude, Gesundheit und ruhige Nächte!", "Von Herzen alles Gute für eure kleine Familie."],
+      lustig: ["Willkommen im Club – der jüngste Koch ist da!", "Der erste Brei ist schon in Planung!", "Kleiner Mensch, große Freude – und bald viel Babybrei!", "Ein neuer Küchenchef ist geboren!", "Schlaflose Nächte? Wir bringen Kaffee vorbei!", "Herzlichen Glückwunsch – das Lätzchen mit Kochmütze ist bestellt!", "Der Club hat Nachwuchs – Glückwunsch!"],
+      kurz: ["Herzlich willkommen!", "Alles Gute!", "Herzlichen Glückwunsch!", "Willkommen, Baby!", "So viel Freude!", "Alles Liebe!", "Hurra!"] } },
+  beileid: { sym: "🕯️", name: "Beileid", gruss: (vn) => `🕯️ In Gedanken bei dir, ${vn}.`, ohneName: true,
+    titel: () => ["Herzliches Beileid", "In stiller Anteilnahme", "In Gedanken bei euch"],
+    motive: ["kerze", "rosew", "baum", "feder"],
+    texte: { herzlich: ["Wir sind in Gedanken bei euch und wünschen euch viel Kraft.", "In stiller Trauer fühlen wir mit euch.", "Wir werden ihn/sie immer in guter Erinnerung behalten.", "Unser tiefes Mitgefühl in dieser schweren Zeit.", "Möge die Erinnerung euch Trost und Kraft geben.", "Wir teilen eure Trauer und sind für euch da.", "In Liebe und Dankbarkeit erinnern wir uns."],
+      lustig: [], // bei Beileid bewusst keine lustigen Sprüche
+      kurz: ["In stiller Anteilnahme.", "Wir denken an euch.", "Unser herzliches Beileid.", "In Gedanken bei euch.", "Viel Kraft in dieser Zeit.", "Wir trauern mit euch.", "In Erinnerung."] } },
+};
+const KARTEN_GRUPPEN = [["herzlich", "💛 Herzlich"], ["lustig", "😄 Lustig"], ["kurz", "✏️ Kurz"]];
 const gkAbsender = () => { const vn = ICH?.vorname || String(ICH?.name || "").split(" ")[0] || "Hansi"; return ["Dein Köcheclub", `${vn} und der ganze Club`, `Von ${vn}`]; };
 function gkUmbruch(g, text, breite) { // Zeilen umbrechen; zu lang → Schrift kleiner (höchstens 3 Zeilen)
   for (let gr = 46; gr >= 30; gr -= 2) {
@@ -33380,66 +34064,113 @@ async function gkZeichnen(k) { // k = { motiv, titel, text, von, namen? } – na
   g.fillStyle = "#fff"; g.font = "700 50px Georgia, 'Times New Roman', serif"; g.fillText("Köcheclub Werne", cx + 40, H - 88);
   return c;
 }
+const kaAnlass = (a) => (KARTEN_ANLAESSE[a] ? a : "genesung");
+// Überschriften je Anlass; ohne Namen (z. B. Karte zum Drucken) fällt das „, …“ weg
+const gkTitel = (vn, anlass = "genesung") => KARTEN_ANLAESSE[kaAnlass(anlass)].titel(vn || "").map((t) => t.replace(/, !$/, "!"));
+const gkMotiveFuer = (anlass) => KARTEN_ANLAESSE[kaAnlass(anlass)].motive.map((id) => GK_MOTIVE.find((m) => m.id === id)).filter(Boolean);
+function gkTexte(anlass, gruppe, motiv) { // Spruch-Liste einer Gruppe; bei Gute Besserung kommen die Sprüche des Motivs vorne dazu
+  const a = kaAnlass(anlass), mo = GK_MOTIVE.find((m) => m.id === motiv), eig = a === "genesung" && gruppe === "herzlich" ? mo?.texte || [] : [];
+  return [...new Set([...eig, ...(KARTEN_ANLAESSE[a].texte[gruppe] || [])])];
+}
+const GK_DAUMEN = new Map(); // Motiv → kleines Vorschaubild (einmal gezeichnet)
+function gkDaumen(id) {
+  if (GK_DAUMEN.has(id)) return GK_DAUMEN.get(id);
+  const mo = GK_MOTIVE.find((m) => m.id === id), c = document.createElement("canvas"); c.width = c.height = 150; const g = c.getContext("2d");
+  g.fillStyle = GK_BEIGE; g.fillRect(0, 0, 150, 150); g.save(); g.lineCap = "round"; g.translate(75, 75); g.scale(0.165, 0.165); g.translate(-540, -440);
+  try { mo?.zeichnen(g, 540, 470); } catch {} g.restore();
+  const u = c.toDataURL("image/png"); GK_DAUMEN.set(id, u); return u;
+}
+const gkDateiName = (anlass, vn) => `${KARTEN_ANLAESSE[kaAnlass(anlass)].name.replace(/[^A-Za-zÄÖÜäöüß]+/g, "-")}-${vn || "Karte"}.jpg`.replace(/-+/g, "-");
 let GK = null;
 const GK_KEY = "kc_club_gk_wahl";
-async function genesungsKarte(pid) {
-  if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return meldeFehler(e); }
-  const m = MITGLIEDER.find((x) => x.person_id === pid); if (!m || pid === ICH?.person_id) return melde("Die Person ist nicht (mehr) in der Mitgliederliste.", true);
-  const vorname = m.vorname || String(m.name || "").split(" ")[0];
+function genesungsKarte(pid) { return kartenBaukasten(pid, "genesung"); } // ältere Knöpfe/Links öffnen den Baukasten mit „Gute Besserung“
+// Karten-Baukasten: pid = Mitglied (Chat + gemeinsame Karte möglich) oder null (nur Drucken, z. B. Beileid an die Familie; fuer = Name vorbelegt)
+async function kartenBaukasten(pid, anlass, fuer = "") {
+  let vorname = String(fuer || "").trim();
+  if (pid) {
+    if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return meldeFehler(e); }
+    const m = MITGLIEDER.find((x) => x.person_id === pid); if (!m || pid === ICH?.person_id) return melde("Die Person ist nicht (mehr) in der Mitgliederliste.", true);
+    vorname = m.vorname || String(m.name || "").split(" ")[0];
+    if (!anlass) anlass = m.geburtstag && m.geburtstag === heuteIso().slice(5) ? "geburtstag" : "genesung"; // heute Geburtstag → Geburtstagskarte
+  }
+  anlass = kaAnlass(anlass);
   let gemerkt = {}; try { gemerkt = JSON.parse(localStorage.getItem(GK_KEY) || "{}") || {}; } catch {}
-  const motiv = GK_MOTIVE.some((x) => x.id === gemerkt.motiv) ? gemerkt.motiv : "strauss";
-  GK = { pid, vorname, motiv, titel: 0, text: 0, eigenText: "", von: 0, eigenVon: "" };
-  const f = blattAuf("gkBlatt", `<h3 style="margin-top:0">💐 Gute-Besserung-Karte für ${esc(vorname)}</h3>
-    <img id="gkBild" alt="Genesungskarte" style="width:100%;max-width:420px;display:block;margin:0 auto 8px;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.2);touch-action:pan-y">
-    <div class="hl-chips gk-motive" style="justify-content:center">${GK_MOTIVE.map((x) => `<button type="button" class="chip" data-motiv="${x.id}" aria-label="${esc(x.name)}">${x.sym} ${esc(x.name)}</button>`).join("")}</div>
+  const motive = gkMotiveFuer(anlass), motiv = motive.some((x) => x.id === gemerkt.motiv) ? gemerkt.motiv : motive[0].id;
+  GK = { pid, vorname, motiv, titel: 0, text: 0, eigenText: "", von: 0, eigenVon: "", anlass, gruppe: "herzlich" };
+  const leitung = !!(ICH?.admin || ICH?.vorstand);
+  const f = blattAuf("gkBlatt", `<h3 style="margin-top:0" id="gkKopf"></h3>
+    <div class="hl-chips" id="gkAnlass" style="justify-content:center">${Object.entries(KARTEN_ANLAESSE).map(([id, a]) => `<button type="button" class="chip" data-anlass="${id}">${a.sym} ${esc(a.name)}</button>`).join("")}</div>
+    ${pid ? "" : `<label class="feld">Für wen? (Name auf der Karte, darf leer bleiben)<input id="gkFuer" maxlength="30" value="${esc(vorname)}" placeholder="z. B. Familie Müller"></label>`}
+    <img id="gkBild" alt="Karte" style="width:100%;max-width:420px;display:block;margin:8px auto;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.2);touch-action:pan-y">
+    <h4 class="gk-h">Motiv <span class="hinweis" style="font-weight:400">– oder auf der Karte wischen</span></h4>
+    <div class="gk-motive" id="gkMotive" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:6px"></div>
     <h4 class="gk-h">Überschrift</h4><div class="hl-chips" id="gkTitel"></div>
-    <h4 class="gk-h">Text</h4><div class="hl-chips" id="gkTexte"></div>
+    <h4 class="gk-h">Text</h4><div class="hl-chips" id="gkGruppen" style="margin-bottom:4px"></div><div class="hl-chips" id="gkTexte"></div>
     <label class="feld versteckt" id="gkEigenFeld">Dein Text (höchstens 120 Zeichen)<textarea id="gkEigen" rows="3" maxlength="120" placeholder="z. B. Liebe Karla, wir drücken dir die Daumen …"></textarea></label>
     <h4 class="gk-h">Absender</h4><div class="hl-chips" id="gkVon"></div>
     <label class="feld versteckt" id="gkVonFeld">Absender<input id="gkVonEigen" maxlength="40" placeholder="z. B. Deine Kochfreunde"></label>
-    <p class="hinweis" style="margin:6px 0">Die Karte kommt als Bild in den Chat mit ${esc(vorname)}. Ein paar eigene Worte schreibst du darunter – dann ➤.</p>
-    <div style="display:grid;gap:8px"><button type="button" class="knopf haupt" id="gkLos">💬 In ${esc(vorname)}s Chat legen</button>
-      ${ICH?.admin || ICH?.vorstand ? `<button type="button" class="knopf" id="gkGemeinsam">👥 Als gemeinsame Karte starten – alle unterschreiben</button>` : ""}
+    <p class="hinweis" style="margin:6px 0">${pid ? `In den Chat: die Karte kommt als Bild in den Chat mit ${esc(vorname)}, ein paar eigene Worte schreibst du darunter – dann ➤. ` : ""}Drucken: Karte in Club-Farben (A5) zum Ausschneiden.</p>
+    <div style="display:grid;gap:8px">${pid ? `<button type="button" class="knopf haupt" id="gkLos">💬 In ${esc(vorname)}s Chat legen</button>` : ""}
+      <button type="button" class="knopf${pid ? "" : " haupt"}" id="gkDruck">🖨️ Drucken</button>
+      ${pid && leitung ? `<button type="button" class="knopf" id="gkGemeinsam">👥 Als gemeinsame Karte starten – alle unterschreiben</button>` : ""}
       <button type="button" class="knopf" onclick="fensterZu($('gkBlatt'))">Abbrechen</button></div>
     <div id="gkLaeuft"></div>`);
-  gkLaeuftZeigen(pid); // 2.967.0 KC-CLUB-GK-GEMEINSAM: läuft schon eine gemeinsame Karte für diese Person?
+  if (pid) gkLaeuftZeigen(pid); // 2.967.0 KC-CLUB-GK-GEMEINSAM: läuft schon eine gemeinsame Karte für diese Person?
   let timer = 0;
   const malen = async () => {
-    const mo = GK_MOTIVE.find((x) => x.id === GK.motiv) || GK_MOTIVE[0];
-    const text = GK.text === -1 ? (GK.eigenText.trim() || "…") : mo.texte[GK.text] || mo.texte[0];
+    const mo = GK_MOTIVE.find((x) => x.id === GK.motiv) || GK_MOTIVE[0], A = KARTEN_ANLAESSE[GK.anlass];
+    const text = GK.text === -1 ? (GK.eigenText.trim() || "…") : gkTexte(GK.anlass, GK.gruppe, mo.id)[GK.text] || gkTexte(GK.anlass, "herzlich", mo.id)[0];
     const von = GK.von === -1 ? (GK.eigenVon.trim() || "Dein Köcheclub") : gkAbsender()[GK.von];
-    const c = await gkZeichnen({ motiv: mo.id, titel: gkTitel(vorname)[GK.titel], text, von });
-    const b = $("gkBild"); if (b) { b.src = c.toDataURL("image/jpeg", 0.88); b.alt = `Genesungskarte: ${mo.name}, ${gkTitel(vorname)[GK.titel]}`; } GK.canvas = c;
+    const titel = gkTitel(GK.vorname, GK.anlass)[GK.titel], c = await gkZeichnen({ motiv: mo.id, titel, text, von });
+    const b = $("gkBild"); if (b) { b.src = c.toDataURL("image/jpeg", 0.88); b.alt = `${A.name}-Karte: ${mo.name}, ${titel}`; } GK.canvas = c;
   };
   const spaeter = () => { clearTimeout(timer); timer = setTimeout(malen, 250); };
   const chips = (id, liste, wahl, eigen) => { $(id).innerHTML = liste.map((t, i) => `<button type="button" class="chip${wahl === i ? " an" : ""}" data-i="${i}">${esc(t)}</button>`).join("") + (eigen ? `<button type="button" class="chip${wahl === -1 ? " an" : ""}" data-i="-1">✏️ ${eigen}</button>` : ""); };
   const zeigen = () => {
-    const mo = GK_MOTIVE.find((x) => x.id === GK.motiv) || GK_MOTIVE[0];
-    f.querySelectorAll("[data-motiv]").forEach((b) => b.classList.toggle("an", b.dataset.motiv === GK.motiv));
-    chips("gkTitel", gkTitel(vorname), GK.titel); chips("gkTexte", mo.texte, GK.text, "Eigener Text"); chips("gkVon", gkAbsender(), GK.von, "Eigener");
+    const A = KARTEN_ANLAESSE[GK.anlass], gruppen = KARTEN_GRUPPEN.filter(([g]) => A.texte[g]?.length);
+    if (!gruppen.some(([g]) => g === GK.gruppe)) GK.gruppe = gruppen[0][0];
+    $("gkKopf").textContent = `${A.sym} ${A.name} – Karte${GK.vorname ? " für " + GK.vorname : ""}`;
+    f.querySelectorAll("[data-anlass]").forEach((b) => b.classList.toggle("an", b.dataset.anlass === GK.anlass));
+    $("gkMotive").innerHTML = gkMotiveFuer(GK.anlass).map((x) => `<button type="button" data-motiv="${x.id}" aria-label="${esc(x.name)}" aria-pressed="${x.id === GK.motiv}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px;border-radius:10px;background:#fff;cursor:pointer;font-size:.78rem;border:3px solid ${x.id === GK.motiv ? GK_ROT : "transparent"};box-shadow:0 1px 4px rgba(0,0,0,.15)"><img src="${gkDaumen(x.id)}" alt="" style="width:100%;max-width:70px;border-radius:6px"><span>${esc(x.name)}</span></button>`).join("");
+    chips("gkTitel", gkTitel(GK.vorname, GK.anlass), GK.titel);
+    $("gkGruppen").innerHTML = gruppen.map(([g, t]) => `<button type="button" class="chip${g === GK.gruppe && GK.text !== -1 ? " an" : ""}" data-gruppe="${g}">${esc(t)}</button>`).join("");
+    chips("gkTexte", gkTexte(GK.anlass, GK.gruppe, GK.motiv), GK.text, "Eigener Text"); chips("gkVon", gkAbsender(), GK.von, "Eigener");
     $("gkEigenFeld").classList.toggle("versteckt", GK.text !== -1); $("gkVonFeld").classList.toggle("versteckt", GK.von !== -1);
     malen();
   };
-  f.querySelectorAll("[data-motiv]").forEach((b) => (b.onclick = () => { GK.motiv = b.dataset.motiv; if (GK.text > 0) GK.text = 0; zeigen(); }));
+  const motivWahl = (id) => { GK.motiv = id; if (GK.text > 0 && GK.anlass === "genesung" && GK.gruppe === "herzlich") GK.text = 0; zeigen(); };
+  $("gkAnlass").onclick = (e) => { const b = e.target.closest("[data-anlass]"); if (!b || b.dataset.anlass === GK.anlass) return;
+    GK.anlass = b.dataset.anlass; const ms = gkMotiveFuer(GK.anlass); if (!ms.some((x) => x.id === GK.motiv)) GK.motiv = ms[0].id;
+    GK.titel = 0; GK.gruppe = "herzlich"; if (GK.text !== -1) GK.text = 0; zeigen(); };
+  $("gkMotive").onclick = (e) => { const b = e.target.closest("[data-motiv]"); if (b) motivWahl(b.dataset.motiv); };
   $("gkTitel").onclick = (e) => { const b = e.target.closest("[data-i]"); if (b) { GK.titel = +b.dataset.i; zeigen(); } };
+  $("gkGruppen").onclick = (e) => { const b = e.target.closest("[data-gruppe]"); if (b) { GK.gruppe = b.dataset.gruppe; GK.text = 0; zeigen(); } };
   $("gkTexte").onclick = (e) => { const b = e.target.closest("[data-i]"); if (b) { GK.text = +b.dataset.i; zeigen(); if (GK.text === -1) $("gkEigen").focus(); } };
   $("gkVon").onclick = (e) => { const b = e.target.closest("[data-i]"); if (b) { GK.von = +b.dataset.i; zeigen(); if (GK.von === -1) $("gkVonEigen").focus(); } };
   $("gkEigen").oninput = (e) => { GK.eigenText = e.target.value.slice(0, 120); spaeter(); };
   $("gkVonEigen").oninput = (e) => { GK.eigenVon = e.target.value.slice(0, 40); spaeter(); };
-  // Wischen auf der Karte = nächstes / voriges Motiv
+  if ($("gkFuer")) $("gkFuer").oninput = (e) => { GK.vorname = e.target.value.slice(0, 30).trim(); $("gkKopf").textContent = `${KARTEN_ANLAESSE[GK.anlass].sym} ${KARTEN_ANLAESSE[GK.anlass].name} – Karte${GK.vorname ? " für " + GK.vorname : ""}`; chips("gkTitel", gkTitel(GK.vorname, GK.anlass), GK.titel); spaeter(); };
+  // Wischen auf der Karte = nächstes / voriges Motiv (des Anlasses)
   let x0 = null; const bild = $("gkBild");
   bild.addEventListener("pointerdown", (e) => { x0 = e.clientX; });
   bild.addEventListener("pointerup", (e) => { if (x0 === null) return; const dx = e.clientX - x0; x0 = null; if (Math.abs(dx) < 40) return;
-    const i = GK_MOTIVE.findIndex((x) => x.id === GK.motiv), n = GK_MOTIVE.length; GK.motiv = GK_MOTIVE[(i + (dx < 0 ? 1 : -1) + n) % n].id; if (GK.text > 0) GK.text = 0; zeigen(); });
-  f.querySelector("#gkLos").onclick = (e) => einmal(e.target, gkInDenChat);
+    const ms = gkMotiveFuer(GK.anlass), i = ms.findIndex((x) => x.id === GK.motiv), n = ms.length; motivWahl(ms[(i + (dx < 0 ? 1 : -1) + n) % n].id); });
+  f.querySelector("#gkLos")?.addEventListener("click", (e) => einmal(e.target, gkInDenChat));
+  f.querySelector("#gkDruck").onclick = () => gkDrucken();
   f.querySelector("#gkGemeinsam")?.addEventListener("click", (e) => einmal(e.target, gkGemeinsamStarten));
   zeigen();
+}
+function gkDrucken() { // Karte (A5, Club-Farben) drucken oder als PDF sichern
+  if (!GK?.canvas) return;
+  if (GK.text === -1 && !GK.eigenText.trim()) return melde("Bitte zuerst deinen Text schreiben – oder einen Vorschlag antippen.", true);
+  try { localStorage.setItem(GK_KEY, JSON.stringify({ motiv: GK.motiv })); } catch {}
+  druckStarten("karte", { bild: GK.canvas.toDataURL("image/jpeg", 0.92), name: GK.vorname, anlass: KARTEN_ANLAESSE[GK.anlass].name });
 }
 // ---------- 2.967.0 KC-CLUB-GK-GEMEINSAM (Wunsch Hansi 16.11.2026 „Baue noch die gemeinsame Karte“): Clubleitung startet, alle bekommen eine Push und
 // unterschreiben mit einem Tipp, die beschenkte Person sieht nichts. Der Starter (oder Admin) schickt die Karte mit allen Vornamen in den Chat.
 const gkWahl = () => { // Auswahl aus dem offenen Karten-Fenster
   const mo = GK_MOTIVE.find((x) => x.id === GK.motiv) || GK_MOTIVE[0];
-  return { motiv: mo.id, titel: GK.titel, text: GK.text === -1 ? GK.eigenText.trim() : mo.texte[GK.text] || mo.texte[0], von: GK.von === -1 ? (GK.eigenVon.trim() || "Dein Köcheclub") : gkAbsender()[GK.von] };
+  return { motiv: mo.id, anlass: GK.anlass, titel: GK.titel, text: GK.text === -1 ? GK.eigenText.trim() : gkTexte(GK.anlass, GK.gruppe, mo.id)[GK.text] || gkTexte(GK.anlass, "herzlich", mo.id)[0], von: GK.von === -1 ? (GK.eigenVon.trim() || "Dein Köcheclub") : gkAbsender()[GK.von] };
 };
 async function gkGemeinsamStarten() {
   if (!GK) return; const w = gkWahl(); if (!w.text) return melde("Bitte zuerst deinen Text schreiben – oder einen Vorschlag antippen.", true);
@@ -33508,15 +34239,21 @@ function gkGesichterZeichnen(g, leute, y, cx, B) {
 const GKN_KEY = "kc_club_gk_nachfrage";
 function gknStand() { try { const o = JSON.parse(localStorage.getItem(GKN_KEY) || "{}"); return o && typeof o === "object" ? o : {}; } catch { return {}; } }
 function gknMerken(id, w) { const st = gknStand(); st[id] = w; const k = Object.keys(st); if (k.length > 20) for (const x of k.slice(0, k.length - 20)) delete st[x]; try { localStorage.setItem(GKN_KEY, JSON.stringify(st)); } catch {} }
+// KC-CLUB-GK-NACHFRAGE-IMMER (19.11.2026, Fund Hansi: Thomas bekam die Frage nie – App öffnete bei ihm in „Termine“, Startseite erst nach 4 Min.;
+// Wunsch „wie eine Startnachricht, damit die Info öfter kommt“): auf JEDER Seite, sobald kein anderes Fenster offen ist; die App wartet dafür bis zu
+// 30 Min. (alle 5 Sek. prüfen). „Später“ = beim nächsten Öffnen der App wieder fragen (ohne Grenze), nur „Nein, danke“ beendet die Frage für diese Karte.
+const GKN_WARTEN_MS = 5000, GKN_VERSUCHE = 360;
 function gkNachfragePruefen(versuch = 0) {
-  const st = gknStand(), k = (INIT?.gkOffen || []).find((x) => { const w = st[x.id] || {}; return !w.nein && (w.spaeter || 0) < 2; });
+  const st = gknStand(), k = (INIT?.gkOffen || []).find((x) => !(st[x.id] || {}).nein);
   if (!k) return;
-  if (document.hidden || aktuelleAnsicht !== "start" || document.querySelector(FENSTER_OFFEN)) { if (versuch < 3) setTimeout(() => gkNachfragePruefen(versuch + 1), 12000); return; }
+  if (document.hidden || document.querySelector(FENSTER_OFFEN)) { if (versuch < GKN_VERSUCHE) setTimeout(() => gkNachfragePruefen(versuch + 1), GKN_WARTEN_MS); return; }
   try { if (sessionStorage.getItem("kc_club_gkn_" + k.id)) return; sessionStorage.setItem("kc_club_gkn_" + k.id, "1"); } catch {}
-  const f = blattAuf("gknBlatt", `<h3 style="margin-top:0">💐 ${esc(k.fuerName)} braucht gerade gute Wünsche.</h3>
-    <p style="margin:6px 0">Möchtest du ${esc(k.fuerName)} mit der <b>Gemeinschaftskarte vom Club</b> auch gute Besserung wünschen?</p>
+  // 2.991.0 KC-CLUB-KARTEN-BAUKASTEN: andere Anlässe → passende Frage (ohne Angabe wie bisher „gute Besserung“)
+  const wunsch = { geburtstag: "zum Geburtstag gratulieren", glueckwunsch: "gratulieren", danke: "Danke sagen", hochzeit: "gratulieren", geburt: "zum Nachwuchs gratulieren", beileid: "dein Mitgefühl zeigen" }[k.anlass];
+  const f = blattAuf("gknBlatt", `<h3 style="margin-top:0">${wunsch ? `💌 Für ${esc(k.fuerName)} gibt es eine gemeinsame Karte.` : `💐 ${esc(k.fuerName)} braucht gerade gute Wünsche.`}</h3>
+    <p style="margin:6px 0">Möchtest du ${esc(k.fuerName)} mit der <b>Gemeinschaftskarte vom Club</b> auch ${wunsch || "gute Besserung wünschen"}?</p>
     <p class="hinweis" style="margin:0 0 10px">Ein Tipp genügt – dein Name und dein Gesicht kommen auf die Karte. ${esc(k.fuerName)} sieht sie erst, wenn sie kommt 🤫</p>
-    <div style="display:grid;gap:8px"><button type="button" class="knopf haupt" data-w="ja">💐 Ja, zur Karte</button>
+    <div style="display:grid;gap:8px"><button type="button" class="knopf haupt" data-w="ja">${wunsch ? "💌" : "💐"} Ja, zur Karte</button>
       <button type="button" class="knopf" data-w="spaeter">Später</button><button type="button" class="knopf" data-w="nein">Nein, danke</button></div>`);
   f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => {
     const w = b.dataset.w, alt = gknStand()[k.id] || {}; fensterZu(f);
@@ -33528,33 +34265,24 @@ function gkNachfragePruefen(versuch = 0) {
 // noch nicht unterschrieben, fragt die App nach dem Start einmal „💐 Gemeinsame Karte für Karla – magst du auch unterschreiben?“ → zeigt die Karte mit allen
 // Namen. „Später“ = heute nicht mehr fragen. Dazu eine Zeile im Info-Laufband, bis man unterschrieben hat. Die beschenkte Person sieht nichts (Server).
 var GK_OFFEN = []; // var: das Info-Laufband darf schon vorher danach fragen
-const GK_SPAETER = "kc_club_gk_spaeter";
 async function gkStartHinweis() {
   if (zugang() !== "mitglied") return;
   let d; try { d = await api("gk_gemeinsam_liste"); } catch { return; }
   GK_OFFEN = (d?.karten || []).filter((k) => !k.ichDabei);
   if (GK_OFFEN.length) try { ilZeigen(); } catch {}
-  let sp = {}; try { sp = JSON.parse(localStorage.getItem(GK_SPAETER) || "{}") || {}; } catch {}
-  const k = GK_OFFEN.find((x) => sp[x.id] !== heuteIso()); if (k) gkHinweisZeigen(k, 0);
-}
-function gkHinweisZeigen(k, n) {
-  if (document.querySelector(FENSTER_OFFEN + ", .dlg") || aktuelleAnsicht !== "start") { if (n < 20) setTimeout(() => gkHinweisZeigen(k, n + 1), 3000); return; }
-  frage(`💐 Gemeinsame Karte für ${k.fuerName}\n\n${k.starter ? k.starter + " hat" : "Der Club hat"} eine Gute-Besserung-Karte gestartet – ${k.namen.length} ${k.namen.length === 1 ? "hat" : "haben"} schon unterschrieben. Magst du auch unterschreiben? ${k.fuerName} erfährt es erst, wenn die Karte kommt.`,
-    { ja: "💐 Karte ansehen & unterschreiben", nein: "Später" }).then((ja) => {
-    if (ja) return gkGemeinsamOeffnen(k.id);
-    try { const sp = JSON.parse(localStorage.getItem(GK_SPAETER) || "{}") || {}; sp[k.id] = heuteIso(); localStorage.setItem(GK_SPAETER, JSON.stringify(sp)); } catch {}
-  });
+  // KC-CLUB-GK-NACHFRAGE-IMMER (19.11.2026): die Frage selbst stellt jetzt nur noch gkNachfragePruefen – auf jeder Seite, bei jedem Öffnen, bis
+  // unterschrieben oder „Nein, danke“ (vorher gab es hier eine zweite Frage nur auf der Startseite, die nach 1 Min. aufgab). Hier bleibt die Laufband-Zeile.
 }
 async function gkGemeinsamOeffnen(id) {
   let d; try { d = await api("gk_gemeinsam_liste", {}, { warten: true }); } catch (e) { return meldeFehler(e); }
   const k = (d?.karten || []).find((x) => x.id === id);
   if (!k) return melde("Diese Karte ist schon verschickt – danke fürs Mitmachen! 💐");
-  const daten = { motiv: k.motiv, titel: gkTitel(k.fuerName)[k.titel] || gkTitel(k.fuerName)[0], text: k.text, von: k.von, namen: k.namen,
+  const daten = { motiv: k.motiv, titel: gkTitel(k.fuerName, k.anlass)[k.titel] || gkTitel(k.fuerName, k.anlass)[0], text: k.text, von: k.von, namen: k.namen,
     leute: k.leute ? await gkLeuteMitBild(k.leute) : null }; // 2.977.0 KC-CLUB-GK-GESICHTER (älterer Server ohne „leute“ → wie bisher nur Vornamen)
   const bis = new Date(k.bis).toLocaleString("de-DE", { weekday: "short", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
   const f = blattAuf("gkGemBlatt", `<h3 style="margin-top:0">👥 Gemeinsame Karte für ${esc(k.fuerName)}</h3>
     <p class="hinweis" style="margin:0 0 6px">Gestartet von ${esc(k.starter)} · unterschreiben bis ${esc(bis)} · ${esc(k.fuerName)} sieht die Karte erst, wenn sie kommt 🤫</p>
-    <img id="gkGemBild" alt="Gemeinsame Genesungskarte" style="width:100%;max-width:420px;display:block;margin:0 auto 8px;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.2)">
+    <img id="gkGemBild" alt="Gemeinsame Karte" style="width:100%;max-width:420px;display:block;margin:0 auto 8px;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.2)">
     <p style="margin:4px 0 8px;text-align:center"><b>${k.namen.length}</b> Unterschrift${k.namen.length === 1 ? "" : "en"}${k.namen.length ? ": " + esc(k.namen.join(", ")) : ""}</p>
     <div style="display:grid;gap:8px">
       ${k.ichDabei ? `<button type="button" class="knopf" data-w="zurueck">↩️ Meine Unterschrift zurücknehmen</button>` : `<button type="button" class="knopf haupt" data-w="ja">👆 Hier tippen – mit Name und Gesicht unterschreiben</button>`}
@@ -33572,12 +34300,12 @@ async function gkGemeinsamOeffnen(id) {
       if (w === "senden") {
         if (!(await frage(`Die Karte mit ${k.namen.length} Unterschrift${k.namen.length === 1 ? "" : "en"} jetzt in ${k.fuerName}s Chat legen?\n\nDanach kann niemand mehr unterschreiben.`, { ja: "💬 Ja, jetzt", nein: "Noch warten" }))) return;
         const c = await gkZeichnen(daten), blob = await new Promise((r) => c.toBlob(r, "image/jpeg", 0.88));
-        const name = `Gute-Besserung-${k.fuerName}.jpg`, r = await anlageHochladen(new File([blob], name, { type: "image/jpeg" }));
+        const name = gkDateiName(k.anlass, k.fuerName), r = await anlageHochladen(new File([blob], name, { type: "image/jpeg" }));
         await api("gk_gemeinsam_ende", { id }, { warten: true }); fensterZu(f);
         await direkt(k.fuer);
         anlagen = [...anlagen.filter((a) => !a.laedt), { id: r.id, name: r.name || name, laedt: false }]; EINMAL = false; chipsZeigen();
-        textVorbelegen(`💐 Gute Besserung, ${k.fuerName}! Eine Karte vom ganzen Köcheclub – ${k.namen.length} haben unterschrieben.`); $("text")?.dispatchEvent(new Event("input")); $("text")?.focus();
-        melde("💐 Die gemeinsame Karte liegt im Chat bereit – jetzt ➤");
+        textVorbelegen(`${KARTEN_ANLAESSE[kaAnlass(k.anlass)].gruss(k.fuerName)} Eine Karte vom ganzen Köcheclub – ${k.namen.length} haben unterschrieben.`); $("text")?.dispatchEvent(new Event("input")); $("text")?.focus();
+        melde("💌 Die gemeinsame Karte liegt im Chat bereit – jetzt ➤");
       }
     } catch (e) { meldeFehler(e); }
   })));
@@ -33589,12 +34317,12 @@ async function gkInDenChat() {
   try { localStorage.setItem(GK_KEY, JSON.stringify({ motiv: GK.motiv })); } catch {}
   try {
     const blob = await new Promise((r) => GK.canvas.toBlob(r, "image/jpeg", 0.88));
-    const name = `Gute-Besserung-${vorname}.jpg`, r = await anlageHochladen(new File([blob], name, { type: "image/jpeg" }));
+    const name = gkDateiName(GK.anlass, vorname), A = KARTEN_ANLAESSE[GK.anlass], r = await anlageHochladen(new File([blob], name, { type: "image/jpeg" }));
     fensterZu($("gkBlatt")); GK = null;
     await direkt(pid);
     anlagen = [...anlagen.filter((a) => !a.laedt), { id: r.id, name: r.name || name, laedt: false }]; EINMAL = false; chipsZeigen();
-    textVorbelegen(`💐 Gute Besserung, ${vorname}! Werde schnell wieder gesund.`); $("text")?.dispatchEvent(new Event("input")); $("text")?.focus();
-    melde("💐 Die Karte liegt im Chat bereit – noch ein paar Worte dazu und ➤");
+    textVorbelegen(A.gruss(vorname)); $("text")?.dispatchEvent(new Event("input")); $("text")?.focus();
+    melde("💌 Die Karte liegt im Chat bereit – noch ein paar Worte dazu und ➤");
   } catch (e) { meldeFehler(e); }
 }
 // KC-CLUB-EINZELCHAT (2.40.0, Wunsch Hansi): gibt es schon einen Chat nur mit dieser Person, öffnet „💬 Nachricht in der App“ ihn
@@ -35676,7 +36404,7 @@ async function arDrucken(x) {
     const url = URL.createObjectURL(t.datei), f = document.createElement("iframe");
     f.style.cssText = "position:fixed;width:0;height:0;border:0;opacity:0"; f.setAttribute("aria-hidden", "true");
     f.srcdoc = `<!doctype html><title>${esc(x.titel || "Bild")}</title><style>@page{margin:12mm}body{margin:0;text-align:center}img{max-width:100%;max-height:96vh}</style><img src="${url}">`;
-    f.onload = () => { const img = f.contentDocument?.querySelector("img"), los = () => { try { f.contentWindow.focus(); f.contentWindow.print(); } catch { extOeffnen(url); } setTimeout(() => { f.remove(); URL.revokeObjectURL(url); }, 60000); };
+    f.onload = () => { const img = f.contentDocument?.querySelector("img"), los = () => { try { f.contentWindow.focus(); druckMitPause(() => f.contentWindow.print()); } catch { extOeffnen(url); } setTimeout(() => { f.remove(); URL.revokeObjectURL(url); }, 60000); };
       if (img && !img.complete) img.onload = los; else los(); };
     return document.body.appendChild(f);
   }
@@ -36020,7 +36748,7 @@ function protokollText(p) {
   const l = (t, a, von) => a?.length ? [`${t}:`, ...a.map((x, i) => `  ${i + 1}. ${typeof x === "string" ? x : x.name}${von?.[i] ? ` – Vorschlag von ${von[i]}` : ""}`), ""] : [];
   return [`Köcheclub Werne – Protokoll`, p.titel, `${tagKurz(p.datum)}${p.ort ? " · " + p.ort : ""}${prSchreiber(p) ? " · geschrieben von " + prSchreiber(p) : ""}${p.version > 1 ? ` · Fassung ${p.version}` : ""}`, "────────────────────", "",
     ...(p.anwesend?.length ? [`Anwesend (${p.anwesend.length}): ${p.anwesend.map((x) => x.name).join(", ")}`] : []), ...(p.entschuldigt?.length ? [`Entschuldigt: ${p.entschuldigt.map((x) => x.name).join(", ")}`] : []),
-    ...(p.gaeste ? [`Gäste: ${p.gaeste}`] : []), "", ...l("Tagesordnung", p.tagesordnung, p.tagesordnungVon), ...l("Beschlüsse", p.beschluesse), ...(p.kurzfassung ? ["Kurzfassung:", p.kurzfassung, ""] : []), ...(p.naechster_termin ? [`Nächster Termin: ${p.naechster_termin}`, ""] : []),
+    ...(p.gaeste ? [`Gäste: ${p.gaeste}`] : []), "", ...l("Tagesordnung", p.tagesordnung, p.tagesordnungVon), ...l("Beschlüsse", p.beschluesse), ...(p.kurzfassung ? ["Kurzfassung:", p.kurzfassung, ""] : []), ...(PR?.aufgabenStand?.length ? ["Stand der Aufgaben:", ...PR.aufgabenStand.map((e) => "  " + aufgabeStandZeile(e)), ""] : []), ...(p.naechster_termin ? [`Nächster Termin: ${p.naechster_termin}`, ""] : []),
     ...l("Anlagen", PR.anlagen), `Abgelegt am ${zeitDe(new Date().toISOString())} von ${ICH.name}`, ""].join("\n");
 }
 function protokollInsArchiv() {
@@ -36267,7 +36995,9 @@ function suLupenEinbauen() {
   if (!$("suLupe")) document.body.insertAdjacentHTML("beforeend", `<button class="su-klein" id="suLupe" onclick="sucheAuf()" title="Suchen" aria-label="Suchen">🔍</button>`);
 }
 
-const NZ_TAKT_MS = 120000;
+// 18.11.2026 KC-CLUB-LEITUNG-SPARSAM (Wunsch Hansi „einsparen über die direkte Leitung“): Nutzung und Wege im Takt alle 5 statt 2 Min. melden –
+// beim Weglegen/Schließen geht weiterhin sofort alles raus (keepalive), neue Wege weiterhin nach 15 s Ruhe (KC-CLUB-SPUR-LIVE).
+const NZ_TAKT_MS = 5 * 60000;
 let nzPuffer = (() => { try { return JSON.parse(localStorage.getItem("kc_club_nutzung") || "{}"); } catch { return {}; } })();
 // KC-CLUB-NUTZUNG-UHRZEIT (2.23.17, Wunsch Hansi): je Stunde (0–23, Berliner Zeit beim Antippen) nur die Anzahl – getrennt vom Bereich
 let nzStdPuffer = (() => { try { return Object.fromEntries(Object.entries(JSON.parse(localStorage.getItem("kc_club_nutzung_std") || "{}")).filter(([k]) => /^(\d|1\d|2[0-3])$/.test(k))); } catch { return {}; } })(); // 2.45.1: alte „NaN“-Einträge verwerfen
@@ -36293,7 +37023,7 @@ function nzZaehlen(v) {
   const h = nzHeuteLesen(); if (!h.offen.includes(v) && !h.gesendet.includes(v)) { h.offen.push(v); nzHeuteSchreiben(h); }
 }
 // ---------- KC-CLUB-NUTZUNG-PERSON (Wunsch Hansi 07./08.11.2026): Bildschirmzeit (App sichtbar) und Zeit im Hintergrund (App offen, aber weggelegt) je Tag –
-// nur Sekunden, im Gerät gemerkt (höchstens 4 Tage) und mit der Nutzungsmeldung geschickt (beim Weglegen; im 2-Minuten-Takt nur, wenn ohnehin etwas geht –
+// nur Sekunden, im Gerät gemerkt (höchstens 4 Tage) und mit der Nutzungsmeldung geschickt (beim Weglegen; im 5-Minuten-Takt (bis 18.11.2026: 2) nur, wenn ohnehin etwas geht –
 // kein zusätzlicher Aufruf). Ein Stück „sichtbar“ zählt höchstens 6 Std., „Hintergrund“ höchstens 12 Std. (danach hat das Handy die App meist beendet).
 const NP_SICHT_MAX = 6 * 3600, NP_WEG_MAX = 12 * 3600, NP_SPEICHER = "kc_club_np_zeit";
 const NP = { sichtAb: document.hidden ? 0 : Date.now(), wegAb: document.hidden ? Date.now() : 0 };
@@ -36327,7 +37057,7 @@ async function nzSenden() {
     for (const [k, n] of Object.entries(std)) nzStdPuffer[k] = (nzStdPuffer[k] || 0) + n; nzStdSchreiben();
     if (zeit) { const zz = npZeitLesen(); for (const [t, w] of Object.entries(zeit)) npZeitDazu(zz, t, Number(w?.[0]) || 0, Number(w?.[1]) || 0); npZeitSchreiben(zz); } }
 }
-setInterval(nzSenden, sparTakt(NZ_TAKT_MS));
+setInterval(() => { if (!ruht()) nzSenden(); }, sparTakt(NZ_TAKT_MS)); // KC-CLUB-SCHLAFMODUS (beim Weglegen sendet visibilitychange)
 document.addEventListener("visibilitychange", () => { if (document.hidden) nzSenden(); });
 // ---------- KC-CLUB-SPUR (2.23.88, Wunsch Hansi): Wege durch die App – was geöffnet wurde und mit wem (Mitglied/Unterhaltung), mit Uhrzeit.
 // NIE Inhalte (kein Text, keine Suchbegriffe, keine Fotos). Getrennt von der namenlosen Nutzungsstatistik (die bleibt ohne Namen).
@@ -36365,8 +37095,8 @@ async function spurSenden(schliessen = false) {
 }
 // KC-CLUB-SPUR-LIVE (2.81.0, Wunsch Hansi „schnell sehen, wenn gerade einer drin ist“): neue Schritte schon nach 15 s schicken
 // (gebündelt – ein Aufruf je Ruhepause), nicht erst beim 2-Minuten-Takt. Im Sparmodus bleibt es beim langen Takt.
-function spurBaldSenden() { if (SPAR.an || document.hidden) return; clearTimeout(SPUR_BALD); SPUR_BALD = setTimeout(spurSenden, 15000); }
-setInterval(spurSenden, sparTakt(NZ_TAKT_MS));
+function spurBaldSenden() { if (SPAR.an || ruht()) return; clearTimeout(SPUR_BALD); SPUR_BALD = setTimeout(spurSenden, 15000); }
+setInterval(() => { if (!ruht()) spurSenden(); }, sparTakt(NZ_TAKT_MS)); // KC-CLUB-SCHLAFMODUS
 document.addEventListener("visibilitychange", () => { if (document.hidden) spurSenden(true); }); // KC-CLUB-SPUR-KEEPALIVE
 window.addEventListener("pagehide", () => spurSenden(true));
 // 2.729.0 KC-CLUB-SPUR-WIEDER: App kommt nach ≥ 5 Min. im Hintergrund wieder nach vorn → Schritt „wieder_<Minuten>“ („📲 wieder geöffnet (war 33 Min. im Hintergrund)“)
@@ -36380,7 +37110,7 @@ document.addEventListener("visibilitychange", () => {
   const weg = SPUR_HINTER_AB ? Date.now() - SPUR_HINTER_AB : 0; SPUR_HINTER_AB = 0;
   if (weg >= SPUR_WIEDER_MS && ICH && INIT) spur(spurWieder(weg));
 });
-const SPUR_WAS = { glueckskeks: "🥠 Glückskeks geöffnet", kontakt_extern: "📤 Kontakt nach außen weitergeleitet", vorfuehren: "📺 Live zeigen gestartet", vorfuehren_zuschauen: "📺 Bei Live zeigen zugeschaut", fitness: "🏋️ Fit bleiben geöffnet", probe_gesetzt: "🧪 Probephase gestartet/verlängert", probe_uebernommen: "✅ Probephase übernommen", probe_beendet: "🚪 Probephase beendet", geoeffnet: "📲 App geöffnet", mitglied: "👤 Mitglied angesehen", chat: "💬 Unterhaltung geöffnet", gesendet: "✉️ Nachricht gesendet", gesendet_anlage: "📎 Nachricht mit Anhang gesendet",
+const SPUR_WAS = { schlaf_ein: "💤 App eingeschlafen (Schlafmodus)", glueckskeks: "🥠 Glückskeks geöffnet",kontakt_extern: "📤 Kontakt nach außen weitergeleitet", vorfuehren: "📺 Live zeigen gestartet", vorfuehren_zuschauen: "📺 Bei Live zeigen zugeschaut", fitness: "🏋️ Fit bleiben geöffnet", probe_gesetzt: "🧪 Probephase gestartet/verlängert", probe_uebernommen: "✅ Probephase übernommen", probe_beendet: "🚪 Probephase beendet", geoeffnet: "📲 App geöffnet", mitglied: "👤 Mitglied angesehen", chat: "💬 Unterhaltung geöffnet", gesendet: "✉️ Nachricht gesendet", gesendet_anlage: "📎 Nachricht mit Anhang gesendet",
   anruf: "📞 Anruf (App) an", video: "🎥 Videoanruf an", anklopfen: "👋 Angeklopft bei", telefon: "☎️ Telefonnummer angetippt", whatsapp: "🟢 WhatsApp geöffnet", mail: "✉️ E-Mail-Adresse angetippt", meine_statistik: "📊 Eigene Nachrichten-Statistik angesehen",
   geplant: "⏰ Nachricht für später geplant", zurueckgeholt: "↩️ Nachricht zurückgeholt", mein_bild: "🧑‍🍳 „Mein Bild“ geöffnet", bild_gewaehlt: "🧑‍🍳 Koch-Figur als Bild gewählt", bild_gebaut: "🧩 Eigene Figur gespeichert", bild_foto: "📷 Eigenes Foto als Bild gesetzt", bild_entfernt: "🧑‍🍳 Bild entfernt (Buchstaben)", avatar_kombi: "ⓘ Figuren-Möglichkeiten angesehen", jacke_auto_an: "🔄 Kochjacke täglich wechselnd eingeschaltet", jacke_auto_aus: "🔄 Kochjacke täglich wechselnd ausgeschaltet",
   sprache_start: "🎙️ Sprache: Startseite", sprache_zurueck: "🎙️ Sprache: zurück", sprache_pinnwand: "🎙️ Sprache: neuer Zettel", sprache_nachricht: "🎙️ Sprache: neue Nachricht", sprache_termine: "🎙️ Sprache: Termine", sprache_naechster: "🎙️ Sprache: nächster Termin", sprache_suche: "🎙️ Sprache: Suche", sprache_hilfe: "🎙️ Sprache: Hilfe", sprache_unklar: "🎙️ Sprache: nicht verstanden", sensibel_gaeste_frage: "⚠️ Vertrauliches an Nicht-Mitglieder: nachgefragt", sprache_ziel: "🎙️ Sprache: Seite geöffnet", sprache_gelernt: "🎙️ Sprache: neuen Befehl gelernt", sprache_liste: "📋 Liste der Sprachbefehle geöffnet", sprache_training: "🎓 Sprach-Training gestartet", unterstuetzung_viel: "🙋 Unterstützung: viel Hilfe gewählt", unterstuetzung_etwas: "👌 Unterstützung: ein bisschen Hilfe", unterstuetzung_keine: "😎 Unterstützung: keine", inhaltsverzeichnis: "🗂️ Inhaltsverzeichnis gedruckt" }; // KC-CLUB-SPRACHSTEUERUNG (2.75.0)
@@ -36393,6 +37123,7 @@ const SPUR_WAS = { glueckskeks: "🥠 Glückskeks geöffnet", kontakt_extern: "�
 // Registry FENSTER_NAMEN: Fenster-ID → Name in den Wegen. Fehlt ein Name, steht dort „🪟 Fenster: „ID““ – tests/spur-voll.test.mjs meldet fehlende Namen.
 const FENSTER_NAMEN = {
   peBlatt: "🏷️ Preisetiketten", // KC-CLUB-PREISETIKETTEN
+  sendeBerichtBlatt: "📊 Sendebericht", // KC-CLUB-SENDEBERICHT (19.11.2026)
   // 2.794.0 KC-CLUB-FENSTER-NAMEN-NACHTRAG (Fund Hansi 31.10.: in den Wegen stand „Fenster: „niFenster““) – Fenster, die nicht über blattAuf entstehen
   niFenster: "ℹ️ Nachricht-Info: gelesen/zugestellt", naMenue: "💬 Nachricht: Menü", naLoeschen: "🗑️ Nachricht löschen?", wlFenster: "↪️ Nachricht weiterleiten",
   pwFenster: "📌 Pinnwand-Hinweis", ansFenster: "🗣️ Sprachansagen", geFenster: "📱 Meine Geräte mit Push", rsFenster: "🖍️ Tippfehler rot unterstreichen",
@@ -36415,7 +37146,7 @@ const FENSTER_NAMEN = {
   diktatBlatt: "✍️ Diktieren", druckBlatt: "🖨️ Drucken", dsBlatt: "🗓️ Dienstplan", dsOrteBlatt: "📍 Dienst-Orte", dsWerBlatt: "👥 Wer ist heute im Dienst",
   rundBlatt: "🪑 Runder Tisch", rundNeuBlatt: "🪑 Zum Runden Tisch einladen", rundTischBlatt: "🪑 Am Runden Tisch", rundTascheBlatt: "💼 Tasche für den Runden Tisch", rundArchivBlatt: "🗄️ Tasche: aus dem Archiv", // 2.762.0 KC-CLUB-RUNDER-TISCH
   dtBlatt: "🗓️ Dienst-Tausch", dvBlatt: "📊 Dienstzeiten-Übersicht", dwSperreBlatt: "💡 Sperrzeit nicht nötig", egBlatt: "📥 Mein Eingangskorb", eingangBlatt: "📥 In den Eingangskorb eines Mitglieds",
-  einlBlatt: "📥 Dokument einlesen", ekAblageBlatt: "🗄️ Eingangskorb: ablegen", ekDwBlatt: "📅 Dienstzeiten", ekErstBlatt: "💶 Erstattung", ekErstOkBlatt: "✅ Erstattung als erstattet markieren?", gkBlatt: "💐 Genesungskarte", tpBlatt: "⚽ Bundesliga-Tippspiel", gkGemBlatt: "👥 Gemeinsame Karte", gknBlatt: "💐 Frage: Gemeinsame Karte", ekHinweisBlatt: "📥 Hinweis: Eingangskorb",
+  einlBlatt: "📥 Dokument einlesen", ekAblageBlatt: "🗄️ Eingangskorb: ablegen", ekDwBlatt: "📅 Dienstzeiten", ekErstBlatt: "💶 Erstattung", ekErstOkBlatt: "✅ Erstattung als erstattet markieren?", gkBlatt: "💐 Genesungskarte", tpBlatt: "⚽ Bundesliga-Tippspiel", gkGemBlatt: "👥 Gemeinsame Karte", gknBlatt: "💐 Frage: Gemeinsame Karte", astBlatt: "📌 Wie steht's mit deiner Aufgabe?", anlAlleBlatt: "📎 Alle Anlagen im Chat", /* KC-CLUB-CHAT-ANLAGEN-SICHTBAR */ekHinweisBlatt: "📥 Hinweis: Eingangskorb",
   ekNachBlatt: "🔎 Nachverfolgen", elternBlatt: "👪 Eltern-Handy", entwicklerBlatt: "👨‍💻 Über den Entwickler", erBlatt: "✅ Alles eingerichtet", ibBlatt: "🖼️ Installieren mit Bildern", erinBlatt: "🔔 Erinnerung für dich",
   erkBlatt: "💡 Vorschlag aus der Nachricht", khBlatt: "📌 Für dich (Chat)", khErinBlatt: "⏰ An Nachricht erinnern", khAufgabeBlatt: "📋 Nachricht als Aufgabe",ersBesBlatt: "🎓 Fahrten aus Besuchen", ersCsvBlatt: "📊 Erstattungen für Excel", eblBlatt: "📒 Buchungsliste", esTafelBlatt: "📤 Tafel sichern", ewBlatt: "🧭 Einstellungen erklärt",
   expressBlatt: "🏎️ Express-Sendung", externBlatt: "🌐 Externer Inhalt", faAlbenKorb: "🗑️ Gelöschte Alben", faAlbumBlatt: "📸 Foto in welches Album?", faAlbumForm: "📸 Album anlegen/ändern",
@@ -36884,7 +37615,7 @@ function ssAbbrechen(still) {
   if (!still) melde("⏹ Beendet");
 }
 async function ssHolen(sofort) {
-  if (document.hidden && sofort !== true) return; // 2.364.0 KC-CLUB-AKKU-7: im Hintergrund nicht alle 0,8–1,5 s beim Server nachfragen (wie Live-Zeigen seit 2.314.1)
+  if (ruht() && sofort !== true) return; // 2.364.0 KC-CLUB-AKKU-7: im Hintergrund nicht alle 0,8–1,5 s beim Server nachfragen (wie Live-Zeigen seit 2.314.1)
   if (SS.laeuft && sofort === true) { SS.nochmal = true; return; }
   if (sofort !== true && rtAn() && SS.id && $("studioBlatt") && (SS.tn = (SS.tn || 0) + 1) % 3) return; // KC-CLUB-REALTIME-VORFUEHREN: Takt nur zur Sicherheit
   if (!SS.id || !$("studioBlatt")) { if (SS.id) api("schnappschuss_ende", { an: SS.an, id: SS.id }).catch(() => {}); clearInterval(SS.uhr); SS.id = null; ssFhZu(); return; } // Studio zu → Mitschauen beenden
@@ -37005,7 +37736,7 @@ function spgSenderStopp() {
   removeEventListener("scroll", spgSchmutz, { capture: true }); removeEventListener("input", spgSchmutz, true); removeEventListener("resize", spgSchmutz); document.removeEventListener("pointerdown", spgTippen, true);
 }
 async function spgSenderTakt() {
-  if (!SPG.an || SPG.laeuft || document.hidden) return;
+  if (!SPG.an || SPG.laeuft || ruht()) return;
   if (fhVollFaellig()) { SPG.letzt = ""; SPG.schmutzig = true; } // KC-CLUB-FERNHILFE F2: Selbstheilung
   const jetzt = Date.now(); if (!SPG.schmutzig && !(SPG.vorhang && !SPG.vorhangGesendet) && !SPG.mehr?.() && jetzt - SPG.ping < 4000) return;
   SPG.laeuft = true;
@@ -37957,10 +38688,11 @@ async function gastStart(token) {
   history.replaceState({ basis: true }, "", url.pathname);
   history.pushState({ v: "start", tiefe: 1 }, "", url.pathname);
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.addEventListener("message", (e) => { if (e.data?.typ === "push") { onlinePushGezeigt(e.data.titel); /* 2.383.0 */ pushNeuLaden(); onlinePing(); setTimeout(() => taHinweisPruefen(9), 1500); if (chatId && aktuelleAnsicht === "chat") chatSignalLaden(true); else if (chatId) chatLaden(false); ansageAusPush(e.data); if (aktuelleAnsicht === "spiele" && SP.tab === "mg") SP.offen ? spNachsehen() : spLaden(true); }
-      if (e.data?.typ === "online-ansage") { onlineAnsageSprechen([e.data.name]); onlinePing(); }
+    navigator.serviceWorker.addEventListener("message", (e) => { if (SCHLAF.an) return; /* KC-CLUB-SCHLAFMODUS: schlafend nichts laden/ansagen – Anruf und Antippen der Mitteilung wecken vorher (Schlaf-Block oben) */ if (e.data?.typ === "push") { onlinePushGezeigt(e.data.titel); /* 2.383.0 */ pushNeuLaden(); if (!rtAn()) { onlinePing(); setTimeout(() => taHinweisPruefen(9), 1500); } /* 18.11.2026 KC-CLUB-LEITUNG-SPARSAM (Wunsch Hansi „einsparen über die direkte Leitung“): steht die Leitung, melden Anklopfen/Anruf/Terminanfrage sich selbst als Signal */ if (chatId && aktuelleAnsicht === "chat") chatSignalLaden(true); else if (chatId) chatLaden(false); ansageAusPush(e.data); if (aktuelleAnsicht === "spiele" && SP.tab === "mg") SP.offen ? spNachsehen() : spLaden(true); }
+      if (e.data?.typ === "online-ansage") { onlineAnsageSprechen([e.data.name]); if (!onlLeitungVoll()) onlinePing(); } // KC-CLUB-LEITUNG-SPARSAM: mit Leitung + Anwesenheit meldet die Anwesenheit das Kommen selbst
       if (e.data?.typ === "oeffnen") pushOeffnen(e.data.url); }); // 2.209.0 KC-CLUB-PUSH-SPRUNG // KC-CLUB-ONLINE-ANSAGE-PUSH; 2.24.18: LED/Zahl/Ring sofort mitziehen (Hinweis Hansi: Ansage kam immer zuerst)
     navigator.serviceWorker.addEventListener("message", (e) => { if (e.data?.typ === "push" && /^📥 Neu in deinem Eingangskorb/.test(e.data.titel || "")) eingangNeu(); }); // KC-CLUB-EINGANG-DURCHGEHEN (2.741.0): Hinweis sofort bei offener App
+    navigator.serviceWorker.addEventListener("message", (e) => { if (e.data?.typ === "push" && /^📌 Bitte kurz den Stand/.test(e.data.titel || "")) AST.fragen = true; }); // KC-CLUB-AUFGABEN-STAND: beim nächsten Laden (gleich nach der Push) nachfragen
   }
   // Messung: wie wurde die App gestartet (einmal je Sitzung) – zeigt, ob die Installation geklappt hat
   try { if (!sessionStorage.getItem("kc_club_start_gemeldet")) { sessionStorage.setItem("kc_club_start_gemeldet", "1"); setTimeout(() => api("diagnose", { art: "start", daten: { start: START_ART, referrer: (document.referrer || "").slice(0, 80) } }).catch(() => {}), 1500); } } catch {}
@@ -37973,7 +38705,7 @@ async function gastStart(token) {
     if ((!h || h === "#") && (buSchreiben() || (buDarf() && (ICH?.vorstand || ICH?.admin)))) setTimeout(() => buAufgabePruefen(), 4000); // 2.750.0 KC-CLUB-SITZUNG-AUFGABE-START: nächste Aufgabe für die Sitzung (2.797.0 Stufe 4: nur die Clubleitung lädt dafür das Büro-Teil)
     if (!h || h === "#") setTimeout(() => taHinweisPruefen(), 5000);
     if (!h || h === "#") setTimeout(() => { try { grPruefen(); } catch {} }, 6500); // KC-CLUB-GEMEINSCHAFTSGERICHT: Frage nach der Zutat
-    if (!h || h === "#") setTimeout(() => { try { gkNachfragePruefen(); } catch {} }, 8000); // 2.977.0 KC-CLUB-GK-NACHFRAGE: gemeinsame Genesungskarte
+    setTimeout(() => { try { gkNachfragePruefen(); } catch {} }, 8000); // 2.977.0 KC-CLUB-GK-NACHFRAGE: gemeinsame Genesungskarte (KC-CLUB-GK-NACHFRAGE-IMMER: auch wenn die App nicht auf der Startseite öffnet)
     setTimeout(() => { try { pulsStarten(); } catch {} }, 3000); // KC-CLUB-PULS: Datenverkehr-Säulen (nur Admin)
     if (!h || h === "#") setTimeout(() => bwEinladungPruefen(), 15000); // 2.314.0 KC-CLUB-BEWEGUNG-EINLADUNG
     if (!h || h === "#") setTimeout(() => nuVorschlagPruefen(), 25000); // 2.418.0 KC-CLUB-KACHEL-VORSCHLAG (nach der Einladung, nie darüber)
@@ -37988,11 +38720,11 @@ async function gastStart(token) {
   // KC-CLUB-UPDATE-AUTO (2.3.2, Wunsch Hansi): auch beim Start und alle 10 Min. (nur auf der Startseite, nichts offen,
   // nichts eingetippt) selbst aktualisieren – Schutz wie bisher in updateRuhig/updateSelbst (1× je 10 Min. und Version)
   updatePruefen(false).then(() => setTimeout(updateSelbst, updateFrisch() ? 0 : 4000)); // KC-CLUB-UPDATE-START: frisch geöffnet → sofort
-  setInterval(() => { if (!document.hidden && aktuelleAnsicht === "start" && !chatId) updatePruefen(false).then(updateSelbst); }, UPDATE_TAKT_MS);
+  setInterval(() => { if (!ruht() && aktuelleAnsicht === "start" && !chatId) updatePruefen(false).then(updateSelbst); }, UPDATE_TAKT_MS); // KC-CLUB-SCHLAFMODUS
   setTimeout(stStart, 2500); // KC-CLUB-STANDORT
   document.addEventListener("visibilitychange", () => { updWeg(document.hidden); if (!document.hidden) { if (ST.eigen) stMelden(true); if (Date.now() - NEU_ZULETZT >= 60000) neuLaden(); /* KC-CLUB-RC-PRUEFUNG (20.10.2026): höchstens 1× je 60 s neu laden (DB sparen) */ updatePruefen(false).then(updateSelbst); if (chatId) chatLaden(false); setTimeout(pwLive, 1500); } });
-  setInterval(() => { if (!document.hidden && aktuelleAnsicht !== "chat" && (NEU_NACH_CHAT || !(RT.ok && Date.now() - NEU_ZULETZT < 180000))) neuLaden(); }, sparTakt(60000)); // KC-CLUB-SPARMODUS · 2.359.0: steht die direkte Leitung, nur alle 3 Min. (Neues kommt sofort über die Leitung)
-  setInterval(() => pwLive(true), PW_LIVE_MS); // KC-CLUB-PINNWAND-LIVE: auch im Chat · 2.360.0: mit Leitung seltener
+  setInterval(() => { if (!ruht() && aktuelleAnsicht !== "chat" && (NEU_NACH_CHAT || !(RT.ok && Date.now() - NEU_ZULETZT < 180000))) neuLaden(); }, sparTakt(60000)); // KC-CLUB-SPARMODUS · 2.359.0: steht die direkte Leitung, nur alle 3 Min. (Neues kommt sofort über die Leitung)
+  setInterval(() => pwLive(true), PW_LIVE_MS); // KC-CLUB-SCHLAFMODUS: pwLive prüft ruht() selbst // KC-CLUB-PINNWAND-LIVE: auch im Chat · 2.360.0: mit Leitung seltener
 })();
 // ---------- 2.355.0 KC-CLUB-KOCH-EMOJI (Fund Hansi „am PC sieht Twinkey beim Fegen anders aus: laufende Beine, ein Gesicht daneben und eine
 // Pfanne mit Spiegelei – so sieht auch die Kachel ‚Mein Bild‘ aus“) ----------

@@ -335,7 +335,7 @@ function spSpielZeigen() {
 // nach 2 Minuten ohne Zug alle 9 s (jede Änderung setzt wieder auf schnell).
 const SPT_TAKT = { n: 0, ruhig: 0 };
 async function spNachsehen(sofort) {
-  if (!SP.offen || aktuelleAnsicht !== "spiele" || document.hidden || KTM.frage || KTM.aufl) return; // 2.14.0: nie mitten in eine Quizfrage
+  if (!SP.offen || aktuelleAnsicht !== "spiele" || ruht() || KTM.frage || KTM.aufl) return; // KC-CLUB-SCHLAFMODUS: ruht() = Hintergrund oder Schlaf // 2.14.0: nie mitten in eine Quizfrage
   if (sofort !== true) { // sofort = Signal über die direkte Leitung (KC-CLUB-REALTIME-SPIELE) – sonst der Takt
     SPT_TAKT.n++; SPT_TAKT.ruhig++;
     if (rtAn() && !SP.offen.uhr?.laeuft && SPT_TAKT.n % 40) return; // Leitung steht: Züge melden sich selbst – nur alle 2 Min. zur Sicherheit (bisher 30 s; KC-CLUB-RT-SPIEL-SPARSAM 03.11.2026)
