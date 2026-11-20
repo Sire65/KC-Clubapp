@@ -17221,7 +17221,18 @@ function ilMitfahrt(m) {
   const u = `${m.titel} · ${tag}${m.art === "biete" ? ` · ${m.frei === 1 ? "1 Platz" : m.frei + " Plätze"} frei` : ""}${m.eigen ? "" : m.art === "biete" ? " – mitfahren? Antippen" : " – Platz frei? Antippen"}`;
   // Fund Hansi 20.11. „Habe ich nicht gesehen“: eigene waren „weiß“ und fielen hinter die 7 – jetzt gelb wie bei allen
   return { id: "mitfahrt:" + m.art + ":" + m.id, stufe: "gold", sym: m.art === "biete" ? "🚗" : "🙋", t, u,
-    auf: m.bezug_art === "aktion" ? `aktionOeffnen(${JSON.stringify(String(m.bezug_id))})` : `ilTerminOeffnen(${JSON.stringify(String(m.bezug_id))})` };
+    auf: `ilMitfahrtOeffnen(${JSON.stringify(m.bezug_art === "aktion" ? "aktion" : "treffen")}, ${JSON.stringify(String(m.bezug_id))})` };
+}
+// KC-CLUB-MITFAHRT-SPRUNG (20.11.2026, Fund Hansi „Wenn ich sie antippe, gelangt man in den Kalender, aber nicht genau zur Mitfahrgelegenheit“): vorher versuchte
+// ilTerminOeffnen den Termin nur nach 0,7 und 1,8 s – lud der Kalender länger, blieb man im Kalender. Jetzt: warten, bis der Termin da ist (bis ~9 s), Termin öffnen,
+// zum Abschnitt „🚗 Mitfahren“ rollen und ihn kurz aufleuchten lassen. Bei Aktionen genauso in der Aktion.
+function ilMitfahrtOeffnen(art, id) {
+  const hin = (w) => { const b = w?.querySelector(".mf-block"); if (!b) return false; try { b.scrollIntoView({ block: "center", behavior: "smooth" }); } catch {} b.classList.remove("mf-blitz"); void b.offsetWidth; b.classList.add("mf-blitz"); return true; };
+  let n = 0;
+  if (art === "aktion") { Promise.resolve(aktionOeffnen(id)).catch(() => {}).then(() => { const v = () => { if (!hin(document) && ++n < 30) setTimeout(v, 300); }; setTimeout(v, 300); }); return; }
+  zeige("termine");
+  const v = () => { if (TREFFEN_IDX.has(id)) { if (!$("treffenInfo") || $("treffenInfo").dataset.id !== id) treffenInfo(id, false); setTimeout(() => hin($("treffenInfo")), 250); return; } if (++n < 30) setTimeout(v, 300); };
+  setTimeout(v, 300);
 }
 function ilTerminLink(id) { const l = (INIT?.laufbandTermine || []).find((x) => x.id === id)?.link; if (/^https:\/\//.test(l || "")) window.open(l, "_blank", "noopener"); }
 function ilHtml(m) {
@@ -30620,7 +30631,7 @@ function mitfahrtBlock(art, bezugId, liste, offen, suche = [], darf = true) {
     !ichFahre && !ichDabei ? `<button class="knopf klein" onclick="mitfahrtAnbieten('${art}', '${esc(bezugId)}')">🚗 Ich biete eine Mitfahrgelegenheit</button>` : "",
   ].filter(Boolean).join("") : "";
   const legende = liste.length ? '<div class="mf-legende"><span><i class="mf-q mf-frei"></i>frei – antippen</span><span><i class="mf-q mf-du"></i>dein Platz</span><span><i class="mf-q mf-belegt"></i>belegt</span></div>' : "";
-  return `<div style="margin-top:10px;border-top:1px solid var(--linie);padding-top:8px"><b>🚗 Mitfahren</b>${legende}${zeilen || '<p class="hinweis" style="margin:4px 0">Noch keine Mitfahrgelegenheit.</p>'}${suchZeile}
+  return `<div class="mf-block" style="margin-top:10px;border-top:1px solid var(--linie);padding-top:8px"><b>🚗 Mitfahren</b>${legende}${zeilen || '<p class="hinweis" style="margin:4px 0">Noch keine Mitfahrgelegenheit.</p>'}${suchZeile}
     ${knoepfe ? `<div class="knoepfe">${knoepfe}</div>` : ""}
     ${offen && !darf ? '<p class="hinweis" style="margin:6px 0 0;font-size:.85rem">Sag zuerst „✅ Ich komme“ – dann kannst du eine Mitfahrgelegenheit suchen, anbieten oder einen Platz buchen.</p>' : ""}</div>`;
 }

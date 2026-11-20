@@ -33,9 +33,9 @@ for (const c of ["mitfahrt_anbieten", "mitfahrt_platz", "mitfahrt_suchen", "mitf
   const ilMitfahrt = new Function("fTag", "wann", teil + "\nreturn ilMitfahrt;")(fTag, wann);
   let e = ilMitfahrt({ art: "biete", id: "M1", name: "Hansi", frei: 2, bezug_art: "treffen", bezug_id: "T1", titel: "Köcheclub-Sitzung", beginn: "x" });
   assert.equal(e.sym, "🚗"); assert.equal(e.t, "Hansi bietet eine Mitfahrt an"); assert.match(e.u, /Köcheclub-Sitzung · Di\., 24\.11\. um 18:00 · 2 Plätze frei – mitfahren\? Antippen/);
-  assert.equal(e.auf, 'ilTerminOeffnen("T1")');
+  assert.equal(e.auf, 'ilMitfahrtOeffnen("treffen", "T1")', "KC-CLUB-MITFAHRT-SPRUNG: direkt zum Abschnitt Mitfahren");
   e = ilMitfahrt({ art: "suche", id: "x", name: "Anne", bezug_art: "aktion", bezug_id: "A1", titel: "Adventsmarkt", beginn: "x" });
-  assert.equal(e.sym, "🙋"); assert.equal(e.t, "Anne sucht eine Mitfahrgelegenheit"); assert.equal(e.auf, 'aktionOeffnen("A1")');
+  assert.equal(e.sym, "🙋"); assert.equal(e.t, "Anne sucht eine Mitfahrgelegenheit"); assert.equal(e.auf, 'ilMitfahrtOeffnen("aktion", "A1")');
   e = ilMitfahrt({ art: "biete", id: "M1", eigen: true, frei: 1, bezug_art: "treffen", bezug_id: "T1", titel: "Köcheclub-Sitzung", beginn: "x" });
   assert.equal(e.t, "Du bietest eine Mitfahrt an"); assert.match(e.u, /1 Platz frei$/); assert.equal(e.stufe, "gold", "eigene auch gelb (Fund Hansi 20.11.)");
 }
@@ -53,4 +53,13 @@ console.log("mitfahrt-laufband: alle Prüfungen bestanden");
   chk(/String\(m\.id\)\.startsWith\("mitfahrt:"\) \|\| l\.indexOf\(m\) < 7/.test(a), "Mitfahrten fallen nicht hinter die 7");
   chk(/\.il-alle \{ position: absolute; top: -2px;/.test(h) && /\.il-liste \{[^}]*max-height: 62vh; overflow-y: auto;/.test(h), "CSS Pfeil und Rollliste");
   console.log("mitfahrt-laufband (Liste): ok");
+}
+// KC-CLUB-MITFAHRT-SPRUNG (20.11.2026, Fund Hansi „gelangt in den Kalender, aber nicht genau zur Mitfahrgelegenheit“)
+{
+  const { readFileSync } = await import("node:fs");
+  const a = readFileSync(new URL("../app.js", import.meta.url), "utf8"), h = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const f = a.slice(a.indexOf("function ilMitfahrtOeffnen("), a.indexOf("function ilTerminLink("));
+  if (!/if \(\+\+n < 30\) setTimeout\(v, 300\)/.test(f) || !/treffenInfo\(id, false\)/.test(f) || !/querySelector\("\.mf-block"\)/.test(f) || !/scrollIntoView/.test(f)) throw new Error("wartet auf den Termin, öffnet ihn und rollt zu „Mitfahren“");
+  if (!/<div class="mf-block" style=/.test(a) || !/\.mf-block\.mf-blitz \{ animation: aufblitzen/.test(h)) throw new Error("Abschnitt Mitfahren markiert und leuchtet auf");
+  console.log("mitfahrt-laufband (Sprung): ok");
 }

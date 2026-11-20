@@ -45,6 +45,20 @@ await seite.evaluate(() => [...document.querySelectorAll("#ilListe .il-balken")]
 ok(await seite.evaluate(() => JSON.stringify(__sprung) === JSON.stringify([["aktion", "A1"]]) && !$("ilListe")), "Antippen springt zur Aktion und schließt die Liste");
 await seite.click("#infoLaufband .il-alle"); await seite.waitForTimeout(300); await seite.click("#infoLaufband .il-alle"); await seite.waitForTimeout(300);
 ok(await seite.evaluate(() => !$("ilListe")), "▴ schließt die Liste wieder");
+// KC-CLUB-MITFAHRT-SPRUNG: Balken „Du bietest eine Mitfahrt an“ → Termin öffnet sich und „🚗 Mitfahren“ leuchtet auf (auch wenn der Kalender langsam lädt)
+await seite.evaluate(() => {
+  const T1 = { id: "T1", titel: "Köcheclub-Sitzung", beginn: new Date(Date.now() + 4 * 86400000).toISOString(), ende: null, ort: "Clubraum", beschreibung: "", status: "geplant", art: "treffen", ganztaegig: false,
+    gastgeber: null, teilnahme: [{ person_id: "P1", name: "Hans Test", antwort: "ja" }], ja: 1, nein: 0, vielleicht: 0, meine: "ja", link: null, imLaufband: false, anlagen: [],
+    mitfahrten: [{ id: "M1", fahrer: { person_id: "P1", name: "Hans Test" }, plaetze: 3, treffpunkt: "", notiz: "", mitfahrer: [], frei: 3, eigen: true, dabei: false, darfLoeschen: true }], mitfahrtSuche: [] };
+  const alt = api; api = async (a, p) => { if (a === "treffen_liste") { await new Promise((r) => setTimeout(r, 2500)); return { treffen: [T1], geburtstage: [] }; } return alt(a, p); }; // Kalender lädt absichtlich langsam
+  ilTerminOeffnen = window.__echtTermin || ilTerminOeffnen;
+});
+await seite.click("#infoLaufband .il-alle"); await seite.waitForTimeout(300);
+await seite.evaluate(() => [...document.querySelectorAll("#ilListe .il-balken")].find((b) => /Du bietest/.test(b.textContent)).click());
+await seite.waitForTimeout(4200);
+const sp = await seite.evaluate(() => ({ offen: !!$("treffenInfo"), blitz: !!document.querySelector("#treffenInfo .mf-block.mf-blitz"), txt: document.querySelector("#treffenInfo .mf-block")?.textContent.replace(/\s+/g, " ").slice(0, 60) || "" }));
+ok(sp.offen && sp.blitz, "Antippen öffnet den Termin und „🚗 Mitfahren“ leuchtet auf (Kalender lud 2,5 s): " + sp.txt);
+await bild("laufband-3-mitfahrt");
 ok(!fehler.length, "keine Seitenfehler" + (fehler.length ? ": " + fehler.join(" | ") : ""));
 await browser.close(); srv.close();
 console.log(process.exitCode ? "laufband-liste-browser: FEHLER" : "laufband-liste-browser: alle Prüfungen bestanden");

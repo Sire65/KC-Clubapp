@@ -1,5 +1,9 @@
 # Änderungen
 
+## (Version folgt) – 🚗 Mitfahrt in der Laufschrift antippen → direkt zu „Mitfahren“ (KC-CLUB-MITFAHRT-SPRUNG)
+Fund Hansi 20.11.: „Wenn ich sie antippe, gelangt man in den Kalender, aber nicht genau zur Mitfahrgelegenheit.“
+- Antippen der Mitfahrt-Meldung (in der Laufschrift und in der ▾-Liste) öffnet jetzt **den Termin** und rollt **direkt zum Abschnitt „🚗 Mitfahren“**, der kurz aufleuchtet – auch wenn der Kalender ein paar Sekunden zum Laden braucht (vorher gab die App nach 1,8 Sekunden auf und man blieb im Kalender). Bei Aktionen genauso.
+
 ## 2.989.0 – 2026-11-20 – ▾ Alle Meldungen der Laufschrift als Liste · eigene Mitfahrt sichtbar (KC-CLUB-LAUFBAND-LISTE) · Server 2.989.0 · [Hansi: einspielen]
 Wunsch Hansi 20.11.: „Oben im Rand der Laufschrift einen Pfeil nach unten anbieten wie beim Status. Wird der geklickt, geht eine Rollliste nach unten auf, dort stehen Balken mit den Einträgen der Laufschrift. Antippen geht sofort dorthin.“ Und: „Habe ich nicht gesehen, das Mitfahrer-Angebot.“
 - Oben am Rand der Laufschrift hängt jetzt ein kleiner Reiter **„▾ 12“** (Anzahl der Meldungen). Antippen klappt darunter **alle Meldungen als farbige Balken** auf – die wichtigsten oben, auch die, die in der Laufschrift wegen „höchstens 7“ nicht drankommen. Ein Balken antippen = sofort dorthin; **„▴“** klappt die Liste wieder zu.
