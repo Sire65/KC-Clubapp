@@ -12,6 +12,8 @@ Wunsch Hansi 20.11.: Vergessene, sichtbar offene Geräte (PC ohne Bildschirmsper
 - Messung: Die Egress-Messung des Servers läuft bis 05.12.2026 (vorher 21.11.) – Vorher/Nachher-Vergleich; jedes Einschlafen steht als Schritt „💤 App eingeschlafen“ in den Wegen (ohne zusätzliche Abfrage).
 - Neuer Tipp in der Hilfe („Der Schlafmodus“), Suchbegriff „Schlafmodus“/„Bildschirmschoner“ in den Einstellungen. Test `tests/schlafmodus.test.mjs`, Browser-Prüfung `tools/hilfe/schlafmodus-browser.mjs` (abgeschirmt).
 
+- **Sichtschutz-Fehler behoben (KC-CLUB-LS-VIDEO):** Lag irgendwo in der App ein Video im Seitenbaum (auch angehalten), griff der Sichtschutz nach 15 Min. nie. Jetzt zählt nur ein wirklich laufendes Video als Ausnahme.
+
 ## 2.988.0 – 2026-11-20 – 🚗 Mitfahrgelegenheiten in der Laufschrift (KC-CLUB-MITFAHRT-LAUFBAND) · Server 2.988.0 · [Hansi: einspielen]
 Wunsch Hansi 20.11.: „Zeige in der Laufschrift an, wenn jemand eine Mitfahrgelegenheit sucht oder anbietet – z. B. biete ich eine an.“
 - Im Info-Laufband auf der Startseite steht jetzt z. B. **„🚗 Hansi bietet eine Mitfahrt an – Köcheclub-Sitzung · Di., 24.11. · 3 Plätze frei“** oder **„🙋 Anne sucht eine Mitfahrgelegenheit – Adventsmarkt“**. Antippen öffnet den Termin bzw. die Aktion, dort kann man mitfahren oder einen Platz anbieten.

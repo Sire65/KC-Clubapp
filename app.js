@@ -14521,7 +14521,10 @@ function lsHeikel() { // Ansichten mit fremden Daten
     || !!document.querySelector("#mgBlatt:not(.versteckt), #mitgliedBlatt, #wchBlatt, #adBlatt");
 }
 function lsNichtSperren() { // Anruf, Video, Rundgang, Diashow/Bühne: dann liegt niemand „herum“
-  return !!(typeof RG !== "undefined" && RG.an) || !!document.querySelector("#anrufSchirm:not(.versteckt), video:not([paused])")
+  // 20.11.2026 KC-CLUB-LS-VIDEO (Fund beim Schlafmodus): „video:not([paused])“ traf JEDES <video> im Seitenbaum (das Attribut „paused“ gibt es nicht) –
+  // dann sperrte der Sichtschutz nie. Jetzt nur, wenn ein Video wirklich läuft.
+  return !!(typeof RG !== "undefined" && RG.an) || !!document.querySelector("#anrufSchirm:not(.versteckt)")
+    || [...document.querySelectorAll("video")].some((v) => !v.paused && !v.ended)
     || document.fullscreenElement || document.documentElement.classList.contains("kopf-um");
 }
 function lsPruefen(beimZurueckkommen) {

@@ -189,3 +189,5 @@ assert.ok(haupt.includes('schlaf_ein: "💤 App eingeschlafen (Schlafmodus)"'), 
 // ---------- 8. Hilfe-Tipp ----------
 assert.ok(haupt.includes('{ id: "schlafmodus", thema: "technik", sym: "💤"'), "Hilfe-Tipp");
 console.log(`schlafmodus: ok (${takte.length} Abfrage-Takte prüfen ruht())`);
+// KC-CLUB-LS-VIDEO (20.11.2026): Sichtschutz sperrt nur nicht, wenn ein Video wirklich läuft (vorher traf „video:not([paused])“ jedes <video>)
+assert.ok(!haupt.includes('"#anrufSchirm:not(.versteckt), video:not([paused])"') && haupt.includes('[...document.querySelectorAll("video")].some((v) => !v.paused && !v.ended)'), "Video-Ausnahme nur bei laufendem Video");
