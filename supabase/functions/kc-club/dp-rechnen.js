@@ -32,7 +32,8 @@ const vgl = (a, b) => (a < b ? -1 : a > b ? 1 : 0); // wie Pythons sorted() für
 // höchstens max/maxDienst Std.), dann werden überbesetzte Ränder bei dem gekürzt, der insgesamt die meisten Wunschstunden hat, dann füllt die
 // bisherige Rechnung die Lücken mit Kann-Zeiten. Sperren, Ruhetag nach maxTageAmStueck, maxGesamt und „nur mit anderen“ gelten weiter.
 // 2.944.0 KC-CLUB-DP-SPAET-BIS-SCHLUSS: spaetBisSchluss – Spätdienst bis Marktschluss (siehe unten)
-export const DP_REGEL = 9;
+// 2.993.0 KC-CLUB-DP-ZUSCHLAG: zuschlag (Konzertabende) – siehe dpRechnen
+export const DP_REGEL = 10;
 
 export function dpRechnen(e) {
   const MAXLEN = e.max ?? 8, FAIR = e.fair ?? 1.5, LO = e.von ?? 8, HI = e.bis ?? 23, DECKEL = e.wunschDeckel !== false, ANTEIL = Number.isFinite(e.wunschAnteil) ? e.wunschAnteil : 0.5;
@@ -43,6 +44,10 @@ export function dpRechnen(e) {
     for (const b of t.baender || []) for (const s of slots(Number(b.start), Number(b.end))) m.set(s, [Number(b.total) || 0, b.front ?? null, b.back ?? null]);
     dem.set(t.d, m);
   }
+  // 2.993.0 KC-CLUB-DP-ZUSCHLAG (Hansi 20.11.: „Codex hat den Bedarf an 4 Abenden erhöht“): zuschlag [{ d, von, bis, plus }] – zusätzliche Personen
+  // insgesamt (nicht vorne/hinten), z. B. Konzertabende aus der DP2-Programmfreigabe (dienstplan_context.staffingAdjustment)
+  for (const z of e.zuschlag || []) { const m = dem.get(z.d), plus = Number(z.plus) || 0; if (!m || !plus) continue;
+    for (const s of slots(Number(z.von), Number(z.bis))) if (m.has(s)) m.get(s)[0] += plus; }
   const kind = new Map(e.tage.map((t) => [t.d, t.art]));
   const full = new Map([...(e.personen || []), ...(e.leer || [])].map((p) => [p.key, p.name]));
   // Verfügbarkeit (Name, Tag) → Halbstunde → [Stufe, Zone]; Sperren entfernen

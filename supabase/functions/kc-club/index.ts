@@ -195,7 +195,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.991.0";
+const SERVER_VERSION = "2.993.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -5474,11 +5474,25 @@ async function dbWarnungLauf() {
 // die nur gelten, solange die Person keinen neueren Wunschplan abgegeben hat (gleiche Revision). Nichts davon geht nach DP2.
 const DP_ART: Record<string, string> = { preferred: "pref", available: "avai", if_needed: "if_n", unavailable: "unav" };
 const dpKurzname = (name: string) => { const t = String(name || "").trim().split(/\s+/); return t.length > 1 ? `${t[0]} ${t[1][0]}` : t[0] || "?"; };
+// 2.993.0 KC-CLUB-DP-ZUSCHLAG (Hansi 20.11.2026: „Codex hat den Bedarf an 4 Abenden erhöht – dann muss der Plan neu berechnet werden“): DP2 legt
+// Zuschläge zum Grundbedarf in der Programmfreigabe ab (kc_manager_state_sections „dienstplan_context“, staffingAdjustment: programIds +
+// extraPersonsPerEvent, je Programmpunkt Vor-/Nachlauf, Standard 30 Min.). Der veröffentlichte Grundbedarf bleibt, der Plan rechnet den Zuschlag dazu.
+async function dpZuschlag(): Promise<{ d: string; von: number; bis: number; plus: number }[]> {
+  const { data } = await db.from("kc_manager_state_sections").select("payload").eq("org_id", ORG).eq("section_key", "dienstplan_context").maybeSingle();
+  const c: any = data?.payload ?? {}, z: any = c.staffingAdjustment;
+  if (c.eventId !== DW.veranstaltung || !z || !Array.isArray(z.programIds) || !Array.isArray(c.program)) return [];
+  const plus = Number(z.extraPersonsPerEvent) || 0, ids = new Set(z.programIds.map(String)); if (!plus) return [];
+  const halb = (x: number) => Math.round(x * 2) / 2;
+  return c.program.filter((p: any) => ids.has(String(p.id)) && Number.isFinite(Number(p.start)) && Number.isFinite(Number(p.end)))
+    .map((p: any) => ({ d: String(p.date), von: halb(Number(p.start) - (Number.isFinite(Number(p.leadMinutes)) ? Number(p.leadMinutes) : 30) / 60),
+      bis: halb(Number(p.end) + (Number.isFinite(Number(p.lagMinutes)) ? Number(p.lagMinutes) : 30) / 60), plus }));
+}
 async function dpDruckNeu(adminId: string) {
-  const [{ data: k }, { data: tageRoh }, { data: wRoh }] = await Promise.all([
+  const [{ data: k }, { data: tageRoh }, { data: wRoh }, zuschlag] = await Promise.all([
     db.from("kc_club_person_einstellung").select("wert,geaendert_am").eq("person_id", adminId).eq("schluessel", "dp_druck_konfig").maybeSingle(),
     db.from("kc_dp_days_published").select("work_date,day_type,label,demand").eq("event_id", DW.veranstaltung).order("work_date"),
     db.from("kc_dp_wish_inbox").select("person_id,revision,entries,updated_at,standby,standby_general").eq("org_id", ORG).eq("event_id", DW.veranstaltung).limit(300),
+    dpZuschlag(),
   ]);
   const konf: any = k?.wert && typeof k.wert === "object" ? k.wert : {};
   // 2.721.0 KC-CLUB-DP-NACHBESSERN: Angaben je Person in dp_druck_konfig.personen[pid] – aus (nie einplanen), maxGesamt, maxDienst, anfahrtKm (statt der
@@ -5532,7 +5546,7 @@ async function dpDruckNeu(adminId: string) {
     leer: (Array.isArray(konf.leerzeilen) ? konf.leerzeilen : []).map((x: any) => ({ key: dpKurzname(name.get(String(x.person_id)) || String(x.person_id)), name: name.get(String(x.person_id)) || String(x.person_id), label: String(x.label || "") })),
     bereitschaft: berListe.map((x: any) => ({ d: String(x.d), name: name.get(String(x.person_id)) || String(x.person_id), von: Number(x.von), bis: Number(x.bis) })), // 2.938.0: auch selbst Eingetragenes
     bereitschaftFest: (Array.isArray(konf.bereitschaftFest) ? konf.bereitschaftFest : []).filter((x: any) => !aus(String(x.person_id))).map((x: any) => ({ d: String(x.d), name: name.get(String(x.person_id)) || String(x.person_id), von: Number(x.von), bis: Number(x.bis) })), // 2.789.0 feste Bereitschaft
-    max: Number(konf.max) || 8, fair: Number(konf.fair) || 1.5,
+    max: Number(konf.max) || 8, fair: Number(konf.fair) || 1.5, zuschlag, // 2.993.0 KC-CLUB-DP-ZUSCHLAG
     spaetBisSchluss: konf.spaetBisSchluss === true, // 2.944.0 KC-CLUB-DP-SPAET-BIS-SCHLUSS
     wunschZuerst: konf.wunschZuerst === true, // 2.936.0 KC-CLUB-DP-WUNSCH-ZUERST
     bereitschaftAuto, maxTageAmStueck: Number.isFinite(Number(konf.maxTageAmStueck)) ? Number(konf.maxTageAmStueck) : 5, wunschDeckel: konf.wunschDeckel !== false, wunschAnteil: Number.isFinite(Number(konf.wunschAnteil)) && konf.wunschAnteil !== null && konf.wunschAnteil !== undefined ? Number(konf.wunschAnteil) : 0.5, // 2.675.0
@@ -5559,11 +5573,12 @@ async function erkNachricht(ich: Ich, id: string) {
 async function dpDruckVeraltet(adminId: string, w: any) {
   if (!w || !Array.isArray(w.tage) || w.regel !== DP_REGEL) return true;
   const seit = String(w.stand || "");
-  const [{ count: wn }, { count: tn }, { data: k }] = await Promise.all([
+  const [{ count: wn }, { count: tn }, { data: k }, { count: zn }] = await Promise.all([
     db.from("kc_dp_wish_inbox").select("id", { count: "exact", head: true }).eq("org_id", ORG).eq("event_id", DW.veranstaltung).gt("updated_at", seit),
     db.from("kc_dp_days_published").select("work_date", { count: "exact", head: true }).eq("event_id", DW.veranstaltung).gt("updated_at", seit),
-    db.from("kc_club_person_einstellung").select("geaendert_am").eq("person_id", adminId).eq("schluessel", "dp_druck_konfig").maybeSingle()]);
-  return (wn ?? 0) > 0 || (tn ?? 0) > 0 || (!!k?.geaendert_am && Date.parse(String(k.geaendert_am)) > Date.parse(seit));
+    db.from("kc_club_person_einstellung").select("geaendert_am").eq("person_id", adminId).eq("schluessel", "dp_druck_konfig").maybeSingle(),
+    db.from("kc_manager_state_sections").select("section_key", { count: "exact", head: true }).eq("org_id", ORG).eq("section_key", "dienstplan_context").gt("updated_at", seit)]); // 2.993.0 Zuschlag
+  return (wn ?? 0) > 0 || (tn ?? 0) > 0 || (zn ?? 0) > 0 || (!!k?.geaendert_am && Date.parse(String(k.geaendert_am)) > Date.parse(seit));
 }
 async function dpDruckAlleNeu() { // für jeden Admin mit eigener Dienstplan-Druck-Einstellung (nach einem neuen Wunschplan)
   const { data } = await db.from("kc_club_person_einstellung").select("person_id").eq("schluessel", "dp_druck_konfig").limit(5);
