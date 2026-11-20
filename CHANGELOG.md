@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.993.0 – 2026-11-20 – 🎵 Dienstplan rechnet den Konzert-Zuschlag aus DP2 mit (KC-CLUB-DP-ZUSCHLAG)
+Hansi 20.11.: „Codex hat den Bedarf an 4 Abenden erhöht – dann muss der Plan neu berechnet werden.“ DP2 legt den Zuschlag nicht im veröffentlichten Grundbedarf ab, sondern in der Programmfreigabe (`dienstplan_context.staffingAdjustment`: je eine Person mehr an vier Konzertabenden, 30 Min. Vor- und Nachlauf).
+- Der Club-Server liest den Zuschlag beim Rechnen des Dienstplans (`dpZuschlag`) und rechnet ihn auf den Grundbedarf dazu (insgesamt, nicht vorne/hinten). Grundbedarf und Wünsche bleiben unverändert.
+- Ändert sich die Programmfreigabe, gilt der gespeicherte Plan als veraltet und rechnet sich beim nächsten Öffnen neu. Rechenregel 10 (statt 9) – der Plan rechnet sich darum einmal von selbst neu.
+- Test: Block in `tests/app-vertrag.test.mjs`. Rückweg: Server 2.991.0. Nur der Server (App-Version nur mitgezogen).
+
 ## 2.992.0 – 2026-11-20 – ✏️ Der Stift schreibt Buchstabe für Buchstabe (Wunschliste #100)
 
 ### ✏️ Stift schreibt die Buchstaben (KC-CLUB-STIFT-BUCHSTABEN)
