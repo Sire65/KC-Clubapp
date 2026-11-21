@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "3.2.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "3.3.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -35590,15 +35590,22 @@ function dpdTag(d, von, bis, ges = {}, art = "voll") { // Zeilen eines Tages: je
     cells: S.map((s, i) => { const x = bes[i] - d.bedarf[i]; return !d.bedarf[i] && !bes[i] ? ["leer zu", ""] : [x < 0 ? "a-rot" : x > 0 ? "a-gelb" : "a-gruen", x < 0 ? "−" + -x : x > 0 ? "+" + x : "✓"]; }) });
   return { rows, fehl, ueber, bedarfStd, einpl: bedarfStd - fehl, regelStd: d.bedarf.filter(Boolean).length / 2 };
 }
+// 3.3.0 KC-CLUB-DP-PDF-MATRIX (Hansi 21.11. „halbstündig“): Kopf zweizeilig – oben „8 Uhr“ über beide Halbstunden, darunter klein „:00 | :30“;
+// je volle Stunde eine kräftige Linie (hv), zur halben Stunde eine dünne gestrichelte (hb) – in allen Halbstunden-Rastern gleich
+function dpdKopfHalb(S) {
+  const oben = []; for (let j = 0; j < S.length;) { const h = Math.floor(S[j]); let k = j; while (k < S.length && Math.floor(S[k]) === h) k++; oben.push(`<th class="hk hv" colspan="${k - j}">${h} Uhr</th>`); j = k; }
+  return { oben: oben.join(""), unten: S.map((s) => `<th class="hm${dpdHk(s)}">${s % 1 ? ":30" : ":00"}</th>`).join("") };
+}
+const dpdHk = (s) => (s % 1 ? " hb" : " hv");
 function dpdTabelle(tage, von, teil, letzte) {
-  const S = dpdSlots(von, von + tage[0].rows[0].cells.length / 2), idx = teil.map((s) => S.indexOf(s)), rechts = teil[teil.length - 1] === letzte;
-  const kopf = `<colgroup><col class="tag"><col class="wer">${teil.map(() => "<col>").join("")}${rechts ? '<col class="std">' : ""}</colgroup><thead><tr><th class="tag">Tag · Regelzeit</th><th class="wer">Mitglied</th>${teil.map((s) => `<th class="t${s % 1 ? "" : " voll"}">${s % 1 ? "" : s}</th>`).join("")}${rechts ? '<th class="std">Std.</th>' : ""}</tr></thead>`;
+  const S = dpdSlots(von, von + tage[0].rows[0].cells.length / 2), idx = teil.map((s) => S.indexOf(s)), rechts = teil[teil.length - 1] === letzte, K = dpdKopfHalb(teil);
+  const kopf = `<colgroup><col class="tag"><col class="wer">${teil.map(() => "<col>").join("")}${rechts ? '<col class="std">' : ""}</colgroup><thead><tr><th class="tag" rowspan="2">Tag · Regelzeit</th><th class="wer" rowspan="2">Mitglied</th>${K.oben}${rechts ? '<th class="std" rowspan="2">Std.</th>' : ""}</tr><tr class="hm">${K.unten}</tr></thead>`;
   // 3.0.0 KC-CLUB-DRUCK-TAG-GANZ (Hansi 21.11.: „trenne keine Tage – keinen Tagesumbruch, sonst verliert man die Übersicht“): jeder Tag eigenes <tbody>, nie geteilt
   const body = tage.map((t) => `<tbody class="dpd-tag">${t.rows.map((r, i) => {
     const tag = i ? "" : `<th class="tag" rowspan="${t.rows.length}"><b>${t.wt} ${t.dt}</b><span class="kind">${esc(t.name)}</span><span class="regel">${esc(t.regel)} Uhr</span><span class="zahl">${t.art === "Markttag" ? `Regelzeit ${dpdStd(t.regelStd)} Std.` : "aus Wunschplänen, keine Vorgabe"}</span><span class="zahl">Bedarf ${dpdStd(t.bedarfStd)} Std.</span>${t.wunschStd !== undefined ? `<span class="zahl">gewünscht ${dpdStd(t.wunschStd)} Std.</span>` : `<span class="zahl">eingeplant ${dpdStd(t.einpl)} Std.</span><span class="bil ${t.fehl ? "rot" : "gruen"}">● ${t.fehl ? "fehlt " + dpdStd(t.fehl) + " Std." : "richtig besetzt"}</span>${t.ueber ? `<span class="bil gelb">● ${dpdStd(t.ueber)} Std. zu viel</span>` : ""}`}</th>`;
     const zellen = idx.map((k, j) => { let [cl, txt] = r.cells[k];
       if (j === 0 && r.dienst && !txt && teil[0] > r.dienst[0] && teil[0] < r.dienst[1]) txt = `${dpdUhr(r.dienst[0])}–${dpdUhr(r.dienst[1])}`; // läuft vom linken Blatt herüber
-      return `<td class="${cl}">${txt ? `<span>${esc(txt)}</span>` : ""}</td>`; }).join("");
+      return `<td class="${cl}${dpdHk(teil[j])}">${txt ? `<span>${esc(txt)}</span>` : ""}</td>`; }).join("");
     const std = rechts ? `<td class="std ${r.art}"><b>${esc(r.std)}</b><small>${esc(r.klein)}</small></td>` : "";
     return `<tr class="${r.art}${i ? "" : " erste"}">${tag}<th class="wer ${r.art}">${esc(r.name)}<small>${esc(r.sub)}</small></th>${zellen}${std}</tr>`; }).join("")}</tbody>`).join("");
   return `<table class="dpd-raster">${kopf}${body}</table>`;
@@ -35626,22 +35633,29 @@ function dpdUebersicht(tage, ges, gesBer) { // letztes Blatt: Stunden je Person 
   return `<table class="dpd-sum"><thead><tr><th>Mitglied</th>${tage.map((t) => `<th>${t.wt}<small>${t.dt}</small></th>`).join("")}<th class="ges">Gesamt</th><th>Bereitschaft<small>Vorschlag</small></th></tr></thead><tbody>${zeilen}</tbody></table>
     <p class="dpd-eb" style="margin-top:3mm;text-transform:none;letter-spacing:0">Stunden laut Entwurf (eingeplante Dienste). Bereitschaft zählt nicht mit. Ampel je Tag: rot = so viele Personenstunden fehlen, gelb = zu viel eingeplant, grün = richtig besetzt.</p>`;
 }
-function dpdBedarf(tage, von, bis) { // erstes Blatt: Regelzeit je Tag und Besetzung je Stunde (Personen gesamt, darunter vorne/hinten), daneben die Zeitblöcke
-  const std = Array.from({ length: bis - von }, (_, i) => von + i), zelle = (t, i) => [t.bedarf[i] || 0, t.vorne?.[i] ?? null, t.hinten?.[i] ?? null];
+// 3.3.0 KC-CLUB-DP-PDF-MATRIX (Hansi 21.11.: Besetzungsmatrix auch im verschickten Gesamtplan, halbstündig): je Halbstunde Soll/eingeteilt („3/2“),
+// darunter klein „2 V · 1 H“, Ampel wie im Tagesraster (dpdTag: rot fehlt, grün passt, gelb zu viel – auch ohne Bedarf). Konzertabende erhöhen nur
+// die Summe (dp-rechnen.js zuschlag) – dann steht „+1 🎵“ in der Zelle, damit V + H < Soll erklärt ist. teil = Halbstunden des Blatts (breit=2: links/rechts).
+function dpdBedarf(tage, von, bis, teil = dpdSlots(von, bis), rechts = true) {
+  const zelle = (t, i) => [t.bedarf[i] || 0, t.vorne?.[i] ?? null, t.hinten?.[i] ?? null], ix = (s) => Math.round((s - von) * 2), K = dpdKopfHalb(teil);
+  const plusVon = (z) => (z[1] !== null && z[2] !== null ? Math.max(0, z[0] - z[1] - z[2]) : 0);
   const wunsch = (c) => c === "p" || c === "a" || c === "i";
   const zeilen = tage.map((t) => {
-    if (t.art !== "Markttag") { // Aufbau/Nachbereitung: keine Vorgabe – je Stunde, wie viele sich eingetragen haben, daneben je Person die eingetragene Zeit
-      const stunden = std.map((h) => { const n = t.leute.filter((p) => wunsch(p.w[(h - von) * 2])).length; return n ? `<td class="wu"><b>${n}</b></td>` : '<td class="zu"></td>'; }).join("");
+    if (t.art !== "Markttag") { // Aufbau/Nachbereitung: keine Vorgabe – je Halbstunde, wie viele sich eingetragen haben, daneben je Person die eingetragene Zeit
+      const stunden = teil.map((s) => { const n = t.leute.filter((p) => wunsch(p.w[ix(s)])).length; return n ? `<td class="wu${dpdHk(s)}"><b>${n}</b></td>` : `<td class="zu${dpdHk(s)}"></td>`; }).join("");
       const zeit = (f) => dpdBereicheAus(t.leute[0].w.split("").map((_, i) => f(i)), von);
       const pers = t.leute.filter((p) => [...p.w].some(wunsch)).sort((a, b) => a.n.localeCompare(b.n, "de")).map((p) => `${esc(p.n.split(" ")[0])} ${zeit((i) => wunsch(p.w[i]))}`);
-      return `<tr class="ohne"><th class="tg"><b>${t.wt} ${t.dt}</b><small>${esc(t.name)}</small></th><td class="rz"><b>keine Vorgabe</b><small>eingetragen ${zeit((i) => t.leute.some((p) => wunsch(p.w[i])))} Uhr</small></td>${stunden}<td class="bd zwei"><span class="ganz">So haben sich eingetragen:</span>${pers.join("<br>")}</td></tr>`;
+      return `<tr class="ohne"><th class="tg"><b>${t.wt} ${t.dt}</b><small>${esc(t.name)}</small></th><td class="rz"><b>keine Vorgabe</b><small>eingetragen ${zeit((i) => t.leute.some((p) => wunsch(p.w[i])))} Uhr</small></td>${stunden}${rechts ? `<td class="bd zwei"><span class="ganz">So haben sich eingetragen:</span>${pers.join("<br>")}</td>` : ""}</tr>`;
     }
-    const stunden = std.map((h) => { const [p, v, hi] = zelle(t, (h - von) * 2); return p ? `<td><b>${p}</b>${v !== null ? `<small>${v} V · ${hi} H</small>` : ""}</td>` : '<td class="zu"></td>'; }).join("");
+    const stunden = teil.map((s) => { const i = ix(s), z = zelle(t, i), ist = t.besetzt?.[i] || 0, plus = plusVon(z);
+      if (!z[0] && !ist) return `<td class="zu${dpdHk(s)}"></td>`;
+      const x = ist - z[0];
+      return `<td class="${x < 0 ? "a-rot" : x > 0 ? "a-gelb" : "a-gruen"}${dpdHk(s)}"><b>${z[0]}/${ist}</b>${z[1] !== null ? `<small>${z[1]} V · ${z[2]} H</small>` : ""}${plus ? `<small class="zs">+${plus} 🎵</small>` : ""}</td>`; }).join("");
     const bl = []; t.bedarf.forEach((_, i) => { const z = zelle(t, i), l = bl[bl.length - 1]; if (!z[0]) return; if (l && l.b === von + i / 2 && l.z.join() === z.join()) l.b += 0.5; else bl.push({ a: von + i / 2, b: von + i / 2 + 0.5, z }); });
-    const baender = bl.map((x) => `<span class="bnd">${dpdUhr(x.a)}–${dpdUhr(x.b)}: <b>${x.z[0]}</b>${x.z[1] !== null ? ` (${x.z[1]} V, ${x.z[2]} H)` : ""}</span>`).join(" ");
-    return `<tr><th class="tg"><b>${t.wt} ${t.dt}</b><small>${esc(t.name)}</small></th><td class="rz"><b>${esc(t.regel)} Uhr</b><small>${dpdStd(t.regelStd)} Std. · Bedarf ${dpdStd(t.bedarfStd)} Std.</small></td>${stunden}<td class="bd">${baender}</td></tr>`; }).join("");
-  return `<table class="dpd-bed"><thead><tr><th>Tag</th><th>Regelzeit</th>${std.map((h) => `<th>${h}–${h + 1}</th>`).join("")}<th>Besetzung</th></tr></thead><tbody>${zeilen}</tbody></table>
-    <p class="dpd-eb" style="margin-top:2mm;text-transform:none;letter-spacing:0">Vorgabe gilt für die Markttage: zusammen ${dpdStd(tage.filter((t) => t.art === "Markttag").reduce((a, t) => a + t.bedarfStd, 0))} Personenstunden. Aufbau und Nachbereitung haben keine Vorgabe – dort steht, wie sich die Mitglieder in ihren Wunschplänen eingetragen haben.</p>`;
+    const baender = bl.map((x) => `<span class="bnd">${dpdUhr(x.a)}–${dpdUhr(x.b)}: <b>${x.z[0]}</b>${x.z[1] !== null ? ` (${x.z[1]} V, ${x.z[2]} H${plusVon(x.z) ? `, +${plusVon(x.z)} 🎵` : ""})` : ""}</span>`).join(" ");
+    return `<tr><th class="tg"><b>${t.wt} ${t.dt}</b><small>${esc(t.name)}</small></th><td class="rz"><b>${esc(t.regel)} Uhr</b><small>${dpdStd(t.regelStd)} Std. · Bedarf ${dpdStd(t.bedarfStd)} Std.</small></td>${stunden}${rechts ? `<td class="bd">${baender}</td>` : ""}</tr>`; }).join("");
+  return `<table class="dpd-bed"><colgroup><col class="tg"><col class="rz">${teil.map(() => "<col>").join("")}${rechts ? '<col class="bd">' : ""}</colgroup><thead><tr><th rowspan="2">Tag</th><th rowspan="2">Regelzeit</th>${K.oben}${rechts ? '<th rowspan="2">Besetzung</th>' : ""}</tr><tr class="hm">${K.unten}</tr></thead><tbody>${zeilen}</tbody></table>
+    <p class="dpd-eb" style="margin-top:2mm;text-transform:none;letter-spacing:0">Vorgabe gilt für die Markttage: zusammen ${dpdStd(tage.filter((t) => t.art === "Markttag").reduce((a, t) => a + t.bedarfStd, 0))} Personenstunden. Je Halbstunde: Soll / eingeteilt, darunter das Soll vorne / hinten. Aufbau und Nachbereitung haben keine Vorgabe – dort steht, wie sich die Mitglieder in ihren Wunschplänen eingetragen haben.</p>`;
 }
 async function dpdBauen(art = "voll", frei = false) {
   const d = await api(frei ? "dp_plaene" : "dp_druck", {}); // 2.999.0 KC-CLUB-DP-PLAENE-FREI: Mitglieder lesen den freigegebenen Stand
@@ -35654,16 +35668,18 @@ async function dpdBauen(art = "voll", frei = false) {
   const gesP = {}; for (const t of d.tage) for (const p of t.leute) gesP[p.n] = (gesP[p.n] || 0) + (p.s ? p.s[1] - p.s[0] : 0); // 2.999.0 Stunden laut Sollplan
   const tageP = d.tage.map((t) => { const x = new Date(t.d + "T12:00:00"); return { ...t, ...dpdTag(t, von, bis, gesP, "plan"), wt: DPD_WD[x.getDay()], dt: `${t.d.slice(8, 10)}.${t.d.slice(5, 7)}.` }; });
   const tage = d.tage.map((t) => { const x = new Date(t.d + "T12:00:00"); return { ...t, ...dpdTag(t, von, bis, ges, art), name: dpdArtName(t.art, x), wt: DPD_WD[x.getDay()], dt: `${t.d.slice(8, 10)}.${t.d.slice(5, 7)}.`, regel: dpdBereiche(t, von) }; });
-  const blaetter = [[]]; let n = 0;
-  for (const t of tage) { const z = t.rows.length + 0.6; if (blaetter[blaetter.length - 1].length && n + z > DPD_ZEILEN - (breit === "2" ? 4.5 : 0)) { blaetter.push([]); n = 0; } blaetter[blaetter.length - 1].push(t); n += z; }
+  const blaetter = [[]]; let n = 0; // 3.3.0: −0,6 Zeilen für die zweite Kopfzeile („:00 | :30“)
+  for (const t of tage) { const z = t.rows.length + 0.6; if (blaetter[blaetter.length - 1].length && n + z > DPD_ZEILEN - 0.6 - (breit === "2" ? 4.5 : 0)) { blaetter.push([]); n = 0; } blaetter[blaetter.length - 1].push(t); n += z; }
   const S = dpdSlots(von, bis), teile = breit === "2" ? [S.filter((s) => s < 16), S.filter((s) => s >= 15.5)] : [S];
   const stand = d.stand ? wann(d.stand) : "", eb = `<p class="dpd-eb">Köcheclub Werne · ${esc(d.titel || "Dienstplan")} · ${art === "wunsch" ? "Wünsche der Mitglieder" : frei ? "Dienstplan" : "Entwurf, nicht veröffentlicht"}${frei && d.frei?.am ? " · freigegeben " + esc(wann(d.frei.am)) : ""}${stand ? " · Stand " + esc(stand) : ""}</p>`;
   const legW = '<div class="dpd-leg"><span><i class="pref"></i>Wunschzeit</span><span><i class="avai"></i>kann</span><span><i class="if_n"></i>nur wenn nötig</span><span><i class="unav">×</i>gesperrt</span><span><b>5/3</b> = Bedarf / so viele wünschen sich die Zeit</span><span><i class="zu"></i>kein Bedarf</span></div>';
   const legP = '<div class="dpd-leg"><span><i class="dienst"></i>eingeteilt</span><span><i class="ber"></i>Bereitschaft</span><span><i class="a-rot">−2</i>fehlen</span><span><i class="a-gruen">✓</i>richtig besetzt</span><span><i class="a-gelb">+1</i>zu viel</span><span><i class="zu"></i>kein Bedarf</span></div>';
   const leg = art === "wunsch" ? legW : art === "plan" ? legP : `<div class="dpd-leg"><span><i class="pref"></i>Wunschzeit</span><span><i class="avai"></i>kann</span><span><i class="if_n"></i>nur wenn nötig</span><span><i class="unav">×</i>gesperrt</span><span><i class="dienst"></i>im Entwurf eingeplant</span><span><i class="ber"></i>Bereitschaft (Vorschlag)</span><span><i class="a-rot">−2</i>fehlen</span><span><i class="a-gruen">✓</i>richtig besetzt</span><span><i class="a-gelb">+1</i>zu viel</span><span><i class="zu"></i>kein Bedarf</span></div>`;
-  const bed = `<section class="dpd-blatt"><header class="dpd-kopf"><div>${eb}<h1>Regelzeit und Besetzung je Stunde</h1></div><div class="dpd-leg"><span><b>3</b> = Personen gesamt</span><span><b>2 V · 1 H</b> = davon vorne / hinten</span><span><i style="background:#fff"></i>kein Dienst</span><span><i class="wu"></i><b style="color:#3d5fa8">7</b> = so viele haben sich eingetragen (Aufbau/Nachbereitung)</span></div></header>${dpdBedarf(tage, von, bis)}<footer class="dpd-fuss">Regelzeit und Besetzung · vorne vor Blatt 1</footer></section>`;
+  // 3.3.0 KC-CLUB-DP-PDF-MATRIX: Besetzungsmatrix halbstündig, bei „breit=2“ wie das Raster links/rechts (Klebekante 15:30–16 Uhr)
+  const legB = `<div class="dpd-leg"><span><b>3/2</b> = Soll / eingeteilt</span><span><b>2 V · 1 H</b> = Soll vorne / hinten</span><span><b>+1 🎵</b> = Konzertabend: zusätzliche Person (vorne oder hinten) – darum V + H kleiner als das Soll</span><span><i class="a-rot">3/2</i>fehlt</span><span><i class="a-gruen">3/3</i>passt</span><span><i class="a-gelb">3/4</i>zu viel</span><span><i class="zu"></i>kein Dienst</span><span><i class="wu"></i><b style="color:#3d5fa8">7</b> = so viele haben sich eingetragen (Aufbau/Nachbereitung)</span></div>`;
+  const bed = teile.map((teil, k) => `<section class="dpd-blatt"><header class="dpd-kopf"><div>${eb}<h1>Regelzeit und Besetzung je Stunde</h1></div>${legB}</header>${dpdBedarf(tage, von, bis, teil, k === teile.length - 1)}<footer class="dpd-fuss">Regelzeit und Besetzung je halbe Stunde${teile.length > 1 ? (k ? " · rechts – linken Rand bis 16 Uhr umknicken und auf das linke Blatt legen" : " · links") : ""} · vorne vor Blatt 1</footer></section>`).join("");
   const ueberschrift = art === "wunsch" ? "Wunschplan – so haben sich die Mitglieder eingetragen" : art === "plan" ? "Dienstplan – berechnete Einteilung" : "Dienstplan – Wünsche und offene Zeiten";
-  const nb = blaetter.length, html = (art === "voll" ? bed + dpdLueckenBlatt(d) : "") + blaetter.flatMap((bl, i) => teile.map((teil, k) => {
+  const nb = blaetter.length, html = (art === "voll" ? bed + dpdLueckenBlatt(d) : art === "plan" ? bed : "") + blaetter.flatMap((bl, i) => teile.map((teil, k) => {
     const fuss = [teile.length > 1 ? `Blatt ${i + 1} ${k ? "rechts" : "links"}` : `Blatt ${i + 1} von ${nb}`,
       teile.length > 1 ? (k ? `linken Rand bis 16 Uhr umknicken und auf Blatt ${i + 1} links legen` : `rechts an Blatt ${i + 1} rechts anlegen (Klebekante 15:30–16 Uhr)`) : "",
       i < nb - 1 ? `unten geht es mit Blatt ${i + 2} weiter` : "danach: Stunden je Person"].filter(Boolean).join(" · ");
@@ -35681,8 +35697,8 @@ function dpdLueckenDaten(d) {
   const von = d.von ?? 8, bis = d.bis ?? 23, stunden = [];
   for (let h = Math.floor(von); h < bis; h++) if (d.tage.some((t) => t.bedarf[(h - von) * 2] || t.bedarf[(h - von) * 2 + 1])) stunden.push(h);
   const tage = d.tage.map((t) => {
-    const zelle = (h) => { const i = (h - von) * 2, b = (t.bedarf[i] || 0) + (t.bedarf[i + 1] || 0), f = Math.max(t.fehlt[i] || 0, t.fehlt[i + 1] || 0), halb = !!(t.fehlt[i] || 0) !== !!(t.fehlt[i + 1] || 0);
-      return !b ? { k: "zu", t: "" } : f ? { k: "rot", t: String(f), halb } : { k: "ok", t: "✓" }; };
+    const zelle = (h) => { const i = (h - von) * 2, b = (t.bedarf[i] || 0) + (t.bedarf[i + 1] || 0), f = Math.max(t.fehlt[i] || 0, t.fehlt[i + 1] || 0), halb = !!(t.fehlt[i] || 0) !== !!(t.fehlt[i + 1] || 0) ? (t.fehlt[i] ? 1 : 2) : 0; // 3.3.0: 1 = erste Halbstunde fehlt, 2 = zweite
+      return !b ? { k: "zu", t: "" } : f ? { k: "rot", t: String(f), halb, rest: halb && !(t.bedarf[halb === 1 ? i + 1 : i] || 0) ? "zu" : "ok" } : { k: "ok", t: "✓" }; };
     const x = new Date(t.d + "T12:00:00");
     return { tag: `${DPD_WD[x.getDay()]} ${t.d.slice(8, 10)}.${t.d.slice(5, 7)}.`, art: dpdArtName(t.art, x), zellen: stunden.map(zelle),
       text: (() => { const out = []; let i = 0; while (i < t.fehlt.length) { if (!t.fehlt[i]) { i++; continue; } let j = i; while (j < t.fehlt.length && t.fehlt[j] === t.fehlt[i]) j++; out.push(`${dpdUhr(von + i / 2)}–${dpdUhr(von + j / 2)}: ${t.fehlt[i]}`); i = j; } return out; })(),
@@ -35692,14 +35708,18 @@ function dpdLueckenDaten(d) {
   });
   return { stunden, tage, summe: tage.reduce((a, t) => a + t.std, 0), summeAlle: tage.reduce((a, t) => a + t.alle, 0) };
 }
+// 3.3.0 KC-CLUB-DP-PDF-MATRIX: Stunde mit nur 30 Min. Lücke – Schrägstrich, nur die betroffene Hälfte rot (1 = erste Halbstunde: Dreieck oben links,
+// 2 = zweite: unten rechts), die andere Hälfte grün (besetzt) bzw. grau (kein Dienst). Inline-SVG mit zwei Dreiecken – kein Verlauf (KC-CLUB-DRUCK-OHNE-STREIFEN)
+const dpdHalbSvg = (h, rest = "ok") => { const rot = "#f6d3d0", and = rest === "zu" ? "#ece6de" : "#e3f1e6", ol = "0,0 10,0 0,10", ur = "10,0 10,10 0,10";
+  return `<svg class="dpl-halb" viewBox="0 0 10 10" preserveAspectRatio="none" aria-hidden="true"><polygon points="${ol}" fill="${h === 1 ? rot : and}"/><polygon points="${ur}" fill="${h === 2 ? rot : and}"/><line x1="10" y1="0" x2="0" y2="10" stroke="#8b1a12" stroke-width="1" vector-effect="non-scaling-stroke"/></svg>`; };
 function dpdLueckenBlatt(d) {
   const L = dpdLueckenDaten(d), stand = d.stand ? wann(d.stand) : "";
   return `<section class="dpd-blatt dpl">${cdKopf("Hier fehlen noch Helfer", `${d.titel || "Weihnachtsmarkt"}${stand ? " · Stand " + stand : ""}`)}
-    <table class="dpl-tab"><thead><tr><th class="tag">Tag</th>${L.stunden.map((h) => `<th>${h}–${h + 1}<small>Uhr</small></th>`).join("")}<th class="text">Es fehlen laut Plan (Uhrzeit: Personen)</th><th class="std">Std.<small>laut Plan</small></th><th class="std alle">Std.<small>wenn alle ganz</small></th></tr></thead>
-    <tbody>${L.tage.map((t) => `<tr><td class="tag"><b>${esc(t.tag)}</b><small>${esc(t.art || "")}</small></td>${t.zellen.map((z) => `<td class="${z.k}">${z.t}${z.halb ? "<sup>½</sup>" : ""}</td>`).join("")}
+    <table class="dpl-tab"><thead><tr><th class="tag">Tag</th>${L.stunden.map((h) => `<th class="hk">${h} Uhr<small class="hh"><span>:00</span><span>:30</span></small></th>`).join("")}<th class="text">Es fehlen laut Plan (Uhrzeit: Personen)</th><th class="std">Std.<small>laut Plan</small></th><th class="std alle">Std.<small>wenn alle ganz</small></th></tr></thead>
+    <tbody>${L.tage.map((t) => `<tr><td class="tag"><b>${esc(t.tag)}</b><small>${esc(t.art || "")}</small></td>${t.zellen.map((z) => z.halb ? `<td class="halb h${z.halb}">${dpdHalbSvg(z.halb, z.rest)}<span>${z.t}</span></td>` : `<td class="${z.k}">${z.t}</td>`).join("")}
       <td class="text">${t.text.length ? t.text.map(esc).join(" · ") : "✓ alles besetzt"}</td><td class="std">${t.std ? dpdStd(t.std) : "–"}</td><td class="std alle">${t.alle ? dpdStd(t.alle) : "–"}</td></tr>`).join("")}</tbody>
     <tfoot><tr><td class="tag" colspan="${L.stunden.length + 2}">Zusammen fehlen noch</td><td class="std">${dpdStd(L.summe)}</td><td class="std alle">${dpdStd(L.summeAlle)}</td></tr></tfoot></table>
-    <div class="dpl-leg"><span><i class="rot">2</i> so viele Personen fehlen</span><span><i class="rot">1<sup>½</sup></i> nur eine halbe Stunde</span><span><i class="ok">✓</i> besetzt</span><span><i class="zu"></i> kein Dienst</span><span><b>Std. laut Plan</b> = fehlt nach der Einteilung (nie länger als die Wunschzeit) · <b>wenn alle ganz</b> = fehlt selbst dann, wenn alle ihre ganze angebotene Zeit arbeiten</span></div>
+    <div class="dpl-leg"><span><i class="rot">2</i> so viele Personen fehlen</span><span><i class="halb">${dpdHalbSvg(1)}</i> fehlt nur :00–:30</span><span><i class="halb">${dpdHalbSvg(2)}</i> fehlt nur :30–:00</span><span><i class="ok">✓</i> besetzt</span><span><i class="zu"></i> kein Dienst</span><span><b>Std. laut Plan</b> = fehlt nach der Einteilung (nie länger als die Wunschzeit) · <b>wenn alle ganz</b> = fehlt selbst dann, wenn alle ihre ganze angebotene Zeit arbeiten</span></div>
     ${d.tage.some((t) => t.art === "Markttag" && (t.bedarf[(23 - (d.von ?? 8)) * 2 - 1] || 0)) ? '<div class="dpl-hinweis dpl-abend">🌙 <b>Abends:</b> Der Markt geht teils bis 23 Uhr, mit Aufräumen auch mal bis ca. 23:30 Uhr. Wer sich nur bis 22 Uhr eingetragen hat: bitte möglichst bis 23 Uhr verlängern.</div>' : ""}<!-- 2.683.0 KC-CLUB-DP-LUECKEN-ABEND -->
     <div class="dpl-hinweis">📝 <b>So trägst du dich ein:</b> Club-App → <b>📝 Dienstwünsche</b> → Tag antippen → Zeit wählen → speichern. Der Plan rechnet sich dann von selbst neu.</div>
     ${cdFuss("Dienstplan-Entwurf – nicht veröffentlicht. Fragen? Einfach Hansi in der Club-App schreiben.")}</section>`;
@@ -35747,7 +35767,8 @@ async function dpdVorschlagBauen() {
 // Besetzungsstatistik und Bereitschaft, sparsam aber übersichtlich, rechts W = Wunsch- und S = Soll-Stunden“): Einsatzplan aus dem Dienstplan-Stand (dp_druck).
 // Alle Personen stehen auf jeder Seite in fester Reihenfolge, auch ohne Angabe; Aushilfen grau gestreift; Spätdienst bis Schluss rechnet der Server.
 // 3.0.0 KC-CLUB-DRUCK-OHNE-STREIFEN: Gitterlinien als echte Linien statt Verlauf – Chrome legte jeden Verlauf als seitengroßes Bild ab (Drucker hing)
-const dpeRl = (n) => `<span class="rl">${"<i></i>".repeat(n)}</span>`;
+// 3.3.0 KC-CLUB-DP-PDF-MATRIX: Linie zur halben Stunde dünn gestrichelt (d), zur vollen Stunde kräftig; v = Uhrzeit am linken Rand
+const dpeRl = (n, v = 0) => `<span class="rl">${Array.from({ length: n }, (_, k) => ((v + (k + 1) / 2) % 1 ? '<i class="d"></i>' : "<i></i>")).join("")}</span>`;
 function dpdEinsatzBlatt(d) {
   const von0 = d.von ?? 8, alle = [...new Set(d.tage.flatMap((t) => t.leute.map((l) => l.n)))].sort((a, b) => a.localeCompare(b, "de"));
   const uhr = (v) => { const h = Math.floor(v), m = Math.round((v - h) * 60); return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`; }, kurz = (v) => uhr(v).replace(":00", "");
@@ -35759,18 +35780,21 @@ function dpdEinsatzBlatt(d) {
     const i0 = mit.length ? Math.min(...mit) : 0, i1 = mit.length ? Math.max(...mit) + 1 : t.bedarf.length, n = Math.max(1, i1 - i0), v = von0 + i0 / 2, b = von0 + i1 / 2;
     const pos = (a, e) => `left:${(a / n) * 100}%;width:${((e - a) / n) * 100}%`, idx = (h) => Math.round((h - von0) * 2) - i0;
     const soll = t.bedarf.slice(i0, i1).reduce((p, q) => p + q, 0) / 2, ist = t.leute.filter((l) => l.s).reduce((p, l) => p + l.s[1] - l.s[0], 0), fehlt = t.fehlt.reduce((p, q) => p + q, 0) / 2;
-    const achse = Array.from({ length: n }, (_, k) => `<i>${k % 2 ? "" : `<span>${Math.floor(v + k / 2)}</span>`}</i>`).join("");
+    // 3.3.0 KC-CLUB-DP-PDF-MATRIX: Achse zweizeilig – oben „8 Uhr“ über beide Halbstunden, darunter klein „:00 | :30“
+    const achse = (() => { const out = []; for (let k = 0; k < n;) { const s = v + k / 2, zwei = !(s % 1) && k + 1 < n;
+      out.push(`<i class="h${zwei ? " zwei" : ""}"><span>${!(s % 1) || k === 0 ? `${Math.floor(s)} Uhr` : ""}</span><small>${zwei ? "<em>:00</em><em>:30</em>" : `<em>${s % 1 ? ":30" : ":00"}</em>`}</small></i>`); k += zwei ? 2 : 1; }
+      return out.join(""); })();
     const zeile = (name) => {
       const l = t.leute.find((y) => y.n === name), w = l ? l.w : "", segs = [];
       for (let k = i0; k < i1;) { const c = w[k]; let j = k; while (j < i1 && w[j] === c) j++; if (ART[c]) segs.push([c, k - i0, j - i0]); k = j; }
       const wStd = [...w.slice(i0, i1)].filter((c) => c === "p").length / 2, dauer = l?.s ? l.s[1] - l.s[0] : 0;
       const angaben = segs.length ? segs.map(([c, a, e]) => `<b class="seg ${ART[c]}" style="${pos(a, e)}">${e - a >= 3 ? `${ARTX[c]} ${kurz(v + a / 2)}–${kurz(v + e / 2)}` : ""}</b>`).join("") : '<span class="nix">keine Angabe</span>';
       const balken = l?.s ? `<b class="bal ${zone(l.z)}" style="${pos(idx(l.s[0]), idx(l.s[1]))}">${kurz(l.s[0])}–${kurz(l.s[1])}${dauer > 6 ? " ☕" : ""}</b>` : "";
-      return `<tr class="wz${l?.s ? "" : " frei"}"><td class="nm" rowspan="2">${esc(name)}<small>${esc(zusatz(l?.z))}</small></td><td class="zt art">Angaben</td><td class="gr">${dpeRl(n)}${angaben}</td><td class="st klein">W ${dpdStd(wStd)}</td></tr>
-        <tr class="sz${l?.s ? "" : " frei"}"><td class="zt">${l?.s ? `${uhr(l.s[0])}–${uhr(l.s[1])}` : "—"}</td><td class="gr">${dpeRl(n)}${balken}</td><td class="st">S ${l?.s ? dpdStd(dauer) : "0"}</td></tr>`;
+      return `<tr class="wz${l?.s ? "" : " frei"}"><td class="nm" rowspan="2">${esc(name)}<small>${esc(zusatz(l?.z))}</small></td><td class="zt art">Angaben</td><td class="gr">${dpeRl(n, v)}${angaben}</td><td class="st klein">W ${dpdStd(wStd)}</td></tr>
+        <tr class="sz${l?.s ? "" : " frei"}"><td class="zt">${l?.s ? `${uhr(l.s[0])}–${uhr(l.s[1])}` : "—"}</td><td class="gr">${dpeRl(n, v)}${balken}</td><td class="st">S ${l?.s ? dpdStd(dauer) : "0"}</td></tr>`;
     };
     const zahlen = (f) => `<div class="zahlen">${Array.from({ length: n }, (_, k) => f(k + i0)).join("")}</div>`;
-    const ber = (t.ber || []).length ? t.ber.map((z) => `<tr class="ber"><td class="nm">☎ ${esc(z.n)}<small>Bereitschaft</small></td><td class="zt">${uhr(z.s[0])}–${uhr(z.s[1])}</td><td class="gr">${dpeRl(n)}<b class="bal bs" style="${pos(Math.max(0, idx(z.s[0])), Math.min(n, idx(z.s[1])))}">Bereitschaft ${kurz(z.s[0])}–${kurz(z.s[1])}</b></td><td class="st"></td></tr>`).join("")
+    const ber = (t.ber || []).length ? t.ber.map((z) => `<tr class="ber"><td class="nm">☎ ${esc(z.n)}<small>Bereitschaft</small></td><td class="zt">${uhr(z.s[0])}–${uhr(z.s[1])}</td><td class="gr">${dpeRl(n, v)}<b class="bal bs" style="${pos(Math.max(0, idx(z.s[0])), Math.min(n, idx(z.s[1])))}">Bereitschaft ${kurz(z.s[0])}–${kurz(z.s[1])}</b></td><td class="st"></td></tr>`).join("")
       : '<tr class="ber"><td class="nm leer" colspan="4">☎ Bereitschaft: keine eingetragen</td></tr>';
     return `<section class="dpd-blatt dpe" style="--n:${n}">${cdKopf("Einsatzplan – Angaben und Einteilung", `${d.titel || "Weihnachtsmarkt"}${stand ? " · Stand " + stand : ""}`)}
       <div class="dpe-leg"><b>Angaben:</b><span><i class="pw"></i>Wunsch</span><span><i class="pk"></i>kann</span><span><i class="pn"></i>nur wenn nötig</span><span><i class="ps"></i>gesperrt</span>
