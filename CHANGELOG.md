@@ -1,12 +1,28 @@
 # Änderungen
 
-## 2.996.0 – 2026-11-21 – 🙋 Wunschplan und 🗓️ Dienstplan getrennt über alle Tage drucken (KC-CLUB-DP-WUNSCH-PLAN)
+## 2.996.0 – 2026-11-21 – 🙋 Wunschplan und 🗓️ Dienstplan getrennt drucken · 🔍 Rollkartei: Karte wird groß (KC-CLUB-DP-WUNSCH-PLAN, KC-CLUB-ROLLKARTEI-GROSS) · nur App
+Ein Bündel zum 12-Uhr-Termin 21.11. (eingespielt auf Hansis „Einspielen“).
+### 🙋 Wunschplan und 🗓️ Dienstplan getrennt über alle Tage (KC-CLUB-DP-WUNSCH-PLAN)
 Wunsch Hansi 21.11.: „Gibt es einen Plan über alle Tage, wo nur die Wünsche drin stehen – also Wunschplan – und einen von dir berechneten Plan? … in der App einbauen.“
 - Im Ordner „🗓️ Dienstplan-Druck“ (nur Admin) zwei neue Knöpfe:
   - **🙋 Wunschplan – alle Tage:** nur die Angaben der Mitglieder (Wunschzeit, kann, nur wenn nötig, gesperrt), ohne Einteilung. Je Tag unten „Bedarf / Wunsch“ (so viele wünschen sich die halbe Stunde), links Bedarf und gewünschte Stunden; letztes Blatt: Wunschstunden je Person und Tag.
   - **🗓️ Dienstplan – alle Tage:** nur die berechnete Einteilung (wer wann Dienst hat, Bereitschaft, Bedarf/besetzt, Ampel), ohne Wunschfarben, nur wer an dem Tag eingeteilt ist; letztes Blatt: Stunden je Person.
 - Der bisherige große Ausdruck (beides übereinander), Einsatzplan und Lückenblatt bleiben unverändert. Dieselben Daten wie bisher (`dp_druck`), kein neuer Serverweg.
 - Test: Block in `tests/app-vertrag.test.mjs`. Rückweg: App 2.995.0. Nur die App.
+
+### 🔍 Rollkartei: Karte wird groß, wenn sie vorn stehen bleibt (KC-CLUB-ROLLKARTEI-GROSS)
+Wunsch Hansi 21.11.: „Läuft jetzt runder. Aber wenn sie im Vordergrund ist und ich nicht weiter rolle, soll sie in den Vordergrund und groß werden
+und einrasten. Aber wie kann man dann weiter rollen?“
+- **Groß nach vorn:** bleibt eine Karte ⅔ Sekunde stehen, wächst sie sanft groß (≈ 0,3 s) und **rastet hörbar ein** – der Stapel oben tritt zurück,
+  die Karte bekommt fast die ganze Höhe (mehr Inhalt ohne Scrollen).
+- **Weiterrollen wie gewohnt:** einfach weiterschieben – die Karte schrumpft dabei fließend zurück und die nächste rollt nach. Hat die große Karte mehr
+  Inhalt, scrollt der Finger erst den Inhalt, dann geht es nahtlos weiter. Kurz angezogen und losgelassen → bleibt dieselbe Karte, wieder groß.
+- **Unten bleibt ein Streifen** der nächsten Karte sichtbar (antippen = nächste); ▲▼ oben und die Buchstaben-Reiter gehen wie bisher. ▲▼ liegt jetzt
+  über der Karte und ist auch bei der großen Karte immer erreichbar.
+- Abschaltbar je Gerät: ⚙️ → Rollkartei → „🔍 Karte groß“. Die ganze neue Rolle: „🛞 Neue Rolle“ (Rückweg zur klassischen Rollkartei bleibt).
+- Geprüft im abgeschirmten Browser auf Handy und Tablet (wachsen, kleiner Zug, großer Zug, Streifen, ▲, abschalten; keine Programmfehler).
+  Test: `tests/rollkartei-rolle.test.mjs` erweitert. Rückweg: App 2.995.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
 
 ## 2.995.0 – 2026-11-21 – 🛞 Rollkartei als Rolle wie am iPad · 🛰️ Störungsseite nur für unsere Region · Protokoll sparen · 💌 Gemeinsame Karte direkt verschicken (KC-CLUB-ROLLKARTEI-ROLLE, KC-CLUB-SB-REGION, KC-CLUB-PROTOKOLL-SPAREN, KC-CLUB-GK-DIREKT-SENDEN) · App + Server 2.995.0
 Ein Bündel, eingespielt auf Hansis „Einspielen“ (21.11.) – der Abendtermin 20.11. war durch einen Neustart der Sitzung verstrichen.
