@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.996.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.997.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -22599,7 +22599,7 @@ async function chatLaden(scrollen, merk) {
       ...[...ANLS.gepulst].filter(([, t]) => Date.now() - t < 1600).map(([id]) => id)]), anlAuf = anlAufSet(); // gleich wieder neu gezeichnet (z. B. Tag aufgeklappt): Aufleuchten nicht abschneiden
     const blaseHtml = (m) => `${m.id === NA.trennerVor ? '<div class="neu-trenner" id="neuTrenner">⬇ Neue Nachrichten</div>' : ""}<div data-id="${m.id}" class="blase${m.eigen ? " eigen" : ""}${istNotfall(m) ? " notfall" : ""}${m.erwaehntMich ? " erwaehnt-mich" : ""}${m.wichtig ? " wichtig" : ""}${!m.eigen && andere.length > 1 ? " farbig" : ""}"${!m.eigen && andere.length > 1 ? ` style="${gruppenFarbe(m.von)}"` : ""} id="msg-${m.id}" title="Antippen: reagieren, antworten, Details" onclick="if(!event.target.closest('button,img,a,audio,video,.sprache,.zitat'))nachrichtMenue('${m.id}')" oncontextmenu="if(!event.target.closest('a,img,audio,video,input,textarea')){event.preventDefault();nachrichtMenue('${m.id}')}">
       ${istNotfall(m) ? '<div class="notfall-marke">🚨 NOTFALL</div>' : m.wichtig ? '<div class="wichtig-marke">❗ WICHTIG</div>' : ""}${m.express ? '<div class="express-marke">🏎️ EXPRESS</div>' : ""}${!m.eigen && andere.length > 1 ? `<div class="von">${esc(m.von)}</div>` : ""}${m.antwortAuf ? `<div class="zitat" onclick="zuNachricht('${m.antwortAuf.id}')"><b>${esc(m.antwortAuf.von)}</b><span>${esc(vnKurz(m.antwortAuf.text))}</span></div>` : ""}${m.umfrage ? umfrageHtml(m) : m.kontakt ? kontaktKarteHtml(m) : (m.text === "📎" || (m.text === EINMAL_TEXT && m.anlagen.some((a) => a.einmal))) && m.anlagen.length ? "" : khSprachHtml(m) /* KC-CLUB-KLUGE-HELFER */ ?? `<div class="txt">${naText(istNotfall(m) ? m.text.replace(NOTFALL_RE, "") : m.text)}</div>`}${m.link ? lvKarteHtml(m.link) : ""}${ntKnopfHtml(m) /* 2.608.0 KC-CLUB-NACHRICHT-TERMIN */}${erkKnopfHtml(m) /* 2.666.0 KC-CLUB-ERKENNUNG-NACHRICHT */}
-      ${m.anlagen.map((a) => a.name === VN_ANL_NAME ? vnAnlHtml(a) : a.einmal ? einmalKachel(a) : /^image\//.test(a.mime || "") ? `<img data-anlage="${a.id}" alt="${esc(a.name)}" onclick="event.stopPropagation();anlageOeffnen('${a.id}')">` : /^audio\//.test(a.mime || "") ? `<div class="sprache" data-sprache="${a.id}"><button onclick="spracheAbspielen(this, '${a.id}', ${/^Sprachnachricht/i.test(a.name || "") ? "false" : "true"})">${/^Sprachnachricht/i.test(a.name || "") ? "▶️ Sprachnachricht anhören" : `▶️ 🎵 ${esc(a.name || "Musik")}`}</button></div>` : anlZaehlt(a) ? "" /* KC-CLUB-CHAT-ANLAGEN-SICHTBAR: Dateien stehen in der Anlage-Leiste */ : `<div class="anlage" onclick='event.stopPropagation();anlageAktion(${hlJs(a.id)}, ${hlJs(a.name || "Datei")}, ${hlJs(a.mime || "")})'>📄 ${esc(a.name)}</div>`).join("")}${anlLeisteHtml(m, anlPuls.has(m.id), anlAuf)}
+      ${m.anlagen.map((a) => a.name === VN_ANL_NAME ? vnAnlHtml(a) : a.einmal ? einmalKachel(a) : /^image\//.test(a.mime || "") ? `<img data-anlage="${a.id}" alt="${esc(a.name)}" onclick="event.stopPropagation();anlageAktion(${jsArg(a.id)}, ${jsArg(a.name)}, ${jsArg(a.mime)})">` /* KC-CLUB-CHATFOTO-SPEICHERN */ : /^audio\//.test(a.mime || "") ? `<div class="sprache" data-sprache="${a.id}"><button onclick="spracheAbspielen(this, '${a.id}', ${/^Sprachnachricht/i.test(a.name || "") ? "false" : "true"})">${/^Sprachnachricht/i.test(a.name || "") ? "▶️ Sprachnachricht anhören" : `▶️ 🎵 ${esc(a.name || "Musik")}`}</button></div>` : anlZaehlt(a) ? "" /* KC-CLUB-CHAT-ANLAGEN-SICHTBAR: Dateien stehen in der Anlage-Leiste */ : `<div class="anlage" onclick='event.stopPropagation();anlageAktion(${hlJs(a.id)}, ${hlJs(a.name || "Datei")}, ${hlJs(a.mime || "")})'>📄 ${esc(a.name)}</div>`).join("")}${anlLeisteHtml(m, anlPuls.has(m.id), anlAuf)}
       <div class="na-seite"><button class="na-pfeil" title="Weiterleiten oder kopieren" aria-label="Weiterleiten oder kopieren" onclick="naPfeilMenue('${m.id}')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4.5l7.5 7.5-7.5 7.5v-4.3c-5.2 0-8.8 1.7-11.4 5.3 1-5.2 4.1-10.3 11.4-11.3V4.5z"/></svg></button><button class="na-info" title="Info: wer geschrieben, bekommen und gelesen hat" aria-label="Info zur Nachricht" onclick="nachrichtInfo('${m.id}')">i</button></div>
       ${m.eigen && m.express?.empfaenger ? expressStatusHtml(m.express) : m.express?.quittungen?.length ? `<div class="express-quittung">📬 Empfang bestätigt: ${m.express.quittungen.map((q) => `${esc(q.name)} ${esc(zeitKurz(q.am))}`).join(", ")}</div>` : m.eigen && m.express ? '<div class="express-quittung warte">📭 Empfang noch nicht bestätigt</div>' : ""}
       <div class="fuss">${m.loeschtAm ? `<span class="sl-marke" title="Löscht sich selbst – für alle">⏳ noch ${slRest(m.loeschtAm)}</span> ` : ""}${m.angeheftet ? '<span title="oben angeheftet">📌</span> ' : ""}${m.gemerkt ? '<span title="gemerkt">⭐</span> ' : ""}${m.bearbeitet ? '<span class="bearb" title="nachträglich geändert">bearbeitet</span>' : ""}${zeitKurz(m.zeit)}${m.eigen ? " " + hakenHtml(m, andere.length) : ""}${m.eigen || ICH.admin ? ` <button aria-label="Nachricht löschen" class="weg" title="Nachricht löschen" onclick="nachrichtLoeschen('${m.id}')">🗑️</button>` : ""}</div></div>`;
@@ -25249,16 +25249,23 @@ async function anlageDateiZeigen() {
   if (t.datei) { const url = URL.createObjectURL(t.datei); const w = window.open(url, "_blank"); if (w) { try { w.opener = null; } catch {} return; } return anlageLinkZeigen(url, t.name || "Datei"); }
   return anlageOeffnen(t.id);
 }
+// KC-CLUB-CHATFOTO-SPEICHERN (17.11.2026, Fund Hansi: „im Chat steht es als jpg – beim Herunterladen kommt immer html“): Fotos im Chat öffneten
+// nur den 10-Minuten-Link im Browser; „Herunterladen“ im Browser-Menü speicherte dann die Seite (oder nach Ablauf die Fehlerseite) als HTML.
+// Jetzt bekommen Chat-Fotos dasselbe Fenster wie Datei-Anlagen: Öffnen / Teilen / Auf dem Gerät speichern – gespeichert wird die Bilddatei selbst.
 // 2.128.0 KC-CLUB-ANLAGE-TEILEN (Wunsch Hansi): Datei-Anhang antippen → Öffnen / Teilen / Speichern.
 // Die Datei wird beim Öffnen des Fensters schon geholt (der Server prüft wie immer, ob man sie sehen darf) – so kommt das Teilen-Menü
 // direkt beim Antippen (iPhone verlangt das), ohne erneutes Laden.
 let ANL_T = null;
+// KC-CLUB-CHATFOTO-SPEICHERN: fehlt dem Namen die Endung (z. B. „Foto“), hängt sie das Handy sonst nicht an – die Galerie erkennt die Datei dann nicht
+const MIME_ENDUNG = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/gif": "gif", "application/pdf": "pdf" };
+const mitEndung = (name, mime) => { const n = String(name || "Datei"), e = MIME_ENDUNG[String(mime || "").toLowerCase()]; return !e || /\.[a-z0-9]{2,5}$/i.test(n) ? n : `${n}.${e}`; };
 function anlageAktion(id, name, mime) {
   ANL_T = { id, name, mime, datei: null, fehler: null }; anlGeoeffnetMerken(id); // KC-CLUB-CHAT-ANLAGEN-SICHTBAR
   api("diagnose", { art: "anlage", daten: { schritt: "angetippt", mime: mime || "" } }).catch(() => {}); // 2.166.0: Diagnose „öffnet sich nicht“
   const lauf = ANL_T;
-  lauf.warten = anlageAlsDatei({ id, name, mime }).then((d) => { lauf.datei = new File([d.blob], d.name, { type: d.mime || "application/octet-stream" }); }).catch((e) => { lauf.fehler = e; });
-  blattAuf("anlBlatt", `<h3 style="margin:0 0 4px">📄 ${esc(name)}</h3><p class="hinweis" style="margin:0 0 10px">Was möchtest du mit der Datei machen?</p>
+  lauf.warten = anlageAlsDatei({ id, name, mime }).then((d) => { lauf.datei = new File([d.blob], mitEndung(d.name, d.mime), { type: d.mime || "application/octet-stream" }); }).catch((e) => { lauf.fehler = e; });
+  const bild = /^image\//.test(mime || "");
+  blattAuf("anlBlatt", `<h3 style="margin:0 0 4px">${bild ? "🖼️" : "📄"} ${esc(name)}</h3><p class="hinweis" style="margin:0 0 10px">Was möchtest du mit ${bild ? "dem Foto" : "der Datei"} machen?</p>
     <button class="knopf haupt" onclick="anlageDateiZeigen()">👁️ Öffnen</button>
     <button class="knopf" onclick="anlageTeilen(false)">📤 Teilen / Weiterleiten</button>
     <button class="knopf" onclick="anlageTeilen(true)">⬇️ Auf dem Gerät speichern</button>
@@ -26212,7 +26219,7 @@ async function mailRundSenden(text, empf) { // nur Admin: Rundmail ohne Chat
     const ablegbar = gesendetAblegbar(vorher); if (ablegbar.length) setTimeout(() => gesendetAblageFragen(ablegbar), 500);
     if (!chatId) { neuEntwurf = null; zeige("nachrichten"); }
   } catch (e) { meldeFehler(e); }
-  $("sendenKnopf").disabled = false;
+  sendenFrei();
 }
 
 async function senden() {
@@ -26268,8 +26275,8 @@ async function senden() {
     if (EINMAL) return melde("👁️ Einmal-Foto und 🔒 verschlüsselt gehen nicht zusammen – bitte eins von beiden ausschalten.", true);
     if (anlagen.some((a) => a.id && !a.vnWartet) && !(await frage("🔒 Anlage schon hochgeladen\nDiese Anlage wurde ausgewählt, bevor 🔒 an war, und liegt schon unverschlüsselt auf dem Server. Für echte Geheimhaltung: entfernen und mit 🔒 neu auswählen.\n\nTrotzdem verschlüsselt senden?", { ja: "🔒 Verschlüsselt senden", nein: "Abbrechen" }))) return;
     $("sendenKnopf").disabled = true; melde("🔒 Anlagen werden auf dem Handy verschlüsselt …");
-    let enc; try { enc = await vnAnlVerschluesseln(anlagen); } catch (e) { $("sendenKnopf").disabled = false; return meldeFehler(e); }
-    $("sendenKnopf").disabled = false;
+    let enc; try { enc = await vnAnlVerschluesseln(anlagen); } catch (e) { sendenFrei(); return meldeFehler(e); }
+    sendenFrei();
     const v = await vnVerschluesseln(text + VN_ANL + JSON.stringify(enc)); if (!v) return;
     if (vnIst(v)) { text = v; vnIds = enc.map((x) => x.id); }
     // „Normal senden“ gewählt: Text wie getippt, Anlagen unverschlüsselt (die verschlüsselten Kopien bleiben ungenutzt liegen)
@@ -26279,7 +26286,7 @@ async function senden() {
   if (anlagen.some((a) => a.laedt)) {
     $("sendenKnopf").disabled = true; melde("⏳ Die Anlage lädt noch – deine Nachricht geht mit ihr zusammen raus, sobald sie fertig ist …");
     const fertig = await anlagenFertig();
-    $("sendenKnopf").disabled = false;
+    sendenFrei();
     if (!fertig) return melde("⚠️ Die Anlage ist noch nicht fertig hochgeladen – nichts wurde gesendet. Bitte kurz warten und nochmal auf ➤ tippen.", true);
     if (!$("text").value.trim() && !anlagen.length) return;
   }
@@ -26316,7 +26323,7 @@ async function senden() {
       spur("gesendet", vorher); // KC-CLUB-SPUR: nur „gesendet“ + Unterhaltung, nie der Text
       if (ZW.whatsapp && text) whatsappWeitergeben(text, empfIds.filter((id) => id !== ICH.person_id));
       setTimeout(() => window.scrollTo(0, document.body.scrollHeight), 30);
-      $("sendenKnopf").disabled = false; try { $("text").focus({ preventScroll: true }); } catch {} // Tastatur bleibt offen – gleich weiterschreiben
+      sendenFrei(); try { $("text").focus({ preventScroll: true }); } catch {} // Tastatur bleibt offen – gleich weiterschreiben
       return;
     }
     const r = chatId ? await api("nachricht_senden", { id: chatId, ...daten }) : await api("nachricht_senden", { ...daten, ...neuEntwurf });
@@ -26336,7 +26343,7 @@ async function senden() {
     await chatLaden(true);
     if (gesendet.length) setTimeout(() => gesendetAblageFragen(gesendet), 500);
   } catch (e) { meldeFehler(e); }
-  $("sendenKnopf").disabled = false;
+  sendenFrei();
 }
 
 // KC-CLUB-MEHRFACH-NACHRICHT: nacheinander in jeden markierten Chat; was nicht ging, bleibt markiert (nochmal versuchen), der Text bleibt dann stehen
@@ -26352,7 +26359,7 @@ async function uhMehrfachSenden(daten, text) {
     melde(fehl.length ? `📨 ${ids.length - fehl.length} von ${ids.length} Chats bekommen – ${fehl.length} ging nicht (bleibt markiert, einfach nochmal ➤)` : `📨 An ${ids.length === 1 ? "den Chat" : `alle ${ids.length} Chats`} gesendet`, !!fehl.length);
     if (!fehl.length) { zeige("nachrichten"); neuLaden(); }
   } catch (e) { meldeFehler(e); }
-  $("sendenKnopf").disabled = false;
+  sendenFrei();
 }
 
 // ---------- Fotos über „Teilen“ aus der Galerie (KC-CLUB-TEILEN) ----------
@@ -27357,8 +27364,17 @@ async function einmalOeffnen(id) {
   document.body.appendChild(f); spur("einmal_foto", chatId);
 }
 function einmalSchliessen() { const f = $("einmalSchirm"); if (!f) return; f._weg?.(); f.remove(); melde("👁️ Das Foto ist jetzt weg."); chatLaden(true).catch(() => {}); }
+// KC-CLUB-SENDEN-NACH-UPLOAD (17.11.2026, Wunsch Hansi nach Rundschreiben ohne PDF: „wenn ein Anhang dabei ist, Sendeknopf erst freigeben,
+// wenn die Anlage hochgeladen ist“): solange eine Anlage hochlädt, ist ➤ gesperrt und zeigt ⏳ – erst wenn alles oben ist, wird gesendet.
+function sendenFrei() {
+  const k = $("sendenKnopf"); if (!k) return;
+  const laedt = anlagen.some((a) => a.laedt);
+  k.disabled = laedt; k.classList.toggle("laedt-hoch", laedt);
+  k.textContent = laedt ? "⏳" : "➤"; k.title = laedt ? "Bitte warten – die Anlage wird noch hochgeladen" : "Senden";
+  k.setAttribute("aria-label", k.title);
+}
 function chipsZeigen() {
-  versandZeigen(); // 2.524.0 KC-CLUB-VERSANDART: mit Anhang auch ohne Text
+  versandZeigen(); sendenFrei(); // 2.524.0 KC-CLUB-VERSANDART: mit Anhang auch ohne Text
   if (!(anlagen.length === 1 && anlagen[0].bild)) EINMAL = false; // KC-CLUB-EINMAL-FOTO: nur bei genau einem Foto
   $("anlagenChips").innerHTML = anlagen.map((a, i) => `<span class="chip anl-chip"><button type="button" class="anl-auf" onclick="anlageAnsehen(${i})" aria-label="Anhang ansehen: ${esc(a.name)}">${a.vnWartet ? "🔒" : ""}${a.bild ? `<img src="${a.bild}" alt="">` : a.laedt ? "⏳" : "📎"} ${esc(a.name)}</button><button type="button" class="anl-weg" onclick="anlageEntfernen(${i})" aria-label="Anhang entfernen" title="Anhang entfernen">✕</button></span>`).join("");
   if (anlagen.length === 1 && anlagen[0].bild) $("anlagenChips").insertAdjacentHTML("beforeend", `<button type="button" class="chip einmal-chip${EINMAL ? " an" : ""}" onclick="einmalUmschalten()" aria-pressed="${EINMAL}" title="Der Empfänger kann das Foto nur ein einziges Mal öffnen">👁️ Einmal ansehen: ${EINMAL ? "An" : "Aus"}</button>`);
@@ -27420,10 +27436,11 @@ async function dateienGewaehlt(input) {
     try {
       const r = await anlageHochladen(roh);
       Object.assign(eintrag, { id: r.id, name: r.name, laedt: false });
-    } catch (e) { anlagen.splice(anlagen.indexOf(eintrag), 1); meldeFehler(e); }
+    } catch (e) { anlagen.splice(anlagen.indexOf(eintrag), 1); melde(`⚠️ „${roh.name}“ wurde NICHT angehängt: ${e?.message || e}`, true); } // KC-CLUB-SENDEN-NACH-UPLOAD: deutlich sagen, dass die Datei fehlt
     chipsZeigen();
   }
   input.value = "";
+  if (!anlagen.some((a) => a.laedt) && anlagen.length) melde("📎 Anlage bereit – du kannst jetzt senden.");
 }
 
 // ---------- Aktionen / Ausflüge (KC-CLUB-AKTIONEN) – Daten aus dem KC Manager, hier nur zum Ansehen ----------

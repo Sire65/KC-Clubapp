@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.997.0 – 2026-11-21 – 🖼️ Chat-Fotos richtig speichern · ⏳ Senden erst, wenn die Anlage oben ist (KC-CLUB-CHATFOTO-SPEICHERN, KC-CLUB-SENDEN-NACH-UPLOAD) · nur App
+Fertig seit 17.11. (PR #203), nie eingespielt – auf den Stand 2.996.0 gebracht (Hansi 21.11.: „Was ist das mit den alten Sachen?“).
+- **Fotos speichern** (Fund Hansi 17.11.: „Im Chat steht es als jpg – beim Herunterladen kommt immer html.“): Chat-Fotos bekommen beim Antippen dasselbe Fenster wie Datei-Anlagen – 👁️ Öffnen · 📤 Teilen · ⬇️ Auf dem Gerät speichern. Gespeichert wird die Bilddatei selbst, nicht mehr die Browserseite bzw. die Fehlerseite des abgelaufenen 10-Minuten-Links. Fehlt dem Namen die Endung, wird sie ergänzt (.jpg, .png, .webp, .gif, .pdf).
+- **Senden erst nach dem Hochladen** (Wunsch Hansi 17.11. nach einem Rundschreiben ohne PDF): solange eine Anlage hochlädt, ist ➤ gesperrt, halb durchsichtig und zeigt ⏳; ist alles oben: „📎 Anlage bereit – du kannst jetzt senden.“ Klappt das Hochladen nicht (z. B. über 8 MB): „⚠️ „Datei“ wurde NICHT angehängt: …“.
+- Tests: neu `tests/chatfoto-speichern.test.mjs`, `tests/senden-nach-upload.test.mjs`. Rückweg: App 2.996.0. Keine Chat-Inhalte gelesen – nur Code.
+
 ## 2.996.0 – 2026-11-21 – 🙋 Wunschplan und 🗓️ Dienstplan getrennt drucken · 🔍 Rollkartei: Karte wird groß (KC-CLUB-DP-WUNSCH-PLAN, KC-CLUB-ROLLKARTEI-GROSS) · nur App
 Ein Bündel zum 12-Uhr-Termin 21.11. (eingespielt auf Hansis „Einspielen“).
 ### 🙋 Wunschplan und 🗓️ Dienstplan getrennt über alle Tage (KC-CLUB-DP-WUNSCH-PLAN)
