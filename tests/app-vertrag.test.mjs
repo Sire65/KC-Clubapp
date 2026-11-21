@@ -13901,3 +13901,6 @@ assert.ok(/if \(!gezeigt && !nurZaehlen && !\(START_HASH && START_HASH !== "#"\)
 }
 // 3.0.0 KC-CLUB-DRUCK-TAG-GANZ (Hansi 21.11.: keinen Tag über zwei Seiten trennen)
 assert.ok(/const body = tage\.map\(\(t\) => `<tbody class="dpd-tag">/.test(programm) && /#druck \.dpd-raster tbody\.dpd-tag, [^{]*\{ break-inside: avoid; page-break-inside: avoid; \}/.test(seite), "jeder Tag eine unteilbare Einheit");
+// 3.2.0 KC-CLUB-PDF-BLATT-GANZ (Fund Hansi 21.11.: im PDF waren Tage getrennt)
+assert.ok(/DRUCK\.randlos = !!s\.randlos;/.test(programm) && /padding:\$\{DRUCK\.randlos \? 0 : "12mm"\}/.test(programm), "randlos ohne Zusatzrand");
+assert.ok(/\["page", "always"\]\.includes\(cs\(e\)\.breakAfter\)/.test(programm) && /st\.breakInside === "avoid"/.test(programm) && /const ganz = !!DRUCK\?\.randlos && bis - von <= seiteH \+ 2;/.test(programm) && /von === 0 \|\| ganz \? 0 : RAND/.test(programm), "Blattgrenzen und Tage im PDF");

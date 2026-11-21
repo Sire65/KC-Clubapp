@@ -1,5 +1,12 @@
 # Änderungen
 
+## 3.2.0 – 2026-11-21 – 📄 PDF-Knopf: ganze Blätter, kein Tag über zwei Seiten (KC-CLUB-PDF-BLATT-GANZ) · nur App
+Fund Hansi 21.11.: „Ich wollte gerade den PDF-Plan versenden. Da waren die Tage getrennt. Nur ganze Tage, nicht umbrechen auf 2 Seiten.“
+- Ursache: „📄 PDF speichern / teilen“ und „💬 In der Club-App senden“ zeichnen die Druckseite als ein großes Bild und schneiden es in A4-Stücke. Dabei kannte der Schnitt nur Zeilen, keine Blattgrenzen aus dem Stylesheet (`break-after: page`) – und die Vorschau gab jedem Blatt noch 12 mm Rand dazu. Randlose A4-Blätter (Dienstplan, Wunschplan, Einsatzplan, Lückenblatt) liefen so über und Tage landeten auf zwei Seiten.
+- Jetzt: Seitenwechsel auch aus dem Stylesheet, Blöcke mit `break-inside: avoid` (ein Tag) werden nie zerschnitten, ein ganzes Blatt kommt ohne Zusatzrand und Kopf genau auf eine Seite; randlose Ausdrucke bekommen in Vorschau und PDF keinen Rand mehr.
+- Geprüft mit dem echten Planstand über den PDF-Knopf: Dienstplan 8 Blätter → 8 Seiten, Wunschplan 10 → 10, jede Seite mit ganzen Tagen. Andere Ausdrucke (ohne Blattgrenzen) unverändert.
+- Test: Block in `tests/app-vertrag.test.mjs`. Rückweg: App 3.1.0.
+
 ## 3.1.0 – 2026-11-21 – 📌 Pinnwand und Terminanfragen sparsamer (KC-CLUB-PW-TA-SPARSAM) · 🧯 Browser-Fremdfehler leise (KC-CLUB-FREMDFEHLER) · App + Server 3.1.0
 Sparbilanz 21.11.: seit dem Leitung-Sparpaket (2.982.0/2.985.0) sparten „pinnwand_neu“ nur −23 % und „terminanfragen_liste“ nur −19 % je aktive Personenstunde (Online −71 %).
 - **Pinnwand beim Start:** keine Zusatzabfrage „pinnwand_neu“ mehr – die Zahl ungelesener Zettel kommt aus dem stillen Laden der Pinnwand (gleiche Rechnung). Nur mit „👋 Was ist neu“ wie bisher.
