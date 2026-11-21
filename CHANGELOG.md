@@ -1,6 +1,8 @@
 # Änderungen
 
-## 2.995.0 – 2026-11-20 – 🛞 Rollkartei als Rolle wie am iPad – folgt dem Finger, rastet ein, mit Rastgeräusch (KC-CLUB-ROLLKARTEI-ROLLE) · nur App
+## 2.995.0 – 2026-11-21 – 🛞 Rollkartei als Rolle wie am iPad · 🛰️ Störungsseite nur für unsere Region · Protokoll sparen · 💌 Gemeinsame Karte direkt verschicken (KC-CLUB-ROLLKARTEI-ROLLE, KC-CLUB-SB-REGION, KC-CLUB-PROTOKOLL-SPAREN, KC-CLUB-GK-DIREKT-SENDEN) · App + Server 2.995.0
+Ein Bündel, eingespielt auf Hansis „Einspielen“ (21.11.) – der Abendtermin 20.11. war durch einen Neustart der Sitzung verstrichen.
+
 Wunsch Hansi 20.11.: „Auf dem iPad drehen die Meldungsfenster nach oben, wenn es mehr werden. Wir haben in der Club-App auch Drehregister (Rollkartei),
 die laufen aber nicht gut“ → „Ja, aber sorgfältig und bedienerfreundlich, mit flüssiger Bewegung und Rastgeräuschen – und so, dass du es wieder
 rückgängig machen kannst, wenn es mir nicht gefällt.“ Gilt überall, wo es die Rollkartei gibt (👥 Mitglieder, 💬 Chats, ⚙️ Einstellungen).
@@ -14,7 +16,12 @@ rückgängig machen kannst, wenn es mir nicht gefällt.“ Gilt überall, wo es 
   Umschalten neu ↔ klassisch, keine Programmfehler. Test: `tests/rollkartei-rolle.test.mjs`. Rückweg: App 2.994.0.
 - Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
 
-## 2.994.0 – 2026-11-20 – 🛰️ Störungsseite nur für unsere Region · Ablauf „Protokoll sparen“ (KC-CLUB-SB-REGION, KC-CLUB-PROTOKOLL-SPAREN) · nur App
+### Im selben Bündel (Beitrag einer anderen Sitzung, PR #221): 💌 Gemeinsame Karte wird direkt verschickt – Bild und Gruß zusammen (KC-CLUB-GK-DIREKT-SENDEN)
+Fund Hansi 20.11.: Karla bekam zuerst nur den Gruß-Text, das Bild der Karte fehlte – „sorgfältig umbauen, damit es nicht peinlich ist“.
+- Der Knopf heißt jetzt **„💌 Jetzt an Karla schicken“**. Nach der Rückfrage (sie zeigt Empfänger und Gruß) schickt die App die Karte **selbst** – **Bild und Gruß in einer Nachricht**, ohne extra ➤. Vorher lag beides nur im Schreibfeld; das Bild ging verloren, wenn nicht sofort gesendet wurde, und die Karte galt schon vorher als „verschickt“.
+- Sorgfältige Reihenfolge: Karte zeichnen → Bild hochladen → senden → **erst dann** „verschickt“. Klappt ein Schritt nicht, geht **nichts** raus, die Karte bleibt offen und es kommt eine verständliche Meldung („… es wurde nichts verschickt“). Danach öffnet sich der Chat, damit man sieht, dass die Karte angekommen ist.
+
+### Im selben Bündel: 🛰️ Störungsseite nur für unsere Region · Ablauf „Protokoll sparen“ (KC-CLUB-SB-REGION, KC-CLUB-PROTOKOLL-SPAREN) · nur App
 Wunsch Hansi 20.11.: „Check mal Supabase, ob es neue Sachen gibt, die wir gebrauchen können“ → „Ja, erstelle das mal“.
 - **Störungsseite (Verbindungsprüfung, Admin-Zentrale):** Supabase listet seit 08.10. (Umzug zu incident.io) einzelne Regionen. Bisher wurde jede Störung
   irgendwo auf der Welt gelb – jetzt nur noch Störungen in **unserer Region London (eu-west-2)** oder ohne Regionsangabe. Sonst: „unsere Region (London) läuft –
