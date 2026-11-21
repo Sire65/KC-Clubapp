@@ -1,5 +1,15 @@
 # Änderungen
 
+## 3.1.0 – 2026-11-21 – 📌 Pinnwand und Terminanfragen sparsamer (KC-CLUB-PW-TA-SPARSAM) · 🧯 Browser-Fremdfehler leise (KC-CLUB-FREMDFEHLER) · App + Server 3.1.0
+Sparbilanz 21.11.: seit dem Leitung-Sparpaket (2.982.0/2.985.0) sparten „pinnwand_neu“ nur −23 % und „terminanfragen_liste“ nur −19 % je aktive Personenstunde (Online −71 %).
+- **Pinnwand beim Start:** keine Zusatzabfrage „pinnwand_neu“ mehr – die Zahl ungelesener Zettel kommt aus dem stillen Laden der Pinnwand (gleiche Rechnung). Nur mit „👋 Was ist neu“ wie bisher.
+- **Pinnwand bei Rückkehr in die App:** bisher JEDES Mal eine Abfrage (und dazu oft eine im nächsten Takt, weil die Leitung im Hintergrund getrennt war) – jetzt nur nach > 10 Min. weg oder wenn die Leitung nach 10 s nicht steht (wie bei den Terminanfragen). Ein Leitungsaufbau bis 15 s nach dem letzten Stand gilt als gedeckt; ein späterer Neuaufbau (Funkloch) fragt wie bisher sofort.
+- **Terminanfragen beim Start und nach > 10 Min. weg:** der Hinweis-Check nutzt die offenen Anfragen aus dem frischen init-Stand (INIT.terminanfragenOffen) – die Liste wird nur geholt, wenn der Hinweis wirklich erscheinen soll (neue Anfrage / nicht auf „später“ gestellt / 5 oder mehr).
+- Signale „pinnwand“/„terminanfrage“ laden weiter sofort, Takte (10 bzw. 60 Min.) bleiben; ohne Leitung wie bisher. Kein Server-Umbau nötig.
+- Test `tests/pw-ta-sparsam.test.mjs`.
+- **🧯 Browser-Fremdfehler leise (KC-CLUB-FREMDFEHLER, Fund: Mitglied iPad/Safari bekam beim Einrichten 2× „Script error.“ → Fenster + Alarm-Mail KC-F-001):** „Script error.“ (oder leer) ganz ohne Datei/Zeile/Stapel kommt von Safari, Erweiterungen oder Inhaltsblockern – jetzt eigene Art „fremd“ (KC-F-022, Fehlerkatalog): nur mitgeschrieben (⚪ Info), **kein Fenster** beim Mitglied, **keine Alarm-Mail** je Fehler (auch nicht von älteren App-Ständen). Erst bei **mehr als 5 an einem Tag** beim selben Mitglied EIN Hinweis am Tag an die Admins („vermutlich Browser-Erweiterung/Inhaltsblocker – Gerät/Browser prüfen“). **Spur zum Fehler:** jede Fehlermeldung bringt die letzten 8 Schritte mit (nur Ansichts-/Fensternamen, Chat-UUIDs und IDs fallen weg) – im 🩺 Fehlerprotokoll („👣 Schritte davor“) und in der Alarm-Mail. **Migration `20261121_kc_fehler_fremd.sql` beim Einspielen anwenden** (nur Katalogzeile). Test `tests/fremdfehler.test.mjs`.
+- Eingespielt als eigenes Bündel direkt nach 3.0.0 (Hansi 21.11.: „Nimm PR #228 mit“). Rückweg: App + Server 3.0.0 bzw. 2.999.0.
+
 ## 3.0.0 – 2026-11-21 – 🖨️ Dienstpläne drucken ohne Hänger: keine Streifen-Hintergründe mehr im Druck · kein Tag über zwei Seiten (KC-CLUB-DRUCK-OHNE-STREIFEN, KC-CLUB-DRUCK-TAG-GANZ) · nur App
 Hansi 21.11.: „Check nochmal, ob die PDF-Ausdrucke alle klappen und alle Seiten – bei mir war mal ein Hänger im Drucker.“
 - Prüfung aller Dienstplan-Ausdrucke (Wunschplan, Dienstplan, großer Ausdruck, Einsatzplan, Lückenblatt, Vorschläge; Admin und Mitglied) mit dem echten Planstand: alle Seiten da, keine leer, A4 quer.
