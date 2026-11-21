@@ -13359,7 +13359,7 @@ function idx0() { return lies("index.html"); }
   assert.equal(f.dpdBereiche(tag, 8), "9–11", "Regelzeit aus dem Bedarf");
   assert.equal(r.fehl, 1, "fehlende Stunden");
   assert.deepEqual(r.rows.map((x) => x.art), ["p", "b", "s", "f"], "Person, Bereitschaft, Bedarf, Ampel");
-  assert.ok(r.rows[0].cells[2][0].includes("dienst anf") && r.rows[0].cells[2][1] === "9–10:30" && r.rows[0].cells[5][0].startsWith("unav") && r.rows[0].cells[5][1] === "×", "Dienst mit Zeit, Sperre mit ×");
+  assert.ok(r.rows[0].cells[2][0].includes("dienst anf") && r.rows[0].cells[2][1] === "9–10:30 · 1,5 h" && r.rows[0].cells[5][0].startsWith("unav") && r.rows[0].cells[5][1] === "×", "Dienst mit Zeit, Sperre mit ×");
   assert.deepEqual(r.rows[3].cells.map((c) => c[1]), ["", "", "✓", "−1", "−1", "✓"], "Ampel: fehlende Personen rot, passend grün");
   // 2.646.0 KC-CLUB-DP-DRUCK-STUNDEN: rechts Stunden (Tag + gesamt), Ampel auch für zu viel, vorne Regelzeit/Bedarf/eingeplant, letztes Blatt Stunden je Person
   const r2 = f.dpdTag({ ...tag, besetzt: [0, 1, 3, 2, 4, 3], fehlt: [0, 0, 0, 1, 0, 0] }, 8, 11, { A: 12.5 });
@@ -13867,7 +13867,7 @@ assert.ok(/if \(!gezeigt && !nurZaehlen && !\(START_HASH && START_HASH !== "#"\)
 {
   assert.ok(/const ausReg = await dienstAusnahmen\(\);\s*const aus = \(pid: string\) => pk\[pid\]\?\.aus === true \|\| ausReg\.has\(pid\);/.test(server), "Register-Ausnahmen nie einplanen");
   assert.ok(/v\?\.wunschFremd === true/.test(server) && /if \(fremd\.has\(p\.n\)\) p\.f = 1;/.test(server), "fremd eingesetzte Zeiten markiert");
-  assert.ok(/const dpdW = \(p\) => \((?:p\.f|dpdVerdeckt\(p\)) \? "-"\.repeat\(p\.w\.length\) : p\.w(?: \|\| p\.w| \|\| p\.we|)/.test(programm) && /dpdVerdeckt = \(p\) => !!\(p\.f/.test(programm) && /DPD_ART\[dpdW\(p\)\[i\]\]/.test(programm) && /p\.f \? "nicht selbst eingetragen"/.test(programm), "im Wunschplan leer");
+  assert.ok(/const dpdW = \(p\) => \((?:p\.f|dpdVerdeckt\(p\)) \? "-"\.repeat\(p\.w\.length\) : p\.w(?: \|\| p\.w| \|\| p\.we|)/.test(programm) && /dpdVerdeckt = \(p\) => !!\(p\.f/.test(programm) && /DPD_ART\[dpdW\(p\)\[i\]\]|cells: dpdWunschZellen\(dpdW\(p\), S, zu\)/.test(programm) && /p\.f \? "nicht selbst eingetragen"/.test(programm), "im Wunschplan leer");
 }
 // 2.998.0 KC-CLUB-DP-WUNSCH-EIGEN (Hansi 21.11.: Wunschplan zum Verschicken – nur selbst Abgegebenes, nur Freigegebenes, mit Bereitschaft)
 {
@@ -13876,5 +13876,12 @@ assert.ok(/if \(!gezeigt && !nurZaehlen && !\(START_HASH && START_HASH !== "#"\)
     "--aapppuuu" + "-".repeat(20), "gleiche Rangfolge wie im Plan");
   assert.ok(/share_with_colleagues"\)\.eq\("org_id", ORG\)/.test(server) && /p\.we = wunschZeile\(eigenW\.get\(p\.n\)/.test(server) && /if \(nichtFrei\.has\(p\.n\)\) p\.g = 1;/.test(server) && /if \(e\.length\) eigenW\.set\(n, e\); else fremd\.add\(n\);/.test(server), "Server liefert we, g und f");
   assert.ok(/const dpdVerdeckt = \(p\) => !!\(p\.f \|\| \(DPD\.frei && p\.g\)\);/.test(programm) && /const dpdW = \(p\) => \(dpdVerdeckt\(p\) \? "-"\.repeat\(p\.w\.length\) : p\.we \|\| p\.w\);/.test(programm), "Wunschplan zeigt nur Eigenes und Freigegebenes");
-  assert.ok(/id="dpdNurFrei"/.test(programm) && /DPD\.frei = art === "wunsch" && DPD\.nurFrei;/.test(programm) && /sub: "Bereitschaft \(eingetragen\)"/.test(programm), "Haken und Bereitschaft");
+  assert.ok(/DPD\.frei = false;/.test(programm) && !/id="dpdNurFrei"/.test(programm) && /sub: "Bereitschaft \(eingetragen\)"/.test(programm), "2.999.0: niemand ausgeblendet, Bereitschaft drin");
+}
+// 2.999.0 KC-CLUB-DP-PLAN-STUNDEN (Hansi 21.11.: Uhrzeit und Stunden in den Balken, zuletzt Stunden laut Sollplan und Lücken)
+{
+  assert.ok(/txt = `\$\{dpdUhr\(a\)\}–\$\{dpdUhr\(b\)\} · \$\{dpdStd\(b - a\)\} h`;/.test(programm), "Balken mit Stunden");
+  assert.ok(/function dpdWunschZellen\(w, S, zu\)/.test(programm) && /cells: dpdWunschZellen\(dpdW\(p\), S, zu\)/.test(programm), "Wunschblöcke mit Uhrzeit");
+  assert.ok(/Stunden je Person laut Sollplan – alle Tage/.test(programm) && /dpdUebersicht\(tageP, gesP, gesBer\)/.test(programm) && /\+ \(art === "voll" \? "" : dpdLueckenBlatt\(d\)\)/.test(programm), "zum Schluss Sollplan-Stunden und Lücken");
+  assert.ok(/td\.anf:is\(\.pref, \.avai, \.if_n\):not\(\.dienst\) span/.test(seite), "Text über den Nachbarzellen lesbar");
 }

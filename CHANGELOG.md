@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.999.0 – 2026-11-21 – 🗓️ Uhrzeit und Stunden in den Balken · am Ende Stunden laut Sollplan und „Hier fehlen noch Helfer“ · alle Mitglieder wieder sichtbar (KC-CLUB-DP-PLAN-STUNDEN) · nur App
+Hansi 21.11.: „Auf dem Dienstplan müssen auch die nicht geteilten drauf – das war nur für die Planungsphase. In die Balken des Sollplans Uhrzeiten und Stundenumfang, am besten im Wunschplan auch, und zuletzt eine Übersicht über die komplette Stundenauswertung nach Sollplan und wo noch Personen fehlen.“
+- **Alle sichtbar:** der Haken „🔒 Nur freigegebene Wünsche“ aus 2.998.0 ist wieder weg – im 🙋 Wunschplan stehen alle mit ihren selbst abgegebenen Zeiten (Freigabe galt nur für die Planungsphase). Wer keinen eigenen Wunschplan abgegeben hat (Andrea, Anne, Leon), bleibt leer.
+- **Balken mit Uhrzeit und Stunden:** im 🗓️ Dienstplan und im großen Ausdruck z. B. „11–16 · 5 h“; im 🙋 Wunschplan am Anfang jedes Wunschblocks ebenso (Wunsch, kann, nur wenn nötig).
+- **Zum Schluss:** beide Ausdrucke enden mit „Stunden je Person laut Sollplan – alle Tage“ (Stunden je Person und Tag, Bedarf, Ampel) und „Hier fehlen noch Helfer“; der Wunschplan hat davor noch die Wunschstunden.
+- Test: Block in `tests/app-vertrag.test.mjs`. Rückweg: App 2.998.0.
+
 ## 2.998.0 – 2026-11-21 – 🙋 Wunschplan zum Verschicken: nur selbst Abgegebenes, nur Freigegebenes, mit Bereitschaft (KC-CLUB-DP-WUNSCH-EIGEN) · App + Server 2.998.0
 Hansi 21.11. nach der Gesamtprüfung des Plans: „Ja, bau das so um und spiele auch sofort ein, denn ich möchte es später per PDF-Anhang versenden. Gab es auch jemand, der angehakt hat, dass er nicht möchte, dass seine Zeiten von anderen gesehen werden, und ist auch die Bereitschaft zu sehen?“
 - **Nur selbst Abgegebenes:** Gelten für jemanden Ersatz-Zeiten (Ruth: auf Hansis Wunsch ergänzte „wenn nötig“-Zeiten), zeigt der 🙋 Wunschplan nur, was sie selbst abgegeben hat. Ohne eigenen Wunschplan (Andrea, Anne, Leon) bleibt die Zeile leer – „nicht selbst eingetragen“. Für die Planung gelten die Zeiten weiter.
