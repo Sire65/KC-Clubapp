@@ -195,7 +195,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.995.0";
+const SERVER_VERSION = "2.997.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -5498,7 +5498,10 @@ async function dpDruckNeu(adminId: string) {
   // 2.721.0 KC-CLUB-DP-NACHBESSERN: Angaben je Person in dp_druck_konfig.personen[pid] – aus (nie einplanen), maxGesamt, maxDienst, anfahrtKm (statt der
   // km aus der Adresse, z. B. „wohnt in der Zeit bei ihrem Bruder in Werne“), notiz. Wer ab anfahrtGrenzeKm (10) fährt, bekommt Dienste ab anfahrtMinDienst (3) Std.
   const pk: Record<string, any> = konf.personen && typeof konf.personen === "object" ? konf.personen : {};
-  const aus = (pid: string) => pk[pid]?.aus === true;
+  // 2.997.0 KC-CLUB-DP-AUS-REGISTER (Hansi 21.11.: „im Sollplan Karla nicht wegen krank und Fridbert nicht“): wer im Register
+  // kc_club_dienst_ausnahmen steht, wird nie eingeplant – auch ohne „aus“ in der Konfiguration
+  const ausReg = await dienstAusnahmen();
+  const aus = (pid: string) => pk[pid]?.aus === true || ausReg.has(pid);
   if (!(tageRoh ?? []).length) throw new Fehler("Für die Veranstaltung ist noch kein Bedarf veröffentlicht.", 409);
   const ersatz: Record<string, any> = konf.ersatz && typeof konf.ersatz === "object" ? konf.ersatz : {};
   const leerIds = (Array.isArray(konf.leerzeilen) ? konf.leerzeilen : []).map((x: any) => String(x.person_id));
@@ -5551,6 +5554,10 @@ async function dpDruckNeu(adminId: string) {
     wunschZuerst: konf.wunschZuerst === true, // 2.936.0 KC-CLUB-DP-WUNSCH-ZUERST
     bereitschaftAuto, maxTageAmStueck: Number.isFinite(Number(konf.maxTageAmStueck)) ? Number(konf.maxTageAmStueck) : 5, wunschDeckel: konf.wunschDeckel !== false, wunschAnteil: Number.isFinite(Number(konf.wunschAnteil)) && konf.wunschAnteil !== null && konf.wunschAnteil !== undefined ? Number(konf.wunschAnteil) : 0.5, // 2.675.0
   });
+  // 2.997.0 KC-CLUB-DP-WUNSCH-FREMD (Hansi 21.11.: „die keinen Wunschplan abgegeben haben wie Anne und Leon, auch im Wunschplan leer“):
+  // personen[pid].wunschFremd = die Zeiten hat jemand anderes eingesetzt – sie gelten für die Rechnung, im Wunschplan bleibt die Zeile leer (f: 1)
+  const fremd = new Set(Object.entries(pk).filter(([, v]: any) => v?.wunschFremd === true).map(([id]) => name.get(id)).filter(Boolean));
+  for (const t of ergebnis.tage || []) for (const p of (t.leute || []) as any[]) if (fremd.has(p.n)) p.f = 1;
   const stand = jetzt(), wert = { ...ergebnis, titel: konf.titel || "Weihnachtsmarkt Werne 2026", stand, gerechnet: "club-server" };
   const { error } = await db.from("kc_club_person_einstellung").upsert({ person_id: adminId, schluessel: "dp_druck", wert, geaendert_am: stand }, { onConflict: "person_id,schluessel" });
   if (error) throw new Fehler("Der neue Stand konnte nicht gespeichert werden.", 500);

@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.997.0 – 2026-11-21 – 🖼️ Chat-Fotos richtig speichern · ⏳ Senden erst, wenn die Anlage oben ist · 🙋 Wunschplan nur mit selbst Eingetragenem (KC-CLUB-CHATFOTO-SPEICHERN, KC-CLUB-SENDEN-NACH-UPLOAD, KC-CLUB-DP-WUNSCH-FREMD, KC-CLUB-DP-AUS-REGISTER) · App + Server 2.997.0
+Fertig seit 17.11. (PR #203), nie eingespielt – auf den Stand 2.996.0 gebracht (Hansi 21.11.: „Was ist das mit den alten Sachen?“).
+- **Fotos speichern** (Fund Hansi 17.11.: „Im Chat steht es als jpg – beim Herunterladen kommt immer html.“): Chat-Fotos bekommen beim Antippen dasselbe Fenster wie Datei-Anlagen – 👁️ Öffnen · 📤 Teilen · ⬇️ Auf dem Gerät speichern. Gespeichert wird die Bilddatei selbst, nicht mehr die Browserseite bzw. die Fehlerseite des abgelaufenen 10-Minuten-Links. Fehlt dem Namen die Endung, wird sie ergänzt (.jpg, .png, .webp, .gif, .pdf).
+- **Senden erst nach dem Hochladen** (Wunsch Hansi 17.11. nach einem Rundschreiben ohne PDF): solange eine Anlage hochlädt, ist ➤ gesperrt, halb durchsichtig und zeigt ⏳; ist alles oben: „📎 Anlage bereit – du kannst jetzt senden.“ Klappt das Hochladen nicht (z. B. über 8 MB): „⚠️ „Datei“ wurde NICHT angehängt: …“.
+- Tests: neu `tests/chatfoto-speichern.test.mjs`, `tests/senden-nach-upload.test.mjs`. Rückweg: App 2.996.0. Keine Chat-Inhalte gelesen – nur Code.
+- **Wunschplan nur mit selbst Eingetragenem** (Hansi 21.11.: „die keinen Wunschplan abgegeben haben wie Anne und Leon, auch im Wunschplan leer“): in den Plan-Einstellungen `personen[…].wunschFremd` – die eingesetzten Zeiten gelten weiter für die Rechnung, im 🙋 Wunschplan steht die Zeile leer („nicht selbst eingetragen“) und zählt nicht bei „Bedarf / Wunsch“. Gesetzt für Anne und Leon.
+- **Nie eingeplant, wer im Ausnahmen-Register steht** (Hansi 21.11.: „im Sollplan Karla nicht wegen krank und Fridbert nicht“): der Dienstplan lässt jeden aus `kc_club_dienst_ausnahmen` weg, auch ohne „aus“ in den Einstellungen (Karla und Fridbert stehen in beidem). Rückweg Server: 2.995.0.
+
 ## 2.996.0 – 2026-11-21 – 🙋 Wunschplan und 🗓️ Dienstplan getrennt drucken · 🔍 Rollkartei: Karte wird groß (KC-CLUB-DP-WUNSCH-PLAN, KC-CLUB-ROLLKARTEI-GROSS) · nur App
 Ein Bündel zum 12-Uhr-Termin 21.11. (eingespielt auf Hansis „Einspielen“).
 ### 🙋 Wunschplan und 🗓️ Dienstplan getrennt über alle Tage (KC-CLUB-DP-WUNSCH-PLAN)
