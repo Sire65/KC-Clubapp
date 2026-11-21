@@ -13367,7 +13367,7 @@ function idx0() { return lies("index.html"); }
   assert.ok(r2.rows[0].std === "1,5" && r2.rows[0].klein === "ges. 12,5" && r2.ueber === 1 && r2.fehl === 0.5 && r2.regelStd === 2 && r2.bedarfStd === 6, "Stunden je Zeile und Tag");
   assert.ok(/function dpdUebersicht\(tage, ges, gesBer\)/.test(programm) && /Stunden je Person – alle Tage/.test(programm) && /<td class="std \$\{r\.art\}">/.test(programm), "Stundenspalte und Blatt „Stunden je Person“");
   assert.ok(/#druck \.dpd-raster td\.a-gelb \{/.test(html) && /#druck \.dpd-sum \{/.test(html), "Ampel- und Übersichts-Stil im Druckblock");
-  assert.ok(/function dpdBedarf\(tage, von, bis\)/.test(programm) && /Regelzeit und Besetzung je Stunde/.test(programm) && /html = (?:bed \+ (?:dpdLueckenBlatt\(d\) \+ )?|\(art === "voll" \? bed \+ dpdLueckenBlatt\(d\) : ""\) \+ )blaetter\.flatMap/.test(programm) && /#druck \.dpd-bed \{/.test(html), "vorn das Blatt Regelzeit und Besetzung je Stunde");
+  assert.ok(/function dpdBedarf\(tage, von, bis(?:, teil = dpdSlots\(von, bis\), rechts = true)?\)/.test(programm) && /Regelzeit und Besetzung je Stunde/.test(programm) && /html = (?:bed \+ (?:dpdLueckenBlatt\(d\) \+ )?|\(art === "voll" \? bed \+ dpdLueckenBlatt\(d\) : (?:art === "plan" \? bed : )?""\) \+ )blaetter\.flatMap/.test(programm) && /#druck \.dpd-bed \{/.test(html), "vorn das Blatt Regelzeit und Besetzung je Stunde");
   assert.ok(/if \(t\.art !== "Markttag"\) \{ \/\/ Aufbau\/Nachbereitung: keine Vorgabe/.test(programm) && /So haben sich eingetragen:/.test(programm) && /"aus Wunschplänen, keine Vorgabe"/.test(programm), "Aufbau und Nachbereitung ohne Vorgabe, aus den Wunschplänen");
   assert.ok(/#druck:has\(\.dpd\) \{ padding: 0 !important; width: 297mm !important; \}/.test(html) && /#druck \.dpd-blatt \{[^}]*height: 210mm;[^}]*break-after: page;/.test(html), "je Blatt genau A4 quer");
   const druckBlock = html.slice(html.indexOf("  @media print {"), html.indexOf("\n  }\n", html.indexOf("  @media print {")));
@@ -13861,7 +13861,7 @@ assert.ok(/if \(!gezeigt && !nurZaehlen && !\(START_HASH && START_HASH !== "#"\)
   assert.ok(programm.includes(`onclick="druckZu();druckStarten('dpWunsch')"`) && programm.includes(`onclick="druckZu();druckStarten('dpPlan')"`), "Knöpfe im Ordner");
   const i = programm.indexOf("function dpdTag(d, von, bis, ges = {}, art = \"voll\")"), f = programm.slice(i, i + 3000);
   assert.ok(i > 0 && /if \(art === "wunsch"\)/.test(f) && /art === "plan" \? d\.leute\.filter\(\(x\) => x\.s\)/.test(f) && /const t = art === "plan" \? "leer"/.test(f), "Wunsch ohne Einteilung, Plan ohne Wunschfarben");
-  assert.ok(/html = \(art === "voll" \? bed \+ dpdLueckenBlatt\(d\) : ""\)/.test(programm), "Bedarfs- und Lückenblatt nur im großen Ausdruck");
+  assert.ok(/html = \(art === "voll" \? bed \+ dpdLueckenBlatt\(d\) : (?:art === "plan" \? bed : )?""\)/.test(programm), "Bedarfs- und Lückenblatt nur im großen Ausdruck (3.3.0: Besetzungsmatrix auch im Dienstplan)");
 }
 // 2.997.0 KC-CLUB-DP-WUNSCH-FREMD / KC-CLUB-DP-AUS-REGISTER (Hansi 21.11.: Anne und Leon ohne eigenen Wunschplan im Wunschplan leer; Karla/Fridbert nie im Sollplan)
 {
@@ -13897,7 +13897,7 @@ assert.ok(/if \(!gezeigt && !nurZaehlen && !\(START_HASH && START_HASH !== "#"\)
 {
   const regeln = seite.match(/#druck \.(?:dpd|dpl|dpe|ep)[^{]*\{[^}]*\}/g) || [];
   assert.ok(regeln.length > 40 && regeln.every((r) => !/linear-gradient/.test(r)), "keine Streifen/Verläufe in den Dienstplan-Druckregeln: " + regeln.filter((r) => /linear-gradient/.test(r)).join(" | ").slice(0, 200));
-  assert.ok(/const dpeRl = \(n\) =>/.test(programm) && (programm.match(/<td class="gr">\$\{dpeRl\(n\)\}/g) || []).length === 3 && /html #druck \.dv-zelle \{ background-image: none; \}/.test(seite), "Gitterlinien als Linien, Dienstzeiten-Übersicht ohne Streifen");
+  assert.ok(/const dpeRl = \(n(?:, v = 0)?\) =>/.test(programm) && (programm.match(/<td class="gr">\$\{dpeRl\(n(?:, v)?\)\}/g) || []).length === 3 && /html #druck \.dv-zelle \{ background-image: none; \}/.test(seite), "Gitterlinien als Linien, Dienstzeiten-Übersicht ohne Streifen");
 }
 // 3.0.0 KC-CLUB-DRUCK-TAG-GANZ (Hansi 21.11.: keinen Tag über zwei Seiten trennen)
 assert.ok(/const body = tage\.map\(\(t\) => `<tbody class="dpd-tag">/.test(programm) && /#druck \.dpd-raster tbody\.dpd-tag, [^{]*\{ break-inside: avoid; page-break-inside: avoid; \}/.test(seite), "jeder Tag eine unteilbare Einheit");

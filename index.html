@@ -3320,7 +3320,9 @@
     #druck .dpd-raster th, #druck .dpd-raster td { border: .15mm solid var(--lin); padding: 0; height: 5.4mm; font-variant-numeric: tabular-nums; }
     #druck .dpd.breit .dpd-raster th, #druck .dpd.breit .dpd-raster td { height: 5.6mm; }
     #druck .dpd-raster thead th { font-weight: 600; color: var(--mut); text-align: left; padding-left: .5mm; height: 4mm; }
-    #druck .dpd-raster thead th.t { border-left-color: transparent; } #druck .dpd-raster thead th.t.voll { border-left: .3mm solid var(--ink); color: var(--ink); }
+    /* 3.3.0 KC-CLUB-DP-PDF-MATRIX: Kopf zweizeilig („8 Uhr“ über :00 | :30), kräftige Linie je volle Stunde, dünne gestrichelte zur halben */
+    #druck .dpd-raster thead th.hk { color: var(--ink); padding-left: .6mm; } #druck .dpd-raster thead tr.hm th { height: 2.8mm; font-size: 4.8pt; font-weight: 400; text-align: center; padding: 0; color: var(--mut); }
+    #druck .dpd-raster .hv { border-left: .35mm solid #6d655c; } #druck .dpd-raster .hb { border-left: .2mm dashed #a89f93; }
     #druck .dpd-raster th.tag { text-align: left; vertical-align: top; padding: 1mm; border-right: .4mm solid var(--ink); font-weight: 400; }
     #druck .dpd-raster th.tag b { display: block; font-size: 8.5pt; } #druck .dpd-raster th.tag span { display: block; font-size: 6.5pt; line-height: 1.25; }
     #druck .dpd-raster th.tag .kind { color: var(--mut); text-transform: uppercase; letter-spacing: .04em; } #druck .dpd-raster th.tag .regel { font-weight: 700; margin-top: .6mm; }
@@ -3398,6 +3400,11 @@
     #druck .dpl-tab tbody tr:nth-child(even) td.text, #druck .dpl-tab tbody tr:nth-child(even) td.tag { background: #faf6f0; }
     #druck .dpl-tab tfoot td { border-top: .6mm solid var(--cd-rot, #741521); font-weight: 800; text-align: right; } #druck .dpl-tab tfoot td.std { text-align: center; color: #8b1a12; }
     #druck .dpl-tab sup, #druck .dpl-leg sup { font-size: 6pt; }
+    /* 3.3.0 KC-CLUB-DP-PDF-MATRIX: Kopf „8 Uhr“ mit :00 | :30, halbe Lücke als Schrägstrich (SVG, zwei Dreiecke – kein Verlauf) */
+    #druck .dpl-tab th.hk small.hh { display: flex; justify-content: space-between; } #druck .dpl-tab th.hk small.hh span + span { border-left: .2mm dashed #8a7f72; padding-left: .5mm; }
+    #druck .dpl-tab td.halb { position: relative; padding: 0; background: #fff; color: #8b1a12; font-weight: 800; font-size: 9pt; } #druck .dpl-halb { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+    #druck .dpl-tab td.halb span { position: absolute; z-index: 1; line-height: 1; } #druck .dpl-tab td.halb.h1 span { left: 1mm; top: .6mm; } #druck .dpl-tab td.halb.h2 span { right: 1mm; bottom: .6mm; }
+    #druck .dpl-leg i.halb { position: relative; overflow: hidden; }
     #druck .dpl-leg { display: flex; flex-wrap: wrap; gap: 5mm; margin: 2.5mm 0 0; font-size: 7.5pt; color: #5b544d; } #druck .dpl-leg i { display: inline-block; min-width: 6mm; height: 4.5mm; margin-right: 1.5mm; border: .25mm solid #8a7f72; font-style: normal; text-align: center; line-height: 4.5mm; vertical-align: middle; }
     #druck .dpl-leg i.rot { background: #f6d3d0; color: #8b1a12; font-weight: 800; } #druck .dpl-leg i.ok { background: #e3f1e6; color: #1f5a3e; } #druck .dpl-leg i.zu { background: #ece6de; }
     #druck .dpl-hinweis { margin-top: 2mm; padding: 1.5mm 3mm; border: .3mm solid var(--cd-beige-rand, #e0cfb9); border-left: 1.2mm solid var(--cd-rot, #741521); background: var(--cd-beige, #f3e9dc); font-size: 9pt; }
@@ -3417,9 +3424,11 @@
     #druck .dpe-tab .gr { position: relative; padding: 0; }
     #druck .dpd-raster tbody.dpd-tag, #druck .dpd-sum tr, #druck .dpl-tab tr { break-inside: avoid; page-break-inside: avoid; } /* KC-CLUB-DRUCK-TAG-GANZ: ein Tag nie über zwei Seiten */
     /* KC-CLUB-DRUCK-OHNE-STREIFEN: keine Verläufe/Streifen im Druck – Chrome legt jeden als seitengroßes Bild mit Maske ab (≈ 80 MB je Seite, Drucker hängt) */
-    #druck .dpe-tab .gr .rl { position: absolute; inset: 0; display: flex; pointer-events: none; } #druck .dpe-tab .gr .rl i { flex: 1; border-right: .2mm solid #efe6db; }
+    #druck .dpe-tab .gr .rl { position: absolute; inset: 0; display: flex; pointer-events: none; } #druck .dpe-tab .gr .rl i { flex: 1; border-right: .25mm solid #d9cab8; } #druck .dpe-tab .gr .rl i.d { border-right: .2mm dashed #e6dccf; }
     html #druck .dv-zelle { background-image: none; } html #druck .dv-bal.sperre { background: #f1948a; }
-    #druck .dpe-tab .achse { display: flex; } #druck .dpe-tab .achse i { flex: 1; font-style: normal; text-align: left; font-size: 6.5pt; } #druck .dpe-tab .achse i span { position: relative; left: -1.2mm; }
+    #druck .dpe-tab th.achse { padding: 0; } #druck .dpe-tab .achse { display: flex; } #druck .dpe-tab .achse i { flex: 1; font-style: normal; text-align: left; font-size: 6.5pt; border-left: .3mm solid #b9a58e; line-height: 1.05; }
+    #druck .dpe-tab .achse i.zwei { flex: 2; } #druck .dpe-tab .achse i span { display: block; padding-left: .6mm; font-weight: 700; color: #3a332d; white-space: nowrap; }
+    #druck .dpe-tab .achse i small { display: flex; font-size: 4.8pt; font-weight: 400; } #druck .dpe-tab .achse i small em { flex: 1; font-style: normal; text-align: center; } #druck .dpe-tab .achse i.zwei small em + em { border-left: .2mm dashed #cbbba7; }
     #druck .dpe-tab .wz td { height: 3.6mm; border-bottom: none; } #druck .dpe-tab .sz td { height: 4.6mm; border-bottom: .5mm solid #b9a58e; } #druck .dpe-tab .nm[rowspan] { border-bottom: .5mm solid #b9a58e; } #druck .dpe-tab .frei .nm { color: #8a8076; }
     #druck .dpe-tab .seg { position: absolute; top: .45mm; bottom: .45mm; border-radius: .7mm; font-size: 5.8pt; color: #5b4a3a; display: flex; align-items: center; padding-left: .8mm; white-space: nowrap; overflow: hidden; }
     #druck .dpe .pw { background: #ecd7b2; } #druck .dpe .pk { background: #f6ecd9; } #druck .dpe .pn { background: #fbf5ea; border: .2mm dashed #d9c4a0; } #druck .dpe .ps { background: #ebe6e1; color: #7a7068; }
@@ -3433,7 +3442,17 @@
     #druck .dpd-bed { border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 7pt; font-variant-numeric: tabular-nums; }
     #druck .dpd-bed th, #druck .dpd-bed td { border: .15mm solid var(--lin); padding: .6mm .5mm; text-align: center; vertical-align: middle; height: 9.4mm; }
     #druck .dpd-bed thead th { background: #f3e9dc; font-weight: 700; font-size: 6.5pt; height: auto; }
-    #druck .dpd-bed thead th:nth-child(1) { width: 17mm; } #druck .dpd-bed thead th:nth-child(2) { width: 25mm; } #druck .dpd-bed thead th:last-child { width: 78mm; }
+    #druck .dpd-bed col.tg { width: 16mm; } #druck .dpd-bed col.rz { width: 22mm; } #druck .dpd-bed col.bd { width: 50mm; } #druck .dpd.breit .dpd-bed col.bd { width: 70mm; }
+    /* 3.3.0 KC-CLUB-DP-PDF-MATRIX: Besetzungsmatrix halbstündig – Soll/eingeteilt, darunter V/H, Ampel wie im Tagesraster, +1 🎵 Konzertabend */
+    #druck .dpd-bed thead th.hk { text-align: left; padding-left: .8mm; } #druck .dpd-bed thead tr.hm th { font-size: 5pt; font-weight: 400; color: var(--mut); padding: 0 0 .2mm; background: #faf5ef; }
+    #druck .dpd-bed .hv { border-left: .4mm solid #6d655c; } #druck .dpd-bed .hb { border-left: .2mm dashed #a89f93; }
+    #druck .dpd-bed td.hv, #druck .dpd-bed td.hb { padding: .3mm 0; line-height: 1.1; white-space: nowrap; overflow: hidden; }
+    #druck .dpd-bed td.hv b, #druck .dpd-bed td.hb b { font-size: 7pt; } #druck .dpd.breit .dpd-bed td.hv b, #druck .dpd.breit .dpd-bed td.hb b { font-size: 9pt; }
+    #druck .dpd-bed td.hv small, #druck .dpd-bed td.hb small { font-size: 4.4pt; letter-spacing: -.03em; word-spacing: -.1em; color: inherit; opacity: .85; }
+    #druck .dpd.breit .dpd-bed td.hv small, #druck .dpd.breit .dpd-bed td.hb small { font-size: 5.6pt; letter-spacing: 0; word-spacing: 0; }
+    #druck .dpd-bed small.zs { color: #5b2d8c; font-weight: 700; opacity: 1; }
+    #druck .dpd-bed td.a-rot { background: var(--fehltbg); color: var(--fehlt); } #druck .dpd-bed td.a-gruen { background: #d4ecd9; color: #1f5a3e; } #druck .dpd-bed td.a-gelb { background: #fde7b0; color: #8a5a00; }
+    #druck .dpd-bed td.zu.hv, #druck .dpd-bed td.zu.hb { background: #fff; }
     #druck .dpd-bed th.tg, #druck .dpd-bed td.rz, #druck .dpd-bed td.bd { text-align: left; padding: .8mm 1.2mm; }
     #druck .dpd-bed small { display: block; font-size: 5.5pt; color: var(--mut); font-weight: 400; white-space: nowrap; }
     #druck .dpd-bed td b { font-size: 9pt; } #druck .dpd-bed td.rz b, #druck .dpd-bed td.bd b { font-size: 7pt; }
@@ -7279,7 +7298,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=3.2.0" data-v="3.2.0"></script>
+<script src="app.js?v=3.3.0" data-v="3.3.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

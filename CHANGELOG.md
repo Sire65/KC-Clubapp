@@ -1,5 +1,15 @@
 # Änderungen
 
+## 3.3.0 – 2026-11-21 – 🗓️ Dienstplan-PDF: Besetzungsmatrix, klare Uhrzeiten, halbe Lücken (KC-CLUB-DP-PDF-MATRIX) · 🔒 Speicher gesperrt
+Wunsch Hansi 21.11.: „halbstündig, jetzt bauen und sofort einspielen“.
+- **Besetzungsmatrix im verschickten Dienstplan:** Das Blatt „Regelzeit und Besetzung je Stunde“ steht jetzt auch im „🗓️ Dienstplan – alle Tage“ als erstes Blatt (bisher nur im großen Ausdruck) – **je halbe Stunde** eine Spalte (bisher nur die erste Halbstunde je Stunde). Je Zelle Soll/eingeteilt („3/2“), darunter klein „2 V · 1 H“, Färbung wie die Ampel im Tagesraster (rot fehlt, grün passt, gelb zu viel). Konzertabende (Zuschlag erhöht nur die Summe) zeigen „+1 🎵“ – so ist erklärt, warum V + H kleiner als das Soll ist. Bei „breit=2“ wie das Raster links/rechts mit Klebekante 15:30–16 Uhr.
+- **Klare Uhrzeiten:** In allen Halbstunden-Rastern (Dienstplan/Wunschplan, Besetzungsmatrix, Einsatzplan-Achse, „Hier fehlen noch Helfer“) ist der Kopf zweizeilig – oben „8 Uhr“ über beiden Halbstunden, darunter klein „:00 | :30“; kräftige Linie je volle Stunde, dünne gestrichelte zur halben Stunde.
+- **Halbe Lücken:** Fehlt in einer Stunde nur eine halbe Stunde, zeigt das Kästchen einen Schrägstrich und nur die betroffene Hälfte ist rot (erste Halbstunde oben links, zweite unten rechts) – als kleines SVG mit zwei Dreiecken, kein Farbverlauf (KC-CLUB-DRUCK-OHNE-STREIFEN). Bisher „½“.
+- Test: `tests/dp-pdf-matrix.test.mjs` (neu), Blöcke in `tests/app-vertrag.test.mjs` angepasst. Server-Version mitgezogen (keine Server-Änderung). Rückweg: App 3.2.0.
+
+### 🔒 Kein Programmfehler bei gesperrtem Speicher (KC-CLUB-SPEICHER-GESPERRT)
+Meldung 21.11. 16:05 (nicht angemeldet, Android/Chrome mit blockierten Website-Daten): der Sichtschutz las beim Zurückkommen `localStorage` ohne Schutz → „SecurityError“ als schwerwiegender Fehler. Jetzt über `lsLesen` (gibt bei Sperre einfach nichts zurück).
+
 ## 3.2.0 – 2026-11-21 – 📄 PDF-Knopf: ganze Blätter, kein Tag über zwei Seiten (KC-CLUB-PDF-BLATT-GANZ) · nur App
 Fund Hansi 21.11.: „Ich wollte gerade den PDF-Plan versenden. Da waren die Tage getrennt. Nur ganze Tage, nicht umbrechen auf 2 Seiten.“
 - Ursache: „📄 PDF speichern / teilen“ und „💬 In der Club-App senden“ zeichnen die Druckseite als ein großes Bild und schneiden es in A4-Stücke. Dabei kannte der Schnitt nur Zeilen, keine Blattgrenzen aus dem Stylesheet (`break-after: page`) – und die Vorschau gab jedem Blatt noch 12 mm Rand dazu. Randlose A4-Blätter (Dienstplan, Wunschplan, Einsatzplan, Lückenblatt) liefen so über und Tage landeten auf zwei Seiten.
