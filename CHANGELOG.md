@@ -1,5 +1,13 @@
 # Änderungen
 
+## 3.0.0 – 2026-11-21 – 🖨️ Dienstpläne drucken ohne Hänger: keine Streifen-Hintergründe mehr im Druck · kein Tag über zwei Seiten (KC-CLUB-DRUCK-OHNE-STREIFEN, KC-CLUB-DRUCK-TAG-GANZ) · nur App
+Hansi 21.11.: „Check nochmal, ob die PDF-Ausdrucke alle klappen und alle Seiten – bei mir war mal ein Hänger im Drucker.“
+- Prüfung aller Dienstplan-Ausdrucke (Wunschplan, Dienstplan, großer Ausdruck, Einsatzplan, Lückenblatt, Vorschläge; Admin und Mitglied) mit dem echten Planstand: alle Seiten da, keine leer, A4 quer.
+- **Ursache für Hänger gefunden:** gestreifte Hintergründe (gesperrt, Bereitschaft, „kein Bedarf“, Gitterlinien im Einsatzplan) legt Chrome als **seitengroße Bilder mit Transparenz-Maske** ab – entpackt rund **80 MB je Ausdruck** (allein das einseitige Lückenblatt 80 MB). Daran können Drucker hängen bleiben.
+- **Behoben:** im Druck einfarbige Flächen statt Streifen (gesperrt hellrot mit ×, Bereitschaft hellblau mit Linie, kein Bedarf grau), Gitterlinien im Einsatzplan als echte Linien. Ergebnis: **2,5–4,9 MB entpackt, 0,2–0,7 MB Datei**, keine seitengroßen Bilder mehr. Auch die Dienstzeiten-Übersicht druckt ohne Streifen.
+- **Kein Tag über zwei Seiten** (Hansi 21.11.: „trenne keine Tage … keinen Tagesumbruch, sonst verliert man die Übersicht“): jeder Tag ist im Druck eine unteilbare Einheit (eigener Tabellenblock, `break-inside: avoid`) – passt ein Tag nicht mehr aufs Blatt, kommt er ganz aufs nächste. Geprüft: alle Blätter passen genau auf eine Seite (1 und 2 Blätter breit).
+- Test: Block in `tests/app-vertrag.test.mjs` (keine Verläufe in den Druckregeln, Tag als Einheit). Rückweg: App 2.999.0.
+
 ## 2.999.0 – 2026-11-21 – 🗓️ Uhrzeit und Stunden in den Balken · am Ende Stunden laut Sollplan und „Hier fehlen noch Helfer“ · alle Mitglieder wieder sichtbar · 📣 Pläne für alle Mitglieder (KC-CLUB-DP-PLAN-STUNDEN, KC-CLUB-DP-PLAENE-FREI) · App + Server 2.999.0
 Hansi 21.11.: „Auf dem Dienstplan müssen auch die nicht geteilten drauf – das war nur für die Planungsphase. In die Balken des Sollplans Uhrzeiten und Stundenumfang, am besten im Wunschplan auch, und zuletzt eine Übersicht über die komplette Stundenauswertung nach Sollplan und wo noch Personen fehlen.“
 - **Alle sichtbar:** der Haken „🔒 Nur freigegebene Wünsche“ aus 2.998.0 ist wieder weg – im 🙋 Wunschplan stehen alle mit ihren selbst abgegebenen Zeiten (Freigabe galt nur für die Planungsphase). Wer keinen eigenen Wunschplan abgegeben hat (Andrea, Anne, Leon), bleibt leer.

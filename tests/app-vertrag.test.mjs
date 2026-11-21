@@ -13893,3 +13893,11 @@ assert.ok(/if \(!gezeigt && !nurZaehlen && !\(START_HASH && START_HASH !== "#"\)
   assert.ok(/\$\{dpdPlaeneKarte\(MD_D\?\.plaene\)\}/.test(programm) && /if \(DP\.plaene\) \$\("dpListe"\)\.insertAdjacentHTML\("afterbegin", dpdPlaeneKarte\(DP\.plaene\)\)/.test(programm), "Karte an beiden Stellen");
   assert.ok(/druckStarten\('dpPlan',\{frei:true\}\)/.test(programm) && /const d = await api\(frei \? "dp_plaene" : "dp_druck", \{\}\);/.test(programm) && /onclick="dpdFreigeben\(this\)"/.test(programm), "Druck aus dem freigegebenen Stand, Knopf für den Admin");
 }
+// 3.0.0 KC-CLUB-DRUCK-OHNE-STREIFEN (Hansi 21.11.: Hänger im Drucker) – Verläufe legt Chrome als seitengroße Bilder ab (~80 MB je Ausdruck)
+{
+  const regeln = seite.match(/#druck \.(?:dpd|dpl|dpe|ep)[^{]*\{[^}]*\}/g) || [];
+  assert.ok(regeln.length > 40 && regeln.every((r) => !/linear-gradient/.test(r)), "keine Streifen/Verläufe in den Dienstplan-Druckregeln: " + regeln.filter((r) => /linear-gradient/.test(r)).join(" | ").slice(0, 200));
+  assert.ok(/const dpeRl = \(n\) =>/.test(programm) && (programm.match(/<td class="gr">\$\{dpeRl\(n\)\}/g) || []).length === 3 && /html #druck \.dv-zelle \{ background-image: none; \}/.test(seite), "Gitterlinien als Linien, Dienstzeiten-Übersicht ohne Streifen");
+}
+// 3.0.0 KC-CLUB-DRUCK-TAG-GANZ (Hansi 21.11.: keinen Tag über zwei Seiten trennen)
+assert.ok(/const body = tage\.map\(\(t\) => `<tbody class="dpd-tag">/.test(programm) && /#druck \.dpd-raster tbody\.dpd-tag, [^{]*\{ break-inside: avoid; page-break-inside: avoid; \}/.test(seite), "jeder Tag eine unteilbare Einheit");

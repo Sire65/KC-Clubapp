@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.999.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "3.0.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -35537,14 +35537,15 @@ function dpdTag(d, von, bis, ges = {}, art = "voll") { // Zeilen eines Tages: je
 function dpdTabelle(tage, von, teil, letzte) {
   const S = dpdSlots(von, von + tage[0].rows[0].cells.length / 2), idx = teil.map((s) => S.indexOf(s)), rechts = teil[teil.length - 1] === letzte;
   const kopf = `<colgroup><col class="tag"><col class="wer">${teil.map(() => "<col>").join("")}${rechts ? '<col class="std">' : ""}</colgroup><thead><tr><th class="tag">Tag · Regelzeit</th><th class="wer">Mitglied</th>${teil.map((s) => `<th class="t${s % 1 ? "" : " voll"}">${s % 1 ? "" : s}</th>`).join("")}${rechts ? '<th class="std">Std.</th>' : ""}</tr></thead>`;
-  const body = tage.flatMap((t) => t.rows.map((r, i) => {
+  // 3.0.0 KC-CLUB-DRUCK-TAG-GANZ (Hansi 21.11.: „trenne keine Tage – keinen Tagesumbruch, sonst verliert man die Übersicht“): jeder Tag eigenes <tbody>, nie geteilt
+  const body = tage.map((t) => `<tbody class="dpd-tag">${t.rows.map((r, i) => {
     const tag = i ? "" : `<th class="tag" rowspan="${t.rows.length}"><b>${t.wt} ${t.dt}</b><span class="kind">${esc(t.name)}</span><span class="regel">${esc(t.regel)} Uhr</span><span class="zahl">${t.art === "Markttag" ? `Regelzeit ${dpdStd(t.regelStd)} Std.` : "aus Wunschplänen, keine Vorgabe"}</span><span class="zahl">Bedarf ${dpdStd(t.bedarfStd)} Std.</span>${t.wunschStd !== undefined ? `<span class="zahl">gewünscht ${dpdStd(t.wunschStd)} Std.</span>` : `<span class="zahl">eingeplant ${dpdStd(t.einpl)} Std.</span><span class="bil ${t.fehl ? "rot" : "gruen"}">● ${t.fehl ? "fehlt " + dpdStd(t.fehl) + " Std." : "richtig besetzt"}</span>${t.ueber ? `<span class="bil gelb">● ${dpdStd(t.ueber)} Std. zu viel</span>` : ""}`}</th>`;
     const zellen = idx.map((k, j) => { let [cl, txt] = r.cells[k];
       if (j === 0 && r.dienst && !txt && teil[0] > r.dienst[0] && teil[0] < r.dienst[1]) txt = `${dpdUhr(r.dienst[0])}–${dpdUhr(r.dienst[1])}`; // läuft vom linken Blatt herüber
       return `<td class="${cl}">${txt ? `<span>${esc(txt)}</span>` : ""}</td>`; }).join("");
     const std = rechts ? `<td class="std ${r.art}"><b>${esc(r.std)}</b><small>${esc(r.klein)}</small></td>` : "";
-    return `<tr class="${r.art}${i ? "" : " erste"}">${tag}<th class="wer ${r.art}">${esc(r.name)}<small>${esc(r.sub)}</small></th>${zellen}${std}</tr>`; })).join("");
-  return `<table class="dpd-raster">${kopf}<tbody>${body}</tbody></table>`;
+    return `<tr class="${r.art}${i ? "" : " erste"}">${tag}<th class="wer ${r.art}">${esc(r.name)}<small>${esc(r.sub)}</small></th>${zellen}${std}</tr>`; }).join("")}</tbody>`).join("");
+  return `<table class="dpd-raster">${kopf}${body}</table>`;
 }
 function dpdUebersichtWunsch(tage, ges) { // 2.996.0 letztes Blatt des Wunschplans: Wunschstunden je Person und Tag
   const namen = Object.keys(ges).filter((n) => ges[n] || tage.some((t) => t.leute.some((p) => p.n === n && (dpdVerdeckt(p) || /[pai]/.test(dpdW(p)))))).sort((a, b) => (ges[b] || 0) - (ges[a] || 0) || a.localeCompare(b, "de"));
@@ -35689,6 +35690,8 @@ async function dpdVorschlagBauen() {
 // ---------- 2.944.0 KC-CLUB-DP-EINSATZ (Wunsch Hansi „je Tag eine A4-Seite: alle Personen, oben die Wunschzeit, darunter die Sollzeit – mit Balken,
 // Besetzungsstatistik und Bereitschaft, sparsam aber übersichtlich, rechts W = Wunsch- und S = Soll-Stunden“): Einsatzplan aus dem Dienstplan-Stand (dp_druck).
 // Alle Personen stehen auf jeder Seite in fester Reihenfolge, auch ohne Angabe; Aushilfen grau gestreift; Spätdienst bis Schluss rechnet der Server.
+// 3.0.0 KC-CLUB-DRUCK-OHNE-STREIFEN: Gitterlinien als echte Linien statt Verlauf – Chrome legte jeden Verlauf als seitengroßes Bild ab (Drucker hing)
+const dpeRl = (n) => `<span class="rl">${"<i></i>".repeat(n)}</span>`;
 function dpdEinsatzBlatt(d) {
   const von0 = d.von ?? 8, alle = [...new Set(d.tage.flatMap((t) => t.leute.map((l) => l.n)))].sort((a, b) => a.localeCompare(b, "de"));
   const uhr = (v) => { const h = Math.floor(v), m = Math.round((v - h) * 60); return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`; }, kurz = (v) => uhr(v).replace(":00", "");
@@ -35707,11 +35710,11 @@ function dpdEinsatzBlatt(d) {
       const wStd = [...w.slice(i0, i1)].filter((c) => c === "p").length / 2, dauer = l?.s ? l.s[1] - l.s[0] : 0;
       const angaben = segs.length ? segs.map(([c, a, e]) => `<b class="seg ${ART[c]}" style="${pos(a, e)}">${e - a >= 3 ? `${ARTX[c]} ${kurz(v + a / 2)}–${kurz(v + e / 2)}` : ""}</b>`).join("") : '<span class="nix">keine Angabe</span>';
       const balken = l?.s ? `<b class="bal ${zone(l.z)}" style="${pos(idx(l.s[0]), idx(l.s[1]))}">${kurz(l.s[0])}–${kurz(l.s[1])}${dauer > 6 ? " ☕" : ""}</b>` : "";
-      return `<tr class="wz${l?.s ? "" : " frei"}"><td class="nm" rowspan="2">${esc(name)}<small>${esc(zusatz(l?.z))}</small></td><td class="zt art">Angaben</td><td class="gr">${angaben}</td><td class="st klein">W ${dpdStd(wStd)}</td></tr>
-        <tr class="sz${l?.s ? "" : " frei"}"><td class="zt">${l?.s ? `${uhr(l.s[0])}–${uhr(l.s[1])}` : "—"}</td><td class="gr">${balken}</td><td class="st">S ${l?.s ? dpdStd(dauer) : "0"}</td></tr>`;
+      return `<tr class="wz${l?.s ? "" : " frei"}"><td class="nm" rowspan="2">${esc(name)}<small>${esc(zusatz(l?.z))}</small></td><td class="zt art">Angaben</td><td class="gr">${dpeRl(n)}${angaben}</td><td class="st klein">W ${dpdStd(wStd)}</td></tr>
+        <tr class="sz${l?.s ? "" : " frei"}"><td class="zt">${l?.s ? `${uhr(l.s[0])}–${uhr(l.s[1])}` : "—"}</td><td class="gr">${dpeRl(n)}${balken}</td><td class="st">S ${l?.s ? dpdStd(dauer) : "0"}</td></tr>`;
     };
     const zahlen = (f) => `<div class="zahlen">${Array.from({ length: n }, (_, k) => f(k + i0)).join("")}</div>`;
-    const ber = (t.ber || []).length ? t.ber.map((z) => `<tr class="ber"><td class="nm">☎ ${esc(z.n)}<small>Bereitschaft</small></td><td class="zt">${uhr(z.s[0])}–${uhr(z.s[1])}</td><td class="gr"><b class="bal bs" style="${pos(Math.max(0, idx(z.s[0])), Math.min(n, idx(z.s[1])))}">Bereitschaft ${kurz(z.s[0])}–${kurz(z.s[1])}</b></td><td class="st"></td></tr>`).join("")
+    const ber = (t.ber || []).length ? t.ber.map((z) => `<tr class="ber"><td class="nm">☎ ${esc(z.n)}<small>Bereitschaft</small></td><td class="zt">${uhr(z.s[0])}–${uhr(z.s[1])}</td><td class="gr">${dpeRl(n)}<b class="bal bs" style="${pos(Math.max(0, idx(z.s[0])), Math.min(n, idx(z.s[1])))}">Bereitschaft ${kurz(z.s[0])}–${kurz(z.s[1])}</b></td><td class="st"></td></tr>`).join("")
       : '<tr class="ber"><td class="nm leer" colspan="4">☎ Bereitschaft: keine eingetragen</td></tr>';
     return `<section class="dpd-blatt dpe" style="--n:${n}">${cdKopf("Einsatzplan – Angaben und Einteilung", `${d.titel || "Weihnachtsmarkt"}${stand ? " · Stand " + stand : ""}`)}
       <div class="dpe-leg"><b>Angaben:</b><span><i class="pw"></i>Wunsch</span><span><i class="pk"></i>kann</span><span><i class="pn"></i>nur wenn nötig</span><span><i class="ps"></i>gesperrt</span>
