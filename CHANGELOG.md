@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.998.0 – 2026-11-21 – 🙋 Wunschplan zum Verschicken: nur selbst Abgegebenes, nur Freigegebenes, mit Bereitschaft (KC-CLUB-DP-WUNSCH-EIGEN) · App + Server 2.998.0
+Hansi 21.11. nach der Gesamtprüfung des Plans: „Ja, bau das so um und spiele auch sofort ein, denn ich möchte es später per PDF-Anhang versenden. Gab es auch jemand, der angehakt hat, dass er nicht möchte, dass seine Zeiten von anderen gesehen werden, und ist auch die Bereitschaft zu sehen?“
+- **Nur selbst Abgegebenes:** Gelten für jemanden Ersatz-Zeiten (Ruth: auf Hansis Wunsch ergänzte „wenn nötig“-Zeiten), zeigt der 🙋 Wunschplan nur, was sie selbst abgegeben hat. Ohne eigenen Wunschplan (Andrea, Anne, Leon) bleibt die Zeile leer – „nicht selbst eingetragen“. Für die Planung gelten die Zeiten weiter.
+- **🔒 Nur freigegebene Wünsche** (neuer Haken beim Drucken, Standard an): wer im Wunschplan „für Kollegen sichtbar“ nicht angekreuzt hat, steht leer da („nicht freigegeben“) – so kann der Plan verschickt werden. Ohne Haken: alle Angaben, Kopfzeile „alle Angaben, nicht weitergeben“.
+- **Bereitschaft im Wunschplan:** die eingetragene Bereitschaft steht je Tag mit drin (nicht bei verdeckten Personen).
+- Server: `wunschZeile()` in `dp-rechnen.js`, Felder `we` (eigene Wunschzeile) und `g` (nicht freigegeben) im Planstand; Rechenregel 11 – der Plan rechnet sich beim nächsten Öffnen einmal neu, die Einteilung bleibt gleich.
+- Test: Block in `tests/app-vertrag.test.mjs`. Rückweg: App + Server 2.997.0.
+
 ## 2.997.0 – 2026-11-21 – 🖼️ Chat-Fotos richtig speichern · ⏳ Senden erst, wenn die Anlage oben ist · 🙋 Wunschplan nur mit selbst Eingetragenem (KC-CLUB-CHATFOTO-SPEICHERN, KC-CLUB-SENDEN-NACH-UPLOAD, KC-CLUB-DP-WUNSCH-FREMD, KC-CLUB-DP-AUS-REGISTER) · App + Server 2.997.0
 Fertig seit 17.11. (PR #203), nie eingespielt – auf den Stand 2.996.0 gebracht (Hansi 21.11.: „Was ist das mit den alten Sachen?“).
 - **Fotos speichern** (Fund Hansi 17.11.: „Im Chat steht es als jpg – beim Herunterladen kommt immer html.“): Chat-Fotos bekommen beim Antippen dasselbe Fenster wie Datei-Anlagen – 👁️ Öffnen · 📤 Teilen · ⬇️ Auf dem Gerät speichern. Gespeichert wird die Bilddatei selbst, nicht mehr die Browserseite bzw. die Fehlerseite des abgelaufenen 10-Minuten-Links. Fehlt dem Namen die Endung, wird sie ergänzt (.jpg, .png, .webp, .gif, .pdf).
