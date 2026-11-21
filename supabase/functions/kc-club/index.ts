@@ -195,7 +195,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.998.0";
+const SERVER_VERSION = "2.999.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -4508,7 +4508,7 @@ const ZUGANG_AKTIONEN: Record<"basis" | "aushilfe", readonly string[]> = {
     "twinkey_gelesen", "fehler_melden", "fehler_katalog", "hilfe_anfordern", "feedback_meins", "feedback_senden", "feedback_neu", "vorfuehren_antwort", "vorfuehren_holen",
     "vorfuehren_senden", "vorfuehren_ende", "vorfuehren_bild", "schnappschuss_antwort", "schnappschuss_bild", "schnappschuss_ende", "fernbedienung_melden", "push_anmelden",
     "push_pruefen", "geraete_liste", "geraet_entfernen", "andere_geraete_abmelden", "push_abmelden", "push_test", "rw_test", "neues_geraet_antwort"],
-  aushilfe: ["mein_dienst", "dienstwunsch_laden", "dienstwunsch_speichern", "dienst_gruss", "dienste", "dienst_freigabe", "meine_eingaben",
+  aushilfe: ["mein_dienst", "dp_plaene", "dienstwunsch_laden", "dienstwunsch_speichern", "dienst_gruss", "dienste", "dienst_freigabe", "meine_eingaben",
     "eingaben_bestaetigen", "wunschbogen_mailen", "eingaben_ablegen", "fotos_neueste", "fotos_liste", "foto_oeffnen",
     "schulung_meine", "schulung_antwort", "gericht_zutat_setzen", "gericht_antwort", "tipp_stand", "tipp_mitmachen", "tipp_abgeben",
     "sondereinsatz_zusage", "stunden_melden", "mein_ausweis", "dienst_stand", "dienst_buchen", "dienst_korrigieren", "dienst_tausch_liste", "dienst_tausch_anbieten", "dienst_tausch_aktion", "dp_einzelplan", "ist_offen", "ist_antworten", "ist_feedback"], // 2.590.0: Aushilfen dürfen sich auch anmelden (Hansi 22.10.); 2.606.0: und Dienste tauschen
@@ -12452,6 +12452,29 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         }
         throw new Fehler("Unbekannte Aktion.", 400);
       }
+      // 2.999.0 KC-CLUB-DP-PLAENE-FREI (Hansi 21.11.: „wo können die Mitglieder diese Pläne in der App aufrufen – in Mein Dienstplan (Meins)
+      // oder Dienstpläne (Club)“): der Admin gibt den gerechneten Stand frei (Schnappschuss in kc_club_konfig „dp_plaene_frei“) – erst dann sehen
+      // alle Mitglieder 🙋 Wunschplan und 🗓️ Dienstplan zum Drucken/als PDF. Spätere Neuberechnungen ändern den freigegebenen Stand nicht, bis er neu freigegeben wird.
+      case "dp_plaene_freigeben": {
+        nurAdmin(ich);
+        if (p.zurueck === true) { await db.from("kc_club_konfig").delete().eq("schluessel", "dp_plaene_frei"); await protokoll(ich.person_id, "dp_plaene_zurueck", {}); return json({ ok: true, frei: null }); }
+        const { data: z } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "dp_druck").maybeSingle();
+        let w: any = z?.wert && typeof z.wert === "object" ? z.wert : null;
+        if (await dpDruckVeraltet(ich.person_id, w).catch(() => false)) { await dpDruckNeu(ich.person_id);
+          w = (await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "dp_druck").maybeSingle()).data?.wert; }
+        if (!w || !Array.isArray(w.tage) || !w.tage.length) throw new Fehler("Es gibt noch keinen gerechneten Plan zum Freigeben.", 409);
+        const frei = { am: jetzt(), stand: w.stand || null, plan: w };
+        const { error } = await db.from("kc_club_konfig").upsert({ schluessel: "dp_plaene_frei", wert: frei, geaendert_von: ich.person_id, geaendert_am: frei.am });
+        if (error) throw new Fehler("Die Freigabe konnte nicht gespeichert werden.", 500);
+        await protokoll(ich.person_id, "dp_plaene_frei", { stand: frei.stand });
+        return json({ ok: true, frei: { am: frei.am, stand: frei.stand } });
+      }
+      case "dp_plaene": {
+        const { data: z } = await db.from("kc_club_konfig").select("wert").eq("schluessel", "dp_plaene_frei").maybeSingle();
+        const f: any = z?.wert;
+        if (!f?.plan || !Array.isArray(f.plan.tage)) return json({ frei: null });
+        return p.nurInfo === true ? json({ frei: { am: f.am, stand: f.stand } }) : json({ ...f.plan, frei: { am: f.am, stand: f.stand } });
+      }
       case "dp_druck": {
         nurAdmin(ich);
         const { data: zeile } = await db.from("kc_club_person_einstellung").select("wert, geaendert_am").eq("person_id", ich.person_id).eq("schluessel", "dp_druck").maybeSingle();
@@ -14733,11 +14756,13 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const { data: sonderRoh } = await db.from("kc_dp_hour_reports").select("work_date,start_h,end_h,break_minutes,special_event_title,status,ablehngrund")
           .eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("person_id", ich.person_id).in("status", ["gemeldet", "bestaetigt", "abgelehnt"]).order("work_date", { ascending: false }).limit(100);
         const sonderMin = (x: any) => Math.max(0, Math.round((Number(x.end_h) - Number(x.start_h)) * 60)); // Pausen zählen wie in DP2 (bezahlt)
+        const { data: plFrei } = await db.from("kc_club_konfig").select("geaendert_am").eq("schluessel", "dp_plaene_frei").maybeSingle(); // 2.999.0 KC-CLUB-DP-PLAENE-FREI
         const uhrH = (h: number) => `${String(Math.floor(h % 24)).padStart(2, "0")}:${String(Math.round((h % 1) * 60)).padStart(2, "0")}`;
         const min = (a: unknown, b: unknown, pause: unknown) => { const t = (x: unknown) => { const [h, m] = String(x || "0:0").split(":").map(Number); return h * 60 + (m || 0); };
           let d = t(b) - t(a); if (d < 0) d += 1440; return Math.max(0, d - (Number(pause) || 0)); };
         const zeit = (x: any) => ({ datum: x.work_date, start: String(x.start_time || "").slice(0, 5), ende: String(x.end_time || "").slice(0, 5), bereich: x.area || null, ...(x.getauscht ? { getauscht: true } : {}) });
         return json({
+          plaene: plFrei ? { am: plFrei.geaendert_am } : null, // 2.999.0 KC-CLUB-DP-PLAENE-FREI: Wunschplan/Dienstplan für alle freigegeben
           wunsch: { veranstaltung: DW.name, phase: ph?.status || null, schluss: ph?.close_at || ph?.deadline_date || null,
             status: w?.status || null, tage: Array.isArray(w?.entries) ? w.entries.length : 0, abgegeben: w?.submitted_at || null, uebernommen: w?.taken_at || null },
           soll: { naechste: (soll ?? []).slice(0, 5).map(zeit), anzahl: (soll ?? []).length, monat: (soll ?? []).filter((x: any) => String(x.work_date).startsWith(monat)).length },
@@ -14868,7 +14893,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           .eq("org_id", ORG).eq("status", "published").in("person_id", gewaehlt).gte("work_date", von).lte("work_date", bis)
           .order("work_date").order("start_time") : { data: [] as any[] };
         const { data: letzte } = await db.from("kc_dp_plan_published").select("published_at").eq("org_id", ORG).eq("status", "published").order("published_at", { ascending: false }).limit(1);
+        const { data: plFrei } = await db.from("kc_club_konfig").select("geaendert_am").eq("schluessel", "dp_plaene_frei").maybeSingle(); // 2.999.0 KC-CLUB-DP-PLAENE-FREI
         return json({
+          plaene: plFrei ? { am: plFrei.geaendert_am } : null,
           von, bis, freigabe: freigegeben.has(ich.person_id),
           personen: sichtbar.map((m) => ({ person_id: m.person_id, name: m.display_name, vorname: vorname(m), ich: m.person_id === ich.person_id })),
           gewaehlt,

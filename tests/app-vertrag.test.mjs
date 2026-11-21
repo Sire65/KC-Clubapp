@@ -5921,7 +5921,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\) \|\| Number\(r\.headers\?\.get\?\.\("x-club-ms"\)\);.{0,200}schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693|694|695|696|699|709|710|712|721|722|723|724|726|728|729|730|731|736|738|739|740|741|743|754|755|760|761|762|763|764|765|766|772|773|774|775|776|781|783|784|785|786|789|790|792|795|796|799|800|802|804|806|809|810|813|814|817|818|822|824|829|830|833|834|835|839|840|841|842|843|844|845|846|850|851|857|859|862|863|865|869|870|871|872|878|885|886|887|893|897|899|900|901|902|903|907|909|912|921|934|935|936|938|939|942|943|944|946|947|950|953|954|955|956|957|962|964|966|967|966|968|969|970|971|972|973|974|975|977|978|980|981|982|983|984|985|986|987|988|989|990|991|993|994|995|997|998)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693|694|695|696|699|709|710|712|721|722|723|724|726|728|729|730|731|736|738|739|740|741|743|754|755|760|761|762|763|764|765|766|772|773|774|775|776|781|783|784|785|786|789|790|792|795|796|799|800|802|804|806|809|810|813|814|817|818|822|824|829|830|833|834|835|839|840|841|842|843|844|845|846|850|851|857|859|862|863|865|869|870|871|872|878|885|886|887|893|897|899|900|901|902|903|907|909|912|921|934|935|936|938|939|942|943|944|946|947|950|953|954|955|956|957|962|964|966|967|966|968|969|970|971|972|973|974|975|977|978|980|981|982|983|984|985|986|987|988|989|990|991|993|994|995|997|998|999)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -13359,7 +13359,7 @@ function idx0() { return lies("index.html"); }
   assert.equal(f.dpdBereiche(tag, 8), "9–11", "Regelzeit aus dem Bedarf");
   assert.equal(r.fehl, 1, "fehlende Stunden");
   assert.deepEqual(r.rows.map((x) => x.art), ["p", "b", "s", "f"], "Person, Bereitschaft, Bedarf, Ampel");
-  assert.ok(r.rows[0].cells[2][0].includes("dienst anf") && r.rows[0].cells[2][1] === "9–10:30" && r.rows[0].cells[5][0].startsWith("unav") && r.rows[0].cells[5][1] === "×", "Dienst mit Zeit, Sperre mit ×");
+  assert.ok(r.rows[0].cells[2][0].includes("dienst anf") && r.rows[0].cells[2][1] === "9–10:30 · 1,5 h" && r.rows[0].cells[5][0].startsWith("unav") && r.rows[0].cells[5][1] === "×", "Dienst mit Zeit, Sperre mit ×");
   assert.deepEqual(r.rows[3].cells.map((c) => c[1]), ["", "", "✓", "−1", "−1", "✓"], "Ampel: fehlende Personen rot, passend grün");
   // 2.646.0 KC-CLUB-DP-DRUCK-STUNDEN: rechts Stunden (Tag + gesamt), Ampel auch für zu viel, vorne Regelzeit/Bedarf/eingeplant, letztes Blatt Stunden je Person
   const r2 = f.dpdTag({ ...tag, besetzt: [0, 1, 3, 2, 4, 3], fehlt: [0, 0, 0, 1, 0, 0] }, 8, 11, { A: 12.5 });
@@ -13857,7 +13857,7 @@ assert.ok(/if \(!gezeigt && !nurZaehlen && !\(START_HASH && START_HASH !== "#"\)
 }
 // 2.996.0 KC-CLUB-DP-WUNSCH-PLAN (Hansi 21.11.: Wunschplan und berechneter Plan getrennt über alle Tage)
 {
-  assert.ok(/dpWunsch: \{ titel: "🙋 Wunschplan – alle Tage"[^\n]*bauen: \(\) => dpdBauen\("wunsch"\) \}/.test(programm) && /dpPlan: \{ titel: "🗓️ Dienstplan – alle Tage"[^\n]*bauen: \(\) => dpdBauen\("plan"\) \}/.test(programm), "zwei Druckarten");
+  assert.ok(/dpWunsch: \{ titel: "🙋 Wunschplan – alle Tage"[^\n]*bauen: \((?:o, p)?\) => dpdBauen\("wunsch"(?:, p\?\.frei)?\) \}/.test(programm) && /dpPlan: \{ titel: "🗓️ Dienstplan – alle Tage"[^\n]*bauen: \((?:o, p)?\) => dpdBauen\("plan"(?:, p\?\.frei)?\) \}/.test(programm), "zwei Druckarten");
   assert.ok(programm.includes(`onclick="druckZu();druckStarten('dpWunsch')"`) && programm.includes(`onclick="druckZu();druckStarten('dpPlan')"`), "Knöpfe im Ordner");
   const i = programm.indexOf("function dpdTag(d, von, bis, ges = {}, art = \"voll\")"), f = programm.slice(i, i + 3000);
   assert.ok(i > 0 && /if \(art === "wunsch"\)/.test(f) && /art === "plan" \? d\.leute\.filter\(\(x\) => x\.s\)/.test(f) && /const t = art === "plan" \? "leer"/.test(f), "Wunsch ohne Einteilung, Plan ohne Wunschfarben");
@@ -13867,7 +13867,7 @@ assert.ok(/if \(!gezeigt && !nurZaehlen && !\(START_HASH && START_HASH !== "#"\)
 {
   assert.ok(/const ausReg = await dienstAusnahmen\(\);\s*const aus = \(pid: string\) => pk\[pid\]\?\.aus === true \|\| ausReg\.has\(pid\);/.test(server), "Register-Ausnahmen nie einplanen");
   assert.ok(/v\?\.wunschFremd === true/.test(server) && /if \(fremd\.has\(p\.n\)\) p\.f = 1;/.test(server), "fremd eingesetzte Zeiten markiert");
-  assert.ok(/const dpdW = \(p\) => \((?:p\.f|dpdVerdeckt\(p\)) \? "-"\.repeat\(p\.w\.length\) : p\.w(?: \|\| p\.w| \|\| p\.we|)/.test(programm) && /dpdVerdeckt = \(p\) => !!\(p\.f/.test(programm) && /DPD_ART\[dpdW\(p\)\[i\]\]/.test(programm) && /p\.f \? "nicht selbst eingetragen"/.test(programm), "im Wunschplan leer");
+  assert.ok(/const dpdW = \(p\) => \((?:p\.f|dpdVerdeckt\(p\)) \? "-"\.repeat\(p\.w\.length\) : p\.w(?: \|\| p\.w| \|\| p\.we|)/.test(programm) && /dpdVerdeckt = \(p\) => !!\(p\.f/.test(programm) && /DPD_ART\[dpdW\(p\)\[i\]\]|cells: dpdWunschZellen\(dpdW\(p\), S, zu\)/.test(programm) && /p\.f \? "nicht selbst eingetragen"/.test(programm), "im Wunschplan leer");
 }
 // 2.998.0 KC-CLUB-DP-WUNSCH-EIGEN (Hansi 21.11.: Wunschplan zum Verschicken – nur selbst Abgegebenes, nur Freigegebenes, mit Bereitschaft)
 {
@@ -13876,5 +13876,20 @@ assert.ok(/if \(!gezeigt && !nurZaehlen && !\(START_HASH && START_HASH !== "#"\)
     "--aapppuuu" + "-".repeat(20), "gleiche Rangfolge wie im Plan");
   assert.ok(/share_with_colleagues"\)\.eq\("org_id", ORG\)/.test(server) && /p\.we = wunschZeile\(eigenW\.get\(p\.n\)/.test(server) && /if \(nichtFrei\.has\(p\.n\)\) p\.g = 1;/.test(server) && /if \(e\.length\) eigenW\.set\(n, e\); else fremd\.add\(n\);/.test(server), "Server liefert we, g und f");
   assert.ok(/const dpdVerdeckt = \(p\) => !!\(p\.f \|\| \(DPD\.frei && p\.g\)\);/.test(programm) && /const dpdW = \(p\) => \(dpdVerdeckt\(p\) \? "-"\.repeat\(p\.w\.length\) : p\.we \|\| p\.w\);/.test(programm), "Wunschplan zeigt nur Eigenes und Freigegebenes");
-  assert.ok(/id="dpdNurFrei"/.test(programm) && /DPD\.frei = art === "wunsch" && DPD\.nurFrei;/.test(programm) && /sub: "Bereitschaft \(eingetragen\)"/.test(programm), "Haken und Bereitschaft");
+  assert.ok(/DPD\.frei = false;/.test(programm) && !/id="dpdNurFrei"/.test(programm) && /sub: "Bereitschaft \(eingetragen\)"/.test(programm), "2.999.0: niemand ausgeblendet, Bereitschaft drin");
+}
+// 2.999.0 KC-CLUB-DP-PLAN-STUNDEN (Hansi 21.11.: Uhrzeit und Stunden in den Balken, zuletzt Stunden laut Sollplan und Lücken)
+{
+  assert.ok(/txt = `\$\{dpdUhr\(a\)\}–\$\{dpdUhr\(b\)\} · \$\{dpdStd\(b - a\)\} h`;/.test(programm), "Balken mit Stunden");
+  assert.ok(/function dpdWunschZellen\(w, S, zu\)/.test(programm) && /cells: dpdWunschZellen\(dpdW\(p\), S, zu\)/.test(programm), "Wunschblöcke mit Uhrzeit");
+  assert.ok(/Stunden je Person laut Sollplan – alle Tage/.test(programm) && /dpdUebersicht\(tageP, gesP, gesBer\)/.test(programm) && /\+ \(art === "voll" \? "" : dpdLueckenBlatt\(d\)\)/.test(programm), "zum Schluss Sollplan-Stunden und Lücken");
+  assert.ok(/td\.anf:is\(\.pref, \.avai, \.if_n\):not\(\.dienst\) span/.test(seite), "Text über den Nachbarzellen lesbar");
+}
+// 2.999.0 KC-CLUB-DP-PLAENE-FREI (Hansi 21.11.: Pläne für Mitglieder unter Meins → Mein Dienst und Club → Dienstpläne)
+{
+  assert.ok(/case "dp_plaene_freigeben": \{\s*nurAdmin\(ich\);/.test(server) && /schluessel: "dp_plaene_frei", wert: frei/.test(server) && /case "dp_plaene": \{/.test(server), "Freigabe nur Admin, Lesen für alle");
+  assert.ok(/aushilfe: \["mein_dienst", "dp_plaene",/.test(server), "auch Aushilfen");
+  assert.ok((server.match(/plaene: plFrei \? \{ am: plFrei\.geaendert_am \} : null/g) || []).length === 2, "Mein Dienst und Dienstpläne kennen die Freigabe");
+  assert.ok(/\$\{dpdPlaeneKarte\(MD_D\?\.plaene\)\}/.test(programm) && /if \(DP\.plaene\) \$\("dpListe"\)\.insertAdjacentHTML\("afterbegin", dpdPlaeneKarte\(DP\.plaene\)\)/.test(programm), "Karte an beiden Stellen");
+  assert.ok(/druckStarten\('dpPlan',\{frei:true\}\)/.test(programm) && /const d = await api\(frei \? "dp_plaene" : "dp_druck", \{\}\);/.test(programm) && /onclick="dpdFreigeben\(this\)"/.test(programm), "Druck aus dem freigegebenen Stand, Knopf für den Admin");
 }

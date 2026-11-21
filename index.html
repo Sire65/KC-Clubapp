@@ -3330,6 +3330,8 @@
     #druck .dpd-raster td.dienst.anf.end { box-shadow: inset 0 0 0 .8mm var(--dienst); }
     #druck .dpd-raster td.dienst span, #druck .dpd-raster td.ber span { position: absolute; left: 1mm; top: 50%; transform: translateY(-50%); z-index: 1; font-weight: 700; font-size: 6pt; padding: 0 .6mm; background: #fff; color: var(--dienst); border-radius: .6mm; }
     #druck .dpd-raster td.ber { background: repeating-linear-gradient(45deg, var(--berbg) 0 .6mm, #fff .6mm 1.4mm); } #druck .dpd-raster td.ber span { color: var(--ber); }
+    /* 2.999.0 KC-CLUB-DP-PLAN-STUNDEN: Uhrzeit und Stunden am Anfang jedes Wunschblocks – über den Nachbarzellen lesbar */
+    #druck .dpd-raster td.anf:is(.pref, .avai, .if_n):not(.dienst) span { position: absolute; left: .6mm; top: 50%; transform: translateY(-50%); z-index: 1; font-size: 5.6pt; font-weight: 600; color: #333; padding: 0 .4mm; background: rgba(255,255,255,.75); border-radius: .6mm; }
     #druck .dpd-raster tr.s td { font-size: 5.5pt; color: var(--mut); }
     #druck .dpd-raster td.fehlt { background: var(--fehltbg); color: var(--fehlt); font-weight: 800; font-size: 7pt; }
     #druck .dpd-fuss { margin-top: 1.5mm; font-size: 6.5pt; color: var(--mut); border-top: .3mm dashed var(--mut); padding-top: 1mm; }
@@ -7264,7 +7266,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.998.0" data-v="2.998.0"></script>
+<script src="app.js?v=2.999.0" data-v="2.999.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>
