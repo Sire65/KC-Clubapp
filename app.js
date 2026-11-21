@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.995.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.996.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -18094,7 +18094,7 @@ function rkSchalten(k, an) {
 function rkAufbauen(z) {
   const w = z.w, an = z.immer || rkAn(z.schluessel);
   const sch = $("setRk" + z.schluessel[0].toUpperCase() + z.schluessel.slice(1)); if (sch) sch.checked = an; // Schalter unter 🧩 Startseite & Ansicht
-  if ($("setRkRolle")) $("setRkRolle").checked = rkRolleAn(); if ($("setRkRast")) $("setRkRast").checked = einst("rkRast", true); // KC-CLUB-ROLLKARTEI-ROLLE
+  if ($("setRkRolle")) $("setRkRolle").checked = rkRolleAn(); if ($("setRkRast")) $("setRkRast").checked = einst("rkRast", true); if ($("setRkGross")) $("setRkGross").checked = einst("rkGross", true); // KC-CLUB-ROLLKARTEI-ROLLE/-GROSS
   if (z.knopf) { const tx = an ? (z.schluessel === "einst" ? "Übersicht" : "Liste") : "Kartei"; if (z.knopf.querySelector(".kl-i")) klSetzen(z.knopf, an ? "☰" : "🗂️", tx, tx); else z.knopf.textContent = (an ? "☰ " : "🗂️ ") + tx; /* 2.729.0 */ z.knopf.title = an ? "Als gewohnte Liste zeigen" : "Als Rollkartei zeigen"; }
   if (z.schluessel === "einst") setTimeout(() => { try { euModus(); } catch {} }, 0); // 2.552.0 KC-CLUB-EINST-UEBERSICHT: Übersicht ↔ Kartei
   if (!an) { if (z.an) rkAbbauen(z); return; }
@@ -18159,7 +18159,7 @@ function rkStellen(z, still) {
   z.reiter.querySelectorAll(".rk-tab").forEach((b, i) => { b.classList.toggle("an", i === z.i); b.setAttribute("aria-selected", i === z.i); });
   z.reiter.querySelector(".rk-tab.an")?.scrollIntoView({ block: "nearest", inline: "center" });
   z.platz.querySelector(".rk-zahl").textContent = `${z.i + 1} / ${n}`;
-  if (z.rolle) { z.griffe?.forEach((g) => (g.hidden = true)); if (!z.lauf) z.p = z.i; rkRolleZeichnen(z); } // KC-CLUB-ROLLKARTEI-ROLLE: Lage aus z.i (auch wenn andere Stellen z.i setzen)
+  if (z.rolle) { z.griffe?.forEach((g) => (g.hidden = true)); if (!z.lauf) z.p = z.i; rkRolleZeichnen(z); if (!z.lauf) rkRolleRuhe(z); } // KC-CLUB-ROLLKARTEI-ROLLE: Lage aus z.i (auch wenn andere Stellen z.i setzen)
   try { z.opts?.vorn?.(z.karten[z.i], z); } catch {}
 }
 // i darf über das Ende hinaus zeigen (Überlauf); richtung: 1 = vorwärts, -1 = rückwärts, ohne = kürzester Weg (Reiter)
@@ -18225,6 +18225,7 @@ function rkKlick() {
 // gedreht wird dann am Stapel oben, an der nächsten Karte unten, an den Reitern oder ▲▼. Inhalt und Funktionen der Karten bleiben unverändert.
 // RÜCKWEG: je Gerät ⚙️ → Rollkartei → „🛞 Neue Rolle“ aus (dann wieder die klassische Rollkartei 2.180.0 mit Rad); für alle: RK_ROLLE_STANDARD = false.
 const RK_ROLLE_STANDARD = true, RK_STAPEL = 14, RK_LUECKE = 10, RK_BLICK = 72; // Stapelstufe, Abstand zur nächsten Karte, sichtbarer Teil der nächsten Karte (px)
+const RK_STREIFEN = 30, RK_RUHE_MS = 650, RK_GROSS_MS = 280; // KC-CLUB-ROLLKARTEI-GROSS: Streifen der nächsten Karte, Wartezeit bis „groß“, Dauer des Wachsens
 const rkRolleAn = () => einst("rkRolle", RK_ROLLE_STANDARD);
 const rkBedienText = () => rkRolleAn() ? "mit dem Finger nach oben schieben, sie rastet auf jeder Karte ein (oder Buchstaben oben, ▲▼)" : "wischen, antippen oder ▲▼ am Rad";
 function rkRolleSetzen(an) {
@@ -18252,14 +18253,14 @@ function rkRolleEinrichten(z) {
   z.zaehler = document.createElement("div"); z.zaehler.className = "rk-zaehler";
   z.zaehler.innerHTML = `<button type="button" data-r="-1" aria-label="Vorige Karte">▲</button><span class="rk-z-zahl" aria-live="polite"></span><button type="button" data-r="1" aria-label="Nächste Karte">▼</button>`;
   z.zaehler.querySelectorAll("[data-r]").forEach((b) => (b.onclick = (e) => { e.stopPropagation(); rkGehe(z, z.i + Number(b.dataset.r), Number(b.dataset.r)); }));
-  z.platz.appendChild(z.zaehler);
+  z.w.insertBefore(z.zaehler, z.platz); // neben den Karten (nicht im Platz – sonst liegt die große Karte darüber)
   const w = z.w;
   // Finger/Maus: senkrecht ziehen. Hat die vordere Karte mehr Inhalt, scrollt der Finger erst ihren Inhalt – am Ende rollt er nahtlos weiter
   // zur nächsten Karte (wie am iPad); zurück genauso. So gibt es keinen Streit mehr zwischen „Karte lesen“ und „Rolle drehen“.
   w.addEventListener("pointerdown", z.pd = (e) => {
     if (!z.rolle || !z.an || e.button > 0 || !rkRolleImFeld(z, e.clientX, e.clientY)) return;
-    rkRolleInnenHalt(z);
-    z.zug = { id: e.pointerId, y0: e.clientY, x0: e.clientX, y: e.clientY, p0: z.p, zieht: false, gerollt: false, spur: [[performance.now(), e.clientY]], ziel: e.target };
+    rkRolleInnenHalt(z); clearTimeout(z.grossUhr);
+    z.zug = { id: e.pointerId, y0: e.clientY, x0: e.clientX, y: e.clientY, p0: z.p, zieht: false, gerollt: false, geschrumpft: false, spur: [[performance.now(), e.clientY]], ziel: e.target };
   });
   w.addEventListener("pointermove", z.pm = (e) => {
     const g = z.zug; if (!g || g.id !== e.pointerId) return;
@@ -18270,6 +18271,10 @@ function rkRolleEinrichten(z) {
     if (ganz && k && k.scrollHeight > k.clientHeight + 2) { // erst den Karteninhalt
       const t = rest > 0 ? Math.min(rest, k.scrollHeight - k.clientHeight - k.scrollTop) : Math.max(rest, -k.scrollTop);
       if (t) { k.scrollTop += t; rest -= t; }
+    }
+    if (rest && (z.g || 0) > 0) { // große Karte: erst fließend zurückschrumpfen (≈ 60 px Weg), dann rollen
+      cancelAnimationFrame(z.grossRaf || 0); const t = Math.sign(rest) * Math.min(Math.abs(rest), z.g * 60);
+      z.g = Math.max(0, z.g - Math.abs(t) / 60); rest -= t; g.geschrumpft = true; rkRolleZeichnen(z);
     }
     if (rest) { z.p += rest / schritt; g.gerollt = true; rkRolleZeichnen(z); }
     g.spur.push([performance.now(), e.clientY]); if (g.spur.length > 6) g.spur.shift();
@@ -18285,7 +18290,7 @@ function rkRolleEinrichten(z) {
     z.klickSperre = performance.now(); // nach dem Ziehen keinen Klick auslösen
     const s = g.spur, a = s[0], b = s[s.length - 1], dt = Math.max(16, b[0] - a[0]), schritt = (z.kh || 300) + RK_LUECKE;
     const vPx = performance.now() - b[0] > 90 ? 0 : -(b[1] - a[1]) / dt; // px je ms (nach oben = positiv)
-    if (!g.gerollt && Math.abs(z.p - Math.round(z.p)) < 0.002) return rkRolleInnen(z, vPx); // nur gelesen: Inhalt läuft mit Schwung aus
+    if (!g.gerollt && Math.abs(z.p - Math.round(z.p)) < 0.002) { if (g.geschrumpft) rkRolleGross(z, 1); else rkRolleRuhe(z); return rkRolleInnen(z, vPx); } // nur gelesen: Inhalt läuft mit Schwung aus; kurz angezogen → wieder groß
     const weit = Math.max(-4, Math.min(4, vPx / schritt * 1000 * 0.22)); // Schwung: schneller Wisch läuft über mehrere Karten
     let ziel = Math.round(z.p + weit); if (ziel === Math.round(g.p0) && Math.abs(z.p - g.p0) > 0.18) ziel += z.p > g.p0 ? 1 : -1; // kleiner, bewusster Zug reicht für eine Karte
     rkRolleFahren(z, ziel);
@@ -18294,10 +18299,10 @@ function rkRolleEinrichten(z) {
   w.addEventListener("click", z.kl = (e) => { if (z.klickSperre && performance.now() - z.klickSperre < 350) { e.stopPropagation(); e.preventDefault(); } }, true);
 }
 function rkRolleAbbauen(z) {
-  if (!z.rolle) return; rkRolleHalt(z); z.rolle = false; const w = z.w; w.classList.remove("rk-rolle");
+  if (!z.rolle) return; rkRolleHalt(z); clearTimeout(z.grossUhr); cancelAnimationFrame(z.grossRaf || 0); z.g = 0; z.rolle = false; const w = z.w; w.classList.remove("rk-rolle", "rk-gross");
   for (const [t, f] of [["pointerdown", z.pd], ["pointermove", z.pm], ["pointerup", z.pu], ["pointercancel", z.pc]]) if (f) w.removeEventListener(t, f);
   if (z.kl) w.removeEventListener("click", z.kl, true); z.zaehler?.remove(); z.zaehler = null; z.zug = null;
-  (z.karten || []).forEach((d) => { d.style.transform = d.style.opacity = d.style.zIndex = d.style.clipPath = d.style.visibility = ""; d.classList.remove("rk-scroll"); });
+  (z.karten || []).forEach((d) => { d.style.transform = d.style.opacity = d.style.zIndex = d.style.clipPath = d.style.visibility = d.style.height = ""; d.classList.remove("rk-scroll"); });
 }
 const rkRolleImFeld = (z, x, y) => { const r = z.platz?.getBoundingClientRect(); return !!r && y >= r.top && y <= r.bottom && x >= r.left && x <= r.right; };
 function rkRolleMasse(z) {
@@ -18307,22 +18312,28 @@ function rkRolleMasse(z) {
   const oben = 3 * RK_STAPEL + 10; z.kh = Math.max(180, h - oben - RK_LUECKE - RK_BLICK);
   z.w.style.setProperty("--rk-oben", z.platz.offsetTop + oben + "px"); z.w.style.setProperty("--rk-h", z.kh + "px");
   z.platzUnten = z.platz.offsetTop + h; z.oben = z.platz.offsetTop + oben;
+  if (z.zaehler) z.zaehler.style.top = z.platz.offsetTop - 14 + "px"; // über der Kartenkante, nie verdeckt
   (z.karten || []).forEach((d) => d.classList.toggle("rk-scroll", d.scrollHeight > d.clientHeight + 2));
   rkRolleZeichnen(z);
 }
 // Lage jeder Karte aus der (gebrochenen) Position p: 0 = vorn, >0 kommend (unten), <0 gelesen (oben im Stapel). Endlos wie bisher.
 function rkRolleZeichnen(z) {
   const n = z.karten?.length || 0; if (!n || !z.rolle) return;
-  const H = z.kh || 300, schritt = H + RK_LUECKE, sichtUnten = (z.platzUnten || 0) - (z.oben || 0);
+  const H = z.kh || 300, sichtUnten = (z.platzUnten || 0) - (z.oben || 0);
+  // KC-CLUB-ROLLKARTEI-GROSS (2.996.0): g = 0…1 – bleibt eine Karte stehen, wächst sie groß nach vorn (Stapel tritt zurück, unten bleibt ein Streifen der nächsten)
+  const g = Math.max(0, Math.min(1, z.g || 0)), e1 = g * (3 * RK_STAPEL + 4), e2 = g * (RK_BLICK - RK_STREIFEN), schritt = H + RK_LUECKE + e2;
   z.karten.forEach((d, i) => {
     let a = (((i - z.p) % n) + n) % n; if (a > n / 2 + 0.0001) a -= n; // a: Abstand zur vorderen Stelle (−: gelesen/oben, +: kommend/unten)
-    let y, s = 1, o = 1, zi;
-    if (a >= 0) { y = a <= 1 ? a * schritt : schritt + (a - 1) * (RK_BLICK + 30); o = a <= 1 ? 1 : Math.max(0, 1 - (a - 1) * 2.5); zi = 200 - Math.round(a * 10); }
-    else { const t = Math.min(-a, 3); y = -t * RK_STAPEL; s = 1 - t * 0.045; o = -a > 3 ? Math.max(0, 1 - (-a - 3) * 2) : 1 - t * 0.14; zi = 150 - Math.round(-a * 10); }
-    const unten = Math.max(0, H - (sichtUnten - y)); // was unter den Platz ragt, abschneiden
+    let y, s = 1, o = 1, zi, hoch = 0;
+    if (Math.abs(a) < 0.0005) { y = -e1; hoch = g > 0 ? H + e1 + e2 : 0; zi = 200; }
+    else if (a > 0) { y = a <= 1 ? a * schritt : schritt + (a - 1) * (RK_BLICK + 30); o = a <= 1 ? 1 : Math.max(0, 1 - (a - 1) * 2.5); zi = 200 - Math.round(a * 10); }
+    else { const t = Math.min(-a, 3); y = -t * RK_STAPEL - e1; s = 1 - t * 0.045; o = (-a > 3 ? Math.max(0, 1 - (-a - 3) * 2) : 1 - t * 0.14) * (1 - g); zi = 150 - Math.round(-a * 10); }
+    const unten = Math.max(0, (hoch || H) - (sichtUnten - y)); // was unter den Platz ragt, abschneiden
+    d.style.height = hoch ? hoch.toFixed(1) + "px" : "";
     d.style.transform = `translate3d(0, ${y.toFixed(1)}px, 0) scale(${s.toFixed(3)})`; d.style.opacity = o.toFixed(3); d.style.zIndex = zi;
     d.style.clipPath = unten > 0 ? `inset(0 0 ${unten.toFixed(1)}px 0 round 0 0 16px 16px)` : ""; d.style.visibility = o < 0.02 ? "hidden" : "";
   });
+  z.w.classList.toggle("rk-gross", g > 0.5);
   const i = ((Math.round(z.p) % n) + n) % n;
   if (i !== z.i || !z.zaehler?.dataset.n) { const neu = i !== z.i; z.i = i; rkRolleStand(z); if (neu) { z.karten[i].scrollTop = 0; rkRast(); try { z.opts?.vorn?.(z.karten[z.i], z); } catch {} } }
 }
@@ -18336,6 +18347,19 @@ function rkRolleStand(z) { // Reiter, Zähler, wer bedienbar ist – ohne die La
   const zahl = z.platz?.querySelector(".rk-zahl"); if (zahl) zahl.textContent = `${z.i + 1} / ${n}`;
 }
 function rkRolleHalt(z) { if (z.lauf) { cancelAnimationFrame(z.lauf.raf); z.lauf = null; } }
+// KC-CLUB-ROLLKARTEI-GROSS (2.996.0, Wunsch Hansi 21.11.: „wenn sie im Vordergrund ist und ich nicht weiter rolle, soll sie in den Vordergrund und groß werden
+// und einrasten – aber wie kann man dann weiter rollen?“): nach kurzer Ruhe wächst die vordere Karte groß (mit Rasten). Weiterrollen wie immer: schieben –
+// die Karte schrumpft dabei fließend zurück und die nächste rollt nach; oder den Streifen unten / ▲▼ / Buchstaben antippen. Abschaltbar: ⚙️ „🔍 Karte groß“.
+const rkGrossAn = () => einst("rkGross", true);
+function rkRolleRuhe(z) { clearTimeout(z.grossUhr); if (!z.rolle || !rkGrossAn() || (z.g || 0) >= 1) return; z.grossUhr = setTimeout(() => { if (!z.zug && !z.lauf && z.rolle && z.an) rkRolleGross(z, 1); }, RK_RUHE_MS); }
+function rkRolleGross(z, ziel) {
+  cancelAnimationFrame(z.grossRaf || 0); const von = z.g || 0; if (Math.abs(ziel - von) < 0.001) return;
+  if (!fxAn()) { z.g = ziel; rkRolleZeichnen(z); if (ziel === 1) rkRast(); return; }
+  const dauer = ziel > von ? RK_GROSS_MS : 160, t0 = performance.now();
+  const schritt = (jetzt) => { const t = Math.min(1, (jetzt - t0) / dauer), e = ziel > von ? 1 - Math.pow(1 - t, 3) : t; z.g = von + (ziel - von) * e; rkRolleZeichnen(z);
+    if (t < 1) z.grossRaf = requestAnimationFrame(schritt); else { z.grossRaf = 0; if (ziel === 1) { rkRast(); z.karten[z.i]?.classList.toggle("rk-scroll", z.karten[z.i].scrollHeight > z.karten[z.i].clientHeight + 2); } } };
+  z.grossRaf = requestAnimationFrame(schritt);
+}
 function rkRolleInnenHalt(z) { if (z.innen) { cancelAnimationFrame(z.innen); z.innen = 0; } }
 function rkRolleInnen(z, v) { // Karteninhalt mit Schwung auslaufen lassen (wie natürliches Scrollen)
   rkRolleInnenHalt(z); const k = z.karten[z.i]; if (!k || Math.abs(v) < 0.05 || !fxAn()) return;
@@ -18345,12 +18369,13 @@ function rkRolleInnen(z, v) { // Karteninhalt mit Schwung auslaufen lassen (wie 
 }
 // gleitet zur Karte „ziel“ (ganze Zahl, darf über n hinaus) – weich auslaufend, bei jeder Karte ein Rasten
 function rkRolleFahren(z, ziel) {
-  rkRolleHalt(z); const von = z.p, weg = ziel - von;
-  if (!fxAn() || Math.abs(weg) < 0.001) { z.p = ziel; rkRolleZeichnen(z); return; }
+  rkRolleHalt(z); clearTimeout(z.grossUhr); const von = z.p, weg = ziel - von;
+  if ((z.g || 0) > 0 && Math.abs(weg) >= 0.001) rkRolleGross(z, 0); // große Karte schrumpft fließend zurück, während die Rolle läuft
+  if (!fxAn() || Math.abs(weg) < 0.001) { z.p = ziel; rkRolleZeichnen(z); rkRolleRuhe(z); return; }
   const dauer = Math.min(900, 260 + 150 * Math.sqrt(Math.abs(weg)) * Math.min(3, Math.abs(weg))), t0 = performance.now();
   const lauf = (z.lauf = { ziel, raf: 0 });
   const schritt = (jetzt) => { if (z.lauf !== lauf) return; const t = Math.min(1, (jetzt - t0) / dauer), e = 1 - Math.pow(1 - t, 3); // sanft auslaufen
-    z.p = von + weg * e; rkRolleZeichnen(z); if (t < 1) lauf.raf = requestAnimationFrame(schritt); else { z.lauf = null; z.p = ziel; rkRolleZeichnen(z); } };
+    z.p = von + weg * e; rkRolleZeichnen(z); if (t < 1) lauf.raf = requestAnimationFrame(schritt); else { z.lauf = null; z.p = ziel; rkRolleZeichnen(z); rkRolleRuhe(z); } };
   lauf.raf = requestAnimationFrame(schritt);
 }
 // KC-CLUB-KLAPPEN-ALLE (2.23.40, Wunsch Hansi): oben ein Umschalter „▾ Alle auf / ▴ Alle zu“ für alle Bereiche einer Seite.

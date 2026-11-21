@@ -1872,12 +1872,15 @@
   .rk.rk-rolle > .rk-karte:not(.rk-vorn) { border-top-color: var(--karte2); box-shadow: 0 6px 18px rgba(0,0,0,.25); }
   .rk.rk-rolle .rk-platz { touch-action: none; user-select: none; -webkit-user-select: none; }
   .rk.rk-rolle .rk-rad, .rk.rk-rolle > .rk-griff { display: none !important; }
-  .rk-zaehler { position: absolute; right: 14px; top: 2px; z-index: 260; display: flex; align-items: center; gap: 2px; padding: 2px; border-radius: 16px; background: var(--rot); color: #fff;
+  .rk-zaehler { position: absolute; right: 18px; top: 0; z-index: 260; display: flex; align-items: center; gap: 2px; padding: 2px; border-radius: 16px; background: var(--rot); color: #fff;
     font-size: .82rem; font-weight: 800; box-shadow: 0 2px 6px rgba(0,0,0,.3); }
   .rk-zaehler button { width: 32px; height: 28px; border: 0; border-radius: 14px; background: transparent; color: inherit; font-size: .8rem; cursor: pointer; }
   .rk-zaehler button:active { background: rgba(255,255,255,.2); }
   .rk-zaehler button::before { content: ""; position: absolute; inset: -6px 0; } .rk-zaehler button { position: relative; }
   .rk-z-zahl { min-width: 3.2em; text-align: center; font-variant-numeric: tabular-nums; }
+  /* KC-CLUB-ROLLKARTEI-GROSS (2.996.0): große Karte – vorn mit rotem Leuchten, Zähler etwas zurückhaltender */
+  .rk.rk-rolle.rk-gross > .rk-karte.rk-vorn { box-shadow: 0 -3px 16px -2px var(--rot), 0 10px 28px rgba(0,0,0,.35); }
+  .rk.rk-gross .rk-zaehler { opacity: .88; }
   /* 2.187.0 Jalousie über der vorderen Karte: Lamellen klappen von unten nach oben weg */
   .rk-jal { position: absolute; left: 0; right: 0; top: 0; height: 100%; z-index: 5; pointer-events: none; overflow: hidden; border-radius: inherit; }
   .rk-jal-zug { position: absolute; inset: 0; }
@@ -6857,7 +6860,8 @@
         <div class="schalter" style="margin:0"><div>💬 Chats <small class="hinweis">(vorne gleich die letzten Nachrichten)</small></div><input type="checkbox" id="setRkChats" onchange="rkSchalten('chats', this.checked)"></div>
         <div class="schalter" style="margin:0"><div>👥 Mitglieder <small class="hinweis">(volle Infos je Karte)</small></div><input type="checkbox" id="setRkMitgl" onchange="mgAnsichtSetzen(this.checked ? 'kartei' : 'kacheln')"></div>
         <div class="schalter" style="margin:6px 0 0"><div>🛞 Neue Rolle <small class="hinweis">(wie am iPad: folgt dem Finger, rastet auf jeder Karte ein – aus = klassisch mit Rad)</small></div><input type="checkbox" id="setRkRolle" onchange="rkRolleSetzen(this.checked)"></div>
-        <div class="schalter" style="margin:0"><div>🔊 Rastgeräusch <small class="hinweis">(leises Klacken bei jeder Karte)</small></div><input type="checkbox" id="setRkRast" onchange="einstellung('rkRast', this.checked)"></div></div>
+        <div class="schalter" style="margin:0"><div>🔊 Rastgeräusch <small class="hinweis">(leises Klacken bei jeder Karte)</small></div><input type="checkbox" id="setRkRast" onchange="einstellung('rkRast', this.checked)"></div>
+        <div class="schalter" style="margin:0"><div>🔍 Karte groß <small class="hinweis">(bleibt eine Karte stehen, wächst sie groß nach vorn – weiterschieben rollt weiter)</small></div><input type="checkbox" id="setRkGross" onchange="einstellung('rkGross', this.checked)"></div></div>
       <!-- KC-CLUB-COUNTDOWN (2.202.0, Wunsch Hansi): was in der Termin-Kachel oben abwechselnd erscheint (gilt für dieses Gerät) -->
       <div class="schalter" style="display:block"><div><b>⏳ Countdown oben in der Termin-Kachel</b><div class="hinweis">Wechselt alle 5 Sekunden. Antippen öffnet, was gerade angezeigt wird. Darstellung normal oder als 🕰️ Fallblatt-Uhr (Falluhr, Blätteruhr wie am Bahnhof). Gilt für dieses Gerät.</div></div>
         <div id="cdWahl" style="margin-top:6px"></div></div>
@@ -7259,7 +7263,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.995.0" data-v="2.995.0"></script>
+<script src="app.js?v=2.996.0" data-v="2.996.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

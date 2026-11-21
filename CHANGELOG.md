@@ -1,5 +1,19 @@
 # Änderungen
 
+## 2.996.0 – 2026-11-21 – 🔍 Rollkartei: Karte wird groß, wenn sie vorn stehen bleibt (KC-CLUB-ROLLKARTEI-GROSS) · nur App
+Wunsch Hansi 21.11.: „Läuft jetzt runder. Aber wenn sie im Vordergrund ist und ich nicht weiter rolle, soll sie in den Vordergrund und groß werden
+und einrasten. Aber wie kann man dann weiter rollen?“
+- **Groß nach vorn:** bleibt eine Karte ⅔ Sekunde stehen, wächst sie sanft groß (≈ 0,3 s) und **rastet hörbar ein** – der Stapel oben tritt zurück,
+  die Karte bekommt fast die ganze Höhe (mehr Inhalt ohne Scrollen).
+- **Weiterrollen wie gewohnt:** einfach weiterschieben – die Karte schrumpft dabei fließend zurück und die nächste rollt nach. Hat die große Karte mehr
+  Inhalt, scrollt der Finger erst den Inhalt, dann geht es nahtlos weiter. Kurz angezogen und losgelassen → bleibt dieselbe Karte, wieder groß.
+- **Unten bleibt ein Streifen** der nächsten Karte sichtbar (antippen = nächste); ▲▼ oben und die Buchstaben-Reiter gehen wie bisher. ▲▼ liegt jetzt
+  über der Karte und ist auch bei der großen Karte immer erreichbar.
+- Abschaltbar je Gerät: ⚙️ → Rollkartei → „🔍 Karte groß“. Die ganze neue Rolle: „🛞 Neue Rolle“ (Rückweg zur klassischen Rollkartei bleibt).
+- Geprüft im abgeschirmten Browser auf Handy und Tablet (wachsen, kleiner Zug, großer Zug, Streifen, ▲, abschalten; keine Programmfehler).
+  Test: `tests/rollkartei-rolle.test.mjs` erweitert. Rückweg: App 2.995.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.995.0 – 2026-11-21 – 🛞 Rollkartei als Rolle wie am iPad · 🛰️ Störungsseite nur für unsere Region · Protokoll sparen · 💌 Gemeinsame Karte direkt verschicken (KC-CLUB-ROLLKARTEI-ROLLE, KC-CLUB-SB-REGION, KC-CLUB-PROTOKOLL-SPAREN, KC-CLUB-GK-DIREKT-SENDEN) · App + Server 2.995.0
 Ein Bündel, eingespielt auf Hansis „Einspielen“ (21.11.) – der Abendtermin 20.11. war durch einen Neustart der Sitzung verstrichen.
 
