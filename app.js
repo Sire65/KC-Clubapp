@@ -10166,7 +10166,7 @@ const ZUGANG_AKTIONEN = {
     "twinkey_gelesen", "fehler_melden", "fehler_katalog", "hilfe_anfordern", "feedback_meins", "feedback_senden", "feedback_neu", "vorfuehren_antwort", "vorfuehren_holen",
     "vorfuehren_senden", "vorfuehren_ende", "vorfuehren_bild", "schnappschuss_antwort", "schnappschuss_bild", "schnappschuss_ende", "fernbedienung_melden", "push_anmelden",
     "push_pruefen", "geraete_liste", "geraet_entfernen", "andere_geraete_abmelden", "push_abmelden", "push_test", "rw_test", "neues_geraet_antwort"],
-  aushilfe: ["mein_dienst", "dienstwunsch_laden", "dienstwunsch_speichern", "dienst_gruss", "dienste", "dienst_freigabe", "meine_eingaben",
+  aushilfe: ["mein_dienst", "dp_plaene", "dienstwunsch_laden", "dienstwunsch_speichern", "dienst_gruss", "dienste", "dienst_freigabe", "meine_eingaben",
     "eingaben_bestaetigen", "wunschbogen_mailen", "eingaben_ablegen", "fotos_neueste", "fotos_liste", "foto_oeffnen",
     "schulung_meine", "schulung_antwort", "gericht_zutat_setzen", "gericht_antwort", "tipp_stand", "tipp_mitmachen", "tipp_abgeben",
     "sondereinsatz_zusage", "stunden_melden", "mein_ausweis", "dienst_stand", "dienst_buchen", "dienst_korrigieren", "dienst_tausch_liste", "dienst_tausch_anbieten", "dienst_tausch_aktion", "dp_einzelplan", "ist_offen", "ist_antworten", "ist_feedback"], // 2.590.0 KC-CLUB-DIENST-STEMPEL; 2.606.0 KC-CLUB-DIENST-TAUSCH
@@ -21200,7 +21200,7 @@ async function mdStart() {
     <div class="karte"><h4 style="margin:0 0 4px">${schritt("2", so.anzahl > 0)} 📅 Sollplan <small class="hinweis">vom Planer veröffentlicht</small></h4>
       ${so.anzahl ? `<div>${so.anzahl} kommende Dienste · ${so.monat} in diesem Monat</div>${so.naechste.map((d) => `<div>• <b>${esc(mdTag(d.datum))}</b> ${esc(d.start)}–${esc(d.ende)} Uhr${d.bereich ? ` <span class="hinweis">${esc(d.bereich)}</span>` : ""}${d.getauscht ? ' <span class="hinweis">🔁 übernommen</span>' : ""}</div>`).join("")}`
         : "<div>Noch keine Dienste für dich veröffentlicht.</div>"}
-      <div class="knoepfe"><button class="knopf haupt klein" onclick="$('mdBlatt').remove();dpNurIch()">📅 Meinen Dienstplan ansehen</button>${frei("dp_einzelplan") ? `<button class="knopf klein" onclick="$('mdBlatt').remove();epStart()">📄 Mein Einzelplan${nurTest("dp_einzelplan") ? " 🔒" : ""}</button>` : ""}${frei("dienst_tausch") ? `<button class="knopf klein" onclick="$('mdBlatt').remove();dtOeffnen()">🔁 Tauschbörse${nurTest("dienst_tausch") ? " 🔒" : ""}</button>` : ""}</div></div>
+      <div class="knoepfe"><button class="knopf haupt klein" onclick="$('mdBlatt').remove();dpNurIch()">📅 Meinen Dienstplan ansehen</button>${frei("dp_einzelplan") ? `<button class="knopf klein" onclick="$('mdBlatt').remove();epStart()">📄 Mein Einzelplan${nurTest("dp_einzelplan") ? " 🔒" : ""}</button>` : ""}${frei("dienst_tausch") ? `<button class="knopf klein" onclick="$('mdBlatt').remove();dtOeffnen()">🔁 Tauschbörse${nurTest("dienst_tausch") ? " 🔒" : ""}</button>` : ""}</div></div>${dpdPlaeneKarte(MD_D?.plaene)}
     <div class="karte"><h4 style="margin:0 0 4px">${schritt("3", ist.anzahl > 0)} ⏱️ Istplan <small class="hinweis">gearbeitet (Stempeluhr), letzte 60 Tage</small></h4>
       ${ist.anzahl ? `<div>${ist.anzahl} Einsätze · <b>${mdHm(ist.istMin)} Std.</b> gearbeitet${ist.sollMin ? ` · geplant waren ${mdHm(ist.sollMin)} Std. (${ist.istMin - ist.sollMin >= 0 ? "+" : "–"}${mdHm(Math.abs(ist.istMin - ist.sollMin))})` : ""}</div>
         ${ist.liste.map((d) => `<div>• ${esc(mdTag(d.datum))} ${esc(d.start)}–${esc(d.ende)} Uhr</div>`).join("")}`
@@ -22078,6 +22078,7 @@ function dpZeichnen() {
     }).join("");
     if (wHin) $("dpListe").insertAdjacentHTML("afterbegin", wHin);
   }
+  if (DP.plaene) $("dpListe").insertAdjacentHTML("afterbegin", dpdPlaeneKarte(DP.plaene)); // 2.999.0 KC-CLUB-DP-PLAENE-FREI: Wunschplan/Dienstplan oben
   // Rule 11: Datenstand sichtbar machen
   $("dpStand").textContent = DP.stand ? `Stand des Dienstplans: veröffentlicht ${zeitKurz(DP.stand)} Uhr` : "";
 }
@@ -32873,8 +32874,8 @@ const DRUCKARTEN = {
   inhaltsverzeichnis: { titel: "🗂️ Inhaltsverzeichnis drucken / als PDF", optionen: () => ivOptionen(), bauen: () => druckInhaltsverzeichnis() }, // KC-CLUB-INHALTSVERZEICHNIS (2.79.0)
   einzelplan: { titel: "📄 Einzelplan", get optionen() { return ICH?.admin ? epOptionen : undefined; }, bauen: (o) => epBauen() }, // KC-CLUB-DP-EINZELPLAN
   dpDruck: { titel: "🗓️ Dienstplan drucken", optionen: () => dpdOptionen(), bauen: () => dpdBauen() }, // 2.642.0 KC-CLUB-DP-DRUCK
-  dpWunsch: { titel: "🙋 Wunschplan – alle Tage", optionen: () => dpdBreitWahl("Nur die Angaben der Mitglieder (Wunschzeit, kann, nur wenn nötig, gesperrt) – ohne Einteilung. Unten je Tag: Bedarf / so viele wünschen sich die Zeit; am Ende Wunschstunden, Stunden laut Sollplan und wo noch Helfer fehlen."), bauen: () => dpdBauen("wunsch") }, // 2.996.0 KC-CLUB-DP-WUNSCH-PLAN
-  dpPlan: { titel: "🗓️ Dienstplan – alle Tage", optionen: () => dpdBreitWahl("Nur die berechnete Einteilung (wer wann Dienst hat, Bereitschaft, Ampel) – ohne die Wunschfarben. Am Ende die Stunden je Person laut Sollplan und wo noch Helfer fehlen."), bauen: () => dpdBauen("plan") }, // 2.996.0
+  dpWunsch: { titel: "🙋 Wunschplan – alle Tage", optionen: () => dpdBreitWahl("Nur die Angaben der Mitglieder (Wunschzeit, kann, nur wenn nötig, gesperrt) – ohne Einteilung. Unten je Tag: Bedarf / so viele wünschen sich die Zeit; am Ende Wunschstunden, Stunden laut Sollplan und wo noch Helfer fehlen."), bauen: (o, p) => dpdBauen("wunsch", p?.frei) }, // 2.996.0 KC-CLUB-DP-WUNSCH-PLAN · 2.999.0 p.frei: freigegebener Stand für Mitglieder
+  dpPlan: { titel: "🗓️ Dienstplan – alle Tage", optionen: () => dpdBreitWahl("Nur die berechnete Einteilung (wer wann Dienst hat, Bereitschaft, Ampel) – ohne die Wunschfarben. Am Ende die Stunden je Person laut Sollplan und wo noch Helfer fehlen."), bauen: (o, p) => dpdBauen("plan", p?.frei) }, // 2.996.0
   dpVorschlag: { titel: "💡 Vorschläge zu den Lücken", optionen: () => '<p class="hinweis">Nur für dich zur Planung (nicht verteilen): je Lücke, wer früher kommen oder länger bleiben könnte, ob er die Zeit schon angeboten hat, wer Bereitschaft hat – und wo neue Helfer nötig sind.</p>', bauen: () => dpdVorschlagBauen() }, // 2.721.0 KC-CLUB-DP-VORSCHLAG
   dpEinsatz: { titel: "📋 Einsatzplan", optionen: () => '<p class="hinweis">Je Tag eine Seite (A4 quer): alle Personen, oben ihre Angaben (Wunsch, kann, nur wenn nötig, gesperrt), darunter die Einteilung als Balken, rechts W = Wunsch- und S = eingeteilte Stunden; unten Besetzt/Soll je halbe Stunde und die selbst eingetragene Bereitschaft. Rechnet sich von selbst neu.</p><p class="hinweis">Beim Drucken „A4 Querformat“ und „Hintergrundgrafiken“ wählen.</p>', bauen: () => dpdEinsatzBauen() }, // 2.944.0 KC-CLUB-DP-EINSATZ
   dpLuecken: { titel: "🧩 Wo noch Helfer fehlen", optionen: () => '<p class="hinweis">Ein Blatt mit Logo: alle Tage und Stunden, an denen noch Leute fehlen – zum Aushängen oder für die, die noch keine Wünsche abgegeben haben. Rechnet sich von selbst neu, sobald ein Wunschplan dazukommt.</p><p class="hinweis">Beim Drucken „A4 Querformat“ und „Hintergrundgrafiken“ wählen.</p>', bauen: () => dpdLueckenBauen() }, // 2.676.0 KC-CLUB-DP-LUECKEN
@@ -35439,7 +35440,22 @@ function dpdBreitWahl(text) { // 2.996.0: Hinweis und Blattbreite für Wunschpla
   const r = (v, t, x) => `<label class="feld" style="display:flex;gap:8px;align-items:flex-start"><input type="radio" name="dpdBreit" value="${v}" ${DPD.breit === v ? "checked" : ""} onchange="DPD.breit=this.value"><span><b>${t}</b><br><small>${x}</small></span></label>`;
   return `<p class="hinweis">${esc(text)}</p>${r("1", "1 Blatt breit", "8–23 Uhr auf einem Blatt")}${r("2", "2 Blätter breit (größer)", "links 8–16, rechts 15:30–23 Uhr")}<p class="hinweis">Beim Drucken „A4 Querformat“ und „Hintergrundgrafiken“ wählen.</p>`;
 }
+// 2.999.0 KC-CLUB-DP-PLAENE-FREI: Admin gibt Wunschplan + Dienstplan für alle frei (Meins → Mein Dienst, Club → Dienstpläne)
+async function dpdFreiZeigen() { const el = $("dpdFreiZeile"); if (!el) return;
+  try { const r = await api("dp_plaene", { nurInfo: true }); el.innerHTML = r?.frei ? `📣 Für Mitglieder freigegeben: <b>${esc(wann(r.frei.am))}</b> <button type="button" class="knopf klein" onclick="dpdFreigeben(this, true)">zurückziehen</button>` : "📣 Für Mitglieder: <b>noch nicht freigegeben</b>"; }
+  catch { el.textContent = "📣 Freigabe-Stand gerade nicht abrufbar."; } }
+async function dpdFreigeben(btn, zurueck = false) {
+  if (!(await frage(zurueck ? "Wunschplan und Dienstplan für die Mitglieder zurückziehen?" : "Wunschplan und Dienstplan in diesem Stand für alle Mitglieder freigeben? Sie finden ihn unter Meins → 🗓️ Mein Dienst und Club → 🗓️ Dienstpläne. Spätere Änderungen erst nach erneuter Freigabe."))) return;
+  if (btn) btn.disabled = true;
+  try { await api("dp_plaene_freigeben", zurueck ? { zurueck: true } : {}); melde(zurueck ? "Freigabe zurückgezogen." : "📣 Freigegeben – die Mitglieder sehen die Pläne jetzt."); }
+  catch (e) { meldeFehler(e); } finally { if (btn) btn.disabled = false; dpdFreiZeigen(); }
+}
+// Karte für Mitglieder: erscheint, sobald freigegeben
+const dpdPlaeneKarte = (frei) => frei ? `<div class="karte"><h4 style="margin:0 0 4px">📄 Pläne Weihnachtsmarkt <small class="hinweis">freigegeben ${esc(wann(frei.am))}</small></h4>
+  <div class="hinweis">Zum Ansehen, Drucken oder als PDF speichern – alle Tage, mit Uhrzeiten und Stunden, am Ende Stundenübersicht und wo noch Helfer fehlen.</div>
+  <div class="knoepfe"><button class="knopf haupt klein" onclick="document.getElementById('mdBlatt')?.remove();druckStarten('dpPlan',{frei:true})">🗓️ Dienstplan</button><button class="knopf klein" onclick="document.getElementById('mdBlatt')?.remove();druckStarten('dpWunsch',{frei:true})">🙋 Wunschplan</button></div></div>` : "";
 function dpdOptionen() {
+  setTimeout(dpdFreiZeigen, 0); // 2.999.0 Freigabe-Stand nachladen
   const r = (v, t, x) => `<label class="feld" style="display:flex;gap:8px;align-items:flex-start"><input type="radio" name="dpdBreit" value="${v}" ${DPD.breit === v ? "checked" : ""} onchange="DPD.breit=this.value"><span><b>${t}</b><br><small>${x}</small></span></label>`;
   const i = DPD.info, neu = i?.neu || [];
   const stand = `<div class="karte" style="margin:0 0 10px;padding:10px">
@@ -35447,6 +35463,8 @@ function dpdOptionen() {
       ${neu.length ? `<div style="margin-top:4px;color:var(--textRot,#b3261e);font-weight:700">🆕 ${neu.length === 1 ? "1 neuer oder geänderter Wunschplan" : neu.length + " neue oder geänderte Wunschpläne"} seit dem letzten Rechnen: ${neu.map(esc).join(", ")}</div>` : i ? '<div class="hinweis" style="margin-top:4px">✅ Alle Wunschpläne sind eingerechnet.</div>' : ""}
       <button type="button" class="knopf${neu.length ? " haupt" : ""}" style="margin-top:8px" onclick="dpdNeuRechnen(this)">🔄 Jetzt neu rechnen</button>
       <div class="hinweis" style="margin-top:4px;font-size:.8rem">Rechnet sich von selbst neu, sobald ein Wunschplan, der Bedarf oder die Einstellungen sich ändern. Regel: nie länger als die Wunschzeit, mindestens die Hälfte darin. Nichts geht nach DP2.</div>
+      <div id="dpdFreiZeile" class="hinweis" style="margin-top:8px">📣 Für Mitglieder: wird geprüft …</div>
+      <button type="button" class="knopf haupt" style="margin-top:4px" onclick="dpdFreigeben(this)">📣 Diesen Stand für alle Mitglieder freigeben</button>
       <button type="button" class="knopf" style="margin-top:8px" onclick="druckZu();druckStarten('dpWunsch')">🙋 Wunschplan – alle Tage (nur die Wünsche)</button>
       <button type="button" class="knopf" style="margin-top:8px" onclick="druckZu();druckStarten('dpPlan')">🗓️ Dienstplan – alle Tage (nur die Einteilung)</button>
       <button type="button" class="knopf" style="margin-top:8px" onclick="druckZu();druckStarten('dpEinsatz')">📋 Einsatzplan – je Tag eine Seite</button>
@@ -35568,8 +35586,9 @@ function dpdBedarf(tage, von, bis) { // erstes Blatt: Regelzeit je Tag und Beset
   return `<table class="dpd-bed"><thead><tr><th>Tag</th><th>Regelzeit</th>${std.map((h) => `<th>${h}–${h + 1}</th>`).join("")}<th>Besetzung</th></tr></thead><tbody>${zeilen}</tbody></table>
     <p class="dpd-eb" style="margin-top:2mm;text-transform:none;letter-spacing:0">Vorgabe gilt für die Markttage: zusammen ${dpdStd(tage.filter((t) => t.art === "Markttag").reduce((a, t) => a + t.bedarfStd, 0))} Personenstunden. Aufbau und Nachbereitung haben keine Vorgabe – dort steht, wie sich die Mitglieder in ihren Wunschplänen eingetragen haben.</p>`;
 }
-async function dpdBauen(art = "voll") {
-  const d = await api("dp_druck", {});
+async function dpdBauen(art = "voll", frei = false) {
+  const d = await api(frei ? "dp_plaene" : "dp_druck", {}); // 2.999.0 KC-CLUB-DP-PLAENE-FREI: Mitglieder lesen den freigegebenen Stand
+  if (frei && !d?.frei) { melde("Die Pläne sind noch nicht freigegeben.", true); return null; }
   DPD.frei = false; // 2.999.0 KC-CLUB-DP-PLAN-STUNDEN (Hansi 21.11.: „auf den Plan müssen auch die nicht geteilten – das war nur für die Planungsphase“): niemand wird mehr ausgeblendet
   if (!d?.tage?.length) { melde("Noch keine Übersicht abgelegt – Claude bitten, sie zu rechnen.", true); return null; }
   DPD.daten = d; const breit = document.querySelector('input[name="dpdBreit"]:checked')?.value || DPD.breit; DPD.breit = breit;
@@ -35581,7 +35600,7 @@ async function dpdBauen(art = "voll") {
   const blaetter = [[]]; let n = 0;
   for (const t of tage) { const z = t.rows.length + 0.6; if (blaetter[blaetter.length - 1].length && n + z > DPD_ZEILEN - (breit === "2" ? 4.5 : 0)) { blaetter.push([]); n = 0; } blaetter[blaetter.length - 1].push(t); n += z; }
   const S = dpdSlots(von, bis), teile = breit === "2" ? [S.filter((s) => s < 16), S.filter((s) => s >= 15.5)] : [S];
-  const stand = d.stand ? wann(d.stand) : "", eb = `<p class="dpd-eb">Köcheclub Werne · ${esc(d.titel || "Dienstplan")} · ${art === "wunsch" ? "Wünsche der Mitglieder" : "Entwurf, nicht veröffentlicht"}${stand ? " · Stand " + esc(stand) : ""}</p>`;
+  const stand = d.stand ? wann(d.stand) : "", eb = `<p class="dpd-eb">Köcheclub Werne · ${esc(d.titel || "Dienstplan")} · ${art === "wunsch" ? "Wünsche der Mitglieder" : frei ? "Dienstplan" : "Entwurf, nicht veröffentlicht"}${frei && d.frei?.am ? " · freigegeben " + esc(wann(d.frei.am)) : ""}${stand ? " · Stand " + esc(stand) : ""}</p>`;
   const legW = '<div class="dpd-leg"><span><i class="pref"></i>Wunschzeit</span><span><i class="avai"></i>kann</span><span><i class="if_n"></i>nur wenn nötig</span><span><i class="unav">×</i>gesperrt</span><span><b>5/3</b> = Bedarf / so viele wünschen sich die Zeit</span><span><i class="zu"></i>kein Bedarf</span></div>';
   const legP = '<div class="dpd-leg"><span><i class="dienst"></i>eingeteilt</span><span><i class="ber"></i>Bereitschaft</span><span><i class="a-rot">−2</i>fehlen</span><span><i class="a-gruen">✓</i>richtig besetzt</span><span><i class="a-gelb">+1</i>zu viel</span><span><i class="zu"></i>kein Bedarf</span></div>';
   const leg = art === "wunsch" ? legW : art === "plan" ? legP : `<div class="dpd-leg"><span><i class="pref"></i>Wunschzeit</span><span><i class="avai"></i>kann</span><span><i class="if_n"></i>nur wenn nötig</span><span><i class="unav">×</i>gesperrt</span><span><i class="dienst"></i>im Entwurf eingeplant</span><span><i class="ber"></i>Bereitschaft (Vorschlag)</span><span><i class="a-rot">−2</i>fehlen</span><span><i class="a-gruen">✓</i>richtig besetzt</span><span><i class="a-gelb">+1</i>zu viel</span><span><i class="zu"></i>kein Bedarf</span></div>`;
