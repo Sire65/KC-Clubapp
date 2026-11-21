@@ -1384,6 +1384,7 @@ const FP_FILTER = "aktion.like.fehler_%,aktion.eq.hilferuf,aktion.eq.diagnose_st
 const FP_SCHWER = new Set(["hilferuf", "hilferuf_anonym", "start_kaputt"]);
 const FP_INFO = new Set(["alte_version", "update_getippt", "umgebung", "startzeit", "hinweis", "link_kopiert", "diagnose_start", "zugang_angefordert", "offline", "anonym_admin_benachrichtigt",
   "update_selbst", "update_start"]); // 2.310.2 KC-CLUB-FP-RUHIG: Updates sind Info, kein Fehler
+FP_INFO.add("fremd"); FP_INFO.add("fremd_alarm"); // KC-CLUB-FREMDFEHLER (21.11.2026): Browser-/Erweiterungsfehler sind Info
 FP_INFO.add("update_mindest"); FP_INFO.add("leitung"); /* 2.863.0 KC-CLUB-LEITUNG-MESSUNG */ FP_INFO.add("schluessel_zurueck"); // KC-CLUB-SCHLUESSEL-SICHERN: still wiederhergestellt = Info // KC-CLUB-MINDESTVERSION (RC 20.10.2026): erzwungenes Update ist Info, kein Fehler
 const FP_VOLL = 300; // ab so vielen Einträgen fragt die Tagesinfo, ob geleert werden soll
 const fpNurBrowser = (d: any) => /^Script error\.?$/i.test(String(d?.text ?? "").trim()) && !d?.datei && !Number(d?.zeile) && !String(d?.stapel ?? "").trim();
@@ -9545,6 +9546,7 @@ function fpSauber(d: any): Record<string, unknown> {
   for (const [k, v] of Object.entries(d).slice(0, 25)) {
     const key = txt(k, 30).replace(/[^A-Za-z0-9_]/g, "");
     if (!key || /token|key|schluessel|passwort|password/i.test(key)) continue;
+    if (key === "schritte") { out[key] = txt(v, 300).replace(FF_UUID, "").replace(/[?&]k=[0-9a-f]{16,}/gi, ""); continue; } // KC-CLUB-FREMDFEHLER: nie Chat-Kennungen
     out[key] = typeof v === "number" || typeof v === "boolean" ? v : txt(typeof v === "object" ? JSON.stringify(v) : v, 400).replace(/[?&]k=[0-9a-f]{16,}/gi, "?k=…");
   }
   return out;
@@ -9610,7 +9612,7 @@ async function fehlerKatalog(): Promise<any[]> {
 const faHaengerErnst = (e: any) => Number(e?.ms) >= 10000 && txt(e?.ursache, 30) !== "haenger_hintergrund";
 async function fehlerAlarm(ich: Ich, liste: any[], ua: string, version: string) {
   if (/^KC-P-TEST/.test(ich.person_id)) return;
-  const ernst = liste.find((e: any) => { const a = fpArt(e?.art); return a in FA_ARTEN && a !== "versprechen" && (a !== "haenger" || faHaengerErnst(e)); });
+  const ernst = liste.find((e: any) => { const a = fpArt(e?.art); return a in FA_ARTEN && a !== "versprechen" && (a !== "haenger" || faHaengerErnst(e)) && (a !== "skript" || !fpNurBrowser(e)); }); // KC-CLUB-FREMDFEHLER: auch ältere App-Stände („skript“ ohne Fundstelle) lösen keinen Alarm aus
   if (!ernst) return;
   const jetztMs = Date.now();
   const [{ count: jeMitglied }, { count: alle }] = await Promise.all([
@@ -9626,13 +9628,45 @@ async function fehlerAlarm(ich: Ich, liste: any[], ua: string, version: string) 
   const fehlertext = ohneLinks(txt(ernst.text, 220)), bereich = txt(ernst.sicht, 40);
   const fk = (await fehlerKatalog().catch(() => [] as any[])).find((k: any) => k.schluessel === (txt(ernst.ursache, 30).toLowerCase() || art)); // KC-CLUB-FEHLERKATALOG
   const fkText = fk ? `Fehler-ID: ${fk.fehler_id} – ${fk.name}\nUrsache: ${fk.ursache}\nLösung: ${fk.loesung}\n` : "";
+  const schritte = txt(ernst.schritte, 300).replace(FF_UUID, ""), schritteText = schritte ? `Schritte davor: ${schritte}\n` : ""; // KC-CLUB-FREMDFEHLER: Spur zum Fehler
   await protokoll(null, "fehler_alarm", { fuer: ich.person_id, art, version });
   await senden("club_nachricht", ziel, {
     titel: `🩺 ${was}: ${ich.name}`, kurz: `${fehlertext || was}${bereich ? " · " + bereich : ""} · ${geraet}/${browser} · v${version || "?"}`,
     betreff: `Köcheclub-App: ${was} bei ${ich.name}`,
-    text: `Hallo,\n\nbei ${ich.name} ist in der Club-App etwas schiefgelaufen.\n\nArt: ${was}\n${fehlertext ? "Fehler: " + fehlertext + "\n" : ""}${bereich ? "Bereich: " + bereich + "\n" : ""}${fkText}Gerät: ${geraet} · ${browser}\nApp-Version: ${version || "?"}${weitere > 0 ? `\nWeitere Einträge in dieser Meldung: ${weitere}` : ""}\n\nDas Mitglied hat eine verständliche Meldung gesehen. Einzelheiten: Admin-Zentrale → 🩺 Fehlerprotokoll.\nWeitere Alarme zu ${ich.name} frühestens in 6 Stunden.\n${APP_URL}\n\nViele Grüße\nKöcheclub-App`,
+    text: `Hallo,\n\nbei ${ich.name} ist in der Club-App etwas schiefgelaufen.\n\nArt: ${was}\n${fehlertext ? "Fehler: " + fehlertext + "\n" : ""}${bereich ? "Bereich: " + bereich + "\n" : ""}${schritteText}${fkText}Gerät: ${geraet} · ${browser}\nApp-Version: ${version || "?"}${weitere > 0 ? `\nWeitere Einträge in dieser Meldung: ${weitere}` : ""}\n\nDas Mitglied hat eine verständliche Meldung gesehen. Einzelheiten: Admin-Zentrale → 🩺 Fehlerprotokoll.\nWeitere Alarme zu ${ich.name} frühestens in 6 Stunden.\n${APP_URL}\n\nViele Grüße\nKöcheclub-App`,
     url: APP_URL,
   }, `club-fehler-alarm:${ich.person_id}:${Math.floor(jetztMs / 3600000)}`);
+}
+
+// KC-CLUB-FREMDFEHLER (21.11.2026, Fund: Mitglied iPad/Safari bekam beim Einrichten 2× „Script error.“ → Fenster + Alarm-Mail KC-F-001):
+// „Script error.“ ohne Datei/Zeile/Stapel kommt von Safari, Erweiterungen oder Inhaltsblockern (fremdes Skript) – Art „fremd“ (KC-F-022).
+// Kein Alarm je Fehler; erst wenn dasselbe Mitglied an einem Tag (deutsche Zeit) mehr als FF_SCHWELLE davon hat, EIN Hinweis am Tag an die Admins.
+const FF_SCHWELLE = 5;
+const FF_UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi;
+async function fremdAlarm(ich: Ich, liste: any[], ua: string, version: string) {
+  if (/^KC-P-TEST/.test(ich.person_id)) return;
+  const neu = liste.filter((e: any) => fpArt(e?.art) === "fremd");
+  if (!neu.length) return;
+  const t = berlinTeile(new Date()), ab = berlinZuUtc(t.y, t.m, t.d, 0, 0).toISOString();
+  const [{ count: n }, { count: schon }] = await Promise.all([
+    db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("person_id", ich.person_id).eq("aktion", "fehler_fremd").gte("zeit", ab),
+    db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("aktion", "fehler_fremd_alarm").eq("details->>fuer", ich.person_id).gte("zeit", ab),
+  ]);
+  if ((n ?? 0) <= FF_SCHWELLE || (schon ?? 0) > 0) return;
+  const ziel = (await adminIds()).filter((id) => id !== ich.person_id);
+  if (!ziel.length) return;
+  const geraet = /iPhone|iPad/.test(ua) ? "iPhone/iPad" : /Android/.test(ua) ? "Android" : /Windows/.test(ua) ? "Windows" : /Mac/.test(ua) ? "Mac" : "Gerät";
+  const browser = /Edg\//.test(ua) ? "Edge" : /SamsungBrowser/.test(ua) ? "Samsung Internet" : /CriOS|Chrome\//.test(ua) ? "Chrome" : /FxiOS|Firefox\//.test(ua) ? "Firefox" : /Safari\//.test(ua) ? "Safari" : "Browser";
+  const letzter = neu[neu.length - 1], bereich = txt(letzter?.sicht, 40), schritte = txt(letzter?.schritte, 300).replace(FF_UUID, "");
+  const fk = (await fehlerKatalog().catch(() => [] as any[])).find((k: any) => k.schluessel === "fremd");
+  const fkText = fk ? `Fehler-ID: ${fk.fehler_id} – ${fk.name}\nUrsache: ${fk.ursache}\nLösung: ${fk.loesung}\n` : "Fehler-ID: KC-F-022 – Fremdfehler aus dem Browser\n";
+  await protokoll(null, "fehler_fremd_alarm", { fuer: ich.person_id, anzahl: n, version });
+  await senden("club_nachricht", ziel, {
+    titel: `🧩 ${n} Fremdfehler heute: ${ich.name}`, kurz: `vermutlich Browser-Erweiterung/Inhaltsblocker – Gerät/Browser prüfen · ${geraet}/${browser}`,
+    betreff: `Köcheclub-App: gehäufte Browser-Fremdfehler bei ${ich.name}`,
+    text: `Hallo,\n\nbei ${ich.name} hat der Browser heute schon ${n}-mal „Script error.“ ohne Fundstelle gemeldet.\nDas kommt nicht aus der App, sondern vermutlich von einer Browser-Erweiterung oder einem Inhaltsblocker – Gerät/Browser prüfen (Erweiterungen/Inhaltsblocker aus, oder die App vom Home-Bildschirm nutzen).\nDas Mitglied hat dabei kein Fehlerfenster gesehen.\n\n${bereich ? "Bereich: " + bereich + "\n" : ""}${schritte ? "Schritte davor: " + schritte + "\n" : ""}${fkText}Gerät: ${geraet} · ${browser}\nApp-Version: ${version || "?"}\n\nEinzelheiten: Admin-Zentrale → 🩺 Fehlerprotokoll („⚪ Info zeigen“).\nZu ${ich.name} kommt dieser Hinweis höchstens einmal am Tag.\n${APP_URL}\n\nViele Grüße\nKöcheclub-App`,
+    url: APP_URL,
+  }, `club-fremd-alarm:${ich.person_id}:${berlinTag(new Date())}`);
 }
 
 // ---------- KC-CLUB-WIEDERHOLUNG (1.1.0): Termine wiederholen – immer in deutscher Ortszeit (18:00 bleibt 18:00, auch nach der Zeitumstellung) ----------
@@ -11683,6 +11717,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const ua = txt(req.headers.get("user-agent"), 200), version = txt(req.headers.get("x-club-version"), 20);
         await db.from("kc_club_protokoll").insert(liste.slice(0, platz).map((e: any) => ({ person_id: ich.person_id, aktion: fpAktion(e?.art), details: { ...fpSauber(e), ua, version } })));
         await fehlerAlarm(ich, liste.slice(0, platz), ua, version).catch(() => null); // KC-CLUB-FEHLER-ALARM (2.48.0)
+        await fremdAlarm(ich, liste.slice(0, platz), ua, version).catch(() => null); // KC-CLUB-FREMDFEHLER: erst ab > 5 am Tag, 1× je Tag
         return json({ ok: true, gespeichert: platz });
       }
 

@@ -8162,7 +8162,9 @@ function absturzFang(text) {
       <div class="knoepfe"><button class="knopf haupt" onclick="location.reload()">🔄 App neu laden</button><button class="knopf" onclick="fensterZu($('asBlatt'))">Weiter benutzen</button></div>`).style.zIndex = "2300"; } catch {}
   }
 }
-window.addEventListener("error", (ev) => { if (ev?.target && ev.target !== window && ev.target.tagName) return; absturzFang(ev?.error?.message || ev?.message); }); // Dateien, die nicht laden: nur Protokoll (index.html)
+window.addEventListener("error", (ev) => { if (ev?.target && ev.target !== window && ev.target.tagName) return;
+  if (window.KCFP?.istFremd?.(ev?.error?.message || ev?.message, ev?.filename, ev?.lineno, ev?.error?.stack)) return; // KC-CLUB-FREMDFEHLER: Browser-/Erweiterungsfehler – kein Fenster, nur Protokoll (index.html)
+  absturzFang(ev?.error?.message || ev?.message); }); // Dateien, die nicht laden: nur Protokoll (index.html)
 window.addEventListener("unhandledrejection", (ev) => { const r = ev?.reason, t = String(r?.message ?? r ?? "");
   if (r instanceof TypeError && /fetch|network|Load failed/i.test(t)) return; // Netz weg: zeigt die Verbindungsanzeige, steht im Protokoll
   if (r instanceof TypeError || r instanceof ReferenceError || JS_FEHLER.test(t)) absturzFang(t); }); // nur echte Programmfehler – Server-/Netzmeldungen zeigt der Aufrufer bzw. die Verbindungsanzeige
@@ -37381,6 +37383,16 @@ document.addEventListener("visibilitychange", () => { if (document.hidden) nzSen
 const SPUR_MAX = 300;
 let SPUR = (() => { try { const s = JSON.parse(localStorage.getItem("kc_club_spur") || "[]"); return Array.isArray(s) ? s.slice(-SPUR_MAX) : []; } catch { return []; } })();
 const spurSchreiben = () => { try { localStorage.setItem("kc_club_spur", JSON.stringify(SPUR)); } catch {} };
+// 21.11.2026 KC-CLUB-FREMDFEHLER (Wunsch Hansi „besser Bescheid wissen“): jede Fehlermeldung bekommt die letzten 8 Schritte mit (Feld „schritte“) –
+// nur Namen von Ansichten/Fenstern („einstellungen › fenster kcCodeBlatt“). Kennungen (Chat-UUIDs, Personen-IDs, Zahlen) fallen weg, nie Inhalte.
+const SPUR_LETZTE = [];
+const SPUR_UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi;
+function spurSchrittName(w, mit) {
+  const n = String(w || "").replace(SPUR_UUID, "").replace(/[^A-Za-z0-9_]/g, "").slice(0, 30) || "?";
+  const m = String(mit ?? "").replace(SPUR_UUID, "");
+  return /^[A-Za-z][A-Za-z_]{1,40}$/.test(m) ? `${n} ${m}` : n; // nur Wörter wie „kcCodeBlatt“ – keine IDs mit Ziffern/Bindestrichen
+}
+try { if (window.KCFP) window.KCFP.schritte = () => SPUR_LETZTE.join(" › "); } catch {}
 function spur(w, mit) {
   if (!w || !ICH) return;
   if (!/^(rg|tat)_/.test(w) && document.body?.classList.contains("rg-an")) return; // KC-CLUB-SPUR-VOLL: im Erklär-Video öffnet das Video selbst Seiten/Fenster – keine Wege des Mitglieds
@@ -37389,6 +37401,7 @@ function spur(w, mit) {
     if (l && l[1] === w && (l[2] || null) === (mit || null) && Date.now() - l[0] < 3000) return; // doppelt angetippt
     SPUR.push(mit ? [Date.now(), String(w), String(mit)] : [Date.now(), String(w)]);
     if (SPUR.length > SPUR_MAX) SPUR = SPUR.slice(-SPUR_MAX);
+    SPUR_LETZTE.push(spurSchrittName(w, mit)); if (SPUR_LETZTE.length > 8) SPUR_LETZTE.shift(); // KC-CLUB-FREMDFEHLER: Spur zum Fehler
     spurSchreiben();
     spurBaldSenden(); // KC-CLUB-SPUR-LIVE (2.81.0)
   } catch {}
@@ -38829,6 +38842,8 @@ async function fpProblemMelden() {
 // ---- Admin: Fehlerprotokoll ansehen ----
 const FP_ARTEN = {
   skript: ["🐞", "Programmfehler", "Fehler im App-Programm – bitte an Claude/Hansi weitergeben"],
+  fremd: ["🧩", "Fremdfehler aus dem Browser · KC-F-022", "Safari/Erweiterung/Inhaltsblocker – meist harmlos; bei Häufung Erweiterungen prüfen oder App vom Home-Bildschirm nutzen"], // KC-CLUB-FREMDFEHLER
+  fremd_alarm: ["📣", "Admin wegen gehäufter Fremdfehler benachrichtigt", "mehr als 5 Fremdfehler an einem Tag (höchstens 1× am Tag je Mitglied)"], // KC-CLUB-FREMDFEHLER
   sprache_haengt: ["🎙️", "Sprachsteuerung meldete sich nicht", "das Gerät hat die Spracherkennung nicht gestartet bzw. nicht beendet – die App hat nach 6 bzw. 15 s von selbst abgebrochen"], // 2.98.0
   versprechen: ["🐞", "Programmfehler im Hintergrund", "meist harmlos, bei Häufung weitergeben"],
   laden: ["📦", "Datei nicht geladen", "schlechtes Netz oder alter Zwischenspeicher – App neu laden/aktualisieren"],
@@ -38897,7 +38912,7 @@ async function fpAdmin(tage) {
       : k ? [k.symbol, `${k.name} · ${k.fehler_id}`, ""] : FP_ARTEN[art] || ["•", art, ""];
     const mess = art === "haenger" && d.ursache ? [d.fokus === false ? "Fenster nicht aktiv" : "", Number.isFinite(d.appMs) ? `App rechnete ${Math.round(d.appMs / 100) / 10} s` : "", d.speicherPct ? `Speicher ${d.speicherPct} %` : "", d.geraetGB ? `Gerät ${d.geraetGB} GB` : "", d.kerne ? `${d.kerne} Kerne` : ""].filter(Boolean).join(", ") : "";
     const info = [d.text, d.sicht ? "Bereich " + d.sicht : "", mess, d.aktion ? "bei „" + d.aktion + "“" : "", d.browser, d.system, d.start ? "läuft als " + d.start : "", d.version ? "v" + d.version : "", d.datei ? d.datei + ":" + d.zeile : ""].filter(Boolean).join(" · ");
-    return `<div class="fp-zeile${x.stufe === "schwer" || art === "hilferuf" ? " fp-rot" : ""}"><span class="hinweis">${esc(fKurz.format(new Date(x.zeit)) + " " + fZeit.format(new Date(x.zeit)))}</span> ${FP_STUFE_ZEICHEN[x.stufe] || ""} ${sym} <b>${esc(name)}</b>${info ? `<div class="hinweis">${esc(info)}</div>` : ""}${k ? `<div class="hinweis">Ursache: ${esc(k.ursache)}</div><div class="hinweis" style="font-style:italic">→ ${esc(k.loesung)}</div>` : tun ? `<div class="hinweis" style="font-style:italic">→ ${esc(tun)}</div>` : ""}</div>`; };
+    return `<div class="fp-zeile${x.stufe === "schwer" || art === "hilferuf" ? " fp-rot" : ""}"><span class="hinweis">${esc(fKurz.format(new Date(x.zeit)) + " " + fZeit.format(new Date(x.zeit)))}</span> ${FP_STUFE_ZEICHEN[x.stufe] || ""} ${sym} <b>${esc(name)}</b>${info ? `<div class="hinweis">${esc(info)}</div>` : ""}${d.schritte ? `<div class="hinweis">👣 Schritte davor: ${esc(d.schritte)}</div>` : ""}${k ? `<div class="hinweis">Ursache: ${esc(k.ursache)}</div><div class="hinweis" style="font-style:italic">→ ${esc(k.loesung)}</div>` : tun ? `<div class="hinweis" style="font-style:italic">→ ${esc(tun)}</div>` : ""}</div>`; };
   const karten = [...gruppen.entries()].map(([name, liste]) => { const probleme = liste.filter((x) => x.stufe ? x.stufe !== "info" : !nurStarts(x) && !/umgebung|hinweis|update_getippt|link_kopiert/.test(x.aktion));
     const zeigen = FP_ADMIN.info ? liste : probleme, still = liste.length - zeigen.length;
     // KC-CLUB-RC-PRUEFUNG (20.10.2026): Rot über var(--textRot) – im Dunkelmodus lesbar
