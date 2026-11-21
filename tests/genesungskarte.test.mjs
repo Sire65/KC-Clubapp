@@ -17,7 +17,12 @@ assert.ok(/function gkUmbruch\(g, text, breite\)/.test(gk), "Zeilen werden umbro
 const vorlagen = [...gk.matchAll(/(?:texte|herzlich|lustig|kurz): \[([^\]]+)\]/g)].map((m) => m[1]).join(" ");
 assert.ok(!/krank|OP\b|Operation|Krankenhaus|Unfall/i.test(vorlagen), "kein Grund auf den Vorlagen (keine Gesundheitsdaten)");
 assert.ok(/anlageHochladen\(new File\(\[blob\], name, \{ type: "image\/jpeg" \}\)\)/.test(gk) && /await direkt\(pid\)/.test(gk), "Bild als Chat-Anhang, Chat mit der Person");
-assert.ok(!/api\("nachricht_senden"/.test(gk) && !/fetch\(\s*["'`]https?:/.test(gk), "nichts wird automatisch gesendet, kein fremder Dienst");
+{ // KC-CLUB-GK-DIREKT-SENDEN (20.11.2026): nur die gemeinsame Karte schickt selbst – erst nach „💌 Ja, jetzt schicken“ (tests/gk-direkt-senden.test.mjs);
+  // alles andere (Einzelkarte usw.) sendet weiterhin nie von selbst
+  const gs = gk.slice(gk.indexOf("async function gkGemeinsamSenden("), gk.indexOf("async function gkInDenChat()")), rest = gk.replace(gs, "");
+  assert.ok(!/api\("nachricht_senden"/.test(rest) && !/fetch\(\s*["'`]https?:/.test(gk), "sonst wird nichts automatisch gesendet, kein fremder Dienst");
+  assert.ok(gs.indexOf("await frage(") > -1 && gs.indexOf("await frage(") < gs.indexOf('api("nachricht_senden"'), "gemeinsame Karte: erst fragen, dann senden");
+}
 assert.ok(/f\.person_id && f\.art !== "tod_mitglied" \? `<button class="mini-kachel" onclick="kartenBaukasten\('\$\{f\.person_id\}','\$\{flKartenAnlass\(f\.art\)\}'\)">/.test(bu) && /const flKartenAnlass = \(art\) =>/.test(bu), "Freud & Leid: Karte bei jedem Fall, passender Anlass");
 assert.ok(/m\.selbst \? "" : `<button class="knopf" onclick="kartenBaukasten\('\$\{m\.person_id\}'\)"><span class="kt-ico">💌<\/span>Karte schicken<\/button>`/.test(app), "beim Mitglied: für alle");
 // Gemeinsame Karte
