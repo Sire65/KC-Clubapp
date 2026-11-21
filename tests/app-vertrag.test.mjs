@@ -13366,7 +13366,7 @@ function idx0() { return lies("index.html"); }
   assert.ok(r2.rows[0].std === "1,5" && r2.rows[0].klein === "ges. 12,5" && r2.ueber === 1 && r2.fehl === 0.5 && r2.regelStd === 2 && r2.bedarfStd === 6, "Stunden je Zeile und Tag");
   assert.ok(/function dpdUebersicht\(tage, ges, gesBer\)/.test(programm) && /Stunden je Person – alle Tage/.test(programm) && /<td class="std \$\{r\.art\}">/.test(programm), "Stundenspalte und Blatt „Stunden je Person“");
   assert.ok(/#druck \.dpd-raster td\.a-gelb \{/.test(html) && /#druck \.dpd-sum \{/.test(html), "Ampel- und Übersichts-Stil im Druckblock");
-  assert.ok(/function dpdBedarf\(tage, von, bis\)/.test(programm) && /Regelzeit und Besetzung je Stunde/.test(programm) && /html = bed \+ (?:dpdLueckenBlatt\(d\) \+ )?blaetter\.flatMap/.test(programm) && /#druck \.dpd-bed \{/.test(html), "vorn das Blatt Regelzeit und Besetzung je Stunde");
+  assert.ok(/function dpdBedarf\(tage, von, bis\)/.test(programm) && /Regelzeit und Besetzung je Stunde/.test(programm) && /html = (?:bed \+ (?:dpdLueckenBlatt\(d\) \+ )?|\(art === "voll" \? bed \+ dpdLueckenBlatt\(d\) : ""\) \+ )blaetter\.flatMap/.test(programm) && /#druck \.dpd-bed \{/.test(html), "vorn das Blatt Regelzeit und Besetzung je Stunde");
   assert.ok(/if \(t\.art !== "Markttag"\) \{ \/\/ Aufbau\/Nachbereitung: keine Vorgabe/.test(programm) && /So haben sich eingetragen:/.test(programm) && /"aus Wunschplänen, keine Vorgabe"/.test(programm), "Aufbau und Nachbereitung ohne Vorgabe, aus den Wunschplänen");
   assert.ok(/#druck:has\(\.dpd\) \{ padding: 0 !important; width: 297mm !important; \}/.test(html) && /#druck \.dpd-blatt \{[^}]*height: 210mm;[^}]*break-after: page;/.test(html), "je Blatt genau A4 quer");
   const druckBlock = html.slice(html.indexOf("  @media print {"), html.indexOf("\n  }\n", html.indexOf("  @media print {")));
@@ -13609,7 +13609,7 @@ assert.ok(/:where\(:root\.sch-an\) :is\(\.kachel,[^)]*\.register button\) \{ box
   assert.equal(nurKann[1] - nurKann[0], 8, "ohne Wunschzeit gilt wie bisher die Kann-Zeit");
   assert.ok(/if \(await dpDruckVeraltet\(ich\.person_id, w\)\.catch\(\(\) => false\)\)/.test(server) && /w\.regel !== DP_REGEL/.test(server), "Stand veraltet (Wunsch, Bedarf, Einstellung, Regel) → von selbst neu");
   assert.ok(/nebenbei\(dpDruckAlleNeu\(\)\.catch/.test(server), "neuer Wunschplan → gleich neu gerechnet");
-  assert.ok(/dpLuecken: \{ titel: "🧩 Wo noch Helfer fehlen"/.test(programm) && /html = bed \+ dpdLueckenBlatt\(d\) \+/.test(programm), "eigenes Blatt und im Gesamtdruck");
+  assert.ok(/dpLuecken: \{ titel: "🧩 Wo noch Helfer fehlen"/.test(programm) && /html = (?:\(art === "voll" \? )?bed \+ dpdLueckenBlatt\(d\)/.test(programm), "eigenes Blatt und im Gesamtdruck");
   assert.ok(/cdKopf\("Hier fehlen noch Helfer"/.test(programm) && /\$\{cdFuss\(/.test(programm.slice(programm.indexOf("function dpdLueckenBlatt"))), "Kopf und Fuß nach CD");
   assert.ok(/#druck \.dpl-tab th, #druck \.dpl-tab td \{ border: \.25mm solid/.test(html), "Längs- und Querlinien");
 }
@@ -13853,4 +13853,12 @@ assert.ok(/if \(!gezeigt && !nurZaehlen && !\(START_HASH && START_HASH !== "#"\)
   const b = (r, h) => r.tage[0].bedarf[(h - r.von) * 2];
   assert.equal(b(ohne, 20), 2); assert.equal(b(mit, 19), 2); assert.equal(b(mit, 19.5), 3); assert.equal(b(mit, 22.5), 3);
   assert.ok(/async function dpZuschlag\(\)/.test(server) && /section_key", "dienstplan_context"\)\.gt\("updated_at", seit\)/.test(server) && /fair: Number\(konf\.fair\) \|\| 1\.5, zuschlag,/.test(server), "Server liest den Zuschlag und rechnet bei Änderung neu");
+}
+// 2.996.0 KC-CLUB-DP-WUNSCH-PLAN (Hansi 21.11.: Wunschplan und berechneter Plan getrennt über alle Tage)
+{
+  assert.ok(/dpWunsch: \{ titel: "🙋 Wunschplan – alle Tage"[^\n]*bauen: \(\) => dpdBauen\("wunsch"\) \}/.test(programm) && /dpPlan: \{ titel: "🗓️ Dienstplan – alle Tage"[^\n]*bauen: \(\) => dpdBauen\("plan"\) \}/.test(programm), "zwei Druckarten");
+  assert.ok(programm.includes(`onclick="druckZu();druckStarten('dpWunsch')"`) && programm.includes(`onclick="druckZu();druckStarten('dpPlan')"`), "Knöpfe im Ordner");
+  const i = programm.indexOf("function dpdTag(d, von, bis, ges = {}, art = \"voll\")"), f = programm.slice(i, i + 3000);
+  assert.ok(i > 0 && /if \(art === "wunsch"\)/.test(f) && /art === "plan" \? d\.leute\.filter\(\(x\) => x\.s\)/.test(f) && /const t = art === "plan" \? "leer"/.test(f), "Wunsch ohne Einteilung, Plan ohne Wunschfarben");
+  assert.ok(/html = \(art === "voll" \? bed \+ dpdLueckenBlatt\(d\) : ""\)/.test(programm), "Bedarfs- und Lückenblatt nur im großen Ausdruck");
 }

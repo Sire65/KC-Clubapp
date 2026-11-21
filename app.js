@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.995.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.996.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -18094,7 +18094,7 @@ function rkSchalten(k, an) {
 function rkAufbauen(z) {
   const w = z.w, an = z.immer || rkAn(z.schluessel);
   const sch = $("setRk" + z.schluessel[0].toUpperCase() + z.schluessel.slice(1)); if (sch) sch.checked = an; // Schalter unter 🧩 Startseite & Ansicht
-  if ($("setRkRolle")) $("setRkRolle").checked = rkRolleAn(); if ($("setRkRast")) $("setRkRast").checked = einst("rkRast", true); // KC-CLUB-ROLLKARTEI-ROLLE
+  if ($("setRkRolle")) $("setRkRolle").checked = rkRolleAn(); if ($("setRkRast")) $("setRkRast").checked = einst("rkRast", true); if ($("setRkGross")) $("setRkGross").checked = einst("rkGross", true); // KC-CLUB-ROLLKARTEI-ROLLE/-GROSS
   if (z.knopf) { const tx = an ? (z.schluessel === "einst" ? "Übersicht" : "Liste") : "Kartei"; if (z.knopf.querySelector(".kl-i")) klSetzen(z.knopf, an ? "☰" : "🗂️", tx, tx); else z.knopf.textContent = (an ? "☰ " : "🗂️ ") + tx; /* 2.729.0 */ z.knopf.title = an ? "Als gewohnte Liste zeigen" : "Als Rollkartei zeigen"; }
   if (z.schluessel === "einst") setTimeout(() => { try { euModus(); } catch {} }, 0); // 2.552.0 KC-CLUB-EINST-UEBERSICHT: Übersicht ↔ Kartei
   if (!an) { if (z.an) rkAbbauen(z); return; }
@@ -18159,7 +18159,7 @@ function rkStellen(z, still) {
   z.reiter.querySelectorAll(".rk-tab").forEach((b, i) => { b.classList.toggle("an", i === z.i); b.setAttribute("aria-selected", i === z.i); });
   z.reiter.querySelector(".rk-tab.an")?.scrollIntoView({ block: "nearest", inline: "center" });
   z.platz.querySelector(".rk-zahl").textContent = `${z.i + 1} / ${n}`;
-  if (z.rolle) { z.griffe?.forEach((g) => (g.hidden = true)); if (!z.lauf) z.p = z.i; rkRolleZeichnen(z); } // KC-CLUB-ROLLKARTEI-ROLLE: Lage aus z.i (auch wenn andere Stellen z.i setzen)
+  if (z.rolle) { z.griffe?.forEach((g) => (g.hidden = true)); if (!z.lauf) z.p = z.i; rkRolleZeichnen(z); if (!z.lauf) rkRolleRuhe(z); } // KC-CLUB-ROLLKARTEI-ROLLE: Lage aus z.i (auch wenn andere Stellen z.i setzen)
   try { z.opts?.vorn?.(z.karten[z.i], z); } catch {}
 }
 // i darf über das Ende hinaus zeigen (Überlauf); richtung: 1 = vorwärts, -1 = rückwärts, ohne = kürzester Weg (Reiter)
@@ -18225,6 +18225,7 @@ function rkKlick() {
 // gedreht wird dann am Stapel oben, an der nächsten Karte unten, an den Reitern oder ▲▼. Inhalt und Funktionen der Karten bleiben unverändert.
 // RÜCKWEG: je Gerät ⚙️ → Rollkartei → „🛞 Neue Rolle“ aus (dann wieder die klassische Rollkartei 2.180.0 mit Rad); für alle: RK_ROLLE_STANDARD = false.
 const RK_ROLLE_STANDARD = true, RK_STAPEL = 14, RK_LUECKE = 10, RK_BLICK = 72; // Stapelstufe, Abstand zur nächsten Karte, sichtbarer Teil der nächsten Karte (px)
+const RK_STREIFEN = 30, RK_RUHE_MS = 650, RK_GROSS_MS = 280; // KC-CLUB-ROLLKARTEI-GROSS: Streifen der nächsten Karte, Wartezeit bis „groß“, Dauer des Wachsens
 const rkRolleAn = () => einst("rkRolle", RK_ROLLE_STANDARD);
 const rkBedienText = () => rkRolleAn() ? "mit dem Finger nach oben schieben, sie rastet auf jeder Karte ein (oder Buchstaben oben, ▲▼)" : "wischen, antippen oder ▲▼ am Rad";
 function rkRolleSetzen(an) {
@@ -18252,14 +18253,14 @@ function rkRolleEinrichten(z) {
   z.zaehler = document.createElement("div"); z.zaehler.className = "rk-zaehler";
   z.zaehler.innerHTML = `<button type="button" data-r="-1" aria-label="Vorige Karte">▲</button><span class="rk-z-zahl" aria-live="polite"></span><button type="button" data-r="1" aria-label="Nächste Karte">▼</button>`;
   z.zaehler.querySelectorAll("[data-r]").forEach((b) => (b.onclick = (e) => { e.stopPropagation(); rkGehe(z, z.i + Number(b.dataset.r), Number(b.dataset.r)); }));
-  z.platz.appendChild(z.zaehler);
+  z.w.insertBefore(z.zaehler, z.platz); // neben den Karten (nicht im Platz – sonst liegt die große Karte darüber)
   const w = z.w;
   // Finger/Maus: senkrecht ziehen. Hat die vordere Karte mehr Inhalt, scrollt der Finger erst ihren Inhalt – am Ende rollt er nahtlos weiter
   // zur nächsten Karte (wie am iPad); zurück genauso. So gibt es keinen Streit mehr zwischen „Karte lesen“ und „Rolle drehen“.
   w.addEventListener("pointerdown", z.pd = (e) => {
     if (!z.rolle || !z.an || e.button > 0 || !rkRolleImFeld(z, e.clientX, e.clientY)) return;
-    rkRolleInnenHalt(z);
-    z.zug = { id: e.pointerId, y0: e.clientY, x0: e.clientX, y: e.clientY, p0: z.p, zieht: false, gerollt: false, spur: [[performance.now(), e.clientY]], ziel: e.target };
+    rkRolleInnenHalt(z); clearTimeout(z.grossUhr);
+    z.zug = { id: e.pointerId, y0: e.clientY, x0: e.clientX, y: e.clientY, p0: z.p, zieht: false, gerollt: false, geschrumpft: false, spur: [[performance.now(), e.clientY]], ziel: e.target };
   });
   w.addEventListener("pointermove", z.pm = (e) => {
     const g = z.zug; if (!g || g.id !== e.pointerId) return;
@@ -18270,6 +18271,10 @@ function rkRolleEinrichten(z) {
     if (ganz && k && k.scrollHeight > k.clientHeight + 2) { // erst den Karteninhalt
       const t = rest > 0 ? Math.min(rest, k.scrollHeight - k.clientHeight - k.scrollTop) : Math.max(rest, -k.scrollTop);
       if (t) { k.scrollTop += t; rest -= t; }
+    }
+    if (rest && (z.g || 0) > 0) { // große Karte: erst fließend zurückschrumpfen (≈ 60 px Weg), dann rollen
+      cancelAnimationFrame(z.grossRaf || 0); const t = Math.sign(rest) * Math.min(Math.abs(rest), z.g * 60);
+      z.g = Math.max(0, z.g - Math.abs(t) / 60); rest -= t; g.geschrumpft = true; rkRolleZeichnen(z);
     }
     if (rest) { z.p += rest / schritt; g.gerollt = true; rkRolleZeichnen(z); }
     g.spur.push([performance.now(), e.clientY]); if (g.spur.length > 6) g.spur.shift();
@@ -18285,7 +18290,7 @@ function rkRolleEinrichten(z) {
     z.klickSperre = performance.now(); // nach dem Ziehen keinen Klick auslösen
     const s = g.spur, a = s[0], b = s[s.length - 1], dt = Math.max(16, b[0] - a[0]), schritt = (z.kh || 300) + RK_LUECKE;
     const vPx = performance.now() - b[0] > 90 ? 0 : -(b[1] - a[1]) / dt; // px je ms (nach oben = positiv)
-    if (!g.gerollt && Math.abs(z.p - Math.round(z.p)) < 0.002) return rkRolleInnen(z, vPx); // nur gelesen: Inhalt läuft mit Schwung aus
+    if (!g.gerollt && Math.abs(z.p - Math.round(z.p)) < 0.002) { if (g.geschrumpft) rkRolleGross(z, 1); else rkRolleRuhe(z); return rkRolleInnen(z, vPx); } // nur gelesen: Inhalt läuft mit Schwung aus; kurz angezogen → wieder groß
     const weit = Math.max(-4, Math.min(4, vPx / schritt * 1000 * 0.22)); // Schwung: schneller Wisch läuft über mehrere Karten
     let ziel = Math.round(z.p + weit); if (ziel === Math.round(g.p0) && Math.abs(z.p - g.p0) > 0.18) ziel += z.p > g.p0 ? 1 : -1; // kleiner, bewusster Zug reicht für eine Karte
     rkRolleFahren(z, ziel);
@@ -18294,10 +18299,10 @@ function rkRolleEinrichten(z) {
   w.addEventListener("click", z.kl = (e) => { if (z.klickSperre && performance.now() - z.klickSperre < 350) { e.stopPropagation(); e.preventDefault(); } }, true);
 }
 function rkRolleAbbauen(z) {
-  if (!z.rolle) return; rkRolleHalt(z); z.rolle = false; const w = z.w; w.classList.remove("rk-rolle");
+  if (!z.rolle) return; rkRolleHalt(z); clearTimeout(z.grossUhr); cancelAnimationFrame(z.grossRaf || 0); z.g = 0; z.rolle = false; const w = z.w; w.classList.remove("rk-rolle", "rk-gross");
   for (const [t, f] of [["pointerdown", z.pd], ["pointermove", z.pm], ["pointerup", z.pu], ["pointercancel", z.pc]]) if (f) w.removeEventListener(t, f);
   if (z.kl) w.removeEventListener("click", z.kl, true); z.zaehler?.remove(); z.zaehler = null; z.zug = null;
-  (z.karten || []).forEach((d) => { d.style.transform = d.style.opacity = d.style.zIndex = d.style.clipPath = d.style.visibility = ""; d.classList.remove("rk-scroll"); });
+  (z.karten || []).forEach((d) => { d.style.transform = d.style.opacity = d.style.zIndex = d.style.clipPath = d.style.visibility = d.style.height = ""; d.classList.remove("rk-scroll"); });
 }
 const rkRolleImFeld = (z, x, y) => { const r = z.platz?.getBoundingClientRect(); return !!r && y >= r.top && y <= r.bottom && x >= r.left && x <= r.right; };
 function rkRolleMasse(z) {
@@ -18307,22 +18312,28 @@ function rkRolleMasse(z) {
   const oben = 3 * RK_STAPEL + 10; z.kh = Math.max(180, h - oben - RK_LUECKE - RK_BLICK);
   z.w.style.setProperty("--rk-oben", z.platz.offsetTop + oben + "px"); z.w.style.setProperty("--rk-h", z.kh + "px");
   z.platzUnten = z.platz.offsetTop + h; z.oben = z.platz.offsetTop + oben;
+  if (z.zaehler) z.zaehler.style.top = z.platz.offsetTop - 14 + "px"; // über der Kartenkante, nie verdeckt
   (z.karten || []).forEach((d) => d.classList.toggle("rk-scroll", d.scrollHeight > d.clientHeight + 2));
   rkRolleZeichnen(z);
 }
 // Lage jeder Karte aus der (gebrochenen) Position p: 0 = vorn, >0 kommend (unten), <0 gelesen (oben im Stapel). Endlos wie bisher.
 function rkRolleZeichnen(z) {
   const n = z.karten?.length || 0; if (!n || !z.rolle) return;
-  const H = z.kh || 300, schritt = H + RK_LUECKE, sichtUnten = (z.platzUnten || 0) - (z.oben || 0);
+  const H = z.kh || 300, sichtUnten = (z.platzUnten || 0) - (z.oben || 0);
+  // KC-CLUB-ROLLKARTEI-GROSS (2.996.0): g = 0…1 – bleibt eine Karte stehen, wächst sie groß nach vorn (Stapel tritt zurück, unten bleibt ein Streifen der nächsten)
+  const g = Math.max(0, Math.min(1, z.g || 0)), e1 = g * (3 * RK_STAPEL + 4), e2 = g * (RK_BLICK - RK_STREIFEN), schritt = H + RK_LUECKE + e2;
   z.karten.forEach((d, i) => {
     let a = (((i - z.p) % n) + n) % n; if (a > n / 2 + 0.0001) a -= n; // a: Abstand zur vorderen Stelle (−: gelesen/oben, +: kommend/unten)
-    let y, s = 1, o = 1, zi;
-    if (a >= 0) { y = a <= 1 ? a * schritt : schritt + (a - 1) * (RK_BLICK + 30); o = a <= 1 ? 1 : Math.max(0, 1 - (a - 1) * 2.5); zi = 200 - Math.round(a * 10); }
-    else { const t = Math.min(-a, 3); y = -t * RK_STAPEL; s = 1 - t * 0.045; o = -a > 3 ? Math.max(0, 1 - (-a - 3) * 2) : 1 - t * 0.14; zi = 150 - Math.round(-a * 10); }
-    const unten = Math.max(0, H - (sichtUnten - y)); // was unter den Platz ragt, abschneiden
+    let y, s = 1, o = 1, zi, hoch = 0;
+    if (Math.abs(a) < 0.0005) { y = -e1; hoch = g > 0 ? H + e1 + e2 : 0; zi = 200; }
+    else if (a > 0) { y = a <= 1 ? a * schritt : schritt + (a - 1) * (RK_BLICK + 30); o = a <= 1 ? 1 : Math.max(0, 1 - (a - 1) * 2.5); zi = 200 - Math.round(a * 10); }
+    else { const t = Math.min(-a, 3); y = -t * RK_STAPEL - e1; s = 1 - t * 0.045; o = (-a > 3 ? Math.max(0, 1 - (-a - 3) * 2) : 1 - t * 0.14) * (1 - g); zi = 150 - Math.round(-a * 10); }
+    const unten = Math.max(0, (hoch || H) - (sichtUnten - y)); // was unter den Platz ragt, abschneiden
+    d.style.height = hoch ? hoch.toFixed(1) + "px" : "";
     d.style.transform = `translate3d(0, ${y.toFixed(1)}px, 0) scale(${s.toFixed(3)})`; d.style.opacity = o.toFixed(3); d.style.zIndex = zi;
     d.style.clipPath = unten > 0 ? `inset(0 0 ${unten.toFixed(1)}px 0 round 0 0 16px 16px)` : ""; d.style.visibility = o < 0.02 ? "hidden" : "";
   });
+  z.w.classList.toggle("rk-gross", g > 0.5);
   const i = ((Math.round(z.p) % n) + n) % n;
   if (i !== z.i || !z.zaehler?.dataset.n) { const neu = i !== z.i; z.i = i; rkRolleStand(z); if (neu) { z.karten[i].scrollTop = 0; rkRast(); try { z.opts?.vorn?.(z.karten[z.i], z); } catch {} } }
 }
@@ -18336,6 +18347,19 @@ function rkRolleStand(z) { // Reiter, Zähler, wer bedienbar ist – ohne die La
   const zahl = z.platz?.querySelector(".rk-zahl"); if (zahl) zahl.textContent = `${z.i + 1} / ${n}`;
 }
 function rkRolleHalt(z) { if (z.lauf) { cancelAnimationFrame(z.lauf.raf); z.lauf = null; } }
+// KC-CLUB-ROLLKARTEI-GROSS (2.996.0, Wunsch Hansi 21.11.: „wenn sie im Vordergrund ist und ich nicht weiter rolle, soll sie in den Vordergrund und groß werden
+// und einrasten – aber wie kann man dann weiter rollen?“): nach kurzer Ruhe wächst die vordere Karte groß (mit Rasten). Weiterrollen wie immer: schieben –
+// die Karte schrumpft dabei fließend zurück und die nächste rollt nach; oder den Streifen unten / ▲▼ / Buchstaben antippen. Abschaltbar: ⚙️ „🔍 Karte groß“.
+const rkGrossAn = () => einst("rkGross", true);
+function rkRolleRuhe(z) { clearTimeout(z.grossUhr); if (!z.rolle || !rkGrossAn() || (z.g || 0) >= 1) return; z.grossUhr = setTimeout(() => { if (!z.zug && !z.lauf && z.rolle && z.an) rkRolleGross(z, 1); }, RK_RUHE_MS); }
+function rkRolleGross(z, ziel) {
+  cancelAnimationFrame(z.grossRaf || 0); const von = z.g || 0; if (Math.abs(ziel - von) < 0.001) return;
+  if (!fxAn()) { z.g = ziel; rkRolleZeichnen(z); if (ziel === 1) rkRast(); return; }
+  const dauer = ziel > von ? RK_GROSS_MS : 160, t0 = performance.now();
+  const schritt = (jetzt) => { const t = Math.min(1, (jetzt - t0) / dauer), e = ziel > von ? 1 - Math.pow(1 - t, 3) : t; z.g = von + (ziel - von) * e; rkRolleZeichnen(z);
+    if (t < 1) z.grossRaf = requestAnimationFrame(schritt); else { z.grossRaf = 0; if (ziel === 1) { rkRast(); z.karten[z.i]?.classList.toggle("rk-scroll", z.karten[z.i].scrollHeight > z.karten[z.i].clientHeight + 2); } } };
+  z.grossRaf = requestAnimationFrame(schritt);
+}
 function rkRolleInnenHalt(z) { if (z.innen) { cancelAnimationFrame(z.innen); z.innen = 0; } }
 function rkRolleInnen(z, v) { // Karteninhalt mit Schwung auslaufen lassen (wie natürliches Scrollen)
   rkRolleInnenHalt(z); const k = z.karten[z.i]; if (!k || Math.abs(v) < 0.05 || !fxAn()) return;
@@ -18345,12 +18369,13 @@ function rkRolleInnen(z, v) { // Karteninhalt mit Schwung auslaufen lassen (wie 
 }
 // gleitet zur Karte „ziel“ (ganze Zahl, darf über n hinaus) – weich auslaufend, bei jeder Karte ein Rasten
 function rkRolleFahren(z, ziel) {
-  rkRolleHalt(z); const von = z.p, weg = ziel - von;
-  if (!fxAn() || Math.abs(weg) < 0.001) { z.p = ziel; rkRolleZeichnen(z); return; }
+  rkRolleHalt(z); clearTimeout(z.grossUhr); const von = z.p, weg = ziel - von;
+  if ((z.g || 0) > 0 && Math.abs(weg) >= 0.001) rkRolleGross(z, 0); // große Karte schrumpft fließend zurück, während die Rolle läuft
+  if (!fxAn() || Math.abs(weg) < 0.001) { z.p = ziel; rkRolleZeichnen(z); rkRolleRuhe(z); return; }
   const dauer = Math.min(900, 260 + 150 * Math.sqrt(Math.abs(weg)) * Math.min(3, Math.abs(weg))), t0 = performance.now();
   const lauf = (z.lauf = { ziel, raf: 0 });
   const schritt = (jetzt) => { if (z.lauf !== lauf) return; const t = Math.min(1, (jetzt - t0) / dauer), e = 1 - Math.pow(1 - t, 3); // sanft auslaufen
-    z.p = von + weg * e; rkRolleZeichnen(z); if (t < 1) lauf.raf = requestAnimationFrame(schritt); else { z.lauf = null; z.p = ziel; rkRolleZeichnen(z); } };
+    z.p = von + weg * e; rkRolleZeichnen(z); if (t < 1) lauf.raf = requestAnimationFrame(schritt); else { z.lauf = null; z.p = ziel; rkRolleZeichnen(z); rkRolleRuhe(z); } };
   lauf.raf = requestAnimationFrame(schritt);
 }
 // KC-CLUB-KLAPPEN-ALLE (2.23.40, Wunsch Hansi): oben ein Umschalter „▾ Alle auf / ▴ Alle zu“ für alle Bereiche einer Seite.
@@ -32831,6 +32856,8 @@ const DRUCKARTEN = {
   inhaltsverzeichnis: { titel: "🗂️ Inhaltsverzeichnis drucken / als PDF", optionen: () => ivOptionen(), bauen: () => druckInhaltsverzeichnis() }, // KC-CLUB-INHALTSVERZEICHNIS (2.79.0)
   einzelplan: { titel: "📄 Einzelplan", get optionen() { return ICH?.admin ? epOptionen : undefined; }, bauen: (o) => epBauen() }, // KC-CLUB-DP-EINZELPLAN
   dpDruck: { titel: "🗓️ Dienstplan drucken", optionen: () => dpdOptionen(), bauen: () => dpdBauen() }, // 2.642.0 KC-CLUB-DP-DRUCK
+  dpWunsch: { titel: "🙋 Wunschplan – alle Tage", optionen: () => dpdBreitWahl("Nur die Angaben der Mitglieder (Wunschzeit, kann, nur wenn nötig, gesperrt) – ohne Einteilung. Unten je Tag: Bedarf / so viele wünschen sich die Zeit; am Ende die Wunschstunden je Person."), bauen: () => dpdBauen("wunsch") }, // 2.996.0 KC-CLUB-DP-WUNSCH-PLAN
+  dpPlan: { titel: "🗓️ Dienstplan – alle Tage", optionen: () => dpdBreitWahl("Nur die berechnete Einteilung (wer wann Dienst hat, Bereitschaft, Ampel) – ohne die Wunschfarben. Am Ende die Stunden je Person."), bauen: () => dpdBauen("plan") }, // 2.996.0
   dpVorschlag: { titel: "💡 Vorschläge zu den Lücken", optionen: () => '<p class="hinweis">Nur für dich zur Planung (nicht verteilen): je Lücke, wer früher kommen oder länger bleiben könnte, ob er die Zeit schon angeboten hat, wer Bereitschaft hat – und wo neue Helfer nötig sind.</p>', bauen: () => dpdVorschlagBauen() }, // 2.721.0 KC-CLUB-DP-VORSCHLAG
   dpEinsatz: { titel: "📋 Einsatzplan", optionen: () => '<p class="hinweis">Je Tag eine Seite (A4 quer): alle Personen, oben ihre Angaben (Wunsch, kann, nur wenn nötig, gesperrt), darunter die Einteilung als Balken, rechts W = Wunsch- und S = eingeteilte Stunden; unten Besetzt/Soll je halbe Stunde und die selbst eingetragene Bereitschaft. Rechnet sich von selbst neu.</p><p class="hinweis">Beim Drucken „A4 Querformat“ und „Hintergrundgrafiken“ wählen.</p>', bauen: () => dpdEinsatzBauen() }, // 2.944.0 KC-CLUB-DP-EINSATZ
   dpLuecken: { titel: "🧩 Wo noch Helfer fehlen", optionen: () => '<p class="hinweis">Ein Blatt mit Logo: alle Tage und Stunden, an denen noch Leute fehlen – zum Aushängen oder für die, die noch keine Wünsche abgegeben haben. Rechnet sich von selbst neu, sobald ein Wunschplan dazukommt.</p><p class="hinweis">Beim Drucken „A4 Querformat“ und „Hintergrundgrafiken“ wählen.</p>', bauen: () => dpdLueckenBauen() }, // 2.676.0 KC-CLUB-DP-LUECKEN
@@ -35391,6 +35418,10 @@ async function dpdNeuRechnen(k) {
     druckZu(); await dpdStart();
   } catch (e) { meldeFehler(e); if (k) { k.disabled = false; k.textContent = "🔄 Jetzt neu rechnen"; } }
 }
+function dpdBreitWahl(text) { // 2.996.0: Hinweis und Blattbreite für Wunschplan / Dienstplan
+  const r = (v, t, x) => `<label class="feld" style="display:flex;gap:8px;align-items:flex-start"><input type="radio" name="dpdBreit" value="${v}" ${DPD.breit === v ? "checked" : ""} onchange="DPD.breit=this.value"><span><b>${t}</b><br><small>${x}</small></span></label>`;
+  return `<p class="hinweis">${esc(text)}</p>${r("1", "1 Blatt breit", "8–23 Uhr auf einem Blatt")}${r("2", "2 Blätter breit (größer)", "links 8–16, rechts 15:30–23 Uhr")}<p class="hinweis">Beim Drucken „A4 Querformat“ und „Hintergrundgrafiken“ wählen.</p>`;
+}
 function dpdOptionen() {
   const r = (v, t, x) => `<label class="feld" style="display:flex;gap:8px;align-items:flex-start"><input type="radio" name="dpdBreit" value="${v}" ${DPD.breit === v ? "checked" : ""} onchange="DPD.breit=this.value"><span><b>${t}</b><br><small>${x}</small></span></label>`;
   const i = DPD.info, neu = i?.neu || [];
@@ -35399,6 +35430,8 @@ function dpdOptionen() {
       ${neu.length ? `<div style="margin-top:4px;color:var(--textRot,#b3261e);font-weight:700">🆕 ${neu.length === 1 ? "1 neuer oder geänderter Wunschplan" : neu.length + " neue oder geänderte Wunschpläne"} seit dem letzten Rechnen: ${neu.map(esc).join(", ")}</div>` : i ? '<div class="hinweis" style="margin-top:4px">✅ Alle Wunschpläne sind eingerechnet.</div>' : ""}
       <button type="button" class="knopf${neu.length ? " haupt" : ""}" style="margin-top:8px" onclick="dpdNeuRechnen(this)">🔄 Jetzt neu rechnen</button>
       <div class="hinweis" style="margin-top:4px;font-size:.8rem">Rechnet sich von selbst neu, sobald ein Wunschplan, der Bedarf oder die Einstellungen sich ändern. Regel: nie länger als die Wunschzeit, mindestens die Hälfte darin. Nichts geht nach DP2.</div>
+      <button type="button" class="knopf" style="margin-top:8px" onclick="druckZu();druckStarten('dpWunsch')">🙋 Wunschplan – alle Tage (nur die Wünsche)</button>
+      <button type="button" class="knopf" style="margin-top:8px" onclick="druckZu();druckStarten('dpPlan')">🗓️ Dienstplan – alle Tage (nur die Einteilung)</button>
       <button type="button" class="knopf" style="margin-top:8px" onclick="druckZu();druckStarten('dpEinsatz')">📋 Einsatzplan – je Tag eine Seite</button>
       <button type="button" class="knopf" style="margin-top:8px" onclick="druckZu();druckStarten('dpLuecken')">🧩 Nur das Blatt „Wo noch Helfer fehlen“</button>
       <button type="button" class="knopf" style="margin-top:8px" onclick="druckZu();druckStarten('dpVorschlag')">💡 Vorschläge zu den Lücken (nur für dich)</button></div>`;
@@ -35418,11 +35451,24 @@ function dpdBereiche(d, von) { // „10–23“ aus den Halbstunden mit Bedarf
 // mit Ampelpunkt, statt „Fehlt“ die Ampel-Zeile je halbe Stunde (rot −n, grün ✓, gelb +n), zum Schluss das Blatt „Stunden je Person – alle Tage“.
 // Vorn das Blatt „Regelzeit und Besetzung je Stunde“ (Wunsch Hansi „Regelzeit pro Tag und Besetzung pro Stunde, z. B. 11–12 2 Personen, 1 H, 1 V“).
 // Aushilfen ohne Zeiten (z. B. Leon) liefert das Planungswerkzeug als Leerzeile jeden Tag mit (z: „Aushilfe“, keine Wünsche, kein Dienst).
-function dpdTag(d, von, bis, ges = {}) { // Zeilen eines Tages: je Person, Bereitschaft, Bedarf/besetzt, Ampel; je Zeile 30 Zellen [Klasse, Text] und rechts die Stunden
+// 2.996.0 KC-CLUB-DP-WUNSCH-PLAN (Hansi 21.11. „ein Plan über alle Tage, wo nur die Wünsche drin stehen, und einer, den du berechnet hast“):
+// art "wunsch" = nur die Angaben der Mitglieder (ohne Einteilung, Bereitschaft, Ampel; unten Bedarf/Wunsch je halbe Stunde),
+// art "plan" = nur die Einteilung (ohne Wunschfarben, nur wer an dem Tag eingeteilt ist), art "voll" = wie bisher beides übereinander.
+const dpdWunschStd = (p) => [...p.w].filter((c) => c === "p").length / 2;
+function dpdTag(d, von, bis, ges = {}, art = "voll") { // Zeilen eines Tages: je Person, Bereitschaft, Bedarf/besetzt, Ampel; je Zeile 30 Zellen [Klasse, Text] und rechts die Stunden
   const S = dpdSlots(von, bis), zu = (i) => (d.bedarf[i] ? "" : " zu"), rows = [];
-  for (const p of d.leute) {
+  if (art === "wunsch") {
+    const leute = d.leute.filter((p) => [...p.w].some((c) => c === "p" || c === "a" || c === "i"));
+    for (const p of leute) rows.push({ art: "p", name: p.n, sub: [p.z, dpdWunschStd(p) ? `Wunsch ${dpdStd(dpdWunschStd(p))} h` : "nur kann / wenn nötig"].filter(Boolean).join(" · "),
+      cells: S.map((s, i) => { const t = DPD_ART[p.w[i]] || "leer"; return [t + zu(i), t === "unav" ? "×" : ""]; }), dienst: null, std: dpdStd(dpdWunschStd(p)), klein: "ges. W " + dpdStd(ges[p.n] || 0) });
+    const wu = S.map((s, i) => d.leute.filter((p) => p.w[i] === "p").length), bedarfStd = d.bedarf.reduce((n, x) => n + x, 0) / 2;
+    rows.push({ art: "s", name: "Bedarf / Wunsch", sub: "Personen je halbe Stunde", std: dpdStd(bedarfStd), klein: "Bedarf",
+      cells: S.map((s, i) => ["sum" + zu(i), d.bedarf[i] || wu[i] ? `${d.bedarf[i]}/${wu[i]}` : ""]) });
+    return { rows, fehl: 0, ueber: 0, bedarfStd, einpl: 0, wunschStd: d.leute.reduce((n, p) => n + dpdWunschStd(p), 0), regelStd: d.bedarf.filter(Boolean).length / 2 };
+  }
+  for (const p of art === "plan" ? d.leute.filter((x) => x.s) : d.leute) {
     const [a, b] = p.s || [null, null], cells = S.map((s, i) => {
-      const t = DPD_ART[p.w[i]] || "leer"; let cl = t + zu(i), txt = "";
+      const t = art === "plan" ? "leer" : DPD_ART[p.w[i]] || "leer"; let cl = t + zu(i), txt = "";
       if (a !== null && s >= a && s < b) { cl += " dienst"; if (s === a) { cl += " anf"; txt = `${dpdUhr(a)}–${dpdUhr(b)}`; } if (s + 0.5 === b) cl += " end"; }
       else if (t === "unav") txt = "×";
       return [cl, txt]; });
@@ -35444,13 +35490,22 @@ function dpdTabelle(tage, von, teil, letzte) {
   const S = dpdSlots(von, von + tage[0].rows[0].cells.length / 2), idx = teil.map((s) => S.indexOf(s)), rechts = teil[teil.length - 1] === letzte;
   const kopf = `<colgroup><col class="tag"><col class="wer">${teil.map(() => "<col>").join("")}${rechts ? '<col class="std">' : ""}</colgroup><thead><tr><th class="tag">Tag · Regelzeit</th><th class="wer">Mitglied</th>${teil.map((s) => `<th class="t${s % 1 ? "" : " voll"}">${s % 1 ? "" : s}</th>`).join("")}${rechts ? '<th class="std">Std.</th>' : ""}</tr></thead>`;
   const body = tage.flatMap((t) => t.rows.map((r, i) => {
-    const tag = i ? "" : `<th class="tag" rowspan="${t.rows.length}"><b>${t.wt} ${t.dt}</b><span class="kind">${esc(t.name)}</span><span class="regel">${esc(t.regel)} Uhr</span><span class="zahl">${t.art === "Markttag" ? `Regelzeit ${dpdStd(t.regelStd)} Std.` : "aus Wunschplänen, keine Vorgabe"}</span><span class="zahl">Bedarf ${dpdStd(t.bedarfStd)} Std.</span><span class="zahl">eingeplant ${dpdStd(t.einpl)} Std.</span><span class="bil ${t.fehl ? "rot" : "gruen"}">● ${t.fehl ? "fehlt " + dpdStd(t.fehl) + " Std." : "richtig besetzt"}</span>${t.ueber ? `<span class="bil gelb">● ${dpdStd(t.ueber)} Std. zu viel</span>` : ""}</th>`;
+    const tag = i ? "" : `<th class="tag" rowspan="${t.rows.length}"><b>${t.wt} ${t.dt}</b><span class="kind">${esc(t.name)}</span><span class="regel">${esc(t.regel)} Uhr</span><span class="zahl">${t.art === "Markttag" ? `Regelzeit ${dpdStd(t.regelStd)} Std.` : "aus Wunschplänen, keine Vorgabe"}</span><span class="zahl">Bedarf ${dpdStd(t.bedarfStd)} Std.</span>${t.wunschStd !== undefined ? `<span class="zahl">gewünscht ${dpdStd(t.wunschStd)} Std.</span>` : `<span class="zahl">eingeplant ${dpdStd(t.einpl)} Std.</span><span class="bil ${t.fehl ? "rot" : "gruen"}">● ${t.fehl ? "fehlt " + dpdStd(t.fehl) + " Std." : "richtig besetzt"}</span>${t.ueber ? `<span class="bil gelb">● ${dpdStd(t.ueber)} Std. zu viel</span>` : ""}`}</th>`;
     const zellen = idx.map((k, j) => { let [cl, txt] = r.cells[k];
       if (j === 0 && r.dienst && !txt && teil[0] > r.dienst[0] && teil[0] < r.dienst[1]) txt = `${dpdUhr(r.dienst[0])}–${dpdUhr(r.dienst[1])}`; // läuft vom linken Blatt herüber
       return `<td class="${cl}">${txt ? `<span>${esc(txt)}</span>` : ""}</td>`; }).join("");
     const std = rechts ? `<td class="std ${r.art}"><b>${esc(r.std)}</b><small>${esc(r.klein)}</small></td>` : "";
     return `<tr class="${r.art}${i ? "" : " erste"}">${tag}<th class="wer ${r.art}">${esc(r.name)}<small>${esc(r.sub)}</small></th>${zellen}${std}</tr>`; })).join("");
   return `<table class="dpd-raster">${kopf}<tbody>${body}</tbody></table>`;
+}
+function dpdUebersichtWunsch(tage, ges) { // 2.996.0 letztes Blatt des Wunschplans: Wunschstunden je Person und Tag
+  const namen = Object.keys(ges).filter((n) => ges[n] || tage.some((t) => t.leute.some((p) => p.n === n && /[pai]/.test(p.w)))).sort((a, b) => (ges[b] || 0) - (ges[a] || 0) || a.localeCompare(b, "de"));
+  const h = (t, n) => { const p = t.leute.find((x) => x.n === n); return p && /[pai]/.test(p.w) ? dpdWunschStd(p) : null; };
+  const zeilen = namen.map((n) => `<tr><td>${esc(n)}</td>${tage.map((t) => { const x = h(t, n); return `<td class="${x === null ? "leer" : ""}">${x === null ? "–" : dpdStd(x)}</td>`; }).join("")}<td class="ges">${dpdStd(ges[n] || 0)}</td></tr>`).join("")
+    + `<tr class="alle"><td>Alle zusammen</td>${tage.map((t) => `<td>${dpdStd(t.leute.reduce((a, p) => a + dpdWunschStd(p), 0))}</td>`).join("")}<td class="ges">${dpdStd(Object.values(ges).reduce((a, b) => a + b, 0))}</td></tr>`
+    + `<tr class="bed"><td>Bedarf</td>${tage.map((t) => `<td>${dpdStd(t.bedarfStd)}</td>`).join("")}<td class="ges">${dpdStd(tage.reduce((a, t) => a + t.bedarfStd, 0))}</td></tr>`;
+  return `<table class="dpd-sum"><thead><tr><th>Mitglied</th>${tage.map((t) => `<th>${t.wt}<small>${t.dt}</small></th>`).join("")}<th class="ges">Gesamt</th></tr></thead><tbody>${zeilen}</tbody></table>
+    <p class="dpd-eb" style="margin-top:3mm;text-transform:none;letter-spacing:0">Wunschstunden, so wie die Mitglieder sie eingetragen haben (nur „Wunschzeit“; „kann“ und „nur wenn nötig“ zählen nicht mit). „–“ = an dem Tag nichts angeboten.</p>`;
 }
 function dpdUebersicht(tage, ges, gesBer) { // letztes Blatt: Stunden je Person über alle Tage, Bedarf und Ampel je Tag
   const namen = [...new Set(tage.flatMap((t) => t.leute.map((p) => p.n)))].sort((a, b) => (ges[b] || 0) - (ges[a] || 0) || a.localeCompare(b, "de"));
@@ -35483,27 +35538,30 @@ function dpdBedarf(tage, von, bis) { // erstes Blatt: Regelzeit je Tag und Beset
   return `<table class="dpd-bed"><thead><tr><th>Tag</th><th>Regelzeit</th>${std.map((h) => `<th>${h}–${h + 1}</th>`).join("")}<th>Besetzung</th></tr></thead><tbody>${zeilen}</tbody></table>
     <p class="dpd-eb" style="margin-top:2mm;text-transform:none;letter-spacing:0">Vorgabe gilt für die Markttage: zusammen ${dpdStd(tage.filter((t) => t.art === "Markttag").reduce((a, t) => a + t.bedarfStd, 0))} Personenstunden. Aufbau und Nachbereitung haben keine Vorgabe – dort steht, wie sich die Mitglieder in ihren Wunschplänen eingetragen haben.</p>`;
 }
-async function dpdBauen() {
+async function dpdBauen(art = "voll") {
   const d = await api("dp_druck", {});
   if (!d?.tage?.length) { melde("Noch keine Übersicht abgelegt – Claude bitten, sie zu rechnen.", true); return null; }
   DPD.daten = d; const breit = document.querySelector('input[name="dpdBreit"]:checked')?.value || DPD.breit; DPD.breit = breit;
   const von = d.von ?? 8, bis = d.bis ?? 23, ges = {}, gesBer = {};
-  for (const t of d.tage) { for (const p of t.leute) ges[p.n] = (ges[p.n] || 0) + (p.s ? p.s[1] - p.s[0] : 0); for (const x of t.ber || []) gesBer[x.n] = (gesBer[x.n] || 0) + x.s[1] - x.s[0]; }
-  const tage = d.tage.map((t) => { const x = new Date(t.d + "T12:00:00"); return { ...t, ...dpdTag(t, von, bis, ges), name: dpdArtName(t.art, x), wt: DPD_WD[x.getDay()], dt: `${t.d.slice(8, 10)}.${t.d.slice(5, 7)}.`, regel: dpdBereiche(t, von) }; });
+  for (const t of d.tage) { for (const p of t.leute) ges[p.n] = (ges[p.n] || 0) + (art === "wunsch" ? dpdWunschStd(p) : p.s ? p.s[1] - p.s[0] : 0); for (const x of t.ber || []) gesBer[x.n] = (gesBer[x.n] || 0) + x.s[1] - x.s[0]; }
+  const tage = d.tage.map((t) => { const x = new Date(t.d + "T12:00:00"); return { ...t, ...dpdTag(t, von, bis, ges, art), name: dpdArtName(t.art, x), wt: DPD_WD[x.getDay()], dt: `${t.d.slice(8, 10)}.${t.d.slice(5, 7)}.`, regel: dpdBereiche(t, von) }; });
   const blaetter = [[]]; let n = 0;
   for (const t of tage) { const z = t.rows.length + 0.6; if (blaetter[blaetter.length - 1].length && n + z > DPD_ZEILEN - (breit === "2" ? 4.5 : 0)) { blaetter.push([]); n = 0; } blaetter[blaetter.length - 1].push(t); n += z; }
   const S = dpdSlots(von, bis), teile = breit === "2" ? [S.filter((s) => s < 16), S.filter((s) => s >= 15.5)] : [S];
-  const stand = d.stand ? wann(d.stand) : "", eb = `<p class="dpd-eb">Köcheclub Werne · ${esc(d.titel || "Dienstplan")} · Entwurf, nicht veröffentlicht${stand ? " · Stand " + esc(stand) : ""}</p>`;
-  const leg = `<div class="dpd-leg"><span><i class="pref"></i>Wunschzeit</span><span><i class="avai"></i>kann</span><span><i class="if_n"></i>nur wenn nötig</span><span><i class="unav">×</i>gesperrt</span><span><i class="dienst"></i>im Entwurf eingeplant</span><span><i class="ber"></i>Bereitschaft (Vorschlag)</span><span><i class="a-rot">−2</i>fehlen</span><span><i class="a-gruen">✓</i>richtig besetzt</span><span><i class="a-gelb">+1</i>zu viel</span><span><i class="zu"></i>kein Bedarf</span></div>`;
+  const stand = d.stand ? wann(d.stand) : "", eb = `<p class="dpd-eb">Köcheclub Werne · ${esc(d.titel || "Dienstplan")} · ${art === "wunsch" ? "Wünsche der Mitglieder" : "Entwurf, nicht veröffentlicht"}${stand ? " · Stand " + esc(stand) : ""}</p>`;
+  const legW = '<div class="dpd-leg"><span><i class="pref"></i>Wunschzeit</span><span><i class="avai"></i>kann</span><span><i class="if_n"></i>nur wenn nötig</span><span><i class="unav">×</i>gesperrt</span><span><b>5/3</b> = Bedarf / so viele wünschen sich die Zeit</span><span><i class="zu"></i>kein Bedarf</span></div>';
+  const legP = '<div class="dpd-leg"><span><i class="dienst"></i>eingeteilt</span><span><i class="ber"></i>Bereitschaft</span><span><i class="a-rot">−2</i>fehlen</span><span><i class="a-gruen">✓</i>richtig besetzt</span><span><i class="a-gelb">+1</i>zu viel</span><span><i class="zu"></i>kein Bedarf</span></div>';
+  const leg = art === "wunsch" ? legW : art === "plan" ? legP : `<div class="dpd-leg"><span><i class="pref"></i>Wunschzeit</span><span><i class="avai"></i>kann</span><span><i class="if_n"></i>nur wenn nötig</span><span><i class="unav">×</i>gesperrt</span><span><i class="dienst"></i>im Entwurf eingeplant</span><span><i class="ber"></i>Bereitschaft (Vorschlag)</span><span><i class="a-rot">−2</i>fehlen</span><span><i class="a-gruen">✓</i>richtig besetzt</span><span><i class="a-gelb">+1</i>zu viel</span><span><i class="zu"></i>kein Bedarf</span></div>`;
   const bed = `<section class="dpd-blatt"><header class="dpd-kopf"><div>${eb}<h1>Regelzeit und Besetzung je Stunde</h1></div><div class="dpd-leg"><span><b>3</b> = Personen gesamt</span><span><b>2 V · 1 H</b> = davon vorne / hinten</span><span><i style="background:#fff"></i>kein Dienst</span><span><i class="wu"></i><b style="color:#3d5fa8">7</b> = so viele haben sich eingetragen (Aufbau/Nachbereitung)</span></div></header>${dpdBedarf(tage, von, bis)}<footer class="dpd-fuss">Regelzeit und Besetzung · vorne vor Blatt 1</footer></section>`;
-  const nb = blaetter.length, html = bed + dpdLueckenBlatt(d) + blaetter.flatMap((bl, i) => teile.map((teil, k) => {
+  const ueberschrift = art === "wunsch" ? "Wunschplan – so haben sich die Mitglieder eingetragen" : art === "plan" ? "Dienstplan – berechnete Einteilung" : "Dienstplan – Wünsche und offene Zeiten";
+  const nb = blaetter.length, html = (art === "voll" ? bed + dpdLueckenBlatt(d) : "") + blaetter.flatMap((bl, i) => teile.map((teil, k) => {
     const fuss = [teile.length > 1 ? `Blatt ${i + 1} ${k ? "rechts" : "links"}` : `Blatt ${i + 1} von ${nb}`,
       teile.length > 1 ? (k ? `linken Rand bis 16 Uhr umknicken und auf Blatt ${i + 1} links legen` : `rechts an Blatt ${i + 1} rechts anlegen (Klebekante 15:30–16 Uhr)`) : "",
       i < nb - 1 ? `unten geht es mit Blatt ${i + 2} weiter` : "danach: Stunden je Person"].filter(Boolean).join(" · ");
     return `<section class="dpd-blatt"><header class="dpd-kopf"><div>${eb}
-      <h1>Dienstplan – Wünsche und offene Zeiten</h1></div>${leg}</header>${dpdTabelle(bl, von, teil, S[S.length - 1])}<footer class="dpd-fuss">${esc(fuss)}</footer></section>`; })).join("")
-    + `<section class="dpd-blatt"><header class="dpd-kopf"><div>${eb}<h1>Stunden je Person – alle Tage</h1></div></header>${dpdUebersicht(tage, ges, gesBer)}<footer class="dpd-fuss">Stundenübersicht · letztes Blatt</footer></section>`;
-  return { titel: `Dienstplan ${d.titel || ""}`.trim(), ohneRahmen: true, randlos: true, quer: true, html: `<div class="dpd${breit === "2" ? " breit" : ""}">${html}</div>` };
+      <h1>${ueberschrift}</h1></div>${leg}</header>${dpdTabelle(bl, von, teil, S[S.length - 1])}<footer class="dpd-fuss">${esc(fuss)}</footer></section>`; })).join("")
+    + `<section class="dpd-blatt"><header class="dpd-kopf"><div>${eb}<h1>${art === "wunsch" ? "Wunschstunden je Person – alle Tage" : "Stunden je Person – alle Tage"}</h1></div></header>${art === "wunsch" ? dpdUebersichtWunsch(tage, ges) : dpdUebersicht(tage, ges, gesBer)}<footer class="dpd-fuss">Stundenübersicht · letztes Blatt</footer></section>`;
+  return { titel: `${art === "wunsch" ? "Wunschplan" : "Dienstplan"} ${d.titel || ""}`.trim(), ohneRahmen: true, randlos: true, quer: true, html: `<div class="dpd${breit === "2" ? " breit" : ""}">${html}</div>` };
 }
 // ---------- 2.676.0 KC-CLUB-DP-LUECKEN (Wunsch Hansi „Übersicht, an welchen Tagen zu welchen Zeiten noch Leute fehlen – mit Kopf und Logo nach CD,
 // darunter Tage und Stundenbereiche als Tabelle mit Längs- und Querlinien“): je Tag eine Zeile, je Stunde eine Spalte (Zahl = so viele fehlen,
