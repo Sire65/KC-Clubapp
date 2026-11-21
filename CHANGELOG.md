@@ -1,5 +1,8 @@
 # Änderungen
 
+## (Version folgt) – 🔒 Kein Programmfehler bei gesperrtem Speicher (KC-CLUB-SPEICHER-GESPERRT)
+Meldung 21.11. 16:05 (nicht angemeldet, Android/Chrome mit blockierten Website-Daten): der Sichtschutz las beim Zurückkommen `localStorage` ohne Schutz → „SecurityError“ als schwerwiegender Fehler. Jetzt über `lsLesen` (gibt bei Sperre einfach nichts zurück).
+
 ## 3.2.0 – 2026-11-21 – 📄 PDF-Knopf: ganze Blätter, kein Tag über zwei Seiten (KC-CLUB-PDF-BLATT-GANZ) · nur App
 Fund Hansi 21.11.: „Ich wollte gerade den PDF-Plan versenden. Da waren die Tage getrennt. Nur ganze Tage, nicht umbrechen auf 2 Seiten.“
 - Ursache: „📄 PDF speichern / teilen“ und „💬 In der Club-App senden“ zeichnen die Druckseite als ein großes Bild und schneiden es in A4-Stücke. Dabei kannte der Schnitt nur Zeilen, keine Blattgrenzen aus dem Stylesheet (`break-after: page`) – und die Vorschau gab jedem Blatt noch 12 mm Rand dazu. Randlose A4-Blätter (Dienstplan, Wunschplan, Einsatzplan, Lückenblatt) liefen so über und Tage landeten auf zwei Seiten.

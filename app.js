@@ -14585,7 +14585,7 @@ function lsNichtSperren() { // Anruf, Video, Rundgang, Diashow/Bühne: dann lieg
 }
 function lsPruefen(beimZurueckkommen) {
   if (LS.offen || !KEY || lsNichtSperren() || SCHLAF.an) return; // KC-CLUB-SCHLAFMODUS: im Schlaf verdeckt der Bildschirmschoner – keine zweite Schicht
-  const pin = lsLiegenPin(), min = (Date.now() - (beimZurueckkommen ? Math.max(LS.letzte, Number(localStorage.getItem("kc_club_ls_letzt") || 0) || LS.letzte) : LS.letzte)) / 60000;
+  const pin = lsLiegenPin(), min = (Date.now() - (beimZurueckkommen ? Math.max(LS.letzte, Number(lsLesen("kc_club_ls_letzt") || 0) /* 21.11.2026 KC-CLUB-SPEICHER-GESPERRT: gesperrter Speicher (Website-Daten blockiert) warf SecurityError */ || LS.letzte) : LS.letzte)) / 60000;
   if (pin && min >= LS.MIN_PIN && lsHeikel()) return lsSperren(true);
   if (min >= LS.MIN_SICHT) lsSperren(!!pin);
 }

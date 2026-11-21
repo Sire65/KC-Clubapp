@@ -191,3 +191,5 @@ assert.ok(haupt.includes('{ id: "schlafmodus", thema: "technik", sym: "💤"'), 
 console.log(`schlafmodus: ok (${takte.length} Abfrage-Takte prüfen ruht())`);
 // KC-CLUB-LS-VIDEO (20.11.2026): Sichtschutz sperrt nur nicht, wenn ein Video wirklich läuft (vorher traf „video:not([paused])“ jedes <video>)
 assert.ok(!haupt.includes('"#anrufSchirm:not(.versteckt), video:not([paused])"') && haupt.includes('[...document.querySelectorAll("video")].some((v) => !v.paused && !v.ended)'), "Video-Ausnahme nur bei laufendem Video");
+// KC-CLUB-SPEICHER-GESPERRT (21.11.2026): Sichtschutz liest den Speicher geschützt
+assert.ok(!haupt.includes('Number(localStorage.getItem("kc_club_ls_letzt")') && haupt.includes('Number(lsLesen("kc_club_ls_letzt") || 0)'), "Sichtschutz liest Speicher über lsLesen");
