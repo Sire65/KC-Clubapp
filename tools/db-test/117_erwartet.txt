@@ -1,0 +1,15 @@
+spalten=3
+rechte=t
+definer=true,true,true
+probe_aendert_nichts=t
+probe_ist_probe=t
+ausgeloest=t
+schalter_aus=t
+testzeilen=t   (f, wenn Pflichtspalten die Testaufträge nicht zulassen – dann zeigen die folgenden Prüfungen t ohne Testzeilen)
+wartend_angehalten=t
+vorher_gemerkt=t
+processing_bleibt=t
+stand_ohne_inhalt=t
+entriegelt=t
+wieder_queued=t
+schalter_an=t

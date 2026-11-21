@@ -52,7 +52,15 @@ async function vapidSetzen() {
   webpush.setVapidDetails(subject || "mailto:admin@koecheclub-werne.de", pub, priv); VAPID_GESETZT = true; return true;
 }
 
+// KC-NOTAUS (21.11.2026, Wunsch Hansi): solange der NOT-AUS aktiv ist (kc_communication_settings.dispatch_enabled = false), geht auch an Eltern nichts raus –
+// sauber „angehalten“ statt Fehler. Eine kleine Lesung je Versand; Lesefehler → wie bisher senden.
+async function notausAktiv(): Promise<boolean> {
+  try { const { data, error } = await db.from("kc_communication_settings").select("dispatch_enabled").eq("id", "global").maybeSingle(); return !error && data?.dispatch_enabled === false; }
+  catch { return false; }
+}
+
 async function senden(kinder: string[], art: string, titel: string, text: string, url: string) {
+  if (await notausAktiv()) return { gesendet: 0, fehler: 0, angehalten: true, notaus: true };
   const ids = [...new Set(kinder.filter((x) => /^KC-P-[A-Z0-9-]{1,30}$/i.test(x)))].slice(0, 500);
   if (!ids.length || !ARTEN.has(art)) return { gesendet: 0, fehler: 0 };
   if (art !== "notfall" && nachts()) return { gesendet: 0, fehler: 0, nachts: true }; // sachte: nachts (22–7 Uhr) nichts an Eltern

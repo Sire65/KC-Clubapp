@@ -1,5 +1,14 @@
 # Änderungen
 
+## (Version folgt) – ⛔ NOT-AUS für Nachrichten, Push und E-Mails (KC-NOTAUS)
+Wunsch Hansi 21.11.: „roter Notfall-Knopf wie an technischen Maschinen – sofort Nachrichten und auch E-Mails im KC Communicator stoppen, damit nix rausgeht“; Freigabe „Alle Nachrichten stoppen und den Not-Aus in das Nachrichten-Modul und auch in KC Communicator“.
+- **Pilzknopf (nur Admin):** in 💬 Nachrichten oben ein roter Pilzknopf auf gelbem Ring. **1,5 s gedrückt halten** löst aus (der Ring füllt sich; vorher loslassen = nichts), keine Rückfrage → „⛔ NOT-AUS ausgelöst – N angehalten“. Daneben „Probe-NOT-AUS“: zählt nur („Würde N Aufträge anhalten“).
+- **Für alle:** roter Balken „⛔ NOT-AUS seit 14:03 – Nachrichten sind angehalten“ in Nachrichten und Chat, Schreibfeld und ➤ gesperrt; meldet der Server 423, kommt eine freundliche Meldung statt eines Fehlers. Hilfe-Tipp „Roter Balken NOT-AUS“.
+- **Entriegeln (nur Admin):** „🔓 Entriegeln“ zeigt die angehaltenen Aufträge je Kanal (nur Zahlen) – „📤 Alle jetzt senden“, „🗑️ Alle verwerfen“ oder „⏸️ Angehalten lassen (später)“, jeweils mit kurzer Rückfrage.
+- **Club-Server:** `notaus_ausloesen` {probe}, `notaus_entriegeln` {aktion}, `notaus_stand` (Admin), `notaus_info` (alle, aus dem Merker). Solange aktiv sind `nachricht_senden`, `geplant_jetzt`, `geplant_abrufen`, `startnachricht_senden`, `anruf_antwort` für **alle** gesperrt (423, auch Admin); geplante Nachrichten, Geburtstagsgrüße und die Mail-Warteschlange warten. Antwortet der Communicator „angehalten“ (202/423/DISPATCH_DISABLED), ist das kein Fehler. Stand je Instanz 5 s gemerkt. `init` liefert `notaus` nur, wenn aktiv. Eltern-Push (kc-eltern) und Termin-Mails (kc-termine) halten ebenfalls an.
+- **Datenbank:** Migration `20261121_kc_notaus.sql` (Spalten notaus_seit/von/quelle in kc_communication_settings, Status „angehalten“ mit audit_meta.notaus_vorher, RPCs kc_notaus_ausloesen/entriegeln/stand nur für service_role; „processing“ wird nie angefasst). DB-Test `tools/db-test/117_notaus_test.sql`.
+- Tests: `tests/notaus.test.mjs` (neu), Browser-Lauf `tools/hilfe/notaus-browser.mjs` (abgeschirmt).
+
 ## 3.3.0 – 2026-11-21 – 🗓️ Dienstplan-PDF: Besetzungsmatrix, klare Uhrzeiten, halbe Lücken (KC-CLUB-DP-PDF-MATRIX) · 🔒 Speicher gesperrt
 Wunsch Hansi 21.11.: „halbstündig, jetzt bauen und sofort einspielen“.
 - **Besetzungsmatrix im verschickten Dienstplan:** Das Blatt „Regelzeit und Besetzung je Stunde“ steht jetzt auch im „🗓️ Dienstplan – alle Tage“ als erstes Blatt (bisher nur im großen Ausdruck) – **je halbe Stunde** eine Spalte (bisher nur die erste Halbstunde je Stunde). Je Zelle Soll/eingeteilt („3/2“), darunter klein „2 V · 1 H“, Färbung wie die Ampel im Tagesraster (rot fehlt, grün passt, gelb zu viel). Konzertabende (Zuschlag erhöht nur die Summe) zeigen „+1 🎵“ – so ist erklärt, warum V + H kleiner als das Soll ist. Bei „breit=2“ wie das Raster links/rechts mit Klebekante 15:30–16 Uhr.

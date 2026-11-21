@@ -891,7 +891,7 @@ async function routerSendenRoh(eventKey: string, personIds: string[], vars: Reco
   const stuecke: string[][] = [];
   for (let i = 0; i < personIds.length; i += ROUTER_STUECK) stuecke.push(personIds.slice(i, i + ROUTER_STUECK));
   if (!stuecke.length) stuecke.push([]);
-  const teile: { sent: number; failed: number; results: any[] }[] = new Array(stuecke.length);
+  const teile: { sent: number; failed: number; results: any[]; angehalten?: number }[] = new Array(stuecke.length);
   let naechstes = 0;
   const arbeiter = async () => {
     for (let i = naechstes++; i < stuecke.length; i = naechstes++) {
@@ -903,7 +903,8 @@ async function routerSendenRoh(eventKey: string, personIds: string[], vars: Reco
   await Promise.all(Array.from({ length: Math.min(ROUTER_PARALLEL, stuecke.length) }, arbeiter));
   const out = { sent: teile.reduce((n, t) => n + t.sent, 0), failed: teile.reduce((n, t) => n + t.failed, 0), results: teile.flatMap((t) => t.results) };
   dbPufferLeeren();
-  const ergebnis: { gesendet: number; fehler: number; wege?: Record<string, { push: string; mail: string }> } = { gesendet: Number(out?.sent || 0), fehler: Number(out?.failed || 0) };
+  const ergebnis: { gesendet: number; fehler: number; angehalten?: number; wege?: Record<string, { push: string; mail: string }> } = { gesendet: Number(out?.sent || 0), fehler: Number(out?.failed || 0) };
+  const angehalten = teile.reduce((n, t: any) => n + (Number(t?.angehalten) || 0), 0); if (angehalten) ergebnis.angehalten = angehalten; // KC-NOTAUS
   // 2.403.0 KC-CLUB-EXPRESS-WEGE: je Empfänger, was auf welchem Weg wirklich passiert ist (aus der Antwort des Versanddienstes) –
   // „ja“ = raus, „kein“ = kein Push-Gerät bzw. keine Mail-Adresse, „fehler“ = versucht und gescheitert, „-“ = nicht vorgesehen
   if (out.results.length) ergebnis.wege = Object.fromEntries(out.results.filter((x: any) => x?.personId).map((x: any) => [x.personId, routerWege(x.attempts)]));
@@ -926,6 +927,8 @@ async function routerAufruf(eventKey: string, personIds: string[], vars: Record<
   });
   const out = await r.json().catch(() => ({}));
   dbPufferLeeren(); // je Stück: der Communicator hat geschrieben
+  // KC-NOTAUS: der Communicator hat die Aufträge angehalten (202/423/DISPATCH_DISABLED) – kein Fehler, nicht wiederholen; nach dem Entriegeln gehen sie raus
+  if (notausAngehalten(r.status, out)) { notausVergessen(); return { sent: 0, failed: 0, results: [] as any[], angehalten: personIds.length }; }
   if (!r.ok && !out?.sent && !out?.failed) return { sent: 0, failed: personIds.length, results: [] as any[] };
   return { sent: Number(out?.sent || 0), failed: Number(out?.failed || 0), results: Array.isArray(out?.results) ? out.results : [] };
 }
@@ -3263,6 +3266,35 @@ function konfigZeile(schluessel: string): Promise<{ data: { wert: any; geaendert
     });
   });
 }
+// ---------- KC-NOTAUS (21.11.2026, Wunsch Hansi „roter Notfall-Knopf wie an technischen Maschinen – sofort Nachrichten und E-Mails stoppen“) ----------
+// NOT-AUS aktiv = kc_communication_settings.dispatch_enabled = false (gemeinsam mit dem KC Communicator). DB-sparsam: je Server-Instanz NOTAUS_MERK_MS
+// gemerkt (eine kleine Lesung über den Schlüssel), eigenes Auslösen/Entriegeln verwirft den Merker sofort. Lesefehler → nicht gesperrt (wie bisher).
+const NOTAUS_MERK_MS = 5000;
+const NOTAUS_TEXT = "⛔ NOT-AUS: Nachrichten sind gerade angehalten – bitte später noch einmal.";
+// Aktionen, die Nachrichten erzeugen – solange der NOT-AUS aktiv ist, für ALLE gesperrt (auch für den Admin: erst entriegeln)
+const NOTAUS_SPERRT = new Set(["nachricht_senden", "geplant_jetzt", "geplant_abrufen", "startnachricht_senden", "anruf_antwort"]);
+let NOTAUS_MERK: { t: number; v: Promise<{ aktiv: boolean; seit: string | null }> } | null = null;
+function notausLesen(): Promise<{ aktiv: boolean; seit: string | null }> {
+  if (NOTAUS_MERK && Date.now() - NOTAUS_MERK.t <= NOTAUS_MERK_MS) return NOTAUS_MERK.v;
+  const m = { t: Date.now(), v: (async () => {
+    let r: any = await db.from("kc_communication_settings").select("dispatch_enabled,notaus_seit").eq("id", "global").maybeSingle();
+    if (r.error) r = await db.from("kc_communication_settings").select("dispatch_enabled").eq("id", "global").maybeSingle(); // Migration noch nicht eingespielt
+    if (r.error || !r.data) { if (NOTAUS_MERK === m) NOTAUS_MERK = null; return { aktiv: false, seit: null }; }
+    const aktiv = r.data.dispatch_enabled === false;
+    return { aktiv, seit: aktiv ? (r.data.notaus_seit ?? null) : null };
+  })().catch(() => { if (NOTAUS_MERK === m) NOTAUS_MERK = null; return { aktiv: false, seit: null }; }) };
+  NOTAUS_MERK = m;
+  return m.v;
+}
+function notausVergessen() { NOTAUS_MERK = null; }
+async function notausSperre() {
+  const n = await notausLesen();
+  if (n.aktiv) throw new Fehler(NOTAUS_TEXT, 423, { notaus: true, seit: n.seit });
+}
+// Antwort des Communicator-Routers: 202/423, „angehalten“ oder DISPATCH_DISABLED heißt NOT-AUS – angehalten, kein Fehler (nicht wiederholen)
+function notausAngehalten(status: number, out: any): boolean {
+  return status === 423 || out?.angehalten === true || out?.notaus === true || out?.code === "DISPATCH_DISABLED" || out?.error === "DISPATCH_DISABLED";
+}
 async function sosFuerAlle(): Promise<boolean> {
   const { data } = await konfigZeile("sos");
   return !!(data?.wert as any)?.alle;
@@ -3463,6 +3495,7 @@ async function gebGrussLeute(absender: string) {
 async function gebGrussLauf() {
   const stunde = berlinStunde(new Date());
   if (!GG_STUNDEN.includes(stunde)) return { aus: true };
+  if ((await notausLesen()).aktiv) return { notaus: true }; // KC-NOTAUS: Grüße warten bis zum nächsten Lauf nach dem Entriegeln
   const { data: an } = await db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "geb_gruss").contains("wert", { an: true });
   if (!an?.length) return { absender: 0 };
   const heute = berlinTag(new Date()), in2 = berlinTag(new Date(Date.now() + 2 * 86400000)), z = { gesendet: 0, erinnert: 0, fehler: 0 };
@@ -9803,6 +9836,7 @@ async function geplantVorabMelden(ich: Ich, g: { id: string; thread_id: string; 
 // (5/Min., 40/Std.) bekommen im Communicator einen Warteplatz (status „queued“ + scheduled_for). Der Minuten-Zeitplan ruft diese Aktion auch,
 // wenn nur wartende Mails fällig sind; dann arbeitet der Communicator sie ab (nach 15 Min. Wartezeit übernimmt dort gleich Brevo).
 async function mailWarteschlange() {
+  if ((await notausLesen()).aktiv) return { faellig: 0, notaus: true }; // KC-NOTAUS: Warteschlange ruht (Aufträge stehen auf „angehalten“)
   const { count } = await db.from("kc_communication_requests").select("id", { count: "exact", head: true }).eq("status", "queued").not("scheduled_for", "is", null).lte("scheduled_for", jetzt());
   if (!count) return { faellig: 0 };
   const r = await fetch(`${SUPA}/functions/v1/kc-communication-router`, { signal: AbortSignal.timeout(28000), method: "POST",
@@ -9844,6 +9878,7 @@ async function verlassenErinnernLauf() {
 }
 async function geplantFaelligLauf() {
   const z = { gesendet: 0, fehler: 0 };
+  if ((await notausLesen()).aktiv) return { ...z, notaus: true }; // KC-NOTAUS: geplante Nachrichten warten (nicht belegt) – nach dem Entriegeln gehen sie raus
   const { data: faellig } = await db.from("kc_club_geplant").select(GEPLANT_FELDER + ",person_id,status").eq("status", "offen").lte("senden_um", jetzt()).order("senden_um").limit(20);
   for (const g of faellig ?? []) {
     // erst „belegen“ (nächste Zeit bzw. fertig), dann senden – zwei Läufe gleichzeitig senden so nie doppelt
@@ -10757,6 +10792,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
     zugangPruefen(a, ich); // 2.422.0 KC-CLUB-ZUGANG: Gäste/Aushilfen nur freigegebene Aktionen – hier, damit es für alle vier Aufrufwege gilt
     await sitzungVorgaben(); // 2.751.0 KC-CLUB-SITZUNG-VORGABEN: gemerkt, höchstens alle 5 Minuten neu gelesen
     siZaehlen(a, ich); // 2.726.0 KC-CLUB-SICHERHEIT-WAECHTER: Angriffs- und Absaug-Wächter (nur zählen im Speicher; Bremse ab SI.bremsenAb)
+    if (NOTAUS_SPERRT.has(a)) await notausSperre(); // KC-NOTAUS: Nachrichten angehalten – für alle, auch den Admin (erst entriegeln); gilt auch für geplante/Geburtstagsgrüße
     switch (a) {
       // ----- KC-CLUB-KURZCODE (1.87.0): Code für ein weiteres Gerät / die installierte App erzeugen -----
       case "kurzcode_erzeugen": {
@@ -10773,6 +10809,38 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (error) throw new Fehler("Der Code konnte nicht erzeugt werden – bitte nochmal tippen.", 500);
         await protokoll(ich.person_id, "kurzcode_erzeugt", {}); // ohne Code
         return json({ code, bis, minuten: KURZCODE_MIN });
+      }
+      // ----- KC-NOTAUS (21.11.2026): Auslösen / Entriegeln / Stand nur Admin; „notaus_info“ (aktiv? seit?) für alle – aus dem Merker, ohne Inhalte -----
+      case "notaus_info": return json(await notausLesen());
+      case "notaus_ausloesen": {
+        nurAdmin(ich);
+        const probe = p.probe === true;
+        const { data, error } = await db.rpc("kc_notaus_ausloesen", { p_von: ich.person_id, p_quelle: "club", p_probe: probe });
+        notausVergessen();
+        if (error || !data?.ok) { console.error("notaus_ausloesen", error?.message); throw new Fehler("NOT-AUS konnte nicht ausgelöst werden – bitte sofort im KC Communicator den Versand sperren.", 500); }
+        await protokoll(ich.person_id, probe ? "notaus_probe" : "notaus_ausgeloest", { angehalten: Number(data.angehalten) || 0, quelle: "club" });
+        return json({ ok: true, aktiv: !!data.aktiv, seit: data.seit ?? null, angehalten: Number(data.angehalten) || 0, probe });
+      }
+      case "notaus_entriegeln": {
+        nurAdmin(ich);
+        const aktion = ["senden", "verwerfen", "behalten"].includes(String(p.aktion)) ? String(p.aktion) : "";
+        if (!aktion) throw new Fehler("Bitte wählen: alle senden, alle verwerfen oder angehalten lassen.");
+        const { data, error } = await db.rpc("kc_notaus_entriegeln", { p_von: ich.person_id, p_aktion: aktion });
+        notausVergessen();
+        if (error || !data?.ok) { console.error("notaus_entriegeln", error?.message); throw new Fehler("Entriegeln hat nicht geklappt – bitte gleich nochmal versuchen.", 500); }
+        const z = { freigegeben: Number(data.freigegeben) || 0, verworfen: Number(data.verworfen) || 0, behalten: Number(data.behalten) || 0 };
+        await protokoll(ich.person_id, "notaus_entriegelt", { aktion, ...z });
+        // freigegebene Aufträge gleich losschicken (sonst holt sie der Minuten-Takt)
+        if (z.freigegeben) nebenbei(mailWarteschlange().catch((e) => console.error("notaus warteschlange", String(e))));
+        return json({ ok: true, aktiv: false, aktion, ...z });
+      }
+      case "notaus_stand": {
+        nurAdmin(ich);
+        const { data, error } = await db.rpc("kc_notaus_stand");
+        if (error || !data) throw new Fehler("Stand nicht lesbar – bitte gleich nochmal versuchen.", 500);
+        const nk: Record<string, number> = {};
+        for (const [k, v] of Object.entries(data.nach_kanal ?? {})) nk[txt(k, 20)] = Number(v) || 0;
+        return json({ aktiv: !!data.aktiv, seit: data.seit ?? null, von: data.von ?? null, quelle: data.quelle ?? null, angehalten: Number(data.angehalten) || 0, nach_kanal: nk });
       }
       case "init": {
         // KC-CLUB-MINDESTVERSION (RC 20.10.2026, Freigabe Hansi): sehr alte Apps starten nicht mehr mit altem Stand, sondern bekommen
@@ -10853,6 +10921,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         });
         const pGk = gkOffenFuer(ich).catch((e) => { console.error("gk_offen", String(e)); return []; }); // 2.977.0 KC-CLUB-GK-NACHFRAGE
         const pMfLb = mitfahrtLaufband(ich).catch((e) => { console.error("mitfahrt_laufband", String(e)); return []; }); // KC-CLUB-MITFAHRT-LAUFBAND
+        const pNotaus = notausLesen(); // KC-NOTAUS
         const pComm = communicatorStatus(ich).catch(() => null), pSos = sosFuerAlle(), pAdmin = adminVorname(), pThema = konfigZeile("thema").then((r) => { const w: any = r.data?.wert; return w?.id ? w : null; }).catch(() => null); // 2.323.0 KC-CLUB-THEMEN
         const pGedenken = gedenkenListe().catch(() => [] as any[]); // KC-CLUB-GEDENKEN (2.204.0)
         const pRzThema = rzThemaLage(ich).catch(() => null); // 2.730.0 KC-CLUB-REZEPT-WEIHNACHT: Hinweis fürs Info-Laufband (gemerkt, keine Abfrage je Start)
@@ -11068,7 +11137,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const express = await pExpress;
         const dienstwunschFehlt = await pDwFehlt; // KC-CLUB-DW-LAUFBAND
         const neuesGeraet = await siGeraetPruefen(ich, req).catch(() => null); // 2.726.0 KC-CLUB-NEUES-GERAET
+        const notaus = await pNotaus;
         return json({ meinGeburtstag, alarm, express, dienstwunschFehlt, schwerZeiten: SCHWER_ZEITEN, serverJetzt: Date.now(), /* KC-CLUB-ADVENT-SERVERUHR: Uhr des Servers für den Adventskalender */ gericht: await pGericht, /* KC-CLUB-GEMEINSCHAFTSGERICHT */ /* 2.806.0 KC-CLUB-DB-VIEL-ZU-TUN */ startnachrichtDarf: await pSnDarf, kz, hilfeTipps: await pTipps, /* 2.835.0 KC-CLUB-HILFE-TIPPS */ studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, neuesGeraet, meinGeraet: siGeraetKlasse(req.headers.get("user-agent")), /* 2.726.0 KC-CLUB-NEUES-GERAET */ ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtClub: ich.zugang === "tischgast" ? null : await rtClubKanal().catch(() => null), /* KC-CLUB-ANWESENHEIT */ rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, rezeptThema: await pRzThema, themenNaechste: await pThemenN, sitzungVorgaben: SV, /* 2.751.0 KC-CLUB-SITZUNG-VORGABEN */ naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, ablagekorb: await pAblk, clubjahr: await pCj, wartung, communicator, notfall: nf ?? null, einstellungen, rose, /* KC-CLUB-ROSE */ gkOffen: await pGk, mitfahrtenOffen: await pMfLb, /* KC-CLUB-MITFAHRT-LAUFBAND */ /* 2.977.0 KC-CLUB-GK-NACHFRAGE */ vertretung: await pVertretung, /* KC-CLUB-VERTRETUNG */ freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, protokollNeu, protokollPruefen, /* 2.818.0 KC-CLUB-PROTOKOLL-PRUEFUNG */ naechstesTreffen: naechstes[0] ?? null, ...(aufgabenDran ? { aufgabenDran } : {}), /* KC-CLUB-AUFGABEN-STAND */ mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw, ab: await pAb, dienstStempel: await pDs, runderTisch: await pTisch, /* 2.762.0 KC-CLUB-RUNDER-TISCH */
+          ...(notaus.aktiv ? { notaus } : {}), // KC-NOTAUS
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
             ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen,
             // KC-CLUB-GERAETE-TIPP: wohin der Link ginge – nur teilweise (z. B. „h…@web.de“)

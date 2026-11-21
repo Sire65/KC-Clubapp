@@ -6206,6 +6206,27 @@
     body:not(.knoepfe-weg) :is(.su-klein, .hz-frage, .hz-klick) { opacity: .72; }
     body:not(.knoepfe-weg) :is(.su-klein, .hz-frage, .hz-klick):is(:active, :focus-visible), body.klick-zeigen:not(.knoepfe-weg) .hz-klick { opacity: 1; }
   }
+/* KC-NOTAUS (21.11.2026, Wunsch Hansi): roter Pilzknopf auf gelbem Ring wie an Maschinen – 1,5 s halten löst aus; roter Balken für alle */
+.notaus-zeile { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin: 2px 8px 6px; }
+.notaus-zeile .na-probe { background: none; border: 0; color: var(--text2, #666); font-size: .78rem; text-decoration: underline; cursor: pointer; padding: 4px; }
+.notaus-knopf { --fuell: 0; position: relative; width: 64px; height: 64px; border-radius: 50%; border: 0; padding: 0; cursor: pointer; flex: none;
+  background: conic-gradient(#111 calc(var(--fuell) * 1turn), #ffd400 0); box-shadow: 0 0 0 2px #333, 0 2px 6px rgba(0,0,0,.35);
+  touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.notaus-knopf::before { content: ""; position: absolute; inset: 7px; border-radius: 50%; background: #ffd400; }
+.notaus-knopf .pilz { position: absolute; inset: 11px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(circle at 35% 30%, #ff6b6b, #d00000 55%, #8a0000); color: #fff; font: 800 .62rem/1 system-ui, sans-serif; letter-spacing: .02em;
+  box-shadow: inset 0 -3px 5px rgba(0,0,0,.45), 0 2px 3px rgba(0,0,0,.4); text-shadow: 0 1px 1px rgba(0,0,0,.6); transition: transform .1s; }
+.notaus-knopf.haelt .pilz { transform: scale(.92); }
+.notaus-knopf:focus-visible { outline: 3px solid #0a58ca; outline-offset: 2px; }
+.notaus-hinweis { font-size: .72rem; color: var(--text2, #666); max-width: 9em; line-height: 1.2; }
+.notaus-balken { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; background: #c00000; color: #fff; font-weight: 700; padding: 8px 12px;
+  border-radius: 10px; margin: 4px 8px 8px; box-shadow: 0 2px 6px rgba(160,0,0,.35); font-size: .92rem; }
+.notaus-balken span { flex: 1 1 12em; min-width: 0; }
+.notaus-balken button { background: #fff; color: #a00000; border: 0; border-radius: 8px; font-weight: 700; padding: 6px 10px; cursor: pointer; }
+.eingabe.notaus-gesperrt #text, .eingabe.notaus-gesperrt #sendenKnopf { opacity: .45; }
+.notaus-fenster .na-kanal { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid rgba(128,128,128,.25); }
+.notaus-fenster .dlg-knoepfe { flex-direction: column; gap: 8px; }
+.notaus-fenster .dlg-knoepfe .knopf { width: 100%; }
 </style>
 <!-- Club-Küche: redaktionelles Premium-Design, nur für Magazin (nicht Weihnachtsmarkt-Prospekt) -->
 <link rel="stylesheet" href="magazin/premium.css">
@@ -6444,6 +6465,7 @@
     <!-- 2.729.0 KC-CLUB-KOM-SYMBOLE (Wunsch Hansi „der obere Bereich ist zu unruhig und übervoll“ → „Symbol mit kleinem Wort darunter, unter ⚙️ einstellbar“):
          alle Knöpfe in EINER Reihe (html.kom-sym), sonst wie bisher mit Text daneben; der Anrufbeantworter steht mit in der Reihe -->
     <div class="kom-leiste"><button class="knopf klein" onclick="gruppeForm()" title="Neue Gruppe anlegen"><span class="kl-i">👥</span><span class="kl-t"> Gruppe</span><span class="kl-k">Gruppe</span></button><button class="knopf klein" id="uhFavKnopf" onclick="uhFavAnsicht(!UH.favAnsicht)" title="Deine Favoriten: Chats mit ⭐ und die, in denen du am meisten schreibst"><span class="kl-i">⭐</span><span class="kl-t"> Favoriten</span><span class="kl-k">Favoriten</span></button><button class="knopf klein" onclick="gemerktZeigen()" title="Nachrichten, die du mit „merken“ markiert hast"><span class="kl-i">🔖</span><span class="kl-t"> Gemerkt</span><span class="kl-k">Gemerkt</span></button><button class="knopf klein versteckt" id="ugKnopf" onclick="ugStart()" title="Clubleitung: welche deiner Nachrichten noch nicht gelesen wurden"><span class="kl-i">📭</span><span class="kl-t"> Ungelesen</span><span class="kl-k">Ungelesen</span></button><button class="knopf klein" onclick="testAnMichStarten()" title="Nachricht an dich selbst – prüft Push und Mail"><span class="kl-i">🧪</span><span class="kl-t"> Test</span><span class="kl-k">Test</span></button><button type="button" class="knopf klein ab-merker" id="abMerker" onclick="abOeffnen()" title="Mein Anrufbeantworter"><span class="kl-i">📼</span><span class="kl-t"> Mein Anrufbeantworter</span><span class="kl-k">Anrufb.</span></button><!-- 2.568.0 KC-CLUB-ANRUFBEANTWORTER --></div>
+    <div id="naNotaus" class="versteckt" aria-live="assertive"></div><!-- KC-NOTAUS: roter Balken (alle) + Pilzknopf (nur Admin) -->
     <div id="onlineLeiste"></div>
     <div id="uhMarkLeiste"></div>
     <div class="karte" id="unterhListe"><span class="hinweis">Wird geladen …</span></div>
@@ -6457,6 +6479,7 @@
       <div id="chatSuchLeiste" class="versteckt"><input id="chatSuchFeld" type="search" aria-label="Im Chat suchen" placeholder="Im Chat suchen …" autocomplete="off" oninput="chatSucheJetzt(true)" onkeydown="if(event.key==='Enter'){event.preventDefault();chatSucheSpringen(1)}"><span id="chatSuchZahl"></span><button title="vorheriger Treffer" onclick="chatSucheSpringen(-1)">▲</button><button title="nächster Treffer" onclick="chatSucheSpringen(1)">▼</button><button title="Suche schließen" onclick="chatSucheZu()">✕</button></div>
       <div class="chat-unterzeile" id="chatUnterzeile"><div class="hinweis" id="chatTeilnehmer" style="margin-left:54px;cursor:pointer" onclick="if(CHAT?.gruppe||(CHAT?.teilnehmer||[]).length>2)chatMitgliederZeigen()"></div><button type="button" class="tz-pfeil ct-pfeil versteckt" id="chatTeilnehmerPfeil" aria-expanded="false" title="Alle Teilnehmer zeigen" onclick="chatTnKlappen()">▸</button><button class="sl-kopf versteckt" id="chatSlMarke" title="Selbstlöschen in diesem Chat – antippen zum Ändern" onclick="slWahl('chat')"></button></div> <!-- KC-CLUB-SELBSTLOESCHEN 2.148.0: ⏳ neben „online“ -->
       <div id="chatFilterHinweis" class="chat-filter-hinweis versteckt" onclick="chatFilterSetzen('alle')"></div><!-- 2.577.0 KC-CLUB-CHAT-FILTER -->
+      <div id="chatNotaus" class="versteckt" aria-live="assertive"></div><!-- KC-NOTAUS -->
       <div id="chatAngeheftet"></div>
       <div id="khFuerDich" aria-live="polite"></div><!-- KC-CLUB-KLUGE-HELFER: eine Zeile „📌 Für dich“ -->
       <div id="chatRunde"></div>

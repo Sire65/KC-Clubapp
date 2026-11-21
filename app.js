@@ -2694,6 +2694,7 @@ const HILFE = [
   { id: "tastatur_knopf", thema: "nachrichten", sym: "⌨️", t: "Tastatur im Chat aus- und einblenden", x: "Unten im Chat steht neben dem kleinen Pfeil <b>▾</b> eine Taste <b>⌨️</b>. Ist sie <b>rot (⌨️ ▾)</b>, ist die Tastatur offen – antippen nimmt sie weg, und du siehst mehr Nachrichten. Nochmal antippen <b>(⌨️ ▴)</b> holt sie zurück, die Schreibmarke steht wieder im Feld. Dein angefangener Text bleibt dabei stehen. Nur auf Handy und Tablet.", seit: "2.455.0" },
   { id: "tage_einklappen", thema: "nachrichten", sym: "📂", t: "Vergangene Tage im Chat eingeklappt", x: "Im Chat sind frühere Tage jetzt <b>eingeklappt</b> – eine Zeile mit Anzahl und Absendern, <b>rechts das Datum</b> (z. B. „Mo, 11.11.26“). Ältere Wochen stehen als <b>„KW 45/26“</b>. Heute und Ungelesenes bleiben offen. Antippen klappt auf, <b>„⤢ Alle aufklappen“</b> öffnet alles. Ausschalten: ⚙️ → <b>„🧩 Startseite &amp; Ansicht“</b>.", zeig: () => zeige("nachrichten"), seit: "2.429.0" },
   { id: "netz_symbol", thema: "nachrichten", sym: "📡", t: "Router oder Satellit: deine Verbindung auf einen Blick", x: "Ein kleiner <b>Router</b> blinkt jetzt <b>oben links in 💬 Nachrichten</b>, wenn du im WLAN bist, und ein <b>Satellit</b> im Mobilfunk. Die Wellen zeigen die Qualität (grün = gut, gelb = mäßig, rot = schwach, grau = noch unbekannt). <b>Antippen</b> zeigt Netzart, Antwortzeit, Datentempo und <b>„📏 Jetzt messen“</b>. Aus- oder ruhig stellen: ⚙️ → <b>„✨ Effekte“</b>.", zeig: () => zeige("nachrichten"), seit: "2.429.0" },
+  { id: "notaus", thema: "nachrichten", sym: "⛔", t: "Roter Balken „NOT-AUS“", x: "Steht oben in 💬 Nachrichten oder im Chat ein <b>roter Balken „⛔ NOT-AUS“</b>, hat die Clubleitung alle Nachrichten, Push und E-Mails angehalten. Schreiben geht dann kurz nicht – dein Text bleibt im Feld. Sobald entriegelt ist, verschwindet der Balken und du kannst wieder senden. Der Admin löst den NOT-AUS mit dem roten Knopf aus (1,5 Sekunden gedrückt halten) und entriegelt ihn über <b>„🔓 Entriegeln“</b>.", zeig: () => zeige("nachrichten") },
   { id: "merken", thema: "nachrichten", sym: "⭐", t: "Eine Nachricht für später merken", x: "Manchmal liest man etwas und möchte es später schnell wiederfinden. Tipp die Nachricht an und wähle <b>„⭐ Merken“</b>. Alles Gemerkte liegt in 💬 Nachrichten oben unter <b>„🔖 Gemerkt“</b> – diese Liste siehst nur du.", zeig: () => zeige("nachrichten"), seit: "2.855.0" },
   { id: "chat_abstimmung", thema: "nachrichten", sym: "📊", t: "Schnell mal abstimmen", x: "Grillen oder Pizza? Freitag oder Samstag? Über <b>📎</b> unter dem Schreibfeld → <b>„📊 Abstimmung“</b> stellst du eine Frage mit 2 bis 8 Antworten. Alle sehen gleich, wie es gerade steht.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
   { id: "entwickler", thema: "technik", sym: "👨‍🍳", t: "Wer hat die Club-App gebaut?", x: "Die Club-App hat <b>Hans-Joachim Koch</b> entwickelt und gestaltet – Koch, Küchenmeister und Gründungsmitglied des Köcheclubs. Mehr über ihn mit Foto: <b>⚙️ Einstellungen → ℹ️ App-Info → „👨‍🍳 Über den Entwickler“</b>.", zeig: () => entwicklerZeigen(), seit: "2.23.32" },
@@ -8243,6 +8244,7 @@ function fehlerKatalogEintrag(schluessel) {
 }
 function meldeFehler(e) {
   const t = String(e?.message ?? e ?? "Unbekannter Fehler");
+  if (e?.notaus) return melde(t); // KC-NOTAUS: kein Fehlerfenster – Nachrichten sind nur angehalten
   if (istProgFehler(e, t)) { progFehlerMelden(e, t); return melde(JS_FEHLER_TEXT, true); } // 2.481.0: gleiche Erkennung wie fehlerText
   melde(t, true);
 }
@@ -8901,6 +8903,7 @@ async function apiRoh(action, daten = {}, zweiterVersuch = false, abbruch = null
   if (!j && !leitungKaputt && r.ok) throw new Error("Unerwartete Antwort vom Server.");
   if (r.status === 423 && j?.einspielen) { einspielenZeigen(j.vorname, j.fertig); throw Object.assign(new Error(j.error || "Kurze Wartung – gleich wieder da."), { einspielen: true }); } // 2.736.0 KC-CLUB-EINSPIELEN-FENSTER
   if (r.status === 423 && j?.gesperrt) { try { localStorage.removeItem(STAND_KEY); localStorage.removeItem("kc_club_chat_merk"); } catch {} try { caches.delete("kcclub-anhaenge").catch(() => {}); } catch {} /* 2.977.0 KC-CLUB-ANHANG-MERKEN: gesperrt → gemerkte Anlagen weg · 2.540.0 KC-CLUB-SPERRE-OFFLINE: kein alter Stand für den Offline-Start */ sperreZeigen(j.gesperrt, j.error, j.bis); throw Object.assign(new Error(j.error || "Zurzeit nicht verfügbar."), { gesperrt: true }); } // KC-CLUB-PERSON-SPERRE (2.23.77)
+  if (r.status === 423 && j?.notaus) { try { notausSetzen({ aktiv: true, seit: j.seit }); } catch {} throw Object.assign(new Error(j.error || NOTAUS_TEXT), { notaus: true, status: 423 }); } // KC-NOTAUS: Nachrichten angehalten – Balken zeigen, freundliche Meldung
   if (r.status === 401) { $("app").classList.add("versteckt"); $("gesperrt").classList.remove("versteckt"); $("linkUngueltig").classList.remove("versteckt"); try { if (window.KCFP) window.KCFP.ohneLink = true; zugangHilfeZeigen(j?.hilfe); } catch {} throw new Error(j?.error || "Kein Zugang"); } // KC-CLUB-ZUGANG-HILFE
   if (!r.ok) throw Object.assign(new Error(j?.error || (leitungKaputt ? schwerOder("Der Server ist gerade kurz nicht erreichbar – bitte gleich nochmal versuchen.") : FEHLER_KLARTEXT[r.status] || "Fehler " + r.status)), { leitung: leitungKaputt, status: r.status, dbWeg: r.status === 503 && j?.db === "weg" }); // 2.603.0: status (Sende-Schlange erkennt 409)
   return j;
@@ -18586,7 +18589,7 @@ async function neuLadenRoh(vonHand) {
   const swHinweis = !ICH ? setTimeout(startWartetZeigen, 3000) : 0; // 2.976.0 KC-CLUB-START-WARUM: nur beim ersten Anmelden
   initAnfrage.then(() => { try { localStorage.setItem(SCHWER_MERK, JSON.stringify(INIT?.schwerZeiten || null)); } catch {} }, () => {}).finally(() => { clearTimeout(swHinweis); startWartetWeg(); });
   try {
-    INIT = await initAnfrage; if (window.KCFP?.schlaeft) return; uhrAbgleich(INIT); INIT_AM = Date.now(); /* KC-CLUB-PW-TA-SPARSAM */ /* KC-CLUB-ADVENT-SERVERUHR */ /* 2.394.0 Fenster inzwischen geleert */ if (!START_MESS.initBis) { START_MESS.initAb = tInit; START_MESS.initBis = performance.now(); } /* KC-CLUB-KACHEL-ZAHLEN */ ICH = INIT.ich; einstOffenAnwenden(); /* 2.6.1: noch laufende Speicherungen nicht überschreiben */ adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); inkognitoZeigen(); einwZeigen(aktuelleAnsicht); schluesselSichern(KEY); /* KC-CLUB-SCHLUESSEL-SICHERN */ if (document.body.classList.contains("rg-ohne-admin")) document.body.classList.remove("ist-admin"); /* KC-CLUB-ERKLAERVIDEOS-ROLLEN: im Video für alle bleibt Admin aus */ stKnopf(); /* KC-CLUB-STUDIO */ cfUebernehmen(INIT?.einstellungen?.chat_farben); /* KC-CLUB-CHAT-FARBEN */ // KC-CLUB-KOPF-EINFACH
+    INIT = await initAnfrage; if (window.KCFP?.schlaeft) return; uhrAbgleich(INIT); INIT_AM = Date.now(); try { notausSetzen(INIT.notaus); } catch {} /* KC-NOTAUS */ /* KC-CLUB-PW-TA-SPARSAM */ /* KC-CLUB-ADVENT-SERVERUHR */ /* 2.394.0 Fenster inzwischen geleert */ if (!START_MESS.initBis) { START_MESS.initAb = tInit; START_MESS.initBis = performance.now(); } /* KC-CLUB-KACHEL-ZAHLEN */ ICH = INIT.ich; einstOffenAnwenden(); /* 2.6.1: noch laufende Speicherungen nicht überschreiben */ adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); inkognitoZeigen(); einwZeigen(aktuelleAnsicht); schluesselSichern(KEY); /* KC-CLUB-SCHLUESSEL-SICHERN */ if (document.body.classList.contains("rg-ohne-admin")) document.body.classList.remove("ist-admin"); /* KC-CLUB-ERKLAERVIDEOS-ROLLEN: im Video für alle bleibt Admin aus */ stKnopf(); /* KC-CLUB-STUDIO */ cfUebernehmen(INIT?.einstellungen?.chat_farben); /* KC-CLUB-CHAT-FARBEN */ // KC-CLUB-KOPF-EINFACH
     alarmPruefen(); /* KC-CLUB-NOTFALL-MELDUNG */ try { expressPruefen(); } catch {} /* 2.362.0 KC-CLUB-EXPRESS */ setTimeout(() => { try { irLaden(); } catch {} }, 3000); /* KC-CLUB-IST-RUECKFRAGE */ setTimeout(() => { try { abStandZeigen(INIT?.ab); } catch {} }, 2500); /* 2.568.0 KC-CLUB-ANRUFBEANTWORTER */ try { dsLageSetzen(INIT?.dienstStempel); } catch {} /* 2.590.0 KC-CLUB-DIENST-STEMPEL */ try { rundKarteZeichnen(); } catch {} /* 2.762.0 KC-CLUB-RUNDER-TISCH */ setTimeout(() => { try { snPruefen(); } catch {} }, 1500); /* 2.482.0 KC-CLUB-STARTNACHRICHT */ document.body.classList.toggle("sos-frei", sosDarf()); /* KC-CLUB-SOS-FREIGABE */ fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
     if (astF) try { astNachInit(INIT); } catch {} // KC-CLUB-AUFGABEN-STAND
     if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln);
@@ -18938,6 +18941,7 @@ function zeige(v, ausHistorie) {
   if (v !== "chat") $("nachUnten")?.classList.add("versteckt");
   try { stromAbschnitt(); } catch {} // 2.799.0 KC-CLUB-STROM-MESSUNG: Abschnitt dem alten Bereich zurechnen
   aktuelleAnsicht = v; if (window.KCFP) KCFP.sicht = v;
+  if (v === "nachrichten" || v === "chat") try { notausZeigen(); } catch {} // KC-NOTAUS: Balken/Knopf passend zum Stand
   // 19.11.2026 KC-CLUB-AUFGABEN-STAND-ZURUECK (Wunsch Hansi): wer nach dem Öffnen gleich in den Chat o. Ä. ging, verpasste die Startmeldung
   // (die App versuchte es nur ~3½ Min.) – jetzt erscheint sie auch beim Zurückkommen auf die Startseite, solange sie noch offen ist (keine Abfrage)
   if (v === "start" && vorher !== "start" && typeof AST !== "undefined" && AST.dran.length && !AST.offen) setTimeout(() => astPruefen(0), 1500);
@@ -26266,6 +26270,7 @@ async function senden() {
   if (!text && !anlagen.length) return;
   waLieberJetzt(text); WA_HOLEN.aus = false; // KC-CLUB-WA-LIEBER: im selben Antippen (sonst blockiert das Handy den Sprung zu WhatsApp) – die Nachricht geht trotzdem in die Club-App
   if (!(await sensibelGaesteOk(text))) return; // KC-CLUB-SENSIBEL-GAESTE (2.78.0)
+  if (NOTAUS.aktiv) return melde(NOTAUS_TEXT); // KC-NOTAUS: Schreiben angehalten – der Text bleibt im Feld
   await inkoChatFrage(chatId ? "c:" + chatId : "neu"); // 2.153.0 KC-CLUB-INKOGNITO-CHAT: auch beim Schreiben in einem schon offenen Chat (einmal je Chat)
   VW.nurApp = false;
   if (!VN.an && !EXPRESS && !neuEntwurf?.mehrfach && !/^\s*(🚨|notfall)/i.test(text)) { // 2.649.0 KC-CLUB-VERSANDWAHL
@@ -27402,12 +27407,113 @@ async function einmalOeffnen(id) {
   document.body.appendChild(f); spur("einmal_foto", chatId);
 }
 function einmalSchliessen() { const f = $("einmalSchirm"); if (!f) return; f._weg?.(); f.remove(); melde("👁️ Das Foto ist jetzt weg."); chatLaden(true).catch(() => {}); }
+// ---------- KC-NOTAUS (21.11.2026, Wunsch Hansi „roter Notfall-Knopf wie an technischen Maschinen – sofort Nachrichten und E-Mails stoppen, damit nix rausgeht“) ----------
+// Admin: im Nachrichten-Modul ein roter Pilzknopf auf gelbem Ring. 1,5 s gedrückt halten löst aus (Ring füllt sich; vorher loslassen = nichts), KEINE Rückfrage.
+// Dann hält der Club-Server alle Chat-Nachrichten an (423) und der KC Communicator alle Push/E-Mails (Status „angehalten“). Für alle: roter Balken in
+// Nachrichten und Chat, Schreibfeld und ➤ gesperrt. „🔓 Entriegeln“ (nur Admin): Anzahl je Kanal – nur Zahlen, keine Inhalte – und drei Wege.
+// Der Stand kommt mit dem Start (nur wenn aktiv), mit jeder 423-Antwort und – solange aktiv – alle NOTAUS_TAKT_MS aus dem Server-Merker (notaus_info).
+var NOTAUS = { aktiv: false, seit: null, halt: null, takt: null, laeuft: false, platz: null };
+const NOTAUS_HALTEN_MS = 1500, NOTAUS_TAKT_MS = 60000;
+const NOTAUS_TEXT = "⛔ NOT-AUS: Nachrichten sind gerade angehalten – bitte später noch einmal.";
+const notausUhr = (seit) => { const d = new Date(seit || Date.now()); return Number.isFinite(d.getTime()) ? d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Berlin" }) : "?"; };
+function notausSetzen(n) {
+  const an = !!n?.aktiv;
+  NOTAUS.aktiv = an; NOTAUS.seit = an ? (n.seit || NOTAUS.seit || new Date().toISOString()) : null;
+  if (an && !NOTAUS.takt) NOTAUS.takt = setInterval(notausNachsehen, NOTAUS_TAKT_MS);
+  if (!an && NOTAUS.takt) { clearInterval(NOTAUS.takt); NOTAUS.takt = null; }
+  notausZeigen();
+}
+// solange aktiv: nur auf sichtbaren Nachrichten-/Chat-Seiten nachsehen, ob entriegelt wurde (eine kleine Anfrage, Server antwortet aus dem Merker)
+async function notausNachsehen() {
+  if (!NOTAUS.aktiv || document.hidden || !["nachrichten", "chat"].includes(aktuelleAnsicht)) return;
+  try { const r = await api("notaus_info", {}, { still: true }); notausSetzen(r); if (!r?.aktiv) melde("✅ NOT-AUS aufgehoben – Nachrichten gehen wieder."); } catch {}
+}
+function notausZeigen() {
+  const admin = !!ICH?.admin;
+  const balken = NOTAUS.aktiv ? `<div class="notaus-balken" role="alert"><span>⛔ NOT-AUS seit ${esc(notausUhr(NOTAUS.seit))} – Nachrichten sind angehalten</span>${admin ? '<button type="button" id="notausEntriegeln" onclick="notausEntriegelnFenster()">🔓 Entriegeln</button>' : ""}</div>` : "";
+  const knopf = admin && !NOTAUS.aktiv ? `<div class="notaus-zeile"><button type="button" class="na-probe" id="notausProbeKnopf" onclick="notausProbe()" title="Zählt nur, was angehalten würde – ändert nichts">Probe-NOT-AUS</button><span class="notaus-hinweis">1,5 s halten: alle Nachrichten stoppen</span><button type="button" class="notaus-knopf" id="notausKnopf" aria-label="NOT-AUS – 1,5 Sekunden gedrückt halten: alle Nachrichten, Push und E-Mails sofort stoppen" title="NOT-AUS – 1,5 Sekunden gedrückt halten"><span class="pilz" aria-hidden="true">NOT-AUS</span></button></div>` : "";
+  const na = $("naNotaus");
+  if (na && na.dataset.stand !== `${balken}|${knopf}`) { na.dataset.stand = `${balken}|${knopf}`; na.innerHTML = balken + knopf; na.classList.toggle("versteckt", !balken && !knopf); notausKnopfVerbinden(); }
+  const ch = $("chatNotaus"); if (ch) { ch.innerHTML = balken; ch.classList.toggle("versteckt", !balken); }
+  const t = $("text");
+  if (t) {
+    if (NOTAUS.aktiv && !t.disabled) { NOTAUS.platz = t.placeholder; t.placeholder = "⛔ NOT-AUS – Nachrichten sind angehalten"; }
+    else if (!NOTAUS.aktiv && t.disabled && NOTAUS.platz !== null) { t.placeholder = NOTAUS.platz; NOTAUS.platz = null; }
+    t.disabled = NOTAUS.aktiv;
+  }
+  $("eingabe")?.classList.toggle("notaus-gesperrt", NOTAUS.aktiv);
+  try { sendenFrei(); } catch {}
+}
+function notausKnopfVerbinden() {
+  const k = $("notausKnopf"); if (!k || k.dataset.an) return; k.dataset.an = "1";
+  const los = (e) => {
+    if (NOTAUS.halt || NOTAUS.laeuft) return;
+    if (e.pointerId !== undefined) { e.preventDefault(); try { k.setPointerCapture(e.pointerId); } catch {} }
+    k.classList.add("haelt"); const t0 = performance.now();
+    const schritt = () => {
+      if (!NOTAUS.halt) return;
+      const f = Math.min(1, (performance.now() - t0) / NOTAUS_HALTEN_MS); k.style.setProperty("--fuell", f.toFixed(3));
+      if (f >= 1) { notausHaltEnde(k, false); notausAusloesen(); } else NOTAUS.halt.uhr = setTimeout(schritt, 30);
+    };
+    NOTAUS.halt = { uhr: setTimeout(schritt, 30) };
+  };
+  const ab = () => notausHaltEnde(k, true);
+  k.addEventListener("pointerdown", los);
+  for (const n of ["pointerup", "pointercancel", "lostpointercapture"]) k.addEventListener(n, ab);
+  k.addEventListener("keydown", (e) => { if ((e.key === " " || e.key === "Enter") && !e.repeat) { e.preventDefault(); los(e); } });
+  k.addEventListener("keyup", (e) => { if (e.key === " " || e.key === "Enter") ab(); });
+  k.addEventListener("contextmenu", (e) => e.preventDefault());
+  k.addEventListener("click", (e) => e.preventDefault()); // ein kurzes Antippen tut nichts
+}
+function notausHaltEnde(k, zurueck) {
+  if (!NOTAUS.halt) return;
+  clearTimeout(NOTAUS.halt.uhr); NOTAUS.halt = null; k.classList.remove("haelt");
+  if (zurueck) k.style.setProperty("--fuell", "0");
+}
+async function notausAusloesen() {
+  if (NOTAUS.laeuft) return; NOTAUS.laeuft = true;
+  try {
+    try { navigator.vibrate?.(250); } catch {}
+    const r = await api("notaus_ausloesen", {}, { warten: true });
+    notausSetzen({ aktiv: true, seit: r?.seit });
+    melde(`⛔ NOT-AUS ausgelöst – ${Number(r?.angehalten) || 0} angehalten`);
+  } catch (e) { const k = $("notausKnopf"); k?.style.setProperty("--fuell", "0"); meldeFehler(e); }
+  finally { NOTAUS.laeuft = false; }
+}
+async function notausProbe() {
+  try { const r = await api("notaus_ausloesen", { probe: true }, { warten: true }); melde(`🧪 Probe-NOT-AUS: Würde ${Number(r?.angehalten) || 0} Aufträge anhalten – nichts wurde geändert.`); }
+  catch (e) { meldeFehler(e); }
+}
+const NOTAUS_KANAL = { push: "🔔 Push", email: "✉️ E-Mail", whatsapp: "💬 WhatsApp", sms: "📱 SMS" };
+async function notausEntriegelnFenster() {
+  let st; try { st = await api("notaus_stand", {}, { warten: true }); } catch (e) { return meldeFehler(e); }
+  if (!st?.aktiv) { notausSetzen({ aktiv: false }); return melde("✅ Der NOT-AUS ist schon entriegelt."); }
+  const n = Number(st.angehalten) || 0;
+  const zeilen = Object.entries(st.nach_kanal || {}).map(([k, z]) => `<div class="na-kanal"><span>${esc(NOTAUS_KANAL[k] || k)}</span><b>${Number(z) || 0}</b></div>`).join("") || '<p class="hinweis">Keine angehaltenen Aufträge.</p>';
+  const wahl = await new Promise((fertig) => {
+    let f; const zu = (w) => { f?.remove(); fertig(w); };
+    f = dlgOeffnen(`<h3 class="dlg-kopf">🔓 NOT-AUS entriegeln</h3><p class="dlg-text">Angehalten seit ${esc(notausUhr(st.seit))} Uhr: <b>${n}</b> Aufträge (Push/E-Mail) – nur die Anzahl, keine Inhalte.</p>${zeilen}
+      <div class="dlg-knoepfe"><button type="button" class="knopf haupt" data-w="senden">📤 Alle jetzt senden</button><button type="button" class="knopf" data-w="verwerfen">🗑️ Alle verwerfen</button><button type="button" class="knopf" data-w="behalten">⏸️ Angehalten lassen (später)</button><button type="button" class="knopf" data-w="">Abbrechen</button></div>`, () => zu(""));
+    f.classList.add("notaus-fenster"); f.id = "notausFenster";
+    f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => zu(b.dataset.w)));
+  });
+  if (!wahl) return;
+  const fr = { senden: [`📤 Entriegeln und alle ${n} angehaltenen Aufträge jetzt senden?`, "📤 Jetzt senden"],
+    verwerfen: [`🗑️ Entriegeln und alle ${n} angehaltenen Aufträge verwerfen?\n\nSie gehen dann nie raus.`, "🗑️ Verwerfen"],
+    behalten: [`⏸️ Entriegeln – die ${n} angehaltenen Aufträge bleiben liegen (später einzeln im KC Communicator)?`, "⏸️ Entriegeln"] }[wahl];
+  if (!(await frage(fr[0], { ja: fr[1], nein: "Abbrechen" }))) return;
+  try {
+    const r = await api("notaus_entriegeln", { aktion: wahl }, { warten: true });
+    notausSetzen({ aktiv: false });
+    melde(wahl === "senden" ? `🔓 Entriegelt – ${Number(r?.freigegeben) || 0} Aufträge gehen jetzt raus.` : wahl === "verwerfen" ? `🔓 Entriegelt – ${Number(r?.verworfen) || 0} Aufträge verworfen.` : `🔓 Entriegelt – ${Number(r?.behalten) || 0} Aufträge bleiben angehalten.`);
+  } catch (e) { meldeFehler(e); }
+}
 // KC-CLUB-SENDEN-NACH-UPLOAD (17.11.2026, Wunsch Hansi nach Rundschreiben ohne PDF: „wenn ein Anhang dabei ist, Sendeknopf erst freigeben,
 // wenn die Anlage hochgeladen ist“): solange eine Anlage hochlädt, ist ➤ gesperrt und zeigt ⏳ – erst wenn alles oben ist, wird gesendet.
 function sendenFrei() {
   const k = $("sendenKnopf"); if (!k) return;
   const laedt = anlagen.some((a) => a.laedt);
-  k.disabled = laedt; k.classList.toggle("laedt-hoch", laedt);
+  k.disabled = laedt || !!globalThis.NOTAUS?.aktiv; k.classList.toggle("laedt-hoch", laedt); // KC-NOTAUS: ➤ gesperrt, solange Nachrichten angehalten sind
   k.textContent = laedt ? "⏳" : "➤"; k.title = laedt ? "Bitte warten – die Anlage wird noch hochgeladen" : "Senden";
   k.setAttribute("aria-label", k.title);
 }

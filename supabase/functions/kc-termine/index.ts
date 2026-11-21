@@ -169,6 +169,8 @@ async function senden(eventKey: string, personIds: string[], vars: Record<string
     body: JSON.stringify({ sourceProgram: "kc-besuche", eventKey, recipients: personIds.map((personId) => ({ personId })), bcc, variables: vars, correlationId: korrelation }),
   });
   const out = await r.json().catch(() => ({}));
+  // KC-NOTAUS: der Communicator hat angehalten (202/423/DISPATCH_DISABLED) – kein Fehler; nach dem Entriegeln gehen die Aufträge raus
+  if (r.status === 423 || out?.angehalten === true || out?.notaus === true || out?.code === "DISPATCH_DISABLED") return [{ name: "Versand", mail: false, push: false, hinweis: "⛔ NOT-AUS – angehalten, geht nach dem Entriegeln raus" }];
   if (!Array.isArray(out?.results)) return [{ name: "Versand", mail: false, push: false, hinweis: String(out?.error || out?.code || `HTTP ${r.status}`) }];
   return out.results.map((x: any) => {
     const ok = (k: string) => (x.attempts ?? []).some((a: any) => a.channel === k && ["sent", "deduplicated"].includes(a.result));
