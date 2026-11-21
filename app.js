@@ -35471,14 +35471,16 @@ function dpdBereiche(d, von) { // „10–23“ aus den Halbstunden mit Bedarf
 // 2.996.0 KC-CLUB-DP-WUNSCH-PLAN (Hansi 21.11. „ein Plan über alle Tage, wo nur die Wünsche drin stehen, und einer, den du berechnet hast“):
 // art "wunsch" = nur die Angaben der Mitglieder (ohne Einteilung, Bereitschaft, Ampel; unten Bedarf/Wunsch je halbe Stunde),
 // art "plan" = nur die Einteilung (ohne Wunschfarben, nur wer an dem Tag eingeteilt ist), art "voll" = wie bisher beides übereinander.
-const dpdWunschStd = (p) => [...p.w].filter((c) => c === "p").length / 2;
+const dpdWunschStd = (p) => (p.f ? 0 : [...p.w].filter((c) => c === "p").length / 2);
+// 2.997.0 KC-CLUB-DP-WUNSCH-FREMD: f = keinen eigenen Wunschplan abgegeben (Zeiten hat jemand anderes eingesetzt) – im Wunschplan leere Zeile
+const dpdW = (p) => (p.f ? "-".repeat(p.w.length) : p.w);
 function dpdTag(d, von, bis, ges = {}, art = "voll") { // Zeilen eines Tages: je Person, Bereitschaft, Bedarf/besetzt, Ampel; je Zeile 30 Zellen [Klasse, Text] und rechts die Stunden
   const S = dpdSlots(von, bis), zu = (i) => (d.bedarf[i] ? "" : " zu"), rows = [];
   if (art === "wunsch") {
-    const leute = d.leute.filter((p) => [...p.w].some((c) => c === "p" || c === "a" || c === "i"));
-    for (const p of leute) rows.push({ art: "p", name: p.n, sub: [p.z, dpdWunschStd(p) ? `Wunsch ${dpdStd(dpdWunschStd(p))} h` : "nur kann / wenn nötig"].filter(Boolean).join(" · "),
-      cells: S.map((s, i) => { const t = DPD_ART[p.w[i]] || "leer"; return [t + zu(i), t === "unav" ? "×" : ""]; }), dienst: null, std: dpdStd(dpdWunschStd(p)), klein: "ges. W " + dpdStd(ges[p.n] || 0) });
-    const wu = S.map((s, i) => d.leute.filter((p) => p.w[i] === "p").length), bedarfStd = d.bedarf.reduce((n, x) => n + x, 0) / 2;
+    const leute = d.leute.filter((p) => p.f || [...p.w].some((c) => c === "p" || c === "a" || c === "i"));
+    for (const p of leute) rows.push({ art: "p", name: p.n, sub: [p.z, p.f ? "nicht selbst eingetragen" : dpdWunschStd(p) ? `Wunsch ${dpdStd(dpdWunschStd(p))} h` : "nur kann / wenn nötig"].filter(Boolean).join(" · "),
+      cells: S.map((s, i) => { const t = DPD_ART[dpdW(p)[i]] || "leer"; return [t + zu(i), t === "unav" ? "×" : ""]; }), dienst: null, std: dpdStd(dpdWunschStd(p)), klein: "ges. W " + dpdStd(ges[p.n] || 0) });
+    const wu = S.map((s, i) => d.leute.filter((p) => dpdW(p)[i] === "p").length), bedarfStd = d.bedarf.reduce((n, x) => n + x, 0) / 2;
     rows.push({ art: "s", name: "Bedarf / Wunsch", sub: "Personen je halbe Stunde", std: dpdStd(bedarfStd), klein: "Bedarf",
       cells: S.map((s, i) => ["sum" + zu(i), d.bedarf[i] || wu[i] ? `${d.bedarf[i]}/${wu[i]}` : ""]) });
     return { rows, fehl: 0, ueber: 0, bedarfStd, einpl: 0, wunschStd: d.leute.reduce((n, p) => n + dpdWunschStd(p), 0), regelStd: d.bedarf.filter(Boolean).length / 2 };
@@ -35516,8 +35518,8 @@ function dpdTabelle(tage, von, teil, letzte) {
   return `<table class="dpd-raster">${kopf}<tbody>${body}</tbody></table>`;
 }
 function dpdUebersichtWunsch(tage, ges) { // 2.996.0 letztes Blatt des Wunschplans: Wunschstunden je Person und Tag
-  const namen = Object.keys(ges).filter((n) => ges[n] || tage.some((t) => t.leute.some((p) => p.n === n && /[pai]/.test(p.w)))).sort((a, b) => (ges[b] || 0) - (ges[a] || 0) || a.localeCompare(b, "de"));
-  const h = (t, n) => { const p = t.leute.find((x) => x.n === n); return p && /[pai]/.test(p.w) ? dpdWunschStd(p) : null; };
+  const namen = Object.keys(ges).filter((n) => ges[n] || tage.some((t) => t.leute.some((p) => p.n === n && (p.f || /[pai]/.test(p.w))))).sort((a, b) => (ges[b] || 0) - (ges[a] || 0) || a.localeCompare(b, "de"));
+  const h = (t, n) => { const p = t.leute.find((x) => x.n === n); return p && /[pai]/.test(dpdW(p)) ? dpdWunschStd(p) : null; };
   const zeilen = namen.map((n) => `<tr><td>${esc(n)}</td>${tage.map((t) => { const x = h(t, n); return `<td class="${x === null ? "leer" : ""}">${x === null ? "–" : dpdStd(x)}</td>`; }).join("")}<td class="ges">${dpdStd(ges[n] || 0)}</td></tr>`).join("")
     + `<tr class="alle"><td>Alle zusammen</td>${tage.map((t) => `<td>${dpdStd(t.leute.reduce((a, p) => a + dpdWunschStd(p), 0))}</td>`).join("")}<td class="ges">${dpdStd(Object.values(ges).reduce((a, b) => a + b, 0))}</td></tr>`
     + `<tr class="bed"><td>Bedarf</td>${tage.map((t) => `<td>${dpdStd(t.bedarfStd)}</td>`).join("")}<td class="ges">${dpdStd(tage.reduce((a, t) => a + t.bedarfStd, 0))}</td></tr>`;
