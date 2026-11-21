@@ -1,6 +1,6 @@
 # Änderungen
 
-## (Version folgt) – ⛔ NOT-AUS für Nachrichten, Push und E-Mails (KC-NOTAUS)
+## 3.4.0 – 2026-11-21 – ⛔ NOT-AUS für Nachrichten, Push und E-Mails (KC-NOTAUS)
 Wunsch Hansi 21.11.: „roter Notfall-Knopf wie an technischen Maschinen – sofort Nachrichten und auch E-Mails im KC Communicator stoppen, damit nix rausgeht“; Freigabe „Alle Nachrichten stoppen und den Not-Aus in das Nachrichten-Modul und auch in KC Communicator“.
 - **Pilzknopf (nur Admin):** in 💬 Nachrichten oben ein roter Pilzknopf auf gelbem Ring. **1,5 s gedrückt halten** löst aus (der Ring füllt sich; vorher loslassen = nichts), keine Rückfrage → „⛔ NOT-AUS ausgelöst – N angehalten“. Daneben „Probe-NOT-AUS“: zählt nur („Würde N Aufträge anhalten“).
 - **Für alle:** roter Balken „⛔ NOT-AUS seit 14:03 – Nachrichten sind angehalten“ in Nachrichten und Chat, Schreibfeld und ➤ gesperrt; meldet der Server 423, kommt eine freundliche Meldung statt eines Fehlers. Hilfe-Tipp „Roter Balken NOT-AUS“.
