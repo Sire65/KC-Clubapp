@@ -33,7 +33,15 @@ const vgl = (a, b) => (a < b ? -1 : a > b ? 1 : 0); // wie Pythons sorted() für
 // bisherige Rechnung die Lücken mit Kann-Zeiten. Sperren, Ruhetag nach maxTageAmStueck, maxGesamt und „nur mit anderen“ gelten weiter.
 // 2.944.0 KC-CLUB-DP-SPAET-BIS-SCHLUSS: spaetBisSchluss – Spätdienst bis Marktschluss (siehe unten)
 // 2.993.0 KC-CLUB-DP-ZUSCHLAG: zuschlag (Konzertabende) – siehe dpRechnen
-export const DP_REGEL = 10;
+// 2.998.0 KC-CLUB-DP-WUNSCH-EIGEN: eigene Wunschzeile (we) und Freigabe (g) im Ergebnis – einmal neu rechnen
+export const DP_REGEL = 11;
+// 2.998.0 KC-CLUB-DP-WUNSCH-EIGEN: Wunschzeile eines Tages aus Einträgen – gleiche Regel wie im Plan (gesperrt vor Wunsch vor kann vor wenn nötig)
+export function wunschZeile(eintraege, d, von = 8, bis = 23) {
+  const WKZ = { pref: "p", avai: "a", if_n: "i", unav: "u" }, w = new Map();
+  for (const x of eintraege || []) { if (x.d !== d || !ART[x.t]) continue;
+    for (const s of slots(Number(x.a), Number(x.b))) { const alt = w.get(s); if (alt === "unav") continue; if (x.t === "unav" || alt === undefined || ART[x.t] > ART[alt]) w.set(s, x.t); } }
+  return slots(von, bis).map((s) => WKZ[w.get(s)] || "-").join("");
+}
 
 export function dpRechnen(e) {
   const MAXLEN = e.max ?? 8, FAIR = e.fair ?? 1.5, LO = e.von ?? 8, HI = e.bis ?? 23, DECKEL = e.wunschDeckel !== false, ANTEIL = Number.isFinite(e.wunschAnteil) ? e.wunschAnteil : 0.5;

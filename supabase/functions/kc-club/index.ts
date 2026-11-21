@@ -45,7 +45,7 @@ import { bskNeu, bskErlaubt, bskSpielen, bskStichAbschliessen, bskErgebnis } fro
 import { maeNeu, maeMoeglich, maeWuerfeln, maeZiehen, maeComputerWahl } from "./mae.js"; // KC-CLUB-MAE (2.26.0): Regeln = wörtliche Kopie aus app.js (tools/mae/server-kopie.mjs)
 import { FDK_FELD, fdkNeu, fdkOptionen, fdkZiehen, fdkWurfBeginn, fdkAugen, fdkWeiter, fdkKarteSpielen, fdkHygiene, fdkAbgeben, fdkSieger } from "./fdk.js"; // KC-CLUB-FDK-MG (2.219.0): Regeln = wörtliche Kopie aus app.js (tools/fdk/server-kopie.mjs)
 import { dkNeu, dkVorbehalt, dkErlaubt, dkSpielen, dkStichAbschliessen, dkErgebnis, dkComputerKarte } from "./doppelkopf.js"; // KC-CLUB-DK-MG (2.219.0): Regeln = wörtliche Kopie aus app.js (tools/dk/server-kopie.mjs)
-import { dpRechnen, DP_REGEL } from "./dp-rechnen.js";
+import { dpRechnen, DP_REGEL, wunschZeile } from "./dp-rechnen.js";
 import { anfahrt } from "./anfahrt.js"; // 2.721.0 KC-CLUB-ANFAHRT: km Wohnort → Markt aus der PLZ (ohne fremde Dienste) // 2.665.0 KC-CLUB-DP-NEU-RECHNEN: Dienstplan-Entwurf (gleiche Rechnung wie das Planungswerkzeug)
 import { KT_FRAGEN } from "./kt-fragen.js"; // KC-CLUB-KUECHENTERROR (2.14.0): Fragen = wörtliche Kopie aus lib/kuechenterror/fragen.js
 
@@ -195,7 +195,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.997.0";
+const SERVER_VERSION = "2.998.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -5491,7 +5491,7 @@ async function dpDruckNeu(adminId: string) {
   const [{ data: k }, { data: tageRoh }, { data: wRoh }, zuschlag] = await Promise.all([
     db.from("kc_club_person_einstellung").select("wert,geaendert_am").eq("person_id", adminId).eq("schluessel", "dp_druck_konfig").maybeSingle(),
     db.from("kc_dp_days_published").select("work_date,day_type,label,demand").eq("event_id", DW.veranstaltung).order("work_date"),
-    db.from("kc_dp_wish_inbox").select("person_id,revision,entries,updated_at,standby,standby_general").eq("org_id", ORG).eq("event_id", DW.veranstaltung).limit(300),
+    db.from("kc_dp_wish_inbox").select("person_id,revision,entries,updated_at,standby,standby_general,share_with_colleagues").eq("org_id", ORG).eq("event_id", DW.veranstaltung).limit(300),
     dpZuschlag(),
   ]);
   const konf: any = k?.wert && typeof k.wert === "object" ? k.wert : {};
@@ -5515,9 +5515,13 @@ async function dpDruckNeu(adminId: string) {
     ...((kmVon.get(pid) ?? 0) >= grenzeKm ? { minDienst: minWeit } : {}) });
   const name = new Map((leute ?? []).map((p: any) => [String(p.person_id), String(p.display_name || p.person_id)]));
   const wRev = new Map((wRoh ?? []).map((w: any) => [String(w.person_id), w]));
+  const ersatzAktiv = (pid: string) => { const e = ersatz[pid], w: any = wRev.get(pid); return !!e && Array.isArray(e.eintraege) && (e.revision ?? null) === (w ? w.revision : null); };
+  const eigeneVon = (pid: string) => { const w: any = wRev.get(pid); // 2.998.0: nur was die Person selbst abgegeben hat
+    return (Array.isArray(w?.entries) ? w.entries : []).filter((x: any) => DP_ART[x?.wishType] && x.start != null && x.end != null)
+      .map((x: any) => ({ d: String(x.date), t: DP_ART[x.wishType], z: ["V", "H", "B"].includes(x.wishZone) ? x.wishZone : "B", a: Number(x.start), b: Number(x.end) })); };
   const eintraegeVon = (pid: string) => {
     const e = ersatz[pid], w: any = wRev.get(pid);
-    if (e && Array.isArray(e.eintraege) && (e.revision ?? null) === (w ? w.revision : null)) return e.eintraege.map((x: any) => ({ d: String(x.d), t: String(x.t), z: String(x.z || "B"), a: Number(x.a), b: Number(x.b) }));
+    if (ersatzAktiv(pid)) return e.eintraege.map((x: any) => ({ d: String(x.d), t: String(x.t), z: String(x.z || "B"), a: Number(x.a), b: Number(x.b) }));
     return (Array.isArray(w?.entries) ? w.entries : []).filter((x: any) => DP_ART[x?.wishType] && x.start != null && x.end != null)
       .map((x: any) => ({ d: String(x.date), t: DP_ART[x.wishType], z: ["V", "H", "B"].includes(x.wishZone) ? x.wishZone : "B", a: Number(x.start), b: Number(x.end) }));
   };
@@ -5557,7 +5561,17 @@ async function dpDruckNeu(adminId: string) {
   // 2.997.0 KC-CLUB-DP-WUNSCH-FREMD (Hansi 21.11.: „die keinen Wunschplan abgegeben haben wie Anne und Leon, auch im Wunschplan leer“):
   // personen[pid].wunschFremd = die Zeiten hat jemand anderes eingesetzt – sie gelten für die Rechnung, im Wunschplan bleibt die Zeile leer (f: 1)
   const fremd = new Set(Object.entries(pk).filter(([, v]: any) => v?.wunschFremd === true).map(([id]) => name.get(id)).filter(Boolean));
-  for (const t of ergebnis.tage || []) for (const p of (t.leute || []) as any[]) if (fremd.has(p.n)) p.f = 1;
+  // 2.998.0 KC-CLUB-DP-WUNSCH-EIGEN (Hansi 21.11. nach der Prüfung: Ruth zeigt die ergänzten „wenn nötig“-Zeiten, Andreas Zeit kommt von Hansi):
+  // gilt ein Ersatz, steht im Wunschplan nur, was die Person selbst abgegeben hat (we); ohne eigenen Wunschplan bleibt die Zeile leer (f).
+  // g = Zeiten nicht für Kollegen freigegeben (share_with_colleagues nicht ja) – der Wunschplan zum Verschicken blendet sie aus.
+  const eigenW = new Map<string, any[]>(), nichtFrei = new Set<string>();
+  for (const pid of ids) { const n = name.get(pid) || pid; if (ersatzAktiv(pid)) { const e = eigeneVon(pid); if (e.length) eigenW.set(n, e); else fremd.add(n); }
+    if (wRev.get(pid)?.share_with_colleagues !== true) nichtFrei.add(n); }
+  for (const t of ergebnis.tage || []) for (const p of (t.leute || []) as any[]) {
+    if (fremd.has(p.n)) p.f = 1;
+    if (eigenW.has(p.n)) p.we = wunschZeile(eigenW.get(p.n), t.d, ergebnis.von ?? 8, ergebnis.bis ?? 23);
+    if (nichtFrei.has(p.n)) p.g = 1;
+  }
   const stand = jetzt(), wert = { ...ergebnis, titel: konf.titel || "Weihnachtsmarkt Werne 2026", stand, gerechnet: "club-server" };
   const { error } = await db.from("kc_club_person_einstellung").upsert({ person_id: adminId, schluessel: "dp_druck", wert, geaendert_am: stand }, { onConflict: "person_id,schluessel" });
   if (error) throw new Fehler("Der neue Stand konnte nicht gespeichert werden.", 500);
