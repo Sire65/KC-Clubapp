@@ -1,5 +1,13 @@
 # Änderungen
 
+## (Version folgt) – 📌 Pinnwand und Terminanfragen sparsamer (KC-CLUB-PW-TA-SPARSAM)
+Sparbilanz 21.11.: seit dem Leitung-Sparpaket (2.982.0/2.985.0) sparten „pinnwand_neu“ nur −23 % und „terminanfragen_liste“ nur −19 % je aktive Personenstunde (Online −71 %).
+- **Pinnwand beim Start:** keine Zusatzabfrage „pinnwand_neu“ mehr – die Zahl ungelesener Zettel kommt aus dem stillen Laden der Pinnwand (gleiche Rechnung). Nur mit „👋 Was ist neu“ wie bisher.
+- **Pinnwand bei Rückkehr in die App:** bisher JEDES Mal eine Abfrage (und dazu oft eine im nächsten Takt, weil die Leitung im Hintergrund getrennt war) – jetzt nur nach > 10 Min. weg oder wenn die Leitung nach 10 s nicht steht (wie bei den Terminanfragen). Ein Leitungsaufbau bis 15 s nach dem letzten Stand gilt als gedeckt; ein späterer Neuaufbau (Funkloch) fragt wie bisher sofort.
+- **Terminanfragen beim Start und nach > 10 Min. weg:** der Hinweis-Check nutzt die offenen Anfragen aus dem frischen init-Stand (INIT.terminanfragenOffen) – die Liste wird nur geholt, wenn der Hinweis wirklich erscheinen soll (neue Anfrage / nicht auf „später“ gestellt / 5 oder mehr).
+- Signale „pinnwand“/„terminanfrage“ laden weiter sofort, Takte (10 bzw. 60 Min.) bleiben; ohne Leitung wie bisher. Kein Server-Umbau nötig.
+- Test `tests/pw-ta-sparsam.test.mjs`.
+
 ## 2.999.0 – 2026-11-21 – 🗓️ Uhrzeit und Stunden in den Balken · am Ende Stunden laut Sollplan und „Hier fehlen noch Helfer“ · alle Mitglieder wieder sichtbar · 📣 Pläne für alle Mitglieder (KC-CLUB-DP-PLAN-STUNDEN, KC-CLUB-DP-PLAENE-FREI) · App + Server 2.999.0
 Hansi 21.11.: „Auf dem Dienstplan müssen auch die nicht geteilten drauf – das war nur für die Planungsphase. In die Balken des Sollplans Uhrzeiten und Stundenumfang, am besten im Wunschplan auch, und zuletzt eine Übersicht über die komplette Stundenauswertung nach Sollplan und wo noch Personen fehlen.“
 - **Alle sichtbar:** der Haken „🔒 Nur freigegebene Wünsche“ aus 2.998.0 ist wieder weg – im 🙋 Wunschplan stehen alle mit ihren selbst abgegebenen Zeiten (Freigabe galt nur für die Planungsphase). Wer keinen eigenen Wunschplan abgegeben hat (Andrea, Anne, Leon), bleibt leer.

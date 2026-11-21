@@ -1129,7 +1129,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/text: z\.text, zeit: z\.erstellt_am/.test(server), "pinnwand_neu liefert den Text nicht");
   assert.ok(/function pwFenster\(neu\)/.test(html) && /pwFenster\(neu\);/.test(html) && !/pwBanner/.test(html), "Fenster statt Banner fehlt");
   assert.ok(/(api\("pinnwand_gesehen", \{ ids: liste\.map\(\(z\) => z\.id\) \}\)|pwGesehenMelden\(liste\.map\(\(z\) => z\.id\)\))/.test(html) /* 2.763.0 KC-CLUB-PINNWAND-NEU-PULS: über pwGesehenMelden (Zahl zieht mit) */ && /\$\{esc\(z\.text \|\| ""\)\}/.test(html), "Gelesen/Text im Fenster fehlt");
-  const st = html.slice(html.indexOf("async function pwStart("), html.indexOf("async function pwStart(") + 1400);
+  const st = html.slice(html.indexOf("async function pwStart("), html.indexOf("async function pwStart(") + 2400); // KC-CLUB-PW-TA-SPARSAM: längerer Kommentar davor
   assert.ok(st.indexOf('api("pinnwand_neu")') > 0 && st.indexOf('api("pinnwand_neu")') < st.indexOf('api("pinnwand", { markieren: false })'), "App-Start zeigt neue Zettel nicht vor dem Laden"); // 2.763.0: das Laden beim Start markiert nichts mehr
 }
 
@@ -4115,7 +4115,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const k = html.slice(html.indexOf("// KC-CLUB-TERMINANFRAGE-HINWEIS (2.23.52"), html.indexOf("async function taAntwort("));
   for (const t of ["👀 Ja, jetzt ansehen", "⏰ Später", "🌙 Heute nicht mehr fragen"]) assert.ok(k.includes(t), "Knopf fehlt: " + t);
   assert.ok(/!a\.vonMir && !a\.spiel && a\.status === "offen" && !a\.meine && !a\.meinVorschlag/.test(k), "nur unbeantwortete Anfragen an mich");
-  assert.ok(/setInterval\(\(\) => \{ if \(rtAn\(\) && \+\+TAH_TICK % TAH_RT_JEDES\) return; taHinweisPruefen\(9\); \}, TAH_TAKT_MS\)/.test(k) && /visibilitychange/.test(k) && /taHinweisPruefen\(\), 5000\)/.test(html) && /if \(!rtAn\(\)\) \{ onlinePing\(\); setTimeout\(\(\) => taHinweisPruefen\(9\), 1500\); \}/.test(html), "beim Start, zurück in der App, nach Push (ohne Leitung), alle 5 Min. (mit Leitung alle 60 Min. + Signal, 2.874.0 / 18.11.2026 KC-CLUB-LEITUNG-SPARSAM)");
+  assert.ok(/setInterval\(\(\) => \{ if \(rtAn\(\) && \+\+TAH_TICK % TAH_RT_JEDES\) return; taHinweisPruefen\(9\); \}, TAH_TAKT_MS\)/.test(k) && /visibilitychange/.test(k) && /taHinweisPruefen\(0, 1\), 5000\)/.test(html) /* KC-CLUB-PW-TA-SPARSAM: aus dem init-Stand */ && /if \(!rtAn\(\)\) \{ onlinePing\(\); setTimeout\(\(\) => taHinweisPruefen\(9\), 1500\); \}/.test(html), "beim Start, zurück in der App, nach Push (ohne Leitung), alle 5 Min. (mit Leitung alle 60 Min. + Signal, 2.874.0 / 18.11.2026 KC-CLUB-LEITUNG-SPARSAM)");
   assert.ok(/document\.querySelector\(FENSTER_OFFEN\)/.test(k) && /if \(still && !neu\.length\) return/.test(k), "drängt sich nicht über Fenster, neue Anfrage durchbricht „später“"); // 2.789.0 KC-CLUB-EINGABE-RUHE: FENSTER_OFFEN = .blatt:not(.versteckt) + offene Dienstwünsche
 }
 // 402. 2.23.53: „Mikrofon ist gesperrt“ – sofort freischalten und weiter diktieren (KC-CLUB-MIKRO-SOFORT)
@@ -11206,7 +11206,7 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
 
 // 2.360.0 KC-CLUB-AKKU-5: weniger Nachfragen und Malen in Ruhe
 {
-  assert.ok(/if \(takt === true && RT\.ok && PW_AUFBAU === RT\.aufbauten && Date\.now\(\) - PW_ZULETZT < PW_RT_MS\) return;/.test(html) && /const PW_RT_MS = 10 \* 60000;/.test(html) && /setInterval\(\(\) => pwLive\(true\), PW_LIVE_MS\)/.test(html), "Pinnwand-Takt mit Leitung alle 10 Min. (18.11.2026 KC-CLUB-LEITUNG-SPARSAM, vorher 3 Min.)");
+  assert.ok(/if \(takt === true && RT\.ok && pwLeitungGedeckt\(\) && Date\.now\(\) - PW_ZULETZT < PW_RT_MS\) return;/.test(html) && /const PW_RT_MS = 10 \* 60000;/.test(html) && /setInterval\(\(\) => pwLive\(true\), PW_LIVE_MS\)/.test(html), "Pinnwand-Takt mit Leitung alle 10 Min. (18.11.2026 KC-CLUB-LEITUNG-SPARSAM, vorher 3 Min.)");
   assert.ok(/Date\.now\(\) - AD_ZULETZT >= 175000 && Date\.now\(\) - jzbBedient < 300000/.test(html), "Admin-Startseite seltener");
   assert.ok(/setInterval\(\(\) => \{ if \(!document\.hidden\) vbStatusLed\(\); \}, 5000\)/.test(html), "LEDs im Hintergrund still");
 }

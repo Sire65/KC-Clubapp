@@ -43,7 +43,7 @@ assert.ok(app.includes('if (e.data?.typ === "online-ansage") { onlineAnsageSprec
   assert.equal(noetig(11 * 60000), true, "länger als 10 Min. weg → fragen");
   ctx.RT.aufbauten = 4; assert.equal(noetig(60000), false, "KC-CLUB-SPARSAM-NACHBESSERN: Neuaufbau nach Hintergrund-Trennung allein → nicht fragen");
   ctx.RT.aufbauten = 3; ctx.RT.ok = false; assert.equal(noetig(1000), true, "ohne Leitung wie bisher immer");
-  assert.ok(app.includes("setTimeout(() => { if (!taRueckkehrNoetig(weg)) return; if (weg > TAH_WEG_MAX_MS) return taHinweisPruefen(9);") && app.includes("setTimeout(() => { if (taRueckkehrNoetig(weg)) taHinweisPruefen(9); }, 7500); }, 2500); });"), "Rückkehr: Leitung bis 10 s abwarten");
+  assert.ok(app.includes("setTimeout(() => { if (!taRueckkehrNoetig(weg)) return; if (weg > TAH_WEG_MAX_MS) return taHinweisPruefen(9, zurueck);") && app.includes("setTimeout(() => { if (taRueckkehrNoetig(weg)) taHinweisPruefen(9, zurueck); }, 7500); }, 2500); });"), "Rückkehr: Leitung bis 10 s abwarten");
   // KC-CLUB-SPARSAM-NACHBESSERN: Reise-Prüfung nutzt die Countdown-Daten im Gerät (6-Std.-Regel)
   const rc = stueck("async function rcReisen(", "\n}") + "\n}";
   let rufe = 0; const c2 = { RC: { reisen: null }, CD: { stand: Date.now() - 3600000, daten: { reisen: [{ id: "k", a: "🚢" }, { id: "x" }] } }, CD_NEU_MS: 6 * 3600000,
@@ -56,7 +56,7 @@ assert.ok(app.includes('if (e.data?.typ === "online-ansage") { onlineAnsageSprec
 
 // d) Pinnwand: mit Leitung 10 Min., ohne Leitung unverändert 45 s; nach Neuaufbau gleich
 assert.ok(/const PW_LIVE_MS = 45000,/.test(app) && /const PW_RT_MS = 10 \* 60000;/.test(app), "45 s ohne, 10 Min. mit Leitung");
-assert.ok(app.includes("if (takt === true && RT.ok && PW_AUFBAU === RT.aufbauten && Date.now() - PW_ZULETZT < PW_RT_MS) return;") && app.includes("PW_ZULETZT = Date.now(); PW_AUFBAU = RT.aufbauten;"), "Pinnwand-Bremse");
+assert.ok(app.includes("if (takt === true && RT.ok && pwLeitungGedeckt() && Date.now() - PW_ZULETZT < PW_RT_MS) return;") && app.includes("PW_ZULETZT = Date.now(); PW_AUFBAU = RT.aufbauten;"), "Pinnwand-Bremse");
 
 // e) Online-Abgleich: mit Leitung + Anwesenheit Sicherheitsabgleich alle 10 Min., Warten auf Anklopf-Antwort 15 s; ohne Leitung exakt wie bisher
 {

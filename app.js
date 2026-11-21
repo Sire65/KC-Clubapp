@@ -1007,6 +1007,7 @@ function impressumZeigen() {
 const VERLAUF = { state: null, url: "" };
 for (const m of ["pushState", "replaceState"]) { const o = history[m].bind(history); history[m] = (st, t, u) => { o(st, t, u); VERLAUF.state = history.state; VERLAUF.url = location.href; }; } // KC-CLUB-ONLINE-SEITE (1.91.0): einmaliger Filter der Mitglieder-Seite (früh deklariert, zeige() nutzt ihn)
 let MITGLIEDER_STAND = 0; // 2.122.0 KC-CLUB-ONLINE-FRISCH: wann die Mitgliederliste (mit .online) zuletzt frisch geholt wurde
+let INIT_AM = 0; // KC-CLUB-PW-TA-SPARSAM: wann INIT zuletzt frisch vom Server kam (nicht der Offline-Stand)
 let START_HASH = "", KEY = "", ICH = null, INIT = null, MITGLIEDER = null, AEMTER = [], aktuelleAnsicht = "start", reg = "verein";
 let chatId = null, chatTimer = null, empfWahl = { personen: [], aemter: [], alle: false, vorstand: false }, anlagen = [], letzteUngelesen = null, EINMAL = false; // EINMAL: KC-CLUB-EINMAL-FOTO
 
@@ -1419,7 +1420,10 @@ function wasNeuZeigen(pw) {
 async function pwStart(nurZaehlen) { // nurZaehlen: Begrüßung ist offen → Pinnwand nicht zusätzlich öffnen
   // 0.58.0: Zettel, die gekommen sind, während die App zu war, gehen direkt als Post-it-Fenster auf
   let gezeigt = false;
-  try { const rn = await api("pinnwand_neu"), n = rn.neu || []; PW.neu = rn.anzahl ?? n.length; // 2.763.0 KC-CLUB-PINNWAND-NEU-PULS: Zahl immer (auch bei offener Begrüßung)
+  // 21.11.2026 KC-CLUB-PW-TA-SPARSAM (Sparbilanz: „pinnwand_neu“ nur −23 %): die Zahl der ungelesenen Zettel steckt schon im stillen Laden unten
+  // („pinnwand“ mit markieren: false – fremde Zettel ohne „gesehen“ = dieselbe Rechnung wie pinnwand_neu). Die Zusatzabfrage nur noch, wenn
+  // „👋 Was ist neu“ eingeschaltet ist (das Fenster braucht die Zettel in ihrer Form).
+  if (!nurZaehlen && einst("wasNeu2", false)) try { const rn = await api("pinnwand_neu"), n = rn.neu || []; PW.neu = rn.anzahl ?? n.length; // 2.763.0 KC-CLUB-PINNWAND-NEU-PULS: Zahl immer (auch bei offener Begrüßung)
     // 2.847.0 KC-CLUB-PINNWAND-NIE-AUTO (Hansi 03.11.2026 auf „Öffnet bei den Mitgliedern immer automatisch die Pinnwand?“ → „Nie von selbst öffnen“):
     // neue Zettel nur noch als Zahl an der Kachel und Karte im Info-Laufband – kein Zettel-Fenster, keine Pinnwand beim Start (auch nicht bei ❗ wichtig oder Hilfe-Aufruf)
     if (nurZaehlen) { /* nur zählen, nichts einblenden */ } else if (wasNeuZeigen(n)) { gezeigt = true; n.forEach((z) => PW_GEMELDET.add(z.id)); try { localStorage.setItem("kc_club_pw_gemeldet", JSON.stringify([...PW_GEMELDET].slice(-PW_GEMELDET_MAX))); } catch {} } // KC-CLUB-WAS-NEU
@@ -1427,6 +1431,7 @@ async function pwStart(nurZaehlen) { // nurZaehlen: Begrüßung ist offen → Pi
     else if (n.length && ruheInfo()) { /* KC-CLUB-RUHE */ n.forEach((z) => PW_GEMELDET.add(z.id)); try { localStorage.setItem("kc_club_pw_gemeldet", JSON.stringify([...PW_GEMELDET].slice(-PW_GEMELDET_MAX))); } catch {}
       pwFenster(n); gezeigt = true; } } catch {}
   try { const r = await api("pinnwand", { markieren: false }); pwUebernehmen(r); // 2.763.0: still laden zählt nicht als gesehen
+    pwStandAusZetteln(); // KC-CLUB-PW-TA-SPARSAM
     if (!PW_NIE_AUTO && !gezeigt && !nurZaehlen && (PW.zettel.some(pwOffen) || pwHilfeNeu().some((a) => a.wichtig)) && aktuelleAnsicht === "start") { PW.wichtigStart = true; if (pwHilfeNeu().some((a) => a.wichtig)) PW.hilfeStart = true; /* 2.15.0: wichtiger Hilfe-Aufruf */ zeige("pinnwand"); gezeigt = true; }
     // KC-CLUB-HILFE-PINNWAND (1.90.0): neuer Hilfe-Aufruf → beim Start einmal (je Aufruf und Gerät) die Pinnwand mit dem Aushang zeigen
     const hNeu = pwHilfeNeu().filter((a) => !PW_GEMELDET.has("hilfe:" + a.id));
@@ -1450,11 +1455,41 @@ let PW_ZULETZT = 0; // 2.360.0 KC-CLUB-AKKU-5
 async function pwLive(takt) {
   if (ruht() || !ICH) return; // KC-CLUB-SCHLAFMODUS
   // 2.360.0 KC-CLUB-AKKU-5: steht die direkte Leitung, meldet sie neue Zettel sofort – der Takt fragt dann nur alle 3 Min. nach (vorher alle 45 s)
-  if (takt === true && RT.ok && PW_AUFBAU === RT.aufbauten && Date.now() - PW_ZULETZT < PW_RT_MS) return;
+  if (takt === true && RT.ok && pwLeitungGedeckt() && Date.now() - PW_ZULETZT < PW_RT_MS) return;
   PW_ZULETZT = Date.now(); PW_AUFBAU = RT.aufbauten;
   let r; try { r = await api("pinnwand_neu"); } catch { return; }
   const neu = (r.neu || []).filter((z) => !PW_GEMELDET.has(z.id));
   const alt = PW.neu; PW.neu = r.anzahl ?? (r.neu || []).length; if (PW.neu !== alt) pwZahl(); // 2.763.0 KC-CLUB-PINNWAND-NEU-PULS
+  pwNeuMelden(neu);
+}
+// 21.11.2026 KC-CLUB-PW-TA-SPARSAM (Sparbilanz 21.11.: „pinnwand_neu“ nur −23 % je aktive Personenstunde): gefragt wurde weiter bei JEDEM Start
+// (pwStart), bei JEDER Rückkehr in die App (visibilitychange → pwLive ohne Takt) und im ersten Takt nach jedem Neuaufbau der Leitung – die wird im
+// Hintergrund nach 60 s bewusst getrennt (KC-CLUB-AKKU-4), war also nach jeder Rückkehr „neu“. Jetzt, bei stehender Leitung:
+// · Start: Zahl aus dem stillen Laden der Pinnwand (pwStandAusZetteln), keine Zusatzabfrage.
+// · Rückkehr: nur nach > 10 Min. weg oder wenn die Leitung nach 10 s nicht steht (wie taRueckkehrNoetig) – sonst gilt der Neuaufbau als gedeckt.
+// · Ein Neuaufbau bis 15 s nach dem letzten Stand (Start, Rückkehr) gilt als gedeckt; spätere Neuaufbauten (Funkloch) → gleich fragen (Lücke).
+// · Signal „pinnwand“ lädt sofort, der Takt fragt mit Leitung alle 10 Min. Ohne Leitung wie bisher (45-s-Takt).
+const PW_WEG_MAX_MS = 10 * 60000, PW_LUECKE_MS = 15000;
+let PW_WEG_AM = 0;
+function pwLeitungGedeckt() {
+  if (PW_AUFBAU === RT.aufbauten) return true;
+  if (PW_AUFBAU >= 0 && PW_AUFBAU + 1 === RT.aufbauten && RT.aufbauAm >= PW_ZULETZT && RT.aufbauAm - PW_ZULETZT < PW_LUECKE_MS) { PW_AUFBAU = RT.aufbauten; return true; }
+  return false;
+}
+function pwStandAusZetteln() { // Stand aus „pinnwand“ (markieren: false): fremde Zettel, die ich noch nicht gesehen habe
+  const alt = PW.neu; PW.neu = (PW.zettel || []).filter((z) => !z.vonMir && !z.gesehen).length; if (PW.neu !== alt) pwZahl();
+  PW_ZULETZT = Date.now(); PW_AUFBAU = RT.aufbauten;
+  // wie bisher der erste Takt nach dem Start: noch nicht gemeldete ungelesene Zettel einmal kurz melden (je Zettel und Gerät nur einmal)
+  setTimeout(() => { if (ruht() || !ICH) return; pwNeuMelden((PW.zettel || []).filter((z) => !z.vonMir && !z.gesehen && !PW_GEMELDET.has(z.id))); }, PW_LIVE_MS);
+}
+function pwRueckkehrNoetig(wegMs) { return !rtAn() || wegMs > PW_WEG_MAX_MS; }
+function pwRueckkehr(weg) {
+  if (weg > PW_WEG_MAX_MS) return void setTimeout(pwLive, 1500);
+  setTimeout(() => { if (!pwRueckkehrNoetig(weg)) { PW_AUFBAU = RT.aufbauten; return; }
+    setTimeout(() => { if (pwRueckkehrNoetig(weg)) pwLive(); else PW_AUFBAU = RT.aufbauten; }, 7500); }, 2500); // Leitung noch im Aufbau → bis 10 s warten
+}
+document.addEventListener("visibilitychange", () => { if (document.hidden) { PW_WEG_AM = Date.now(); return; } pwRueckkehr(PW_WEG_AM ? Date.now() - PW_WEG_AM : Infinity); });
+function pwNeuMelden(neu) {
   if (!neu.length) return;
   neu.forEach((z) => PW_GEMELDET.add(z.id));
   try { localStorage.setItem("kc_club_pw_gemeldet", JSON.stringify([...PW_GEMELDET].slice(-PW_GEMELDET_MAX))); } catch {}
@@ -5052,7 +5087,7 @@ function rtVerbinden() {
     let d; try { d = JSON.parse(e.data); } catch { return; }
     RT.letzte = Date.now(); // jede Antwort (auch auf den Herzschlag) zeigt: Leitung lebt
     if (d.topic === "phoenix" && d.event === "phx_reply" && d.ref === RTM.herzRef && RTM.herzAb) { if (!document.hidden) rtMessWert("rtt", performance.now() - RTM.herzAb); RTM.herzAb = 0; } // 2.863.0
-    if (d.event === "phx_reply" && d.topic === "realtime:" + kanal && d.payload?.status === "ok" && !RT.ok) { if (RTM.aufbauAb && !document.hidden) rtMessWert("aufbau", performance.now() - RTM.aufbauAb); RTM.aufbauAb = 0; RT.ok = true; RT.aufbauten++; RT.warte = 1000; onlineTakt(); rtNachholen(); rtLedZeigen(); }
+    if (d.event === "phx_reply" && d.topic === "realtime:" + kanal && d.payload?.status === "ok" && !RT.ok) { if (RTM.aufbauAb && !document.hidden) rtMessWert("aufbau", performance.now() - RTM.aufbauAb); RTM.aufbauAb = 0; RT.ok = true; RT.aufbauten++; RT.aufbauAm = Date.now(); /* KC-CLUB-PW-TA-SPARSAM */ RT.warte = 1000; onlineTakt(); rtNachholen(); rtLedZeigen(); }
     else if (d.event === "broadcast" && d.payload?.event === "neu") rtSignal(d.payload.payload || {});
     else if (INIT?.rtClub && d.topic === "realtime:" + INIT.rtClub) { // KC-CLUB-ANWESENHEIT
       if (d.event === "phx_reply" && d.payload?.status === "ok" && !RT.anw) {
@@ -18549,7 +18584,7 @@ async function neuLadenRoh(vonHand) {
   const swHinweis = !ICH ? setTimeout(startWartetZeigen, 3000) : 0; // 2.976.0 KC-CLUB-START-WARUM: nur beim ersten Anmelden
   initAnfrage.then(() => { try { localStorage.setItem(SCHWER_MERK, JSON.stringify(INIT?.schwerZeiten || null)); } catch {} }, () => {}).finally(() => { clearTimeout(swHinweis); startWartetWeg(); });
   try {
-    INIT = await initAnfrage; if (window.KCFP?.schlaeft) return; uhrAbgleich(INIT); /* KC-CLUB-ADVENT-SERVERUHR */ /* 2.394.0 Fenster inzwischen geleert */ if (!START_MESS.initBis) { START_MESS.initAb = tInit; START_MESS.initBis = performance.now(); } /* KC-CLUB-KACHEL-ZAHLEN */ ICH = INIT.ich; einstOffenAnwenden(); /* 2.6.1: noch laufende Speicherungen nicht überschreiben */ adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); inkognitoZeigen(); einwZeigen(aktuelleAnsicht); schluesselSichern(KEY); /* KC-CLUB-SCHLUESSEL-SICHERN */ if (document.body.classList.contains("rg-ohne-admin")) document.body.classList.remove("ist-admin"); /* KC-CLUB-ERKLAERVIDEOS-ROLLEN: im Video für alle bleibt Admin aus */ stKnopf(); /* KC-CLUB-STUDIO */ cfUebernehmen(INIT?.einstellungen?.chat_farben); /* KC-CLUB-CHAT-FARBEN */ // KC-CLUB-KOPF-EINFACH
+    INIT = await initAnfrage; if (window.KCFP?.schlaeft) return; uhrAbgleich(INIT); INIT_AM = Date.now(); /* KC-CLUB-PW-TA-SPARSAM */ /* KC-CLUB-ADVENT-SERVERUHR */ /* 2.394.0 Fenster inzwischen geleert */ if (!START_MESS.initBis) { START_MESS.initAb = tInit; START_MESS.initBis = performance.now(); } /* KC-CLUB-KACHEL-ZAHLEN */ ICH = INIT.ich; einstOffenAnwenden(); /* 2.6.1: noch laufende Speicherungen nicht überschreiben */ adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); inkognitoZeigen(); einwZeigen(aktuelleAnsicht); schluesselSichern(KEY); /* KC-CLUB-SCHLUESSEL-SICHERN */ if (document.body.classList.contains("rg-ohne-admin")) document.body.classList.remove("ist-admin"); /* KC-CLUB-ERKLAERVIDEOS-ROLLEN: im Video für alle bleibt Admin aus */ stKnopf(); /* KC-CLUB-STUDIO */ cfUebernehmen(INIT?.einstellungen?.chat_farben); /* KC-CLUB-CHAT-FARBEN */ // KC-CLUB-KOPF-EINFACH
     alarmPruefen(); /* KC-CLUB-NOTFALL-MELDUNG */ try { expressPruefen(); } catch {} /* 2.362.0 KC-CLUB-EXPRESS */ setTimeout(() => { try { irLaden(); } catch {} }, 3000); /* KC-CLUB-IST-RUECKFRAGE */ setTimeout(() => { try { abStandZeigen(INIT?.ab); } catch {} }, 2500); /* 2.568.0 KC-CLUB-ANRUFBEANTWORTER */ try { dsLageSetzen(INIT?.dienstStempel); } catch {} /* 2.590.0 KC-CLUB-DIENST-STEMPEL */ try { rundKarteZeichnen(); } catch {} /* 2.762.0 KC-CLUB-RUNDER-TISCH */ setTimeout(() => { try { snPruefen(); } catch {} }, 1500); /* 2.482.0 KC-CLUB-STARTNACHRICHT */ document.body.classList.toggle("sos-frei", sosDarf()); /* KC-CLUB-SOS-FREIGABE */ fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
     if (astF) try { astNachInit(INIT); } catch {} // KC-CLUB-AUFGABEN-STAND
     if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln);
@@ -30476,10 +30511,22 @@ async function scHinweisPruefen() {
 // Später/heute nicht gilt für die gezeigten Anfragen – kommt eine neue dazu, erscheint der Hinweis wieder.
 const TAH_KEY = "kc_club_ta_hinweis", TAH_SPAETER_MS = 2 * 3600000, TAH_TAKT_MS = 5 * 60000;
 let TAH_LAEUFT = false, TAH_ZULETZT = 0;
-async function taHinweisPruefen(versuch = 0) {
+// 21.11.2026 KC-CLUB-PW-TA-SPARSAM (Sparbilanz: „terminanfragen_liste“ nur −19 %): init liefert schon die offenen Anfragen an mich
+// (INIT.terminanfragenOffen – dieselbe Auswahl wie „offen“ unten, höchstens 5). initAb > 0: ist INIT seit diesem Zeitpunkt frisch vom Server
+// gekommen, wird die Liste nur geholt, wenn der Hinweis wirklich erscheinen soll (neue IDs bzw. nicht stillgestellt) – sonst keine Abfrage.
+function taInitReicht(initAb) {
+  const o = INIT?.terminanfragenOffen;
+  if (!initAb || !INIT_AM || INIT_AM < initAb || !Array.isArray(o) || o.length >= 5) return false; // 5 = Obergrenze des Servers → vielleicht mehr
+  if (!o.length) return true;
+  let ruhe = {}; try { ruhe = JSON.parse(lsLesen(TAH_KEY) || "{}") || {}; } catch {}
+  const still = ruhe.heute === heuteIso() || Date.now() < Number(ruhe.bis || 0);
+  return still && o.every((a) => (ruhe.ids || []).includes(a.id));
+}
+async function taHinweisPruefen(versuch = 0, initAb = 0) {
   if (!ICH || TAH_LAEUFT || ruht() || $("taHinweisBlatt")) return;
   if (document.querySelector(FENSTER_OFFEN) || !["start", "nachrichten", "pinnwand", "mitglieder", "helfen"].includes(aktuelleAnsicht)) {
-    if (versuch < 10) setTimeout(() => taHinweisPruefen(versuch + 1), 8000); return; }
+    if (versuch < 10) setTimeout(() => taHinweisPruefen(versuch + 1, initAb), 8000); return; }
+  if (taInitReicht(initAb)) return; // KC-CLUB-PW-TA-SPARSAM
   if (Date.now() - TAH_ZULETZT < 20000) return; TAH_ZULETZT = Date.now(); TAH_AUFBAU = RT.aufbauten; // KC-CLUB-LEITUNG-SPARSAM: Stand der Leitung merken
   TAH_LAEUFT = true; let l = [];
   try { l = (await api("terminanfragen_liste")).anfragen || []; } catch { return; } finally { TAH_LAEUFT = false; }
@@ -30523,9 +30570,10 @@ function taSignal() {
   if ($("terminanfragen")?.offsetParent) taLaden(); // Liste gerade zu sehen → frisch holen
 }
 document.addEventListener("visibilitychange", () => { if (document.hidden) { TAH_WEG_AM = Date.now(); return; }
-  const weg = TAH_WEG_AM ? Date.now() - TAH_WEG_AM : Infinity; // KC-CLUB-LEITUNG-SPARSAM
-  setTimeout(() => { if (!taRueckkehrNoetig(weg)) return; if (weg > TAH_WEG_MAX_MS) return taHinweisPruefen(9);
-    setTimeout(() => { if (taRueckkehrNoetig(weg)) taHinweisPruefen(9); }, 7500); }, 2500); }); // Leitung noch im Aufbau → bis 10 s warten
+  const weg = TAH_WEG_AM ? Date.now() - TAH_WEG_AM : Infinity, zurueck = Date.now(); // KC-CLUB-LEITUNG-SPARSAM
+  // KC-CLUB-PW-TA-SPARSAM: hat neuLaden (beim Zurückkommen) INIT schon frisch geholt, reicht dessen Stand (zurueck = frühester erlaubter init-Zeitpunkt)
+  setTimeout(() => { if (!taRueckkehrNoetig(weg)) return; if (weg > TAH_WEG_MAX_MS) return taHinweisPruefen(9, zurueck);
+    setTimeout(() => { if (taRueckkehrNoetig(weg)) taHinweisPruefen(9, zurueck); }, 7500); }, 2500); }); // Leitung noch im Aufbau → bis 10 s warten
 async function taAntwort(id, antwort) {
   let notiz = "";
   if (antwort === "nein" || antwort === "vielleicht") {
@@ -38971,7 +39019,7 @@ async function gastStart(token) {
     if (!h || h === "#") setTimeout(() => buGrussFragen(), 1500); // KC-CLUB-BUERO: Begrüßung der Clubleitung
     if (!h || h === "#") setTimeout(() => ekHinweisPruefen(), 3000); // KC-CLUB-EINGANG-HINWEIS: viel im Eingangskorb?
     if ((!h || h === "#") && (buSchreiben() || (buDarf() && (ICH?.vorstand || ICH?.admin)))) setTimeout(() => buAufgabePruefen(), 4000); // 2.750.0 KC-CLUB-SITZUNG-AUFGABE-START: nächste Aufgabe für die Sitzung (2.797.0 Stufe 4: nur die Clubleitung lädt dafür das Büro-Teil)
-    if (!h || h === "#") setTimeout(() => taHinweisPruefen(), 5000);
+    if (!h || h === "#") setTimeout(() => taHinweisPruefen(0, 1), 5000); // KC-CLUB-PW-TA-SPARSAM: aus dem init-Stand dieses Starts
     if (!h || h === "#") setTimeout(() => { try { grPruefen(); } catch {} }, 6500); // KC-CLUB-GEMEINSCHAFTSGERICHT: Frage nach der Zutat
     setTimeout(() => { try { gkNachfragePruefen(); } catch {} }, 8000); // 2.977.0 KC-CLUB-GK-NACHFRAGE: gemeinsame Genesungskarte (KC-CLUB-GK-NACHFRAGE-IMMER: auch wenn die App nicht auf der Startseite öffnet)
     setTimeout(() => { try { pulsStarten(); } catch {} }, 3000); // KC-CLUB-PULS: Datenverkehr-Säulen (nur Admin)
@@ -38990,7 +39038,7 @@ async function gastStart(token) {
   updatePruefen(false).then(() => setTimeout(updateSelbst, updateFrisch() ? 0 : 4000)); // KC-CLUB-UPDATE-START: frisch geöffnet → sofort
   setInterval(() => { if (!ruht() && aktuelleAnsicht === "start" && !chatId) updatePruefen(false).then(updateSelbst); }, UPDATE_TAKT_MS); // KC-CLUB-SCHLAFMODUS
   setTimeout(stStart, 2500); // KC-CLUB-STANDORT
-  document.addEventListener("visibilitychange", () => { updWeg(document.hidden); if (!document.hidden) { if (ST.eigen) stMelden(true); if (Date.now() - NEU_ZULETZT >= 60000) neuLaden(); /* KC-CLUB-RC-PRUEFUNG (20.10.2026): höchstens 1× je 60 s neu laden (DB sparen) */ updatePruefen(false).then(updateSelbst); if (chatId) chatLaden(false); setTimeout(pwLive, 1500); } });
+  document.addEventListener("visibilitychange", () => { updWeg(document.hidden); if (!document.hidden) { if (ST.eigen) stMelden(true); if (Date.now() - NEU_ZULETZT >= 60000) neuLaden(); /* KC-CLUB-RC-PRUEFUNG (20.10.2026): höchstens 1× je 60 s neu laden (DB sparen) */ updatePruefen(false).then(updateSelbst); if (chatId) chatLaden(false); /* KC-CLUB-PW-TA-SPARSAM: Pinnwand fragt pwRueckkehr (nur > 10 Min. weg oder ohne Leitung) */ } });
   setInterval(() => { if (!ruht() && aktuelleAnsicht !== "chat" && (NEU_NACH_CHAT || !(RT.ok && Date.now() - NEU_ZULETZT < 180000))) neuLaden(); }, sparTakt(60000)); // KC-CLUB-SPARMODUS · 2.359.0: steht die direkte Leitung, nur alle 3 Min. (Neues kommt sofort über die Leitung)
   setInterval(() => pwLive(true), PW_LIVE_MS); // KC-CLUB-SCHLAFMODUS: pwLive prüft ruht() selbst // KC-CLUB-PINNWAND-LIVE: auch im Chat · 2.360.0: mit Leitung seltener
 })();
