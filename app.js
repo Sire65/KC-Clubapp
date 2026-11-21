@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "3.1.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "3.2.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -32984,7 +32984,7 @@ async function druckSeiteBauen() {
     ${cdFuss(`Gedruckt am ${esc(wann(new Date().toISOString()))} von ${esc(ICH?.name || "")} · Köcheclub-App v${APP_VERSION}${s.fuss ? " · " + esc(s.fuss) : ""}`)}</div>`;
   let st = $("druckSeitenformat"); if (!st) { st = document.createElement("style"); st.id = "druckSeitenformat"; document.head.appendChild(st); }
   st.textContent = `@page { size: A4 ${s.quer ? "landscape" : "portrait"};${s.randlos ? " margin: 0;" : ""} }`;
-  DRUCK.titel = s.titel; DRUCK.quer = !!s.quer;
+  DRUCK.titel = s.titel; DRUCK.quer = !!s.quer; DRUCK.randlos = !!s.randlos; // 3.2.0: randlose Blätter (Dienstplan) im PDF ohne Zusatzrand
   return true;
 }
 // Druckseite als eigenständiges HTML (Druck-CSS auf „immer“) – für die Vorschau und zum Teilen am iPhone
@@ -32992,7 +32992,7 @@ function druckHtml(vorschau) {
   const css = [...document.styleSheets].flatMap((sh) => { try { return [...sh.cssRules].map((r) => r.cssText); } catch { return []; } }).filter((t) => /#druck|@page/.test(t)).join("\n");
   const blatt = DRUCK.quer ? "297mm" : "210mm";
   // Vorschau: die Druckseite selbst als A4-Blatt (die Druckregel blendet alles außer #druck aus – kein Rahmen drumherum)
-  const extra = vorschau ? `html,body{background:#7d7d7d!important} body{margin:0;padding:10px 0} #druck{background:#fff;width:${blatt};min-height:${DRUCK.quer ? "210mm" : "297mm"};margin:0 auto;padding:12mm;box-sizing:border-box;box-shadow:0 4px 18px rgba(0,0,0,.45)}`
+  const extra = vorschau ? `html,body{background:#7d7d7d!important} body{margin:0;padding:10px 0} #druck{background:#fff;width:${blatt};min-height:${DRUCK.quer ? "210mm" : "297mm"};margin:0 auto;padding:${DRUCK.randlos ? 0 : "12mm"};box-sizing:border-box;box-shadow:0 4px 18px rgba(0,0,0,.45)}`
     : "body{margin:12mm} .dkopf img{display:none}";
   return `<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(DRUCK.titel)}</title>
     <style>${css.replace(/@media print\s*\{/, "@media all {")} #druck{display:block!important} ${extra}</style></head><body>${$("druck").outerHTML}</body></html>`;
@@ -33055,16 +33055,22 @@ function druckSeitenBilden(c, el, breite, quer) {
     const pos = (e) => { const r = e.getBoundingClientRect(); return [r.top - oben, r.bottom - oben]; };
     const platzVoll = seiteH - 2 * RAND;
     const atome = [...el.querySelectorAll(DS_ATOM)].map(pos).filter(([a, b]) => b - a > 1 && b - a < platzVoll * 0.9);
-    const zwang = [...el.querySelectorAll("[style*='break-after:page'], [style*='break-after: page']")].map((e) => pos(e)[1]).filter((y) => y > 5 && y < ende - 5).sort((a, b) => a - b);
+    // 3.2.0 KC-CLUB-PDF-BLATT-GANZ (Fund Hansi 21.11.: „im PDF waren die Tage getrennt – nur ganze Tage, nicht auf 2 Seiten umbrechen“): Seitenwechsel
+    // auch aus dem Stylesheet (break-after: page, z. B. jedes Dienstplan-Blatt), und Blöcke mit break-inside: avoid (ein Tag) nie zerschneiden
+    const cs = (e) => doc.defaultView.getComputedStyle(e), doc = el.ownerDocument;
+    const zwangEl = [...el.querySelectorAll("[style*='break-after:page'], [style*='break-after: page'], section, .dpd-blatt")].filter((e) => e.matches("[style*='break-after']") || ["page", "always"].includes(cs(e).breakAfter) || cs(e).pageBreakAfter === "always");
+    for (const e of el.querySelectorAll("tbody, table, div")) { const st = cs(e); if (st.breakInside === "avoid" || st.pageBreakInside === "avoid") { const [a, b] = pos(e); if (b - a > 1 && b - a < platzVoll * 0.98) atome.push([a, b]); } }
+    const zwang = [...new Set(zwangEl.map((e) => Math.round(pos(e)[1])))].filter((y) => y > 5 && y < ende - 5).sort((a, b) => a - b);
     const teile = []; let a0 = 0; for (const y of [...zwang, ende]) { if (y - a0 > 5) teile.push([a0, y]); a0 = y; }
     const schnitt = (start, max) => { let y = max;
       for (let i = 0; i < 300; i++) { const s = atome.find(([a, b]) => a < y - 0.5 && b > y + 0.5); if (!s) return y; y = s[0]; if (y <= start + platzVoll * 0.2) return max; }
       return max; };
     const logo = el.querySelector(".cd-kopf img, .cd-logo img"), datum = fKurzJahr.format(new Date()), seiten = [];
     for (const [von, bis] of teile) {
+      const ganz = !!DRUCK?.randlos && bis - von <= seiteH + 2; // 3.2.0: ein ganzes randloses Blatt (z. B. Dienstplan, randlos A4) – ohne Rand und Kopf genau auf eine Seite
       const titelEl = [...el.querySelectorAll(".cd-titel h1")].find((h) => { const [t] = pos(h); return t >= von - 1 && t < bis; });
       const titel = (titelEl?.textContent || DRUCK?.titel || "").trim(), stuecke = []; let y = von;
-      while (y < bis - 2) { const erste = !stuecke.length, platz = (erste ? (von === 0 ? seiteH - RAND : seiteH - 2 * RAND) : seiteH - 2 * RAND - KOPF);
+      while (y < bis - 2) { const erste = !stuecke.length, platz = (erste ? (ganz ? seiteH + 2 : von === 0 ? seiteH - RAND : seiteH - 2 * RAND) : seiteH - 2 * RAND - KOPF);
         let z = bis - y <= platz ? bis : schnitt(y, y + platz);
         // KC-CLUB-DRUCK-FUSS-NIE-ALLEIN (16.11.2026, Fund Hansi bei der Buchungsliste: „die Fußzeile steht auf Seite 2“): bliebe für die nächste Seite nur ein
         // kleiner Rest (z. B. nur die Fußzeile), früher schneiden – dann wandern die letzten Zeilen mit und die Fußzeile steht nie allein
@@ -33073,7 +33079,7 @@ function druckSeitenBilden(c, el, breite, quer) {
       stuecke.forEach(([y1, y2], i) => {
         const s = document.createElement("canvas"); s.width = c.width; s.height = Math.round(seiteH * k); const g = s.getContext("2d");
         g.fillStyle = "#fff"; g.fillRect(0, 0, s.width, s.height);
-        const ziel = i === 0 ? (von === 0 ? 0 : RAND) : RAND + KOPF;
+        const ziel = i === 0 ? (von === 0 || ganz ? 0 : RAND) : RAND + KOPF;
         g.drawImage(c, 0, y1 * k, c.width, (y2 - y1) * k, 0, ziel * k, c.width, (y2 - y1) * k);
         g.scale(k, k); g.textBaseline = "middle";
         const nr = `Seite ${i + 1} von ${stuecke.length}`;
