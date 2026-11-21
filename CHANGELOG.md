@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.996.0 – 2026-11-21 – 🙋 Wunschplan und 🗓️ Dienstplan getrennt über alle Tage drucken (KC-CLUB-DP-WUNSCH-PLAN)
+Wunsch Hansi 21.11.: „Gibt es einen Plan über alle Tage, wo nur die Wünsche drin stehen – also Wunschplan – und einen von dir berechneten Plan? … in der App einbauen.“
+- Im Ordner „🗓️ Dienstplan-Druck“ (nur Admin) zwei neue Knöpfe:
+  - **🙋 Wunschplan – alle Tage:** nur die Angaben der Mitglieder (Wunschzeit, kann, nur wenn nötig, gesperrt), ohne Einteilung. Je Tag unten „Bedarf / Wunsch“ (so viele wünschen sich die halbe Stunde), links Bedarf und gewünschte Stunden; letztes Blatt: Wunschstunden je Person und Tag.
+  - **🗓️ Dienstplan – alle Tage:** nur die berechnete Einteilung (wer wann Dienst hat, Bereitschaft, Bedarf/besetzt, Ampel), ohne Wunschfarben, nur wer an dem Tag eingeteilt ist; letztes Blatt: Stunden je Person.
+- Der bisherige große Ausdruck (beides übereinander), Einsatzplan und Lückenblatt bleiben unverändert. Dieselben Daten wie bisher (`dp_druck`), kein neuer Serverweg.
+- Test: Block in `tests/app-vertrag.test.mjs`. Rückweg: App 2.995.0. Nur die App.
+
 ## 2.995.0 – 2026-11-21 – 🛞 Rollkartei als Rolle wie am iPad · 🛰️ Störungsseite nur für unsere Region · Protokoll sparen · 💌 Gemeinsame Karte direkt verschicken (KC-CLUB-ROLLKARTEI-ROLLE, KC-CLUB-SB-REGION, KC-CLUB-PROTOKOLL-SPAREN, KC-CLUB-GK-DIREKT-SENDEN) · App + Server 2.995.0
 Ein Bündel, eingespielt auf Hansis „Einspielen“ (21.11.) – der Abendtermin 20.11. war durch einen Neustart der Sitzung verstrichen.
 
