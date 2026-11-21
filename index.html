@@ -3303,8 +3303,8 @@
     #druck .dpd h1 { margin: 0; font: 700 12pt/1.2 Georgia, "Times New Roman", serif; color: #741521; }
     #druck .dpd-leg { display: flex; flex-wrap: wrap; gap: 1mm 3mm; font-size: 6.5pt; color: var(--mut); }
     #druck .dpd-leg i { display: inline-block; min-width: 5mm; height: 3mm; vertical-align: -.4mm; margin-right: 1mm; font: 700 6pt/3mm sans-serif; text-align: center; border: .2mm solid var(--lin); }
-    #druck .dpd-leg i.pref { background: var(--pref); } #druck .dpd-leg i.avai { background: var(--avai); } #druck .dpd-leg i.if_n { background: var(--ifn); } #druck .dpd-leg i.unav { background: repeating-linear-gradient(135deg, var(--unav) 0 .8mm, #fceeed .8mm 1.6mm); }
-    #druck .dpd-leg i.dienst { background: var(--dienst); } #druck .dpd-leg i.ber { background: repeating-linear-gradient(45deg, var(--ber) 0 .6mm, #fff .6mm 1.4mm); } #druck .dpd-leg i.fehlt { background: var(--fehltbg); color: var(--fehlt); } #druck .dpd-leg i.zu { background: var(--zu); }
+    #druck .dpd-leg i.pref { background: var(--pref); } #druck .dpd-leg i.avai { background: var(--avai); } #druck .dpd-leg i.if_n { background: var(--ifn); } #druck .dpd-leg i.unav { background: var(--unav); }
+    #druck .dpd-leg i.dienst { background: var(--dienst); } #druck .dpd-leg i.ber { background: var(--berbg); border: .3mm dashed var(--ber); } #druck .dpd-leg i.fehlt { background: var(--fehltbg); color: var(--fehlt); } #druck .dpd-leg i.zu { background: var(--zu); }
     #druck .dpd-raster { border-collapse: collapse; table-layout: fixed; width: 100%; font-size: 6.5pt; }
     #druck .dpd.breit .dpd-raster { font-size: 7.5pt; }
     #druck .dpd-raster col.tag { width: 24mm; } #druck .dpd-raster col.wer { width: 30mm; }
@@ -3323,13 +3323,13 @@
     #druck .dpd-raster td { position: relative; overflow: visible; text-align: center; white-space: nowrap; }
     #druck .dpd-raster td.zu { background: var(--zu); }
     #druck .dpd-raster td.pref { background: var(--pref); } #druck .dpd-raster td.avai { background: var(--avai); } #druck .dpd-raster td.if_n { background: var(--ifn); }
-    #druck .dpd-raster td.unav { background: repeating-linear-gradient(135deg, var(--unav) 0 .8mm, #fceeed .8mm 1.6mm); color: var(--mut); } /* KC-CLUB-DP-FARBEN-DP2: Farben wie in Twinkey/DP2 – Wunsch blau, Kann grün, Nur wenn nötig gelb, Sperrzeit rot gestreift, Dienst bordeaux, Bereitschaft schiefergrau */
+    #druck .dpd-raster td.unav { background: var(--unav); color: var(--mut); } /* KC-CLUB-DP-FARBEN-DP2: Farben wie in Twinkey/DP2 – Wunsch blau, Kann grün, Nur wenn nötig gelb, Sperrzeit rot gestreift, Dienst bordeaux, Bereitschaft schiefergrau */
     #druck .dpd-raster td.dienst { box-shadow: inset 0 1.1mm 0 var(--dienst), inset 0 -1.1mm 0 var(--dienst); }
     #druck .dpd-raster td.dienst.anf { box-shadow: inset 0 1.1mm 0 var(--dienst), inset 0 -1.1mm 0 var(--dienst), inset .8mm 0 0 var(--dienst); }
     #druck .dpd-raster td.dienst.end { box-shadow: inset 0 1.1mm 0 var(--dienst), inset 0 -1.1mm 0 var(--dienst), inset -.8mm 0 0 var(--dienst); }
     #druck .dpd-raster td.dienst.anf.end { box-shadow: inset 0 0 0 .8mm var(--dienst); }
     #druck .dpd-raster td.dienst span, #druck .dpd-raster td.ber span { position: absolute; left: 1mm; top: 50%; transform: translateY(-50%); z-index: 1; font-weight: 700; font-size: 6pt; padding: 0 .6mm; background: #fff; color: var(--dienst); border-radius: .6mm; }
-    #druck .dpd-raster td.ber { background: repeating-linear-gradient(45deg, var(--berbg) 0 .6mm, #fff .6mm 1.4mm); } #druck .dpd-raster td.ber span { color: var(--ber); }
+    #druck .dpd-raster td.ber { background: var(--berbg); box-shadow: inset 0 .5mm 0 var(--ber), inset 0 -.5mm 0 var(--ber); } #druck .dpd-raster td.ber span { color: var(--ber); }
     /* 2.999.0 KC-CLUB-DP-PLAN-STUNDEN: Uhrzeit und Stunden am Anfang jedes Wunschblocks – über den Nachbarzellen lesbar */
     #druck .dpd-raster td.anf:is(.pref, .avai, .if_n):not(.dienst) span { position: absolute; left: .6mm; top: 50%; transform: translateY(-50%); z-index: 1; font-size: 5.6pt; font-weight: 600; color: #333; padding: 0 .4mm; background: rgba(255,255,255,.75); border-radius: .6mm; }
     #druck .dpd-raster tr.s td { font-size: 5.5pt; color: var(--mut); }
@@ -3367,9 +3367,9 @@
     #druck .ep-tab td.z { padding: 0; border-top: .2mm solid #ddd; border-bottom: .2mm solid #ddd; background: #fff; }
     #druck .ep-tab td.z.h { border-left: .2mm solid #bbb; }
     #druck .ep-tab td.z.w { background: #dbe6f8; } #druck .ep-tab td.z.k { background: #e2f1e6; } #druck .ep-tab td.z.n { background: #fdeec4; }
-    #druck .ep-tab td.z.s { background: repeating-linear-gradient(135deg, #f7d9d6 0 .8mm, #fceeed .8mm 1.6mm); }
+    #druck .ep-tab td.z.s { background: #f7d9d6; }
     #druck .ep-tab td.z.zu { background: #e4e1dc; }
-    #druck .ep-tab td.z.dienst { background: #7d1727; } #druck .ep-tab td.z.ber { background: repeating-linear-gradient(45deg, #425b6e 0 1mm, #dfe5ea 1mm 2mm); }
+    #druck .ep-tab td.z.dienst { background: #7d1727; } #druck .ep-tab td.z.ber { background: #9fb0bf; }
     #druck .ep-tab td.zeit { width: 30mm; padding-left: 2mm; } #druck .ep-tab td.std { width: 9mm; text-align: center; font-weight: 700; } #druck .ep-tab td.bem { width: 30mm; color: #555; font-size: 7.5pt; }
     #druck .ep-leg { display: flex; flex-wrap: wrap; gap: 1mm 4mm; margin-top: 2mm; font-size: 8pt; }
     #druck .ep-leg i { display: inline-block; width: 5mm; height: 3.2mm; margin-right: 1mm; vertical-align: -.5mm; border: .3mm solid #bbb; }
@@ -3384,13 +3384,13 @@
     #druck .dpl-tab th small { display: block; font-weight: 400; font-size: 6pt; color: #5b544d; }
     #druck .dpl-tab .tag { text-align: left; white-space: nowrap; width: 22mm; } #druck .dpl-tab td.tag small { display: block; font-size: 6.5pt; color: #5b544d; }
     #druck .dpl-tab td.rot { background: #f6d3d0; color: #8b1a12; font-weight: 800; font-size: 10.5pt; } #druck .dpl-tab td.ok { background: #e3f1e6; color: #1f5a3e; }
-    #druck .dpl-tab td.zu { background: repeating-linear-gradient(135deg, #f1ede7 0 1.2mm, #e6e0d8 1.2mm 2.4mm); }
+    #druck .dpl-tab td.zu { background: #ece6de; }
     #druck .dpl-tab .text { text-align: left; font-size: 7.5pt; width: 58mm; } #druck .dpl-tab .std { width: 12mm; font-weight: 800; } #druck .dpl-tab .std small { font-size: 5.5pt; } #druck .dpl-tab td.alle { color: #5b544d; font-weight: 700; background: #f7f3ee; } #druck .dpl-tab tfoot td.std.alle { color: #5b544d; }
     #druck .dpl-tab tbody tr:nth-child(even) td.text, #druck .dpl-tab tbody tr:nth-child(even) td.tag { background: #faf6f0; }
     #druck .dpl-tab tfoot td { border-top: .6mm solid var(--cd-rot, #741521); font-weight: 800; text-align: right; } #druck .dpl-tab tfoot td.std { text-align: center; color: #8b1a12; }
     #druck .dpl-tab sup, #druck .dpl-leg sup { font-size: 6pt; }
     #druck .dpl-leg { display: flex; flex-wrap: wrap; gap: 5mm; margin: 2.5mm 0 0; font-size: 7.5pt; color: #5b544d; } #druck .dpl-leg i { display: inline-block; min-width: 6mm; height: 4.5mm; margin-right: 1.5mm; border: .25mm solid #8a7f72; font-style: normal; text-align: center; line-height: 4.5mm; vertical-align: middle; }
-    #druck .dpl-leg i.rot { background: #f6d3d0; color: #8b1a12; font-weight: 800; } #druck .dpl-leg i.ok { background: #e3f1e6; color: #1f5a3e; } #druck .dpl-leg i.zu { background: repeating-linear-gradient(135deg, #f1ede7 0 1.2mm, #e6e0d8 1.2mm 2.4mm); }
+    #druck .dpl-leg i.rot { background: #f6d3d0; color: #8b1a12; font-weight: 800; } #druck .dpl-leg i.ok { background: #e3f1e6; color: #1f5a3e; } #druck .dpl-leg i.zu { background: #ece6de; }
     #druck .dpl-hinweis { margin-top: 2mm; padding: 1.5mm 3mm; border: .3mm solid var(--cd-beige-rand, #e0cfb9); border-left: 1.2mm solid var(--cd-rot, #741521); background: var(--cd-beige, #f3e9dc); font-size: 9pt; }
     #druck .dpl-hinweis.dpl-abend { border-left-color: #1d3557; background: #e8eef6; } /* 2.683.0 KC-CLUB-DP-LUECKEN-ABEND */
     #druck .dpv-tab { table-layout: fixed; } #druck .dpv-tab td { padding: 1mm 1.5mm; } #druck .dpv-tab th:nth-child(1) { width: 24mm; } #druck .dpv-tab th:nth-child(2) { width: 22mm; } #druck .dpv-tab th:nth-child(3), #druck .dpv-tab th:nth-child(4) { width: 13mm; } #druck .dpv-tab th.text, #druck .dpv-tab td.text { width: auto; font-size: 8.5pt; line-height: 1.35; } #druck .dpv-tab tr { break-inside: avoid; } #druck .dpv-tab td.rot { background: #f6d3d0; color: #8b1a12; font-weight: 800; } /* 2.721.0 KC-CLUB-DP-VORSCHLAG */
@@ -3405,15 +3405,19 @@
     #druck .dpe-tab th, #druck .dpe-tab td { border-bottom: .2mm solid #eadfd2; padding: 0 1mm; vertical-align: middle; } #druck .dpe-tab th { background: #faf5ef; font-size: 6.5pt; color: #5b544d; height: 3.6mm; }
     #druck .dpe-tab .nm { width: 38mm; text-align: left; white-space: nowrap; overflow: hidden; } #druck .dpe-tab .nm small { display: block; color: #8a8076; font-size: 5.5pt; line-height: 1; }
     #druck .dpe-tab .zt { width: 21mm; text-align: center; white-space: nowrap; font-size: 7pt; } #druck .dpe-tab .zt.art { font-size: 5.8pt; color: #8a8076; } #druck .dpe-tab .st { width: 10mm; text-align: right; font-weight: 800; } #druck .dpe-tab .st.klein { font-size: 5.8pt; font-weight: 500; color: #8a8076; }
-    #druck .dpe-tab .gr { position: relative; padding: 0; background-image: repeating-linear-gradient(90deg, transparent 0, transparent calc(100% / var(--n) - .2mm), #efe6db calc(100% / var(--n) - .2mm), #efe6db calc(100% / var(--n))); }
+    #druck .dpe-tab .gr { position: relative; padding: 0; }
+    #druck .dpd-raster tbody.dpd-tag, #druck .dpd-sum tr, #druck .dpl-tab tr { break-inside: avoid; page-break-inside: avoid; } /* KC-CLUB-DRUCK-TAG-GANZ: ein Tag nie über zwei Seiten */
+    /* KC-CLUB-DRUCK-OHNE-STREIFEN: keine Verläufe/Streifen im Druck – Chrome legt jeden als seitengroßes Bild mit Maske ab (≈ 80 MB je Seite, Drucker hängt) */
+    #druck .dpe-tab .gr .rl { position: absolute; inset: 0; display: flex; pointer-events: none; } #druck .dpe-tab .gr .rl i { flex: 1; border-right: .2mm solid #efe6db; }
+    html #druck .dv-zelle { background-image: none; } html #druck .dv-bal.sperre { background: #f1948a; }
     #druck .dpe-tab .achse { display: flex; } #druck .dpe-tab .achse i { flex: 1; font-style: normal; text-align: left; font-size: 6.5pt; } #druck .dpe-tab .achse i span { position: relative; left: -1.2mm; }
     #druck .dpe-tab .wz td { height: 3.6mm; border-bottom: none; } #druck .dpe-tab .sz td { height: 4.6mm; border-bottom: .5mm solid #b9a58e; } #druck .dpe-tab .nm[rowspan] { border-bottom: .5mm solid #b9a58e; } #druck .dpe-tab .frei .nm { color: #8a8076; }
     #druck .dpe-tab .seg { position: absolute; top: .45mm; bottom: .45mm; border-radius: .7mm; font-size: 5.8pt; color: #5b4a3a; display: flex; align-items: center; padding-left: .8mm; white-space: nowrap; overflow: hidden; }
-    #druck .dpe .pw { background: #ecd7b2; } #druck .dpe .pk { background: #f6ecd9; } #druck .dpe .pn { background: repeating-linear-gradient(135deg, #f6ecd9 0 1mm, #fff 1mm 2mm); border: .2mm dashed #d9c4a0; } #druck .dpe .ps { background: repeating-linear-gradient(135deg, #e2dcd6 0 .8mm, #f4f1ee .8mm 1.6mm); color: #7a7068; }
+    #druck .dpe .pw { background: #ecd7b2; } #druck .dpe .pk { background: #f6ecd9; } #druck .dpe .pn { background: #fbf5ea; border: .2mm dashed #d9c4a0; } #druck .dpe .ps { background: #ebe6e1; color: #7a7068; }
     #druck .dpe-tab .nix { position: absolute; left: 1mm; top: 0; font-size: 5.8pt; color: #b0a69c; font-style: italic; line-height: 3.6mm; }
     #druck .dpe-tab .bal { position: absolute; top: .6mm; bottom: .6mm; border-radius: 1mm; color: #fff; font-size: 7pt; font-weight: 700; display: flex; align-items: center; justify-content: center; white-space: nowrap; overflow: hidden; }
-    #druck .dpe .b { background: #741521; } #druck .dpe .v { background: #c0612b; } #druck .dpe .h { background: #35607e; } #druck .dpe .aus { background: repeating-linear-gradient(135deg, #8a7f76 0 1.5mm, #9e938a 1.5mm 3mm); }
-    #druck .dpe-tab .bal.bs { background: repeating-linear-gradient(135deg, #fff 0 1mm, #e8f0e2 1mm 2mm); border: .4mm dashed #4f7a3a; color: #2f5a1f; }
+    #druck .dpe .b { background: #741521; } #druck .dpe .v { background: #c0612b; } #druck .dpe .h { background: #35607e; } #druck .dpe .aus { background: #948980; }
+    #druck .dpe-tab .bal.bs { background: #eef4e9; border: .4mm dashed #4f7a3a; color: #2f5a1f; }
     #druck .dpe-tab .stat td { background: #fcfaf7; height: 3.8mm; } #druck .dpe-tab .zahlen { display: flex; } #druck .dpe-tab .zahlen i { flex: 1; font-style: normal; text-align: center; font-size: 6.5pt; line-height: 3.8mm; }
     #druck .dpe-tab .zahlen .gruen { background: #e3f1dc; color: #2f5a1f; font-weight: 800; } #druck .dpe-tab .zahlen .rot { background: #f7d4d0; color: #9b1c13; font-weight: 800; } #druck .dpe-tab .zahlen .gelb { background: #fbefc6; color: #7a5b00; font-weight: 800; } #druck .dpe-tab .zahlen .soll { color: #8a8076; }
     #druck .dpe-tab td.rot { color: #9b1c13; font-weight: 800; } #druck .dpe-tab .ber td { height: 4.2mm; } #druck .dpe-tab .leer { color: #8a8076; font-style: italic; }
@@ -7266,7 +7270,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.999.0" data-v="2.999.0"></script>
+<script src="app.js?v=3.0.0" data-v="3.0.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

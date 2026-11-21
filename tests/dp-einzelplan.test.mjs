@@ -21,6 +21,6 @@ assert.ok(/<td class="rz">/.test(app) && /<th>Regelzeit<\/th>/.test(app), "Regel
 assert.ok(/🔁 <b>Dienst tauschen\?<\/b> In der Club-App gibt es eine <b>Tauschbörse<\/b>/.test(app), "Hinweis Tauschbörse");
 // Farben wie in Twinkey/DP2
 for (const [k, f] of [["w", "#dbe6f8"], ["k", "#e2f1e6"], ["n", "#fdeec4"], ["dienst", "#7d1727"]]) assert.ok(html.includes(`#druck .ep-tab td.z.${k} { background: ${f}; }`), "Farbe " + k);
-assert.ok(/#druck \.ep-tab td\.z\.ber \{ background: repeating-linear-gradient\(45deg, #425b6e/.test(html) && /#druck \.ep-tab td\.z\.s \{ background: repeating-linear-gradient\(135deg, #f7d9d6/.test(html), "Bereitschaft/Sperrzeit");
+assert.ok(/#druck \.ep-tab td\.z\.ber \{ background: #9fb0bf; \}/.test(html) && /#druck \.ep-tab td\.z\.s \{ background: #f7d9d6; \}/.test(html), "Bereitschaft/Sperrzeit (3.0.0: einfarbig, ohne Streifen – Drucker-Hänger)");
 assert.ok(/--pref: #dbe6f8; --avai: #e2f1e6; --ifn: #fdeec4; --unav: #f7d9d6; --dienst: #7d1727; --ber: #425b6e;/.test(html), "Gesamtplan-Druck mit denselben Farben");
 console.log("dp-einzelplan: ok");
