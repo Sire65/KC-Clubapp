@@ -15,6 +15,9 @@ on:
 concurrency:
   group: notbetrieb-hochladen
   cancel-in-progress: false
+permissions:
+  contents: read
+
 jobs:
   hochladen:
     runs-on: ubuntu-latest
@@ -23,6 +26,8 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
       - name: Eingerichtet?
         id: pruef
         run: |
