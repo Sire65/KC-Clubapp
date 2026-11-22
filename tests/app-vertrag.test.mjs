@@ -673,9 +673,9 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   for (const a of ["online", "anklopfen", "anklopfen_antwort"]) assert.ok(aktionen.has(a) && aufrufe.has(a), `Online-Aktion ${a} fehlt`);
   assert.ok(/online: \(w\) => \(\{ zeigen: w\?\.zeigen !== false \}\)/.test(server), "Einstellung „online“ fehlt oder Standard nicht an");
   const on = server.slice(server.indexOf('case "online": {'), server.indexOf('case "anklopfen": {'));
-  assert.ok(/zeigen \? (onlineJetzt\(\) : Promise\.resolve\(new Set|await onlineJetztMit\(.*\) : \{ on: new Set|onlineJetztMit\(.*\) : Promise\.resolve\(\{ on: new Set)/.test(on), "Wer sich verbirgt, sieht trotzdem andere"); // 2.485.0 KC-CLUB-ONLINE-SPARSAM
+  assert.ok(/zeigen(?: \|\| ich\.admin)? \? (onlineJetzt\(\) : Promise\.resolve\(new Set|await onlineJetztMit\(.*\) : \{ on: new Set|onlineJetztMit\(.*\) : Promise\.resolve\(\{ on: new Set)/.test(on), "Wer sich verbirgt, sieht trotzdem andere"); // 2.485.0 KC-CLUB-ONLINE-SPARSAM
   // 2.3.0: zusätzlich ohne Inkognito-Admin (KC-CLUB-INKOGNITO)
-  assert.ok(/filter\(\(id: string\) => zeigen\.get\(id\) !== false(\)| && !inko\.has\(id\)\)| && \(mitInkognito \|\| !inko\.has\(id\)\)( && !weg\.has\(id\))?\)\))/.test(server), "Verborgene erscheinen als online"); // KC-CLUB-ONLINE-ECHT: + „weg“
+  assert.ok(/filter\(\(id: string\) => (?:\(mitVerborgenen \|\| zeigen\.get\(id\) !== false\)|zeigen\.get\(id\) !== false)(\)| && !inko\.has\(id\)\)| && \(mitInkognito \|\| !inko\.has\(id\)\)( && !weg\.has\(id\))?\)\))/.test(server), "Verborgene erscheinen als online"); // KC-CLUB-ONLINE-ECHT: + „weg“
   const aw = server.slice(server.indexOf('case "anklopfen_antwort"'), server.indexOf('case "anklopfen_antwort"') + 400);
   assert.ok(/\.eq\("an", ich\.person_id\)/.test(aw), "Fremde könnten ein Anklopfen beantworten");
   const ak = server.slice(server.indexOf('case "anklopfen": {'), server.indexOf('case "anklopfen_antwort"'));
@@ -1173,7 +1173,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   // Kreise: Registry, Rot nur Admin (Server liefert fehler nur im Admin-Zweig), Unbekannt nie OK
   assert.ok(/const KREIS_ARTEN = \[/.test(html) && /art: "fehler"[^\n]*nurAdmin: true, gilt: \(m\) => ICH\?\.admin && !!m\.fehler/.test(html), "Rot nicht auf Admin beschränkt");
   assert.ok(/\.\.\.\(ich\.admin \? \{[^\n]*fehler: fehler\.get\(m\.person_id\) \?\? null[,}]/.test(server) && /if \(ich\.admin( && adminLesen)?\) \{[\s\S]{0,1400}\{ data: fx \}/.test(server) && /ich\.admin \? Promise\.all\(\[\n\s*db\.from\("kc_club_person_einstellung"\)\.select\("person_id,wert"\)\.eq\("schluessel", "ansicht"\),\n\s*db\.from\("kc_communication_requests"\)/.test(server), "Server gibt Fehler an Nicht-Admins"); // 2.593.0: Zustellfehler nur für den Admin gelesen
-  assert.ok(/verborgen: m\.person_id !== ich\.person_id && \(!ichZeige \|\| zeigen\.get\(m\.person_id\) === false\)/.test(server) && /heute: ichZeige && /.test(server), "Online-Privatsphäre bei heute/verborgen nicht beachtet");
+  assert.ok(/verborgen: m\.person_id !== ich\.person_id && (?:!ich\.admin && )?\(!ichZeige \|\| zeigen\.get\(m\.person_id\) === false\)/.test(server) && /heute: ichZeige && /.test(server), "Online-Privatsphäre bei heute/verborgen nicht beachtet");
   assert.ok(/\.avatar\.k-unbekannt \{ background: transparent;[^}]*dashed/.test(html) && /return k \|\| \{ art: "unbekannt"/.test(html), "Unbekannt wird nicht als unbekannt gezeigt");
   assert.ok((html.match(/[{:] ?kreis\((m|\{|MITGLIEDER)/g) || []).length >= 4 && /kreisLegende\(\) \+ (MITGLIEDER|liste)\.map/.test(html), "Kreise nicht in allen Listen / Legende fehlt");
 }
@@ -3205,7 +3205,7 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
 // 286. 2.3.0: Inkognito-Hauptschalter (nur Admin, nicht gegenseitig)
 {
   assert.ok(/inkognito: \(w\) => \(\{ an: w\?\.an === true \}\)/.test(server) && /schluessel === "inkognito" && !ich\.admin( && \(wert as any\)\.an)?\) throw new Fehler\("Nur für den Admin\.", 403\)/.test(server), "nur Admin darf Inkognito setzen");
-  assert.ok(/zeigen\.get\(id\) !== false && \(mitInkognito \|\| !inko\.has\(id\)\)/.test(server), "onlineJetzt ohne Inkognito-Admin"); // 2.6.1: außer als Empfänger
+  assert.ok(/zeigen\.get\(id\) !== false\)? && \(mitInkognito \|\| !inko\.has\(id\)\)/.test(server), "onlineJetzt ohne Inkognito-Admin"); // 3.5.0: (mitVerborgenen || …) // 2.6.1: außer als Empfänger
   assert.ok(/if \(\(await inkognitoSet\(\[wer\.person_id\]\)\)\.has\(wer\.person_id\)\) return;/.test(server), "kein Online-Push bei Inkognito");
   assert.ok(/x\.schluessel === "inkognito" \? !selbst && x\.wert\?\.an === true/.test(server) && /verborgen\(ich\.person_id, true\)/.test(server), "zuletzt da: verbirgt nur den Admin selbst");
   assert.ok(/zeigen\.get\(m\.person_id\) !== false && !inko\.has\(m\.person_id\)/.test(server), "kein „heute da“ bei Inkognito");
@@ -7318,7 +7318,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/return onlineJetztMitAlt\(weitere, seit\);/.test(server) && /return \{ \.\.\.\(await mahnungAlt\(ich, offen, grenze\)\), tage: MAHNUNG_TAGE \};/.test(server), "Rückfall auf den bisherigen Weg");
   assert.ok(/"online_paket_abweichung"/.test(server) && /"mahnung_paket_abweichung"/.test(server), "Vergleich alt ↔ neu");
   const on = server.slice(server.indexOf('case "online": {'), server.indexOf('const { anMich, vonMir } = onlineAnklopfenTeilen'));
-  assert.ok(/const \[, fensterAnders, \{ on, einst \}, liveT\] = await Promise\.all\(\[/.test(on) && /ich\.nurLesen \? Promise\.resolve\(null\) : onlineSeitMerken/.test(on), "Online-Takt gleichzeitig, Nur-Lesen schreibt nicht");
+  assert.ok(/const \[, fensterAnders, \{ on, einst(?:, versteckt)? \}, liveT\] = await Promise\.all\(\[/.test(on) && /ich\.nurLesen \? Promise\.resolve\(null\) : onlineSeitMerken/.test(on), "Online-Takt gleichzeitig, Nur-Lesen schreibt nicht");
   assert.ok(lies("tools/db-test/88_erwartet.txt").includes("mahnung_gleich=t"), "Probelauf erwartet Gleichheit");
 }
 // 2.598.0 KC-CLUB-UNTERHALTUNGEN-PAKET: ein Aufruf statt 3–4 Schritten, bisheriger Weg als Rückfall, Not-Aus, Vergleich

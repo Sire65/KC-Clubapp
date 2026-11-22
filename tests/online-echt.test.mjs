@@ -17,8 +17,8 @@ assert.equal(istWeg({ seit: t(0), zuletzt: t(30), weg: t(20) }), false, "wieder 
 assert.equal(istWeg({ weg: t(20) }), true, "nur „weg“: weg");
 
 // --- Server: überall angewandt ---
-assert.ok(/const erg = \{ on: new Set\(ids\.filter\(\(id\) => [^\n]*&& !istWeg\(einst\.get\("online_seit"\)\?\.get\(id\)\)\)\), einst \};/.test(server), "Online-Paket nimmt „weg“ heraus");
-assert.ok(/return \{ on: new Set\(ids\.filter\(\(id\) => [^\n]*&& !istWeg\(einst\.get\("online_seit"\)\?\.get\(id\)\)\)\), einst \};/.test(server), "Gegenprobe gleich");
+assert.ok(/const erg = \{ on: new Set\(ids\.filter\(\(id\) => [^\n]*&& !istWeg\(einst\.get\("online_seit"\)\?\.get\(id\)\)\)\), einst(?: \}|,\n\s+versteckt: )/.test(server), "Online-Paket nimmt „weg“ heraus"); // 3.5.0: + versteckt (nur Admin)
+assert.ok(/return \{ on: new Set\(ids\.filter\(\(id\) => [^\n]*&& !istWeg\(einst\.get\("online_seit"\)\?\.get\(id\)\)\)\), einst(?: \}|,\n\s+versteckt: )/.test(server), "Gegenprobe gleich");
 assert.ok(server.includes('if (!weitere.includes("online_seit")) weitere = [...weitere, "online_seit"];'), "online_seit wird immer mitgelesen");
 assert.ok(server.includes("&& !weg.has(id))); // KC-CLUB-ONLINE-ECHT"), "onlineJetzt (z. B. „an alle Online“)");
 assert.ok(server.includes("return new Set(drin.filter((id) => !weg.has(id)));"), "Push wieder, wenn die App weggelegt ist");
