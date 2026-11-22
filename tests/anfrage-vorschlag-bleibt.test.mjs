@@ -30,7 +30,7 @@ const ent = fall("terminanfrage_vorschlag_entscheiden", "erinnerung_setzen");
 assert.match(ent, /vorschlagAltWerte\(z, "angenommen"\)/);
 assert.match(ent, /vorschlagAltWerte\(z, "abgelehnt"\)/);
 assert.match(srv, /meinVorschlagAlt: vorschlagAlt\(mein\)/);
-assert.match(srv, /vorschlag: z\.vorschlag_beginn \? \{[^}]+\} : null, vorschlagAlt: vorschlagAlt\(z\) \}/, "Empfängerliste (Sichtbarkeit wie die Antworten)");
+assert.match(srv, /vorschlag: z\.vorschlag_beginn \? \{[^}]+\} : null, vorschlagAlt: vorschlagAlt\(z\)(, zeit: andereZeit\(z\))? \}/, "Empfängerliste (Sichtbarkeit wie die Antworten)");
 assert.match(srv, /from\("kc_club_terminanfrage_empfaenger"\)\.select\("\*"\)\.in\("anfrage_id"/, "Liste liest mit * – vor der Migration einfach leer");
 
 // Reine Funktionen des Servers nachgebaut ausführen

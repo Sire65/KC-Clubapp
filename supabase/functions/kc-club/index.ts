@@ -9388,9 +9388,9 @@ async function kalenderIcs(token: string) {
     // 2.23.58 KC-CLUB-ANFRAGE-KALENDER: verlegte Anfragen ersetzen den alten Eintrag (gleiche UID); Vorbehalt = „vorläufig“
     z.push("BEGIN:VEVENT", `UID:anfrage-${x.id}@koecheclub-werne`, `DTSTAMP:${stamp}`, `SEQUENCE:${Math.floor(new Date(x.beginn).getTime() / 60000) % 100000000}`,
       `SUMMARY:${icsText("📨 " + x.anlass + (x.vonMir ? "" : " (" + x.von.vorname + ")") + (x.vorbehalt ? " – unter Vorbehalt" : ""))}`,
-      `DTSTART:${icsZeit(x.beginn)}`, `DTEND:${icsZeit(x.ende || new Date(new Date(x.beginn).getTime() + 3600000).toISOString())}`);
+      ...andereZeitIcs(x)); // KC-CLUB-ANFRAGE-ANDERE-ZEIT: komme ich zu anderer Zeit, steht meine Zeit im Kalender
     if (x.ort) z.push(`LOCATION:${icsText(x.ort)}`);
-    z.push(`DESCRIPTION:${icsText((x.notiz ? x.notiz + "\n\n" : "") + APP_URL + "#termine")}`, `STATUS:${x.status === "abgesagt" ? "CANCELLED" : x.meine === "vielleicht" || x.vorbehalt ? "TENTATIVE" : "CONFIRMED"}`, "END:VEVENT");
+    z.push(`DESCRIPTION:${icsText((x.meineZeit ? `🕐 du kommst ${andereZeitText(x.meineZeit)} (angefragt: ${anfrageWann(x)})\n\n` : "") + (x.notiz ? x.notiz + "\n\n" : "") + APP_URL + "#termine")}`, `STATUS:${x.status === "abgesagt" ? "CANCELLED" : x.meine === "vielleicht" || x.vorbehalt ? "TENTATIVE" : "CONFIRMED"}`, "END:VEVENT");
   }
   // KC-CLUB-SCHULUNGSTERMINE (2.23.59): Schulungs-/Besuchstermine (Admin alle, Mitglieder ihre eigenen) – Verlegen/Absagen kommt von selbst
   const { data: rolleAbo } = await db.from("kc_club_rollen").select("ist_admin").eq("person_id", ich.person_id).maybeSingle(); // nur für die Schulungstermine
@@ -9598,12 +9598,13 @@ async function terminanfragenListe(ich: Ich, zeitraum?: { von: string; bis: stri
     const mein = e.find((z: any) => z.person_id === ich.person_id);
     return {
       id: a.id, anlass: a.anlass, beginn: a.beginn, ende: a.ende, ort: a.ort, notiz: a.notiz, frist: a.frist, status: a.status, spiel: !!a.spiel_id, erstelltAm: a.erstellt_am, geaendertAm: a.geaendert_am,
-      protokoll: a.protokoll && (a.erstellt_von === ich.person_id || a.protokoll.status === "gesendet") ? a.protokoll : null, // KC-CLUB-TA-PROTOKOLL: Angefragte sehen es erst, wenn es verschickt ist gegenvorschlag: a.gegenvorschlag !== false, vorbehalt: a.vorbehalt ?? null, anlagen: anl.get(a.id) ?? [],
+      protokoll: a.protokoll && (a.erstellt_von === ich.person_id || a.protokoll.status === "gesendet") ? a.protokoll : null, // KC-CLUB-TA-PROTOKOLL: Angefragte sehen es erst, wenn es verschickt ist
+      gegenvorschlag: a.gegenvorschlag !== false, vorbehalt: a.vorbehalt ?? null, anlagen: anl.get(a.id) ?? [], // KC-CLUB-ANFRAGE-ANDERE-ZEIT: stand seit 2.942.0 versehentlich im Kommentar oben
       vonMir: a.erstellt_von === ich.person_id, von: { person_id: a.erstellt_von, name: name(a.erstellt_von), vorname: vorname(leute.get(a.erstellt_von)) || name(a.erstellt_von) },
       meine: mein?.antwort ?? null, meineNotiz: mein?.notiz ?? null, meinGelesen: mein?.gelesen_am ?? null, // KC-CLUB-TERMINANFRAGE-STATUS (2.23.50)
-      meinVorschlag: mein?.vorschlag_beginn ? { beginn: mein.vorschlag_beginn, ende: mein.vorschlag_ende } : null, meinVorschlagAlt: vorschlagAlt(mein), erinnerung: erin.get(a.id) ?? null, erinnerungStandard: a.erinnerung_min || 0,
+      meinVorschlag: mein?.vorschlag_beginn ? { beginn: mein.vorschlag_beginn, ende: mein.vorschlag_ende } : null, meinVorschlagAlt: vorschlagAlt(mein), meineZeit: andereZeit(mein), erinnerung: erin.get(a.id) ?? null, erinnerungStandard: a.erinnerung_min || 0,
       empfaenger: e.map((z: any) => ({ person_id: z.person_id, name: name(z.person_id), vorname: vorname(leute.get(z.person_id)) || name(z.person_id), antwort: z.antwort, notiz: z.notiz, geantwortet_am: z.geantwortet_am,
-        gelesen_am: z.gelesen_am, vorschlag: z.vorschlag_beginn ? { beginn: z.vorschlag_beginn, ende: z.vorschlag_ende } : null, vorschlagAlt: vorschlagAlt(z) }))
+        gelesen_am: z.gelesen_am, vorschlag: z.vorschlag_beginn ? { beginn: z.vorschlag_beginn, ende: z.vorschlag_ende } : null, vorschlagAlt: vorschlagAlt(z), zeit: andereZeit(z) }))
         .sort((x: any, y: any) => x.name.localeCompare(y.name, "de")),
     };
   });
@@ -9623,6 +9624,35 @@ async function empfaengerAendern(werte: Record<string, unknown>, alt: Record<str
   if (alt) { const { error } = await filter(tab().update({ ...werte, ...alt })); if (!error) return; }
   await filter(tab().update(werte)); // ohne vorschlag_alt_* (Migration noch nicht eingespielt) bzw. nichts Früheres zu merken
 }
+// KC-CLUB-ANFRAGE-ANDERE-ZEIT (22.11.2026, Wunsch Hansi „ist also eine Zusage, aber um eine andere Zeit“): „🕐 Ja, aber zu anderer Zeit“ –
+// später kommen / früher gehen. Gespeichert als antwort = 'ja' plus zeit_beginn/zeit_ende (Migration 20261122_kc_club_anfrage_andere_zeit.sql), zählt als Zusage.
+// Anders als der Gegenvorschlag (vorschlag_*), der den ganzen Termin verschieben will. Jede andere Antwort löscht zeit_* wieder.
+// Gelesen über select("*") (fehlt die Spalte, ist sie leer); geschrieben über empfaengerMitZeit: fehlen die Spalten, speichert der Server ohne sie –
+// außer wirklich eine andere Zeit soll gespeichert werden: dann klare Meldung statt einer stillen „normalen“ Zusage.
+const andereZeit = (z: any) => z?.zeit_beginn ? { beginn: z.zeit_beginn, ende: z.zeit_ende ?? null } : null;
+const ZEIT_LEER = { zeit_beginn: null, zeit_ende: null };
+const ZEIT_FEHLT = "„Andere Zeit“ geht erst nach dem nächsten Datenbank-Update – bitte vorerst mit ✅ Ja antworten und die Zeit in die Notiz schreiben.";
+function andereZeitText(z: { beginn: string; ende?: string | null } | null) {
+  if (!z?.beginn) return "";
+  return z.ende ? `${fZeit.format(new Date(z.beginn))}–${fZeit.format(new Date(z.ende))} Uhr` : `ab ${fZeit.format(new Date(z.beginn))} Uhr`;
+}
+// prüft die Wunschzeit gegen den Termin: gültig, Bis nach Von, am Termintag (Berlin; bei Terminen über Mitternacht auch am End-Tag), höchstens 24 Std.
+function andereZeitPruefen(a: any, beginn: unknown, ende: unknown) {
+  const zb = new Date(String(beginn || "")), ze = ende ? new Date(String(ende)) : null;
+  if (isNaN(zb.getTime())) throw new Fehler("Bitte angeben, ab wann du kommst.");
+  if (ze && isNaN(ze.getTime())) throw new Fehler("Die Uhrzeit „bis“ ist ungültig.");
+  if (ze && ze.getTime() <= zb.getTime()) throw new Fehler("„Bis“ muss nach „Von“ liegen.");
+  if (ze && ze.getTime() - zb.getTime() > 24 * 3600000) throw new Fehler("Bitte eine Zeit am Termintag angeben.");
+  const tage = new Set([berlinTag(new Date(a.beginn)), berlinTag(new Date(a.ende || a.beginn))]);
+  if (!tage.has(berlinTag(zb)) || (ze && !tage.has(berlinTag(ze)) && !tage.has(berlinTag(new Date(ze.getTime() - 60000))))) throw new Fehler("Die andere Zeit muss am Tag des Termins liegen.");
+  return { zeit_beginn: zb.toISOString(), zeit_ende: ze ? ze.toISOString() : null };
+}
+async function empfaengerMitZeit(werte: Record<string, unknown>, alt: Record<string, unknown> | null, filter: (q: any) => any, zeit: Record<string, unknown> = ZEIT_LEER, pflicht = false) {
+  const tab = () => db.from("kc_club_terminanfrage_empfaenger");
+  for (const w of alt ? [{ ...werte, ...zeit, ...alt }, { ...werte, ...zeit }] : [{ ...werte, ...zeit }]) { const { error } = await filter(tab().update(w)); if (!error) return true; }
+  if (pflicht) throw new Fehler(ZEIT_FEHLT, 503); // Spalten fehlen noch – nichts gespeichert
+  await empfaengerAendern(werte, alt, filter); return false; // ohne zeit_* (Migration noch nicht eingespielt)
+}
 const ANTWORT_TEXT: Record<string, string> = { ja: "✅ Ja", vielleicht: "🤔 Vielleicht", nein: "❌ Nein" };
 // KC-CLUB-ANFRAGE-ALLE-INFO (19.10.2026, Wunsch Hansi „wenn Zusagen, Absagen, andere Vorschläge kommen, müssen alle benachrichtigt werden“):
 // bei Anfragen an mehrere Personen erfahren auch die übrigen Eingeladenen von Antworten und Gegenvorschlägen (ohne Anfragenden und ohne den Antwortenden selbst)
@@ -9640,6 +9670,12 @@ async function meineErinnerungen(pid: string, ids: string[]) {
   return new Map<string, any>((data ?? []).map((x: any) => [x.anfrage_id, { minuten: x.minuten, vortag: x.vortag, wege: x.wege }]));
 }
 const erinText = (min: number) => min >= 60 ? `${Math.round(min / 60)} Std.` : `${min} Min.`;
+function andereZeitIcs(x: any) { // KC-CLUB-ANFRAGE-ANDERE-ZEIT: Beginn/Ende für das Kalender-Abo
+  const b = x.meine === "ja" && x.meineZeit?.beginn ? x.meineZeit.beginn : x.beginn;
+  const endeAnfrage = x.ende && Date.parse(x.ende) > Date.parse(b) ? x.ende : null;
+  const e = b !== x.beginn ? (x.meineZeit.ende || endeAnfrage || new Date(Date.parse(b) + 3600000).toISOString()) : (x.ende || new Date(Date.parse(x.beginn) + 3600000).toISOString());
+  return [`DTSTART:${icsZeit(b)}`, `DTEND:${icsZeit(e)}`];
+}
 function anfrageWann(a: any) { return wann(a.beginn, true) + (a.ende ? ` bis ${fZeit.format(new Date(a.ende))} Uhr` : ""); }
 
 // ---------- KC-CLUB-STANDORT (0.92.0) ----------
@@ -10478,24 +10514,27 @@ Köcheclub Werne`,
       // KC-CLUB-ERINNERUNG-WAHL (2.23.22): eigene Erinnerungen – je Person, Weg nach Wahl. Der Zeitplan läuft alle 15 Min.; darum wird
       // geschickt, sobald der Zeitpunkt höchstens 7 Min. entfernt ist (mittlere Abweichung am kleinsten), der Text nennt die echte Restzeit.
       const eigeneErin = new Set<string>(); // "anfrage|person" mit eigener Einstellung → nicht zusätzlich die Standard-Erinnerung
+      // KC-CLUB-ANFRAGE-ANDERE-ZEIT: wer zu einer anderen Zeit kommt, wird zu SEINER Zeit erinnert – dafür auch Anfragen, die bis 12 Std. vorher begonnen haben
       { const { data: an } = await db.from("kc_club_terminanfragen").select("id,anlass,beginn,ende,ort,spiel_id,erstellt_von").eq("status", "offen")
-          .gte("beginn", new Date(Date.now() - 10 * 60000).toISOString()).lte("beginn", new Date(Date.now() + 130 * 60000).toISOString());
+          .gte("beginn", new Date(Date.now() - 12 * 3600000).toISOString()).lte("beginn", new Date(Date.now() + 130 * 60000).toISOString());
         if ((an ?? []).length) {
           const ids = (an ?? []).map((x: any) => x.id);
           const [{ data: er }, { data: em }] = await Promise.all([db.from("kc_club_erinnerungen").select("*").in("anfrage_id", ids),
-            db.from("kc_club_terminanfrage_empfaenger").select("anfrage_id,person_id,antwort").in("anfrage_id", ids)]);
+            db.from("kc_club_terminanfrage_empfaenger").select("*").in("anfrage_id", ids)]); // * statt Spaltenliste: zeit_beginn fehlt vor der Migration
           for (const r of er ?? []) eigeneErin.add(r.anfrage_id + "|" + r.person_id);
           for (const r of er ?? []) {
             const x = (an ?? []).find((y: any) => y.id === r.anfrage_id); if (!x || !r.minuten || r.gesendet_am || !(r.wege ?? []).length) continue;
-            const dabei = x.erstellt_von === r.person_id || (em ?? []).some((y: any) => y.anfrage_id === x.id && y.person_id === r.person_id && (y.antwort === "ja" || y.antwort === "vielleicht"));
-            if (!dabei || new Date(x.beginn).getTime() - r.minuten * 60000 > Date.now() + 7 * 60000) continue;
+            const ez = (em ?? []).find((y: any) => y.anfrage_id === x.id && y.person_id === r.person_id);
+            const dabei = x.erstellt_von === r.person_id || (ez && (ez.antwort === "ja" || ez.antwort === "vielleicht"));
+            const ab = new Date(ez?.antwort === "ja" && ez?.zeit_beginn ? ez.zeit_beginn : x.beginn).getTime(); // KC-CLUB-ANFRAGE-ANDERE-ZEIT
+            if (!dabei || ab < Date.now() - 10 * 60000 || ab - r.minuten * 60000 > Date.now() + 7 * 60000) continue;
             const { data: ok } = await db.from("kc_club_erinnerungen").update({ gesendet_am: jetzt() }).eq("person_id", r.person_id).eq("anfrage_id", r.anfrage_id).is("gesendet_am", null).select("person_id");
             if (!ok?.length) continue;
-            const min = Math.max(0, Math.round((new Date(x.beginn).getTime() - Date.now()) / 60000));
+            const min = Math.max(0, Math.round((ab - Date.now()) / 60000)), zT = ez?.antwort === "ja" ? andereZeitText(andereZeit(ez)) : "";
             await sendenGewaehlt("club_erinnerung", [r.person_id], r.wege, {
-              betreff: `Köcheclub Werne – Erinnerung: ${x.anlass}, ${fZeit.format(new Date(x.beginn))} Uhr`,
-              titel: `⏰ ${min > 5 ? "In " + erinText(min) : "Jetzt"}: ${x.anlass}`, kurz: `${fZeit.format(new Date(x.beginn))} Uhr${x.ort ? " – " + x.ort : ""}`,
-              text: `Hallo,\n\ndeine Erinnerung:\n\n📌 ${x.anlass}\n📅 ${anfrageWann(x)}${x.ort ? "\n📍 " + x.ort : ""}\n\nViel Spaß!\nKöcheclub Werne`,
+              betreff: `Köcheclub Werne – Erinnerung: ${x.anlass}, ${fZeit.format(new Date(ab))} Uhr`,
+              titel: `⏰ ${min > 5 ? "In " + erinText(min) : "Jetzt"}: ${x.anlass}`, kurz: `${zT ? "du kommst " + zT : fZeit.format(new Date(x.beginn)) + " Uhr"}${x.ort ? " – " + x.ort : ""}`,
+              text: `Hallo,\n\ndeine Erinnerung:\n\n📌 ${x.anlass}\n📅 ${anfrageWann(x)}${zT ? "\n🕐 du kommst " + zT : ""}${x.ort ? "\n📍 " + x.ort : ""}\n\nViel Spaß!\nKöcheclub Werne`,
               url: x.spiel_id ? `${APP_URL}#spiel=${x.spiel_id}` : APP_URL + "#termine",
             }, `club-erinnerung-eigen:${r.anfrage_id}:${r.person_id}`).catch(() => null);
           }
@@ -10507,11 +10546,17 @@ Köcheclub Werne`,
           if (new Date(x.beginn).getTime() - x.erinnerung_min * 60000 > Date.now()) continue;
           const { data: ok } = await db.from("kc_club_terminanfragen").update({ kurz_erinnert_am: jetzt() }).eq("id", x.id).is("kurz_erinnert_am", null).select("id");
           if (!ok?.length) continue;
-          const { data: e } = await db.from("kc_club_terminanfrage_empfaenger").select("person_id,antwort").eq("anfrage_id", x.id);
+          const { data: e } = await db.from("kc_club_terminanfrage_empfaenger").select("*").eq("anfrage_id", x.id); // * – zeit_beginn (KC-CLUB-ANFRAGE-ANDERE-ZEIT)
           const zu = (e ?? []).filter((y: any) => y.antwort === "ja").map((y: any) => y.person_id);
           if (!zu.length) continue; // noch niemand hat zugesagt → keine „gleich geht's los“-Erinnerung
           const min = Math.max(0, Math.round((new Date(x.beginn).getTime() - Date.now()) / 60000));
-          const an = [x.erstellt_von, ...zu].filter((pid) => !eigeneErin.has(x.id + "|" + pid)); // eigene Einstellung hat Vorrang
+          const anders = new Map<string, string>((e ?? []).filter((y: any) => y.antwort === "ja" && y.zeit_beginn && !eigeneErin.has(x.id + "|" + y.person_id)).map((y: any) => [y.person_id, andereZeitText(andereZeit(y))]));
+          for (const [pid, zT] of anders) await senden("club_erinnerung", [pid], { // KC-CLUB-ANFRAGE-ANDERE-ZEIT: kommt zu anderer Zeit → mit seiner Zeit
+            betreff: `Köcheclub Werne – heute: ${x.anlass}, du kommst ${zT}`, titel: `⏰ Heute: ${x.anlass}`, kurz: `du kommst ${zT}${x.ort ? " – " + x.ort : ""}`,
+            text: `Hallo,\n\nkurze Erinnerung:\n\n📌 ${x.anlass}\n📅 ${anfrageWann(x)}\n🕐 du kommst ${zT}${x.ort ? "\n📍 " + x.ort : ""}\n\nViel Spaß!\nKöcheclub Werne`,
+            url: x.spiel_id ? `${APP_URL}#spiel=${x.spiel_id}` : APP_URL + "#termine",
+          }, `club-terminanfrage-kurz:${x.id}:${pid}`).catch(() => null);
+          const an = [x.erstellt_von, ...zu].filter((pid) => !eigeneErin.has(x.id + "|" + pid) && !anders.has(pid)); // eigene Einstellung hat Vorrang
           if (an.length) await senden("club_erinnerung", an, {
             betreff: `Köcheclub Werne – gleich: ${x.anlass}, ${fZeit.format(new Date(x.beginn))} Uhr`,
             titel: `⏰ ${min > 5 ? "In " + (min >= 90 ? Math.round(min / 60) + " Std." : min + " Min.") : "Jetzt"}: ${x.anlass}`, kurz: `${fZeit.format(new Date(x.beginn))} Uhr${x.ort ? " – " + x.ort : ""}`,
@@ -10530,10 +10575,17 @@ Köcheclub Werne`,
           if (berlinTag(new Date(x.beginn)) !== morgen) continue;
           const { data: ok } = await db.from("kc_club_terminanfragen").update({ erinnerung_gesendet_am: jetzt() }).eq("id", x.id).is("erinnerung_gesendet_am", null).select("id");
           if (!ok?.length) continue;
-          const { data: e } = await db.from("kc_club_terminanfrage_empfaenger").select("person_id,antwort").eq("anfrage_id", x.id);
+          const { data: e } = await db.from("kc_club_terminanfrage_empfaenger").select("*").eq("anfrage_id", x.id); // * – zeit_beginn (KC-CLUB-ANFRAGE-ANDERE-ZEIT)
           const { data: ohneVortag } = await db.from("kc_club_erinnerungen").select("person_id").eq("anfrage_id", x.id).eq("vortag", false); // KC-CLUB-ERINNERUNG-WAHL
           const nein = new Set((ohneVortag ?? []).map((y: any) => y.person_id));
-          const dabei = [x.erstellt_von, ...(e ?? []).filter((y: any) => y.antwort === "ja" || y.antwort === "vielleicht").map((y: any) => y.person_id)].filter((pid) => !nein.has(pid));
+          const anders = new Map<string, string>((e ?? []).filter((y: any) => y.antwort === "ja" && y.zeit_beginn && !nein.has(y.person_id)).map((y: any) => [y.person_id, andereZeitText(andereZeit(y))]));
+          const dabei = [x.erstellt_von, ...(e ?? []).filter((y: any) => y.antwort === "ja" || y.antwort === "vielleicht").map((y: any) => y.person_id)].filter((pid) => !nein.has(pid) && !anders.has(pid));
+          for (const [pid, zT] of anders) await senden("club_erinnerung", [pid], { // KC-CLUB-ANFRAGE-ANDERE-ZEIT
+            betreff: `Köcheclub Werne – Erinnerung: morgen ${x.anlass}, du kommst ${zT}`,
+            titel: "⏰ Morgen: " + x.anlass, kurz: `du kommst ${zT}${x.ort ? " – " + x.ort : ""}`,
+            text: `Hallo,\n\nkurze Erinnerung an morgen:\n\n📌 ${x.anlass}\n📅 ${anfrageWann(x)}\n🕐 du kommst ${zT}${x.ort ? "\n📍 " + x.ort : ""}\n\nDetails in der Köcheclub-App: ${APP_URL}#termine\n\nViele Grüße\nKöcheclub Werne`,
+            url: APP_URL + "#termine",
+          }, `club-terminanfrage-erinnerung:${x.id}:${pid}`).catch(() => null);
           const offen = (e ?? []).filter((y: any) => !y.antwort).map((y: any) => y.person_id);
           const ort = x.ort ? "\n📍 " + x.ort : "";
           if (dabei.length) await senden("club_erinnerung", dabei, {
@@ -11501,25 +11553,31 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (a.status !== "offen") throw new Fehler("Diese Anfrage wurde abgesagt.", 409);
         if (new Date(a.ende || a.beginn).getTime() < Date.now() - 3 * 3600000) throw new Fehler("Der Termin ist schon vorbei.", 409);
         const notiz = antwort === "keine" ? null : txt(p.notiz, 300) || null;
-        await empfaengerAendern({ antwort: antwort === "keine" ? null : antwort, notiz, geantwortet_am: antwort === "keine" ? null : jetzt(),
+        // KC-CLUB-ANFRAGE-ANDERE-ZEIT: „🕐 Ja, aber zu anderer Zeit“ = antwort 'ja' + zeit_beginn/zeit_ende (nicht bei Spiel-Terminen)
+        const mitZeit = antwort === "ja" && !!p.zeit_beginn;
+        if (mitZeit && a.spiel_id) throw new Fehler("Bei Spiel-Terminen gilt „Passt / Passt nicht“.", 409);
+        const zeit = mitZeit ? andereZeitPruefen(a, p.zeit_beginn, p.zeit_ende) : ZEIT_LEER;
+        await empfaengerMitZeit({ antwort: antwort === "keine" ? null : antwort, notiz, geantwortet_am: antwort === "keine" ? null : jetzt(),
           gelesen_am: z.gelesen_am || jetzt(), vorschlag_beginn: null, vorschlag_ende: null }, // Antwort ersetzt einen Gegenvorschlag
-          vorschlagAltWerte(z, null), (q) => q.eq("anfrage_id", a.id).eq("person_id", ich.person_id)); // KC-CLUB-ANFRAGE-VORSCHLAG-BLEIBT: als früheren merken
-        if (antwort !== "keine" && (antwort !== z.antwort || notiz !== z.notiz)) {
+          vorschlagAltWerte(z, null), (q) => q.eq("anfrage_id", a.id).eq("person_id", ich.person_id), zeit, mitZeit); // KC-CLUB-ANFRAGE-VORSCHLAG-BLEIBT: als früheren merken
+        const zText = andereZeitText(mitZeit ? { beginn: zeit.zeit_beginn as string, ende: zeit.zeit_ende as string | null } : null);
+        const zKurz = zText ? ` · ${ich.vorname} kommt ${zText}` : "", zZeile = zText ? `\n🕐 ${ich.vorname} kommt ${zText} (andere Zeit)` : "";
+        if (antwort !== "keine" && (antwort !== z.antwort || notiz !== z.notiz || zText !== andereZeitText(andereZeit(z)))) {
           await senden("club_treffen", [a.erstellt_von], {
-            titel: `${ANTWORT_TEXT[antwort]} von ${ich.vorname}`, kurz: `${a.anlass} – ${wann(a.beginn)}${notiz ? " · „" + notiz + "“" : ""}`,
-            betreff: `Köcheclub Werne – ${ich.name} antwortet: ${ANTWORT_TEXT[antwort].slice(2)} (${a.anlass})`,
-            text: `Hallo,\n\n${ich.name} hat auf deine Terminanfrage geantwortet:\n\n${ANTWORT_TEXT[antwort]}${notiz ? `\n📝 „${notiz}“` : ""}\n\n📌 ${a.anlass}\n📅 ${anfrageWann(a)}\n\nAlle Antworten in der Köcheclub-App: ${APP_URL}#termine\n\nViele Grüße\nKöcheclub Werne`,
+            titel: `${ANTWORT_TEXT[antwort]} von ${ich.vorname}${zText ? " – andere Zeit" : ""}`, kurz: `${a.anlass} – ${wann(a.beginn)}${zKurz}${notiz ? " · „" + notiz + "“" : ""}`,
+            betreff: `Köcheclub Werne – ${ich.name} antwortet: ${ANTWORT_TEXT[antwort].slice(2)}${zText ? ", " + zText : ""} (${a.anlass})`,
+            text: `Hallo,\n\n${ich.name} hat auf deine Terminanfrage geantwortet:\n\n${ANTWORT_TEXT[antwort]}${zZeile}${notiz ? `\n📝 „${notiz}“` : ""}\n\n📌 ${a.anlass}\n📅 ${anfrageWann(a)}\n\nAlle Antworten in der Köcheclub-App: ${APP_URL}#termine\n\nViele Grüße\nKöcheclub Werne`,
             url: APP_URL + "#termine",
           }, `club-terminanfrage-antwort:${a.id}:${ich.person_id}:${Date.now()}`);
           const mit = await anfrageMitEingeladene(a, ich.person_id);
           if (mit.length) await senden("club_treffen", mit, {
-            titel: `${ANTWORT_TEXT[antwort]} von ${ich.vorname}`, kurz: `${a.anlass} – ${wann(a.beginn)}${notiz ? " · „" + notiz + "“" : ""}`,
-            betreff: `Köcheclub Werne – ${ich.name} antwortet: ${ANTWORT_TEXT[antwort].slice(2)} (${a.anlass})`,
-            text: `Hallo,\n\n${ich.name} hat auf die Terminanfrage geantwortet, zu der du auch eingeladen bist:\n\n${ANTWORT_TEXT[antwort]}${notiz ? `\n📝 „${notiz}“` : ""}\n\n📌 ${a.anlass}\n📅 ${anfrageWann(a)}\n\nAlle Antworten in der Köcheclub-App: ${APP_URL}#termine\n\nViele Grüße\nKöcheclub Werne`,
+            titel: `${ANTWORT_TEXT[antwort]} von ${ich.vorname}${zText ? " – andere Zeit" : ""}`, kurz: `${a.anlass} – ${wann(a.beginn)}${zKurz}${notiz ? " · „" + notiz + "“" : ""}`,
+            betreff: `Köcheclub Werne – ${ich.name} antwortet: ${ANTWORT_TEXT[antwort].slice(2)}${zText ? ", " + zText : ""} (${a.anlass})`,
+            text: `Hallo,\n\n${ich.name} hat auf die Terminanfrage geantwortet, zu der du auch eingeladen bist:\n\n${ANTWORT_TEXT[antwort]}${zZeile}${notiz ? `\n📝 „${notiz}“` : ""}\n\n📌 ${a.anlass}\n📅 ${anfrageWann(a)}\n\nAlle Antworten in der Köcheclub-App: ${APP_URL}#termine\n\nViele Grüße\nKöcheclub Werne`,
             url: APP_URL + "#termine",
           }, `club-terminanfrage-antwort-mit:${a.id}:${ich.person_id}:${Date.now()}`).catch(() => null);
         }
-        await protokoll(ich.person_id, "terminanfrage_antwort", { anfrage: a.id, antwort });
+        await protokoll(ich.person_id, "terminanfrage_antwort", { anfrage: a.id, antwort, ...(mitZeit ? { andereZeit: true } : {}) });
         return json({ ok: true, anfrage: (await terminanfragenListe(ich, { von: new Date(new Date(a.beginn).getTime() - 1000).toISOString(), bis: new Date(new Date(a.beginn).getTime() + 1000).toISOString() })).find((x: any) => x.id === a.id) });
       }
 
@@ -11542,9 +11600,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (vb.getTime() < Date.now()) throw new Fehler("Der Vorschlag liegt in der Vergangenheit.");
         if (ve && (isNaN(ve.getTime()) || ve < vb)) throw new Fehler("Das Ende liegt vor dem Beginn.");
         const notiz = txt(p.notiz, 300) || null;
-        await empfaengerAendern({ antwort: null, notiz, geantwortet_am: jetzt(), gelesen_am: z.gelesen_am || jetzt(),
+        await empfaengerMitZeit({ antwort: null, notiz, geantwortet_am: jetzt(), gelesen_am: z.gelesen_am || jetzt(),
           vorschlag_beginn: vb.toISOString(), vorschlag_ende: ve ? ve.toISOString() : null }, VORSCHLAG_ALT_LEER, // neuer offener Vorschlag löst den früheren ab
-          (q) => q.eq("anfrage_id", a.id).eq("person_id", ich.person_id));
+          (q) => q.eq("anfrage_id", a.id).eq("person_id", ich.person_id)); // KC-CLUB-ANFRAGE-ANDERE-ZEIT: löscht eine „andere Zeit“
         const vWann = wann(vb.toISOString()) + (ve ? ` bis ${fZeit.format(ve)} Uhr` : "");
         const versand = await senden("club_treffen", [a.erstellt_von], {
           titel: `🔄 Gegenvorschlag von ${ich.vorname}`, kurz: `${a.anlass}: lieber ${vWann}${notiz ? " · „" + notiz + "“" : ""}`,
@@ -11579,9 +11637,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           if (new Date(z.vorschlag_beginn).getTime() < Date.now()) throw new Fehler("Der vorgeschlagene Termin ist schon vorbei.", 409);
           await db.from("kc_club_terminanfragen").update({ beginn: z.vorschlag_beginn, ende: z.vorschlag_ende, erinnerung_gesendet_am: null, kurz_erinnert_am: null, vorbehalt: vorbehalt ? zusatz : null, geaendert_am: jetzt() }).eq("id", a.id);
           // neue Zeit: alle anderen werden neu gefragt, der Vorschlagende hat damit zugesagt; Erinnerungen laufen neu
-          await db.from("kc_club_terminanfrage_empfaenger").update({ antwort: null, notiz: null, geantwortet_am: null, gelesen_am: null, vorschlag_beginn: null, vorschlag_ende: null })
-            .eq("anfrage_id", a.id).neq("person_id", z.person_id);
-          await empfaengerAendern({ antwort: "ja", geantwortet_am: jetzt(), vorschlag_beginn: null, vorschlag_ende: null }, vorschlagAltWerte(z, "angenommen"),
+          await empfaengerMitZeit({ antwort: null, notiz: null, geantwortet_am: null, gelesen_am: null, vorschlag_beginn: null, vorschlag_ende: null }, null,
+            (q) => q.eq("anfrage_id", a.id).neq("person_id", z.person_id)); // KC-CLUB-ANFRAGE-ANDERE-ZEIT: neue Zeit → auch „andere Zeit“ weg
+          await empfaengerMitZeit({ antwort: "ja", geantwortet_am: jetzt(), vorschlag_beginn: null, vorschlag_ende: null }, vorschlagAltWerte(z, "angenommen"),
             (q) => q.eq("anfrage_id", a.id).eq("person_id", z.person_id)); // KC-CLUB-ANFRAGE-VORSCHLAG-BLEIBT
           await db.from("kc_club_erinnerungen").update({ gesendet_am: null }).eq("anfrage_id", a.id);
           const neu = { ...a, beginn: z.vorschlag_beginn, ende: z.vorschlag_ende };

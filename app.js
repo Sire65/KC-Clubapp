@@ -16807,7 +16807,7 @@ function demnaechstListe(k) {
   for (const a of k.aktionen || []) e.push({ tag: a.von < heute ? heute : a.von, sym: "🧳", text: a.titel });
   for (const d of k.dienste || []) e.push({ tag: d.datum, zeit: d.start, sym: "🗓️", text: "Mein Dienst" + (d.bereich ? " · " + d.bereich : "") });
   for (const v of k.fristen || []) if (v.offen) e.push({ tag: berlinIso(v.frist), sym: "🗳️", text: "Abstimmung endet: " + v.titel });
-  for (const x of k.anfragen || []) e.push({ tag: berlinIso(x.beginn), zeit: fZeit.format(new Date(x.beginn)), sym: "📨", text: x.anlass + (x.vonMir ? " (an " + taAnWen(x) + ")" : " (" + x.von.vorname + ")") });
+  for (const x of k.anfragen || []) e.push({ tag: berlinIso(x.beginn), zeit: fZeit.format(new Date(x.meineZeit?.beginn || x.beginn)), sym: x.meineZeit ? "🕐" : "📨", text: x.anlass + (x.vonMir ? " (an " + taAnWen(x) + ")" : " (" + x.von.vorname + ")") }); // KC-CLUB-ANFRAGE-ANDERE-ZEIT: meine Zeit
   for (const x of k.privat || []) e.push({ tag: berlinIso(x.beginn), zeit: x.ganztaegig ? "" : fZeit.format(new Date(x.beginn)), sym: "🔒", text: x.titel });
   for (const x of k.schulungen || []) if (x.status !== "abgesagt" && x.status !== "vorbehalt") e.push({ tag: berlinIso(x.beginn), zeit: fZeit.format(new Date(x.beginn)), sym: "🎓", text: "Schulung" + (x.ichDabei && !ICH?.admin ? "" : ": " + x.namen.join(", ")) }); // KC-CLUB-SCHULUNGSTERMINE
   for (const g of k.geburtstage || []) { // nächster Geburtstag im Zeitraum (nur Tag/Monat)
@@ -19376,7 +19376,7 @@ function kalTagZeigen() {
     if (x.art === "schulung-ab") return `<div class="keintrag sc-abgesagt"><div class="farbe" style="background:#9aa0a6"></div><div style="flex:1"><b><s>🎓 ${esc(fZeit.format(new Date(x.x.beginn)))}–${esc(fZeit.format(new Date(x.x.ende)))} Schulung${x.x.ichDabei && !ICH?.admin ? "" : ": " + esc(x.x.namen.join(", "))}</s></b><small><span class="marke rot">❌ abgesagt</span> ${esc(x.x.art || "")} · aus dem Termin-Programm</small></div></div>`; // KC-CLUB-SCHULUNG-ABGESAGT-KALENDER (2.30.1)
     if (x.art === "schulung-vb") return `<div class="keintrag sc-vorbehalt"><div class="farbe" style="background:repeating-linear-gradient(#7d3c98 0 6px,transparent 6px 10px)"></div><div style="flex:1"><b>🎓 ${esc(fZeit.format(new Date(x.x.beginn)))}–${esc(fZeit.format(new Date(x.x.ende)))} Schulung – unter Vorbehalt</b><small>${x.x.namen.length ? "angeboten an " + esc(x.x.namen.join(", ")) : "noch niemandem angeboten"} · ${esc(x.x.art || "")} · noch nicht gewählt</small></div></div>`; // KC-CLUB-SCHULUNG-VORBEHALT (2.120.0)
     if (x.art === "schulung") return `<div class="keintrag"><div class="farbe" style="background:#7d3c98"></div><div style="flex:1"><b>🎓 ${esc(fZeit.format(new Date(x.x.beginn)))}–${esc(fZeit.format(new Date(x.x.ende)))} Schulung${x.x.ichDabei && !ICH?.admin ? "" : ": " + esc(x.x.namen.join(", "))}</b><small>${esc(x.x.art || "")}${x.x.status === "vorgemerkt" ? " · ⏳ vorgemerkt" : " · ✅ bestätigt"}${x.x.besuch ? " · " + esc(x.x.besuch) : ""} · aus dem Termin-Programm</small></div></div>`; // KC-CLUB-SCHULUNGSTERMINE
-    if (x.art === "anfrage") return `<div class="keintrag" onclick="taZeigen('${x.x.id}')"><div class="farbe" style="background:var(--gold)"></div><div style="flex:1"><b>📨 ${esc(fZeit.format(new Date(x.x.beginn)))} ${esc(x.x.anlass)}</b><small>${x.x.vonMir ? "Anfrage an " + esc(taAnWen(x.x)) + (x.x.empfaenger.length === 1 && x.x.status !== "abgesagt" ? " · " + taStatus(x.x, x.x.empfaenger[0]).sym + " " + esc(taStatus(x.x, x.x.empfaenger[0]).t) : "") : "von " + esc(x.x.von.vorname)}${x.x.ort ? " · 📍 " + esc(x.x.ort) : ""}${x.x.meine ? " · " + TA_ANTW[x.x.meine] : ""}</small></div></div>`;
+    if (x.art === "anfrage") return `<div class="keintrag" onclick="taZeigen('${x.x.id}')"><div class="farbe" style="background:var(--gold)"></div><div style="flex:1"><b>📨 ${esc(fZeit.format(new Date(x.x.beginn)))} ${esc(x.x.anlass)}</b><small>${x.x.vonMir ? "Anfrage an " + esc(taAnWen(x.x)) + (x.x.empfaenger.length === 1 && x.x.status !== "abgesagt" ? " · " + taStatus(x.x, x.x.empfaenger[0]).sym + " " + esc(taStatus(x.x, x.x.empfaenger[0]).t) : "") : "von " + esc(x.x.von.vorname)}${x.x.ort ? " · 📍 " + esc(x.x.ort) : ""}${x.x.meine ? " · " + TA_ANTW[x.x.meine] + (x.x.meineZeit ? " · 🕐 du kommst " + esc(taZeitText(x.x.meineZeit)) : "") : ""}${x.x.status !== "abgesagt" && x.x.empfaenger.length > 1 ? ` · ✅ ${x.x.empfaenger.filter((e) => e.antwort === "ja").length} von ${x.x.empfaenger.length} zugesagt` : ""}</small>${x.x.status !== "abgesagt" && taAndereZeitZeile(x.x) ? `<small class="ta-az">${esc(taAndereZeitZeile(x.x))}</small>` : ""}</div></div>`; // KC-CLUB-ANFRAGE-ANDERE-ZEIT: Zusagen + „🕐 andere Zeit“ im Terminplan
     if (x.art === "ferien") { const d = (t) => new Date(t + "T12:00:00Z").toLocaleDateString("de-DE", { timeZone: "UTC", day: "2-digit", month: "2-digit" });
       const ld = x.laender.length > 3 ? `${x.laender.length} Bundesländer` : x.laender.map((k) => BUNDESLAENDER.find(([b]) => b === k)?.[1] || k).join(", ");
       return `<div class="keintrag"><div class="farbe" style="background:var(--ferien)"></div><div style="flex:1"><b>🏖️ ${esc(x.name)}</b><small>Schulferien ${esc(ld)} · ${d(x.von)}${x.bis > x.von ? "–" + d(x.bis) : ""}</small></div></div>`; }
@@ -29458,7 +29458,9 @@ async function taHerausnehmen(id, pid) {
 function taKarte(a) {
   const n = (w) => a.empfaenger.filter((e) => e.antwort === w).length, offen = a.empfaenger.filter((e) => !e.antwort).length;
   const ab = a.status === "abgesagt";
-  const k = (w) => `<button class="knopf klein${a.meine === w ? " haupt" : ""}" onclick="taAntwort('${a.id}', '${a.meine === w ? "keine" : w}')">${TA_ANTW[w]}</button>`;
+  const gleich = (w) => a.meine === w && !(w === "ja" && a.meineZeit); // KC-CLUB-ANFRAGE-ANDERE-ZEIT: „Ja“ bei anderer Zeit = normal zusagen, nicht zurücknehmen
+  const k = (w) => `<button class="knopf klein${gleich(w) ? " haupt" : ""}" onclick="taAntwort('${a.id}', '${gleich(w) ? "keine" : w}')">${TA_ANTW[w]}</button>`;
+  const azZeile = taAndereZeitZeile(a), azN = taAndereZeitListe(a).length;
   const wer = a.empfaenger.map((e) => { const st = taStatus(a, e);
     return `<div class="ta-wer"><span class="ta-st ta-st-${st.k}">${st.sym} ${st.t}</span> ${esc(e.name)}${e.notiz ? ` <span class="hinweis">– „${esc(e.notiz)}“</span>` : ""}${(a.vonMir || ICH?.admin) && !ab && a.empfaenger.length > 1 ? ` <button type="button" class="ta-raus" title="${esc(e.name)} aus der Anfrage herausnehmen" aria-label="${esc(e.name)} aus der Anfrage herausnehmen" onclick="taHerausnehmen('${a.id}','${esc(e.person_id)}')">✕</button>` : ""}
       ${e.vorschlagAlt && !e.vorschlag ? `<div class="hinweis ta-valt">${esc(taVAltText(e.vorschlagAlt))}</div>` : ""}${a.vonMir && !ab && e.vorschlag ? `<div class="knoepfe ta-vk"><button class="knopf haupt klein" onclick="taVorschlagBlatt('${a.id}','${esc(e.person_id)}','ja')">✅ Neue Zeit annehmen</button><button class="knopf klein" onclick="taVorschlagBlatt('${a.id}','${esc(e.person_id)}','vorbehalt')">🤔 Unter Vorbehalt</button><button class="knopf klein" onclick="taVorschlagBlatt('${a.id}','${esc(e.person_id)}','nein')">❌ Passt nicht</button></div>` : ""}</div>`; }).join("");
@@ -29467,16 +29469,19 @@ function taKarte(a) {
     <span class="marke gelb">📨 Terminanfrage</span>${ab ? ' <span class="marke">🚫 abgesagt</span>' : einer ? ` <span class="marke ta-st-${einer.k}">${einer.sym} ${einer.t}</span>` : ""}${!ab && a.frist ? ` <span class="marke">⏳ Antwort bis ${esc(wann(a.frist))}</span>` : ""}
     <div style="font-size:1.12rem;font-weight:800;margin-top:6px">${esc(a.anlass)}</div>
     <div>📅 <b>${esc(wann(a.beginn))}</b>${a.ende ? ` – ${esc(fZeit.format(new Date(a.ende)))} Uhr` : ""}</div>
+    ${azZeile && !ab ? `<div class="ta-az">${esc(azZeile)}</div>` : ""}
     ${a.ort ? `<div>📍 ${esc(a.ort)}</div>` : ""}
     <div class="hinweis" style="font-size:.85rem">${a.vonMir ? `<b>Anfrage an ${esc(taAnWen(a))}</b>` : "von " + esc(a.von.name) + " · an " + (a.empfaenger.length === 1 ? "dich" : a.empfaenger.length + " Mitglieder")}</div>
     ${a.notiz ? `<p class="hinweis" style="white-space:pre-wrap;margin:6px 0 0">📝 ${esc(a.notiz)}</p>` : ""}${a.geaendertAm && a.erstelltAm && new Date(a.geaendertAm) - new Date(a.erstelltAm) > 60000 && !ab ? `<div class="hinweis" style="font-size:.8rem">✏️ ergänzt am ${esc(wann(a.geaendertAm))}</div>` : ""}${oaAnzeige(a.anlagen)}
     ${a.vonMir && !ab && !a.spiel && a.gegenvorschlag === false ? `<div class="hinweis" style="font-size:.82rem">🔒 ohne Gegenvorschläge</div>` : ""}
     ${a.vorbehalt && !ab ? `<p class="ta-vorbehalt">🤔 <b>Unter Vorbehalt</b> (${esc(a.vonMir ? "deiner" : a.von.vorname)}): „${esc(a.vorbehalt)}“</p>` : ""}
     ${!a.vonMir && !ab ? `<div class="ta-antw">${k("ja")}${k("vielleicht")}${k("nein")}</div>
+      ${a.spiel ? "" : `<button type="button" class="knopf klein ta-az-knopf${a.meineZeit ? " haupt" : ""}" onclick="taAndereZeit('${a.id}')">🕐 Ja, aber zu anderer Zeit</button>`}
+      ${a.meineZeit ? `<div class="ta-az ta-az-mein">🕐 Du kommst <b>${esc(taZeitText(a.meineZeit))}</b> – zählt als Zusage. Zum Ändern nochmal „🕐“ antippen, „✅ Ja“ = ganz normal zusagen.</div>` : ""}
       ${a.meine ? `<div class="hinweis" style="font-size:.8rem;margin-top:4px">Nochmal auf deine Antwort tippen nimmt sie zurück.${a.meineNotiz ? ` Deine Notiz: „${esc(a.meineNotiz)}“` : ""}</div>` : ""}
       ${a.meinVorschlag ? `<div class="hinweis" style="margin-top:4px">🔄 Dein Gegenvorschlag: <b>${esc(taVWann(a.meinVorschlag))}</b> – ${esc(a.von.vorname)} entscheidet.</div>` : a.meinVorschlagAlt ? `<div class="hinweis ta-valt" style="margin-top:4px">${esc(taVAltText(a.meinVorschlagAlt, true))}</div>` : ""}
-      ${a.spiel ? "" : a.gegenvorschlag === false ? `<div class="hinweis" style="font-size:.82rem;margin-top:6px">🔒 Gegenvorschläge sind bei dieser Anfrage nicht möglich – die Zeit steht fest.</div>` : `<button type="button" class="knopf klein" style="margin-top:6px" onclick="taGegenvorschlag('${a.id}')">🔄 ${a.meinVorschlag ? "Anderen Vorschlag machen" : "Andere Zeit vorschlagen"}</button>`}` : ""}
-    ${ab ? "" : `<details style="margin-top:8px"${a.vonMir ? " open" : ""}><summary class="hinweis">✅ ${n("ja")} · 🤔 ${n("vielleicht")} · ❌ ${n("nein")} · ⏳ ${offen} offen</summary>${wer}</details>`}
+      ${a.spiel ? "" : a.gegenvorschlag === false ? `<div class="hinweis" style="font-size:.82rem;margin-top:6px">🔒 Gegenvorschläge sind bei dieser Anfrage nicht möglich – die Zeit steht fest.</div>` : `<button type="button" class="knopf klein" style="margin-top:6px" onclick="taGegenvorschlag('${a.id}')">🔄 ${a.meinVorschlag ? "Anderen Vorschlag machen" : "Anderen Termin vorschlagen"}</button>`}` : ""}
+    ${ab ? "" : `<details style="margin-top:8px"${a.vonMir ? " open" : ""}><summary class="hinweis">✅ ${n("ja")}${azN ? ` (🕐 ${azN} andere Zeit)` : ""} · 🤔 ${n("vielleicht")} · ❌ ${n("nein")} · ⏳ ${offen} offen</summary>${wer}</details>`}
     ${!ab && (a.vonMir || a.meine === "ja" || a.meine === "vielleicht") ? erinZeileHtml(a.erinnerung, `erinAnfrage('${a.id}')`, a.erinnerungStandard) : ""}
     ${taKalHtml(a, ab)}
     ${!ab && !a.spiel && (a.vonMir || a.meine === "ja" || a.meine === "vielleicht") ? taToSchalterHtml(a) : ""}
@@ -29534,7 +29539,7 @@ function taBesprechungDruck(id) { // DRUCKARTEN.besprechung – wie die Sitzungs
   const h = (t) => `<h2 style="font-size:4.6mm;margin:6mm 0 2mm;border-bottom:2px solid #741521;padding-bottom:1mm">${t}</h2>`;
   const strich = (mm) => `<span style="display:inline-block;width:${mm}mm;border-bottom:1px solid #555;height:4mm;vertical-align:-1mm"></span>`;
   const zeile = (t, inhalt) => `<div style="font-size:3.6mm;margin:0 0 2mm"><b>${t}:</b> ${inhalt}</div>`;
-  const alle = [{ name: a.vonMir ? ICH?.name : a.von?.name, antwort: "ja" }, ...a.empfaenger.map((e) => ({ name: e.name, antwort: e.antwort, notiz: e.notiz }))].filter((x) => x.name);
+  const alle = [{ name: a.vonMir ? ICH?.name : a.von?.name, antwort: "ja" }, ...a.empfaenger.map((e) => ({ name: e.name + (e.antwort === "ja" && e.zeit ? ` (${taZeitText(e.zeit).replace(/ Uhr$/, "")})` : ""), antwort: e.antwort, notiz: e.notiz }))].filter((x) => x.name); // KC-CLUB-ANFRAGE-ANDERE-ZEIT
   const nein = alle.filter((x) => x.antwort === "nein"), rest = alle.filter((x) => x.antwort !== "nein");
   const zeilen = P.length > 6 ? 3 : 4;
   const html = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:0 6mm;margin:0 0 1mm">${zeile("Protokollführer", strich(48))}${zeile("Ort", a.ort ? esc(a.ort) : strich(55))}</div>
@@ -29552,16 +29557,43 @@ function taBesprechungDruck(id) { // DRUCKARTEN.besprechung – wie die Sitzungs
 // Gegenvorschlag; ohne Antwort nach der Antwortfrist bzw. nach Beginn: abgelaufen. Eine Stelle für Liste, Kalender und Überblick.
 function taStatus(a, e) {
   if (!e) return { k: "an", sym: "📨", t: "angefragt" };
-  if (e.antwort === "ja") return { k: "ja", sym: "✅", t: "bestätigt" };
+  if (e.antwort === "ja") return { k: "ja", sym: "✅", t: e.zeit ? "bestätigt · 🕐 " + taZeitText(e.zeit) : "bestätigt" }; // KC-CLUB-ANFRAGE-ANDERE-ZEIT
   if (e.antwort === "nein") return { k: "nein", sym: "❌", t: "abgelehnt" };
   if (e.antwort === "vielleicht") return { k: "vl", sym: "🤔", t: "vielleicht" };
-  if (e.vorschlag) return { k: "gv", sym: "🔄", t: "Gegenvorschlag: " + taVWann(e.vorschlag) };
+  if (e.vorschlag) return { k: "gv", sym: "🔄", t: "schlägt anderen Termin vor: " + taVWann(e.vorschlag) };
   const jetztMs = Date.now();
   if ((a.frist && new Date(a.frist).getTime() < jetztMs) || new Date(a.beginn).getTime() < jetztMs) return { k: "ab", sym: "⌛", t: "abgelaufen" };
   if (e.gelesen_am) return { k: "ge", sym: "👁️", t: "gelesen" };
   return { k: "an", sym: "📨", t: "angefragt" };
 }
 const taVWann = (v) => wann(v.beginn) + (v.ende ? ` – ${fZeit.format(new Date(v.ende))} Uhr` : "");
+// KC-CLUB-ANFRAGE-ANDERE-ZEIT (22.11.2026, Wunsch Hansi „ist also eine Zusage, aber um eine andere Zeit“): „🕐 Ja, aber zu anderer Zeit“ – später kommen /
+// früher gehen. Zählt als Zusage (antwort „ja“ + e.zeit {beginn, ende|null}); der Gegenvorschlag („🔄 schlägt anderen Termin vor“) bleibt getrennt.
+const taZeitText = (z) => z?.beginn ? (z.ende ? `${fZeit.format(new Date(z.beginn))}–${fZeit.format(new Date(z.ende))} Uhr` : `ab ${fZeit.format(new Date(z.beginn))} Uhr`) : "";
+const taAndereZeitListe = (a) => (a.empfaenger || []).filter((e) => e.antwort === "ja" && e.zeit).sort((x, y) => String(x.zeit.beginn).localeCompare(String(y.zeit.beginn))); // wer kommt wann – nach Uhrzeit
+const taAndereZeitZeile = (a) => { const l = taAndereZeitListe(a);
+  return l.length ? "🕐 andere Zeit: " + l.map((e) => `${e.vorname || e.name.split(" ")[0]} ${taZeitText(e.zeit).replace(/ Uhr$/, "")}`).join(", ") : ""; };
+function taAndereZeit(id) {
+  const a = TA.liste.find((x) => x.id === id); if (!a) return;
+  const z = a.meineZeit || { beginn: a.beginn, ende: a.ende }, tag = berlinIso(a.beginn);
+  const f = blattAuf("taAzBlatt", `<h3 style="margin:0">🕐 Ja, aber zu anderer Zeit</h3>
+    <p class="hinweis" style="margin:0">${esc(a.anlass)} – ${esc(wann(a.beginn))}${a.ende ? ` – ${esc(fZeit.format(new Date(a.ende)))} Uhr` : ""}. Du sagst zu, kommst aber später oder gehst früher. ${esc(a.von.vorname)} sieht deine Zeit.</p>
+    <div class="ta-gv-zeit"><label>Von<input type="time" id="taAzVon" value="${esc(fZeit.format(new Date(z.beginn)))}"></label><label>Bis <small class="hinweis">(freiwillig)</small><input type="time" id="taAzBis" value="${esc(z.ende ? fZeit.format(new Date(z.ende)) : "")}"></label></div>
+    <label>Notiz <small class="hinweis">(freiwillig)</small><input id="taAzNotiz" maxlength="300" data-diktat value="${esc(a.meineZeit ? a.meineNotiz || "" : "")}" placeholder="z. B. komme direkt von der Arbeit"></label>
+    <p class="hinweis" style="margin:0;font-size:.82rem">Soll der ganze Termin verschoben werden? Dann lieber „🔄 Anderen Termin vorschlagen“.</p>
+    <button class="knopf haupt" id="taAzOk">✅ Zusagen mit dieser Zeit</button><button class="knopf" onclick="$('taAzBlatt').remove()">Abbrechen</button>`);
+  f.querySelector("#taAzOk").onclick = async () => {
+    const von = $("taAzVon").value, b = $("taAzBis").value;
+    if (!von) return melde("🕐 Bitte angeben, ab wann du kommst.");
+    let beginn = new Date(taZeitpunkt(tag, von)), ende = b ? new Date(taZeitpunkt(tag, b)) : null; // deutsche Zeit (2.425.0)
+    if (a.ende && berlinIso(a.ende) !== tag && beginn < new Date(a.beginn) && new Date(taZeitpunkt(berlinIso(a.ende), von)) <= new Date(a.ende)) beginn = new Date(taZeitpunkt(berlinIso(a.ende), von)); // über Mitternacht
+    if (ende && ende <= beginn) { const n = new Date(taZeitpunkt(tagPlus(berlinIso(beginn.toISOString()), 1), b)); if (b === "00:00" || (a.ende && n <= new Date(a.ende))) ende = n; }
+    if (ende && ende <= beginn) return melde("⏰ „Bis“ muss nach „Von“ liegen.");
+    try { await api("terminanfrage_antwort", { id, antwort: "ja", notiz: $("taAzNotiz").value.trim().slice(0, 300), zeit_beginn: beginn.toISOString(), zeit_ende: ende ? ende.toISOString() : null });
+      f.remove(); melde(`✅ Zugesagt – du kommst ${taZeitText({ beginn: beginn.toISOString(), ende: ende ? ende.toISOString() : null })}`); TA.markiert = id; await taLaden(); neuLaden(); erinAnfrage(id); }
+    catch (e) { meldeFehler(e); }
+  };
+}
 // KC-CLUB-ANFRAGE-VORSCHLAG-BLEIBT (22.11.2026, Wunsch Hansi): früherer Gegenvorschlag (danach Ja/Nein/Vielleicht oder entschieden) bleibt als Hinweis –
 // „🔄 hatte Mo., 23.11., 16:30–18:00 vorgeschlagen (15.11.)“; kein Annehmen-Knopf mehr (der hängt nur am offenen e.vorschlag).
 const taVAltText = (v, du) => `🔄 ${du ? "Du hattest" : "hatte"} ${fTag.format(new Date(v.beginn))}, ${fZeit.format(new Date(v.beginn))}${v.ende ? "–" + fZeit.format(new Date(v.ende)) : ""} vorgeschlagen${v.am ? ` (${fKurz.format(new Date(v.am))})` : ""}${v.status === "angenommen" ? " · ✅ angenommen" : v.status === "abgelehnt" ? " · ❌ abgelehnt" : ""}`;
@@ -29571,8 +29603,9 @@ function taGegenvorschlag(id) {
   if (a.gegenvorschlag === false) return melde("Bei dieser Anfrage sind keine Gegenvorschläge möglich.", true); // KC-CLUB-ANFRAGE-GEGENVORSCHLAG
   const v = a.meinVorschlag || { beginn: a.beginn, ende: a.ende };
   const tag = berlinIso(v.beginn), zeit = fZeit.format(new Date(v.beginn)), bis = v.ende ? fZeit.format(new Date(v.ende)) : "";
-  const f = blattAuf("taGvBlatt", `<h3 style="margin:0">🔄 Andere Zeit vorschlagen</h3>
-    <p class="hinweis" style="margin:0">${esc(a.anlass)} – angefragt für ${esc(wann(a.beginn))}. ${esc(a.von.vorname)} bekommt deinen Vorschlag und kann ihn annehmen.</p>
+  const f = blattAuf("taGvBlatt", `<h3 style="margin:0">🔄 Anderen Termin vorschlagen</h3>
+    <p class="hinweis" style="margin:0">${esc(a.anlass)} – angefragt für ${esc(wann(a.beginn))}. ${esc(a.von.vorname)} bekommt deinen Vorschlag und kann den Termin für alle verlegen.</p>
+    <p class="hinweis" style="margin:0;font-size:.82rem">Du kommst nur später oder gehst früher? Dann lieber „🕐 Ja, aber zu anderer Zeit“ – das ist eine Zusage.</p>
     <label>Tag<input type="date" id="taGvTag" value="${esc(tag)}" min="${esc(heuteIso())}"></label>
     <div class="ta-gv-zeit"><label>Von<input type="time" id="taGvVon" value="${esc(zeit)}"></label><label>Bis <small class="hinweis">(freiwillig)</small><input type="time" id="taGvBis" value="${esc(bis)}"></label></div>
     <label>Notiz <small class="hinweis">(freiwillig)</small><input id="taGvNotiz" maxlength="300" data-diktat placeholder="z. B. vormittags geht es bei mir nicht"></label>
@@ -30832,7 +30865,11 @@ function taKalHtml(a, ab) {
     <small>Den alten Eintrag (${esc(wann(kal))}) bitte im Kalender antippen und löschen 🗑️ – das kann die App nicht selbst.</small></div>`;
   return `<button type="button" class="knopf klein" style="margin-top:6px" onclick="taKalender('${a.id}')">📅 ${kal ? "Nochmal in den Handy-Kalender" : "In meinen Handy-Kalender"}</button>`;
 }
-function taKalender(id) { const t = TA.liste.find((x) => x.id === id); if (!t) return; erinKalender(t, 60); setTimeout(() => taLaden(), 1500); }
+function taKalender(id) { const t = TA.liste.find((x) => x.id === id); if (!t) return;
+  const z = t.meine === "ja" && t.meineZeit; // KC-CLUB-ANFRAGE-ANDERE-ZEIT: komme ich zu anderer Zeit, kommt meine Zeit in den Handy-Kalender
+  erinKalender(z ? { ...t, beginn: z.beginn, ende: z.ende || (t.ende && new Date(t.ende) > new Date(z.beginn) ? t.ende : null) } : t, 60);
+  if (z) taKalMerken(t.id, t.beginn); // gemerkt wird die Zeit der Anfrage (sonst hieße es „Termin verlegt“)
+  setTimeout(() => taLaden(), 1500); }
 function erinKalender(t, minuten) {
   const z = (iso) => new Date(iso).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, ""), e = (x) => String(x || "").replace(/[\;,]/g, (c) => "\\" + c).replace(/\n/g, "\\n");
   const ende = t.ende || new Date(new Date(t.beginn).getTime() + 3600000).toISOString();
@@ -37718,7 +37755,7 @@ const FENSTER_NAMEN = {
   smHinweisBlatt: "🎓 Du bist zur Schulung eingeladen", smVBlatt: "💬 Kein Termin passt", snBlatt: "📣 Startnachricht", sosInfo: "🆘 Meine SOS-Angaben", spAn: "💬 An wen?",
   spEinlBlatt: "🎲 Spiel-Einladung", spHerausBlatt: "🎲 Herausfordern", spLiveBlatt: "🎲 Spiel-Herausforderung", spTerminBlatt: "📅 Termin für die Partie", sperreBlatt: "🔒 Personen sperren",
   sprForm: "💬 Eigener Spruch", sprungBlatt: "🔘 Knopf in die Nachricht", spurFrageBlatt: "🟢 Frage: Wege ansehen?", statusBlatt: "🙂 Mein Status", studioBlatt: "🎬 Studio",
-  svBlatt: "⚙️ Sitzungs-Vorgaben", taAeBlatt: "✏️ Terminanfrage ändern", taPrBlatt: "📝 Besprechungs-Protokoll schreiben", taPrLesen: "📝 Besprechungs-Protokoll lesen", taGvBlatt: "🔄 Andere Zeit vorschlagen", taHinweisBlatt: "📨 Hinweis: Terminanfragen", grBlatt: "🍲 Gemeinschaftsgericht: deine Zutat", pulsBlatt: "🎚️ Datenverkehr der Club-App",grAdminBlatt: "🍲 Gemeinschaftsgericht (Admin)",taVkBlatt: "🔄 Gegenvorschlag", tdtBlatt: "💡 Tipp des Tages",
+  svBlatt: "⚙️ Sitzungs-Vorgaben", taAeBlatt: "✏️ Terminanfrage ändern", taPrBlatt: "📝 Besprechungs-Protokoll schreiben", taPrLesen: "📝 Besprechungs-Protokoll lesen", taGvBlatt: "🔄 Anderen Termin vorschlagen", taAzBlatt: "🕐 Ja, aber zu anderer Zeit",taHinweisBlatt: "📨 Hinweis: Terminanfragen", grBlatt: "🍲 Gemeinschaftsgericht: deine Zutat", pulsBlatt: "🎚️ Datenverkehr der Club-App",grAdminBlatt: "🍲 Gemeinschaftsgericht (Admin)",taVkBlatt: "🔄 Gegenvorschlag", tdtBlatt: "💡 Tipp des Tages",
   teilenBlatt: "📥 Mit Köcheclub geteilt", themaFrage: "✅ Zusage: Thema/Mitbringen", mtBlatt: "💡 Ein Tipp für dich", twBlatt: "🧑‍🍳 Frag Twinkey", twOffenBlatt: "📥 Fragen an Twinkey",
   uaAdminBlatt: "🙋 Unterstützungs-Anfragen", ustBlatt: "🤝 Wie viel Unterstützung möchtest du?", verbindungBlatt: "📡 Verbindung", verlassenBlatt: "👋 Hinweis beim Verlassen", verpasstBlatt: "👋 Verpasstes Anklopfen",
   versandBlatt: "📤 Wie verschicken?", vfAuswahlBlatt: "👥 Auswahl: an wen", vfVorlageBlatt: "📄 Vorlage übernehmen", vorschlagBearb: "✏️ Vorschlag bearbeiten", vorschlagInfo: "💡 Vorschlag ansehen",

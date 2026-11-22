@@ -3813,7 +3813,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/create table if not exists kc_club_erinnerungen/.test(mig) && /on delete cascade/.test(mig) && /revoke all on table kc_club_erinnerungen from anon, authenticated;/.test(mig), "Tabelle");
   assert.ok(server.includes('case "erinnerung_setzen":') && html.includes('api("erinnerung_setzen"'), "Aktion");
   assert.ok(/a\.erstellt_von !== ich\.person_id \? await db\.from\("kc_club_terminanfrage_empfaenger"\)/.test(server), "nur Absender oder Empfänger");
-  assert.ok(/const an = \[x\.erstellt_von, \.\.\.zu\]\.filter\(\(pid\) => !eigeneErin\.has\(x\.id \+ "\|" \+ pid\)\);/.test(server), "Standard nur ohne eigene Einstellung");
+  assert.ok(/const an = \[x\.erstellt_von, \.\.\.zu\]\.filter\(\(pid\) => !eigeneErin\.has\(x\.id \+ "\|" \+ pid\) && !anders\.has\(pid\)\);/.test(server), "Standard nur ohne eigene Einstellung (KC-CLUB-ANFRAGE-ANDERE-ZEIT: andere Zeit eigens)");
   assert.ok(/\.eq\("vortag", false\)/.test(server) && /sendenGewaehlt\("club_erinnerung", \[r\.person_id\], r\.wege/.test(server), "Vortag abwählbar, Weg nach Wahl");
   assert.ok(/if \(antwort === "ja" \|\| antwort === "vielleicht"\) erinAnfrage\(id\);/.test(html) && /TA\.markiert = r\.id; await taLaden\(\); erinAnfrage\(r\.id\);/.test(html), "fragt nach Zusage und nach dem Vorschlagen");
   assert.ok(/1 · Wann möchtest du erinnert werden\?/.test(html) && /2 · Wie\?/.test(html) && /"TRIGGER:-PT\$\{minuten\}M"|`TRIGGER:-PT\$\{minuten\}M`/.test(html), "gegliedertes Fenster, Kalender-Alarm");
@@ -4082,7 +4082,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 399. 2.23.50: Terminanfrage zeigt „Anfrage an …“ und den Stand je Empfänger, Gegenvorschlag (KC-CLUB-TERMINANFRAGE-STATUS)
 {
   const st = html.slice(html.indexOf("function taStatus(a, e)"), html.indexOf("const taVWann"));
-  for (const w of ["angefragt", "gelesen", "bestätigt", "vielleicht", "abgelehnt", "Gegenvorschlag", "abgelaufen"]) assert.ok(st.includes(`"${w}`), "Stand fehlt: " + w);
+  for (const w of ["angefragt", "gelesen", "bestätigt", "vielleicht", "abgelehnt", "schlägt anderen Termin vor", "abgelaufen"] /* KC-CLUB-ANFRAGE-ANDERE-ZEIT: Gegenvorschlag klar vom „🕐 andere Zeit“ getrennt */) assert.ok(st.includes(`"${w}`), "Stand fehlt: " + w);
   assert.ok(st.indexOf("abgelaufen") < st.indexOf('"gelesen"') && st.indexOf('"bestätigt"') < st.indexOf("abgelaufen"), "Antwort vor abgelaufen, abgelaufen vor gelesen");
   assert.ok(/<b>Anfrage an \$\{esc\(taAnWen\(a\)\)\}<\/b>/.test(html) && /"Anfrage an " \+ esc\(taAnWen\(x\.x\)\)/.test(html), "„Anfrage an …“ in Liste und Kalender");
   assert.ok(/api\("terminanfrage_gelesen", \{ ids: ungelesen \}\)/.test(html) && /!a\.vonMir && !a\.meinGelesen/.test(html), "gelesen nur vom Empfänger gemeldet");

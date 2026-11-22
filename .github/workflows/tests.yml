@@ -148,6 +148,7 @@ jobs:
       - run: node tests/rollkartei-rolle.test.mjs
       - run: node tests/anfrage-gegenvorschlag.test.mjs
       - run: node tests/anfrage-vorschlag-bleibt.test.mjs
+      - run: node tests/anfrage-andere-zeit.test.mjs
       - run: node tests/netz-balken.test.mjs
       - run: node tests/muenze-gesicht.test.mjs
       - run: node tests/ta-tagesordnung.test.mjs
