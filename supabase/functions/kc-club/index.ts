@@ -569,6 +569,60 @@ async function tippAbgleich(): Promise<void> { // aktueller und nächster Spielt
 const ADVENT_PREISE: Record<number, string> = { 6: "Mini-Schoko-Nikolaus", 20: "Kinderriegel" };
 const berlinTag = (d: Date) => new Intl.DateTimeFormat("sv-SE", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
 const berlinStunde = (d: Date) => Number(new Intl.DateTimeFormat("en-US", { timeZone: TZ, hourCycle: "h23", hour: "2-digit" }).format(d));
+// KC-CLUB-ADVENT-GADGETS (Wunsch Hansi 22.11.2026): 4 Einzelstücke, verlost unter allen, die das Türchen AM TAG öffnen und bis 22 Uhr (Server-Uhr, deutsche Zeit)
+// „🎲 Ich mache mit“ tippen. Muss zu AK_GADGETS in der App passen (Test advent-gadgets). Neues Gadget = Eintrag hier + in der App.
+const ADVENT_GADGETS: Record<number, string> = { 3: "ausziehbares USB-Ladekabel", 10: "Flaschenöffner", 13: "Plüsch-Biene", 17: "Selfie-Ringlicht fürs Handy" };
+const ADVENT_GADGET_AKK: Record<number, string> = { 3: "ein", 10: "einen", 13: "eine", 17: "ein" }; // für „Du hast … gewonnen“
+const ADVENT_GADGET_SCHLUSS = 22; // Uhr (deutsche Zeit) – danach wird beim ersten Abruf gezogen („faul“, ohne Zeitplan)
+const adventGadgetPhase = (heute: string, stunde: number, jahr: number, tag: number): "vorher" | "offen" | "vorbei" => {
+  const t = `${jahr}-12-${String(tag).padStart(2, "0")}`;
+  return heute < t ? "vorher" : heute > t || stunde >= ADVENT_GADGET_SCHLUSS ? "vorbei" : "offen";
+};
+// Gewinner: zufällig unter den Teilnehmern, die dieses Jahr noch nichts gewonnen haben; niemand übrig → null („nicht vergeben“)
+const adventGadgetWahl = (teilnehmer: string[], gewonnen: Set<string>, zufall: (n: number) => number): string | null => {
+  const k = [...new Set(teilnehmer)].filter((x) => !gewonnen.has(x)).sort();
+  return k.length ? k[zufall(k.length)] : null;
+};
+const zufallIndex = (n: number) => { const grenze = Math.floor(0x100000000 / n) * n, a = new Uint32Array(1); do crypto.getRandomValues(a); while (a[0] >= grenze); return a[0] % n; };
+const adventGadgetText = (tag: number) => `🎉 Glückwunsch! Du hast im Adventskalender ${ADVENT_GADGET_AKK[tag]} ${ADVENT_GADGETS[tag]} gewonnen. Ausgegeben wird beim Weihnachtsessen im Januar.`;
+async function adventGadgetGlueckwunsch(pid: string, tag: number) { // Startnachricht von Hansi (wie startnachricht_senden, ohne Push)
+  const { data: z } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", pid).eq("schluessel", SN_SCHLUESSEL).maybeSingle();
+  const am = jetzt(), alt = Date.now() - 60 * 86400000;
+  const eintrag = { id: crypto.randomUUID(), von: "KC-P-002", vonName: "Hans-Joachim Koch", text: adventGadgetText(tag), wichtig: false, am };
+  const liste = [eintrag, ...snListe(z?.wert).filter((x: any) => !x.gelesen_am || Date.parse(x.gelesen_am) > alt)].slice(0, SN_MAX_JE_PERSON);
+  const { error } = await db.from("kc_club_person_einstellung").upsert({ person_id: pid, schluessel: SN_SCHLUESSEL, geaendert_am: am, wert: { liste } }, { onConflict: "person_id,schluessel" });
+  if (error) console.error("adventGadgetGlueckwunsch", error.message);
+}
+// Zieht alle fälligen Gadget-Tage bis bisTag in der Reihenfolge der Tage (frühere Gewinner sind so sicher ausgeschlossen). Idempotent:
+// unique (jahr, tag) – ein zweiter Abruf bekommt einen Konflikt und liest nur neu; unique (jahr, person_id) – niemand gewinnt zweimal.
+async function adventGadgetsZiehen(jahr: number, bisTag: number) {
+  const jd = new Date(), heute = berlinTag(jd), std = berlinStunde(jd);
+  const faellig = Object.keys(ADVENT_GADGETS).map(Number).filter((t) => t <= bisTag && adventGadgetPhase(heute, std, jahr, t) === "vorbei").sort((x, y) => x - y);
+  if (!faellig.length) return;
+  const lesen = async () => { const { data, error } = await db.from("kc_club_advent_gadget_gewinn").select("tag,person_id").eq("jahr", jahr);
+    if (error) throw new Fehler("Die Verlosung ist gerade nicht erreichbar.", 503); return data ?? []; };
+  let da = await lesen();
+  const gewonnen = new Set<string>(da.filter((x: any) => x.person_id).map((x: any) => String(x.person_id)));
+  for (const tag of faellig) {
+    if (da.some((x: any) => x.tag === tag)) continue;
+    const { data: tn, error: te } = await db.from("kc_club_advent_gadget_teilnahme").select("person_id").eq("jahr", jahr).eq("tag", tag).limit(2000);
+    if (te) throw new Fehler("Die Verlosung ist gerade nicht erreichbar.", 503);
+    const alle = (tn ?? []).map((x: any) => String(x.person_id));
+    for (let versuch = 0; versuch < 3; versuch++) {
+      const wahl = adventGadgetWahl(alle, gewonnen, zufallIndex);
+      const { error } = await db.from("kc_club_advent_gadget_gewinn").insert({ jahr, tag, gadget: ADVENT_GADGETS[tag], person_id: wahl, teilnehmer: alle.length, gezogen_am: jetzt() });
+      if (!error) {
+        if (wahl) { gewonnen.add(wahl); await adventGadgetGlueckwunsch(wahl, tag).catch((e) => console.error("adventGadgetGlueckwunsch", String(e))); }
+        await protokoll(null, "advent_gadget_gezogen", { jahr, tag, teilnehmer: alle.length, vergeben: !!wahl });
+        break;
+      }
+      if (error.code !== "23505") throw new Fehler("Die Verlosung ist gerade nicht erreichbar.", 503);
+      da = await lesen(); // Konflikt: schon gezogen (anderer Abruf) oder die Person hat gerade woanders gewonnen
+      da.forEach((x: any) => { if (x.person_id) gewonnen.add(String(x.person_id)); });
+      if (da.some((x: any) => x.tag === tag)) break;
+    }
+  }
+}
 const wann = (iso: string, lang = false) => `${(lang ? fTagLang : fTag).format(new Date(iso))}, ${fZeit.format(new Date(iso))} Uhr`;
 const txt = (v: unknown, max: number) => String(v ?? "").replace(/\r\n?/g, "\n").replace(/[\u0000-\u0008\u000b-\u001f\u007f]/g, " ").trim().slice(0, max);
 
@@ -4544,7 +4598,7 @@ const ZUGANG_AKTIONEN: Record<"basis" | "aushilfe", readonly string[]> = {
     "push_pruefen", "geraete_liste", "geraet_entfernen", "andere_geraete_abmelden", "push_abmelden", "push_test", "rw_test", "neues_geraet_antwort"],
   aushilfe: ["mein_dienst", "dp_plaene", "dienstwunsch_laden", "dienstwunsch_speichern", "dienst_gruss", "dienste", "dienst_freigabe", "meine_eingaben",
     "eingaben_bestaetigen", "wunschbogen_mailen", "eingaben_ablegen", "fotos_neueste", "fotos_liste", "foto_oeffnen",
-    "schulung_meine", "schulung_antwort", "gericht_zutat_setzen", "gericht_antwort", "tipp_stand", "tipp_mitmachen", "tipp_abgeben",
+    "schulung_meine", "schulung_antwort", "gericht_zutat_setzen", "gericht_antwort", "tipp_stand", "tipp_mitmachen", "tipp_abgeben", "advent_gadget_stand", "advent_gadget_mitmachen", // KC-CLUB-ADVENT-GADGETS
     "sondereinsatz_zusage", "stunden_melden", "mein_ausweis", "dienst_stand", "dienst_buchen", "dienst_korrigieren", "dienst_tausch_liste", "dienst_tausch_anbieten", "dienst_tausch_aktion", "dp_einzelplan", "ist_offen", "ist_antworten", "ist_feedback"], // 2.590.0: Aushilfen dürfen sich auch anmelden (Hansi 22.10.); 2.606.0: und Dienste tauschen
 };
 const ZUGANG_ERLAUBT = { gast: new Set(ZUGANG_AKTIONEN.basis), aushilfe: new Set([...ZUGANG_AKTIONEN.basis, ...ZUGANG_AKTIONEN.aushilfe]), tischgast: new Set<string>(TISCHGAST_AKTIONEN) };
@@ -9531,12 +9585,27 @@ async function terminanfragenListe(ich: Ich, zeitraum?: { von: string; bis: stri
       protokoll: a.protokoll && (a.erstellt_von === ich.person_id || a.protokoll.status === "gesendet") ? a.protokoll : null, // KC-CLUB-TA-PROTOKOLL: Angefragte sehen es erst, wenn es verschickt ist gegenvorschlag: a.gegenvorschlag !== false, vorbehalt: a.vorbehalt ?? null, anlagen: anl.get(a.id) ?? [],
       vonMir: a.erstellt_von === ich.person_id, von: { person_id: a.erstellt_von, name: name(a.erstellt_von), vorname: vorname(leute.get(a.erstellt_von)) || name(a.erstellt_von) },
       meine: mein?.antwort ?? null, meineNotiz: mein?.notiz ?? null, meinGelesen: mein?.gelesen_am ?? null, // KC-CLUB-TERMINANFRAGE-STATUS (2.23.50)
-      meinVorschlag: mein?.vorschlag_beginn ? { beginn: mein.vorschlag_beginn, ende: mein.vorschlag_ende } : null, erinnerung: erin.get(a.id) ?? null, erinnerungStandard: a.erinnerung_min || 0,
+      meinVorschlag: mein?.vorschlag_beginn ? { beginn: mein.vorschlag_beginn, ende: mein.vorschlag_ende } : null, meinVorschlagAlt: vorschlagAlt(mein), erinnerung: erin.get(a.id) ?? null, erinnerungStandard: a.erinnerung_min || 0,
       empfaenger: e.map((z: any) => ({ person_id: z.person_id, name: name(z.person_id), vorname: vorname(leute.get(z.person_id)) || name(z.person_id), antwort: z.antwort, notiz: z.notiz, geantwortet_am: z.geantwortet_am,
-        gelesen_am: z.gelesen_am, vorschlag: z.vorschlag_beginn ? { beginn: z.vorschlag_beginn, ende: z.vorschlag_ende } : null }))
+        gelesen_am: z.gelesen_am, vorschlag: z.vorschlag_beginn ? { beginn: z.vorschlag_beginn, ende: z.vorschlag_ende } : null, vorschlagAlt: vorschlagAlt(z) }))
         .sort((x: any, y: any) => x.name.localeCompare(y.name, "de")),
     };
   });
+}
+// KC-CLUB-ANFRAGE-VORSCHLAG-BLEIBT (22.11.2026, Wunsch Hansi): Ein Gegenvorschlag bleibt als „früherer Vorschlag“ sichtbar, wenn danach mit Ja/Nein/Vielleicht
+// geantwortet oder über ihn entschieden wird. vorschlag_beginn/_ende = offener Vorschlag (Annehmen/Ablehnen), vorschlag_alt_* = früherer (nur Hinweis).
+// Spalten aus Migration 20261122_kc_club_anfrage_vorschlag_bleibt.sql – gelesen wird über select("*") (fehlt die Spalte, ist sie einfach leer),
+// geschrieben über empfaengerAendern: fehlen die Spalten noch, wird ohne sie gespeichert (Verhalten wie vorher).
+const vorschlagAlt = (z: any) => z?.vorschlag_alt_beginn ? { beginn: z.vorschlag_alt_beginn, ende: z.vorschlag_alt_ende ?? null, am: z.vorschlag_alt_am ?? null, status: z.vorschlag_alt_status ?? null } : null;
+function vorschlagAltWerte(z: any, status: "angenommen" | "abgelehnt" | null) {
+  if (!z?.vorschlag_beginn) return null; // kein offener Vorschlag → früheren unverändert lassen
+  return { vorschlag_alt_beginn: z.vorschlag_beginn, vorschlag_alt_ende: z.vorschlag_ende ?? null, vorschlag_alt_am: z.geantwortet_am ?? jetzt(), vorschlag_alt_status: status };
+}
+const VORSCHLAG_ALT_LEER = { vorschlag_alt_beginn: null, vorschlag_alt_ende: null, vorschlag_alt_am: null, vorschlag_alt_status: null };
+async function empfaengerAendern(werte: Record<string, unknown>, alt: Record<string, unknown> | null, filter: (q: any) => any) {
+  const tab = () => db.from("kc_club_terminanfrage_empfaenger");
+  if (alt) { const { error } = await filter(tab().update({ ...werte, ...alt })); if (!error) return; }
+  await filter(tab().update(werte)); // ohne vorschlag_alt_* (Migration noch nicht eingespielt) bzw. nichts Früheres zu merken
 }
 const ANTWORT_TEXT: Record<string, string> = { ja: "✅ Ja", vielleicht: "🤔 Vielleicht", nein: "❌ Nein" };
 // KC-CLUB-ANFRAGE-ALLE-INFO (19.10.2026, Wunsch Hansi „wenn Zusagen, Absagen, andere Vorschläge kommen, müssen alle benachrichtigt werden“):
@@ -11414,9 +11483,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (a.status !== "offen") throw new Fehler("Diese Anfrage wurde abgesagt.", 409);
         if (new Date(a.ende || a.beginn).getTime() < Date.now() - 3 * 3600000) throw new Fehler("Der Termin ist schon vorbei.", 409);
         const notiz = antwort === "keine" ? null : txt(p.notiz, 300) || null;
-        await db.from("kc_club_terminanfrage_empfaenger").update({ antwort: antwort === "keine" ? null : antwort, notiz, geantwortet_am: antwort === "keine" ? null : jetzt(),
-          gelesen_am: z.gelesen_am || jetzt(), vorschlag_beginn: null, vorschlag_ende: null }) // Antwort ersetzt einen Gegenvorschlag
-          .eq("anfrage_id", a.id).eq("person_id", ich.person_id);
+        await empfaengerAendern({ antwort: antwort === "keine" ? null : antwort, notiz, geantwortet_am: antwort === "keine" ? null : jetzt(),
+          gelesen_am: z.gelesen_am || jetzt(), vorschlag_beginn: null, vorschlag_ende: null }, // Antwort ersetzt einen Gegenvorschlag
+          vorschlagAltWerte(z, null), (q) => q.eq("anfrage_id", a.id).eq("person_id", ich.person_id)); // KC-CLUB-ANFRAGE-VORSCHLAG-BLEIBT: als früheren merken
         if (antwort !== "keine" && (antwort !== z.antwort || notiz !== z.notiz)) {
           await senden("club_treffen", [a.erstellt_von], {
             titel: `${ANTWORT_TEXT[antwort]} von ${ich.vorname}`, kurz: `${a.anlass} – ${wann(a.beginn)}${notiz ? " · „" + notiz + "“" : ""}`,
@@ -11455,8 +11524,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (vb.getTime() < Date.now()) throw new Fehler("Der Vorschlag liegt in der Vergangenheit.");
         if (ve && (isNaN(ve.getTime()) || ve < vb)) throw new Fehler("Das Ende liegt vor dem Beginn.");
         const notiz = txt(p.notiz, 300) || null;
-        await db.from("kc_club_terminanfrage_empfaenger").update({ antwort: null, notiz, geantwortet_am: jetzt(), gelesen_am: z.gelesen_am || jetzt(),
-          vorschlag_beginn: vb.toISOString(), vorschlag_ende: ve ? ve.toISOString() : null }).eq("anfrage_id", a.id).eq("person_id", ich.person_id);
+        await empfaengerAendern({ antwort: null, notiz, geantwortet_am: jetzt(), gelesen_am: z.gelesen_am || jetzt(),
+          vorschlag_beginn: vb.toISOString(), vorschlag_ende: ve ? ve.toISOString() : null }, VORSCHLAG_ALT_LEER, // neuer offener Vorschlag löst den früheren ab
+          (q) => q.eq("anfrage_id", a.id).eq("person_id", ich.person_id));
         const vWann = wann(vb.toISOString()) + (ve ? ` bis ${fZeit.format(ve)} Uhr` : "");
         const versand = await senden("club_treffen", [a.erstellt_von], {
           titel: `🔄 Gegenvorschlag von ${ich.vorname}`, kurz: `${a.anlass}: lieber ${vWann}${notiz ? " · „" + notiz + "“" : ""}`,
@@ -11493,7 +11563,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           // neue Zeit: alle anderen werden neu gefragt, der Vorschlagende hat damit zugesagt; Erinnerungen laufen neu
           await db.from("kc_club_terminanfrage_empfaenger").update({ antwort: null, notiz: null, geantwortet_am: null, gelesen_am: null, vorschlag_beginn: null, vorschlag_ende: null })
             .eq("anfrage_id", a.id).neq("person_id", z.person_id);
-          await db.from("kc_club_terminanfrage_empfaenger").update({ antwort: "ja", geantwortet_am: jetzt(), vorschlag_beginn: null, vorschlag_ende: null }).eq("anfrage_id", a.id).eq("person_id", z.person_id);
+          await empfaengerAendern({ antwort: "ja", geantwortet_am: jetzt(), vorschlag_beginn: null, vorschlag_ende: null }, vorschlagAltWerte(z, "angenommen"),
+            (q) => q.eq("anfrage_id", a.id).eq("person_id", z.person_id)); // KC-CLUB-ANFRAGE-VORSCHLAG-BLEIBT
           await db.from("kc_club_erinnerungen").update({ gesendet_am: null }).eq("anfrage_id", a.id);
           const neu = { ...a, beginn: z.vorschlag_beginn, ende: z.vorschlag_ende };
           const { data: alle } = await db.from("kc_club_terminanfrage_empfaenger").select("person_id").eq("anfrage_id", a.id);
@@ -11509,7 +11580,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             text: `Hallo,\n\n${ich.name} hat die Zeit der Terminanfrage geändert:\n\n📌 ${a.anlass}\n📅 neu: ${anfrageWann(neu)}${vorbehalt ? zeile : ""}\n\nBitte in der Köcheclub-App neu antworten: ${APP_URL}#termine\n\nViele Grüße\nKöcheclub Werne`, url: APP_URL + "#termine",
           }, `club-terminanfrage-neuzeit:${a.id}:${Date.now()}`).catch(() => null);
         } else {
-          await db.from("kc_club_terminanfrage_empfaenger").update({ vorschlag_beginn: null, vorschlag_ende: null, geantwortet_am: null }).eq("anfrage_id", a.id).eq("person_id", z.person_id);
+          await empfaengerAendern({ vorschlag_beginn: null, vorschlag_ende: null, geantwortet_am: null }, vorschlagAltWerte(z, "abgelehnt"),
+            (q) => q.eq("anfrage_id", a.id).eq("person_id", z.person_id)); // KC-CLUB-ANFRAGE-VORSCHLAG-BLEIBT
           await senden("club_treffen", [z.person_id], {
             titel: `❌ Dein Vorschlag passt ${ich.vorname} leider nicht`, kurz: `${a.anlass} – es bleibt bei ${wann(a.beginn)}${zusatz ? " · „" + zusatz + "“" : ""}`,
             betreff: `Köcheclub Werne – Vorschlag passt nicht: ${a.anlass}`,
@@ -13297,7 +13369,12 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           const { data, error } = await db.from("kc_club_advent_preise").select("person_id,tag,preis,gemeldet_am").eq("jahr", j).order("tag").limit(1000);
           if (error) throw new Fehler("Die Liste ist gerade nicht erreichbar.", 503);
           const leute = await personen([...new Set((data ?? []).map((x: any) => x.person_id))]);
-          return json({ ok: true, jahr: j, preise: (data ?? []).map((x: any) => ({ tag: x.tag, preis: x.preis, am: x.gemeldet_am, name: leute.get(x.person_id)?.display_name || vorname(leute.get(x.person_id)) || "Mitglied" })) });
+          // KC-CLUB-ADVENT-GADGETS: verloste Gadgets mit Gewinner und Teilnehmerzahl (fällige Tage werden dabei gezogen)
+          if (j === jahr) await adventGadgetsZiehen(j, 24);
+          const { data: gw } = await db.from("kc_club_advent_gadget_gewinn").select("tag,gadget,person_id,teilnehmer,gezogen_am").eq("jahr", j).order("tag");
+          const gl = await personen([...new Set((gw ?? []).filter((x: any) => x.person_id).map((x: any) => x.person_id))]);
+          const gadgets = (gw ?? []).map((x: any) => ({ tag: x.tag, gadget: x.gadget, teilnehmer: x.teilnehmer, am: x.gezogen_am, name: x.person_id ? gl.get(x.person_id)?.display_name || vorname(gl.get(x.person_id)) || "Mitglied" : null }));
+          return json({ ok: true, jahr: j, preise: (data ?? []).map((x: any) => ({ tag: x.tag, preis: x.preis, am: x.gemeldet_am, name: leute.get(x.person_id)?.display_name || vorname(leute.get(x.person_id)) || "Mitglied" })), gadgets });
         }
         if (a === "advent_preise_meine") {
           const { data } = await db.from("kc_club_advent_preise").select("tag").eq("person_id", ich.person_id).eq("jahr", jahr);
@@ -13309,6 +13386,33 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const { error } = await db.from("kc_club_advent_preise").upsert({ person_id: ich.person_id, jahr, tag, preis }, { onConflict: "person_id,jahr,tag", ignoreDuplicates: true });
         if (error) throw new Fehler("Das hat gerade nicht geklappt – bitte gleich noch einmal.", 503);
         return json({ ok: true, tag, preis });
+      }
+      case "advent_gadget_stand": case "advent_gadget_mitmachen": { // KC-CLUB-ADVENT-GADGETS: Stand bzw. mitmachen (nur am Tag bis 22 Uhr, Server-Uhr)
+        if (ich.zugang !== "mitglied" && ich.zugang !== "aushilfe") throw new Fehler("Mitmachen können nur Mitglieder und Aushilfen.", 403);
+        const jd = new Date(), heute = berlinTag(jd), jahr = Number(heute.slice(0, 4)), tag = Math.round(Number(p.tag)), gadget = ADVENT_GADGETS[tag];
+        if (!gadget) throw new Fehler("Hinter diesem Türchen gibt es nichts zu gewinnen.");
+        const phase = adventGadgetPhase(heute, berlinStunde(jd), jahr, tag);
+        await adventGadgetsZiehen(jahr, tag);
+        const [{ data: gw, error: ge }, { data: tn, error: te }] = await Promise.all([
+          db.from("kc_club_advent_gadget_gewinn").select("tag,person_id,teilnehmer").eq("jahr", jahr),
+          db.from("kc_club_advent_gadget_teilnahme").select("person_id").eq("jahr", jahr).eq("tag", tag).limit(2000)]);
+        if (ge || te) throw new Fehler("Die Verlosung ist gerade nicht erreichbar.", 503);
+        const zeile: any = (gw ?? []).find((x: any) => x.tag === tag), schonGewonnen = (gw ?? []).some((x: any) => x.person_id === ich.person_id);
+        let ichDabei = (tn ?? []).some((x: any) => x.person_id === ich.person_id), anzahl = (tn ?? []).length;
+        if (a === "advent_gadget_mitmachen") {
+          if (phase === "vorher") throw new Fehler(`Mitmachen kannst du am ${tag}. Dezember.`, 409);
+          if (phase === "vorbei" || zeile) throw new Fehler("Die Verlosung ist vorbei.", 409);
+          if (schonGewonnen) throw new Fehler("Du hast schon gewonnen 🎉 – jetzt sind die anderen dran.", 409);
+          if (!ichDabei) {
+            const { error } = await db.from("kc_club_advent_gadget_teilnahme").upsert({ jahr, tag, person_id: ich.person_id, am: jetzt() }, { onConflict: "jahr,tag,person_id", ignoreDuplicates: true });
+            if (error) throw new Fehler("Das hat gerade nicht geklappt – bitte gleich noch einmal.", 503);
+            ichDabei = true; anzahl++;
+          }
+        }
+        let gewinnerVorname: string | null = null;
+        if (zeile?.person_id) { const l = await personen([zeile.person_id]); gewinnerVorname = vorname(l.get(zeile.person_id)) || l.get(zeile.person_id)?.display_name || "Mitglied"; }
+        return json({ ok: true, tag, gadget, phase, offenBis: `${jahr}-12-${String(tag).padStart(2, "0")}T${ADVENT_GADGET_SCHLUSS}:00:00+01:00`, ichDabei, teilnehmer: zeile ? zeile.teilnehmer : anzahl,
+          schonGewonnen, gezogen: !!zeile, gewinnerVorname, ichGewonnen: !!zeile && zeile.person_id === ich.person_id });
       }
       case "rezept_bewerten": { // 2.730.0 KC-CLUB-REZEPT-WEIHNACHT: Sterne 1–5 (oder keine) und „nachgebacken“ – eine Zeile je Mitglied und Rezept
         await nurWennFrei("rezepte", ich, "Das Rezeptbuch");

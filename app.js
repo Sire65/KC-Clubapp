@@ -10208,7 +10208,7 @@ const ZUGANG_AKTIONEN = {
     "push_pruefen", "geraete_liste", "geraet_entfernen", "andere_geraete_abmelden", "push_abmelden", "push_test", "rw_test", "neues_geraet_antwort"],
   aushilfe: ["mein_dienst", "dp_plaene", "dienstwunsch_laden", "dienstwunsch_speichern", "dienst_gruss", "dienste", "dienst_freigabe", "meine_eingaben",
     "eingaben_bestaetigen", "wunschbogen_mailen", "eingaben_ablegen", "fotos_neueste", "fotos_liste", "foto_oeffnen",
-    "schulung_meine", "schulung_antwort", "gericht_zutat_setzen", "gericht_antwort", "tipp_stand", "tipp_mitmachen", "tipp_abgeben",
+    "schulung_meine", "schulung_antwort", "gericht_zutat_setzen", "gericht_antwort", "tipp_stand", "tipp_mitmachen", "tipp_abgeben", "advent_gadget_stand", "advent_gadget_mitmachen", // KC-CLUB-ADVENT-GADGETS
     "sondereinsatz_zusage", "stunden_melden", "mein_ausweis", "dienst_stand", "dienst_buchen", "dienst_korrigieren", "dienst_tausch_liste", "dienst_tausch_anbieten", "dienst_tausch_aktion", "dp_einzelplan", "ist_offen", "ist_antworten", "ist_feedback"], // 2.590.0 KC-CLUB-DIENST-STEMPEL; 2.606.0 KC-CLUB-DIENST-TAUSCH
 };
 const ZUGANG_KACHELN = { basis: ["termine", "kommunikation", "sos", "spiele", "status", "einstellungen", "hilfezentrum", "twinkey", "erklaer", "update", "sicherheit", "feedback", "test"],
@@ -13284,6 +13284,9 @@ const AK_TUERCHEN = [ // 2.869.0 KC-CLUB-ADVENT-2026: Tag 1–24; art: naschen |
   { art: "einladung", sym: "☕", t: "Einladung zum Frühstück" },
 ];
 const AK_ARTEN = { naschen: ["🍬", "Nascherei"], basteln: ["✂️", "Basteln"], deko: ["🕯️", "Deko"], riegel: ["🍫", "Überraschung"], einladung: ["☕", "Einladung"] };
+// KC-CLUB-ADVENT-GADGETS (Wunsch Hansi 22.11.2026): Einzelstücke, zusätzlich zum Türchen-Inhalt verlost (Tag → Name/Foto); muss zu ADVENT_GADGETS im Server passen
+const AK_GADGETS = { 3: { name: "ausziehbares USB-Ladekabel", foto: "advent/gadget-ladekabel.webp", b: 520, h: 494 }, 10: { name: "Flaschenöffner", foto: "advent/gadget-flaschenoeffner.webp", b: 520, h: 82 },
+  13: { name: "Plüsch-Biene", foto: "advent/gadget-biene.webp", b: 341, h: 520 }, 17: { name: "Selfie-Ringlicht fürs Handy", foto: "advent/gadget-ringlicht.webp", b: 487, h: 490 } };
 const AK_REIHE = [7, 15, 1, 22, 10, 3, 18, 12, 24, 5, 20, 9, 2, 14, 17, 6, 11, 23, 4, 19, 13, 8, 16, 21]; // feste, gemischte Anordnung der Türchen
 // KC-CLUB-ADVENT-SERVERUHR (Wunsch Hansi 15.11.2026: „Jedes Türchen darf nur am Tag geöffnet werden, nicht schon vorher – im Nachhinein erlaubt … mit Server-Uhr
 // absichern“): Tag nach der Uhr des Servers in deutscher Zeit – ein vorgestelltes Handy-Datum öffnet kein Türchen früher. Der Versatz kommt einmal beim Start
@@ -13351,13 +13354,44 @@ async function akPreisListe() { // nur Admin: wer bekommt was (zum Austeilen im 
   const b = blattAuf("akPreisBlatt", '<h3 style="margin:0">📋 Adventskalender – wer bekommt was</h3><div id="akPreisListe"><p class="hinweis">⏳ Wird geladen …</p></div>');
   let r; try { r = await api("advent_preise_liste", {}, { warten: true }); } catch (e) { if ($("akPreisListe")) $("akPreisListe").innerHTML = `<p class="hinweis">⚠️ ${esc(fehlerText(e))}</p>`; return; }
   const gruppen = Object.values(AK_PREISE).map((P) => ({ P, leute: r.preise.filter((x) => x.preis === P.name).map((x) => x.name).sort((a, c) => a.localeCompare(c, "de")) }));
-  const html = gruppen.map(({ P, leute }) => `<h4 style="margin:12px 0 4px">${P.sym} ${esc(P.name)} – ${leute.length} Stück</h4>${leute.length ? `<ol style="margin:0;padding-left:22px">${leute.map((x) => `<li>${esc(x)}</li>`).join("")}</ol>` : '<p class="hinweis" style="margin:0">Noch niemand gemeldet.</p>'}`).join("");
+  const gezogen = new Map((r.gadgets || []).map((x) => [x.tag, x])); // KC-CLUB-ADVENT-GADGETS: eigener Abschnitt für die verlosten Einzelstücke
+  const html = gruppen.map(({ P, leute }) => `<h4 style="margin:12px 0 4px">${P.sym} ${esc(P.name)} – ${leute.length} Stück</h4>${leute.length ? `<ol style="margin:0;padding-left:22px">${leute.map((x) => `<li>${esc(x)}</li>`).join("")}</ol>` : '<p class="hinweis" style="margin:0">Noch niemand gemeldet.</p>'}`).join("")
+    + `<h4 style="margin:12px 0 4px">🎁 Gadgets (verlost)</h4><ul style="margin:0;padding-left:22px">${Object.entries(AK_GADGETS).map(([t, G]) => { const x = gezogen.get(Number(t));
+      return `<li>${t}.12. – ${esc(G.name)}: ${!x ? "Verlosung am " + t + ". Dezember um 22 Uhr" : x.name ? `<b>${esc(x.name)}</b>` : "nicht vergeben"}${x ? ` (${x.teilnehmer} ${x.teilnehmer === 1 ? "Teilnehmer" : "Teilnehmende"})` : ""}</li>`; }).join("")}</ul>`;
   if (!$("akPreisListe")) return;
   $("akPreisListe").innerHTML = html + `<div class="knoepfe" style="margin-top:12px"><button type="button" class="knopf haupt" onclick="akPreisDruck()">🖨️ Drucken</button><button type="button" class="knopf" onclick="fensterZu($('akPreisBlatt'))">Schließen</button></div>`;
   AK_GEMELDET.druck = { jahr: r.jahr, html };
 }
 const akPreisDruck = () => AK_GEMELDET.druck && druckStarten("advent_preise"); // Druck-Baustein mit Club-Kopf und -Fuß (AGENTS.md Regel 19)
 const AK_FRUEHSTUECK = /fr(ü|ue)hst(ü|ue)ck/i; // Abstimmung von Hansi (Vorschläge → 🗳️ Abstimmung), deren Titel „Frühstück“ enthält
+// KC-CLUB-ADVENT-GADGETS: Block „🎁 Heute zu gewinnen“ (Foto lazy), Stand vom Server (advent_gadget_stand); mitmachen nur am Tag bis 22 Uhr (Server-Uhr)
+function akGadgetBlock(n) {
+  const G = AK_GADGETS[n];
+  return `<div class="ak-karte ak-gadget"><div style="width:100%"><span class="ak-marke">🎁 Verlosung</span><br><b>🎁 Heute zu gewinnen: ${esc(G.name)}</b>
+    <img class="ak-gadget-foto" src="${G.foto}" alt="${esc(G.name)}" width="${G.b}" height="${G.h}" loading="lazy" decoding="async">
+    <p class="hinweis" style="margin:4px 0 0">Ein Einzelstück – unter allen, die das Türchen heute öffnen und bis 22 Uhr mitmachen, wird es ausgelost. Ausgegeben wird beim Weihnachtsessen im Januar.</p>
+    <div id="akGadget" class="ak-antwort">${akHeute() ? '<p class="hinweis">Einen Moment …</p>' : '<p class="hinweis">🎲 Im Dezember kannst du hier mitmachen.</p>'}</div></div></div>`;
+}
+function akGadgetStandHtml(r, n) {
+  const dabei = `${r.teilnehmer === 1 ? "1 Person macht" : (r.teilnehmer || 0) + " machen"} mit`;
+  if (r.gezogen) return r.gewinnerVorname ? `<p class="ak-ok">🎉 Gewonnen hat: ${esc(r.gewinnerVorname)}${r.ichGewonnen ? " – das bist du! Glückwunsch!" : ""}</p><p class="hinweis" style="margin:4px 0 0">${r.teilnehmer === 1 ? "1 Person hat" : r.teilnehmer + " haben"} mitgemacht.</p>`
+    : '<p class="hinweis">Die Verlosung ist vorbei – das Gadget wurde nicht vergeben (niemand hat mitgemacht).</p>';
+  if (r.phase === "vorher") return '<p class="hinweis">🎲 Am Tag kannst du hier mitmachen.</p>';
+  if (r.phase !== "offen") return '<p class="hinweis">Die Verlosung ist vorbei.</p>';
+  if (r.ichDabei) return `<p class="ak-ok">✅ Du bist dabei! Ausgelost wird heute um 22 Uhr.</p><p class="hinweis" style="margin:4px 0 0">${dabei}.</p>`;
+  if (r.schonGewonnen) return '<p class="ak-ok">Du hast schon gewonnen 🎉 – jetzt sind die anderen dran.</p>';
+  return `<button type="button" class="knopf haupt" style="width:100%;margin-top:6px" onclick="akGadgetMitmachen(${n}, this)">🎲 Ich mache mit</button><p class="hinweis" style="margin:4px 0 0">Mitmachen bis heute 22 Uhr · ${dabei}.</p>`;
+}
+async function akGadgetLaden(n) {
+  if (!akHeute()) return; // Vorschau (Admin vor Dezember): nur der Hinweis
+  let r; try { r = await api("advent_gadget_stand", { tag: n }); } catch (e) { if ($("akGadget")) $("akGadget").innerHTML = `<p class="hinweis">⚠️ ${esc(fehlerText(e))}</p>`; return; }
+  if ($("akGadget")) $("akGadget").innerHTML = akGadgetStandHtml(r, n);
+}
+async function akGadgetMitmachen(n, knopf) {
+  if (knopf) knopf.disabled = true;
+  try { const r = await api("advent_gadget_mitmachen", { tag: n }, { warten: true }); melde("🎲 Du bist dabei – viel Glück!"); if ($("akGadget")) $("akGadget").innerHTML = akGadgetStandHtml(r, n); }
+  catch (e) { meldeFehler(e); akGadgetLaden(n); }
+}
 function akEinladungKarte() {
   return `<div class="ak-karte ak-einladung"><div style="width:100%"><div class="ak-gross" aria-hidden="true">☕🥐🍳</div>
     <p style="margin:4px 0">Der Köcheclub Werne wünscht dir und deiner Familie <b>frohe Weihnachten</b> und gesegnete Festtage!</p>
@@ -13385,6 +13419,7 @@ function akTuer(n) {
   $("akInhalt").innerHTML = T.art === "riegel" ? akRiegelKarte(T, n) : T.art === "einladung" ? akEinladungKarte() : akAnleitung(T, n);
   if (T.art === "einladung") akAntwortLaden();
   if (T.art === "riegel") akPreiseLaden(n);
+  if (AK_GADGETS[n]) { $("akInhalt").insertAdjacentHTML("beforeend", akGadgetBlock(n)); akGadgetLaden(n); } // KC-CLUB-ADVENT-GADGETS: zusätzlich, nicht statt
   $("akInhalt").scrollIntoView({ block: "nearest", behavior: "smooth" });
   if (n === h) try { ilZeigen(); } catch {} // Erinnerung im Laufband verschwindet
 }
@@ -22256,7 +22291,7 @@ function uhKarteiHtml(liste) {
   const uhOn = (u) => !u.gruppe && u.anzahl <= 2 && mgOn(MITGLIEDER?.find((m) => m.name === u.teilnehmer[0])); // Einzelchat mit jemandem, der online ist
   return `<div class="rk-box" id="uhKartei">${rkOnlineVorn(liste, uhOn).map((u) => { const titel = u.gruppe?.name || u.betreff || u.teilnehmer.join(", ");
     const bild = u.gruppe || u.anzahl > 2 ? uhRundeKreis(u) : kreis(MITGLIEDER?.find((m) => m.name === u.teilnehmer[0]) || null, u.teilnehmer[0], 30);
-    return `<details class="karte uhk${uhUngelesen(u) ? " uh-neu" : ""}" data-klappe="uhk" data-id="${esc(u.id)}" data-stand="${esc(u.letzte?.zeit || "")}" open><summary>${bild}<span>${esc(titel)}</span>${anlMarke(u) /* KC-CLUB-CHAT-ANLAGEN-SICHTBAR */}${u.ungelesen ?`<span class="punkt">${u.ungelesen}</span>` : ""}</summary>
+    return `<details class="karte uhk${uhUngelesen(u) ? " uh-neu" : ""}" data-klappe="uhk" data-id="${esc(u.id)}" data-stand="${esc(u.letzte?.zeit || "")}" open><summary>${bild}<span>${esc(titel)}</span>${anlMarke(u) /* KC-CLUB-CHAT-ANLAGEN-SICHTBAR */}${u.ungelesen ?`<span class="punkt">${u.ungelesen}</span>` : ""}${!u.gruppe && u.anzahl <= 2 ? rkWasKnopf(MITGLIEDER?.find((m) => m.name === u.teilnehmer[0])) : "" /* KC-KARTEI-WEGE: Einzelchat mit jemandem, der online ist */}</summary>
       <div class="hinweis uhk-info">${u.gruppe ? `🔗 Feste Gruppe · ${u.anzahl} Mitgl.` : u.anzahl > 2 ? `Runde · ${u.anzahl} Personen` : "Einzelchat"}${uhOn(u) ? " · 🟢 online" : ""}${u.letzte ? ` · zuletzt ${esc(zeitKurz(u.letzte.zeit))}` : ""}${stummAn(u.id) ? " · 🔕" : ""}</div>${uhLesestand(u)}
       <div class="uhk-verlauf" data-teil="verlauf">${u.letzte ? '<p class="hinweis">Wird geladen …</p>' : '<p class="hinweis">Noch keine Nachricht.</p>'}</div>
       <div class="uhk-knoepfe"><button type="button" class="knopf haupt" onclick="chatOeffnen('${esc(u.id)}')">💬 Öffnen &amp; antworten${u.ungelesen ? ` (${u.ungelesen} neu)` : ""}</button></div>
@@ -27431,10 +27466,16 @@ async function notausNachsehen() {
 function notausZeigen() {
   const admin = !!ICH?.admin;
   const balken = NOTAUS.aktiv ? `<div class="notaus-balken" role="alert"><span>⛔ NOT-AUS seit ${esc(notausUhr(NOTAUS.seit))} – Nachrichten sind angehalten</span>${admin ? '<button type="button" id="notausEntriegeln" onclick="notausEntriegelnFenster()">🔓 Entriegeln</button>' : ""}</div>` : "";
-  const knopf = admin && !NOTAUS.aktiv ? `<div class="notaus-zeile"><button type="button" class="na-probe" id="notausProbeKnopf" onclick="notausProbe()" title="Zählt nur, was angehalten würde – ändert nichts">Probe-NOT-AUS</button><span class="notaus-hinweis">1,5 s halten: alle Nachrichten stoppen</span><button type="button" class="notaus-knopf" id="notausKnopf" aria-label="NOT-AUS – 1,5 Sekunden gedrückt halten: alle Nachrichten, Push und E-Mails sofort stoppen" title="NOT-AUS – 1,5 Sekunden gedrückt halten"><span class="pilz" aria-hidden="true">NOT-AUS</span></button></div>` : "";
+  // KC-NOTAUS-OBEN (22.11.2026, Wunsch Hansi „eine ganze Zeile verschwendet“): der Pilzknopf steht klein oben in der Kopfzeile links neben 🚨 SOS –
+  // keine eigene Zeile mehr. Kurz antippen (statt halten) zeigt den Hinweis „1,5 s halten …“ mit „🧪 Probe-NOT-AUS“ (notausTipp).
+  const knopf = admin && !NOTAUS.aktiv ? `<button type="button" class="notaus-knopf klein" id="notausKnopf" aria-label="NOT-AUS – 1,5 Sekunden gedrückt halten: alle Nachrichten, Push und E-Mails sofort stoppen. Kurz antippen: Hinweis und Probe-NOT-AUS" title="NOT-AUS – 1,5 s halten = alle Nachrichten stoppen · kurz antippen = Hinweis und Probe-NOT-AUS"><span class="pilz" aria-hidden="true">NOT<br>AUS</span></button>` : "";
   const na = $("naNotaus");
-  if (na && na.dataset.stand !== `${balken}|${knopf}`) { na.dataset.stand = `${balken}|${knopf}`; na.innerHTML = balken + knopf; na.classList.toggle("versteckt", !balken && !knopf); notausKnopfVerbinden(); }
+  if (na && na.dataset.stand !== balken) { na.dataset.stand = balken; na.innerHTML = balken; na.classList.toggle("versteckt", !balken); }
+  const pl = $("naNotausPlatz");
+  if (pl && pl.dataset.stand !== knopf) { pl.dataset.stand = knopf; pl.innerHTML = knopf; if (!knopf) $("notausTipp")?.remove(); notausKnopfVerbinden(); }
   const ch = $("chatNotaus"); if (ch) { ch.innerHTML = balken; ch.classList.toggle("versteckt", !balken); }
+  // KC-NOTAUS-PULS (22.11.2026, Wunsch Hansi): solange aktiv pulsiert der Titel „💬 Nachrichten“ rot – wie das Inkognito-Pulsieren, für alle (wie der Balken)
+  document.querySelector("#v-nachrichten .kopf2 > h2")?.classList.toggle("notaus-puls", NOTAUS.aktiv);
   const t = $("text");
   if (t) {
     if (NOTAUS.aktiv && !t.disabled) { NOTAUS.platz = t.placeholder; t.placeholder = "⛔ NOT-AUS – Nachrichten sind angehalten"; }
@@ -27457,11 +27498,11 @@ function notausKnopfVerbinden() {
     };
     NOTAUS.halt = { uhr: setTimeout(schritt, 30) };
   };
-  const ab = () => notausHaltEnde(k, true);
+  const ab = (e) => { const kurz = !!NOTAUS.halt; notausHaltEnde(k, true); if (kurz && (e?.type === "pointerup" || e?.type === "keyup")) notausTipp(k); }; // KC-NOTAUS-OBEN: zu kurz → Hinweis
   k.addEventListener("pointerdown", los);
   for (const n of ["pointerup", "pointercancel", "lostpointercapture"]) k.addEventListener(n, ab);
   k.addEventListener("keydown", (e) => { if ((e.key === " " || e.key === "Enter") && !e.repeat) { e.preventDefault(); los(e); } });
-  k.addEventListener("keyup", (e) => { if (e.key === " " || e.key === "Enter") ab(); });
+  k.addEventListener("keyup", (e) => { if (e.key === " " || e.key === "Enter") ab(e); });
   k.addEventListener("contextmenu", (e) => e.preventDefault());
   k.addEventListener("click", (e) => e.preventDefault()); // ein kurzes Antippen tut nichts
 }
@@ -27479,6 +27520,19 @@ async function notausAusloesen() {
     melde(`⛔ NOT-AUS ausgelöst – ${Number(r?.angehalten) || 0} angehalten`);
   } catch (e) { const k = $("notausKnopf"); k?.style.setProperty("--fuell", "0"); meldeFehler(e); }
   finally { NOTAUS.laeuft = false; }
+}
+// KC-NOTAUS-OBEN: kleine Blase unter dem Knopf statt eigener Zeile – Hinweis + „🧪 Probe-NOT-AUS“; tippen daneben oder nach 8 s schließt sie
+function notausTipp(k) {
+  $("notausTipp")?.remove();
+  const t = document.createElement("div"); t.id = "notausTipp"; t.className = "notaus-tipp"; t.setAttribute("role", "status");
+  t.innerHTML = `<b>⛔ 1,5 s halten = alle Nachrichten stoppen</b><button type="button" class="na-probe" id="notausProbeKnopf" title="Zählt nur, was angehalten würde – ändert nichts">🧪 Probe-NOT-AUS</button>`;
+  document.body.appendChild(t);
+  const b = k.getBoundingClientRect(), w = t.offsetWidth;
+  t.style.top = `${Math.round(b.bottom + 8)}px`; t.style.left = `${Math.round(Math.max(8, Math.min(innerWidth - w - 8, b.left + b.width / 2 - w / 2)))}px`;
+  t.querySelector("#notausProbeKnopf").onclick = () => { t.remove(); notausProbe(); };
+  const zu = (e) => { if (!t.contains(e.target) && e.target !== k) { t.remove(); document.removeEventListener("pointerdown", zu, true); } };
+  setTimeout(() => document.addEventListener("pointerdown", zu, true), 0);
+  setTimeout(() => { t.remove(); document.removeEventListener("pointerdown", zu, true); }, 8000);
 }
 async function notausProbe() {
   try { const r = await api("notaus_ausloesen", { probe: true }, { warten: true }); melde(`🧪 Probe-NOT-AUS: Würde ${Number(r?.angehalten) || 0} Aufträge anhalten – nichts wurde geändert.`); }
@@ -29064,6 +29118,11 @@ function mgDaText(m) {
   return tage <= 1 ? "zuletzt online gestern" : `zuletzt online am ${z.tag.slice(8, 10)}.${z.tag.slice(5, 7)}.`;
 }
 function mgWasMacht(pid) { if (!ICH?.admin) return; spurAdmin(heuteIso(), pid); } // 2.648.0 KC-CLUB-WAS-MACHT
+// KC-KARTEI-WEGE (22.11.2026, Wunsch Hansi „auf die Rollkartei oben rechts das Fragezeichen, wie auf dem Button, welche Wege jemand im Programm nimmt“):
+// dasselbe „?“ wie auf der Mitglieder-Kachel (KC-CLUB-WAS-MACHT) jetzt oben rechts auf den Karten der Rollkartei (Chats aus 💬 Nachrichten → 🗂️ Kartei
+// und 👥 Mitglieder als Kartei). Gleiche Regeln: nur Admin, nur wenn die Person gerade online ist (mgOn – vorhandene Online-Daten, keine neue Abfrage),
+// nicht bei mir selbst. Antippen öffnet ihre „Wege der Mitglieder“ von heute (mgWasMacht → spurAdmin; der Server prüft spur_liste mit nurAdmin).
+const rkWasKnopf = (m) => ICH?.admin && m?.person_id && m.person_id !== ICH.person_id && mgOn(m) ? `<button type="button" class="mg-was rk-was" title="Was macht ${esc(String(m.name || "").split(" ")[0])} gerade?" aria-label="Was macht ${esc(m.name || "")} gerade in der App?" onclick="event.preventDefault();event.stopPropagation();mgWasMacht('${esc(m.person_id)}')">?</button>` : "";
 function mgPushInfo(pid) { // Hansi 16.11.2026: ein Satz, was 🔔/🔕 auf der Kachel bedeutet
   const m = MITGLIEDER?.find?.((x) => x.person_id === pid); if (!m?.wege) return;
   const vn = m.name.split(" ")[0];
@@ -29192,7 +29251,7 @@ const MGK = { det: new Map() }; // person_id → { zeit, d } (Details 5 Min. im 
 const rkOnlineVorn = (liste, istOn) => { const on = [], rest = []; for (const x of liste) (istOn(x) ? on : rest).push(x); return [...on, ...rest]; };
 function mgKarteiHtml(liste) {
   return `<div class="rk-box" id="mgKartei">${rkOnlineVorn(liste, mgOn).map((m) => { const ich = m.person_id === ICH.person_id;
-    return `<details class="karte mgk" data-klappe="mgk" data-pid="${esc(m.person_id)}" open><summary>${kreis(m, m.name, 30)}<span>${esc(m.name)}</span></summary>
+    return `<details class="karte mgk" data-klappe="mgk" data-pid="${esc(m.person_id)}" open><summary>${kreis(m, m.name, 30)}<span>${esc(m.name)}</span>${rkWasKnopf(m) /* KC-KARTEI-WEGE */}</summary>
       <div class="mgk-kopf">${kreis(m, m.name, 80, `onclick="mitgliedOeffnen('${esc(m.person_id)}')"`)}
         <div class="mgk-name">${esc(m.name)}${gbKerze(m.person_id)}${ich ? ' <small class="hinweis">(du)</small>' : ""} ${mgStern(m)}</div>
         ${m.aemter?.length ? `<div>${m.aemter.map((a) => `<span class="marke">${esc(a)}</span>`).join(" ")}</div>` : ""}
@@ -29391,7 +29450,7 @@ function taKarte(a) {
   const k = (w) => `<button class="knopf klein${a.meine === w ? " haupt" : ""}" onclick="taAntwort('${a.id}', '${a.meine === w ? "keine" : w}')">${TA_ANTW[w]}</button>`;
   const wer = a.empfaenger.map((e) => { const st = taStatus(a, e);
     return `<div class="ta-wer"><span class="ta-st ta-st-${st.k}">${st.sym} ${st.t}</span> ${esc(e.name)}${e.notiz ? ` <span class="hinweis">– „${esc(e.notiz)}“</span>` : ""}${(a.vonMir || ICH?.admin) && !ab && a.empfaenger.length > 1 ? ` <button type="button" class="ta-raus" title="${esc(e.name)} aus der Anfrage herausnehmen" aria-label="${esc(e.name)} aus der Anfrage herausnehmen" onclick="taHerausnehmen('${a.id}','${esc(e.person_id)}')">✕</button>` : ""}
-      ${a.vonMir && !ab && e.vorschlag ? `<div class="knoepfe ta-vk"><button class="knopf haupt klein" onclick="taVorschlagBlatt('${a.id}','${esc(e.person_id)}','ja')">✅ Neue Zeit annehmen</button><button class="knopf klein" onclick="taVorschlagBlatt('${a.id}','${esc(e.person_id)}','vorbehalt')">🤔 Unter Vorbehalt</button><button class="knopf klein" onclick="taVorschlagBlatt('${a.id}','${esc(e.person_id)}','nein')">❌ Passt nicht</button></div>` : ""}</div>`; }).join("");
+      ${e.vorschlagAlt && !e.vorschlag ? `<div class="hinweis ta-valt">${esc(taVAltText(e.vorschlagAlt))}</div>` : ""}${a.vonMir && !ab && e.vorschlag ? `<div class="knoepfe ta-vk"><button class="knopf haupt klein" onclick="taVorschlagBlatt('${a.id}','${esc(e.person_id)}','ja')">✅ Neue Zeit annehmen</button><button class="knopf klein" onclick="taVorschlagBlatt('${a.id}','${esc(e.person_id)}','vorbehalt')">🤔 Unter Vorbehalt</button><button class="knopf klein" onclick="taVorschlagBlatt('${a.id}','${esc(e.person_id)}','nein')">❌ Passt nicht</button></div>` : ""}</div>`; }).join("");
   const einer = a.vonMir && a.empfaenger.length === 1 ? taStatus(a, a.empfaenger[0]) : null;
   return `<div class="karte" id="ta-${a.id}" style="border-left:6px solid var(--gold)${ab ? ";opacity:.65" : ""}">
     <span class="marke gelb">📨 Terminanfrage</span>${ab ? ' <span class="marke">🚫 abgesagt</span>' : einer ? ` <span class="marke ta-st-${einer.k}">${einer.sym} ${einer.t}</span>` : ""}${!ab && a.frist ? ` <span class="marke">⏳ Antwort bis ${esc(wann(a.frist))}</span>` : ""}
@@ -29404,7 +29463,7 @@ function taKarte(a) {
     ${a.vorbehalt && !ab ? `<p class="ta-vorbehalt">🤔 <b>Unter Vorbehalt</b> (${esc(a.vonMir ? "deiner" : a.von.vorname)}): „${esc(a.vorbehalt)}“</p>` : ""}
     ${!a.vonMir && !ab ? `<div class="ta-antw">${k("ja")}${k("vielleicht")}${k("nein")}</div>
       ${a.meine ? `<div class="hinweis" style="font-size:.8rem;margin-top:4px">Nochmal auf deine Antwort tippen nimmt sie zurück.${a.meineNotiz ? ` Deine Notiz: „${esc(a.meineNotiz)}“` : ""}</div>` : ""}
-      ${a.meinVorschlag ? `<div class="hinweis" style="margin-top:4px">🔄 Dein Gegenvorschlag: <b>${esc(taVWann(a.meinVorschlag))}</b> – ${esc(a.von.vorname)} entscheidet.</div>` : ""}
+      ${a.meinVorschlag ? `<div class="hinweis" style="margin-top:4px">🔄 Dein Gegenvorschlag: <b>${esc(taVWann(a.meinVorschlag))}</b> – ${esc(a.von.vorname)} entscheidet.</div>` : a.meinVorschlagAlt ? `<div class="hinweis ta-valt" style="margin-top:4px">${esc(taVAltText(a.meinVorschlagAlt, true))}</div>` : ""}
       ${a.spiel ? "" : a.gegenvorschlag === false ? `<div class="hinweis" style="font-size:.82rem;margin-top:6px">🔒 Gegenvorschläge sind bei dieser Anfrage nicht möglich – die Zeit steht fest.</div>` : `<button type="button" class="knopf klein" style="margin-top:6px" onclick="taGegenvorschlag('${a.id}')">🔄 ${a.meinVorschlag ? "Anderen Vorschlag machen" : "Andere Zeit vorschlagen"}</button>`}` : ""}
     ${ab ? "" : `<details style="margin-top:8px"${a.vonMir ? " open" : ""}><summary class="hinweis">✅ ${n("ja")} · 🤔 ${n("vielleicht")} · ❌ ${n("nein")} · ⏳ ${offen} offen</summary>${wer}</details>`}
     ${!ab && (a.vonMir || a.meine === "ja" || a.meine === "vielleicht") ? erinZeileHtml(a.erinnerung, `erinAnfrage('${a.id}')`, a.erinnerungStandard) : ""}
@@ -29492,6 +29551,9 @@ function taStatus(a, e) {
   return { k: "an", sym: "📨", t: "angefragt" };
 }
 const taVWann = (v) => wann(v.beginn) + (v.ende ? ` – ${fZeit.format(new Date(v.ende))} Uhr` : "");
+// KC-CLUB-ANFRAGE-VORSCHLAG-BLEIBT (22.11.2026, Wunsch Hansi): früherer Gegenvorschlag (danach Ja/Nein/Vielleicht oder entschieden) bleibt als Hinweis –
+// „🔄 hatte Mo., 23.11., 16:30–18:00 vorgeschlagen (15.11.)“; kein Annehmen-Knopf mehr (der hängt nur am offenen e.vorschlag).
+const taVAltText = (v, du) => `🔄 ${du ? "Du hattest" : "hatte"} ${fTag.format(new Date(v.beginn))}, ${fZeit.format(new Date(v.beginn))}${v.ende ? "–" + fZeit.format(new Date(v.ende)) : ""} vorgeschlagen${v.am ? ` (${fKurz.format(new Date(v.am))})` : ""}${v.status === "angenommen" ? " · ✅ angenommen" : v.status === "abgelehnt" ? " · ❌ abgelehnt" : ""}`;
 const taAnWen = (a) => (a.empfaenger.length === 1 ? a.empfaenger[0].vorname || a.empfaenger[0].name : a.empfaenger.length <= 3 ? a.empfaenger.map((e) => e.vorname || e.name).join(", ") : a.empfaenger.length + " Mitglieder");
 function taGegenvorschlag(id) {
   const a = TA.liste.find((x) => x.id === id); if (!a) return;
@@ -35703,17 +35765,21 @@ function dpdKopfHalb(S) {
   return { oben: oben.join(""), unten: S.map((s) => `<th class="hm${dpdHk(s)}">${s % 1 ? ":30" : ":00"}</th>`).join("") };
 }
 const dpdHk = (s) => (s % 1 ? " hb" : " hv");
+// KC-CLUB-DP-PDF-ZEBRA: jede zweite Person eines Tages (rows = Zeilen nur dieses Tages → je Tag neu, erste Person weiß; nur art p zählt)
+const dpdZebra = (rows, i) => rows[i].art === "p" && rows.slice(0, i).filter((x) => x.art === "p").length % 2 === 1;
 function dpdTabelle(tage, von, teil, letzte) {
   const S = dpdSlots(von, von + tage[0].rows[0].cells.length / 2), idx = teil.map((s) => S.indexOf(s)), rechts = teil[teil.length - 1] === letzte, K = dpdKopfHalb(teil);
   const kopf = `<colgroup><col class="tag"><col class="wer">${teil.map(() => "<col>").join("")}${rechts ? '<col class="std">' : ""}</colgroup><thead><tr><th class="tag" rowspan="2">Tag · Regelzeit</th><th class="wer" rowspan="2">Mitglied</th>${K.oben}${rechts ? '<th class="std" rowspan="2">Std.</th>' : ""}</tr><tr class="hm">${K.unten}</tr></thead>`;
   // 3.0.0 KC-CLUB-DRUCK-TAG-GANZ (Hansi 21.11.: „trenne keine Tage – keinen Tagesumbruch, sonst verliert man die Übersicht“): jeder Tag eigenes <tbody>, nie geteilt
+  // KC-CLUB-DP-PDF-ZEBRA (Hansi 22.11.: „jede zweite Linie minimal hellgrau“): jede zweite Person eines Tages bekommt die Klasse zb (nur
+  // background-color, kein Verlauf – KC-CLUB-DRUCK-OHNE-STREIFEN); je Tag neu gezählt, erste Person weiß, nur Personenzeilen (art p) zählen
   const body = tage.map((t) => `<tbody class="dpd-tag">${t.rows.map((r, i) => {
     const tag = i ? "" : `<th class="tag" rowspan="${t.rows.length}"><b>${t.wt} ${t.dt}</b><span class="kind">${esc(t.name)}</span><span class="regel">${esc(t.regel)} Uhr</span><span class="zahl">${t.art === "Markttag" ? `Regelzeit ${dpdStd(t.regelStd)} Std.` : "aus Wunschplänen, keine Vorgabe"}</span><span class="zahl">Bedarf ${dpdStd(t.bedarfStd)} Std.</span>${t.wunschStd !== undefined ? `<span class="zahl">gewünscht ${dpdStd(t.wunschStd)} Std.</span>` : `<span class="zahl">eingeplant ${dpdStd(t.einpl)} Std.</span><span class="bil ${t.fehl ? "rot" : "gruen"}">● ${t.fehl ? "fehlt " + dpdStd(t.fehl) + " Std." : "richtig besetzt"}</span>${t.ueber ? `<span class="bil gelb">● ${dpdStd(t.ueber)} Std. zu viel</span>` : ""}`}</th>`;
     const zellen = idx.map((k, j) => { let [cl, txt] = r.cells[k];
       if (j === 0 && r.dienst && !txt && teil[0] > r.dienst[0] && teil[0] < r.dienst[1]) txt = `${dpdUhr(r.dienst[0])}–${dpdUhr(r.dienst[1])}`; // läuft vom linken Blatt herüber
       return `<td class="${cl}${dpdHk(teil[j])}">${txt ? `<span>${esc(txt)}</span>` : ""}</td>`; }).join("");
     const std = rechts ? `<td class="std ${r.art}"><b>${esc(r.std)}</b><small>${esc(r.klein)}</small></td>` : "";
-    return `<tr class="${r.art}${i ? "" : " erste"}">${tag}<th class="wer ${r.art}">${esc(r.name)}<small>${esc(r.sub)}</small></th>${zellen}${std}</tr>`; }).join("")}</tbody>`).join("");
+    return `<tr class="${r.art}${i ? "" : " erste"}${dpdZebra(t.rows, i) ? " zb" : ""}">${tag}<th class="wer ${r.art}">${esc(r.name)}<small>${esc(r.sub)}</small></th>${zellen}${std}</tr>`; }).join("")}</tbody>`).join("");
   return `<table class="dpd-raster">${kopf}${body}</table>`;
 }
 function dpdUebersichtWunsch(tage, ges) { // 2.996.0 letztes Blatt des Wunschplans: Wunschstunden je Person und Tag
@@ -35887,17 +35953,18 @@ function dpdEinsatzBlatt(d) {
     const pos = (a, e) => `left:${(a / n) * 100}%;width:${((e - a) / n) * 100}%`, idx = (h) => Math.round((h - von0) * 2) - i0;
     const soll = t.bedarf.slice(i0, i1).reduce((p, q) => p + q, 0) / 2, ist = t.leute.filter((l) => l.s).reduce((p, l) => p + l.s[1] - l.s[0], 0), fehlt = t.fehlt.reduce((p, q) => p + q, 0) / 2;
     // 3.3.0 KC-CLUB-DP-PDF-MATRIX: Achse zweizeilig – oben „8 Uhr“ über beide Halbstunden, darunter klein „:00 | :30“
+    // KC-CLUB-DP-PDF-ACHSE (Hansi 22.11.): Klasse „ah“ statt „h“ – „h“ ist „hinten“ (#druck .dpe .h dunkelblau) und färbte die Kopfzeile
     const achse = (() => { const out = []; for (let k = 0; k < n;) { const s = v + k / 2, zwei = !(s % 1) && k + 1 < n;
-      out.push(`<i class="h${zwei ? " zwei" : ""}"><span>${!(s % 1) || k === 0 ? `${Math.floor(s)} Uhr` : ""}</span><small>${zwei ? "<em>:00</em><em>:30</em>" : `<em>${s % 1 ? ":30" : ":00"}</em>`}</small></i>`); k += zwei ? 2 : 1; }
+      out.push(`<i class="ah${zwei ? " zwei" : ""}"><span>${!(s % 1) || k === 0 ? `${Math.floor(s)} Uhr` : ""}</span><small>${zwei ? "<em>:00</em><em>:30</em>" : `<em>${s % 1 ? ":30" : ":00"}</em>`}</small></i>`); k += zwei ? 2 : 1; }
       return out.join(""); })();
-    const zeile = (name) => {
-      const l = t.leute.find((y) => y.n === name), w = l ? l.w : "", segs = [];
+    const zeile = (name, nr) => { // KC-CLUB-DP-PDF-ZEBRA: beide Zeilen einer Person gleich, jede zweite Person zb – je Tag (Seite) neu gezählt, erste weiß
+      const l = t.leute.find((y) => y.n === name), w = l ? l.w : "", segs = [], zb = nr % 2 === 1 ? " zb" : "";
       for (let k = i0; k < i1;) { const c = w[k]; let j = k; while (j < i1 && w[j] === c) j++; if (ART[c]) segs.push([c, k - i0, j - i0]); k = j; }
       const wStd = [...w.slice(i0, i1)].filter((c) => c === "p").length / 2, dauer = l?.s ? l.s[1] - l.s[0] : 0;
       const angaben = segs.length ? segs.map(([c, a, e]) => `<b class="seg ${ART[c]}" style="${pos(a, e)}">${e - a >= 3 ? `${ARTX[c]} ${kurz(v + a / 2)}–${kurz(v + e / 2)}` : ""}</b>`).join("") : '<span class="nix">keine Angabe</span>';
       const balken = l?.s ? `<b class="bal ${zone(l.z)}" style="${pos(idx(l.s[0]), idx(l.s[1]))}">${kurz(l.s[0])}–${kurz(l.s[1])}${dauer > 6 ? " ☕" : ""}</b>` : "";
-      return `<tr class="wz${l?.s ? "" : " frei"}"><td class="nm" rowspan="2">${esc(name)}<small>${esc(zusatz(l?.z))}</small></td><td class="zt art">Angaben</td><td class="gr">${dpeRl(n, v)}${angaben}</td><td class="st klein">W ${dpdStd(wStd)}</td></tr>
-        <tr class="sz${l?.s ? "" : " frei"}"><td class="zt">${l?.s ? `${uhr(l.s[0])}–${uhr(l.s[1])}` : "—"}</td><td class="gr">${dpeRl(n, v)}${balken}</td><td class="st">S ${l?.s ? dpdStd(dauer) : "0"}</td></tr>`;
+      return `<tr class="wz${l?.s ? "" : " frei"}${zb}"><td class="nm" rowspan="2">${esc(name)}<small>${esc(zusatz(l?.z))}</small></td><td class="zt art">Angaben</td><td class="gr">${dpeRl(n, v)}${angaben}</td><td class="st klein">W ${dpdStd(wStd)}</td></tr>
+        <tr class="sz${l?.s ? "" : " frei"}${zb}"><td class="zt">${l?.s ? `${uhr(l.s[0])}–${uhr(l.s[1])}` : "—"}</td><td class="gr">${dpeRl(n, v)}${balken}</td><td class="st">S ${l?.s ? dpdStd(dauer) : "0"}</td></tr>`;
     };
     const zahlen = (f) => `<div class="zahlen">${Array.from({ length: n }, (_, k) => f(k + i0)).join("")}</div>`;
     const ber = (t.ber || []).length ? t.ber.map((z) => `<tr class="ber"><td class="nm">☎ ${esc(z.n)}<small>Bereitschaft</small></td><td class="zt">${uhr(z.s[0])}–${uhr(z.s[1])}</td><td class="gr">${dpeRl(n, v)}<b class="bal bs" style="${pos(Math.max(0, idx(z.s[0])), Math.min(n, idx(z.s[1])))}">Bereitschaft ${kurz(z.s[0])}–${kurz(z.s[1])}</b></td><td class="st"></td></tr>`).join("")
@@ -35908,7 +35975,7 @@ function dpdEinsatzBlatt(d) {
       <div class="dpe-tag"><div><b>${DPD_WD[x.getDay()]} ${t.d.slice(8, 10)}.${t.d.slice(5, 7)}.${t.d.slice(0, 4)}</b> · ${esc(dpdArtName(t.art, x))} · Regelzeit <b>${uhr(v)}–${uhr(b)} Uhr</b></div>
         <div>Soll <b>${dpdStd(soll)} Std.</b> · eingeteilt <b>${dpdStd(ist)} Std.</b> · ${fehlt ? `<span class="rot">fehlt ${dpdStd(fehlt)} Std.</span>` : '<span class="gruen">voll besetzt ✓</span>'}</div></div>
       <table class="dpe-tab"><thead><tr><th class="nm">Person</th><th class="zt">Zeit</th><th class="gr achse">${achse}</th><th class="st">Std.</th></tr></thead>
-        <tbody>${alle.map(zeile).join("")}</tbody>
+        <tbody>${alle.map((name, nr) => zeile(name, nr)).join("")}</tbody>
         <tbody class="stat"><tr><td class="nm">Besetzt</td><td class="zt">je ½ Std.</td><td class="gr">${zahlen((i) => `<i class="${t.besetzt[i] < t.bedarf[i] ? "rot" : t.besetzt[i] > t.bedarf[i] ? "gelb" : "gruen"}">${t.besetzt[i]}</i>`)}</td><td class="st">${dpdStd(ist)}</td></tr>
           <tr><td class="nm">Soll</td><td class="zt"></td><td class="gr">${zahlen((i) => `<i class="soll">${t.bedarf[i]}</i>`)}</td><td class="st">${dpdStd(soll)}</td></tr>
           ${fehlt ? `<tr><td class="nm rot">Fehlt</td><td class="zt"></td><td class="gr">${zahlen((i) => `<i class="${t.fehlt[i] ? "rot" : ""}">${t.fehlt[i] || ""}</i>`)}</td><td class="st rot">${dpdStd(fehlt)}</td></tr>` : ""}</tbody>

@@ -146,6 +146,7 @@ jobs:
       - run: node tests/sb-region.test.mjs
       - run: node tests/rollkartei-rolle.test.mjs
       - run: node tests/anfrage-gegenvorschlag.test.mjs
+      - run: node tests/anfrage-vorschlag-bleibt.test.mjs
       - run: node tests/netz-balken.test.mjs
       - run: node tests/muenze-gesicht.test.mjs
       - run: node tests/ta-tagesordnung.test.mjs
@@ -222,6 +223,7 @@ jobs:
       - run: node tests/video-stimme-stumm.test.mjs
       - run: node tests/advent-2026.test.mjs
       - run: node tests/advent-preise.test.mjs
+      - run: node tests/advent-gadgets.test.mjs
       - run: node tests/erstattung-sicher.test.mjs
       - run: node tests/ablage-neu.test.mjs
       - run: node tests/genesungskarte.test.mjs
@@ -269,9 +271,11 @@ jobs:
       - run: node tests/chatfoto-speichern.test.mjs
       - run: node tests/senden-nach-upload.test.mjs
       - run: node tests/notaus.test.mjs
+      - run: node tests/kartei-wege.test.mjs
       - run: node tests/dp-bereitschaft-weit.test.mjs
       - run: node tests/dp-einzelplan.test.mjs
       - run: node tests/dp-pdf-matrix.test.mjs
+      - run: node tests/dp-pdf-zebra.test.mjs
       - run: node tests/actions-fest.test.mjs
       - run: node tests/wege-links.test.mjs
       - run: node tests/db-aussetzer.test.mjs

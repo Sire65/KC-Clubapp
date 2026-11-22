@@ -76,5 +76,22 @@ assert.ok(/id: "notaus", thema: "nachrichten"/.test(app), "Hilfe-Tipp");
 const uhr = new Function(app.match(/const notausUhr = [^\n]*/)[0].replace("const notausUhr =", "return"))();
 assert.equal(uhr("2026-11-21T13:03:00Z"), "14:03", "Winterzeit Berlin");
 
+// ---- KC-NOTAUS-OBEN (22.11.2026, Wunsch Hansi „eine ganze Zeile verschwendet“): Knopf oben in der Kopfzeile links neben 🚨 SOS, keine eigene Zeile ----
+const kopf = html.match(/<section id="v-nachrichten"[\s\S]*?<div class="kopf2">([\s\S]*?)<\/div>/)[1];
+assert.ok(/<h2>💬 Nachrichten<\/h2><span id="naNotausPlatz" class="notaus-platz"><\/span>(<!--[^>]*-->)?<button class="knopf klein alarm-knopf" id="naSosKnopf"/.test(kopf), "Platz in der Kopfzeile direkt links neben SOS");
+assert.ok(!/notaus-zeile|notaus-hinweis/.test(app + html), "keine eigene NOT-AUS-Zeile mehr (auch kein CSS dafür)");
+assert.ok(/const pl = \$\("naNotausPlatz"\);/.test(app) && /pl\.innerHTML = knopf;/.test(app) && /na\.innerHTML = balken;/.test(app), "Knopf in die Kopfzeile, #naNotaus nur noch Balken");
+assert.ok(/const knopf = admin && !NOTAUS\.aktiv \? `<button type="button" class="notaus-knopf klein" id="notausKnopf"/.test(app), "kleiner Knopf, nur Admin, nicht bei aktivem NOT-AUS");
+assert.ok(/\.notaus-knopf\.klein \{ width: 40px; height: 40px;/.test(html), "etwa SOS-Höhe");
+assert.ok(/\.notaus-platz:empty \{ display: none; \}/.test(html) && /#naNotausPlatz:empty \+ #naSosKnopf \{ margin-left: auto; \}/.test(html), "ohne Knopf steht SOS wie bisher rechts");
+assert.ok(/const ab = \(e\) => \{ const kurz = !!NOTAUS\.halt; notausHaltEnde\(k, true\); if \(kurz && \(e\?\.type === "pointerup" \|\| e\?\.type === "keyup"\)\) notausTipp\(k\); \};/.test(app), "kurz antippen → Hinweis (nicht bei Abbruch)");
+assert.ok(/function notausTipp\(k\) \{/.test(app) && app.includes("1,5 s halten = alle Nachrichten stoppen") && /id="notausProbeKnopf"/.test(app) && /\.onclick = \(\) => \{ t\.remove\(\); notausProbe\(\); \};/.test(app), "Blase mit Hinweis und Probe-NOT-AUS");
+assert.ok(/if \(f >= 1\) \{ notausHaltEnde\(k, false\); notausAusloesen\(\); \}/.test(app), "Auslösen nach 1,5 s halten unverändert");
+
+// ---- KC-NOTAUS-PULS: Titel pulsiert rot, solange aktiv (für alle), wie das Inkognito-Pulsieren ----
+assert.ok(app.includes('document.querySelector("#v-nachrichten .kopf2 > h2")?.classList.toggle("notaus-puls", NOTAUS.aktiv);'), "Titel-Puls an/aus mit dem NOT-AUS");
+assert.ok(/#v-nachrichten \.kopf2 > h2\.notaus-puls \{ animation: notausTitelPuls 1\.2s ease-in-out infinite; \}/.test(html) && /@keyframes notausTitelPuls \{[^\n]*#ff1744/.test(html), "rot pulsierend im Inkognito-Takt");
+assert.ok(/@media \(prefers-reduced-motion: reduce\) \{ #v-nachrichten \.kopf2 > h2\.notaus-puls \{ animation-duration: 2\.4s; \} \}/.test(html), "weniger Bewegung wie beim Inkognito");
+
 assert.ok(lies(".github/workflows/tests.yml").includes("node tests/notaus.test.mjs"), "läuft in der CI");
 console.log("notaus: ok");

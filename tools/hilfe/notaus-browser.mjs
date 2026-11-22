@@ -1,3 +1,4 @@
+// KC-NOTAUS-OBEN (22.11.2026): Knopf oben in der Kopfzeile links neben 🚨 SOS, keine eigene Zeile; kurz antippen → Hinweis-Blase mit Probe-NOT-AUS.
 // KC-NOTAUS (21.11.2026): Browser-Prüfung mit dem echten app.js – Pilzknopf nur für den Admin, 1,5 s halten löst aus (kürzer nicht), Probe ändert nichts,
 // roter Balken + gesperrtes Schreibfeld, Entriegeln-Fenster mit drei Knöpfen, 423 vom Server → freundliche Meldung, 390 px ohne Überlauf.
 // Nur Testdaten – nichts an den Server (KC-TESTS-OHNE-ECHTSERVER).
@@ -36,17 +37,24 @@ await seite.evaluate(() => {
     return {}; };
   $("gesperrt").classList.add("versteckt"); $("app").classList.remove("versteckt");
 });
-const als = (admin) => seite.evaluate((admin) => { ICH = { ...(ICH || {}), person_id: admin ? "P1" : "P2", name: "Test", vorname: "Test", admin, vorstand: admin, buero: false }; MITGLIEDER = MITGLIEDER || []; zeige("nachrichten"); }, admin);
+const als = (admin) => seite.evaluate((admin) => { ICH = { ...(ICH || {}), person_id: admin ? "P1" : "P2", name: "Test", vorname: "Test", admin, vorstand: admin, buero: false }; document.body.classList.toggle("ist-admin", admin); MITGLIEDER = MITGLIEDER || []; zeige("nachrichten"); }, admin);
 // 1) Mitglied: kein Knopf
 await als(false); await seite.waitForTimeout(400);
 ok(await seite.evaluate(() => !document.getElementById("notausKnopf")), "Mitglied sieht keinen NOT-AUS-Knopf");
 // 2) Admin: Knopf sichtbar, 390 px ohne Überlauf
 await als(true); await seite.waitForTimeout(400); await weg();
-const k = await seite.evaluate(() => { const b = document.getElementById("notausKnopf")?.getBoundingClientRect(); return b && { w: b.width, r: b.right, sichtbar: b.width > 0 && b.height > 0 }; });
-ok(k?.sichtbar && k.w >= 56 && k.r <= 390, "Admin sieht den Pilzknopf (" + JSON.stringify(k) + ")");
-ok(!(await ueberlauf()), "390 px ohne Überlauf (Knopf)");
+const k = await seite.evaluate(() => { const b = document.getElementById("notausKnopf")?.getBoundingClientRect(), s = $("naSosKnopf").getBoundingClientRect(), n = document.querySelector("#v-nachrichten .kopf2 > .knopf.haupt").getBoundingClientRect();
+  return b && { w: b.width, h: b.height, r: b.right, sosH: s.height, sichtbar: b.width > 0 && b.height > 0, inKopf: !!document.querySelector("#v-nachrichten .kopf2 #notausKnopf"), linksVonSos: b.right <= s.left + 1 && s.left - b.right < 20,
+    eineReihe: Math.abs((b.top + b.bottom) / 2 - (s.top + s.bottom) / 2) < 3 && Math.abs(s.top - n.top) < 3, zeile: !!document.querySelector(".notaus-zeile"), naLeer: $("naNotaus").classList.contains("versteckt") }; });
+ok(k?.sichtbar && k.inKopf && k.linksVonSos && k.eineReihe && k.r <= 390, "Admin sieht den Pilzknopf oben links neben SOS (" + JSON.stringify(k) + ")");
+ok(k.h >= 36 && k.h <= k.sosH + 8, "Knopf etwa in SOS-Höhe");
+ok(!k.zeile && k.naLeer, "keine eigene NOT-AUS-Zeile mehr");
+ok(!(await ueberlauf()) && await seite.evaluate(() => { const k = document.querySelector("#v-nachrichten .kopf2"); return k.scrollWidth <= k.clientWidth + 1; }), "390 px ohne Überlauf (Kopfzeile)");
 await bild("notaus-1-knopf");
-// 3) Probe ändert nichts
+// 3) kurz antippen → Hinweis-Blase, darin Probe – ändert nichts
+await seite.click("#notausKnopf"); await seite.waitForTimeout(300);
+ok(/1,5 s halten = alle Nachrichten stoppen/.test(await seite.evaluate(() => $("notausTipp")?.textContent || "")) && await seite.evaluate(() => !NOTAUS.aktiv), "kurz antippen → Hinweis „1,5 s halten …“ mit Probe, nichts ausgelöst");
+await bild("notaus-1b-tipp");
 await seite.click("#notausProbeKnopf"); await seite.waitForTimeout(300);
 ok(/Würde 7 Aufträge anhalten/.test(await meldungen()) && await seite.evaluate(() => !NOTAUS.aktiv), "Probe-NOT-AUS: „Würde 7 Aufträge anhalten“, nichts aktiv");
 await weg();
@@ -69,6 +77,9 @@ ok(/NOT-AUS seit 14:03 – Nachrichten sind angehalten/.test(balken) && /Entrieg
 ok(await seite.evaluate(() => $("text").disabled && $("sendenKnopf").disabled), "Schreibfeld und ➤ gesperrt");
 ok(!(await ueberlauf()), "390 px ohne Überlauf (Balken)");
 await bild("notaus-3-aktiv");
+const puls = () => seite.evaluate(() => { const h = document.querySelector("#v-nachrichten .kopf2 > h2"); return h.classList.contains("notaus-puls") && getComputedStyle(h).animationName === "notausTitelPuls"; });
+ok(await puls(), "KC-NOTAUS-PULS: Titel „Nachrichten“ pulsiert, solange aktiv");
+await weg(); await seite.waitForTimeout(600); await bild("notaus-puls");
 // 7) Chat: Balken auch dort
 await seite.evaluate(() => { zeige("chat"); }); await seite.waitForTimeout(300);
 ok(/NOT-AUS seit 14:03/.test(await seite.evaluate(() => document.querySelector("#chatNotaus")?.textContent || "")), "Balken auch im Chat");
@@ -86,6 +97,7 @@ ok(/jetzt senden\?/.test(await seite.evaluate(() => document.querySelector(".dlg
 await seite.evaluate(() => document.querySelector(".dlg-blatt [data-w='1']").click()); await seite.waitForTimeout(500);
 ok(await seite.evaluate(() => !NOTAUS.aktiv && !$("text").disabled && __api.some((x) => x.a === "notaus_entriegeln" && x.p.aktion === "senden")), "entriegelt, Schreibfeld frei");
 ok(/Entriegelt – 7 Aufträge gehen jetzt raus/.test(await meldungen()), "Meldung nach dem Entriegeln");
+ok(!(await puls()), "KC-NOTAUS-PULS: nach dem Entriegeln sofort aus");
 await weg();
 // 9) Mitglied sendet, Server meldet 423 NOT-AUS (abgeschirmte Antwort) → freundliche Meldung, Balken erscheint
 await als(false); await seite.waitForTimeout(200);
@@ -93,6 +105,7 @@ const e = await seite.evaluate(async () => { try { await apiRoh("nachricht_sende
 await seite.waitForTimeout(300);
 ok(e?.notaus && await seite.evaluate(() => NOTAUS.aktiv && !!document.querySelector("#naNotaus .notaus-balken") && !document.querySelector("#naNotaus #notausEntriegeln")), "423 → NOT-AUS-Balken für das Mitglied (ohne Entriegeln)");
 ok(/NOT-AUS: Nachrichten sind gerade angehalten/.test(await meldungen()) && await seite.evaluate(() => ![...document.querySelectorAll(".meldung")].some((m) => /fehler/.test(m.className))), "freundliche Meldung statt Fehlerfenster");
+ok(await puls(), "KC-NOTAUS-PULS: auch beim Mitglied");
 await bild("notaus-5-mitglied");
 ok(!fehler.length, "keine Seitenfehler" + (fehler.length ? ": " + fehler.join(" | ") : ""));
 await browser.close(); srv.close();
