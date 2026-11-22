@@ -1,5 +1,12 @@
 # Änderungen
 
+## (Version folgt) – 📱 iPad nicht mehr doppelt „online“ (KC-CLUB-ONLINE-GERAET-IPAD)
+Fund Hansi 22.11.: Admin bekam „Marianne am PC ist jetzt online“ und direkt danach „Marianne am Tablet ist jetzt online“ – sie war nur am iPad (installierte App, Safari meldet sich als „Macintosh“).
+- **Ursache:** Den Geräte-Hinweis der App (iPad = Mac + Berührung → Tablet) schickte nur der Online-Abgleich (`online`). Die „ist jetzt online“-Push entsteht aber bei der **ersten** Anfrage nach der Pause (meist `init`) – dort sah der Server nur „Macintosh“ und schrieb „am PC“. Die Online-Liste sagte danach richtig „am Tablet“ – und weil die App sich gemeldete Namen samt Gerät merkte, kam eine zweite Ansage.
+- **App:** jede Anfrage trägt den Geräte-Hinweis im Inhalt (`_g`, keine neue Kopfzeile – CORS beim Einspielen unverändert). Ansage/Push-Sperre wird je **Person** gemerkt (ohne „(am …)“): wechselt nur die Geräte-Angabe, kommt keine zweite Meldung, die Online-Liste zeigt still das neue Gerät.
+- **Club-Server:** „Macintosh“ ohne Hinweis = unklar statt „PC“ (Windows/ChromeOS/Linux bleiben PC); unklar → zuletzt bekanntes Gerät der Person aus ihrem Online-Abgleich, sonst ohne Gerät.
+- Test `tests/online-geraet-ipad.test.mjs`.
+
 ## 3.4.0 – 2026-11-21 – ⛔ NOT-AUS für Nachrichten, Push und E-Mails (KC-NOTAUS)
 Wunsch Hansi 21.11.: „roter Notfall-Knopf wie an technischen Maschinen – sofort Nachrichten und auch E-Mails im KC Communicator stoppen, damit nix rausgeht“; Freigabe „Alle Nachrichten stoppen und den Not-Aus in das Nachrichten-Modul und auch in KC Communicator“.
 - **Pilzknopf (nur Admin):** in 💬 Nachrichten oben ein roter Pilzknopf auf gelbem Ring. **1,5 s gedrückt halten** löst aus (der Ring füllt sich; vorher loslassen = nichts), keine Rückfrage → „⛔ NOT-AUS ausgelöst – N angehalten“. Daneben „Probe-NOT-AUS“: zählt nur („Würde N Aufträge anhalten“).
