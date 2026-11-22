@@ -9531,12 +9531,27 @@ async function terminanfragenListe(ich: Ich, zeitraum?: { von: string; bis: stri
       protokoll: a.protokoll && (a.erstellt_von === ich.person_id || a.protokoll.status === "gesendet") ? a.protokoll : null, // KC-CLUB-TA-PROTOKOLL: Angefragte sehen es erst, wenn es verschickt ist gegenvorschlag: a.gegenvorschlag !== false, vorbehalt: a.vorbehalt ?? null, anlagen: anl.get(a.id) ?? [],
       vonMir: a.erstellt_von === ich.person_id, von: { person_id: a.erstellt_von, name: name(a.erstellt_von), vorname: vorname(leute.get(a.erstellt_von)) || name(a.erstellt_von) },
       meine: mein?.antwort ?? null, meineNotiz: mein?.notiz ?? null, meinGelesen: mein?.gelesen_am ?? null, // KC-CLUB-TERMINANFRAGE-STATUS (2.23.50)
-      meinVorschlag: mein?.vorschlag_beginn ? { beginn: mein.vorschlag_beginn, ende: mein.vorschlag_ende } : null, erinnerung: erin.get(a.id) ?? null, erinnerungStandard: a.erinnerung_min || 0,
+      meinVorschlag: mein?.vorschlag_beginn ? { beginn: mein.vorschlag_beginn, ende: mein.vorschlag_ende } : null, meinVorschlagAlt: vorschlagAlt(mein), erinnerung: erin.get(a.id) ?? null, erinnerungStandard: a.erinnerung_min || 0,
       empfaenger: e.map((z: any) => ({ person_id: z.person_id, name: name(z.person_id), vorname: vorname(leute.get(z.person_id)) || name(z.person_id), antwort: z.antwort, notiz: z.notiz, geantwortet_am: z.geantwortet_am,
-        gelesen_am: z.gelesen_am, vorschlag: z.vorschlag_beginn ? { beginn: z.vorschlag_beginn, ende: z.vorschlag_ende } : null }))
+        gelesen_am: z.gelesen_am, vorschlag: z.vorschlag_beginn ? { beginn: z.vorschlag_beginn, ende: z.vorschlag_ende } : null, vorschlagAlt: vorschlagAlt(z) }))
         .sort((x: any, y: any) => x.name.localeCompare(y.name, "de")),
     };
   });
+}
+// KC-CLUB-ANFRAGE-VORSCHLAG-BLEIBT (22.11.2026, Wunsch Hansi): Ein Gegenvorschlag bleibt als „früherer Vorschlag“ sichtbar, wenn danach mit Ja/Nein/Vielleicht
+// geantwortet oder über ihn entschieden wird. vorschlag_beginn/_ende = offener Vorschlag (Annehmen/Ablehnen), vorschlag_alt_* = früherer (nur Hinweis).
+// Spalten aus Migration 20261122_kc_club_anfrage_vorschlag_bleibt.sql – gelesen wird über select("*") (fehlt die Spalte, ist sie einfach leer),
+// geschrieben über empfaengerAendern: fehlen die Spalten noch, wird ohne sie gespeichert (Verhalten wie vorher).
+const vorschlagAlt = (z: any) => z?.vorschlag_alt_beginn ? { beginn: z.vorschlag_alt_beginn, ende: z.vorschlag_alt_ende ?? null, am: z.vorschlag_alt_am ?? null, status: z.vorschlag_alt_status ?? null } : null;
+function vorschlagAltWerte(z: any, status: "angenommen" | "abgelehnt" | null) {
+  if (!z?.vorschlag_beginn) return null; // kein offener Vorschlag → früheren unverändert lassen
+  return { vorschlag_alt_beginn: z.vorschlag_beginn, vorschlag_alt_ende: z.vorschlag_ende ?? null, vorschlag_alt_am: z.geantwortet_am ?? jetzt(), vorschlag_alt_status: status };
+}
+const VORSCHLAG_ALT_LEER = { vorschlag_alt_beginn: null, vorschlag_alt_ende: null, vorschlag_alt_am: null, vorschlag_alt_status: null };
+async function empfaengerAendern(werte: Record<string, unknown>, alt: Record<string, unknown> | null, filter: (q: any) => any) {
+  const tab = () => db.from("kc_club_terminanfrage_empfaenger");
+  if (alt) { const { error } = await filter(tab().update({ ...werte, ...alt })); if (!error) return; }
+  await filter(tab().update(werte)); // ohne vorschlag_alt_* (Migration noch nicht eingespielt) bzw. nichts Früheres zu merken
 }
 const ANTWORT_TEXT: Record<string, string> = { ja: "✅ Ja", vielleicht: "🤔 Vielleicht", nein: "❌ Nein" };
 // KC-CLUB-ANFRAGE-ALLE-INFO (19.10.2026, Wunsch Hansi „wenn Zusagen, Absagen, andere Vorschläge kommen, müssen alle benachrichtigt werden“):
@@ -11414,9 +11429,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (a.status !== "offen") throw new Fehler("Diese Anfrage wurde abgesagt.", 409);
         if (new Date(a.ende || a.beginn).getTime() < Date.now() - 3 * 3600000) throw new Fehler("Der Termin ist schon vorbei.", 409);
         const notiz = antwort === "keine" ? null : txt(p.notiz, 300) || null;
-        await db.from("kc_club_terminanfrage_empfaenger").update({ antwort: antwort === "keine" ? null : antwort, notiz, geantwortet_am: antwort === "keine" ? null : jetzt(),
-          gelesen_am: z.gelesen_am || jetzt(), vorschlag_beginn: null, vorschlag_ende: null }) // Antwort ersetzt einen Gegenvorschlag
-          .eq("anfrage_id", a.id).eq("person_id", ich.person_id);
+        await empfaengerAendern({ antwort: antwort === "keine" ? null : antwort, notiz, geantwortet_am: antwort === "keine" ? null : jetzt(),
+          gelesen_am: z.gelesen_am || jetzt(), vorschlag_beginn: null, vorschlag_ende: null }, // Antwort ersetzt einen Gegenvorschlag
+          vorschlagAltWerte(z, null), (q) => q.eq("anfrage_id", a.id).eq("person_id", ich.person_id)); // KC-CLUB-ANFRAGE-VORSCHLAG-BLEIBT: als früheren merken
         if (antwort !== "keine" && (antwort !== z.antwort || notiz !== z.notiz)) {
           await senden("club_treffen", [a.erstellt_von], {
             titel: `${ANTWORT_TEXT[antwort]} von ${ich.vorname}`, kurz: `${a.anlass} – ${wann(a.beginn)}${notiz ? " · „" + notiz + "“" : ""}`,
@@ -11455,8 +11470,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (vb.getTime() < Date.now()) throw new Fehler("Der Vorschlag liegt in der Vergangenheit.");
         if (ve && (isNaN(ve.getTime()) || ve < vb)) throw new Fehler("Das Ende liegt vor dem Beginn.");
         const notiz = txt(p.notiz, 300) || null;
-        await db.from("kc_club_terminanfrage_empfaenger").update({ antwort: null, notiz, geantwortet_am: jetzt(), gelesen_am: z.gelesen_am || jetzt(),
-          vorschlag_beginn: vb.toISOString(), vorschlag_ende: ve ? ve.toISOString() : null }).eq("anfrage_id", a.id).eq("person_id", ich.person_id);
+        await empfaengerAendern({ antwort: null, notiz, geantwortet_am: jetzt(), gelesen_am: z.gelesen_am || jetzt(),
+          vorschlag_beginn: vb.toISOString(), vorschlag_ende: ve ? ve.toISOString() : null }, VORSCHLAG_ALT_LEER, // neuer offener Vorschlag löst den früheren ab
+          (q) => q.eq("anfrage_id", a.id).eq("person_id", ich.person_id));
         const vWann = wann(vb.toISOString()) + (ve ? ` bis ${fZeit.format(ve)} Uhr` : "");
         const versand = await senden("club_treffen", [a.erstellt_von], {
           titel: `🔄 Gegenvorschlag von ${ich.vorname}`, kurz: `${a.anlass}: lieber ${vWann}${notiz ? " · „" + notiz + "“" : ""}`,
@@ -11493,7 +11509,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           // neue Zeit: alle anderen werden neu gefragt, der Vorschlagende hat damit zugesagt; Erinnerungen laufen neu
           await db.from("kc_club_terminanfrage_empfaenger").update({ antwort: null, notiz: null, geantwortet_am: null, gelesen_am: null, vorschlag_beginn: null, vorschlag_ende: null })
             .eq("anfrage_id", a.id).neq("person_id", z.person_id);
-          await db.from("kc_club_terminanfrage_empfaenger").update({ antwort: "ja", geantwortet_am: jetzt(), vorschlag_beginn: null, vorschlag_ende: null }).eq("anfrage_id", a.id).eq("person_id", z.person_id);
+          await empfaengerAendern({ antwort: "ja", geantwortet_am: jetzt(), vorschlag_beginn: null, vorschlag_ende: null }, vorschlagAltWerte(z, "angenommen"),
+            (q) => q.eq("anfrage_id", a.id).eq("person_id", z.person_id)); // KC-CLUB-ANFRAGE-VORSCHLAG-BLEIBT
           await db.from("kc_club_erinnerungen").update({ gesendet_am: null }).eq("anfrage_id", a.id);
           const neu = { ...a, beginn: z.vorschlag_beginn, ende: z.vorschlag_ende };
           const { data: alle } = await db.from("kc_club_terminanfrage_empfaenger").select("person_id").eq("anfrage_id", a.id);
@@ -11509,7 +11526,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             text: `Hallo,\n\n${ich.name} hat die Zeit der Terminanfrage geändert:\n\n📌 ${a.anlass}\n📅 neu: ${anfrageWann(neu)}${vorbehalt ? zeile : ""}\n\nBitte in der Köcheclub-App neu antworten: ${APP_URL}#termine\n\nViele Grüße\nKöcheclub Werne`, url: APP_URL + "#termine",
           }, `club-terminanfrage-neuzeit:${a.id}:${Date.now()}`).catch(() => null);
         } else {
-          await db.from("kc_club_terminanfrage_empfaenger").update({ vorschlag_beginn: null, vorschlag_ende: null, geantwortet_am: null }).eq("anfrage_id", a.id).eq("person_id", z.person_id);
+          await empfaengerAendern({ vorschlag_beginn: null, vorschlag_ende: null, geantwortet_am: null }, vorschlagAltWerte(z, "abgelehnt"),
+            (q) => q.eq("anfrage_id", a.id).eq("person_id", z.person_id)); // KC-CLUB-ANFRAGE-VORSCHLAG-BLEIBT
           await senden("club_treffen", [z.person_id], {
             titel: `❌ Dein Vorschlag passt ${ich.vorname} leider nicht`, kurz: `${a.anlass} – es bleibt bei ${wann(a.beginn)}${zusatz ? " · „" + zusatz + "“" : ""}`,
             betreff: `Köcheclub Werne – Vorschlag passt nicht: ${a.anlass}`,

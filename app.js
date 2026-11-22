@@ -29415,7 +29415,7 @@ function taKarte(a) {
   const k = (w) => `<button class="knopf klein${a.meine === w ? " haupt" : ""}" onclick="taAntwort('${a.id}', '${a.meine === w ? "keine" : w}')">${TA_ANTW[w]}</button>`;
   const wer = a.empfaenger.map((e) => { const st = taStatus(a, e);
     return `<div class="ta-wer"><span class="ta-st ta-st-${st.k}">${st.sym} ${st.t}</span> ${esc(e.name)}${e.notiz ? ` <span class="hinweis">– „${esc(e.notiz)}“</span>` : ""}${(a.vonMir || ICH?.admin) && !ab && a.empfaenger.length > 1 ? ` <button type="button" class="ta-raus" title="${esc(e.name)} aus der Anfrage herausnehmen" aria-label="${esc(e.name)} aus der Anfrage herausnehmen" onclick="taHerausnehmen('${a.id}','${esc(e.person_id)}')">✕</button>` : ""}
-      ${a.vonMir && !ab && e.vorschlag ? `<div class="knoepfe ta-vk"><button class="knopf haupt klein" onclick="taVorschlagBlatt('${a.id}','${esc(e.person_id)}','ja')">✅ Neue Zeit annehmen</button><button class="knopf klein" onclick="taVorschlagBlatt('${a.id}','${esc(e.person_id)}','vorbehalt')">🤔 Unter Vorbehalt</button><button class="knopf klein" onclick="taVorschlagBlatt('${a.id}','${esc(e.person_id)}','nein')">❌ Passt nicht</button></div>` : ""}</div>`; }).join("");
+      ${e.vorschlagAlt && !e.vorschlag ? `<div class="hinweis ta-valt">${esc(taVAltText(e.vorschlagAlt))}</div>` : ""}${a.vonMir && !ab && e.vorschlag ? `<div class="knoepfe ta-vk"><button class="knopf haupt klein" onclick="taVorschlagBlatt('${a.id}','${esc(e.person_id)}','ja')">✅ Neue Zeit annehmen</button><button class="knopf klein" onclick="taVorschlagBlatt('${a.id}','${esc(e.person_id)}','vorbehalt')">🤔 Unter Vorbehalt</button><button class="knopf klein" onclick="taVorschlagBlatt('${a.id}','${esc(e.person_id)}','nein')">❌ Passt nicht</button></div>` : ""}</div>`; }).join("");
   const einer = a.vonMir && a.empfaenger.length === 1 ? taStatus(a, a.empfaenger[0]) : null;
   return `<div class="karte" id="ta-${a.id}" style="border-left:6px solid var(--gold)${ab ? ";opacity:.65" : ""}">
     <span class="marke gelb">📨 Terminanfrage</span>${ab ? ' <span class="marke">🚫 abgesagt</span>' : einer ? ` <span class="marke ta-st-${einer.k}">${einer.sym} ${einer.t}</span>` : ""}${!ab && a.frist ? ` <span class="marke">⏳ Antwort bis ${esc(wann(a.frist))}</span>` : ""}
@@ -29428,7 +29428,7 @@ function taKarte(a) {
     ${a.vorbehalt && !ab ? `<p class="ta-vorbehalt">🤔 <b>Unter Vorbehalt</b> (${esc(a.vonMir ? "deiner" : a.von.vorname)}): „${esc(a.vorbehalt)}“</p>` : ""}
     ${!a.vonMir && !ab ? `<div class="ta-antw">${k("ja")}${k("vielleicht")}${k("nein")}</div>
       ${a.meine ? `<div class="hinweis" style="font-size:.8rem;margin-top:4px">Nochmal auf deine Antwort tippen nimmt sie zurück.${a.meineNotiz ? ` Deine Notiz: „${esc(a.meineNotiz)}“` : ""}</div>` : ""}
-      ${a.meinVorschlag ? `<div class="hinweis" style="margin-top:4px">🔄 Dein Gegenvorschlag: <b>${esc(taVWann(a.meinVorschlag))}</b> – ${esc(a.von.vorname)} entscheidet.</div>` : ""}
+      ${a.meinVorschlag ? `<div class="hinweis" style="margin-top:4px">🔄 Dein Gegenvorschlag: <b>${esc(taVWann(a.meinVorschlag))}</b> – ${esc(a.von.vorname)} entscheidet.</div>` : a.meinVorschlagAlt ? `<div class="hinweis ta-valt" style="margin-top:4px">${esc(taVAltText(a.meinVorschlagAlt, true))}</div>` : ""}
       ${a.spiel ? "" : a.gegenvorschlag === false ? `<div class="hinweis" style="font-size:.82rem;margin-top:6px">🔒 Gegenvorschläge sind bei dieser Anfrage nicht möglich – die Zeit steht fest.</div>` : `<button type="button" class="knopf klein" style="margin-top:6px" onclick="taGegenvorschlag('${a.id}')">🔄 ${a.meinVorschlag ? "Anderen Vorschlag machen" : "Andere Zeit vorschlagen"}</button>`}` : ""}
     ${ab ? "" : `<details style="margin-top:8px"${a.vonMir ? " open" : ""}><summary class="hinweis">✅ ${n("ja")} · 🤔 ${n("vielleicht")} · ❌ ${n("nein")} · ⏳ ${offen} offen</summary>${wer}</details>`}
     ${!ab && (a.vonMir || a.meine === "ja" || a.meine === "vielleicht") ? erinZeileHtml(a.erinnerung, `erinAnfrage('${a.id}')`, a.erinnerungStandard) : ""}
@@ -29516,6 +29516,9 @@ function taStatus(a, e) {
   return { k: "an", sym: "📨", t: "angefragt" };
 }
 const taVWann = (v) => wann(v.beginn) + (v.ende ? ` – ${fZeit.format(new Date(v.ende))} Uhr` : "");
+// KC-CLUB-ANFRAGE-VORSCHLAG-BLEIBT (22.11.2026, Wunsch Hansi): früherer Gegenvorschlag (danach Ja/Nein/Vielleicht oder entschieden) bleibt als Hinweis –
+// „🔄 hatte Mo., 23.11., 16:30–18:00 vorgeschlagen (15.11.)“; kein Annehmen-Knopf mehr (der hängt nur am offenen e.vorschlag).
+const taVAltText = (v, du) => `🔄 ${du ? "Du hattest" : "hatte"} ${fTag.format(new Date(v.beginn))}, ${fZeit.format(new Date(v.beginn))}${v.ende ? "–" + fZeit.format(new Date(v.ende)) : ""} vorgeschlagen${v.am ? ` (${fKurz.format(new Date(v.am))})` : ""}${v.status === "angenommen" ? " · ✅ angenommen" : v.status === "abgelehnt" ? " · ❌ abgelehnt" : ""}`;
 const taAnWen = (a) => (a.empfaenger.length === 1 ? a.empfaenger[0].vorname || a.empfaenger[0].name : a.empfaenger.length <= 3 ? a.empfaenger.map((e) => e.vorname || e.name).join(", ") : a.empfaenger.length + " Mitglieder");
 function taGegenvorschlag(id) {
   const a = TA.liste.find((x) => x.id === id); if (!a) return;

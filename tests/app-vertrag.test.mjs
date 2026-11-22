@@ -4090,7 +4090,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/\.eq\("person_id", ich\.person_id\)\.in\("anfrage_id", ids\)\.is\("gelesen_am", null\)/.test(g), "gelesen nur eigene Zeilen, nur einmal");
   assert.ok(/if \(a\.spiel_id\) throw/.test(g) && /if \(a\.erstellt_von !== ich\.person_id\) throw new Fehler\("Entscheiden kann nur, wer angefragt hat\.", 403\)/.test(g), "Gegenvorschlag: nicht bei Spielen, entscheiden nur der Absender");
   assert.ok(/erinnerung_gesendet_am: null, kurz_erinnert_am: null/.test(g) && /kc_club_erinnerungen"\)\.update\(\{ gesendet_am: null \}\)/.test(g), "nach dem Verlegen laufen Erinnerungen neu");
-  assert.ok(/vorschlag_beginn: null, vorschlag_ende: null \}\) \/\/ Antwort ersetzt einen Gegenvorschlag/.test(server), "Antwort räumt den Gegenvorschlag weg");
+  assert.ok(/vorschlag_beginn: null, vorschlag_ende: null \}, \/\/ Antwort ersetzt einen Gegenvorschlag/.test(server), "Antwort räumt den Gegenvorschlag weg (KC-CLUB-ANFRAGE-VORSCHLAG-BLEIBT: als früheren gemerkt)");
   const mig = lies("supabase/migrations/20261005_kc_club_v22350_terminanfrage_status.sql");
   assert.ok(/add column if not exists gelesen_am timestamptz/.test(mig) && /add column if not exists vorschlag_beginn timestamptz/.test(mig) && !/drop column|delete|truncate/i.test(mig.replace(/^--.*$/gm, "")), "nur Spalten ergänzt");
 }

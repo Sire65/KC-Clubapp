@@ -17,7 +17,7 @@ assert.match(senden, /const gegenvorschlag = spielId \? true : p\.gegenvorschlag
 assert.match(senden, /if \(!gegenvorschlag\) werte\.gegenvorschlag = false;/, "Spalte nur mitschicken, wenn abgeschaltet");
 assert.match(senden, /keine Gegenvorschläge möglich/, "E-Mail nennt die feste Zeit");
 const gv = srv.slice(srv.indexOf('case "terminanfrage_gegenvorschlag"'), srv.indexOf('case "terminanfrage_vorschlag_entscheiden"'));
-const sperre = gv.indexOf("a.gegenvorschlag === false"), schreiben = gv.indexOf('update({ antwort: null');
+const sperre = gv.indexOf("a.gegenvorschlag === false"), schreiben = gv.indexOf('empfaengerAendern({ antwort: null'); // KC-CLUB-ANFRAGE-VORSCHLAG-BLEIBT
 assert.ok(sperre > 0 && sperre < schreiben, "Sperre vor dem Speichern");
 assert.match(srv, /gegenvorschlag: a\.gegenvorschlag !== false, vorbehalt:/);
 
