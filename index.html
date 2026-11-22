@@ -2989,6 +2989,10 @@
   .mg-was { position: absolute; top: 6px; right: 6px; width: 30px; height: 30px; min-height: 0; padding: 0; border-radius: 50%; border: 2px solid var(--textGruen); background: var(--karte); color: var(--textGruen); font: 900 1rem/1 system-ui, sans-serif; cursor: pointer; box-shadow: var(--schatten); }
   .mg-push.aus { opacity: .75; } /* 2.948.0 KC-CLUB-MG-PUSH-ZEICHEN; seit Hansi 16.11. unten bei den Knöpfen, für alle */
   .mg-was:focus-visible { outline: 3px solid var(--textGruen); outline-offset: 2px; }
+  /* KC-KARTEI-WEGE (22.11.2026): dasselbe „?“ oben rechts im Kopf der Karteikarte (Chats/Mitglieder) – im Kopf antippbar, obwohl der Kopf sonst nicht reagiert */
+  :is(.uhk, .mgk):has(> summary > .rk-was) > summary { display: flex; align-items: center; gap: 8px; }
+  :is(.uhk, .mgk) > summary > .rk-was { position: static; flex: none; margin-left: auto; pointer-events: auto; width: 30px; height: 30px; }
+  .uhk > summary .punkt ~ .rk-was { margin-left: 0; }
   .mg-kachel .mk-titel { text-align: center; }
   /* KC-CLUB-MG-ONLINE-FARBE (2.42.0, Wunsch Hansi): Kachel eines Mitglieds, das gerade online ist, sofort erkennbar grün */
   .mg-kacheln .mg-kachel.mg-online { background: var(--gruenbg); border-color: var(--textGruen); }
@@ -6207,8 +6211,6 @@
     body:not(.knoepfe-weg) :is(.su-klein, .hz-frage, .hz-klick):is(:active, :focus-visible), body.klick-zeigen:not(.knoepfe-weg) .hz-klick { opacity: 1; }
   }
 /* KC-NOTAUS (21.11.2026, Wunsch Hansi): roter Pilzknopf auf gelbem Ring wie an Maschinen – 1,5 s halten löst aus; roter Balken für alle */
-.notaus-zeile { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin: 2px 8px 6px; }
-.notaus-zeile .na-probe { background: none; border: 0; color: var(--text2, #666); font-size: .78rem; text-decoration: underline; cursor: pointer; padding: 4px; }
 .notaus-knopf { --fuell: 0; position: relative; width: 64px; height: 64px; border-radius: 50%; border: 0; padding: 0; cursor: pointer; flex: none;
   background: conic-gradient(#111 calc(var(--fuell) * 1turn), #ffd400 0); box-shadow: 0 0 0 2px #333, 0 2px 6px rgba(0,0,0,.35);
   touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
@@ -6218,7 +6220,19 @@
   box-shadow: inset 0 -3px 5px rgba(0,0,0,.45), 0 2px 3px rgba(0,0,0,.4); text-shadow: 0 1px 1px rgba(0,0,0,.6); transition: transform .1s; }
 .notaus-knopf.haelt .pilz { transform: scale(.92); }
 .notaus-knopf:focus-visible { outline: 3px solid #0a58ca; outline-offset: 2px; }
-.notaus-hinweis { font-size: .72rem; color: var(--text2, #666); max-width: 9em; line-height: 1.2; }
+/* KC-NOTAUS-OBEN (22.11.2026, Wunsch Hansi): Knopf klein in der Kopfzeile links neben 🚨 SOS, keine eigene Zeile; Hinweis + Probe als Blase beim Antippen */
+/* KC-NOTAUS-PULS (22.11.2026, Wunsch Hansi): Titel „💬 Nachrichten“ pulsiert rot, solange der NOT-AUS aktiv ist – Takt wie das Inkognito-Pulsieren (1,2 s, ruhiger bei weniger Bewegung) */
+#v-nachrichten .kopf2 > h2.notaus-puls { animation: notausTitelPuls 1.2s ease-in-out infinite; }
+@keyframes notausTitelPuls { 0%, 100% { color: #e53935; text-shadow: 0 0 0 rgba(255, 23, 68, 0); } 50% { color: #ff1744; text-shadow: 0 0 12px rgba(255, 23, 68, .9); } }
+@media (prefers-reduced-motion: reduce) { #v-nachrichten .kopf2 > h2.notaus-puls { animation-duration: 2.4s; } }
+.notaus-platz { display: inline-flex; align-items: center; flex: none; } .notaus-platz:empty { display: none; }
+#v-nachrichten .kopf2 > #naNotausPlatz:empty + #naSosKnopf { margin-left: auto; }
+.notaus-knopf.klein { width: 40px; height: 40px; box-shadow: 0 0 0 1.5px #333, 0 1px 4px rgba(0,0,0,.35); }
+.notaus-knopf.klein::before { inset: 4px; }
+.notaus-knopf.klein .pilz { inset: 7px; font: 900 .4rem/1.05 system-ui, sans-serif; letter-spacing: 0; text-align: center; box-shadow: inset 0 -2px 3px rgba(0,0,0,.45), 0 1px 2px rgba(0,0,0,.4); }
+.notaus-tipp { position: fixed; z-index: 9000; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; max-width: min(280px, calc(100vw - 16px)); box-sizing: border-box;
+  background: var(--karte, #fff); color: inherit; border: 2px solid #d00000; border-radius: 12px; padding: 8px 12px; box-shadow: 0 4px 14px rgba(0,0,0,.3); font-size: .88rem; }
+.notaus-tipp .na-probe { background: none; border: 0; color: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; padding: 4px 0; font-size: .88rem; }
 .notaus-balken { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; background: #c00000; color: #fff; font-weight: 700; padding: 8px 12px;
   border-radius: 10px; margin: 4px 8px 8px; box-shadow: 0 2px 6px rgba(160,0,0,.35); font-size: .92rem; }
 .notaus-balken span { flex: 1 1 12em; min-width: 0; }
@@ -6461,11 +6475,11 @@
   <!-- NACHRICHTEN -->
   <section id="v-nachrichten" class="versteckt">
     <!-- 1.32.1 (Hinweis Hansi): „＋ Neu“ immer sichtbar in der Kopfzeile, die übrigen Knöpfe beschriftet in einer eigenen Reihe -->
-    <div class="kopf2"><button class="zurueck" onclick="zurueck('start')" aria-label="Zurück">‹</button><button type="button" class="na-netz" id="naNetz" onclick="netzBlatt()" aria-label="Verbindung"></button><h2>💬 Nachrichten</h2><button class="knopf klein alarm-knopf" id="naSosKnopf" onclick="notfallMeldung()" title="Notfall-Meldung sofort an alle – Push, E-Mail, WhatsApp, SMS">🚨 SOS</button><button class="knopf haupt klein" onclick="uhNeu()">＋ Neu</button></div>
+    <div class="kopf2"><button class="zurueck" onclick="zurueck('start')" aria-label="Zurück">‹</button><button type="button" class="na-netz" id="naNetz" onclick="netzBlatt()" aria-label="Verbindung"></button><h2>💬 Nachrichten</h2><span id="naNotausPlatz" class="notaus-platz"></span><!-- KC-NOTAUS-OBEN: Pilzknopf (nur Admin) links neben SOS --><button class="knopf klein alarm-knopf" id="naSosKnopf" onclick="notfallMeldung()" title="Notfall-Meldung sofort an alle – Push, E-Mail, WhatsApp, SMS">🚨 SOS</button><button class="knopf haupt klein" onclick="uhNeu()">＋ Neu</button></div>
     <!-- 2.729.0 KC-CLUB-KOM-SYMBOLE (Wunsch Hansi „der obere Bereich ist zu unruhig und übervoll“ → „Symbol mit kleinem Wort darunter, unter ⚙️ einstellbar“):
          alle Knöpfe in EINER Reihe (html.kom-sym), sonst wie bisher mit Text daneben; der Anrufbeantworter steht mit in der Reihe -->
     <div class="kom-leiste"><button class="knopf klein" onclick="gruppeForm()" title="Neue Gruppe anlegen"><span class="kl-i">👥</span><span class="kl-t"> Gruppe</span><span class="kl-k">Gruppe</span></button><button class="knopf klein" id="uhFavKnopf" onclick="uhFavAnsicht(!UH.favAnsicht)" title="Deine Favoriten: Chats mit ⭐ und die, in denen du am meisten schreibst"><span class="kl-i">⭐</span><span class="kl-t"> Favoriten</span><span class="kl-k">Favoriten</span></button><button class="knopf klein" onclick="gemerktZeigen()" title="Nachrichten, die du mit „merken“ markiert hast"><span class="kl-i">🔖</span><span class="kl-t"> Gemerkt</span><span class="kl-k">Gemerkt</span></button><button class="knopf klein versteckt" id="ugKnopf" onclick="ugStart()" title="Clubleitung: welche deiner Nachrichten noch nicht gelesen wurden"><span class="kl-i">📭</span><span class="kl-t"> Ungelesen</span><span class="kl-k">Ungelesen</span></button><button class="knopf klein" onclick="testAnMichStarten()" title="Nachricht an dich selbst – prüft Push und Mail"><span class="kl-i">🧪</span><span class="kl-t"> Test</span><span class="kl-k">Test</span></button><button type="button" class="knopf klein ab-merker" id="abMerker" onclick="abOeffnen()" title="Mein Anrufbeantworter"><span class="kl-i">📼</span><span class="kl-t"> Mein Anrufbeantworter</span><span class="kl-k">Anrufb.</span></button><!-- 2.568.0 KC-CLUB-ANRUFBEANTWORTER --></div>
-    <div id="naNotaus" class="versteckt" aria-live="assertive"></div><!-- KC-NOTAUS: roter Balken (alle) + Pilzknopf (nur Admin) -->
+    <div id="naNotaus" class="versteckt" aria-live="assertive"></div><!-- KC-NOTAUS: roter Balken (alle); der Pilzknopf steht seit KC-NOTAUS-OBEN in der Kopfzeile -->
     <div id="onlineLeiste"></div>
     <div id="uhMarkLeiste"></div>
     <div class="karte" id="unterhListe"><span class="hinweis">Wird geladen …</span></div>

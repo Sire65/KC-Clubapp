@@ -1,5 +1,12 @@
 # Änderungen
 
+## (Version folgt) – NOT-AUS oben neben SOS, pulsierender Titel, „?“ für die Wege in der Rollkartei (KC-NOTAUS-OBEN, KC-NOTAUS-PULS, KC-KARTEI-WEGE)
+Wünsche Hansi 22.11.2026 (Bildschirmfoto 💬 Nachrichten am Handy: „eine ganze Zeile verschwendet“).
+- **NOT-AUS oben (KC-NOTAUS-OBEN):** Der rote Pilzknopf (nur Admin) steht jetzt klein (40 px, etwa SOS-Höhe) oben in der Kopfzeile links neben 🚨 SOS; die eigene Zeile unter den Kacheln entfällt. Auslösen unverändert: 1,5 s halten, Ring füllt sich, keine Rückfrage. **Kurz antippen** zeigt eine kleine Blase „⛔ 1,5 s halten = alle Nachrichten stoppen“ mit „🧪 Probe-NOT-AUS“ (zählt nur, ändert nichts). Roter Balken mit „🔓 Entriegeln“ wie bisher.
+- **Titel pulsiert (KC-NOTAUS-PULS):** Solange der NOT-AUS aktiv ist, pulsiert „💬 Nachrichten“ oben rot – im Takt des Inkognito-Pulsierens (1,2 s; bei „weniger Bewegung“ 2,4 s), für alle; nach dem Entriegeln sofort aus.
+- **„?“ in der Rollkartei (KC-KARTEI-WEGE):** Das „?“ der Mitglieder-Kachel („Was macht … gerade?“) steht jetzt auch oben rechts auf den Karteikarten – in der Chats-Kartei (💬 Nachrichten → 🗂️ Kartei, Einzelchats) und in der Mitglieder-Kartei. Wie bisher nur für den Admin, nur wenn die Person online ist, nicht bei einem selbst; Antippen öffnet ihre „👣 Wege der Mitglieder“ von heute. Keine zusätzliche Server-Abfrage (vorhandene Online-Daten).
+- Tests: `tests/notaus.test.mjs` erweitert, `tests/kartei-wege.test.mjs` (neu), `tests/app-vertrag.test.mjs` angepasst; Browser-Läufe `tools/hilfe/notaus-browser.mjs` (erweitert) und `tools/hilfe/kartei-wege-browser.mjs` (neu), beide abgeschirmt.
+
 ## 3.4.0 – 2026-11-21 – ⛔ NOT-AUS für Nachrichten, Push und E-Mails (KC-NOTAUS)
 Wunsch Hansi 21.11.: „roter Notfall-Knopf wie an technischen Maschinen – sofort Nachrichten und auch E-Mails im KC Communicator stoppen, damit nix rausgeht“; Freigabe „Alle Nachrichten stoppen und den Not-Aus in das Nachrichten-Modul und auch in KC Communicator“.
 - **Pilzknopf (nur Admin):** in 💬 Nachrichten oben ein roter Pilzknopf auf gelbem Ring. **1,5 s gedrückt halten** löst aus (der Ring füllt sich; vorher loslassen = nichts), keine Rückfrage → „⛔ NOT-AUS ausgelöst – N angehalten“. Daneben „Probe-NOT-AUS“: zählt nur („Würde N Aufträge anhalten“).

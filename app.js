@@ -22256,7 +22256,7 @@ function uhKarteiHtml(liste) {
   const uhOn = (u) => !u.gruppe && u.anzahl <= 2 && mgOn(MITGLIEDER?.find((m) => m.name === u.teilnehmer[0])); // Einzelchat mit jemandem, der online ist
   return `<div class="rk-box" id="uhKartei">${rkOnlineVorn(liste, uhOn).map((u) => { const titel = u.gruppe?.name || u.betreff || u.teilnehmer.join(", ");
     const bild = u.gruppe || u.anzahl > 2 ? uhRundeKreis(u) : kreis(MITGLIEDER?.find((m) => m.name === u.teilnehmer[0]) || null, u.teilnehmer[0], 30);
-    return `<details class="karte uhk${uhUngelesen(u) ? " uh-neu" : ""}" data-klappe="uhk" data-id="${esc(u.id)}" data-stand="${esc(u.letzte?.zeit || "")}" open><summary>${bild}<span>${esc(titel)}</span>${anlMarke(u) /* KC-CLUB-CHAT-ANLAGEN-SICHTBAR */}${u.ungelesen ?`<span class="punkt">${u.ungelesen}</span>` : ""}</summary>
+    return `<details class="karte uhk${uhUngelesen(u) ? " uh-neu" : ""}" data-klappe="uhk" data-id="${esc(u.id)}" data-stand="${esc(u.letzte?.zeit || "")}" open><summary>${bild}<span>${esc(titel)}</span>${anlMarke(u) /* KC-CLUB-CHAT-ANLAGEN-SICHTBAR */}${u.ungelesen ?`<span class="punkt">${u.ungelesen}</span>` : ""}${!u.gruppe && u.anzahl <= 2 ? rkWasKnopf(MITGLIEDER?.find((m) => m.name === u.teilnehmer[0])) : "" /* KC-KARTEI-WEGE: Einzelchat mit jemandem, der online ist */}</summary>
       <div class="hinweis uhk-info">${u.gruppe ? `🔗 Feste Gruppe · ${u.anzahl} Mitgl.` : u.anzahl > 2 ? `Runde · ${u.anzahl} Personen` : "Einzelchat"}${uhOn(u) ? " · 🟢 online" : ""}${u.letzte ? ` · zuletzt ${esc(zeitKurz(u.letzte.zeit))}` : ""}${stummAn(u.id) ? " · 🔕" : ""}</div>${uhLesestand(u)}
       <div class="uhk-verlauf" data-teil="verlauf">${u.letzte ? '<p class="hinweis">Wird geladen …</p>' : '<p class="hinweis">Noch keine Nachricht.</p>'}</div>
       <div class="uhk-knoepfe"><button type="button" class="knopf haupt" onclick="chatOeffnen('${esc(u.id)}')">💬 Öffnen &amp; antworten${u.ungelesen ? ` (${u.ungelesen} neu)` : ""}</button></div>
@@ -27431,10 +27431,16 @@ async function notausNachsehen() {
 function notausZeigen() {
   const admin = !!ICH?.admin;
   const balken = NOTAUS.aktiv ? `<div class="notaus-balken" role="alert"><span>⛔ NOT-AUS seit ${esc(notausUhr(NOTAUS.seit))} – Nachrichten sind angehalten</span>${admin ? '<button type="button" id="notausEntriegeln" onclick="notausEntriegelnFenster()">🔓 Entriegeln</button>' : ""}</div>` : "";
-  const knopf = admin && !NOTAUS.aktiv ? `<div class="notaus-zeile"><button type="button" class="na-probe" id="notausProbeKnopf" onclick="notausProbe()" title="Zählt nur, was angehalten würde – ändert nichts">Probe-NOT-AUS</button><span class="notaus-hinweis">1,5 s halten: alle Nachrichten stoppen</span><button type="button" class="notaus-knopf" id="notausKnopf" aria-label="NOT-AUS – 1,5 Sekunden gedrückt halten: alle Nachrichten, Push und E-Mails sofort stoppen" title="NOT-AUS – 1,5 Sekunden gedrückt halten"><span class="pilz" aria-hidden="true">NOT-AUS</span></button></div>` : "";
+  // KC-NOTAUS-OBEN (22.11.2026, Wunsch Hansi „eine ganze Zeile verschwendet“): der Pilzknopf steht klein oben in der Kopfzeile links neben 🚨 SOS –
+  // keine eigene Zeile mehr. Kurz antippen (statt halten) zeigt den Hinweis „1,5 s halten …“ mit „🧪 Probe-NOT-AUS“ (notausTipp).
+  const knopf = admin && !NOTAUS.aktiv ? `<button type="button" class="notaus-knopf klein" id="notausKnopf" aria-label="NOT-AUS – 1,5 Sekunden gedrückt halten: alle Nachrichten, Push und E-Mails sofort stoppen. Kurz antippen: Hinweis und Probe-NOT-AUS" title="NOT-AUS – 1,5 s halten = alle Nachrichten stoppen · kurz antippen = Hinweis und Probe-NOT-AUS"><span class="pilz" aria-hidden="true">NOT<br>AUS</span></button>` : "";
   const na = $("naNotaus");
-  if (na && na.dataset.stand !== `${balken}|${knopf}`) { na.dataset.stand = `${balken}|${knopf}`; na.innerHTML = balken + knopf; na.classList.toggle("versteckt", !balken && !knopf); notausKnopfVerbinden(); }
+  if (na && na.dataset.stand !== balken) { na.dataset.stand = balken; na.innerHTML = balken; na.classList.toggle("versteckt", !balken); }
+  const pl = $("naNotausPlatz");
+  if (pl && pl.dataset.stand !== knopf) { pl.dataset.stand = knopf; pl.innerHTML = knopf; if (!knopf) $("notausTipp")?.remove(); notausKnopfVerbinden(); }
   const ch = $("chatNotaus"); if (ch) { ch.innerHTML = balken; ch.classList.toggle("versteckt", !balken); }
+  // KC-NOTAUS-PULS (22.11.2026, Wunsch Hansi): solange aktiv pulsiert der Titel „💬 Nachrichten“ rot – wie das Inkognito-Pulsieren, für alle (wie der Balken)
+  document.querySelector("#v-nachrichten .kopf2 > h2")?.classList.toggle("notaus-puls", NOTAUS.aktiv);
   const t = $("text");
   if (t) {
     if (NOTAUS.aktiv && !t.disabled) { NOTAUS.platz = t.placeholder; t.placeholder = "⛔ NOT-AUS – Nachrichten sind angehalten"; }
@@ -27457,11 +27463,11 @@ function notausKnopfVerbinden() {
     };
     NOTAUS.halt = { uhr: setTimeout(schritt, 30) };
   };
-  const ab = () => notausHaltEnde(k, true);
+  const ab = (e) => { const kurz = !!NOTAUS.halt; notausHaltEnde(k, true); if (kurz && (e?.type === "pointerup" || e?.type === "keyup")) notausTipp(k); }; // KC-NOTAUS-OBEN: zu kurz → Hinweis
   k.addEventListener("pointerdown", los);
   for (const n of ["pointerup", "pointercancel", "lostpointercapture"]) k.addEventListener(n, ab);
   k.addEventListener("keydown", (e) => { if ((e.key === " " || e.key === "Enter") && !e.repeat) { e.preventDefault(); los(e); } });
-  k.addEventListener("keyup", (e) => { if (e.key === " " || e.key === "Enter") ab(); });
+  k.addEventListener("keyup", (e) => { if (e.key === " " || e.key === "Enter") ab(e); });
   k.addEventListener("contextmenu", (e) => e.preventDefault());
   k.addEventListener("click", (e) => e.preventDefault()); // ein kurzes Antippen tut nichts
 }
@@ -27479,6 +27485,19 @@ async function notausAusloesen() {
     melde(`⛔ NOT-AUS ausgelöst – ${Number(r?.angehalten) || 0} angehalten`);
   } catch (e) { const k = $("notausKnopf"); k?.style.setProperty("--fuell", "0"); meldeFehler(e); }
   finally { NOTAUS.laeuft = false; }
+}
+// KC-NOTAUS-OBEN: kleine Blase unter dem Knopf statt eigener Zeile – Hinweis + „🧪 Probe-NOT-AUS“; tippen daneben oder nach 8 s schließt sie
+function notausTipp(k) {
+  $("notausTipp")?.remove();
+  const t = document.createElement("div"); t.id = "notausTipp"; t.className = "notaus-tipp"; t.setAttribute("role", "status");
+  t.innerHTML = `<b>⛔ 1,5 s halten = alle Nachrichten stoppen</b><button type="button" class="na-probe" id="notausProbeKnopf" title="Zählt nur, was angehalten würde – ändert nichts">🧪 Probe-NOT-AUS</button>`;
+  document.body.appendChild(t);
+  const b = k.getBoundingClientRect(), w = t.offsetWidth;
+  t.style.top = `${Math.round(b.bottom + 8)}px`; t.style.left = `${Math.round(Math.max(8, Math.min(innerWidth - w - 8, b.left + b.width / 2 - w / 2)))}px`;
+  t.querySelector("#notausProbeKnopf").onclick = () => { t.remove(); notausProbe(); };
+  const zu = (e) => { if (!t.contains(e.target) && e.target !== k) { t.remove(); document.removeEventListener("pointerdown", zu, true); } };
+  setTimeout(() => document.addEventListener("pointerdown", zu, true), 0);
+  setTimeout(() => { t.remove(); document.removeEventListener("pointerdown", zu, true); }, 8000);
 }
 async function notausProbe() {
   try { const r = await api("notaus_ausloesen", { probe: true }, { warten: true }); melde(`🧪 Probe-NOT-AUS: Würde ${Number(r?.angehalten) || 0} Aufträge anhalten – nichts wurde geändert.`); }
@@ -29064,6 +29083,11 @@ function mgDaText(m) {
   return tage <= 1 ? "zuletzt online gestern" : `zuletzt online am ${z.tag.slice(8, 10)}.${z.tag.slice(5, 7)}.`;
 }
 function mgWasMacht(pid) { if (!ICH?.admin) return; spurAdmin(heuteIso(), pid); } // 2.648.0 KC-CLUB-WAS-MACHT
+// KC-KARTEI-WEGE (22.11.2026, Wunsch Hansi „auf die Rollkartei oben rechts das Fragezeichen, wie auf dem Button, welche Wege jemand im Programm nimmt“):
+// dasselbe „?“ wie auf der Mitglieder-Kachel (KC-CLUB-WAS-MACHT) jetzt oben rechts auf den Karten der Rollkartei (Chats aus 💬 Nachrichten → 🗂️ Kartei
+// und 👥 Mitglieder als Kartei). Gleiche Regeln: nur Admin, nur wenn die Person gerade online ist (mgOn – vorhandene Online-Daten, keine neue Abfrage),
+// nicht bei mir selbst. Antippen öffnet ihre „Wege der Mitglieder“ von heute (mgWasMacht → spurAdmin; der Server prüft spur_liste mit nurAdmin).
+const rkWasKnopf = (m) => ICH?.admin && m?.person_id && m.person_id !== ICH.person_id && mgOn(m) ? `<button type="button" class="mg-was rk-was" title="Was macht ${esc(String(m.name || "").split(" ")[0])} gerade?" aria-label="Was macht ${esc(m.name || "")} gerade in der App?" onclick="event.preventDefault();event.stopPropagation();mgWasMacht('${esc(m.person_id)}')">?</button>` : "";
 function mgPushInfo(pid) { // Hansi 16.11.2026: ein Satz, was 🔔/🔕 auf der Kachel bedeutet
   const m = MITGLIEDER?.find?.((x) => x.person_id === pid); if (!m?.wege) return;
   const vn = m.name.split(" ")[0];
@@ -29192,7 +29216,7 @@ const MGK = { det: new Map() }; // person_id → { zeit, d } (Details 5 Min. im 
 const rkOnlineVorn = (liste, istOn) => { const on = [], rest = []; for (const x of liste) (istOn(x) ? on : rest).push(x); return [...on, ...rest]; };
 function mgKarteiHtml(liste) {
   return `<div class="rk-box" id="mgKartei">${rkOnlineVorn(liste, mgOn).map((m) => { const ich = m.person_id === ICH.person_id;
-    return `<details class="karte mgk" data-klappe="mgk" data-pid="${esc(m.person_id)}" open><summary>${kreis(m, m.name, 30)}<span>${esc(m.name)}</span></summary>
+    return `<details class="karte mgk" data-klappe="mgk" data-pid="${esc(m.person_id)}" open><summary>${kreis(m, m.name, 30)}<span>${esc(m.name)}</span>${rkWasKnopf(m) /* KC-KARTEI-WEGE */}</summary>
       <div class="mgk-kopf">${kreis(m, m.name, 80, `onclick="mitgliedOeffnen('${esc(m.person_id)}')"`)}
         <div class="mgk-name">${esc(m.name)}${gbKerze(m.person_id)}${ich ? ' <small class="hinweis">(du)</small>' : ""} ${mgStern(m)}</div>
         ${m.aemter?.length ? `<div>${m.aemter.map((a) => `<span class="marke">${esc(a)}</span>`).join(" ")}</div>` : ""}

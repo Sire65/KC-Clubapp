@@ -2119,7 +2119,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 
 // 182. 1.32.1: „＋ Neu“ immer sichtbar, Kopfzeilen brechen um (KC-CLUB-KOPFZEILE)
 {
-  assert.ok(/<h2>💬 (Kommunikation|Nachrichten)<\/h2>(<button[^>]*id="naSosKnopf"[^>]*>🚨 SOS<\/button>)?<button class="knopf haupt klein" onclick="(neueNachricht|uhNeu)\(\)">＋ Neu<\/button><\/div>/.test(html), "＋ Neu direkt in der Kopfzeile"); // 2.57.0: uhNeu = mit Markierung Mehrfach-Nachricht, sonst neueNachricht // 2.22.0: davor nur beim Admin 🚨 SOS
+  assert.ok(/<h2>💬 (Kommunikation|Nachrichten)<\/h2>(<span id="naNotausPlatz" class="notaus-platz"><\/span>(<!--[^>]*-->)?)?(<button[^>]*id="naSosKnopf"[^>]*>🚨 SOS<\/button>)?<button class="knopf haupt klein" onclick="(neueNachricht|uhNeu)\(\)">＋ Neu<\/button><\/div>/.test(html), "＋ Neu direkt in der Kopfzeile"); // 2.57.0: uhNeu = mit Markierung Mehrfach-Nachricht, sonst neueNachricht // 2.22.0: davor nur beim Admin 🚨 SOS // KC-NOTAUS-OBEN: davor der Platz für den Pilzknopf
   assert.ok(/<span class="kl-i">🔖<\/span><span class="kl-t"> Gemerkt<\/span><span class="kl-k">Gemerkt<\/span><\/button>/.test(html) && /\.kopf2 \{ display: flex; align-items: center; gap: 10px; margin: 6px 0 4px; flex-wrap: wrap; \}/.test(html), "Stern beschriftet, Kopfzeile bricht um");
 }
 
@@ -3543,7 +3543,7 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
 }
 // 323. 2.22.0: SOS im Nachrichten-Kopf (KC-CLUB-NOTFALL-KANAELE) – nur Admin, einsprechen, danach WhatsApp/SMS mit einem Tipp
 {
-  assert.ok(/<h2>💬 Nachrichten<\/h2><button class="knopf klein alarm-knopf" id="naSosKnopf" onclick="notfallMeldung\(\)"/.test(html) && /body:not\(\.ist-admin\):not\(\.sos-frei\) #naSosKnopf \{ display: none; \}/.test(html), "SOS neben ＋ Neu, nur Admin");
+  assert.ok(/<h2>💬 Nachrichten<\/h2>(<span id="naNotausPlatz" class="notaus-platz"><\/span>(<!--[^>]*-->)?)?<button class="knopf klein alarm-knopf" id="naSosKnopf" onclick="notfallMeldung\(\)"/.test(html) && /body:not\(\.ist-admin\):not\(\.sos-frei\) #naSosKnopf \{ display: none; \}/.test(html), "SOS neben ＋ Neu, nur Admin");
   assert.ok(/diktatStart\(\\'notfallText\\', notfallSenden\)/.test(html) && /function diktatStart\(ziel, nachSenden(, opt = \{\})?\)/.test(html) && /if \(was === "senden" && DT\.nachSenden\)[^\n]*return DT\.nachSenden\(\); \}/.test(html), "Einsprechen über das vorhandene Diktat");
   assert.ok(/href="https:\/\/wa\.me\/\?text=\$\{t\}"/.test(html) && /href="sms:\?&body=\$\{t\}"/.test(html), "WhatsApp und SMS mit fertigem Text");
   assert.ok(/"notfall_whatsapp", "notfall_sms"/.test(server), "Weitergabe wird protokolliert");
