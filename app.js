@@ -10217,6 +10217,7 @@ const ZUGANG_AKTIONEN = {
   aushilfe: ["mein_dienst", "dp_plaene", "dienstwunsch_laden", "dienstwunsch_speichern", "dienst_gruss", "dienste", "dienst_freigabe", "meine_eingaben",
     "eingaben_bestaetigen", "wunschbogen_mailen", "eingaben_ablegen", "fotos_neueste", "fotos_liste", "foto_oeffnen",
     "schulung_meine", "schulung_antwort", "gericht_zutat_setzen", "gericht_antwort", "tipp_stand", "tipp_mitmachen", "tipp_abgeben", "advent_gadget_stand", "advent_gadget_mitmachen", // KC-CLUB-ADVENT-GADGETS
+    "advent_preis_melden", "advent_preise_meine", // KC-CLUB-ADVENT-AUSHILFEN (Hansi 22.11.2026)
     "sondereinsatz_zusage", "stunden_melden", "mein_ausweis", "dienst_stand", "dienst_buchen", "dienst_korrigieren", "dienst_tausch_liste", "dienst_tausch_anbieten", "dienst_tausch_aktion", "dp_einzelplan", "ist_offen", "ist_antworten", "ist_feedback"], // 2.590.0 KC-CLUB-DIENST-STEMPEL; 2.606.0 KC-CLUB-DIENST-TAUSCH
 };
 const ZUGANG_KACHELN = { basis: ["termine", "kommunikation", "sos", "spiele", "status", "einstellungen", "hilfezentrum", "twinkey", "erklaer", "update", "sicherheit", "feedback", "test"],
@@ -13309,8 +13310,10 @@ function akOffen() { try { const l = JSON.parse(localStorage.getItem(akKey()) ||
 const akAn = () => einst("advent", true);
 // 2.482.0 KC-CLUB-ADVENT-UEBERRASCHUNG (Wunsch Hansi „Nimm den Adventskalender aus der Info – das ist eine Überraschung“): vor dem 1. Dezember
 // sehen Mitglieder ihn nirgends (Hilfe, „Neu in der App“, ⚙️ Effekte); ab Dezember wie gehabt. Admins sehen ihn immer (zum Prüfen).
-// 2.869.0 KC-CLUB-ADVENT-2026 (Hansi: „keine Kalender für Kinder und Gäste“): nur Mitglieder – Gäste und Aushilfen sehen ihn nie.
-const akSichtbar = () => zugang() === "mitglied" && (!!ICH?.admin || akBerlin(akJetzt()).m === 12); // KC-CLUB-ADVENT-SERVERUHR
+// 2.869.0 KC-CLUB-ADVENT-2026 (Hansi: „keine Kalender für Kinder und Gäste“): Gäste sehen ihn nie.
+// KC-CLUB-ADVENT-AUSHILFEN (Wunsch Hansi 22.11.2026: „Adventskalender auch für Aushilfen.“): Mitglieder UND Aushilfen – Kachel, Türchen, Laufband,
+// Preis-Türchen („🎁 Ja, den nehme ich“) und Gadget-Verlosung; „📋 Wer bekommt was“ bleibt nur Admin.
+const akSichtbar = () => (zugang() === "mitglied" || zugang() === "aushilfe") && (!!ICH?.admin || akBerlin(akJetzt()).m === 12); // KC-CLUB-ADVENT-SERVERUHR
 function akSichtbarSetzen() { const z = $("setAdventZeile"); if (z) z.classList.toggle("versteckt", !akSichtbar()); }
 const akVorschau = () => !akHeute() && !!ICH?.admin; // Admin außerhalb Dezember: alle Türchen zum Ansehen
 function akZeigen() {

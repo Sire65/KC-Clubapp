@@ -39,5 +39,5 @@ r = R(t("2026-12-10T09:00:00Z")); r.uhrAbgleich({ serverJetzt: "abc" }); r.uhrAb
 assert.equal(r.v, null, "ohne gültige Server-Zeit kein Versatz");
 
 assert.ok(/if \(n > h && !akVorschau\(\)\) \{/.test(app), "spätere Türchen bleiben zu (nur Admin-Vorschau außerhalb Dezember)");
-assert.ok(/const akSichtbar = \(\) => zugang\(\) === "mitglied" && \(!!ICH\?\.admin \|\| akBerlin\(akJetzt\(\)\)\.m === 12\);/.test(app), "Sichtbarkeit ab Dezember nach Server-Uhr");
+assert.ok(/const akSichtbar = \(\) => \(zugang\(\) === "mitglied" \|\| zugang\(\) === "aushilfe"\) && \(!!ICH\?\.admin \|\| akBerlin\(akJetzt\(\)\)\.m === 12\);/.test(app), "Sichtbarkeit ab Dezember nach Server-Uhr");
 console.log("✅ advent-serveruhr: alle Prüfungen bestanden");

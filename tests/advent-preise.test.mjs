@@ -17,7 +17,7 @@ assert.deepEqual(srvPreise, { 6: "Mini-Schoko-Nikolaus", 20: "Kinderriegel" }, "
 
 // Server: nur Mitglieder, nur ab dem Tag im Dezember, doppelt melden geht nicht, Liste nur für den Admin
 const fall = srv.slice(srv.indexOf('case "advent_preis_melden"'), srv.indexOf('case "rezept_bewerten"'));
-assert.ok(/ich\.zugang !== "mitglied"/.test(fall), "nur Mitglieder");
+assert.ok(/ich\.zugang !== "mitglied" && ich\.zugang !== "aushilfe"/.test(fall), "Mitglieder und Aushilfen (KC-CLUB-ADVENT-AUSHILFEN, Hansi 22.11.2026), Gäste nie");
 assert.ok(/if \(!ich\.admin\) throw new Fehler\("Nur für den Admin\.", 403\)/.test(fall), "Liste nur Admin");
 assert.ok(/heute\.slice\(5, 7\) !== "12" \|\| Number\(heute\.slice\(8, 10\)\) < tag/.test(fall), "erst ab dem Tag im Dezember");
 assert.ok(/onConflict: "person_id,jahr,tag", ignoreDuplicates: true/.test(fall), "nur einmal je Person und Tag");

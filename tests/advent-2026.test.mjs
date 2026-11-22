@@ -51,8 +51,17 @@ const einl = js.slice(js.indexOf("function akEinladungKarte"), js.indexOf("funct
 assert.ok(/Termin wird noch bekannt gegeben/.test(einl) && /frohe Weihnachten/.test(einl), "Einladung mit Gruß, ohne Terminauswahl");
 assert.ok(/api\("vorschlaege_liste"\)/.test(einl) && /vorschlagInfo\(/.test(einl) && (einl.match(/api\("/g) || []).length === 1, "nur vorhandene Abstimmung");
 
-// Nur Mitglieder; Hintergrundbild klein und vorhanden
-assert.ok(/const akSichtbar = \(\) => zugang\(\) === "mitglied" &&/.test(js) && /function akZeigen\(\) \{\n  if \(!akSichtbar\(\)\) return;/.test(js), "kein Kalender für Gäste/Aushilfen");
+// Mitglieder und Aushilfen, Gäste nie (KC-CLUB-ADVENT-AUSHILFEN, Wunsch Hansi 22.11.2026: „Adventskalender auch für Aushilfen.“ – vorher 2.869.0 nur Mitglieder);
+// Hintergrundbild klein und vorhanden
+assert.ok(/const akSichtbar = \(\) => \(zugang\(\) === "mitglied" \|\| zugang\(\) === "aushilfe"\) &&/.test(js) && /function akZeigen\(\) \{\n  if \(!akSichtbar\(\)\) return;/.test(js), "Kalender für Mitglieder und Aushilfen, nie für Gäste");
+{ const lp = (q, name) => { const t = q.slice(q.indexOf("const ZUGANG_AKTIONEN")); return t.slice(t.indexOf(name + ": ["), t.indexOf("]", t.indexOf(name + ": ["))); };
+  const srv = fs.readFileSync(new URL("../supabase/functions/kc-club/index.ts", import.meta.url), "utf8");
+  for (const q of [js, srv]) {
+    for (const a of ["advent_preis_melden", "advent_preise_meine", "advent_gadget_stand", "advent_gadget_mitmachen"]) assert.ok(lp(q, "aushilfe").includes(`"${a}"`) && !lp(q, "basis").includes(`"${a}"`), `Aushilfen ja, Gäste nein: ${a}`);
+    assert.ok(!lp(q, "basis").includes('"advent_preise_liste"') && !lp(q, "aushilfe").includes('"advent_preise_liste"'), "Wer bekommt was: nicht in den Zugangslisten (nur Admin)");
+  }
+  const fall = srv.slice(srv.indexOf('case "advent_preis_melden"'), srv.indexOf('case "advent_gadget_stand"'));
+  assert.ok(/ich\.zugang !== "mitglied" && ich\.zugang !== "aushilfe"/.test(fall) && /advent_preise_liste[\s\S]*if \(!ich\.admin\)/.test(fall), "Server: Preise für Mitglieder+Aushilfen, Liste nur Admin"); }
 const bild = fs.statSync(new URL("../advent/rathaus.webp", import.meta.url));
 assert.ok(bild.size > 10_000 && bild.size <= 150_000, "Rathaus-Bild ≤ 150 KB");
 assert.ok(/\.ak-blatt \.blatt-innen \{ background: #1b1815 url\(advent\/rathaus\.webp\)/.test(seite) && /Bild: Altes Rathaus Werne im Advent – Hansi/.test(js), "Hintergrund + Bildnachweis");

@@ -6800,7 +6800,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.deepEqual([...reihe].sort((a, b) => a - b), Array.from({ length: 24 }, (_, i) => i + 1), "jede Zahl genau einmal");
   assert.ok(/const akHeute = \(d = akJetzt\(\)\) => \{ const b = akBerlin\(d\); return b\.m === 12 \? Math\.min\(b\.t, 24\) : 0; \};/.test(html), "nur im Dezember (Server-Uhr, deutsche Zeit)");
   assert.ok(/if \(n > h && !akVorschau\(\)\) \{/.test(html) && /const akVorschau = \(\) => !akHeute\(\) && !!ICH\?\.admin;/.test(html), "spätere Türchen bleiben zu (Vorschau nur Admin außerhalb Dezember)");
-  assert.ok(/if \(ah && akAn\(\) && akSichtbar\(\) && !akOffen\(\)\.includes\(ah\)\) add\(\{ id: "advent:" \+ ah/.test(html), "Laufband-Erinnerung nur solange heute zu (und nur für Mitglieder)");
+  assert.ok(/if \(ah && akAn\(\) && akSichtbar\(\) && !akOffen\(\)\.includes\(ah\)\) add\(\{ id: "advent:" \+ ah/.test(html), "Laufband-Erinnerung nur solange heute zu (Mitglieder und Aushilfen)");
   assert.ok(/id="setAdvent"[^>]*onchange="einstellung\('advent', this\.checked\)"/.test(lies("index.html")) && /\$\("setAdvent"\)\.checked = akAn\(\)/.test(html), "abschaltbar");
   assert.ok(/\.ak-tuer \{[^}]*background: #741521/.test(lies("index.html")) && /\.ak-tuer:not\(\.auf\) \.ak-sym \{ visibility: hidden; \}/.test(lies("index.html")), "Corporate Design, Bild erst nach Öffnen");
 }
@@ -6962,7 +6962,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 }
 // 2.482.0 KC-CLUB-ADVENT-UEBERRASCHUNG (Wunsch Hansi): vor Dezember für Mitglieder unsichtbar (Hilfe, Neu-Tipps, Einstellungen)
 {
-  assert.ok(/\{ id: "adventskalender", nur: \(\) => akSichtbar\(\),/.test(html) && /const akSichtbar = \(\) => zugang\(\) === "mitglied" && \(!!ICH\?\.admin \|\| akBerlin\(akJetzt\(\)\)\.m === 12\);/.test(html), "Hilfe-Eintrag erst ab Dezember");
+  assert.ok(/\{ id: "adventskalender", nur: \(\) => akSichtbar\(\),/.test(html) && /const akSichtbar = \(\) => \(zugang\(\) === "mitglied" \|\| zugang\(\) === "aushilfe"\) && \(!!ICH\?\.admin \|\| akBerlin\(akJetzt\(\)\)\.m === 12\);/.test(html), "Hilfe-Eintrag erst ab Dezember");
   assert.ok(/<div class="schalter versteckt" id="setAdventZeile">/.test(lies("index.html")) && /if \(v === "einstellungen"\) akSichtbarSetzen\(\);/.test(html), "Schalter unter Effekte erst ab Dezember (Admin immer)");
   const ak = html.slice(html.indexOf("const akHeute"), html.indexOf("const akHeute") + 400);
   assert.ok(/b\.m === 12/.test(ak), "Laufband-Erinnerung nur im Dezember");

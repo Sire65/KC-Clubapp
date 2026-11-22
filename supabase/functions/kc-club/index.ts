@@ -4611,6 +4611,7 @@ const ZUGANG_AKTIONEN: Record<"basis" | "aushilfe", readonly string[]> = {
   aushilfe: ["mein_dienst", "dp_plaene", "dienstwunsch_laden", "dienstwunsch_speichern", "dienst_gruss", "dienste", "dienst_freigabe", "meine_eingaben",
     "eingaben_bestaetigen", "wunschbogen_mailen", "eingaben_ablegen", "fotos_neueste", "fotos_liste", "foto_oeffnen",
     "schulung_meine", "schulung_antwort", "gericht_zutat_setzen", "gericht_antwort", "tipp_stand", "tipp_mitmachen", "tipp_abgeben", "advent_gadget_stand", "advent_gadget_mitmachen", // KC-CLUB-ADVENT-GADGETS
+    "advent_preis_melden", "advent_preise_meine", // KC-CLUB-ADVENT-AUSHILFEN (Hansi 22.11.2026)
     "sondereinsatz_zusage", "stunden_melden", "mein_ausweis", "dienst_stand", "dienst_buchen", "dienst_korrigieren", "dienst_tausch_liste", "dienst_tausch_anbieten", "dienst_tausch_aktion", "dp_einzelplan", "ist_offen", "ist_antworten", "ist_feedback"], // 2.590.0: Aushilfen dürfen sich auch anmelden (Hansi 22.10.); 2.606.0: und Dienste tauschen
 };
 const ZUGANG_ERLAUBT = { gast: new Set(ZUGANG_AKTIONEN.basis), aushilfe: new Set([...ZUGANG_AKTIONEN.basis, ...ZUGANG_AKTIONEN.aushilfe]), tischgast: new Set<string>(TISCHGAST_AKTIONEN) };
@@ -13374,7 +13375,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         return json({ ok: true, saison, dabei: ichDabei, spieltag: tag, tage, spiele: spieltag, tabelle, bald, quelle: "OpenLigaDB" });
       }
       case "advent_preis_melden": case "advent_preise_meine": case "advent_preise_liste": {
-        if (ich.zugang !== "mitglied") throw new Fehler("Der Adventskalender ist nur für Mitglieder.", 403);
+        // KC-CLUB-ADVENT-AUSHILFEN (Wunsch Hansi 22.11.2026: „Adventskalender auch für Aushilfen.“): Mitglieder und Aushilfen, Gäste nie; die Liste nur Admin
+        if (ich.zugang !== "mitglied" && ich.zugang !== "aushilfe") throw new Fehler("Der Adventskalender ist nur für Mitglieder und Aushilfen.", 403);
         const heute = berlinTag(new Date()), jahr = Number(heute.slice(0, 4));
         if (a === "advent_preise_liste") {
           if (!ich.admin) throw new Fehler("Nur für den Admin.", 403);
