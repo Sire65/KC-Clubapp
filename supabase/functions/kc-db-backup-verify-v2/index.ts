@@ -12,13 +12,15 @@
 // entschluesselt. Pruefregeln, Hashes, Antwortformat und Eintraege bleiben gleich.
 // Version 12 (KC-SICHERUNG-PACKEN, 15.11.2026): gepackte Saetze (compression:"gzip", AAD "kc-backup|gzip") entschluesseln und entpacken;
 // ungepackte Altsaetze wie bisher.
+// Version 13 (KC-BACKUP-PRUEFUNG-SPAETER, Hansi 22.11.2026): der Backup-Worker ruft diesen Test nicht mehr sofort auf; er laeuft nur noch ueber
+// Job 51 kc-neon-backup-verify um 06:30 UTC (nach dem Neon-Spiegel) und setzt selbst den Kopf in kc_backup_sets auf ok/error.
 async function sicherGleich(a:string,b:string){const h=async(s:string)=>new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)));const [x,y]=await Promise.all([h(a),h(b)]);let diff=0;for(let i=0;i<x.length;i++)diff|=x[i]^y[i];return diff===0}
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import postgres from "npm:postgres@3.4.5";
 import { assessBackupCompleteness } from "./completeness.js";
 import { splitIntoParts, mergePartChecks, runPartAdaptive } from "./parts.js";
-const J={"Content-Type":"application/json","X-KC-Function-Version":"12"}; const b64d=(s:string)=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+const J={"Content-Type":"application/json","X-KC-Function-Version":"13"}; const b64d=(s:string)=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
 const PART_SIZE=40, PARALLEL=3;
 const safeUuid=(v:string)=>/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
 const GZ_AAD=new TextEncoder().encode("kc-backup|gzip");
@@ -120,6 +122,15 @@ Deno.serve(async req=>{
     const message=failed?`Backup ${set}: restore-read test failed`:!comp.complete?`Backup ${set}: restore-read test failed (incomplete ${comp.present}/${comp.expected??"?"} tables)`:`Backup ${set}: restore-read test passed`;
     await neon.unsafe("insert into public.kc_backup_verifications(backup_set,status,checked_tables,failed_tables,detail) values ($1::uuid,$2,$3,$4,jsonb_build_object('checks',$5::jsonb,'schema_drift_compatible',true,'stable_hash_compatible',true,'completeness',$6::jsonb,'parts',$7::int))",[set,bad?"error":"ok",checks.length,failed,JSON.stringify(checks),JSON.stringify(completeness),parts.length]);
     await sb.from("kc_db_mirror_runs").insert({run_type:"restore_test",status:bad?"error":"ok",started_at:new Date().toISOString(),finished_at:new Date().toISOString(),source_rows:checks.length,target_rows:checks.length-failed,mismatch_count:failed+(comp.complete?0:Math.max(0,(comp.expected??0)-comp.present)),message,metrics:{backup_set:set,checked_tables:checks.length,failed_tables:failed,...completeness,parts:parts.length,encryption_aware:true,schema_drift_compatible:true,stable_hash_compatible:true,failed_checks:checks.filter(x=>x.status!=="ok")}});
+    // KC-BACKUP-PRUEFUNG-SPAETER (Version 13): den Kopf des Satzes (kc_backup_sets) setzt jetzt dieser Test – bisher tat das der Backup-Worker
+    // direkt nach der Sicherung. Nur aus "running" oder "error" (eine spaetere bestandene Pruefung darf "error" aufheben), nur die Werte ok/error.
+    // Vor der Aufbewahrungsregel, damit der gerade gepruefte Satz schon als "ok" zaehlt. Fehler hier aendern das Pruefergebnis nicht.
+    let kopf:any=null;
+    try{
+      const st=await neon.unsafe("select count(*)::int n,coalesce(sum(row_count),0)::bigint rows,coalesce(sum(pg_column_size(payload)),0)::bigint bytes from public.kc_backup_snapshots where backup_set=$1::uuid",[set]);
+      const k=await neon.unsafe("update public.kc_backup_sets set table_count=$1,ok_count=$2,total_rows=greatest(total_rows,$3),total_bytes=greatest(total_bytes,$4),status=$5,completed_at=now() where backup_set=$6::uuid and status in ('running','error') returning status",[Number(st[0]?.n||0),Math.max(0,checks.length-failed),Number(st[0]?.rows||0),Number(st[0]?.bytes||0),bad?"error":"ok",set]);
+      kopf=k.length?String(k[0].status):"unveraendert";
+    }catch(e){kopf={error:String(e).slice(0,200)}}
     // KICC-F-103: Aufbewahrungsregel nur nach bestandenem Restore-Test; Fehler hier aendern das Pruefergebnis nicht.
     let retention:any=null;
     if(!bad){
@@ -128,6 +139,6 @@ Deno.serve(async req=>{
         if(retention?.ausgefuehrt)await sb.from("kc_db_mirror_audit").insert({severity:"info",action:"backup_retention",detail:`Aufbewahrungsregel: ${retention.loeschen} alte Backup-Saetze entfernt, ${retention.behalten} behalten`,metadata:{backup_set:set,...retention}});
       }catch(e){retention={error:String(e).slice(0,200)}}
     }
-    return new Response(JSON.stringify({ok:!bad,checked_tables:checks.length,failed_tables:failed,...completeness,retention}),{status:bad?500:200,headers:J});
+    return new Response(JSON.stringify({ok:!bad,checked_tables:checks.length,failed_tables:failed,...completeness,kopf,retention}),{status:bad?500:200,headers:J});
   }finally{await neon.end({timeout:5})}
 });

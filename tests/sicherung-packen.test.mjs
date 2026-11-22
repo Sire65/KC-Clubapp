@@ -11,10 +11,10 @@ const w = lies("supabase/functions/kc-db-backup-worker/index.ts"), v = lies("sup
 assert.ok(/new TextEncoder\(\)\.encode\("kc-backup\|gzip"\)/.test(w) && /additionalData:GZ_AAD\},key,await packen\(/.test(w), "Worker packt vor dem Verschlüsseln");
 assert.ok(/'compression',\$10::text/.test(w) && /redacted\.has\(table\),env\.compression\]/.test(w), "Merkmal im gespeicherten Umschlag");
 assert.ok(/s\.payload->>'compression'='gzip' order by b\.started_at desc limit 1/.test(w), "unverändert kopiert wird nur, was schon gepackt ist");
-assert.ok(/X-KC-Function-Version":"22"/.test(w), "Worker Version 22");
+assert.ok(/X-KC-Function-Version":"23"/.test(w), "Worker Version 23 (22 + KC-BACKUP-PRUEFUNG-SPAETER)");
 // Leser: Prüfdienst (stückweise und im Ganzen) und Notfall-Werkzeug verstehen beide Formen
 assert.ok(/payload->>'compression' c,length\(payload->>'ciphertext'\) l/.test(v) && /if\(gz\)plain=await entpacken\(plain\)/.test(v), "Prüfdienst stückweise");
-assert.ok(/async function decrypt\(p:any,key:CryptoKey\)\{[^\n]*gzArt\(p\?\.compression\)/.test(v) && /X-KC-Function-Version":"12"/.test(v), "Prüfdienst im Ganzen, Version 12");
+assert.ok(/async function decrypt\(p:any,key:CryptoKey\)\{[^\n]*gzArt\(p\?\.compression\)/.test(v) && /X-KC-Function-Version":"13"/.test(v), "Prüfdienst im Ganzen, Version 13");
 assert.ok(/const gzArt=\(c:any\)=>\{if\(c==null\|\|c===""\)return false;if\(c==="gzip"\)return true;throw/.test(v), "unbekannte Packart ist ein Fehler");
 // Rundweg mit dem echten Notfall-Werkzeug (Testschlüssel, Testdaten)
 const geheim = "test-geheimnis-nicht-echt-1234567890", daten = JSON.stringify(Array.from({ length: 500 }, (_, i) => ({ id: i, aktion: "test", zeit: "2026-11-15T07:00:00Z" })));
