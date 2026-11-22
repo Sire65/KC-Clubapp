@@ -1414,13 +1414,24 @@ function geraetAusUA(ua: string): string | null {
   if (/iPad|Tablet|Kindle|Silk\//i.test(ua)) return "tablet";
   if (/iPhone|iPod|Windows Phone|Android.*Mobile|Mobile.*Android/i.test(ua)) return "handy";
   if (/Android/i.test(ua)) return "tablet"; // Android ohne „Mobile“ = Tablet
-  if (/Windows|Macintosh|CrOS|X11|Linux/i.test(ua)) return "pc";
+  // KC-CLUB-ONLINE-GERAET-IPAD (Fund Hansi 22.11.2026): iPads geben sich als „Macintosh“ aus – ohne Hinweis der App ist das unklar (null), nicht „pc“
+  if (/Windows|CrOS|X11|Linux/i.test(ua)) return "pc";
   return null;
+}
+// Hinweis der App (_g im Inhalt jeder Anfrage, seit KC-CLUB-ONLINE-GERAET-IPAD) gilt vor dem User-Agent
+const geraetAus = (ua: string, hinweis?: unknown) => GERAETE.has(String(hinweis)) ? String(hinweis) : geraetAusUA(ua);
+const GERAET_HINWEIS = new WeakMap<Request, string>(); // je Anfrage (der Inhalt ist bei der Anmeldung schon gelesen)
+// Gerät unklar (Mac/iPad ohne Hinweis, ältere App): zuletzt bekanntes Gerät dieser Person aus ihrem Online-Abgleich (fenster), sonst weglassen
+async function geraetZuletzt(personId: string): Promise<string | null> {
+  const { data } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", personId).eq("schluessel", "fenster").maybeSingle();
+  const l = Array.isArray((data?.wert as any)?.liste) ? (data!.wert as any).liste : [];
+  const x = l.filter((e: any) => e && GERAETE.has(String(e.g))).sort((a: any, b: any) => Number(b.t) - Number(a.t))[0];
+  return x ? String(x.g) : null;
 }
 async function fensterAbgleich(ich: Ich, f: any, req: Request, vorab?: { wert: any } | null) {
   if (!f || typeof f !== "object" || ich.nurLesen) return null;
   const i = txt(f.i, 40).replace(/[^A-Za-z0-9-]/g, ""), b = txt(f.b, 30), sy = txt(f.s, 30);
-  const g = GERAETE.has(String(f.g)) ? String(f.g) : geraetAusUA(req.headers.get("user-agent") || ""); // 2.477.0 KC-CLUB-ONLINE-GERAET
+  const g = geraetAus(req.headers.get("user-agent") || "", f.g); // 2.477.0 KC-CLUB-ONLINE-GERAET
   if (!i) return null;
   const netz = (await sha256("kc-netz:" + (req.headers.get("x-forwarded-for") || "").split(",")[0].trim())).slice(0, 16), t = Date.now();
   const { data } = vorab !== undefined ? { data: vorab } : await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "fenster").maybeSingle();
@@ -1508,7 +1519,7 @@ async function fpUeberwachen() {
 // (die hören Ton/Ansage in der App), nicht in deren Ruhezeit, nicht für Mitglieder, die ihren Online-Status verbergen.
 // Abschaltbar je Admin (Einstellung online_push). Nur Push – keine Mail.
 const ONLINE_PUSH_PAUSE_MS = 10 * 60000;
-async function onlinePushMelden(wer: Ich, ua = "") {
+async function onlinePushMelden(wer: Ich, ua = "", hinweis = "") {
   if (wer.person_id.startsWith("KC-P-TEST")) return;
   if ((await onlineZeigenMap([wer.person_id])).get(wer.person_id) === false) return;
   if ((await inkognitoSet([wer.person_id])).has(wer.person_id)) return; // KC-CLUB-INKOGNITO
@@ -1520,7 +1531,8 @@ async function onlinePushMelden(wer: Ich, ua = "") {
   const d = new Date(), um = fZeit.format(d);
   // 2.477.0 KC-CLUB-ONLINE-GERAET: Admins lesen/hören zusätzlich das Gerät – „🟢 Klaus (am Handy) ist jetzt online (10:05 Uhr)“; Titel-Muster bleibt gleich
   // (Service Worker erkennt es weiter), der Name trägt das Gerät. Alle anderen Empfänger wie bisher ohne Gerät.
-  const ger = GERAET_NAME[geraetAusUA(ua) || ""] || "";
+  // KC-CLUB-ONLINE-GERAET-IPAD: Hinweis der App vor User-Agent; unklar → zuletzt bekanntes Gerät, sonst ohne Gerät (nie geraten „am PC“)
+  const ger = GERAET_NAME[geraetAus(ua, hinweis) || (await geraetZuletzt(wer.person_id).catch(() => null)) || ""] || "";
   const senden = (an: string[], name: string, k: string) => an.length ? routerSenden("club_online", an, { titel: `🟢 ${name} ist jetzt online (${um} Uhr)`, kurz: `${fTag.format(d)} um ${um} Uhr in die Köcheclub-App gekommen`,
     betreff: `Köcheclub Werne – ${name} ist online`, text: `${wer.name} ist gerade in der Köcheclub-App.`, url: APP_URL },
     `club-online:${wer.person_id}:${Math.floor(Date.now() / ONLINE_PUSH_PAUSE_MS)}${k}`) : Promise.resolve();
@@ -4565,7 +4577,7 @@ async function anmeldenDb(hash: string, version: string | null, ua = "", req?: R
   if (!p?.active) { if (req) fremdMerken(req, "gesperrt", hash, p?.person_id || null); throw new Fehler("Kein Zugang – bitte bei Hansi melden.", 401, req && p?.person_id ? { hilfe: await zugangHilfeInfo(hash, String(p.person_id)) } : undefined); }
   // KC-CLUB-ONLINE-PUSH (1.57.0): nach ≥ 10 Min. Pause (oder zum ersten Mal) wieder da → Admins benachrichtigen (im Hintergrund)
   if (!a.vorher || Date.now() - Date.parse(a.vorher) >= ONLINE_PUSH_PAUSE_MS) {
-    const lauf = onlinePushMelden(ichAus(p, r), ua).catch((e) => console.error("online push", String(e)));
+    const lauf = onlinePushMelden(ichAus(p, r), ua, req ? GERAET_HINWEIS.get(req) : "").catch((e) => console.error("online push", String(e)));
     try { (globalThis as any).EdgeRuntime?.waitUntil?.(lauf); } catch { /* ohne Hintergrund-Hilfe läuft es trotzdem an */ }
   }
   return ichAus(p, r);
@@ -10779,6 +10791,7 @@ Köcheclub Werne`,
     // Speicher (15 s / 15 s / 5 Min.); die Prüfungen unten laufen unverändert in derselben Reihenfolge. Nur bei gültig aussehendem Schlüssel (keine Last durch Fremde).
     const vorab = START_VORAB.has(a) && /^[0-9a-f]{32,96}$/.test(req.headers.get("x-club-token") ?? "")
       ? Promise.all([sperrenAktuell().catch(() => null), a === "init" ? einspielenLage() : null, sitzungVorgaben()]) : null;
+    GERAET_HINWEIS.set(req, String(p?._g ?? "")); // KC-CLUB-ONLINE-GERAET-IPAD: Geräte-Hinweis der App für die „ist jetzt online“-Push
     const ich = await anmelden(req);
     if (vorab) await vorab;
     const gesperrt = ich.admin ? null : await sperreFuer(ich.person_id); // KC-CLUB-PERSON-SPERRE (2.23.77)
@@ -14492,7 +14505,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (fehler && !(art === "in" && Number.isFinite(nachtragMs))) throw new Fehler(fehler, 409);
         const vorOrt = dsVorOrt({ lat: Number(p.lat), lon: Number(p.lon), genau: Number(p.genau) }, await dsOrte());
         const { data: pe } = await db.from("kc_core_personen").select("mitgliedsnummer").eq("person_id", ich.person_id).maybeSingle();
-        const basis = { person_id: ich.person_id, member_no: /^KC-\d{3,5}$/.test(String(pe?.mitgliedsnummer || "")) ? pe!.mitgliedsnummer : null, quelle: "app", geraet: txt(geraetAusUA(req.headers.get("user-agent") || "") || "", 40) || null,
+        const basis = { person_id: ich.person_id, member_no: /^KC-\d{3,5}$/.test(String(pe?.mitgliedsnummer || "")) ? pe!.mitgliedsnummer : null, quelle: "app", geraet: txt(geraetAus(req.headers.get("user-agent") || "", p?._g) || "", 40) || null,
           dienst_ref: dienst?.ref || null, dienst_start: dienst ? new Date(dienst.startMs).toISOString() : null, dienst_ende: dienst ? new Date(dienst.endeMs).toISOString() : null,
           event_id: dienst?.event || null, vor_ort: vorOrt, erstellt_von: ich.person_id, spontan };
         const zeilen: any[] = [];

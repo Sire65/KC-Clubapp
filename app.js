@@ -4446,8 +4446,11 @@ const OA = { vorher: null, zuletzt: 0, gesehen: new Map(), gesagt: new Map(), na
 // Sprechen kann die App nur, wenn sie offen ist – sie hat die Ansage bisher beim Zurückkommen NACHGEHOLT (bis 3 Min. später).
 // Wer schon per Mitteilung gemeldet wurde, wird auf diesem Gerät nicht noch einmal verspätet angesagt (10 Min., wie die Ansage-Pause).
 // 2.390.0 KC-CLUB-ONLINE-PUSH-ZEIT: Titel jetzt mit Uhrzeit bzw. „war um … online“
-function onlinePushGezeigt(titel) { const m = /^🟢 (.+?) (?:ist jetzt|war um \d\d:\d\d Uhr) online(?: \(\d\d:\d\d Uhr\))?$/.exec(String(titel || "")); if (m) OA.perPush.set(m[1], Date.now()); }
-const schonPerPush = (name) => Date.now() - (OA.perPush.get(name) || 0) < ANSAGE_PAUSE_MS;
+function onlinePushGezeigt(titel) { const m = /^🟢 (.+?) (?:ist jetzt|war um \d\d:\d\d Uhr) online(?: \(\d\d:\d\d Uhr\))?$/.exec(String(titel || "")); if (m) OA.perPush.set(oaKern(m[1]), Date.now()); }
+const schonPerPush = (name) => Date.now() - (OA.perPush.get(oaKern(name)) || 0) < ANSAGE_PAUSE_MS;
+// KC-CLUB-ONLINE-GERAET-IPAD: gemerkt wird je PERSON (Name ohne „(am Handy/Tablet/PC)“) – wechselt nur die Geräte-Angabe (Push „am PC“, Online-Liste
+// „am Tablet“), kommt keine zweite Meldung; die Online-Liste zeigt still das neue Gerät.
+const oaKern = (n) => String(n || "").replace(/ \(am (?:Handy|Tablet|PC)\)$/, "");
 // 2.477.0 KC-CLUB-ONLINE-GERAET: nur der Admin bekommt das Gerät dazu – „Klaus (am Handy)“ (gesprochen: „Klaus am Handy ist jetzt online“);
 // gleiche Schreibweise wie im Push-Titel des Servers, damit dieselbe Meldung nicht doppelt angesagt wird
 const OA_GERAET = { handy: "am Handy", tablet: "am Tablet", pc: "am PC" };
@@ -4489,7 +4492,7 @@ function werIstDa(liste, zeigen) {
   const namen = [...new Set((liste || []).filter((x) => x.person_id !== ICH?.person_id).map(oaName).filter(Boolean))]; // 2.477.0: Admin mit Gerät
   if (!namen.length) return;
   const text = werIstDaText(namen), jetzt = Date.now();
-  namen.forEach((x) => OA.gesagt.set(x, jetzt));
+  namen.forEach((x) => OA.gesagt.set(oaKern(x), jetzt)); // KC-CLUB-ONLINE-GERAET-IPAD: je Person
   melde("🟢 " + text);
   if (!("speechSynthesis" in window)) return;
   if (!navigator.userActivation || navigator.userActivation.hasBeenActive) { WER_DA.warte = null; document.removeEventListener("pointerdown", werIstDaNachTipp, true); return sprechen(text.replace(/[()]/g, "")); }
@@ -4540,9 +4543,9 @@ function onlineAnsageText(n) {
 }
 function onlineAnsageSprechen(namen) {
   if (document.hidden || inRuheJetzt(INIT?.einstellungen?.ruhezeit) || eingabeRuhe()) return; // 2.789.0 KC-CLUB-EINGABE-RUHE
-  const jetzt = Date.now(), n = [...new Set(namen.filter(Boolean))].filter((x) => jetzt - (OA.gesagt.get(x) || 0) >= ANSAGE_PAUSE_MS && !schonPerPush(x));
+  const jetzt = Date.now(), n = [...new Set(namen.filter(Boolean))].filter((x) => jetzt - (OA.gesagt.get(oaKern(x)) || 0) >= ANSAGE_PAUSE_MS && !schonPerPush(x));
   if (!n.length) return;
-  n.forEach((x) => OA.gesagt.set(x, jetzt));
+  n.forEach((x) => OA.gesagt.set(oaKern(x), jetzt));
   OA.warte = [...new Set([...(OA.warte || []), ...n])];
   clearTimeout(OA.sammelTimer);
   OA.sammelTimer = setTimeout(() => {
@@ -8867,6 +8870,11 @@ function startWartetZeigen() {
 }
 function startWartetWeg() { if (START_WARTET) clearInterval(START_WARTET.takt); START_WARTET = { ab: 0, takt: 0, fertig: true }; $("startWartet")?.remove(); }
 const schwerOder = (text) => { let l = null; try { l = schwerLage(); } catch {} /* nur Hinweis, darf die Fehlermeldung nie verhindern */ return l ? `Zurzeit hat die Datenbank viel zu tun: Es wird gerade ${l.was}. Das dauert ca. noch ${l.rest} Minute${l.rest === 1 ? "" : "n"}. Versuche dein Anliegen bitte später noch einmal. Danke für dein Verständnis.` : text; };
+// KC-CLUB-ONLINE-GERAET-IPAD (Fund Hansi 22.11.2026 „Marianne am PC … und direkt danach am Tablet online“ – sie war nur am iPad): der Hinweis g kam nur mit
+// dem Online-Abgleich; die „ist jetzt online“-Push entsteht aber bei der ERSTEN Anfrage (meist init) – dort sah der Server nur „Macintosh“ → „am PC“.
+// Jetzt trägt JEDE Anfrage den Hinweis im Inhalt (_g, keine neue Kopfzeile – CORS beim Einspielen). Einmal ermittelt, ändert sich im Fenster nicht.
+let GERAET_HINWEIS = "";
+function geraetHinweis() { if (!GERAET_HINWEIS) try { GERAET_HINWEIS = fpGeraet(); } catch { return ""; } return GERAET_HINWEIS; }
 async function apiRoh(action, daten = {}, zweiterVersuch = false, abbruch = null) {
   // KC-CLUB-NOTBETRIEB-ERNSTFALL: simulierter Ausfall – genau der Fehler, den ein unerreichbarer Club-Server liefert
   if (notErnstfall()) { vbStart(); await new Promise((ok) => setTimeout(ok, 300)); vbEnde(false, 0, "Server nicht erreichbar (Simulation)"); throw Object.assign(new Error("Keine Verbindung zum Server – bitte gleich nochmal versuchen."), { leitung: true }); }
@@ -8878,7 +8886,7 @@ async function apiRoh(action, daten = {}, zweiterVersuch = false, abbruch = null
   // sonst drehte sich die Sanduhr bis zu 2½ Minuten und der Notbetrieb sprang nicht an
   // 2.1.1: Lesen 25 s; Schreiben 140 s (der Server speichert zuerst und benachrichtigt dann – das darf dauern, sonst doppelt)
   const zeitMs = API_LESEN.test(action) ? 25000 : 140000;
-  try { r = await fetch(adresse, { method: "POST", headers: { "Content-Type": "application/json", "x-club-token": KEY, "x-club-version": APP_VERSION, ...(TG_GERAET ? { "x-tg-geraet": TG_GERAET } : {}) }, body: JSON.stringify({ action, ...daten, ...(typeof document !== "undefined" && !document.hidden ? { _sichtbar: 1 } : {}) /* KC-CLUB-ONLINE-JEDE-ANFRAGE */ }), signal: zeitSignalMit(zeitMs, abbruch) }); if (action !== "lebenszeichen") verkehrZaehlen(); }
+  try { r = await fetch(adresse, { method: "POST", headers: { "Content-Type": "application/json", "x-club-token": KEY, "x-club-version": APP_VERSION, ...(TG_GERAET ? { "x-tg-geraet": TG_GERAET } : {}) }, body: JSON.stringify({ action, ...daten, ...(typeof document !== "undefined" && !document.hidden ? { _sichtbar: 1 } : {}) /* KC-CLUB-ONLINE-JEDE-ANFRAGE */, _g: geraetHinweis() /* KC-CLUB-ONLINE-GERAET-IPAD */ }), signal: zeitSignalMit(zeitMs, abbruch) }); if (action !== "lebenszeichen") verkehrZaehlen(); }
   catch (fe) { if (abbruch?.aborted) { VB.laufend = Math.max(0, VB.laufend - 1); vbDatenLed(); throw Object.assign(new Error("Abgebrochen."), { abgebrochen: true }); } // KC-CLUB-LADE-SICHERHEIT
     if (fe?.name === "TimeoutError" || fe?.name === "AbortError") { vbEnde(false, 0, "Server antwortet nicht"); try { if (navigator.onLine) schneckeMessen(zeitMs); } catch {} /* KC-CLUB-SCHNECKE: nur Anzeige, darf api() nie stören */ throw Object.assign(new Error(schwerOder(API_LESEN.test(action) ? "Der Server antwortet gerade nicht – bitte gleich nochmal versuchen." : "Der Server antwortet gerade nicht – bitte kurz prüfen, ob es angekommen ist, bevor du es nochmal sendest.")), { leitung: true, zeit: true }); }
     // Region weg → Standardweg. 2.425.0 KC-CLUB-GENERALCHECK: nur Lesen still wiederholen – „Failed to fetch“ kann auch NACH dem Absenden kommen

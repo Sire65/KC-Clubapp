@@ -88,6 +88,7 @@ jobs:
       - run: node tests/fremdfehler.test.mjs
       - run: node tests/lastwaechter-arbeitszeit.test.mjs
       - run: node tests/online-jede-anfrage.test.mjs
+      - run: node tests/online-geraet-ipad.test.mjs
       - run: node tests/schreibtisch.test.mjs
       - run: node tests/anleitungen.test.mjs
       - run: node tests/hilfe-tipps.test.mjs
