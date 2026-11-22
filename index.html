@@ -3348,6 +3348,10 @@
     /* 2.999.0 KC-CLUB-DP-PLAN-STUNDEN: Uhrzeit und Stunden am Anfang jedes Wunschblocks – über den Nachbarzellen lesbar */
     #druck .dpd-raster td.anf:is(.pref, .avai, .if_n):not(.dienst) span { position: absolute; left: .6mm; top: 50%; transform: translateY(-50%); z-index: 1; font-size: 5.6pt; font-weight: 600; color: #333; padding: 0 .4mm; background: rgba(255,255,255,.75); border-radius: .6mm; }
     #druck .dpd-raster tr.s td { font-size: 5.5pt; color: var(--mut); }
+    /* KC-CLUB-DP-PDF-ZEBRA (Hansi 22.11.): jede zweite Person je Tag ganz leicht grau-beige (Name bis letzte Stunde) – nur background-color, kein Verlauf
+       (KC-CLUB-DRUCK-OHNE-STREIFEN); Wunschfarben, Bereitschaft und Ampel bleiben, Dienstbalken (box-shadow) liegen darüber; „kein Bedarf“ eine Spur dunkler */
+    #druck .dpd-raster tr.zb > th.wer, #druck .dpd-raster tr.zb > td.leer, #druck .dpd-raster tr.zb > td.std { background-color: #f1eee9; }
+    #druck .dpd-raster tr.zb > td.leer.zu { background-color: #e2ddd5; }
     #druck .dpd-raster td.fehlt { background: var(--fehltbg); color: var(--fehlt); font-weight: 800; font-size: 7pt; }
     #druck .dpd-fuss { margin-top: 1.5mm; font-size: 6.5pt; color: var(--mut); border-top: .3mm dashed var(--mut); padding-top: 1mm; }
     /* 2.646.0 KC-CLUB-DP-DRUCK-STUNDEN: Spalte „Std.“, Ampel-Zeile (rot fehlt, grün passt, gelb zu viel), Blatt „Stunden je Person“ */
@@ -3440,6 +3444,7 @@
     #druck .dpe-tab .bal { position: absolute; top: .6mm; bottom: .6mm; border-radius: 1mm; color: #fff; font-size: 7pt; font-weight: 700; display: flex; align-items: center; justify-content: center; white-space: nowrap; overflow: hidden; }
     #druck .dpe .b { background: #741521; } #druck .dpe .v { background: #c0612b; } #druck .dpe .h { background: #35607e; } #druck .dpe .aus { background: #948980; }
     #druck .dpe-tab .bal.bs { background: #eef4e9; border: .4mm dashed #4f7a3a; color: #2f5a1f; }
+    #druck .dpe-tab tr.zb > td { background-color: #f1eee9; } /* KC-CLUB-DP-PDF-ZEBRA: Wunsch- und Einteilungszeile einer Person gleich, je Tag abwechselnd */
     #druck .dpe-tab .stat td { background: #fcfaf7; height: 3.8mm; } #druck .dpe-tab .zahlen { display: flex; } #druck .dpe-tab .zahlen i { flex: 1; font-style: normal; text-align: center; font-size: 6.5pt; line-height: 3.8mm; }
     #druck .dpe-tab .zahlen .gruen { background: #e3f1dc; color: #2f5a1f; font-weight: 800; } #druck .dpe-tab .zahlen .rot { background: #f7d4d0; color: #9b1c13; font-weight: 800; } #druck .dpe-tab .zahlen .gelb { background: #fbefc6; color: #7a5b00; font-weight: 800; } #druck .dpe-tab .zahlen .soll { color: #8a8076; }
     #druck .dpe-tab td.rot { color: #9b1c13; font-weight: 800; } #druck .dpe-tab .ber td { height: 4.2mm; } #druck .dpe-tab .leer { color: #8a8076; font-style: italic; }

@@ -35727,17 +35727,21 @@ function dpdKopfHalb(S) {
   return { oben: oben.join(""), unten: S.map((s) => `<th class="hm${dpdHk(s)}">${s % 1 ? ":30" : ":00"}</th>`).join("") };
 }
 const dpdHk = (s) => (s % 1 ? " hb" : " hv");
+// KC-CLUB-DP-PDF-ZEBRA: jede zweite Person eines Tages (rows = Zeilen nur dieses Tages → je Tag neu, erste Person weiß; nur art p zählt)
+const dpdZebra = (rows, i) => rows[i].art === "p" && rows.slice(0, i).filter((x) => x.art === "p").length % 2 === 1;
 function dpdTabelle(tage, von, teil, letzte) {
   const S = dpdSlots(von, von + tage[0].rows[0].cells.length / 2), idx = teil.map((s) => S.indexOf(s)), rechts = teil[teil.length - 1] === letzte, K = dpdKopfHalb(teil);
   const kopf = `<colgroup><col class="tag"><col class="wer">${teil.map(() => "<col>").join("")}${rechts ? '<col class="std">' : ""}</colgroup><thead><tr><th class="tag" rowspan="2">Tag · Regelzeit</th><th class="wer" rowspan="2">Mitglied</th>${K.oben}${rechts ? '<th class="std" rowspan="2">Std.</th>' : ""}</tr><tr class="hm">${K.unten}</tr></thead>`;
   // 3.0.0 KC-CLUB-DRUCK-TAG-GANZ (Hansi 21.11.: „trenne keine Tage – keinen Tagesumbruch, sonst verliert man die Übersicht“): jeder Tag eigenes <tbody>, nie geteilt
+  // KC-CLUB-DP-PDF-ZEBRA (Hansi 22.11.: „jede zweite Linie minimal hellgrau“): jede zweite Person eines Tages bekommt die Klasse zb (nur
+  // background-color, kein Verlauf – KC-CLUB-DRUCK-OHNE-STREIFEN); je Tag neu gezählt, erste Person weiß, nur Personenzeilen (art p) zählen
   const body = tage.map((t) => `<tbody class="dpd-tag">${t.rows.map((r, i) => {
     const tag = i ? "" : `<th class="tag" rowspan="${t.rows.length}"><b>${t.wt} ${t.dt}</b><span class="kind">${esc(t.name)}</span><span class="regel">${esc(t.regel)} Uhr</span><span class="zahl">${t.art === "Markttag" ? `Regelzeit ${dpdStd(t.regelStd)} Std.` : "aus Wunschplänen, keine Vorgabe"}</span><span class="zahl">Bedarf ${dpdStd(t.bedarfStd)} Std.</span>${t.wunschStd !== undefined ? `<span class="zahl">gewünscht ${dpdStd(t.wunschStd)} Std.</span>` : `<span class="zahl">eingeplant ${dpdStd(t.einpl)} Std.</span><span class="bil ${t.fehl ? "rot" : "gruen"}">● ${t.fehl ? "fehlt " + dpdStd(t.fehl) + " Std." : "richtig besetzt"}</span>${t.ueber ? `<span class="bil gelb">● ${dpdStd(t.ueber)} Std. zu viel</span>` : ""}`}</th>`;
     const zellen = idx.map((k, j) => { let [cl, txt] = r.cells[k];
       if (j === 0 && r.dienst && !txt && teil[0] > r.dienst[0] && teil[0] < r.dienst[1]) txt = `${dpdUhr(r.dienst[0])}–${dpdUhr(r.dienst[1])}`; // läuft vom linken Blatt herüber
       return `<td class="${cl}${dpdHk(teil[j])}">${txt ? `<span>${esc(txt)}</span>` : ""}</td>`; }).join("");
     const std = rechts ? `<td class="std ${r.art}"><b>${esc(r.std)}</b><small>${esc(r.klein)}</small></td>` : "";
-    return `<tr class="${r.art}${i ? "" : " erste"}">${tag}<th class="wer ${r.art}">${esc(r.name)}<small>${esc(r.sub)}</small></th>${zellen}${std}</tr>`; }).join("")}</tbody>`).join("");
+    return `<tr class="${r.art}${i ? "" : " erste"}${dpdZebra(t.rows, i) ? " zb" : ""}">${tag}<th class="wer ${r.art}">${esc(r.name)}<small>${esc(r.sub)}</small></th>${zellen}${std}</tr>`; }).join("")}</tbody>`).join("");
   return `<table class="dpd-raster">${kopf}${body}</table>`;
 }
 function dpdUebersichtWunsch(tage, ges) { // 2.996.0 letztes Blatt des Wunschplans: Wunschstunden je Person und Tag
@@ -35914,14 +35918,14 @@ function dpdEinsatzBlatt(d) {
     const achse = (() => { const out = []; for (let k = 0; k < n;) { const s = v + k / 2, zwei = !(s % 1) && k + 1 < n;
       out.push(`<i class="h${zwei ? " zwei" : ""}"><span>${!(s % 1) || k === 0 ? `${Math.floor(s)} Uhr` : ""}</span><small>${zwei ? "<em>:00</em><em>:30</em>" : `<em>${s % 1 ? ":30" : ":00"}</em>`}</small></i>`); k += zwei ? 2 : 1; }
       return out.join(""); })();
-    const zeile = (name) => {
-      const l = t.leute.find((y) => y.n === name), w = l ? l.w : "", segs = [];
+    const zeile = (name, nr) => { // KC-CLUB-DP-PDF-ZEBRA: beide Zeilen einer Person gleich, jede zweite Person zb – je Tag (Seite) neu gezählt, erste weiß
+      const l = t.leute.find((y) => y.n === name), w = l ? l.w : "", segs = [], zb = nr % 2 === 1 ? " zb" : "";
       for (let k = i0; k < i1;) { const c = w[k]; let j = k; while (j < i1 && w[j] === c) j++; if (ART[c]) segs.push([c, k - i0, j - i0]); k = j; }
       const wStd = [...w.slice(i0, i1)].filter((c) => c === "p").length / 2, dauer = l?.s ? l.s[1] - l.s[0] : 0;
       const angaben = segs.length ? segs.map(([c, a, e]) => `<b class="seg ${ART[c]}" style="${pos(a, e)}">${e - a >= 3 ? `${ARTX[c]} ${kurz(v + a / 2)}–${kurz(v + e / 2)}` : ""}</b>`).join("") : '<span class="nix">keine Angabe</span>';
       const balken = l?.s ? `<b class="bal ${zone(l.z)}" style="${pos(idx(l.s[0]), idx(l.s[1]))}">${kurz(l.s[0])}–${kurz(l.s[1])}${dauer > 6 ? " ☕" : ""}</b>` : "";
-      return `<tr class="wz${l?.s ? "" : " frei"}"><td class="nm" rowspan="2">${esc(name)}<small>${esc(zusatz(l?.z))}</small></td><td class="zt art">Angaben</td><td class="gr">${dpeRl(n, v)}${angaben}</td><td class="st klein">W ${dpdStd(wStd)}</td></tr>
-        <tr class="sz${l?.s ? "" : " frei"}"><td class="zt">${l?.s ? `${uhr(l.s[0])}–${uhr(l.s[1])}` : "—"}</td><td class="gr">${dpeRl(n, v)}${balken}</td><td class="st">S ${l?.s ? dpdStd(dauer) : "0"}</td></tr>`;
+      return `<tr class="wz${l?.s ? "" : " frei"}${zb}"><td class="nm" rowspan="2">${esc(name)}<small>${esc(zusatz(l?.z))}</small></td><td class="zt art">Angaben</td><td class="gr">${dpeRl(n, v)}${angaben}</td><td class="st klein">W ${dpdStd(wStd)}</td></tr>
+        <tr class="sz${l?.s ? "" : " frei"}${zb}"><td class="zt">${l?.s ? `${uhr(l.s[0])}–${uhr(l.s[1])}` : "—"}</td><td class="gr">${dpeRl(n, v)}${balken}</td><td class="st">S ${l?.s ? dpdStd(dauer) : "0"}</td></tr>`;
     };
     const zahlen = (f) => `<div class="zahlen">${Array.from({ length: n }, (_, k) => f(k + i0)).join("")}</div>`;
     const ber = (t.ber || []).length ? t.ber.map((z) => `<tr class="ber"><td class="nm">☎ ${esc(z.n)}<small>Bereitschaft</small></td><td class="zt">${uhr(z.s[0])}–${uhr(z.s[1])}</td><td class="gr">${dpeRl(n, v)}<b class="bal bs" style="${pos(Math.max(0, idx(z.s[0])), Math.min(n, idx(z.s[1])))}">Bereitschaft ${kurz(z.s[0])}–${kurz(z.s[1])}</b></td><td class="st"></td></tr>`).join("")
@@ -35932,7 +35936,7 @@ function dpdEinsatzBlatt(d) {
       <div class="dpe-tag"><div><b>${DPD_WD[x.getDay()]} ${t.d.slice(8, 10)}.${t.d.slice(5, 7)}.${t.d.slice(0, 4)}</b> · ${esc(dpdArtName(t.art, x))} · Regelzeit <b>${uhr(v)}–${uhr(b)} Uhr</b></div>
         <div>Soll <b>${dpdStd(soll)} Std.</b> · eingeteilt <b>${dpdStd(ist)} Std.</b> · ${fehlt ? `<span class="rot">fehlt ${dpdStd(fehlt)} Std.</span>` : '<span class="gruen">voll besetzt ✓</span>'}</div></div>
       <table class="dpe-tab"><thead><tr><th class="nm">Person</th><th class="zt">Zeit</th><th class="gr achse">${achse}</th><th class="st">Std.</th></tr></thead>
-        <tbody>${alle.map(zeile).join("")}</tbody>
+        <tbody>${alle.map((name, nr) => zeile(name, nr)).join("")}</tbody>
         <tbody class="stat"><tr><td class="nm">Besetzt</td><td class="zt">je ½ Std.</td><td class="gr">${zahlen((i) => `<i class="${t.besetzt[i] < t.bedarf[i] ? "rot" : t.besetzt[i] > t.bedarf[i] ? "gelb" : "gruen"}">${t.besetzt[i]}</i>`)}</td><td class="st">${dpdStd(ist)}</td></tr>
           <tr><td class="nm">Soll</td><td class="zt"></td><td class="gr">${zahlen((i) => `<i class="soll">${t.bedarf[i]}</i>`)}</td><td class="st">${dpdStd(soll)}</td></tr>
           ${fehlt ? `<tr><td class="nm rot">Fehlt</td><td class="zt"></td><td class="gr">${zahlen((i) => `<i class="${t.fehlt[i] ? "rot" : ""}">${t.fehlt[i] || ""}</i>`)}</td><td class="st rot">${dpdStd(fehlt)}</td></tr>` : ""}</tbody>
