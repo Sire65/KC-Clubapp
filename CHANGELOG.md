@@ -1,6 +1,6 @@
 # Änderungen
 
-## (Version folgt) – 🎄 Adventskalender auch für Aushilfen (KC-CLUB-ADVENT-AUSHILFEN) · 🕐 Terminanfrage: „Ja, aber zu anderer Zeit“ (KC-CLUB-ANFRAGE-ANDERE-ZEIT)
+## 3.7.0 – 2026-11-22 – 🎄 Adventskalender auch für Aushilfen (KC-CLUB-ADVENT-AUSHILFEN) · 🕐 Terminanfrage: „Ja, aber zu anderer Zeit“ (KC-CLUB-ANFRAGE-ANDERE-ZEIT)
 Wunsch Hansi 22.11.2026: „Adventskalender auch für Aushilfen.“
 - **Aushilfen sehen den Adventskalender** wie Mitglieder: Türchen, Erinnerung im Info-Laufband, Schalter unter ⚙️ → ✨ Effekte und die Hilfe dazu (ab 1. Dezember, Admin immer). Gäste sehen ihn weiterhin nie (bisher seit 2.869.0: nur Mitglieder).
 - **Preis-Türchen auch für Aushilfen:** „🎁 Ja, den nehme ich“ (🎅 Mini-Schoko-Nikolaus am 6.12., 🍫 Kinderriegel am 20.12.) – `advent_preis_melden` und `advent_preise_meine` sind jetzt in der Aktionsliste für Aushilfen (App und Server gleich), der Server lässt Mitglieder und Aushilfen zu. Die Gadget-Verlosung ließ Aushilfen schon zu.
