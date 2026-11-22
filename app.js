@@ -35915,8 +35915,9 @@ function dpdEinsatzBlatt(d) {
     const pos = (a, e) => `left:${(a / n) * 100}%;width:${((e - a) / n) * 100}%`, idx = (h) => Math.round((h - von0) * 2) - i0;
     const soll = t.bedarf.slice(i0, i1).reduce((p, q) => p + q, 0) / 2, ist = t.leute.filter((l) => l.s).reduce((p, l) => p + l.s[1] - l.s[0], 0), fehlt = t.fehlt.reduce((p, q) => p + q, 0) / 2;
     // 3.3.0 KC-CLUB-DP-PDF-MATRIX: Achse zweizeilig – oben „8 Uhr“ über beide Halbstunden, darunter klein „:00 | :30“
+    // KC-CLUB-DP-PDF-ACHSE (Hansi 22.11.): Klasse „ah“ statt „h“ – „h“ ist „hinten“ (#druck .dpe .h dunkelblau) und färbte die Kopfzeile
     const achse = (() => { const out = []; for (let k = 0; k < n;) { const s = v + k / 2, zwei = !(s % 1) && k + 1 < n;
-      out.push(`<i class="h${zwei ? " zwei" : ""}"><span>${!(s % 1) || k === 0 ? `${Math.floor(s)} Uhr` : ""}</span><small>${zwei ? "<em>:00</em><em>:30</em>" : `<em>${s % 1 ? ":30" : ":00"}</em>`}</small></i>`); k += zwei ? 2 : 1; }
+      out.push(`<i class="ah${zwei ? " zwei" : ""}"><span>${!(s % 1) || k === 0 ? `${Math.floor(s)} Uhr` : ""}</span><small>${zwei ? "<em>:00</em><em>:30</em>" : `<em>${s % 1 ? ":30" : ":00"}</em>`}</small></i>`); k += zwei ? 2 : 1; }
       return out.join(""); })();
     const zeile = (name, nr) => { // KC-CLUB-DP-PDF-ZEBRA: beide Zeilen einer Person gleich, jede zweite Person zb – je Tag (Seite) neu gezählt, erste weiß
       const l = t.leute.find((y) => y.n === name), w = l ? l.w : "", segs = [], zb = nr % 2 === 1 ? " zb" : "";

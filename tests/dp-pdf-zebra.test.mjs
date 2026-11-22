@@ -54,4 +54,8 @@ assert.ok(css.some((z) => /\.dpe-tab tr\.zb > td \{ background-color: #f1eee9; \
 // Zeilenhöhen (KC-CLUB-DRUCK-TAG-GANZ / Seitenumbruch) unberührt: Zebra-Regeln setzen keine Höhe, Rahmen oder Abstände
 for (const z of css) assert.ok(!/height|border|padding|margin/.test(z.replace(/\/\*.*?\*\//g, "")), "keine Größenänderung: " + z.trim());
 
+// KC-CLUB-DP-PDF-ACHSE (Hansi 22.11.): Achsen-Zellen nicht mit Klasse „h“ (= hinten, dunkelblau) – Kopfzeile bleibt hell
+const achse = E[0].match(/<th class="gr achse">(.*?)<\/th>/)[1];
+assert.ok(/<i class="ah( zwei)?">/.test(achse) && !/<i class="h[ "]/.test(achse), "Achse mit eigener Klasse ah");
+assert.ok(!/\.ah\b[^{]*\{[^}]*background/.test(html), "Achse ohne eigene Hintergrundfarbe (hell wie der Tabellenkopf)");
 console.log("dp-pdf-zebra: alles grün");
