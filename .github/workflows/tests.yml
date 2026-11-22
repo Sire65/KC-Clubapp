@@ -78,6 +78,7 @@ jobs:
       - run: node tests/alter-link-klar.test.mjs
       - run: node tests/update-hinweis.test.mjs
       - run: node tests/sicherung-packen.test.mjs
+      - run: node tests/backup-pruefung-spaeter.test.mjs  # 22.11.2026 KC-BACKUP-PRUEFUNG-SPAETER: Restore-Test nur noch 06:30 UTC
       - run: node tests/online-frage.test.mjs
       - run: node tests/aenderung-erbitten.test.mjs
       - run: node tests/spiegel-schonend.test.mjs
