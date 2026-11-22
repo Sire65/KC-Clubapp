@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "3.5.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "3.6.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -29148,12 +29148,12 @@ function mgKachelnHtml(liste) {
     // als Knopf unten neben 💬/📞 – antippen sagt in einem Satz, was es bedeutet.
     const push = m.wege ? `<button type="button" class="knopf klein mg-push${m.wege.push ? "" : " aus"}" title="${m.wege.push ? "Push ist eingeschaltet" : "Kein Push"}" aria-label="${m.wege.push ? "Push an" : "kein Push"}" onclick="mgPushInfo('${m.person_id}')">${m.wege.push ? "🔔" : "🔕"}</button>` : "";
     return `<div class="mini-kachel mg-kachel${on ? " mg-online" : ""}" onclick="mitgliedOeffnen('${m.person_id}')" role="button" tabindex="0">
-      ${was}${kreis(m, m.name, 58)}<span class="mk-titel">${esc(m.name)}${gbKerze(m.person_id)}</span>
+      ${was}${kreis(m, m.name, 58)}<span class="mk-titel">${esc(m.name)}${gbKerze(m.person_id)} ${ICH?.admin && m.selbstVerborgen ? '<span class="mg-verborgen" title="Online-Anzeige ausgeschaltet – nur du als Admin siehst, ob online" aria-label="Online-Anzeige verborgen (nur für den Admin sichtbar)">🙈</span>' : ""}</span>
       ${m.aemter?.length ? `<span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}
       ${m.status || m.aktiv ? `<span class="stmarke st-${statusArt(m.status)}">${esc(m.status ? statusText(m.status) : "🟢 verfügbar")}</span>` : ""}${da}${ICH.admin && m.unerreichbar ? '<span class="mk-unter" title="kein Push, keine E-Mail – nur über 🔗 Link oder Telefon">📵 nicht erreichbar</span>' : ""}${ICH.admin && m.probe ? `<span class="mk-unter" title="Probephase – nur für dich als Admin sichtbar">🧪 Probe${m.probe.bis ? " bis " + esc(prDatum(m.probe.bis)) : ""}</span>` : ""}
       ${ich ? '<span class="mk-unter"><b>(du)</b></span>' : `<span class="mg-knoepfe" onclick="event.stopPropagation()">${mgStern(m)}<button class="knopf klein" title="Nachricht" onclick="direkt('${m.person_id}')">💬</button>${mgKlopfKnopf(m)}${mgAnrufKnoepfe(m)}${push}</span>`}</div>`; // 2.23.87 (Wunsch Hansi): 📞/🎥 auch auf der Kachel – aktiv bei online (gleicher Baustein wie in der Liste)
   };
-  return `<p class="hinweis" style="margin:0 2px 8px;font-size:.85rem">🟢 online · 🔵 heute da · 🟠 abwesend · ⚪ noch nie in der App · 🔔 Push an · 🔕 kein Push – Kachel antippen für Telefon, Adresse${ICH?.admin ? ", 🔗 Link und 🎖️ Ämter" : " usw."}</p>
+  return `<p class="hinweis" style="margin:0 2px 8px;font-size:.85rem">🟢 online · 🔵 heute da · 🟠 abwesend · ⚪ noch nie in der App · 🔔 Push an · 🔕 kein Push${ICH?.admin ? " · 🙈 Online-Anzeige aus (nur du siehst es)" : ""} – Kachel antippen für Telefon, Adresse${ICH?.admin ? ", 🔗 Link und 🎖️ Ämter" : " usw."}</p>
     <div class="mini-kacheln mg-kacheln">${liste.map(k).join("")}</div>`;
 }
 // KC-CLUB-MG-GRUPPEN (1.34.0, Wunsch Hansi): eigene Gruppen (z. B. „Innovation“) als Filter – antippen zeigt nur deren Mitglieder
@@ -29261,7 +29261,7 @@ function mgKarteiHtml(liste) {
   return `<div class="rk-box" id="mgKartei">${rkOnlineVorn(liste, mgOn).map((m) => { const ich = m.person_id === ICH.person_id;
     return `<details class="karte mgk" data-klappe="mgk" data-pid="${esc(m.person_id)}" open><summary>${kreis(m, m.name, 30)}<span>${esc(m.name)}</span>${rkWasKnopf(m) /* KC-KARTEI-WEGE */}</summary>
       <div class="mgk-kopf">${kreis(m, m.name, 80, `onclick="mitgliedOeffnen('${esc(m.person_id)}')"`)}
-        <div class="mgk-name">${esc(m.name)}${gbKerze(m.person_id)}${ich ? ' <small class="hinweis">(du)</small>' : ""} ${mgStern(m)}</div>
+        <div class="mgk-name">${esc(m.name)}${gbKerze(m.person_id)} ${ICH?.admin && m.selbstVerborgen ? '<span class="mg-verborgen" title="Online-Anzeige ausgeschaltet – nur du als Admin siehst, ob online" aria-label="Online-Anzeige verborgen (nur für den Admin sichtbar)">🙈</span>' : ""}${ich ? ' <small class="hinweis">(du)</small>' : ""} ${mgStern(m)}</div>
         ${m.aemter?.length ? `<div>${m.aemter.map((a) => `<span class="marke">${esc(a)}</span>`).join(" ")}</div>` : ""}
         ${m.status || m.aktiv ? `<div style="margin-top:6px"><span class="stmarke st-${statusArt(m.status)}">${esc(m.status ? statusText(m.status) : "verfügbar")}</span></div>` : ""}
         ${!ich && mgDaText(m) ? `<div class="hinweis mgk-da${mgOn(m) ? " an" : ""}">${mgOn(m) ? "🟢 " : "🕒 "}${esc(mgDaText(m))}</div>` : ""}</div>

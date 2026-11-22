@@ -195,7 +195,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "3.5.0";
+const SERVER_VERSION = "3.6.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -1697,11 +1697,11 @@ function gespraechSignal(a: any) {
 // Sichtbarkeit geändert (Online-Anzeige, Inkognito, Anklopfen/Gespräche zeigen) → Signal „sichtbar“ an alle in der App (ohne mich): deren App gleicht
 // gebremst ab. Eigene Art statt „online“, weil die App „online“ bei stehender Anwesenheit nur gebremst behandelt.
 const SICHTBAR_SCHLUESSEL = new Set(["online", "inkognito", "anklopfen"]);
-async function onlineJetzt(mitInkognito = false): Promise<Set<string>> {
+async function onlineJetzt(mitInkognito = false, mitVerborgenen = false): Promise<Set<string>> { // 3.5.0 KC-CLUB-ADMIN-VERBORGEN: mitVerborgenen nur für den Admin
   const seit = new Date(Date.now() - ONLINE_SEK * 1000).toISOString();
   const { data } = await db.from("kc_club_zugang").select("person_id").eq("aktiv", true).gte("zuletzt_gesehen", seit).not("person_id", "like", "KC-P-TEST%");
   const ids = (data ?? []).map((x: any) => x.person_id), [zeigen, inko, weg] = await Promise.all([onlineZeigenMap(ids), inkognitoSet(ids), wegSet(ids).catch(() => new Set<string>())]);
-  return new Set(ids.filter((id: string) => zeigen.get(id) !== false && (mitInkognito || !inko.has(id)) && !weg.has(id))); // KC-CLUB-ONLINE-ECHT
+  return new Set(ids.filter((id: string) => (mitVerborgenen || zeigen.get(id) !== false) && (mitInkognito || !inko.has(id)) && !weg.has(id))); // KC-CLUB-ONLINE-ECHT
 }
 // KC-CLUB-ONLINE-SPARSAM (2.485.0): wie onlineJetzt(), holt aber „online“, „inkognito“ und weitere Einstellungen der Online-Leute in EINER Abfrage
 // 2.597.0 KC-CLUB-ONLINE-PAKET (Prüfung „bündeln statt einzeln nacheinander“, Wunsch Hansi „sorgfältig und vorsichtig“): Zugang, Einstellungen
@@ -1717,7 +1717,8 @@ async function onlinePaketHolen(seit: string, weitere: string[]): Promise<{ ids:
     return !(r as any).error && d && Array.isArray(d.ids) && Array.isArray(d.einst) && Array.isArray(d.inko) ? d : null;
   } catch { return null; }
 }
-async function onlineJetztMit(weitere: string[]): Promise<{ on: Set<string>; einst: Map<string, Map<string, any>> }> {
+// 3.5.0 KC-CLUB-ADMIN-VERBORGEN: „versteckt“ = online, aber Online-Anzeige selbst ausgeschaltet (nicht inkognito, nicht „weg“) – nur der Admin bekommt sie zu sehen
+async function onlineJetztMit(weitere: string[]): Promise<{ on: Set<string>; einst: Map<string, Map<string, any>>; versteckt: Set<string> }> {
   const seit = new Date(Date.now() - ONLINE_SEK * 1000).toISOString();
   if (!weitere.includes("online_seit")) weitere = [...weitere, "online_seit"]; // KC-CLUB-ONLINE-ECHT: für „weg“
   const pk = await onlinePaketHolen(seit, weitere);
@@ -1725,7 +1726,8 @@ async function onlineJetztMit(weitere: string[]): Promise<{ on: Set<string>; ein
     const einst = new Map<string, Map<string, any>>();
     for (const x of pk.einst) { const m = einst.get(x.schluessel) ?? new Map(); m.set(x.person_id, x.wert); einst.set(x.schluessel, m); }
     const inko = new Set(pk.inko.map(String)), ids = [...new Set(pk.ids.map(String))];
-    const erg = { on: new Set(ids.filter((id) => einst.get("online")?.get(id)?.zeigen !== false && !inko.has(id) && !istWeg(einst.get("online_seit")?.get(id)))), einst };
+    const erg = { on: new Set(ids.filter((id) => einst.get("online")?.get(id)?.zeigen !== false && !inko.has(id) && !istWeg(einst.get("online_seit")?.get(id)))), einst,
+      versteckt: new Set(ids.filter((id) => einst.get("online")?.get(id)?.zeigen === false && !inko.has(id) && !istWeg(einst.get("online_seit")?.get(id)))) };
     const t0 = Date.now();
     if (Math.random() < 1 / ONLINE_PAKET_VERGLEICH) nebenbei(onlineJetztMitAlt(weitere, seit).then(async (alt) => {
       const a = [...alt.on].sort().join(), b = [...erg.on].sort().join();
@@ -1742,17 +1744,18 @@ async function onlineJetztMit(weitere: string[]): Promise<{ on: Set<string>; ein
   }
   return onlineJetztMitAlt(weitere, seit);
 }
-async function onlineJetztMitAlt(weitere: string[], seit: string): Promise<{ on: Set<string>; einst: Map<string, Map<string, any>> }> {
+async function onlineJetztMitAlt(weitere: string[], seit: string): Promise<{ on: Set<string>; einst: Map<string, Map<string, any>>; versteckt: Set<string> }> {
   const einst = new Map<string, Map<string, any>>();
   const { data } = await db.from("kc_club_zugang").select("person_id").eq("aktiv", true).gte("zuletzt_gesehen", seit).not("person_id", "like", "KC-P-TEST%");
   const ids = [...new Set((data ?? []).map((x: any) => x.person_id as string))];
-  if (!ids.length) return { on: new Set(), einst };
+  if (!ids.length) return { on: new Set(), einst, versteckt: new Set() };
   const { data: es } = await db.from("kc_club_person_einstellung").select("person_id,schluessel,wert").in("schluessel", ["online", "inkognito", ...weitere]).in("person_id", ids);
   for (const x of es ?? []) { const m = einst.get(x.schluessel) ?? new Map(); m.set(x.person_id, x.wert); einst.set(x.schluessel, m); }
   const inkoAn = ids.filter((id) => einst.get("inkognito")?.get(id)?.an === true);
   let inko = new Set<string>(); // 2.6.1: Inkognito gilt nur, solange die Person Admin ist (wie inkognitoSet)
   if (inkoAn.length) { const { data: ad } = await db.from("kc_club_rollen").select("person_id").eq("ist_admin", true).in("person_id", inkoAn); inko = new Set((ad ?? []).map((x: any) => x.person_id as string)); }
-  return { on: new Set(ids.filter((id) => einst.get("online")?.get(id)?.zeigen !== false && !inko.has(id) && !istWeg(einst.get("online_seit")?.get(id)))), einst };
+  return { on: new Set(ids.filter((id) => einst.get("online")?.get(id)?.zeigen !== false && !inko.has(id) && !istWeg(einst.get("online_seit")?.get(id)))), einst,
+    versteckt: new Set(ids.filter((id) => einst.get("online")?.get(id)?.zeigen === false && !inko.has(id) && !istWeg(einst.get("online_seit")?.get(id)))) };
 }
 // Anklopfen an mich (offen, ANKLOPFEN_SEK, neueste 3) und von mir (10 Min.) aus einer gemeinsamen Abfrage – wie vorher die zwei Abfragen
 const klopfArt = (a: unknown) => (a === "sprechen" || a === "dazukommen" ? a : "schreiben"); // KC-CLUB-GESPRAECHE: + dazukommen
@@ -11265,7 +11268,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const z = new Map((zug ?? []).map((x: any) => [x.person_id, x]));
         const ps = new Set((push ?? []).map((x: any) => x.person_id));
         const aemter = [...new Set((rollen ?? []).flatMap((x: any) => x.aemter || []))].sort();
-        const ichZeige = ichZeigeMap.get(ich.person_id) !== false, on = ichZeige ? await onlineJetzt() : new Set<string>();
+        const ichZeige = ichZeigeMap.get(ich.person_id) !== false, on = ichZeige || ich.admin ? await onlineJetzt(false, ich.admin) : new Set<string>(); // 3.5.0 KC-CLUB-ADMIN-VERBORGEN
         // KC-CLUB-KREISE (0.60.0): Farbe der Namenskreise. „heute da“ und „verborgen“ folgen derselben Regel wie online
         // (wer sich verbirgt, sieht auch andere nicht). Zustellfehler (rot) nur für den Admin.
         const tag = (d: string | Date) => new Date(d).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }), heute = tag(new Date());
@@ -11305,7 +11308,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             ...((r.get(m.person_id) as any)?.zugang === "passiv" ? { passiv: true } : {}), // 2.784.0 KC-CLUB-PASSIV
             vorstand: !!(r.get(m.person_id) as any)?.ist_vorstand, aemter: (r.get(m.person_id) as any)?.aemter ?? [], admin: !!(r.get(m.person_id) as any)?.ist_admin,
             status: st.get(m.person_id) ?? null, online: on.has(m.person_id) && m.person_id !== ich.person_id, zuletztDa: zd.get(m.person_id) ?? null,
-            verborgen: m.person_id !== ich.person_id && (!ichZeige || zeigen.get(m.person_id) === false),
+            verborgen: m.person_id !== ich.person_id && !ich.admin && (!ichZeige || zeigen.get(m.person_id) === false),
+            ...(ich.admin && m.person_id !== ich.person_id && zeigen.get(m.person_id) === false ? { selbstVerborgen: true } : {}), // 3.5.0 KC-CLUB-ADMIN-VERBORGEN: 🙈 nur für den Admin
             heute: ichZeige && ((zeigen.get(m.person_id) !== false && !inko.has(m.person_id)) || m.person_id === ich.person_id) && !!(z.get(m.person_id) as any)?.zuletzt_gesehen && tag((z.get(m.person_id) as any).zuletzt_gesehen) === heute,
             wege: { push: ps.has(m.person_id), mail: !!m.email, whatsapp: hatTel.has(m.person_id) && (ich.admin || m.person_id === ich.person_id || (ich.kontakte && handyFrei.has(m.person_id))),
               waLieber: waLieber.has(m.person_id) }, // KC-CLUB-WA-LIEBER: liest lieber WhatsApp (die App öffnet beim Senden WhatsApp – nur wenn „whatsapp“ erlaubt ist)
@@ -17184,10 +17188,10 @@ Köcheclub-App`,
         const zeigen = (mein.get("online") as any)?.wert?.zeigen !== false;
         // 2.597.0 KC-CLUB-GLEICHZEITIG: „online seit“ und Fenster merken (nur meine Zeilen), wer sonst online ist und die Live-Umfrage hängen nicht
         // voneinander ab – sie laufen jetzt gleichzeitig statt nacheinander. Gleiche Abfragen, gleiches Ergebnis.
-        const [, fensterAnders, { on, einst }, liveT] = await Promise.all([
+        const [, fensterAnders, { on, einst, versteckt }, liveT] = await Promise.all([
           ich.nurLesen ? Promise.resolve(null) : onlineSeitMerken(ich.person_id, mein.get("online_seit") ?? null).catch(() => null), // KC-CLUB-ONLINE-SEIT (2.25.5)
           fensterAbgleich(ich, p.fenster, req, mein.get("fenster") ?? null).catch(() => null), // KC-CLUB-ZWEI-BROWSER
-          zeigen ? onlineJetztMit(["anklopfen", "online_seit", ...(ich.admin ? ["fenster"] : [])]) : Promise.resolve({ on: new Set<string>(), einst: new Map<string, Map<string, any>>() }),
+          zeigen || ich.admin ? onlineJetztMit(["anklopfen", "online_seit", ...(ich.admin ? ["fenster"] : [])]) : Promise.resolve({ on: new Set<string>(), einst: new Map<string, Map<string, any>>(), versteckt: new Set<string>() }), // 3.5.0: Admin immer
           liveTerminKurz().catch(() => null), // KC-CLUB-LIVE-TERMIN (2.231.0): auch ohne direkte Leitung bemerken
           ich.nurLesen ? Promise.resolve(null) : installStandMerken(ich.person_id, p, mein.get("app_stand") ?? null).catch(() => null), // 2.859.0 KC-CLUB-INSTALL-STAND
         ]);
@@ -17237,13 +17241,16 @@ Köcheclub-App`,
         // vom Server gerechnet – keine Uhrenabweichung) – die App sagt beim Zurückkommen an, wer in den letzten 3 Min. dazugekommen ist
         const seitMap = new Map<string, number>();
         for (const id of on) { const ts = Date.parse(einst.get("online_seit")?.get(id)?.seit || ""); if (ts > 0) seitMap.set(id, Math.max(0, Math.round((Date.now() - ts) / 1000))); }
-        const leute = await personen([...on, ...(ss ? [ss.von] : []), ...(anMich ?? []).map((x: any) => x.von), ...(vonMir ?? []).map((x: any) => x.an), ...(rufe ?? []).map((x: any) => x.von), ...verp.map((x: any) => x.von), ...(spAn ?? []).map((x: any) => x.von), ...(vf ? [vf.von] : []), ...kVerp.map((x: any) => x.von), ...gs.liste.flatMap((g: any) => g.teilnehmer), ...dazuAnMich.map((x: any) => x.von), ...dazuVonMir.map((x: any) => x.an)]);
+        // 3.5.0 KC-CLUB-ADMIN-VERBORGEN (Wunsch Hansi 22.11.2026 „Ich brauche die Funktion … mir anzeigen, wenn er online ist“): nur der Admin sieht
+        // zusätzlich, wer online ist, obwohl die Online-Anzeige aus ist (markiert verborgen: true). Anklopfen, Ansage u. Ä. bleiben wie bisher (nur „on“).
+        const adminVersteckt = ich.admin ? [...(versteckt ?? [])].filter((id) => id !== ich.person_id && !on.has(id)) : [];
+        const leute = await personen([...on, ...adminVersteckt, ...(ss ? [ss.von] : []), ...(anMich ?? []).map((x: any) => x.von), ...(vonMir ?? []).map((x: any) => x.an), ...(rufe ?? []).map((x: any) => x.von), ...verp.map((x: any) => x.von), ...(spAn ?? []).map((x: any) => x.von), ...(vf ? [vf.von] : []), ...kVerp.map((x: any) => x.von), ...gs.liste.flatMap((g: any) => g.teilnehmer), ...dazuAnMich.map((x: any) => x.von), ...dazuVonMir.map((x: any) => x.an)]);
         const wer = (id: string) => ({ person_id: id, name: leute.get(id)?.display_name || id, vorname: vorname(leute.get(id) ?? null) || id });
         // 2.477.0 KC-CLUB-ONLINE-GERAET: nur für den Admin – mit welchem Gerät (neuester Eintrag der letzten 3 Min.) jemand online ist
         const geraetMap = new Map<string, string>();
         if (ich.admin) for (const id of on) { const l = (einst.get("fenster")?.get(id)?.liste || []).filter((y: any) => y && GERAETE.has(y.g) && Date.now() - Number(y.t) < FENSTER_SEK * 1000).sort((a: any, b: any) => b.t - a.t);
           if (l[0]) geraetMap.set(id, l[0].g); }
-        return json({ fensterAnders, liveTermin: liveT ? { id: liveT.id, stand: liveT.geaendert_am } : null, zeigen, verpasst: verp.map((x: any) => ({ id: x.id, von: wer(x.von), art: x.art, zeit: x.erstellt_am })), online: [...on].map((id) => ({ ...wer(id), klopfbar: klopfbar.get(id) !== false, ...(seitMap.has(id) ? { seitSek: seitMap.get(id) } : {}), ...(geraetMap.has(id) ? { geraet: geraetMap.get(id) } : {}) })), klopfen: (anMich ?? []).map((x: any) => ({ id: x.id, von: wer(x.von), zeit: x.erstellt_am, art: x.art })),
+        return json({ fensterAnders, liveTermin: liveT ? { id: liveT.id, stand: liveT.geaendert_am } : null, zeigen, verpasst: verp.map((x: any) => ({ id: x.id, von: wer(x.von), art: x.art, zeit: x.erstellt_am })), online: [...on, ...adminVersteckt].map((id) => ({ ...wer(id), ...(adminVersteckt.includes(id) ? { verborgen: true } : {}), klopfbar: !adminVersteckt.includes(id) && klopfbar.get(id) !== false, ...(seitMap.has(id) ? { seitSek: seitMap.get(id) } : {}), ...(geraetMap.has(id) ? { geraet: geraetMap.get(id) } : {}) })), klopfen: (anMich ?? []).map((x: any) => ({ id: x.id, von: wer(x.von), zeit: x.erstellt_am, art: x.art })),
           klopfAntworten: (anMich ?? []).length ? Object.entries(KLOPF_ANTWORTEN).map(([id, text]) => ({ id, text })) : undefined,
           antworten: (vonMir ?? []).map((x: any) => ({ id: x.id, an: wer(x.an), status: x.status, thread: x.thread_id, antwort: x.antwort ?? null, art: x.art, ...(pushStand.has(x.id) ? { push: pushStand.get(x.id) } : {}) })),
           ...(kVerp.length ? { klopfVerpasst: kVerp.map((x: any) => ({ id: x.id, von: wer(x.von), zeit: x.zeit })) } : {}),
