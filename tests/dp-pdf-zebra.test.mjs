@@ -58,4 +58,8 @@ for (const z of css) assert.ok(!/height|border|padding|margin/.test(z.replace(/\
 const achse = E[0].match(/<th class="gr achse">(.*?)<\/th>/)[1];
 assert.ok(/<i class="ah( zwei)?">/.test(achse) && !/<i class="h[ "]/.test(achse), "Achse mit eigener Klasse ah");
 assert.ok(!/\.ah\b[^{]*\{[^}]*background/.test(html), "Achse ohne eigene Hintergrundfarbe (hell wie der Tabellenkopf)");
+// KC-CLUB-DP-PDF-ACHSE: „:00 | :30“ unter „10 Uhr“ – die allgemeine Regel .zwei { display: grid } darf die Achse nicht nebeneinander legen
+assert.ok(/^\s*\.zwei \{ display: grid;/m.test(html) ? /#druck \.dpe-tab \.achse i \{ display: block;/.test(html) : true, "Achsen-Zelle display:block gegen .zwei-Gitter");
+assert.ok(/#druck \.dpe-tab \.achse i span \{ display: block;/.test(html) && /#druck \.dpe-tab \.achse i small \{ display: flex;/.test(html) && /#druck \.dpe-tab \.achse i small em \{ flex: 1;[^}]*text-align: center;/.test(html), "oben „10 Uhr“, darunter je Halbstunde mittig");
+assert.ok(/#druck \.dpe-tab th\.achse \{ padding: 0; height: 4\.4mm; \}/.test(html), "Kopf hoch genug für zwei Zeilen");
 console.log("dp-pdf-zebra: alles grün");
