@@ -223,6 +223,7 @@ jobs:
       - run: node tests/video-stimme-stumm.test.mjs
       - run: node tests/advent-2026.test.mjs
       - run: node tests/advent-preise.test.mjs
+      - run: node tests/advent-gadgets.test.mjs
       - run: node tests/erstattung-sicher.test.mjs
       - run: node tests/ablage-neu.test.mjs
       - run: node tests/genesungskarte.test.mjs

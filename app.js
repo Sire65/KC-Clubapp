@@ -10208,7 +10208,7 @@ const ZUGANG_AKTIONEN = {
     "push_pruefen", "geraete_liste", "geraet_entfernen", "andere_geraete_abmelden", "push_abmelden", "push_test", "rw_test", "neues_geraet_antwort"],
   aushilfe: ["mein_dienst", "dp_plaene", "dienstwunsch_laden", "dienstwunsch_speichern", "dienst_gruss", "dienste", "dienst_freigabe", "meine_eingaben",
     "eingaben_bestaetigen", "wunschbogen_mailen", "eingaben_ablegen", "fotos_neueste", "fotos_liste", "foto_oeffnen",
-    "schulung_meine", "schulung_antwort", "gericht_zutat_setzen", "gericht_antwort", "tipp_stand", "tipp_mitmachen", "tipp_abgeben",
+    "schulung_meine", "schulung_antwort", "gericht_zutat_setzen", "gericht_antwort", "tipp_stand", "tipp_mitmachen", "tipp_abgeben", "advent_gadget_stand", "advent_gadget_mitmachen", // KC-CLUB-ADVENT-GADGETS
     "sondereinsatz_zusage", "stunden_melden", "mein_ausweis", "dienst_stand", "dienst_buchen", "dienst_korrigieren", "dienst_tausch_liste", "dienst_tausch_anbieten", "dienst_tausch_aktion", "dp_einzelplan", "ist_offen", "ist_antworten", "ist_feedback"], // 2.590.0 KC-CLUB-DIENST-STEMPEL; 2.606.0 KC-CLUB-DIENST-TAUSCH
 };
 const ZUGANG_KACHELN = { basis: ["termine", "kommunikation", "sos", "spiele", "status", "einstellungen", "hilfezentrum", "twinkey", "erklaer", "update", "sicherheit", "feedback", "test"],
@@ -13284,6 +13284,9 @@ const AK_TUERCHEN = [ // 2.869.0 KC-CLUB-ADVENT-2026: Tag 1–24; art: naschen |
   { art: "einladung", sym: "☕", t: "Einladung zum Frühstück" },
 ];
 const AK_ARTEN = { naschen: ["🍬", "Nascherei"], basteln: ["✂️", "Basteln"], deko: ["🕯️", "Deko"], riegel: ["🍫", "Überraschung"], einladung: ["☕", "Einladung"] };
+// KC-CLUB-ADVENT-GADGETS (Wunsch Hansi 22.11.2026): Einzelstücke, zusätzlich zum Türchen-Inhalt verlost (Tag → Name/Foto); muss zu ADVENT_GADGETS im Server passen
+const AK_GADGETS = { 3: { name: "ausziehbares USB-Ladekabel", foto: "advent/gadget-ladekabel.webp", b: 520, h: 494 }, 10: { name: "Flaschenöffner", foto: "advent/gadget-flaschenoeffner.webp", b: 520, h: 82 },
+  13: { name: "Plüsch-Biene", foto: "advent/gadget-biene.webp", b: 341, h: 520 }, 17: { name: "Selfie-Ringlicht fürs Handy", foto: "advent/gadget-ringlicht.webp", b: 487, h: 490 } };
 const AK_REIHE = [7, 15, 1, 22, 10, 3, 18, 12, 24, 5, 20, 9, 2, 14, 17, 6, 11, 23, 4, 19, 13, 8, 16, 21]; // feste, gemischte Anordnung der Türchen
 // KC-CLUB-ADVENT-SERVERUHR (Wunsch Hansi 15.11.2026: „Jedes Türchen darf nur am Tag geöffnet werden, nicht schon vorher – im Nachhinein erlaubt … mit Server-Uhr
 // absichern“): Tag nach der Uhr des Servers in deutscher Zeit – ein vorgestelltes Handy-Datum öffnet kein Türchen früher. Der Versatz kommt einmal beim Start
@@ -13351,13 +13354,44 @@ async function akPreisListe() { // nur Admin: wer bekommt was (zum Austeilen im 
   const b = blattAuf("akPreisBlatt", '<h3 style="margin:0">📋 Adventskalender – wer bekommt was</h3><div id="akPreisListe"><p class="hinweis">⏳ Wird geladen …</p></div>');
   let r; try { r = await api("advent_preise_liste", {}, { warten: true }); } catch (e) { if ($("akPreisListe")) $("akPreisListe").innerHTML = `<p class="hinweis">⚠️ ${esc(fehlerText(e))}</p>`; return; }
   const gruppen = Object.values(AK_PREISE).map((P) => ({ P, leute: r.preise.filter((x) => x.preis === P.name).map((x) => x.name).sort((a, c) => a.localeCompare(c, "de")) }));
-  const html = gruppen.map(({ P, leute }) => `<h4 style="margin:12px 0 4px">${P.sym} ${esc(P.name)} – ${leute.length} Stück</h4>${leute.length ? `<ol style="margin:0;padding-left:22px">${leute.map((x) => `<li>${esc(x)}</li>`).join("")}</ol>` : '<p class="hinweis" style="margin:0">Noch niemand gemeldet.</p>'}`).join("");
+  const gezogen = new Map((r.gadgets || []).map((x) => [x.tag, x])); // KC-CLUB-ADVENT-GADGETS: eigener Abschnitt für die verlosten Einzelstücke
+  const html = gruppen.map(({ P, leute }) => `<h4 style="margin:12px 0 4px">${P.sym} ${esc(P.name)} – ${leute.length} Stück</h4>${leute.length ? `<ol style="margin:0;padding-left:22px">${leute.map((x) => `<li>${esc(x)}</li>`).join("")}</ol>` : '<p class="hinweis" style="margin:0">Noch niemand gemeldet.</p>'}`).join("")
+    + `<h4 style="margin:12px 0 4px">🎁 Gadgets (verlost)</h4><ul style="margin:0;padding-left:22px">${Object.entries(AK_GADGETS).map(([t, G]) => { const x = gezogen.get(Number(t));
+      return `<li>${t}.12. – ${esc(G.name)}: ${!x ? "Verlosung am " + t + ". Dezember um 22 Uhr" : x.name ? `<b>${esc(x.name)}</b>` : "nicht vergeben"}${x ? ` (${x.teilnehmer} ${x.teilnehmer === 1 ? "Teilnehmer" : "Teilnehmende"})` : ""}</li>`; }).join("")}</ul>`;
   if (!$("akPreisListe")) return;
   $("akPreisListe").innerHTML = html + `<div class="knoepfe" style="margin-top:12px"><button type="button" class="knopf haupt" onclick="akPreisDruck()">🖨️ Drucken</button><button type="button" class="knopf" onclick="fensterZu($('akPreisBlatt'))">Schließen</button></div>`;
   AK_GEMELDET.druck = { jahr: r.jahr, html };
 }
 const akPreisDruck = () => AK_GEMELDET.druck && druckStarten("advent_preise"); // Druck-Baustein mit Club-Kopf und -Fuß (AGENTS.md Regel 19)
 const AK_FRUEHSTUECK = /fr(ü|ue)hst(ü|ue)ck/i; // Abstimmung von Hansi (Vorschläge → 🗳️ Abstimmung), deren Titel „Frühstück“ enthält
+// KC-CLUB-ADVENT-GADGETS: Block „🎁 Heute zu gewinnen“ (Foto lazy), Stand vom Server (advent_gadget_stand); mitmachen nur am Tag bis 22 Uhr (Server-Uhr)
+function akGadgetBlock(n) {
+  const G = AK_GADGETS[n];
+  return `<div class="ak-karte ak-gadget"><div style="width:100%"><span class="ak-marke">🎁 Verlosung</span><br><b>🎁 Heute zu gewinnen: ${esc(G.name)}</b>
+    <img class="ak-gadget-foto" src="${G.foto}" alt="${esc(G.name)}" width="${G.b}" height="${G.h}" loading="lazy" decoding="async">
+    <p class="hinweis" style="margin:4px 0 0">Ein Einzelstück – unter allen, die das Türchen heute öffnen und bis 22 Uhr mitmachen, wird es ausgelost. Ausgegeben wird beim Weihnachtsessen im Januar.</p>
+    <div id="akGadget" class="ak-antwort">${akHeute() ? '<p class="hinweis">Einen Moment …</p>' : '<p class="hinweis">🎲 Im Dezember kannst du hier mitmachen.</p>'}</div></div></div>`;
+}
+function akGadgetStandHtml(r, n) {
+  const dabei = `${r.teilnehmer === 1 ? "1 Person macht" : (r.teilnehmer || 0) + " machen"} mit`;
+  if (r.gezogen) return r.gewinnerVorname ? `<p class="ak-ok">🎉 Gewonnen hat: ${esc(r.gewinnerVorname)}${r.ichGewonnen ? " – das bist du! Glückwunsch!" : ""}</p><p class="hinweis" style="margin:4px 0 0">${r.teilnehmer === 1 ? "1 Person hat" : r.teilnehmer + " haben"} mitgemacht.</p>`
+    : '<p class="hinweis">Die Verlosung ist vorbei – das Gadget wurde nicht vergeben (niemand hat mitgemacht).</p>';
+  if (r.phase === "vorher") return '<p class="hinweis">🎲 Am Tag kannst du hier mitmachen.</p>';
+  if (r.phase !== "offen") return '<p class="hinweis">Die Verlosung ist vorbei.</p>';
+  if (r.ichDabei) return `<p class="ak-ok">✅ Du bist dabei! Ausgelost wird heute um 22 Uhr.</p><p class="hinweis" style="margin:4px 0 0">${dabei}.</p>`;
+  if (r.schonGewonnen) return '<p class="ak-ok">Du hast schon gewonnen 🎉 – jetzt sind die anderen dran.</p>';
+  return `<button type="button" class="knopf haupt" style="width:100%;margin-top:6px" onclick="akGadgetMitmachen(${n}, this)">🎲 Ich mache mit</button><p class="hinweis" style="margin:4px 0 0">Mitmachen bis heute 22 Uhr · ${dabei}.</p>`;
+}
+async function akGadgetLaden(n) {
+  if (!akHeute()) return; // Vorschau (Admin vor Dezember): nur der Hinweis
+  let r; try { r = await api("advent_gadget_stand", { tag: n }); } catch (e) { if ($("akGadget")) $("akGadget").innerHTML = `<p class="hinweis">⚠️ ${esc(fehlerText(e))}</p>`; return; }
+  if ($("akGadget")) $("akGadget").innerHTML = akGadgetStandHtml(r, n);
+}
+async function akGadgetMitmachen(n, knopf) {
+  if (knopf) knopf.disabled = true;
+  try { const r = await api("advent_gadget_mitmachen", { tag: n }, { warten: true }); melde("🎲 Du bist dabei – viel Glück!"); if ($("akGadget")) $("akGadget").innerHTML = akGadgetStandHtml(r, n); }
+  catch (e) { meldeFehler(e); akGadgetLaden(n); }
+}
 function akEinladungKarte() {
   return `<div class="ak-karte ak-einladung"><div style="width:100%"><div class="ak-gross" aria-hidden="true">☕🥐🍳</div>
     <p style="margin:4px 0">Der Köcheclub Werne wünscht dir und deiner Familie <b>frohe Weihnachten</b> und gesegnete Festtage!</p>
@@ -13385,6 +13419,7 @@ function akTuer(n) {
   $("akInhalt").innerHTML = T.art === "riegel" ? akRiegelKarte(T, n) : T.art === "einladung" ? akEinladungKarte() : akAnleitung(T, n);
   if (T.art === "einladung") akAntwortLaden();
   if (T.art === "riegel") akPreiseLaden(n);
+  if (AK_GADGETS[n]) { $("akInhalt").insertAdjacentHTML("beforeend", akGadgetBlock(n)); akGadgetLaden(n); } // KC-CLUB-ADVENT-GADGETS: zusätzlich, nicht statt
   $("akInhalt").scrollIntoView({ block: "nearest", behavior: "smooth" });
   if (n === h) try { ilZeigen(); } catch {} // Erinnerung im Laufband verschwindet
 }
