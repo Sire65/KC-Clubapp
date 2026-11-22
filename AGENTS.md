@@ -13,6 +13,18 @@ Gilt für Claude, Codex/ChatGPT und jeden anderen Agent, ohne Ausnahme:
 4. Erlaubt bleibt nur Technik ohne Inhalt: Tabellen- und Spaltennamen, Zeilenzahlen, Prüfsummen, Speichergrößen, Fehlermeldungen ohne Nachrichtentext.
 5. Bei Fehlersuche in Chat-Funktionen: mit Beispieldaten oder Testkonten arbeiten, nie mit echten Nachrichten.
 
+## ⛔ Update-Stopp: ab 23.11.2026 nur Fehlerbeseitigung (KC-EGRESS-STOPP, Hansi 22.11.2026)
+
+Hansi 22.11.: „Die heutigen Updates müssen noch laufen. Danach nur Fehlerbeseitigung, bis wir eine klare Übersicht haben.“
+Anlass: Supabase-Ausgang (Egress) 4,64 von 5 GB am 22.11. (Zeitraum bis 26.11.) – jede neue Version startet alle Apps neu und kostet Datenverkehr.
+
+1. **Bis einschließlich 22.11.2026** dürfen die geplanten Bündel noch eingespielt werden.
+2. **Ab 23.11.2026** nur noch **Fehlerbeseitigung** (App für Mitglieder kaputt, falsche Daten, Sicherheit, Datensicherung) – keine neuen Funktionen,
+   keine Umbauten, keine Schönheitskorrekturen. Neuerungen auf Arbeitszweigen fertigstellen und liegen lassen.
+3. Der Stopp gilt, **bis Hansi die Übersicht freigibt** (ausdrücklich, z. B. „Update-Stopp aufheben“). Ein neuer Abrechnungszeitraum (26.11.) hebt ihn nicht von selbst auf.
+4. Auch beim Fehlerbeseitigen: so wenige Versionen wie möglich (bündeln), keine Supabase-Protokolle durchsuchen (Protokollabfrage 115/100 GB am 22.11.).
+5. Bis 26.11. sind Hintergrundjobs gedrosselt (Rückstellung automatisch, `kc_db_mirror_audit` action `hintergrund_spartakt_egress`, `mirror_spartakt_egress`).
+
 ## Neuerungen gebündelt einspielen (KC-DB-SPARSAM, 18.10.2026, Freigabe Hansi)
 
 Jede neue Version startet alle gerade offenen Apps neu. Ein App-Start kostet rund 71 Datenbank-Abfragen je Gerät
