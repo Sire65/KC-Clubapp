@@ -328,7 +328,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/const in3 = berlinTag\(new Date\(Date\.now\(\) \+ 3 \* 86400000\)\)/.test(server) && /\.filter\(\(id\) => !geantwortet\.has\(id\)\)/.test(server), "Nachfassen falsch");
   assert.ok(/update\(\{ nachfass_gesendet_am: jetzt\(\) \}\)\.eq\("id", t\.id\)\.is\("nachfass_gesendet_am", null\)/.test(server), "Nachfassen ohne Doppelversand-Sperre");
   // Mitfahren: Platzgrenze, Fahrer bekommt Bescheid, Löschen mit Sicherung
-  assert.ok(/if \(\(count \?\? 0\) >= m\.plaetze\) throw new Fehler\("Leider sind schon alle Plätze vergeben\."/.test(server), "Plätze werden nicht begrenzt");
+  assert.ok(/if \(mitfahrtFrei\(m\.plaetze, count \?\? 0, gae\.length\) <= 0\) throw new Fehler\("Leider sind schon alle Plätze vergeben\."/.test(server), "Plätze werden nicht begrenzt (KC-CLUB-MITFAHRT-GAST: Gäste zählen mit)");
   // Notfall: nur selbst oder Organisation
   assert.ok(/selbst \|\| ich\.vorstand \? (await )?db\.from\("kc_club_notfall"\)\.select\("name,telefon,beziehung"\)\.eq\("person_id", pid\)\.maybeSingle\(\) : (\{ data: null \}|Promise\.resolve\(\{ data: null as any \}\))/.test(server), "Notfallkontakt zu breit sichtbar"); // 2.593.0: im gemeinsamen Block
   // Kalender-Abo: nur Hash gespeichert, GET liefert iCalendar
@@ -2212,7 +2212,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   const f = html.slice(html.indexOf("function mfAutoHtml("), html.indexOf("async function mfSitzBuchen("));
   assert.ok(/Array\.from\(\{ length: m\.plaetze \}/.test(f) && /for \(let i = 1; i < sitze\.length; i \+= 3\)/.test(f), "so viele Sitze wie angeboten, Kleinbus-Reihen");
   assert.ok(/const waehlbar = aktiv && !m\.eigen && !ichDabei;/.test(f) && /mf-sitz mf-belegt" role="img"/.test(f), "frei nur wählbar, wenn erlaubt; belegt nie anwählbar");
-  assert.ok(/if \(!\(await frage\(`🚗 Diesen Platz bei \$\{fahrer\} für dich reservieren\?/.test(html) && /if \(!\(await frage\(`Deinen Platz bei \$\{fahrer\} wieder freigeben\?/.test(html), "Buchen/Freigeben mit Rückfrage");
+  assert.ok(/`🚗 Diesen Platz bei \$\{fahrer\} für dich reservieren\?/.test(html) && /`Deinen Platz bei \$\{fahrer\} wieder freigeben\?/.test(html) && /if \(!\(await frage\(vn \? `🚗 Diesen Platz bei \$\{fahrer\} für \$\{vn\} reservieren\?/.test(html), "Buchen/Freigeben mit Rückfrage (auch in Vertretung – KC-CLUB-MITFAHRT-VERTRETUNG)");
 }
 
 // 193. 1.40.0: Twinkey-Ladeanzeige mit sichtbarer drehender Kochmütze (KC-CLUB-DIENSTWUNSCH)
@@ -2225,9 +2225,9 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 
 // 194. 1.41.0: „Keine Mitfahrgelegenheit – soll ich Bescheid geben?“ (KC-CLUB-MITFAHRT-BESCHEID)
 {
-  assert.ok(/onclick="mfSuchenFragen\('\$\{art\}', '\$\{esc\(bezugId\)\}', \$\{liste\.some\(\(m\) => !m\.eigen && m\.frei > 0\)\}\)">🙋 Ich suche eine Mitfahrgelegenheit/.test(html), "Suchen-Knopf fragt, wenn nichts frei ist");
+  assert.ok(/onclick="mfSuchenFragen\('\$\{art\}', '\$\{esc\(bezugId\)\}', \$\{liste\.some\(\(m\) => !m\.eigen && m\.frei > 0\)\}\)">🙋 \$\{vt \? `Mitfahrgelegenheit für \$\{vn\} suchen` : "Ich suche eine Mitfahrgelegenheit"\}/.test(html), "Suchen-Knopf fragt, wenn nichts frei ist");
   assert.ok(/Zurzeit gibt es noch keine Mitfahrgelegenheit/.test(html) && /Soll ich das für dich im Auge behalten und dich informieren, sobald eine neue Gelegenheit eingestellt wird\?/.test(html), "Text wie gewünscht");
-  assert.ok(/async function mfBescheidJa\(art, bezugId\) \{[^]{0,120}api\("mitfahrt_suchen", \{ bezug_art: art, bezug_id: bezugId, an: true \}/.test(html), "Ja = Suche eintragen (vorhandene Benachrichtigung)");
+  assert.ok(/async function mfBescheidJa\(art, bezugId\) \{[^]{0,120}api\("mitfahrt_suchen", \{ bezug_art: art, bezug_id: bezugId, an: true, \.\.\.mfFuerMich\(art\) \}/.test(html), "Ja = Suche eintragen (vorhandene Benachrichtigung)");
   assert.ok(/titel: "🚗 Mitfahrgelegenheit gefunden"/.test(server), "Server benachrichtigt Suchende bei neuer Fahrt");
   assert.ok(/\{ id: "mitfahrt", sym: "🚗", t: "Mitfahrt", los: \(\) => zumTreffen\(true\) \}/.test(html) && /if \(!darf \|\| mf\.some\(\(m\) => m\.eigen \|\| m\.dabei \|\| m\.frei > 0\)/.test(html), "Schnellstart prüft – nur nach Zusage, nur ohne freie Fahrt");
 }
@@ -13904,7 +13904,7 @@ assert.ok(/const body = tage\.map\(\(t\) => `<tbody class="dpd-tag">/.test(progr
 // 3.2.0 KC-CLUB-PDF-BLATT-GANZ (Fund Hansi 21.11.: im PDF waren Tage getrennt)
 assert.ok(/DRUCK\.randlos = !!s\.randlos;/.test(programm) && /padding:\$\{DRUCK\.randlos \? 0 : "12mm"\}/.test(programm), "randlos ohne Zusatzrand");
 assert.ok(/\["page", "always"\]\.includes\(cs\(e\)\.breakAfter\)/.test(programm) && /st\.breakInside === "avoid"/.test(programm) && /const ganz = !!DRUCK\?\.randlos && bis - von <= seiteH \+ 2;/.test(programm) && /von === 0 \|\| ganz \? 0 : RAND/.test(programm), "Blattgrenzen und Tage im PDF");
-// 3.15.0 KC-CLUB-DP-OHNE-RUHETAG (Hansi 23.11.: Manfred am 08.12. trotz 5 Tagen am Stück)
+// 3.16.0 KC-CLUB-DP-OHNE-RUHETAG (Hansi 23.11.: Manfred am 08.12. trotz 5 Tagen am Stück)
 {
   const { dpRechnen } = await import("../supabase/functions/kc-club/dp-rechnen.js");
   const tage = ["2026-12-04", "2026-12-05", "2026-12-06"].map((d) => ({ d, art: "Markttag", baender: [{ start: 18, end: 20, total: 1, front: null, back: null }] }));

@@ -34,7 +34,7 @@ const vgl = (a, b) => (a < b ? -1 : a > b ? 1 : 0); // wie Pythons sorted() für
 // 2.944.0 KC-CLUB-DP-SPAET-BIS-SCHLUSS: spaetBisSchluss – Spätdienst bis Marktschluss (siehe unten)
 // 2.993.0 KC-CLUB-DP-ZUSCHLAG: zuschlag (Konzertabende) – siehe dpRechnen
 // 2.998.0 KC-CLUB-DP-WUNSCH-EIGEN: eigene Wunschzeile (we) und Freigabe (g) im Ergebnis – einmal neu rechnen
-// 3.15.0 KC-CLUB-DP-OHNE-RUHETAG (Hansi 23.11.: Manfred am 08.12. abends statt 2 Std. am 13.12.): personen[].ohneRuhetag hebt „höchstens {maxTageAmStueck} Tage am Stück“ für diese Person auf
+// 3.16.0 KC-CLUB-DP-OHNE-RUHETAG (Hansi 23.11.: Manfred am 08.12. abends statt 2 Std. am 13.12.): personen[].ohneRuhetag hebt „höchstens {maxTageAmStueck} Tage am Stück“ für diese Person auf
 export const DP_REGEL = 12;
 // 2.998.0 KC-CLUB-DP-WUNSCH-EIGEN: Wunschzeile eines Tages aus Einträgen – gleiche Regel wie im Plan (gesperrt vor Wunsch vor kann vor wenn nötig)
 export function wunschZeile(eintraege, d, von = 8, bis = 23) {
@@ -87,7 +87,7 @@ export function dpRechnen(e) {
   const HINW = new Map((e.personen || []).filter((p) => p.hinweis).map((p) => [p.key, String(p.hinweis).slice(0, 60)]));
   const MAXTAGE = Number.isFinite(e.maxTageAmStueck) && e.maxTageAmStueck > 0 ? e.maxTageAmStueck : Infinity, tageVon = new Map(); // Person → Set der eingeplanten Tage
   const vortag = (d, n) => { const x = new Date(d + "T12:00:00Z"); x.setUTCDate(x.getUTCDate() - n); return x.toISOString().slice(0, 10); };
-  const OHNE_RUHE = new Set((e.personen || []).filter((p) => p.ohneRuhetag).map((p) => p.key)); // 3.15.0 KC-CLUB-DP-OHNE-RUHETAG: Ausnahme je Person
+  const OHNE_RUHE = new Set((e.personen || []).filter((p) => p.ohneRuhetag).map((p) => p.key)); // 3.16.0 KC-CLUB-DP-OHNE-RUHETAG: Ausnahme je Person
   const ruhetag = (n, d) => { const t = tageVon.get(n); if (!t || MAXTAGE === Infinity || OHNE_RUHE.has(n)) return false; for (let i = 1; i <= MAXTAGE; i++) if (!t.has(vortag(d, i))) return false; return true; };
   const hours = new Map(), plan = new Map(), gapsJe = new Map();
   const WZ = e.wunschZuerst === true, wBlock = new Map(), wSumme = new Map(); // Wunschblock je (Person, Tag) und geplante Wunschstunden je Person

@@ -3074,6 +3074,13 @@
   .mf-legende span { display: flex; align-items: center; gap: 5px; }
   .mf-q { width: 14px; height: 14px; border-radius: 4px; border: 2px solid; display: inline-block; }
   .mf-q.mf-belegt::after { display: none; }
+  /* KC-CLUB-MITFAHRT-GAST · KC-CLUB-MITFAHRT-VERTRETUNG (23.11.2026) */
+  .mf-sitz.mf-gast { border-style: dashed; }
+  .mf-gaeste { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 6px 0 2px; font-size: .9rem; }
+  .mf-gast-name { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; background: var(--karte2); border: 1px dashed var(--linie); font-weight: 700; }
+  .mf-gast-name .knopf { padding: 0 6px; min-height: 26px; }
+  .marke.mf-vt-marke { background: var(--blaubg); color: var(--text); font-size: .8rem; }
+  .mf-block[data-vt] { box-shadow: inset 4px 0 0 #1d5fa8; padding-left: 8px; }
   .bu-haken-liste.br-liste { grid-template-columns: 1fr; }
   .br-liste .br-name { flex: 1 1 auto; min-width: 0; }
   .br-liste .br-recht { flex: none; white-space: nowrap; margin-left: auto; }
@@ -7378,7 +7385,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=3.15.0" data-v="3.15.0"></script>
+<script src="app.js?v=3.16.0" data-v="3.16.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

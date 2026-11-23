@@ -1,10 +1,23 @@
 # Änderungen
 
-## 3.15.0 – 2026-11-23 – 🗓️ Dienstplan: „höchstens 5 Tage am Stück“ je Person abschaltbar (KC-CLUB-DP-OHNE-RUHETAG) · Server 3.15.0
+## 3.16.0 – 2026-11-23 – 🗓️ Dienstplan: „höchstens 5 Tage am Stück“ je Person abschaltbar (KC-CLUB-DP-OHNE-RUHETAG) · Server 3.16.0 · [Hansi: einspielen, Update-Stopp für diese Version aufgehoben]
 Hansi 23.11.: „Manfred ist nur für 2 Stunden eingetragen … wichtiger ist, wo noch jemand fehlt. Gib ihm etwas mehr Stunden.“ – Vorschlag: Manfred am Di 08.12. abends (Wunsch 15–22) statt 2 Std. am 13.12.; der 08.12. war sein Ruhetag nach 5 Tagen am Stück.
 - Plan-Einstellung `personen[…].ohneRuhetag` (dp-rechnen.js): für diese Person gilt „höchstens maxTageAmStueck Tage am Stück“ nicht. Rechenregel 12 – der Plan rechnet sich beim nächsten Öffnen neu.
 - Eingetragen für Manfred (nach dem Einspielen): ohne Ruhetag, höchstens 53 Std. Ergebnis (nachgerechnet): 08.12. 17–23 Uhr – Abendlücke 20–23 zu; 13.12. ohne Manfred (Andrea ab 16, Frank bis 23, Steven bis 18) – keine neue Lücke; es fehlen 13 statt 16 Std.
-- Test: Block in `tests/app-vertrag.test.mjs`. Rückweg: Server 3.14.0.
+- Test: Block in `tests/app-vertrag.test.mjs`. Rückweg: Server 3.15.0.
+## 3.15.0 – 2026-11-23 – 🚗 Mitfahrt: Vertretung darf Platz buchen · ＋ Gast mitnehmen (KC-CLUB-MITFAHRT-VERTRETUNG, KC-CLUB-MITFAHRT-GAST)
+Wunsch Hansi 23.11.2026 (Arbeitszweig `mitfahrt-vertretung-gast` – Update-Stopp KC-EGRESS-STOPP: erst nach Freigabe einspielen; Migration vorher einspielen).
+- **Vertretung auch für Mitfahrten (KC-CLUB-MITFAHRT-VERTRETUNG):** `mitfahrt_platz` (Platz buchen/freigeben) und `mitfahrt_suchen` (suchen/zurücknehmen) stehen jetzt in `VERTRETUNG_AKTIONEN` (Server) und `VT_AKTIONEN` (App) – anbieten, ändern, löschen und Gäste bleiben beim Mitglied selbst. Die Mitfahrten kommen wie bisher mit `treffen_liste` (in Vertretung als das vertretene Mitglied).
+  - Im Termin steht im Modus „Für Ruth handeln“ **„🚗 Mitfahren 🤝 für Ruth“** (blauer Rand), Sitze „✔ Ruth“/„Platz von Ruth“, „Mitfahrgelegenheit für Ruth suchen“; kein „Ich biete …“, kein ✏️/🗑️. Rückfragen und Meldungen nennen Ruth.
+  - Fahrer bekommt **„Karla … hat für Ruth … einen Platz gebucht“** (bzw. „… wieder freigegeben“); Ruth bekommt per E-Mail **„Karla hat für dich einen Platz bei Hansi gebucht – „Termin““** (auch bei Mitfahrt-Suche; nie doppelt wie bisher).
+  - Aktionen (KC Manager) bleiben in Vertretung die eigenen: die App schickt dort ausdrücklich „für mich“ mit. Bei „Kann nicht“ in Vertretung wird nie eine Fahrt gelöscht.
+- **＋ Gast mitnehmen (KC-CLUB-MITFAHRT-GAST):** Wer in einer Fahrt einen Platz hat (oder selbst fährt), tippt „＋ Gast mitnehmen“ → Name (höchstens 40 Zeichen) → der Gast belegt einen weiteren Platz und steht als **„Ruth (Gast von Karla)“** in der Fahrt (gestrichelter Sitz 🧳). Nur bei freiem Platz, höchstens 2 Gäste je Mitglied und Fahrt. Austragen (✖): wer ihn eingetragen hat, der Fahrer, der Admin. Gibt das Mitglied seinen Platz frei, fährt sein Gast nicht mehr mit.
+  - Fahrer bekommt **„Karla … nimmt Ruth (Gast) mit“**; Protokoll nur mit Anzahl, **nie mit dem Gast-Namen**.
+  - Gäste zählen überall mit: Server-Prüfung „voll“, „x von y Plätzen frei“, Termin-Kachel „🚗 n Plätze frei“, Laufband (KC-CLUB-MITFAHRT-LAUFBAND), Fahrer-Benachrichtigung bei Suche, Teilnehmerliste (Druck).
+  - **Server:** neue Aktion `mitfahrt_gast` (`{ id, name }` eintragen, `{ gast_id, weg: true }` austragen); fehlt die Tabelle noch, zählen Gäste einfach nicht (Termin-Abruf bleibt heil).
+  - **Migration** `supabase/migrations/20261123_kc_club_mitfahrt_gast.sql`: Tabelle `kc_club_mitfahrt_gast` (id, mitfahrt_id → kc_club_mitfahrt on delete cascade, eingetragen_von → kc_core_people, name 1–40, am), RLS an, `revoke … from public, anon, authenticated`, `grant … to service_role`, Spiegel/Sicherung (`kc_db_mirror_table_rules`, `kc_neon_resume_tables`).
+- Hilfe: „vertretung“ ergänzt, neu „mitfahrt_gast“; Sprachansage versteht die neuen Meldungen.
+- Tests: neu `mitfahrt-vertretung-gast` (Listen gleich, Vertretung darf `mitfahrt_platz`/`mitfahrt_suchen`, nicht anbieten/löschen/Gast; Gast zählt Platz, voll → Fehler, Entfernen-Rechte, Protokoll ohne Namen, Migration-Rechte, Anzeige mit Beispieldaten); `app-vertrag` angepasst.
 
 ## 3.14.0 – 2026-11-23 – 🔳 QR-Codes: Mitgliederliste lesbar (KC-CLUB-ADMIN-QR-FIX)
 Fehlerbeseitigung nach 3.13.0, Bildschirmfoto Hansi 23.11.2026: Reiter „🪪 Mitglieder“ zeigte nur leere Zeilen.

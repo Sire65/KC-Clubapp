@@ -195,7 +195,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "3.15.0";
+const SERVER_VERSION = "3.16.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -2422,7 +2422,9 @@ const roseFaellig = (e: Record<string, any>) => !!e.rose_schiessbude?.an && !e.r
 // das vertretene Mitglied aus (eigene Rechte, eigene Sperre). Nur Termine zu-/absagen, Terminumfragen, Dienstwünsche und Abstimmungen (keine
 // geheimen) – nie Nachrichten, Daten oder Rechte. Jeder Schritt steht im Protokoll beider: „vertretung“ beim Vertreter, „vertreten“ beim Mitglied.
 const VERTRETUNG_KEY = "vertretung_fuer", VERTRETUNG_MAX = 5;
-const VERTRETUNG_AKTIONEN = new Set(["treffen_liste", "treffen_antwort", "terminumfragen_liste", "terminumfrage_antwort", "dienstwunsch_laden", "dienstwunsch_speichern", "vorschlaege_liste", "vorschlag_stimme"]);
+// KC-CLUB-MITFAHRT-VERTRETUNG (Wunsch Hansi 23.11.2026): dazu Mitfahrten – Platz buchen/freigeben (mitfahrt_platz) und Mitfahrt suchen/zurücknehmen
+// (mitfahrt_suchen); NICHT anbieten/löschen (Fahrer bleibt man selbst) und keine Gäste (mitfahrt_gast). Die Mitfahrten kommen mit treffen_liste.
+const VERTRETUNG_AKTIONEN = new Set(["treffen_liste", "treffen_antwort", "terminumfragen_liste", "terminumfrage_antwort", "dienstwunsch_laden", "dienstwunsch_speichern", "vorschlaege_liste", "vorschlag_stimme", "mitfahrt_platz", "mitfahrt_suchen"]);
 const vertretungIds = (w: any): string[] => [...new Set((Array.isArray(w?.ids) ? w.ids : []).map(String).filter((x: string) => /^KC-P-[A-Z0-9-]{1,30}$/i.test(x)))].slice(0, VERTRETUNG_MAX) as string[];
 async function vertretungIch(ich: Ich, fuer: string, a: string): Promise<Ich> {
   if (!VERTRETUNG_AKTIONEN.has(a)) throw new Fehler("Das geht nicht in Vertretung – bitte oben „Für mich handeln“ wählen.", 403);
@@ -2456,14 +2458,23 @@ async function vertretungMelden(von: Ich, fuer: Ich, a: string, p: any) {
     was = leer ? `bei „${v.titel}“ die Stimme zurückgenommen` : `bei „${v.titel}“ abgestimmt`; schluessel += `${p.id}:${txt(JSON.stringify(p.wahl ?? ""), 200)}`;
   } else if (a === "dienstwunsch_speichern") {
     was = "deine Dienstwünsche (Twinkey) eingetragen bzw. geändert"; schluessel += berlinTag(new Date());
+  } else if (a === "mitfahrt_platz") { // KC-CLUB-MITFAHRT-VERTRETUNG: „Karla hat für dich einen Platz bei Hansi gebucht“
+    const { data: m } = await db.from("kc_club_mitfahrt").select("id,fahrer,bezug_art,bezug_id").eq("id", String(p.id || "")).maybeSingle();
+    if (!m) return;
+    const fahrer = vorname((await personen([m.fahrer])).get(m.fahrer) ?? null) || "dem Fahrer", titel = (await mitfahrtBezugTitel(m.bezug_art, m.bezug_id)) || "Termin";
+    was = p.dabei === false ? `deinen Platz bei ${fahrer} wieder freigegeben – „${titel}“` : `einen Platz bei ${fahrer} gebucht – „${titel}“`; schluessel += `${m.id}:${p.dabei === false ? "frei" : "dabei"}`;
+  } else if (a === "mitfahrt_suchen") {
+    const art = p.bezug_art === "aktion" ? "aktion" : "treffen", titel = (await mitfahrtBezugTitel(art, String(p.bezug_id || ""))) || "Termin";
+    was = p.an === false ? `die Suche nach einer Mitfahrgelegenheit zurückgenommen – „${titel}“` : `eine Mitfahrgelegenheit gesucht – „${titel}“`; schluessel += `${art}:${p.bezug_id}:${p.an === false ? "aus" : "an"}`;
   } else return;
+  const mf = a.startsWith("mitfahrt_");
   schluessel = `${fuer.person_id}:${von.person_id}:${schluessel}`;
   const { data: schon } = await db.from("kc_club_protokoll").select("id").eq("aktion", "vertretung_mail").eq("details->>schluessel", schluessel).limit(1);
   if (schon?.length) return;
   await protokoll(fuer.person_id, "vertretung_mail", { schluessel, von: von.person_id, aktion: a });
   await sendenGewaehlt("club_erinnerung", [fuer.person_id], ["email"], {
-    titel: `🤝 ${von.vorname} hat für dich gehandelt`, kurz: `${von.vorname} hat ${was}.`,
-    betreff: `Köcheclub Werne – ${von.name} hat für dich ${a === "dienstwunsch_speichern" ? "Dienstwünsche eingetragen" : a === "vorschlag_stimme" ? "abgestimmt" : "geantwortet"}`,
+    titel: `🤝 ${von.vorname} hat für dich gehandelt`, kurz: `${von.vorname} hat ${mf ? "für dich " : ""}${was}.`,
+    betreff: `Köcheclub Werne – ${von.name} hat für dich ${a === "dienstwunsch_speichern" ? "Dienstwünsche eingetragen" : a === "vorschlag_stimme" ? "abgestimmt" : mf ? "eine Mitfahrt eingetragen" : "geantwortet"}`,
     text: `Hallo ${fuer.vorname},\n\n${von.name} hat in der Köcheclub-App für dich ${was}.\n\nDas geht, weil ${von.vorname} für dich handeln darf. Wenn etwas nicht stimmt, sag bitte ${von.vorname} oder Hansi Bescheid.\n\nViele Grüße\nKöcheclub Werne`,
     url: APP_URL + (a === "vorschlag_stimme" ? "#vorschlaege" : a === "dienstwunsch_speichern" ? "#dienstwunsch" : "#termine"),
   }, `club-vertretung:${schluessel}`);
@@ -5686,7 +5697,7 @@ async function dpDruckNeu(adminId: string) {
   const kmVon = new Map((leute ?? []).map((p: any) => [String(p.person_id), Number.isFinite(Number(pk[p.person_id]?.anfahrtKm)) ? Number(pk[p.person_id].anfahrtKm) : (anfahrt(p.postal_code, p.city)?.fahrt ?? 0)]));
   const grenzeKm = Number(konf.anfahrtGrenzeKm ?? 10), minWeit = Number(konf.anfahrtMinDienst ?? 3);
   const grenzen = (pid: string) => ({ ...(Number.isFinite(Number(pk[pid]?.maxGesamt)) ? { maxGesamt: Number(pk[pid].maxGesamt) } : {}), ...(Number.isFinite(Number(pk[pid]?.maxDienst)) ? { maxDienst: Number(pk[pid].maxDienst) } : {}),
-    ...(Number.isFinite(Number(pk[pid]?.begleitet)) ? { begleitet: Number(pk[pid].begleitet) } : {}), ...(pk[pid]?.ohneRuhetag === true ? { ohneRuhetag: true } : {}), // 3.15.0 KC-CLUB-DP-OHNE-RUHETAG ...(pk[pid]?.hinweis ? { hinweis: String(pk[pid].hinweis).slice(0, 60) } : {}), // 2.722.0
+    ...(Number.isFinite(Number(pk[pid]?.begleitet)) ? { begleitet: Number(pk[pid].begleitet) } : {}), ...(pk[pid]?.ohneRuhetag === true ? { ohneRuhetag: true } : {}), // 3.16.0 KC-CLUB-DP-OHNE-RUHETAG ...(pk[pid]?.hinweis ? { hinweis: String(pk[pid].hinweis).slice(0, 60) } : {}), // 2.722.0
     ...((kmVon.get(pid) ?? 0) >= grenzeKm ? { minDienst: minWeit } : {}) });
   const name = new Map((leute ?? []).map((p: any) => [String(p.person_id), String(p.display_name || p.person_id)]));
   const wRev = new Map((wRoh ?? []).map((w: any) => [String(w.person_id), w]));
@@ -8200,18 +8211,35 @@ async function mitfahrtenZu(ich: Ich, art: "treffen" | "aktion", ids: string[]) 
   if (!ids.length) return new Map<string, any[]>();
   const { data: mf } = await db.from("kc_club_mitfahrt").select("*").eq("bezug_art", art).in("bezug_id", ids).order("erstellt_am");
   const mids = (mf ?? []).map((m: any) => m.id);
-  const { data: pl } = mids.length ? await db.from("kc_club_mitfahrt_platz").select("mitfahrt_id,person_id").in("mitfahrt_id", mids) : { data: [] as any[] };
-  const leute = await personen([...(mf ?? []).map((m: any) => m.fahrer), ...(pl ?? []).map((x: any) => x.person_id)]);
+  const [{ data: pl }, gae] = await Promise.all([mids.length ? db.from("kc_club_mitfahrt_platz").select("mitfahrt_id,person_id").in("mitfahrt_id", mids) : Promise.resolve({ data: [] as any[] }), mitfahrtGaeste(mids)]);
+  const leute = await personen([...(mf ?? []).map((m: any) => m.fahrer), ...(pl ?? []).map((x: any) => x.person_id), ...gae.map((g: any) => g.eingetragen_von)]);
   const aus = new Map<string, any[]>();
   for (const m of mf ?? []) {
-    const mit = (pl ?? []).filter((x: any) => x.mitfahrt_id === m.id);
+    const mit = (pl ?? []).filter((x: any) => x.mitfahrt_id === m.id), gaeste = gae.filter((g: any) => g.mitfahrt_id === m.id);
     aus.set(m.bezug_id, [...(aus.get(m.bezug_id) ?? []), {
       id: m.id, fahrer: { person_id: m.fahrer, name: leute.get(m.fahrer)?.display_name || m.fahrer }, plaetze: m.plaetze, treffpunkt: m.treffpunkt, notiz: m.notiz,
-      mitfahrer: mit.map((x: any) => leute.get(x.person_id)?.display_name || x.person_id), frei: Math.max(0, m.plaetze - mit.length),
+      mitfahrer: mit.map((x: any) => leute.get(x.person_id)?.display_name || x.person_id), frei: mitfahrtFrei(m.plaetze, mit.length, gaeste.length),
+      // KC-CLUB-MITFAHRT-GAST: Begleitung ohne App – „Ruth (Gast von Karla)“, belegt einen Platz
+      gaeste: gaeste.map((g: any) => ({ id: g.id, name: g.name, von: vorname(leute.get(g.eingetragen_von) ?? null) || leute.get(g.eingetragen_von)?.display_name || "Mitglied", eigen: g.eingetragen_von === ich.person_id, darfEntfernen: mitfahrtGastDarfEntfernen(ich, g, m) })),
       eigen: m.fahrer === ich.person_id, dabei: mit.some((x: any) => x.person_id === ich.person_id), darfLoeschen: m.fahrer === ich.person_id || ich.vorstand,
     }]);
   }
   return aus;
+}
+// KC-CLUB-MITFAHRT-GAST (Wunsch Hansi 23.11.2026): ein Mitglied nimmt in seiner Mitfahrt eine Begleitperson ohne App mit („＋ Gast mitnehmen“).
+// Tabelle kc_club_mitfahrt_gast (Migration 20261123_kc_club_mitfahrt_gast.sql). Der Gast belegt einen Platz (überall mitgezählt: „voll“, „x von y frei“,
+// Laufband, Suche), hängt am Mitglied (eingetragen_von) und geht mit, wenn das Mitglied seinen Platz freigibt. Höchstens MITFAHRT_GAST_MAX je Mitglied
+// und Fahrt. Entfernen: wer ihn eingetragen hat, der Fahrer, der Admin. Gast-Namen nie ins Protokoll – nur die Anzahl.
+const MITFAHRT_GAST_MAX = 2, MITFAHRT_GAST_LEN = 40;
+const mitfahrtFrei = (plaetze: number, mitfahrer: number, gaeste: number) => Math.max(0, (Number(plaetze) || 0) - mitfahrer - gaeste);
+const mitfahrtGastName = (s: unknown) => String(s ?? "").replace(/[\u0000-\u001f\u007f<>]/g, "").replace(/\s+/g, " ").trim().slice(0, MITFAHRT_GAST_LEN).trim();
+const mitfahrtGastDarfEntfernen = (ich: { person_id: string; admin?: boolean }, g: { eingetragen_von: string }, m: { fahrer: string }) => g.eingetragen_von === ich.person_id || m.fahrer === ich.person_id || !!ich.admin;
+// Gäste zu Fahrten – fehlt die Tabelle noch (Migration nicht eingespielt), zählen sie einfach nicht (nie den Termin-Abruf stören)
+async function mitfahrtGaeste(mids: string[]): Promise<any[]> {
+  if (!mids.length) return [];
+  const { data, error } = await db.from("kc_club_mitfahrt_gast").select("id,mitfahrt_id,eingetragen_von,name").in("mitfahrt_id", mids).order("am");
+  if (error) { console.error("mitfahrt_gast", String(error.code ?? "")); return []; }
+  return data ?? [];
 }
 // KC-CLUB-MITFAHRT-LAUFBAND (20.11.2026, Wunsch Hansi „zeige in der Laufschrift an, wenn jemand eine Mitfahrgelegenheit sucht oder anbietet“):
 // offene Angebote (mit freien Plätzen) und Suchen zu kommenden Terminen/Aktionen – für das Info-Laufband beim App-Start. Datenbank-sparsam: das Ergebnis
@@ -8240,7 +8268,7 @@ async function mitfahrtLaufbandLaden(): Promise<any[]> {
   if (alle.some((x: any) => x.bezug_art === "aktion")) { const heute = berlinTag(new Date());
     for (const a of (await aktionenRoh()).liste as any[]) if (String(a.dateTo || a.dateFrom) >= heute) termine.set("aktion:" + String(a.id), { titel: txt(a.activity, 120) || "Aktion", beginn: String(a.dateFrom) + "T12:00:00Z" }); }
   const mids = (mf ?? []).filter((m: any) => termine.has(m.bezug_art + ":" + m.bezug_id)).map((m: any) => m.id), belegt = new Map<string, number>();
-  if (mids.length) { const { data: pl } = await db.from("kc_club_mitfahrt_platz").select("mitfahrt_id").in("mitfahrt_id", mids); for (const x of pl ?? []) belegt.set(x.mitfahrt_id, (belegt.get(x.mitfahrt_id) || 0) + 1); }
+  if (mids.length) { const { data: pl } = await db.from("kc_club_mitfahrt_platz").select("mitfahrt_id").in("mitfahrt_id", mids); for (const x of [...(pl ?? []), ...await mitfahrtGaeste(mids)]) belegt.set(x.mitfahrt_id, (belegt.get(x.mitfahrt_id) || 0) + 1); } // KC-CLUB-MITFAHRT-GAST: Gäste belegen Plätze
   const pids = alle.filter((x: any) => termine.has(x.bezug_art + ":" + x.bezug_id)).map((x: any) => x.fahrer || x.person_id), leute = await personen(pids);
   return mitfahrtLaufbandListe(mf ?? [], su ?? [], belegt, termine, (pid) => vorname(leute.get(pid) ?? null) || "Jemand");
 }
@@ -19636,23 +19664,84 @@ Köcheclub Werne`,
         if (!m) throw new Fehler("Mitfahrgelegenheit nicht gefunden.", 404);
         if (m.fahrer === ich.person_id) throw new Fehler("Das ist deine eigene Fahrt.");
         const titel = (await mitfahrtBezugTitel(m.bezug_art, m.bezug_id)) || "Termin";
+        let gaesteWeg = 0;
         if (p.dabei === false) {
           await db.from("kc_club_mitfahrt_platz").delete().eq("mitfahrt_id", m.id).eq("person_id", ich.person_id);
+          // KC-CLUB-MITFAHRT-GAST: der Gast hängt am Mitglied – gibt es seinen Platz frei, fährt auch sein Gast nicht mehr mit
+          const { data: gw } = await db.from("kc_club_mitfahrt_gast").delete().eq("mitfahrt_id", m.id).eq("eingetragen_von", ich.person_id).select("id");
+          gaesteWeg = (gw ?? []).length;
         } else {
           await mitfahrtErlaubt(ich, m.bezug_art, m.bezug_id);
           const { count } = await db.from("kc_club_mitfahrt_platz").select("person_id", { count: "exact", head: true }).eq("mitfahrt_id", m.id);
-          if ((count ?? 0) >= m.plaetze) throw new Fehler("Leider sind schon alle Plätze vergeben.", 409);
+          const gae = await mitfahrtGaeste([m.id]); // KC-CLUB-MITFAHRT-GAST: Gäste belegen Plätze
+          if (mitfahrtFrei(m.plaetze, count ?? 0, gae.length) <= 0) throw new Fehler("Leider sind schon alle Plätze vergeben.", 409);
           await db.from("kc_club_mitfahrt_platz").upsert({ mitfahrt_id: m.id, person_id: ich.person_id });
           await db.from("kc_club_mitfahrt_suche").delete().eq("bezug_art", m.bezug_art).eq("bezug_id", m.bezug_id).eq("person_id", ich.person_id); // gefunden
         }
+        // KC-CLUB-MITFAHRT-VERTRETUNG: in Vertretung nennt die Nachricht an den Fahrer beide – „Karla hat für Ruth einen Platz gebucht“
+        const vt = ich.vertreter, satz = p.dabei === false
+          ? (vt ? `${vt.name} hat den Platz für ${ich.name} wieder freigegeben` : `${ich.name} fährt doch nicht mit`) + (gaesteWeg ? ` (mit ${gaesteWeg === 1 ? "Gast" : gaesteWeg + " Gästen"})` : "")
+          : vt ? `${vt.name} hat für ${ich.name} einen Platz gebucht` : `${ich.name} fährt bei dir mit`;
         const versand = await senden("club_treffen", [m.fahrer], {
-          titel: p.dabei === false ? "🚗 Mitfahrt abgesagt" : "🚗 Neue Mitfahrt", kurz: `${ich.name} ${p.dabei === false ? "fährt doch nicht mit" : "fährt bei dir mit"}: ${titel}`,
+          titel: p.dabei === false ? "🚗 Mitfahrt abgesagt" : "🚗 Neue Mitfahrt", kurz: `${satz}: ${titel}`,
           betreff: `Köcheclub Werne – ${p.dabei === false ? "Mitfahrt abgesagt" : "neue Mitfahrt"}: ${titel}`,
-          text: `Hallo,\n\n${ich.name} ${p.dabei === false ? "fährt doch nicht bei dir mit" : "fährt bei dir mit"} – ${titel}.\n\nAlle Mitfahrer siehst du in der Köcheclub-App: ${APP_URL}#termine\n\nViele Grüße\nKöcheclub Werne`,
+          text: `Hallo,\n\n${satz} – ${titel}.\n\nAlle Mitfahrer siehst du in der Köcheclub-App: ${APP_URL}#termine\n\nViele Grüße\nKöcheclub Werne`,
           url: APP_URL + (m.bezug_art === "aktion" ? "#aktion=" + m.bezug_id : "#termine"),
         }, `club-mitfahrt:${m.id}:${ich.person_id}:${Date.now()}`);
         await rtKlingelnInApp("mitfahrt", ich.person_id); // KC-CLUB-RT-CLUBABEND-MITFAHRT
-        await protokoll(ich.person_id, p.dabei === false ? "mitfahrt_abgesagt" : "mitfahrt_zugesagt", { mitfahrt: m.id, versand });
+        await protokoll(ich.person_id, p.dabei === false ? "mitfahrt_abgesagt" : "mitfahrt_zugesagt", { mitfahrt: m.id, versand, ...(gaesteWeg ? { gaeste: gaesteWeg } : {}) });
+        return json({ ok: true });
+      }
+
+      // KC-CLUB-MITFAHRT-GAST (Wunsch Hansi 23.11.2026): „＋ Gast mitnehmen“ – Begleitperson ohne App belegt einen weiteren Platz in derselben Fahrt.
+      // Eintragen: wer in der Fahrt einen Platz hat (oder der Fahrer selbst), nur bei freiem Platz, höchstens MITFAHRT_GAST_MAX je Mitglied.
+      // Entfernen ({ gast_id, weg: true }): wer ihn eingetragen hat, der Fahrer, der Admin. Protokoll nur mit Anzahl – nie mit dem Namen.
+      case "mitfahrt_gast": {
+        mitfahrtLaufbandVergessen(); // KC-CLUB-MITFAHRT-LAUFBAND: Laufband-Liste neu holen
+        if (p.weg === true) {
+          const { data: g } = await db.from("kc_club_mitfahrt_gast").select("id,mitfahrt_id,eingetragen_von,name").eq("id", String(p.gast_id || "")).maybeSingle();
+          if (!g) throw new Fehler("Gast nicht gefunden.", 404);
+          const { data: m } = await db.from("kc_club_mitfahrt").select("id,fahrer,bezug_art,bezug_id").eq("id", g.mitfahrt_id).maybeSingle();
+          if (!m) throw new Fehler("Mitfahrgelegenheit nicht gefunden.", 404);
+          if (!mitfahrtGastDarfEntfernen(ich, g, m)) throw new Fehler("Den Gast darf nur entfernen, wer ihn eingetragen hat – oder der Fahrer.", 403);
+          schreibOk(await db.from("kc_club_mitfahrt_gast").delete().eq("id", g.id), "Gast entfernen");
+          if (m.fahrer !== ich.person_id) {
+            const titel = (await mitfahrtBezugTitel(m.bezug_art, m.bezug_id)) || "Termin";
+            await senden("club_treffen", [m.fahrer], {
+              titel: "🚗 Mitfahrt abgesagt", kurz: `${ich.name}: ${g.name} (Gast) fährt doch nicht mit: ${titel}`,
+              betreff: `Köcheclub Werne – Mitfahrt abgesagt: ${titel}`,
+              text: `Hallo,\n\n${ich.name} hat den Gast ${g.name} wieder ausgetragen – ${titel}. Der Platz ist wieder frei.\n\nIn der Köcheclub-App: ${APP_URL}#termine\n\nViele Grüße\nKöcheclub Werne`,
+              url: APP_URL + (m.bezug_art === "aktion" ? "#aktion=" + m.bezug_id : "#termine"),
+            }, `club-mitfahrt-gast-weg:${g.id}`);
+          }
+          await rtKlingelnInApp("mitfahrt", ich.person_id); // KC-CLUB-RT-CLUBABEND-MITFAHRT
+          await protokoll(ich.person_id, "mitfahrt_gast_entfernt", { mitfahrt: m.id, anzahl: 1 });
+          return json({ ok: true });
+        }
+        const { data: m } = await db.from("kc_club_mitfahrt").select("*").eq("id", String(p.id || "")).maybeSingle();
+        if (!m) throw new Fehler("Mitfahrgelegenheit nicht gefunden.", 404);
+        const name = mitfahrtGastName(p.name);
+        if (!name) throw new Fehler("Bitte den Namen des Gastes eingeben.");
+        const istFahrer = m.fahrer === ich.person_id;
+        if (!istFahrer) {
+          const { data: platz } = await db.from("kc_club_mitfahrt_platz").select("person_id").eq("mitfahrt_id", m.id).eq("person_id", ich.person_id).maybeSingle();
+          if (!platz) throw new Fehler("Buche zuerst deinen eigenen Platz – dann kannst du einen Gast mitnehmen.", 409);
+        }
+        await mitfahrtErlaubt(ich, m.bezug_art, m.bezug_id);
+        const [{ count }, gae] = await Promise.all([db.from("kc_club_mitfahrt_platz").select("person_id", { count: "exact", head: true }).eq("mitfahrt_id", m.id), mitfahrtGaeste([m.id])]);
+        const meine = gae.filter((g: any) => g.eingetragen_von === ich.person_id).length;
+        if (meine >= MITFAHRT_GAST_MAX) throw new Fehler(`Höchstens ${MITFAHRT_GAST_MAX} Gäste je Mitglied und Fahrt.`, 409);
+        if (mitfahrtFrei(m.plaetze, count ?? 0, gae.length) <= 0) throw new Fehler("Leider ist kein Platz mehr frei.", 409);
+        schreibOk(await db.from("kc_club_mitfahrt_gast").insert({ mitfahrt_id: m.id, eingetragen_von: ich.person_id, name }), "Gast eintragen");
+        const titel = (await mitfahrtBezugTitel(m.bezug_art, m.bezug_id)) || "Termin";
+        const versand = istFahrer ? null : await senden("club_treffen", [m.fahrer], {
+          titel: "🚗 Neue Mitfahrt", kurz: `${ich.name} nimmt ${name} (Gast) mit: ${titel}`,
+          betreff: `Köcheclub Werne – neue Mitfahrt (Gast): ${titel}`,
+          text: `Hallo,\n\n${ich.name} nimmt ${name} (Gast) mit – ${titel}. Der Gast belegt einen Platz in deinem Auto.\n\nAlle Mitfahrer siehst du in der Köcheclub-App: ${APP_URL}#termine\n\nViele Grüße\nKöcheclub Werne`,
+          url: APP_URL + (m.bezug_art === "aktion" ? "#aktion=" + m.bezug_id : "#termine"),
+        }, `club-mitfahrt-gast:${m.id}:${ich.person_id}:${Date.now()}`);
+        await rtKlingelnInApp("mitfahrt", ich.person_id); // KC-CLUB-RT-CLUBABEND-MITFAHRT
+        await protokoll(ich.person_id, "mitfahrt_gast", { mitfahrt: m.id, anzahl: meine + 1, versand });
         return json({ ok: true });
       }
 
@@ -19675,7 +19764,8 @@ Köcheclub Werne`,
         if (error) throw new Fehler("Konnte nicht gespeichert werden.", 500);
         const { data: mf } = await db.from("kc_club_mitfahrt").select("id,fahrer,plaetze").eq("bezug_art", art).eq("bezug_id", bid);
         const { data: pl } = (mf ?? []).length ? await db.from("kc_club_mitfahrt_platz").select("mitfahrt_id").in("mitfahrt_id", (mf ?? []).map((m: any) => m.id)) : { data: [] as any[] };
-        const fahrer = (mf ?? []).filter((m: any) => (pl ?? []).filter((x: any) => x.mitfahrt_id === m.id).length < m.plaetze).map((m: any) => m.fahrer).filter((id: string) => id !== ich.person_id);
+        const gae = await mitfahrtGaeste((mf ?? []).map((m: any) => m.id)); // KC-CLUB-MITFAHRT-GAST: Gäste belegen Plätze
+        const fahrer = (mf ?? []).filter((m: any) => mitfahrtFrei(m.plaetze, (pl ?? []).filter((x: any) => x.mitfahrt_id === m.id).length, gae.filter((g: any) => g.mitfahrt_id === m.id).length) > 0).map((m: any) => m.fahrer).filter((id: string) => id !== ich.person_id);
         const versand = fahrer.length ? await senden("club_treffen", fahrer, {
           titel: "🙋 Sucht Mitfahrgelegenheit", kurz: `${ich.name} sucht eine Mitfahrgelegenheit: ${titel}`,
           betreff: `Köcheclub Werne – ${ich.name} sucht eine Mitfahrgelegenheit`,
