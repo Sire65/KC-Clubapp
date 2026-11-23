@@ -1,6 +1,6 @@
 # Änderungen
 
-## (Version folgt) – ✉️ Zusage-Seite: alles auf einer Seite, ein Link, „Vielleicht“ mit Erinnerung (KC-CLUB-MAIL-ZUSAGE-2)
+## 3.9.0 – 2026-11-23 – ✉️ Zusage-Seite: alles auf einer Seite, ein Link, „Vielleicht“ mit Erinnerung (KC-CLUB-MAIL-ZUSAGE-2)
 Rückmeldung Hansi 23.11.2026 nach seinem Test (hat geklappt): eine Seite, ein Abschicken, nur ein Link in der Mail, bei „Vielleicht“ eine Erinnerung.
 - **Eine Seite, ein Abschicken (`antwort.html`):** Antwort wählen (✅ Ich komme / ❌ Ich komme nicht / 🤔 Vielleicht) und Notiz auf derselben Seite; erst der große Knopf „📨 Antwort abschicken“ schickt beides in **einer** Anfrage (`mail_antwort_setzen` mit Antwort + Notiz). Danach kurze Meldung („✅ Deine Zusage wurde verschickt – schön, dass du dabei bist!“, „Deine Absage wurde verschickt – schade, vielleicht beim nächsten Mal.“, „🤔 Deine Antwort „vielleicht“ wurde verschickt.“) und „Antwort ändern“. Öffnen und Wählen setzen weiterhin nie etwas (Mail-Scanner); `?a=` aus alten Mails wählt nur vor.
 - **Nur noch ein Link in der Mail** („👉 Hier kurz antworten: …“, weiter als `?k=…` und nach dem Versand geschwärzt – KC-CLUB-LINKSCHUTZ).
