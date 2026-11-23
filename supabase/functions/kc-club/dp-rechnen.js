@@ -250,32 +250,39 @@ export function dpRechnen(e) {
 // Pause wie DP2 (src/core/breaks.js, KC_STANDARD): über 6 Std. 30 Min., über 9 Std. 45 Min.
 export const DP_SOLL_VERTRAG = "KC_DP_SOLL_UEBERGABE_V1";
 export function dpSollPause(stunden) { const h = Number(stunden) || 0; return h > 9 + 1e-9 ? 45 : h > 6 + 1e-9 ? 30 : 0; }
-// plan: dp_druck-Wert · pidVonName: Map Name → person_id (nur eindeutige) · eventTage: Daten der veröffentlichten Veranstaltungstage
-export function dpSollZeilen(plan, pidVonName, eventTage) {
-  const tage = new Set([...(eventTage || [])].map(String)), rows = [], ohneId = new Set(), keys = new Set();
+// plan: dp_druck-Wert (leute[].p = person_id, von dpDruckNeu mitgeschrieben; leute[].pm = mehrdeutige Kandidaten) · eventTage: veröffentlichte
+// Veranstaltungstage · aus: person_ids, die nie eingeplant werden. Ohne eindeutige ID, an nicht veröffentlichten Tagen oder bei „aus“ wird nichts
+// übergeben – die Zeile steht mit Grund in „uebersprungen“, damit DP2 vorhandene Club-Dienste dazu nicht als „entfällt“ löscht (Standard behalten).
+export function dpSollZeilen(plan, eventTage, { aus = [] } = {}) {
+  const tage = new Set([...(eventTage || [])].map(String)), ausSet = new Set([...aus].map(String)), rows = [], ohneId = new Set(), keys = new Set(), uebersprungen = [];
+  const gueltig = (pid) => typeof pid === "string" && /^KC-P-[A-Z0-9-]{1,30}$/.test(pid) && !pid.startsWith("KC-P-TEST");
   let bereitschaft = 0;
   for (const t of Array.isArray(plan?.tage) ? plan.tage : []) {
     const d = String(t?.d || "");
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || !tage.has(d)) continue;
-    bereitschaft += Array.isArray(t.ber) ? t.ber.length : 0;
-    const markt = t.art === "Markttag";
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) continue;
+    const markt = t.art === "Markttag", veroeffentlicht = tage.has(d);
+    if (veroeffentlicht) bereitschaft += Array.isArray(t.ber) ? t.ber.length : 0;
     for (const l of Array.isArray(t.leute) ? t.leute : []) {
       if (!Array.isArray(l?.s) || l.s.length !== 2) continue;
-      const a = Number(l.s[0]), b = Number(l.s[1]);
+      const a = Number(l.s[0]), b = Number(l.s[1]), name = String(l.n || "?");
       if (!Number.isFinite(a) || !Number.isFinite(b) || a < 0 || b > 30 || b <= a) continue;
-      const pid = pidVonName instanceof Map ? pidVonName.get(l.n) : pidVonName?.[l.n];
-      if (!pid || !/^KC-P-[A-Z0-9-]{1,30}$/.test(pid) || pid.startsWith("KC-P-TEST")) { ohneId.add(String(l.n || "?")); continue; }
+      const pid = gueltig(l.p) ? l.p : null, kandidaten = (Array.isArray(l.pm) ? l.pm : []).filter(gueltig);
+      if (!pid) { ohneId.add(name); uebersprungen.push({ name, date: d, personIds: kandidaten, grund: "Person in der Club-App nicht eindeutig" }); continue; }
+      if (ausSet.has(pid)) { uebersprungen.push({ name, date: d, personId: pid, grund: "In der Club-App ausgenommen" }); continue; }
+      if (!veroeffentlicht) { uebersprungen.push({ name, date: d, personId: pid, grund: "Tag nicht veröffentlicht" }); continue; }
       const importKey = `CLUB-${d}-${pid}`;
       if (keys.has(importKey)) continue; // je Person und Tag ein Dienst
       keys.add(importKey);
       const zt = String(l.z || "").split(" · ")[0];
       const zone = !markt ? "neutral" : zt === "vorne" ? "front" : zt === "hinten" ? "back" : "neutral";
       const area = !markt ? (t.art === "Aufbau" ? "Vorbereitung" : "Nachbereitung") : zone === "front" ? "Vorne" : zone === "back" ? "Hinten" : "Vorne/Hinten";
-      rows.push({ importKey, personId: pid, name: String(l.n || ""), date: d, start: a, end: b, zone, area, breakMinutes: dpSollPause(b - a) });
+      rows.push({ importKey, personId: pid, name, date: d, start: a, end: b, zone, area, breakMinutes: dpSollPause(b - a) });
     }
   }
+  // „aus“-Personen ohne Zeile im Plan: DP2 soll ihre schon übernommenen Dienste nicht stillschweigend löschen
+  for (const pid of ausSet) if (gueltig(pid) && !uebersprungen.some((u) => u.personId === pid)) uebersprungen.push({ name: "", date: null, personId: pid, grund: "In der Club-App ausgenommen" });
   rows.sort((x, y) => vgl(x.date, y.date) || x.start - y.start || vgl(x.personId, y.personId));
-  return { rows, ohneId: [...ohneId].sort(vgl), bereitschaft };
+  return { rows, ohneId: [...ohneId].sort(vgl), uebersprungen: uebersprungen.slice(0, 300), bereitschaft };
 }
 // Grundlage der Prüfsumme: nur was DP2 übernimmt (ohne Namen) – gleicher Plan → gleiche Zeichenkette
 export function dpSollKanonisch(rows) {

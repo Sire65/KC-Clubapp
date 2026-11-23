@@ -36058,8 +36058,9 @@ async function dpdSollZeigen() { const el = $("dpdSollZeile"); if (!el) return;
   try {
     const r = await api("dp_soll_uebergeben", { pruefen: true }), l = r.letzte;
     const st = !l ? "noch nichts übergeben" : l.status === "offen" ? `übergeben ${esc(wann(l.am))} – wartet in DP2 auf „Übernehmen“` : `übergeben ${esc(wann(l.am))} – in DP2 übernommen${l.uebernommenAm ? " " + esc(wann(l.uebernommenAm)) : ""}`;
-    el.innerHTML = `📤 DP2: <b>${st}</b>${l && !l.gleich ? " · <b>der Plan hat sich seitdem geändert</b>" : ""}`
+    el.innerHTML = `📤 DP2: <b>${st}</b>${l && !l.gleich && r.anzahl !== null ? " · <b>der Plan hat sich seitdem geändert</b>" : ""}`
       + (l ? `<br><label style="display:inline-flex;gap:6px;align-items:center;margin-top:4px"><input type="checkbox" ${r.auto ? "checked" : ""} onchange="dpdSollAuto(this)"> Änderungen automatisch nachreichen</label>` : "")
+      + (r.autoFremd ? `<br><small>Nachgereicht wird zurzeit der Plan eines anderen Admins – mit „📤 An DP2 übergeben“ übernimmst du das.</small>` : "")
       + (r.bereitschaft ? `<br><small>Bereitschaft (${r.bereitschaft}) wird nicht übergeben – sie bleibt in DP2 von Hand.</small>` : "");
   } catch { el.textContent = "📤 DP2: Stand gerade nicht abrufbar."; } }
 async function dpdSollAuto(box) {
@@ -36068,10 +36069,10 @@ async function dpdSollAuto(box) {
 async function dpdSollUebergeben(btn) {
   if (btn) btn.disabled = true;
   try {
-    const r = await api("dp_soll_uebergeben", { pruefen: true }, { warten: true });
+    const r = await api("dp_soll_uebergeben", { pruefen: true, aktuell: true }, { warten: true }); // rechnet nur hier (Knopf) neu, wenn nötig
     if (!r.anzahl) return melde("Im Plan steht noch keine Schicht zum Übergeben.", true);
     if (r.letzte?.gleich) return melde(r.letzte.status === "offen" ? "📤 Dieser Stand liegt schon in DP2 zur Übernahme bereit." : "📤 Dieser Stand ist in DP2 schon übernommen.");
-    const ohne = r.ohneId?.length ? `\n\nOhne eindeutige Person (nicht übergeben): ${r.ohneId.join(", ")}` : "";
+    const ohne = r.ohneId?.length ? `\n\nOhne eindeutige Person (nicht übergeben, DP2 löscht dazu nichts): ${r.ohneId.join(", ")}` : "";
     const ber = r.bereitschaft ? `\n\nBereitschaft (${r.bereitschaft}) wird nicht übergeben.` : "";
     if (!(await frage(`${r.anzahl} Schichten an DP2 übergeben? In DP2 erscheinen sie zur Übernahme – erst dort übernehmen, wenn der Plan fertig ist, danach stehen sie sofort auf der Kasse.${ohne}${ber}`, { ja: "📤 Übergeben" }))) return;
     const e = await api("dp_soll_uebergeben", { stand: r.stand || "" }, { warten: true });

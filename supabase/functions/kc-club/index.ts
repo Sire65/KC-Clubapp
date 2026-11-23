@@ -5759,7 +5759,14 @@ async function dpDruckNeu(adminId: string) {
     if (eigenW.has(p.n)) p.we = wunschZeile(eigenW.get(p.n), t.d, ergebnis.von ?? 8, ergebnis.bis ?? 23);
     if (nichtFrei.has(p.n)) p.g = 1;
   }
-  const stand = jetzt(), wert = { ...ergebnis, titel: konf.titel || "Weihnachtsmarkt Werne 2026", stand, gerechnet: "club-server" };
+  // KC-DP-SOLL-UEBERGABE: person_id je Zeile mitschreiben (p) – nur wenn der Kurzname (dpKurzname, Schlüssel der Rechnung) eindeutig ist,
+  // sonst die Kandidaten (pm). Anzeige und PDF nutzen p/pm nicht; dp_plaene gibt sie nicht an Mitglieder heraus.
+  const jeKurz = new Map<string, Set<string>>();
+  for (const pid of ids) { const k = dpKurzname(name.get(pid) || pid); if (!jeKurz.has(k)) jeKurz.set(k, new Set()); jeKurz.get(k)!.add(pid); }
+  const pidVon = new Map<string, string>(), mehrdeutig = new Map<string, string[]>();
+  for (const pid of ids) { const n = name.get(pid) || pid, alle = jeKurz.get(dpKurzname(n))!; if (alle.size === 1) pidVon.set(n, pid); else mehrdeutig.set(n, [...alle]); }
+  for (const t of ergebnis.tage || []) for (const p of (t.leute || []) as any[]) { const pid = pidVon.get(p.n); if (pid) p.p = pid; else if (mehrdeutig.has(p.n)) p.pm = mehrdeutig.get(p.n); }
+  const stand = jetzt(), wert = { ...ergebnis, titel: konf.titel || "Weihnachtsmarkt Werne 2026", stand, gerechnet: "club-server", pids: 1 };
   const { error } = await db.from("kc_club_person_einstellung").upsert({ person_id: adminId, schluessel: "dp_druck", wert, geaendert_am: stand }, { onConflict: "person_id,schluessel" });
   if (error) throw new Fehler("Der neue Stand konnte nicht gespeichert werden.", 500);
   await dpSollNachreichen(adminId, wert).catch((e) => console.error("dp soll nachreichen", String(e))); // KC-DP-SOLL-UEBERGABE: nie den Plan aufhalten
@@ -5768,21 +5775,20 @@ async function dpDruckNeu(adminId: string) {
   return { stand, fehlt, bedarf, stunden: ergebnis.stunden };
 }
 // KC-DP-SOLL-UEBERGABE (Hansi 23.11.2026): gerechneten Plan als vollständigen Stand an DP2 übergeben (Tabelle kc_dp_soll_uebergabe, DP2 holt ab
-// über kc_dp_soll_uebergabe_pending/_ack). Personen-ID über den Namen (eindeutig; bei gleichem Namen nur wer einen Wunschplan abgegeben hat),
-// nur veröffentlichte Veranstaltungstage, Bereitschaft nicht. In DP2 ändert sich erst etwas, wenn dort „Übernehmen“ getippt wird.
-// Nachreichen (Hansi: „wenn der Sollplan sich nochmals ändert, muss der Abgleich erneut laufen“): ist kc_club_konfig „dp_soll_auto“ an
-// (nach der ersten Übergabe von selbst), legt jede Neuberechnung mit geänderten Zeilen (Prüfsumme) eine neue offene Übergabe an – ältere offene → verworfen.
-async function dpSollStand(w: any) {
-  const namen = [...new Set((Array.isArray(w?.tage) ? w.tage : []).flatMap((t: any) => (Array.isArray(t?.leute) ? t.leute : []).filter((l: any) => Array.isArray(l?.s)).map((l: any) => String(l.n || ""))))].filter(Boolean).slice(0, 200) as string[];
-  const [{ data: pp }, { data: tg }, { data: wi }] = await Promise.all([
-    namen.length ? db.from("kc_core_people").select("person_id,display_name").in("display_name", namen) : Promise.resolve({ data: [] as any[] }),
+// über kc_dp_soll_uebergabe_pending/_ack). Personen nur über die beim Rechnen mitgeschriebene person_id (leute[].p, eindeutig), nie „aus“-Personen,
+// nur veröffentlichte Veranstaltungstage, Bereitschaft nicht. Übersprungenes geht mit Grund mit (DP2 löscht dazu nichts von selbst).
+// In DP2 ändert sich erst etwas, wenn dort „Übernehmen“ getippt wird.
+// Nachreichen (Hansi: „wenn der Sollplan sich nochmals ändert, muss der Abgleich erneut laufen“): kc_club_konfig „dp_soll_auto“ = { an, von }
+// (nach der ersten Übergabe von selbst an, von = Admin, der übergeben hat) – nur DESSEN Neuberechnung mit geänderten Zeilen (Prüfsumme) legt eine neue
+// offene Übergabe an (ältere offene → verworfen); die Pläne anderer Admins reichen nichts nach.
+async function dpSollStand(adminId: string, w: any) {
+  const [{ data: tg }, { data: k }, ausReg] = await Promise.all([
     db.from("kc_dp_days_published").select("work_date").eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("status", "published").limit(400),
-    db.from("kc_dp_wish_inbox").select("person_id").eq("org_id", ORG).eq("event_id", DW.veranstaltung).limit(300)]);
-  const mitWunsch = new Set((wi ?? []).map((x: any) => String(x.person_id))), je = new Map<string, string[]>();
-  for (const p of (pp ?? []) as any[]) { const id = String(p.person_id); if (id.startsWith("KC-P-TEST")) continue; const n = String(p.display_name); je.set(n, [...(je.get(n) || []), id]); }
-  const pidVonName = new Map<string, string>();
-  for (const [n, ids] of je) { const eng = ids.length > 1 ? ids.filter((id) => mitWunsch.has(id)) : ids; if (eng.length === 1) pidVonName.set(n, eng[0]); }
-  const z = dpSollZeilen(w, pidVonName, (tg ?? []).map((t: any) => String(t.work_date)));
+    db.from("kc_club_person_einstellung").select("wert").eq("person_id", adminId).eq("schluessel", "dp_druck_konfig").maybeSingle(),
+    dienstAusnahmen()]);
+  const pk: any = (k?.wert as any)?.personen && typeof (k!.wert as any).personen === "object" ? (k!.wert as any).personen : {};
+  const aus = [...new Set([...ausReg, ...Object.entries(pk).filter(([, v]: any) => v?.aus === true).map(([id]) => id)])];
+  const z = dpSollZeilen(w, (tg ?? []).map((t: any) => String(t.work_date)), { aus });
   return { ...z, pruefsumme: await sha256(dpSollKanonisch(z.rows)) };
 }
 async function dpSollLetzte(ohneVerworfen: boolean) {
@@ -5791,21 +5797,24 @@ async function dpSollLetzte(ohneVerworfen: boolean) {
   const { data } = await q.order("created_at", { ascending: false }).limit(1);
   return (data ?? [])[0] as any || null;
 }
-async function dpSollAblegen(von: string, w: any, s: { rows: any[]; pruefsumme: string }) {
+async function dpSollAblegen(von: string, w: any, s: { rows: any[]; uebersprungen: any[]; pruefsumme: string }) {
   const { error: e1 } = await db.from("kc_dp_soll_uebergabe").update({ status: "verworfen" }).eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("status", "offen");
   if (e1) throw new Fehler("Die Übergabe an DP2 konnte nicht gespeichert werden.", 500);
   const { data, error } = await db.from("kc_dp_soll_uebergabe").insert({ org_id: ORG, event_id: DW.veranstaltung, stand: w?.stand || null, erstellt_von: von,
-    rows: s.rows, anzahl: s.rows.length, pruefsumme: s.pruefsumme, status: "offen" }).select("id").single();
+    rows: s.rows, uebersprungen: s.uebersprungen, anzahl: s.rows.length, pruefsumme: s.pruefsumme, status: "offen" }).select("id").single();
   if (error || !data) throw new Fehler("Die Übergabe an DP2 konnte nicht gespeichert werden.", 500);
   return String(data.id);
 }
-async function dpSollAuto(): Promise<boolean | null> {
+async function dpSollAuto(): Promise<{ an: boolean; von: string | null } | null> {
   const { data } = await db.from("kc_club_konfig").select("wert").eq("schluessel", "dp_soll_auto").maybeSingle();
-  return typeof (data?.wert as any)?.an === "boolean" ? (data!.wert as any).an : null;
+  const w: any = data?.wert;
+  return typeof w?.an === "boolean" ? { an: w.an, von: typeof w.von === "string" ? w.von : null } : null;
 }
 async function dpSollNachreichen(adminId: string, w: any) {
-  if ((await dpSollAuto()) !== true) return;
-  const s = await dpSollStand(w);
+  const a = await dpSollAuto();
+  if (a?.an !== true || a.von !== adminId) return; // nur der Plan des Admins, der übergeben hat
+  if (!w?.pids) return;
+  const s = await dpSollStand(adminId, w);
   if (!s.rows.length) return;
   const letzte = await dpSollLetzte(false); // auch eine in DP2 verworfene, gleiche Übergabe nicht noch einmal anbieten
   if (letzte && letzte.pruefsumme === s.pruefsumme) return;
@@ -13041,36 +13050,49 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         return json({ ok: true, frei: { am: frei.am, stand: frei.stand } });
       }
       // KC-DP-SOLL-UEBERGABE (Hansi 23.11.2026): gerechneten Sollplan an DP2 übergeben – nur Admin (wie dp_plaene_freigeben).
-      // { pruefen: true } → nur zählen · { auto: true|false } → automatisches Nachreichen an/aus · sonst { stand } → Übergabe ablegen.
+      // { pruefen: true } → nur den gespeicherten Stand zählen (rechnet nie neu – Datenverkehr sparen)
+      // { pruefen: true, aktuell: true } → vor dem Übergeben: veralteten Plan einmal neu rechnen, dann zählen
+      // { auto: true|false } → automatisches Nachreichen an/aus (für den eigenen Plan) · sonst { stand } → Übergabe ablegen.
       case "dp_soll_uebergeben": {
         nurAdmin(ich);
         if (typeof p.auto === "boolean") {
-          schreibOk(await db.from("kc_club_konfig").upsert({ schluessel: "dp_soll_auto", wert: { an: p.auto }, geaendert_von: ich.person_id, geaendert_am: jetzt() }), "Speichern");
+          schreibOk(await db.from("kc_club_konfig").upsert({ schluessel: "dp_soll_auto", wert: { an: p.auto, von: ich.person_id }, geaendert_von: ich.person_id, geaendert_am: jetzt() }), "Speichern");
           await protokoll(ich.person_id, "dp_soll_auto", { an: p.auto });
           return json({ ok: true, auto: p.auto });
         }
-        const { data: z } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "dp_druck").maybeSingle();
-        let w: any = z?.wert && typeof z.wert === "object" ? z.wert : null;
-        if (await dpDruckVeraltet(ich.person_id, w).catch(() => false)) { await dpDruckNeu(ich.person_id);
-          w = (await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "dp_druck").maybeSingle()).data?.wert; }
+        const lies = async () => { const { data: z } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "dp_druck").maybeSingle();
+          return z?.wert && typeof z.wert === "object" ? z.wert as any : null; };
+        let w: any = await lies();
+        if (p.pruefen === true && p.aktuell === true && (!w?.pids || await dpDruckVeraltet(ich.person_id, w).catch(() => false))) { await dpDruckNeu(ich.person_id); w = await lies(); }
         if (!w || !Array.isArray(w.tage) || !w.tage.length) throw new Fehler("Es gibt noch keinen gerechneten Plan zum Übergeben.", 409);
-        const s = await dpSollStand(w), auto = await dpSollAuto(), letzte = await dpSollLetzte(true);
-        const info = { anzahl: s.rows.length, ohneId: s.ohneId, bereitschaft: s.bereitschaft, stand: w.stand || null, auto: auto !== false && (auto === true || !!letzte),
+        const [auto, letzte] = await Promise.all([dpSollAuto(), dpSollLetzte(true)]);
+        const basis = { stand: w.stand || null, auto: auto ? auto.an : true, autoFremd: !!(auto?.an && auto.von && auto.von !== ich.person_id) };
+        if (!w.pids) { // Stand von vor KC-DP-SOLL-UEBERGABE: ohne Personen-IDs – erst beim Übergeben einmal neu rechnen
+          if (p.pruefen === true) return json({ ...basis, anzahl: null, neuRechnen: true, letzte: letzte ? { status: letzte.status, am: letzte.created_at, anzahl: letzte.anzahl, uebernommenAm: letzte.uebernommen_am, gleich: false } : null });
+          throw new Fehler("Der Plan wurde inzwischen neu gerechnet – bitte noch einmal tippen.", 409);
+        }
+        const s = await dpSollStand(ich.person_id, w);
+        const info = { ...basis, anzahl: s.rows.length, ohneId: s.ohneId, uebersprungen: s.uebersprungen.filter((u: any) => u.date).length, bereitschaft: s.bereitschaft,
           letzte: letzte ? { status: letzte.status, am: letzte.created_at, anzahl: letzte.anzahl, uebernommenAm: letzte.uebernommen_am, gleich: letzte.pruefsumme === s.pruefsumme } : null };
         if (p.pruefen === true) return json(info);
-        if (typeof p.stand === "string" && p.stand !== String(w.stand || "")) throw new Fehler("Der Plan wurde inzwischen neu gerechnet – bitte noch einmal tippen.", 409);
+        if (typeof p.stand !== "string" || p.stand !== String(w.stand || "")) throw new Fehler("Der Plan wurde inzwischen neu gerechnet – bitte noch einmal tippen.", 409);
         if (!s.rows.length) throw new Fehler("Im Plan steht noch keine Schicht zum Übergeben.", 409);
         if (letzte && letzte.pruefsumme === s.pruefsumme) return json({ ...info, ok: true, unveraendert: true });
         const id = await dpSollAblegen(ich.person_id, w, s);
-        if (auto === null) await db.from("kc_club_konfig").upsert({ schluessel: "dp_soll_auto", wert: { an: true }, geaendert_von: ich.person_id, geaendert_am: jetzt() }); // nach der ersten Übergabe: Standard an
+        // nach der ersten Übergabe: Nachreichen an – für den Plan dieses Admins (wer zuletzt übergibt, dessen Plan reicht nach)
+        if (auto === null || (auto.an && auto.von !== ich.person_id)) await db.from("kc_club_konfig").upsert({ schluessel: "dp_soll_auto", wert: { an: true, von: ich.person_id }, geaendert_von: ich.person_id, geaendert_am: jetzt() });
         await protokoll(ich.person_id, "dp_soll_uebergeben", { id, anzahl: s.rows.length, ohneId: s.ohneId.length });
-        return json({ ...info, ok: true, id, auto: auto !== false });
+        return json({ ...info, ok: true, id, auto: auto ? auto.an : true, autoFremd: false });
       }
       case "dp_plaene": {
         const { data: z } = await db.from("kc_club_konfig").select("wert").eq("schluessel", "dp_plaene_frei").maybeSingle();
         const f: any = z?.wert;
         if (!f?.plan || !Array.isArray(f.plan.tage)) return json({ frei: null });
-        return p.nurInfo === true ? json({ frei: { am: f.am, stand: f.stand } }) : json({ ...f.plan, frei: { am: f.am, stand: f.stand } });
+        if (p.nurInfo === true) return json({ frei: { am: f.am, stand: f.stand } });
+        // KC-DP-SOLL-UEBERGABE: Personen-IDs (leute[].p/pm) nur für die Übergabe an DP2 – nicht an Mitglieder herausgeben
+        const tage = f.plan.tage.map((t: any) => ({ ...t, leute: (Array.isArray(t.leute) ? t.leute : []).map(({ p: _p, pm: _pm, ...rest }: any) => rest) }));
+        const { pids: _pids, ...plan } = f.plan;
+        return json({ ...plan, tage, frei: { am: f.am, stand: f.stand } });
       }
       case "dp_druck": {
         nurAdmin(ich);

@@ -17,6 +17,7 @@ create table if not exists public.kc_dp_soll_uebergabe (
   stand timestamptz,                         -- Stand des berechneten Plans in der Club-App (dp_druck.stand)
   erstellt_von text,                         -- person_id des Admins (oder 'auto' beim automatischen Nachreichen)
   rows jsonb not null check (jsonb_typeof(rows) = 'array'),
+  uebersprungen jsonb not null default '[]'::jsonb check (jsonb_typeof(uebersprungen) = 'array'), -- nicht übergebene Zeilen mit Grund (Person nicht eindeutig, Tag nicht veröffentlicht, ausgenommen) – DP2 löscht dazu nichts von selbst
   anzahl integer not null default 0 check (anzahl >= 0),
   pruefsumme text not null,                  -- SHA-256 über die geordneten Zeilen – gleicher Stand → gleiche Prüfsumme
   status text not null default 'offen' check (status in ('offen', 'uebernommen', 'verworfen')),
@@ -51,7 +52,7 @@ begin
     raise exception 'Keine aktive dp2-Planungsberechtigung';
   end if;
   return coalesce((select jsonb_build_object('id', u.id, 'eventId', u.event_id, 'stand', u.stand, 'anzahl', u.anzahl, 'pruefsumme', u.pruefsumme,
-      'rows', u.rows, 'createdAt', u.created_at, 'contract', 'KC_DP_SOLL_UEBERGABE_V1')
+      'rows', u.rows, 'uebersprungen', u.uebersprungen, 'createdAt', u.created_at, 'contract', 'KC_DP_SOLL_UEBERGABE_V1')
     from public.kc_dp_soll_uebergabe u where u.org_id = p_org_id and u.event_id = trim(p_event_id) and u.status = 'offen'
     order by u.created_at desc limit 1), '{}'::jsonb);
 end;
