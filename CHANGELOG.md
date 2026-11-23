@@ -1,6 +1,6 @@
 # Änderungen
 
-## (Version folgt) – ✉️ Zusagen per E-Mail-Link ohne App (KC-CLUB-MAIL-ZUSAGE)
+## 3.8.0 – 2026-11-23 – ✉️ Zusagen per E-Mail-Link ohne App (KC-CLUB-MAIL-ZUSAGE)
 Wunsch Hansi 23.11.2026: Mitglieder, die die App nicht öffnen (z. B. App nur auf einem Tablet, das nicht genutzt wird), sollen per E-Mail-Link zu- oder absagen können – ohne App und ohne Anmeldung.
 - **Admin: „✉️ Zusage-Link mailen“** an jedem offenen Treffen – anhaken, wer noch nicht geantwortet hat; jeder bekommt eine Mail mit zwei Links („Ich komme“ / „Ich komme nicht“). Neue Admin-Aktion `mail_antwort_link` (nurAdmin; ohne `senden` gibt sie die Links zurück).
 - **Neue Seite `antwort.html`** (groß, einfach, 390 px): „Hallo Manfred“, Treffen mit Tag/Uhrzeit/Ort, drei große Knöpfe ✅ Ich komme / ❌ Ich komme nicht / 🤔 Vielleicht, danach „Danke, deine Zusage ist eingetragen ✅“ und ein freiwilliges Notizfeld. Ändern geht bis Treffen-Beginn + 2 Std.
