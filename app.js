@@ -17464,11 +17464,16 @@ function ilTerminOeffnen(id) { zeige("termine"); const auf = () => { if (TREFFEN
 // 🚗 „Hansi bietet eine Mitfahrt an“ / 🙋 „Anne sucht eine Mitfahrgelegenheit“ mit Termin, Tag und freien Plätzen – Antippen öffnet den Termin bzw. die Aktion.
 function ilMitfahrt(m) {
   const wer = m.eigen ? "Du" : m.name || "Jemand", tag = m.bezug_art === "aktion" ? fTag.format(new Date(m.beginn)) : wann(m.beginn);
+  const auf = `ilMitfahrtOeffnen(${JSON.stringify(m.bezug_art === "aktion" ? "aktion" : "treffen")}, ${JSON.stringify(String(m.bezug_id))})`;
+  // KC-CLUB-MITFAHRT-AUSGEBUCHT (Wunsch Hansi 23.11.2026 „Schreibe in die Laufschrift, dass meine Mitfahrgelegenheit ausgebucht ist. Immer in solchen Fällen.“):
+  // volle Fahrt für alle sichtbar (damit niemand mehr fragt) – ruhiger als ein freies Angebot (weiß), die eigene gelb wie bisher
+  if (m.art === "voll") { const n = m.name || "Jemand", wessen = m.eigen ? "Deine" : /[sßxz]$/i.test(n) ? n + "’" : n + "s";
+    return { id: "mitfahrt:voll:" + m.id, stufe: m.eigen ? "gold" : "weiss", sym: "🚗", t: m.eigen ? "Deine Mitfahrgelegenheit ist ausgebucht ✅" : `${wessen} Mitfahrt ist ausgebucht`, // kurz: bei 390 px darf „ausgebucht“ nicht abgeschnitten werden
+      u: `${m.titel} · ${tag} · ${m.plaetze > 0 ? (m.plaetze === 1 ? "der Platz ist" : `alle ${m.plaetze} Plätze sind`) : "alle Plätze sind"} vergeben`, auf }; }
   const t = m.art === "biete" ? `${wer} ${m.eigen ? "bietest" : "bietet"} eine Mitfahrt an` : `${wer} ${m.eigen ? "suchst" : "sucht"} eine Mitfahrgelegenheit`;
   const u = `${m.titel} · ${tag}${m.art === "biete" ? ` · ${m.frei === 1 ? "1 Platz" : m.frei + " Plätze"} frei` : ""}${m.eigen ? "" : m.art === "biete" ? " – mitfahren? Antippen" : " – Platz frei? Antippen"}`;
   // Fund Hansi 20.11. „Habe ich nicht gesehen“: eigene waren „weiß“ und fielen hinter die 7 – jetzt gelb wie bei allen
-  return { id: "mitfahrt:" + m.art + ":" + m.id, stufe: "gold", sym: m.art === "biete" ? "🚗" : "🙋", t, u,
-    auf: `ilMitfahrtOeffnen(${JSON.stringify(m.bezug_art === "aktion" ? "aktion" : "treffen")}, ${JSON.stringify(String(m.bezug_id))})` };
+  return { id: "mitfahrt:" + m.art + ":" + m.id, stufe: "gold", sym: m.art === "biete" ? "🚗" : "🙋", t, u, auf };
 }
 // KC-CLUB-MITFAHRT-SPRUNG (20.11.2026, Fund Hansi „Wenn ich sie antippe, gelangt man in den Kalender, aber nicht genau zur Mitfahrgelegenheit“): vorher versuchte
 // ilTerminOeffnen den Termin nur nach 0,7 und 1,8 s – lud der Kalender länger, blieb man im Kalender. Jetzt: warten, bis der Termin da ist (bis ~9 s), Termin öffnen,

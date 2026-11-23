@@ -1,5 +1,12 @@
 # Änderungen
 
+## (Version folgt) – 🚗 Laufschrift: „Mitfahrgelegenheit ausgebucht“ (KC-CLUB-MITFAHRT-AUSGEBUCHT)
+Wunsch Hansi 23.11.: „Schreibe in die Laufschrift, dass meine Mitfahrgelegenheit ausgebucht ist. Immer in solchen Fällen.“
+- Server `mitfahrtLaufbandListe`: Angebote zu kommenden Terminen/Aktionen, deren Plätze belegt sind (Mitfahrer und Gäste aus `kc_club_mitfahrt_gast`), kommen jetzt als `art: "voll"` (mit Platzzahl) statt wegzufallen. Bei mehr als `MITFAHRT_LB_MAX` Einträgen haben Suchen und freie Angebote Vorrang, „voll“ füllt nur auf.
+- App `ilMitfahrt`: „🚗 Hansis Mitfahrt ist ausgebucht“ · „Köcheclub-Sitzung · Di., 24.11. um 18:00 · alle 3 Plätze sind vergeben“ – für alle (weiß, ruhiger als ein freies Angebot), eigene „Deine Mitfahrgelegenheit ist ausgebucht ✅“ gelb. Antippen öffnet wie bisher die Mitfahrt beim Termin.
+- Der gemerkte Laufband-Stand wird schon bei Platz buchen/freigeben (auch in Vertretung), Gast eintragen/entfernen, Anbieten, Suchen und Löschen verworfen – jetzt im Test festgehalten.
+- Test `tests/mitfahrt-laufband.test.mjs` erweitert (voll → art voll, Gast zählt, Vorrang, Texte).
+
 ## 3.16.0 – 2026-11-23 – 🗓️ Dienstplan: „höchstens 5 Tage am Stück“ je Person abschaltbar (KC-CLUB-DP-OHNE-RUHETAG) · Server 3.16.0 · [Hansi: einspielen, Update-Stopp für diese Version aufgehoben]
 Hansi 23.11.: „Manfred ist nur für 2 Stunden eingetragen … wichtiger ist, wo noch jemand fehlt. Gib ihm etwas mehr Stunden.“ – Vorschlag: Manfred am Di 08.12. abends (Wunsch 15–22) statt 2 Std. am 13.12.; der 08.12. war sein Ruhetag nach 5 Tagen am Stück.
 - Plan-Einstellung `personen[…].ohneRuhetag` (dp-rechnen.js): für diese Person gilt „höchstens maxTageAmStueck Tage am Stück“ nicht. Rechenregel 12 – der Plan rechnet sich beim nächsten Öffnen neu.

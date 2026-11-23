@@ -8242,7 +8242,7 @@ async function mitfahrtGaeste(mids: string[]): Promise<any[]> {
   return data ?? [];
 }
 // KC-CLUB-MITFAHRT-LAUFBAND (20.11.2026, Wunsch Hansi „zeige in der Laufschrift an, wenn jemand eine Mitfahrgelegenheit sucht oder anbietet“):
-// offene Angebote (mit freien Plätzen) und Suchen zu kommenden Terminen/Aktionen – für das Info-Laufband beim App-Start. Datenbank-sparsam: das Ergebnis
+// offene Angebote (mit freien Plätzen), ausgebuchte Angebote (KC-CLUB-MITFAHRT-AUSGEBUCHT) und Suchen zu kommenden Terminen/Aktionen – für das Info-Laufband beim App-Start. Datenbank-sparsam: das Ergebnis
 // wird MITFAHRT_LB_MS für alle gemerkt (Server-Speicher) und bei jeder Mitfahrt-Änderung verworfen; nur Namen, Termin, freie Plätze – keine Notizen.
 const MITFAHRT_LB_MS = 5 * 60000, MITFAHRT_LB_MAX = 6;
 let MITFAHRT_LB: { t: number; v: Promise<any[]> } | null = null;
@@ -8250,11 +8250,16 @@ function mitfahrtLaufbandVergessen() { MITFAHRT_LB = null; }
 function mitfahrtLaufbandListe(angebote: any[], suchen: any[], plaetzeBelegt: Map<string, number>, termine: Map<string, { titel: string; beginn: string }>, name: (pid: string) => string) {
   const aus: any[] = [];
   for (const m of angebote) { const t = termine.get(m.bezug_art + ":" + m.bezug_id); if (!t) continue;
-    const frei = Math.max(0, (Number(m.plaetze) || 0) - (plaetzeBelegt.get(m.id) || 0)); if (!frei) continue;
-    aus.push({ art: "biete", id: m.id, person_id: m.fahrer, name: name(m.fahrer), frei, bezug_art: m.bezug_art, bezug_id: m.bezug_id, titel: t.titel, beginn: t.beginn }); }
+    const plaetze = Number(m.plaetze) || 0, frei = Math.max(0, plaetze - (plaetzeBelegt.get(m.id) || 0));
+    // KC-CLUB-MITFAHRT-AUSGEBUCHT (Wunsch Hansi 23.11.2026 „Schreibe in die Laufschrift, dass meine Mitfahrgelegenheit ausgebucht ist. Immer in solchen Fällen.“):
+    // volle Angebote (Plätze inkl. Gäste belegt) erscheinen als art "voll" – damit niemand mehr fragt
+    if (!frei && plaetze <= 0) continue;
+    aus.push({ art: frei ? "biete" : "voll", id: m.id, person_id: m.fahrer, name: name(m.fahrer), ...(frei ? { frei } : { plaetze }), bezug_art: m.bezug_art, bezug_id: m.bezug_id, titel: t.titel, beginn: t.beginn }); }
   for (const x of suchen) { const t = termine.get(x.bezug_art + ":" + x.bezug_id); if (!t) continue;
     aus.push({ art: "suche", id: x.bezug_art + ":" + x.bezug_id + ":" + x.person_id, person_id: x.person_id, name: name(x.person_id), bezug_art: x.bezug_art, bezug_id: x.bezug_id, titel: t.titel, beginn: t.beginn }); }
-  return aus.sort((a, b) => String(a.beginn).localeCompare(String(b.beginn)) || (a.art === b.art ? 0 : a.art === "suche" ? -1 : 1)).slice(0, MITFAHRT_LB_MAX);
+  const rang: Record<string, number> = { suche: 0, biete: 1, voll: 2 }, folge = (a: any, b: any) => String(a.beginn).localeCompare(String(b.beginn)) || rang[a.art] - rang[b.art];
+  // Suchen und freie Angebote haben Vorrang: „voll“ füllt nur auf, was unter MITFAHRT_LB_MAX noch Platz hat
+  return [...aus.filter((x) => x.art !== "voll").sort(folge), ...aus.filter((x) => x.art === "voll").sort(folge)].slice(0, MITFAHRT_LB_MAX).sort(folge);
 }
 async function mitfahrtLaufbandLaden(): Promise<any[]> {
   const [{ data: mf }, { data: su }] = await Promise.all([
