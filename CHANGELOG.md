@@ -1,6 +1,6 @@
 # Änderungen
 
-## (Version folgt) – 🗂️ Rollkartei: sanft eine Karte, schnell durchrollen, 🔒 Karte feststellen (KC-CLUB-ROLLKARTEI-SCHLOSS) · 🤖 Autoantwort-Knopf rot pulsierend (KC-CLUB-AUTOANTWORT-PULS)
+## 3.11.0 – 2026-11-23 – 🗂️ Rollkartei: sanft eine Karte, schnell durchrollen, 🔒 Karte feststellen (KC-CLUB-ROLLKARTEI-SCHLOSS) · 🤖 Autoantwort-Knopf rot pulsierend (KC-CLUB-AUTOANTWORT-PULS)
 Wunsch Hansi 23.11.2026 (Arbeitszweig `rollkartei-wischen` – wegen Update-Stopp KC-EGRESS-STOPP erst nach Freigabe einspielen).
 - **Wischen:** leichtes, langsames Wischen = genau **eine** Karte weiter/zurück (einrasten); schneller Wisch = je nach Schwung **3–10 Karten**, sanft auslaufend, dann Einrasten. Reine Rechnung `rkSchwungKarten(v, ruhig)` (px/ms → Karten, Schwelle `RK_SCHNELL` = 0,9). Gilt für die neue Rolle und die klassische Rollkartei.
 - **Mausrad:** ein Raster = eine Karte (Zeilen/Seiten umgerechnet), Touchpad-Schritte werden gesammelt. ▲▼ und „1 / 2“ bleiben.
