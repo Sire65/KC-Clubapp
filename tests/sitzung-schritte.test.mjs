@@ -70,7 +70,7 @@ assert.deepEqual(u.kc_club_sitzungsprotokolle, { anwesend: ["P1"], entschuldigt:
 u = await lauf(2 * T, "ja"); assert.ok(u.kc_club_buero_sitzung.anwesend.includes("P2"), "Zusage → angehakt");
 assert.deepEqual(await lauf(-H, "nein"), {}, "nach Sitzungsbeginn nichts mehr ändern");
 assert.deepEqual(await lauf(2 * T, "vielleicht"), {}, "„vielleicht“ ändert nichts");
-assert.equal((server.match(/await sitzungAntwortAbgleich\(/g) || []).length, 2, "beide Antwort-Wege (selbst + aus der Nachricht eingetragen)");
+assert.equal((server.match(/await sitzungAntwortAbgleich\(/g) || []).length, 3, "alle Antwort-Wege (selbst + aus der Nachricht eingetragen + KC-CLUB-MAIL-ZUSAGE per E-Mail-Link)");
 // App: alte Fassung beim Laden abgleichen und sagen
 const lQ = app.slice(app.indexOf("async function buSitzungLaden("), app.indexOf("async function buSitzungOeffnen("));
 const BU = {}; await new Function("BU", "api", "buSchreiben", lQ + "\nreturn buSitzungLaden;")(BU, async () => ({ standard: { anwesend: [], tagesordnung: [{ t: "X" }], zeilen: 5 }, anmerkungVorschlag: "",

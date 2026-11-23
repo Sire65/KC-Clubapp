@@ -1,5 +1,13 @@
 # Änderungen
 
+## (Version folgt) – ✉️ Zusagen per E-Mail-Link ohne App (KC-CLUB-MAIL-ZUSAGE)
+Wunsch Hansi 23.11.2026: Mitglieder, die die App nicht öffnen (z. B. App nur auf einem Tablet, das nicht genutzt wird), sollen per E-Mail-Link zu- oder absagen können – ohne App und ohne Anmeldung.
+- **Admin: „✉️ Zusage-Link mailen“** an jedem offenen Treffen – anhaken, wer noch nicht geantwortet hat; jeder bekommt eine Mail mit zwei Links („Ich komme“ / „Ich komme nicht“). Neue Admin-Aktion `mail_antwort_link` (nurAdmin; ohne `senden` gibt sie die Links zurück).
+- **Neue Seite `antwort.html`** (groß, einfach, 390 px): „Hallo Manfred“, Treffen mit Tag/Uhrzeit/Ort, drei große Knöpfe ✅ Ich komme / ❌ Ich komme nicht / 🤔 Vielleicht, danach „Danke, deine Zusage ist eingetragen ✅“ und ein freiwilliges Notizfeld. Ändern geht bis Treffen-Beginn + 2 Std.
+- **Gegen Mail-Scanner:** Öffnen trägt nie etwas ein (`?a=ja` hebt nur den Knopf hervor) – erst das Antippen eines Knopfs.
+- **Sicherheit:** Server-Aktionen `mail_antwort_laden`/`mail_antwort_setzen` vor der Anmeldung, nur mit dem persönlichen Link (32 Zufallsbyte); gespeichert wird nur der SHA-256-Fingerabdruck (neue Tabelle `kc_club_antwort_links`, Migration `20261123_kc_club_mail_zusage.sql`). Bremse für Fehlversuche je Netz und insgesamt. Die Seite bekommt nur Vorname, Titel, Beginn, Ort und die eigene Antwort – keine anderen Teilnehmer, keine E-Mail. Der Link in der Mail wird nach dem Versand im Mail-Speicher geschwärzt (KC-CLUB-LINKSCHUTZ). Antwort wie in der App (Mitfahrt-Suche, Sitzungs-Abgleich), Notiz-Vermerk „per E-Mail-Link“, Protokoll ohne Inhalte (`weg: mail_link`). Strenge CSP, keine fremden Skripte, kein Referrer.
+- Tests: neu `mail-zusage`.
+
 ## 3.7.0 – 2026-11-23 – 🎄 Adventskalender auch für Aushilfen (KC-CLUB-ADVENT-AUSHILFEN) · 🕐 Terminanfrage: „Ja, aber zu anderer Zeit“ (KC-CLUB-ANFRAGE-ANDERE-ZEIT)
 Wunsch Hansi 22.11.2026: „Adventskalender auch für Aushilfen.“
 - **Aushilfen sehen den Adventskalender** wie Mitglieder: Türchen, Erinnerung im Info-Laufband, Schalter unter ⚙️ → ✨ Effekte und die Hilfe dazu (ab 1. Dezember, Admin immer). Gäste sehen ihn weiterhin nie (bisher seit 2.869.0: nur Mitglieder).

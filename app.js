@@ -19500,8 +19500,30 @@ function treffenKarte(t, vorbei) {
     </div>`}
     ${mitfahrtBlock("treffen", t.id, t.mitfahrten || [], offen, t.mitfahrtSuche || [], va || t.meine === "ja")}
     ${offen ? `<div class="knoepfe"><button class="knopf klein" onclick="inKalender('${t.id}')">📲 In meinen Kalender</button></div>` : ""}
-    ${ICH?.vorstand ? `<div class="knoepfe">${offen ? `<button class="knopf klein" onclick='treffenForm(${hlJs(bearbeiten)})'>✏️ Ändern</button><button class="knopf klein" onclick="treffenAbsagen('${t.id}', ${va})">Absagen</button>` : ""}<button class="knopf klein" onclick="treffenLoeschen('${t.id}', ${va})">🗑️ Löschen</button></div>` : ""}
+    ${ICH?.vorstand ? `<div class="knoepfe">${offen ? `<button class="knopf klein" onclick='treffenForm(${hlJs(bearbeiten)})'>✏️ Ändern</button><button class="knopf klein" onclick="treffenAbsagen('${t.id}', ${va})">Absagen</button>` : ""}<button class="knopf klein" onclick="treffenLoeschen('${t.id}', ${va})">🗑️ Löschen</button>${ICH?.admin && offen && !va ? `<button class="knopf klein" onclick="zusageLinkMailen('${t.id}')">✉️ Zusage-Link mailen</button>` : ""}</div>` : ""}
   </div>`;
+}
+// KC-CLUB-MAIL-ZUSAGE (Wunsch Hansi 23.11.2026): Mitglieder ohne Antwort (z. B. App nie geöffnet) bekommen eine Mail mit persönlichem Zusage-Link
+// (antwort.html) – zu-/absagen ohne App und ohne Anmeldung. Nur Admin; der Server erzeugt die Links und schickt die Mails.
+async function zusageLinkMailen(id) {
+  const t = TREFFEN_IDX.get(id); if (!t || !ICH?.admin) return;
+  try { if (!MITGLIEDER) await mitgliederHolen(); } catch (e) { return meldeFehler(e); }
+  const geantwortet = new Set(t.teilnahme.map((x) => x.person_id));
+  const ohne = (MITGLIEDER || []).filter((m) => !m.passiv && !geantwortet.has(m.person_id)).sort((a, b) => a.name.localeCompare(b.name));
+  if (!ohne.length) return melde("Alle haben schon geantwortet. 👍");
+  blattAuf("zusageLinkBlatt", `<h3 style="margin-top:0">✉️ Zusage-Link mailen</h3>
+    <p class="hinweis" style="margin:0 0 8px">${esc(t.titel)} · ${esc(wann(t.beginn))}<br>Wer angehakt ist, bekommt eine Mail mit zwei Links („Ich komme“ / „Ich komme nicht“) – zusagen geht dann ohne App.</p>
+    ${ohne.map((m) => `<label style="display:flex;gap:8px;align-items:center;padding:6px 0"><input type="checkbox" class="zlPerson" value="${esc(m.person_id)}"> ${esc(m.name)}</label>`).join("")}
+    <div class="knoepfe"><button class="knopf haupt" onclick="zusageLinkSenden('${t.id}')">✉️ Mail senden</button><button class="knopf" onclick="$('zusageLinkBlatt').remove()">Abbrechen</button></div>`);
+}
+async function zusageLinkSenden(id) {
+  const ids = [...document.querySelectorAll("#zusageLinkBlatt .zlPerson:checked")].map((x) => x.value);
+  if (!ids.length) return melde("Bitte mindestens ein Mitglied anhaken.", true);
+  try {
+    const r = await api("mail_antwort_link", { treffen_id: id, person_ids: ids, senden: true });
+    $("zusageLinkBlatt")?.remove();
+    melde(r.versand?.fehler ? `✉️ ${r.versand.gesendet} Mail(s) gesendet, ${r.versand.fehler} nicht zugestellt` : `✉️ Zusage-Link an ${r.anzahl} ${r.anzahl === 1 ? "Mitglied" : "Mitglieder"} gemailt`);
+  } catch (e) { meldeFehler(e); }
 }
 // KC-CLUB-THEMA-FRAGE (1.24.1): nach „Ich komme“ freundlich fragen; bei „Ja“ Vorschläge öffnen, Hinweis zeigen, „＋ Neu“ hervorheben
 let VS_ZIEL = null;
@@ -37756,7 +37778,7 @@ const FENSTER_NAMEN = {
   spEinlBlatt: "🎲 Spiel-Einladung", spHerausBlatt: "🎲 Herausfordern", spLiveBlatt: "🎲 Spiel-Herausforderung", spTerminBlatt: "📅 Termin für die Partie", sperreBlatt: "🔒 Personen sperren",
   sprForm: "💬 Eigener Spruch", sprungBlatt: "🔘 Knopf in die Nachricht", spurFrageBlatt: "🟢 Frage: Wege ansehen?", statusBlatt: "🙂 Mein Status", studioBlatt: "🎬 Studio",
   svBlatt: "⚙️ Sitzungs-Vorgaben", taAeBlatt: "✏️ Terminanfrage ändern", taPrBlatt: "📝 Besprechungs-Protokoll schreiben", taPrLesen: "📝 Besprechungs-Protokoll lesen", taGvBlatt: "🔄 Anderen Termin vorschlagen", taAzBlatt: "🕐 Ja, aber zu anderer Zeit",taHinweisBlatt: "📨 Hinweis: Terminanfragen", grBlatt: "🍲 Gemeinschaftsgericht: deine Zutat", pulsBlatt: "🎚️ Datenverkehr der Club-App",grAdminBlatt: "🍲 Gemeinschaftsgericht (Admin)",taVkBlatt: "🔄 Gegenvorschlag", tdtBlatt: "💡 Tipp des Tages",
-  teilenBlatt: "📥 Mit Köcheclub geteilt", themaFrage: "✅ Zusage: Thema/Mitbringen", mtBlatt: "💡 Ein Tipp für dich", twBlatt: "🧑‍🍳 Frag Twinkey", twOffenBlatt: "📥 Fragen an Twinkey",
+  teilenBlatt: "📥 Mit Köcheclub geteilt", themaFrage: "✅ Zusage: Thema/Mitbringen", zusageLinkBlatt: "✉️ Zusage-Link mailen",mtBlatt: "💡 Ein Tipp für dich", twBlatt: "🧑‍🍳 Frag Twinkey", twOffenBlatt: "📥 Fragen an Twinkey",
   uaAdminBlatt: "🙋 Unterstützungs-Anfragen", ustBlatt: "🤝 Wie viel Unterstützung möchtest du?", verbindungBlatt: "📡 Verbindung", verlassenBlatt: "👋 Hinweis beim Verlassen", verpasstBlatt: "👋 Verpasstes Anklopfen",
   versandBlatt: "📤 Wie verschicken?", vfAuswahlBlatt: "👥 Auswahl: an wen", vfVorlageBlatt: "📄 Vorlage übernehmen", vorschlagBearb: "✏️ Vorschlag bearbeiten", vorschlagInfo: "💡 Vorschlag ansehen",
   vwMenueBlatt: "📤 Wie verschicken – nur diese Nachricht", vwSicherBlatt: "⚠️ Versand: Rückfrage", waEinfBlatt: "📋 Aus WhatsApp einfügen", wasNeuBlatt: "🆕 Was ist neu", wbBerichtBlatt: "📊 Wochenbericht",

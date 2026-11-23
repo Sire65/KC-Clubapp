@@ -10243,6 +10243,42 @@ const UA_PUNKTE: Record<string, string> = {
 };
 const UA_KONTAKT: Record<string, string> = { anruf: "📞 Anruf", nachricht: "💬 Nachricht", persoenlich: "🤝 Persönlich" };
 const uaKurz = (punkte: string[], text: string) => [...punkte.map((x) => UA_PUNKTE[x]), ...(text ? [text] : [])].join(" · ").slice(0, 180);
+// ---------- KC-CLUB-MAIL-ZUSAGE (Wunsch Hansi 23.11.2026): Zusage/Absage per E-Mail-Link ohne App und ohne Anmeldung ----------
+// Mitglieder, die die App nicht öffnen, bekommen je Treffen einen persönlichen Link (antwort.html?t=…). Gespeichert wird nur der SHA-256-Fingerabdruck
+// (kc_club_antwort_links.token_hash), nie der Link. Gültig bis Treffen-Beginn + 2 Std. Öffnen setzt NIE etwas (Mail-Scanner öffnen Links vorab) – erst das
+// Antippen eines Knopfs (mail_antwort_setzen) trägt ein, genau wie treffen_antwort. Die Seite bekommt nur Vorname, Titel, Beginn, Ort und die eigene Antwort.
+// Bremse: Fehlversuche je Netz MA_FEHL_NETZ, insgesamt MA_FEHL_GESAMT je MA_MIN Minuten (zusätzlich zur Länge des Zufallsschlüssels: 32 Byte).
+const MA_MIN = 15, MA_FEHL_NETZ = 10, MA_FEHL_GESAMT = 60, MA_NACH_BEGINN_MS = 2 * 3600000, MA_MAX_PERSONEN = 60;
+const MA_ANTWORTEN = ["ja", "nein", "vielleicht"];
+const maTokenOk = (t: string) => /^[A-Za-z0-9_-]{43}$/.test(t);
+function maTokenNeu() {
+  return btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32)))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+const maLink = (token: string, param = "t") => `${APP_URL}antwort.html?${param}=${token}`;
+async function maBremse(req: Request) {
+  const netz = await sha256("kc-netz:" + (req.headers.get("x-forwarded-for") || "").split(",")[0].trim());
+  const seit = new Date(Date.now() - MA_MIN * 60000).toISOString();
+  const [{ count: fehlNetz }, { count: fehlGesamt }] = await Promise.all([
+    db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("aktion", "mail_antwort_fehlversuch").eq("details->>netz", netz).gte("zeit", seit),
+    db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("aktion", "mail_antwort_fehlversuch").gte("zeit", seit),
+  ]);
+  if ((fehlNetz ?? 0) >= MA_FEHL_NETZ || (fehlGesamt ?? 0) >= MA_FEHL_GESAMT) throw new Fehler(`Zu viele Versuche – bitte in ${MA_MIN} Minuten noch einmal.`, 429);
+  return netz;
+}
+// Link prüfen: liefert Link, Treffen und (wenn gültig) gueltig=true – sonst gueltig=false mit freundlichem Grund. Unbekannter Link → Fehler (und Fehlversuch).
+async function maLinkPruefen(req: Request, t: string) {
+  if (!maTokenOk(t)) throw new Fehler("Dieser Link ist nicht vollständig. Bitte den Link aus der Mail noch einmal antippen.", 400);
+  const netz = await maBremse(req);
+  const { data: l } = await db.from("kc_club_antwort_links").select("id,person_id,treffen_id,gueltig_bis").eq("token_hash", await sha256(t)).maybeSingle();
+  if (!l) { await protokoll(null, "mail_antwort_fehlversuch", { netz }); throw new Fehler("Dieser Link ist nicht gültig. Bei Fragen melde dich einfach direkt bei Hansi.", 404); }
+  const { data: tr } = await db.from("kc_club_treffen").select("id,titel,beginn,ort,status").eq("id", l.treffen_id).maybeSingle();
+  if (!tr) throw new Fehler("Dieses Treffen gibt es nicht mehr.", 404);
+  const ende = Date.parse(tr.beginn) + MA_NACH_BEGINN_MS;
+  const grund = tr.status !== "geplant" ? "Dieses Treffen wurde abgesagt."
+    : Date.now() > Math.min(Date.parse(l.gueltig_bis), ende) ? "Dieser Link ist abgelaufen – das Treffen ist vorbei."
+    : (await sperreFuer(l.person_id)) ? "Das geht hier leider nicht – bitte melde dich direkt bei Hansi." : "";
+  return { l, tr, gueltig: !grund, grund };
+}
 // ---------- Hauptprogramm ----------
 const kcAnfrage = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
@@ -10839,6 +10875,32 @@ Köcheclub Werne`,
         }, `club-fehler-alarm:${geraet}:${berlinTag(new Date())}`).catch(() => null);
       }
       return json({ ok: true, gespeichert: platz });
+    }
+
+    // ----- KC-CLUB-MAIL-ZUSAGE (23.11.2026): Zusage-Seite antwort.html (ohne Anmeldung, nur mit dem persönlichen Link je Treffen) -----
+    // Laden: nur lesen – setzt nie eine Antwort (Mail-Scanner öffnen Links vorab). Nur Vorname, Titel, Beginn, Ort, eigene Antwort – keine anderen Teilnehmer.
+    if (a === "mail_antwort_laden") {
+      const { l, tr, gueltig, grund } = await maLinkPruefen(req, String(p.t ?? ""));
+      const [pe, { data: tn }] = await Promise.all([
+        personen([l.person_id]).then((m) => m.get(l.person_id) ?? null),
+        db.from("kc_club_teilnahme").select("antwort").eq("treffen_id", tr.id).eq("person_id", l.person_id).maybeSingle(),
+      ]);
+      return json({ ok: true, vorname: vorname(pe) || "", titel: tr.titel, beginn: tr.beginn, ort: tr.ort ?? null, aktuelleAntwort: tn?.antwort ?? null, gueltig, ...(grund ? { grund } : {}) });
+    }
+    // Setzen: erst beim Antippen eines Knopfs (POST) – genau wie treffen_antwort (Mitfahrt-Suche, Sitzungs-Abgleich, Protokoll ohne Inhalte).
+    if (a === "mail_antwort_setzen") {
+      const antwort = String(p.antwort || "");
+      if (!MA_ANTWORTEN.includes(antwort)) throw new Fehler("Bitte „Ich komme“, „Ich komme nicht“ oder „Vielleicht“ antippen.");
+      const { l, tr, gueltig, grund } = await maLinkPruefen(req, String(p.t ?? ""));
+      if (!gueltig) throw new Fehler(grund, 409);
+      const { data: alt } = await db.from("kc_club_teilnahme").select("notiz").eq("treffen_id", tr.id).eq("person_id", l.person_id).maybeSingle();
+      const notiz = txt(p.notiz, 300) || alt?.notiz || "per E-Mail-Link";
+      schreibOk(await db.from("kc_club_teilnahme").upsert({ treffen_id: tr.id, person_id: l.person_id, antwort, notiz, geaendert_am: jetzt() }), "Antworten");
+      if (antwort !== "ja") await db.from("kc_club_mitfahrt_suche").delete().eq("bezug_art", "treffen").eq("bezug_id", tr.id).eq("person_id", l.person_id); // KC-CLUB-MITFAHRT-SUCHE
+      await sitzungAntwortAbgleich(tr.id, l.person_id, antwort).catch(() => null); // 2.749.0 KC-CLUB-SITZUNG-SCHRITTE
+      await db.from("kc_club_antwort_links").update({ zuletzt_benutzt_am: jetzt(), antwort }).eq("id", l.id);
+      await protokoll(l.person_id, "treffen_antwort", { treffen: tr.id, antwort, weg: "mail_link" });
+      return json({ ok: true, aktuelleAntwort: antwort });
     }
 
     const tAnm = Date.now();
@@ -11492,6 +11554,45 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         await sitzungAntwortAbgleich(t.id, ich.person_id, antwort).catch(() => null); // 2.749.0 KC-CLUB-SITZUNG-SCHRITTE
         await protokoll(ich.person_id, "treffen_antwort", { treffen: t.id, antwort });
         return json({ ok: true, treffen: (await treffenListe(ich)).find((x: any) => x.id === t.id) });
+      }
+
+      // ----- KC-CLUB-MAIL-ZUSAGE (23.11.2026): Zusage-Links für Mitglieder ohne App erzeugen (nur Admin), auf Wunsch gleich per Mail -----
+      case "mail_antwort_link": {
+        nurAdmin(ich);
+        const { data: t } = await db.from("kc_club_treffen").select("id,titel,beginn,ort,status").eq("id", String(p.treffen_id || "")).maybeSingle();
+        if (!t) throw new Fehler("Termin nicht gefunden.", 404);
+        const bis = new Date(Date.parse(t.beginn) + MA_NACH_BEGINN_MS);
+        if (t.status !== "geplant" || bis.getTime() <= Date.now()) throw new Fehler("Dieses Treffen ist nicht mehr offen.", 409);
+        const ids = [...new Set((Array.isArray(p.person_ids) ? p.person_ids : []).map((x: unknown) => String(x || "")))].filter((x) => /^KC-P-[A-Z0-9-]{1,40}$/.test(x));
+        if (!ids.length) throw new Fehler("Bitte mindestens ein Mitglied wählen.");
+        if (ids.length > MA_MAX_PERSONEN) throw new Fehler(`Höchstens ${MA_MAX_PERSONEN} Mitglieder auf einmal.`);
+        const senden = p.senden === true;
+        if (senden) await notausSperre(); // KC-NOTAUS: angehaltene Nachrichten gelten auch hier
+        const leute = await personen(ids);
+        const ziel = ids.filter((id) => leute.has(id));
+        if (!ziel.length) throw new Fehler("Mitglied nicht gefunden.", 404);
+        const links: { person_id: string; name: string; token: string }[] = [];
+        for (const id of ziel) links.push({ person_id: id, name: leute.get(id)?.display_name || id, token: maTokenNeu() });
+        schreibOk(await db.from("kc_club_antwort_links").insert(await Promise.all(links.map(async (x) => ({
+          token_hash: await sha256(x.token), person_id: x.person_id, treffen_id: t.id, erstellt_von: ich.person_id, gueltig_bis: bis.toISOString() })))), "Link erzeugen");
+        let versand: Record<string, unknown> | null = null;
+        if (senden) {
+          // Im Mail-Text steht der Link als ?k=… – so schwärzt kc_club_zugangslinks_schwaerzen ihn nach dem Versand im Mail-Speicher (KC-CLUB-LINKSCHUTZ)
+          const wannT = wann(t.beginn, true);
+          const r = await Promise.all(links.map((x) => {
+            const vn = vorname(leute.get(x.person_id) ?? null) || "", l = maLink(x.token, "k");
+            return routerSenden("club_treffen_mail", [x.person_id], {
+              titel: `📅 Kommst du? ${t.titel}`, kurz: `${t.titel} – ${wannT}`,
+              betreff: `Köcheclub Werne – Kommst du? ${t.titel}, ${wannT}`,
+              text: `Hallo${vn ? " " + vn : ""},\n\nbitte sag kurz Bescheid, ob du kommst:\n\n📌 ${t.titel}\n📅 ${wannT}${t.ort ? "\n📍 " + t.ort : ""}\n\n✅ Ich komme:\n${l}&a=ja\n\n❌ Ich komme nicht:\n${l}&a=nein\n\nDer Link öffnet eine kleine Seite – dort bitte noch einmal auf den Knopf tippen. Du brauchst dafür keine App und keine Anmeldung. Ändern geht bis zum Treffen über denselben Link.\n\nViele Grüße\nKöcheclub Werne`,
+              url: l,
+            }, `club-mail-zusage:${t.id}:${x.person_id}:${Date.now()}`).catch(() => ({ gesendet: 0, fehler: 1 }));
+          }));
+          versand = { gesendet: r.reduce((n, x: any) => n + (x?.gesendet ?? 0), 0), fehler: r.reduce((n, x: any) => n + (x?.fehler ?? 0), 0) };
+          await db.rpc("kc_club_zugangslinks_schwaerzen").then(() => {}, () => {}); // KC-CLUB-LINKSCHUTZ
+        }
+        await protokoll(ich.person_id, "mail_antwort_link", { treffen: t.id, personen: ziel, senden, versand }); // ohne Links
+        return json({ ok: true, anzahl: ziel.length, versand, ...(senden ? {} : { links: links.map((x) => ({ person_id: x.person_id, name: x.name, link: maLink(x.token) })) }) });
       }
 
       // ----- KC-CLUB-TERMINANFRAGE (0.92.0) -----
