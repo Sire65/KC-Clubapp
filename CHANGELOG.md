@@ -1,6 +1,6 @@
 # Änderungen
 
-## (Version folgt) – 🚗 Mitfahrt: Vertretung darf Platz buchen · ＋ Gast mitnehmen (KC-CLUB-MITFAHRT-VERTRETUNG, KC-CLUB-MITFAHRT-GAST)
+## 3.15.0 – 2026-11-23 – 🚗 Mitfahrt: Vertretung darf Platz buchen · ＋ Gast mitnehmen (KC-CLUB-MITFAHRT-VERTRETUNG, KC-CLUB-MITFAHRT-GAST)
 Wunsch Hansi 23.11.2026 (Arbeitszweig `mitfahrt-vertretung-gast` – Update-Stopp KC-EGRESS-STOPP: erst nach Freigabe einspielen; Migration vorher einspielen).
 - **Vertretung auch für Mitfahrten (KC-CLUB-MITFAHRT-VERTRETUNG):** `mitfahrt_platz` (Platz buchen/freigeben) und `mitfahrt_suchen` (suchen/zurücknehmen) stehen jetzt in `VERTRETUNG_AKTIONEN` (Server) und `VT_AKTIONEN` (App) – anbieten, ändern, löschen und Gäste bleiben beim Mitglied selbst. Die Mitfahrten kommen wie bisher mit `treffen_liste` (in Vertretung als das vertretene Mitglied).
   - Im Termin steht im Modus „Für Ruth handeln“ **„🚗 Mitfahren 🤝 für Ruth“** (blauer Rand), Sitze „✔ Ruth“/„Platz von Ruth“, „Mitfahrgelegenheit für Ruth suchen“; kein „Ich biete …“, kein ✏️/🗑️. Rückfragen und Meldungen nennen Ruth.
