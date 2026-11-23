@@ -38123,6 +38123,10 @@ Object.assign(SPUR_WAS, {
   tat_vorschlag: "💡 Vorschlag gespeichert", tat_vorschlag_stimme: "🗳️ Über einen Vorschlag abgestimmt", tat_foto: "📸 Foto hochgeladen", tat_erstattung: "💶 Erstattung eingereicht",
   tat_feedback: "💬 Feedback gesendet", tat_hilfe_aufruf: "🙋 Hilfe-Aufruf gestartet", tat_hilfe_antwort: "🙋 Auf einen Hilfe-Aufruf geantwortet", tat_termin_neu: "📅 Termin angelegt/geändert",
   tat_aufgabe: "✅ Aufgabe gespeichert", tat_todo: "📝 To-do angelegt", tat_umfrage_stimme: "📊 Bei einer Abstimmung im Chat abgestimmt", tat_rezept: "📖 Rezept gespeichert", tat_video_bewertet: "🎬 Erklär-Video bewertet",
+  // 3.18.0 KC-CLUB-SPUR-MITFAHRT (Fund Hansi 23.11.2026: „Karla hat Sitzplätze gebucht. Das steht aber nicht in ihrer Wege-Übersicht“)
+  tat_mf_platz: "🚗 Mitfahrt: Platz gebucht", tat_mf_platz_weg: "🚗 Mitfahrt: Platz freigegeben", tat_mf_platz_vt: "🚗🤝 Mitfahrt: Platz für ein vertretenes Mitglied gebucht",
+  tat_mf_platz_vt_weg: "🚗🤝 Mitfahrt: Platz für ein vertretenes Mitglied freigegeben", tat_mf_gast: "🚗 Mitfahrt: Gast mitgenommen", tat_mf_gast_weg: "🚗 Mitfahrt: Gast ausgetragen",
+  tat_mf_anbieten: "🚗 Mitfahrgelegenheit angeboten/geändert", tat_mf_loeschen: "🚗 Mitfahrgelegenheit gelöscht", tat_mf_suchen: "🚗 Mitfahrgelegenheit gesucht", tat_mf_suchen_weg: "🚗 Mitfahrt-Suche zurückgenommen",
 });
 // Registry SPUR_TATEN: Server-Aktion → Schritt [art, kennung?] – nur nach erfolgreicher Antwort (api), nie mit Inhalten. Neue Handlung = ein Eintrag hier + Name oben.
 const SPUR_TATEN = {
@@ -38135,6 +38139,8 @@ const SPUR_TATEN = {
   erstattung_senden: () => ["tat_erstattung"], feedback_senden: () => ["tat_feedback"], hilfe_aufruf: () => ["tat_hilfe_aufruf"], hilfe_antwort: () => ["tat_hilfe_antwort"],
   treffen_speichern: () => ["tat_termin_neu"], aufgabe_speichern: () => ["tat_aufgabe"], todo_anlegen: () => ["tat_todo"], chat_umfrage_stimmen: () => ["tat_umfrage_stimme"],
   rezept_speichern: () => ["tat_rezept"], video_bewerten: (d) => ["tat_video_bewertet", d.video],
+  mitfahrt_platz: (d) => [(d.fuer && d.fuer !== ICH?.person_id ? "tat_mf_platz_vt" : "tat_mf_platz") + (d.dabei === false ? "_weg" : "")], mitfahrt_gast: (d) => [d.weg ? "tat_mf_gast_weg" : "tat_mf_gast"], // 3.18.0 KC-CLUB-SPUR-MITFAHRT
+  mitfahrt_anbieten: () => ["tat_mf_anbieten"], mitfahrt_loeschen: () => ["tat_mf_loeschen"], mitfahrt_suchen: (d) => [d.weg || d.an === false || d.dabei === false ? "tat_mf_suchen_weg" : "tat_mf_suchen"],
   tisch_anlegen: () => ["tat_tisch_neu"], tisch_zusage: (d) => [d.zusage === "ja" ? "tat_tisch_zusage" : "tat_tisch_zusage_weg"], tisch_verlassen: () => ["tat_tisch_weg"], // 2.762.0 KC-CLUB-RUNDER-TISCH
   hilfe_bewerten: (d) => [d.wert > 0 ? "hz_gut" : d.wert < 0 ? "hz_schlecht" : "hz_bew_weg", d.id],
 };

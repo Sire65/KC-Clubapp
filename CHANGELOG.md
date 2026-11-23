@@ -1,5 +1,10 @@
 # Änderungen
 
+## (Version folgt) – 🚗 Wege der Mitglieder: Mitfahrten werden angezeigt (KC-CLUB-SPUR-MITFAHRT)
+Fund Hansi 23.11.2026: „Karla hat Sitzplätze gebucht. Das steht aber nicht in ihrer Wege-Übersicht.“ Mitfahrt-Aktionen fehlten in der Liste der Handlungen (SPUR_TATEN).
+- Neu in „Wege der Mitglieder“: Platz gebucht/freigegeben (auch „für ein vertretenes Mitglied“), Gast mitgenommen/ausgetragen, Mitfahrgelegenheit angeboten/geändert/gelöscht, gesucht/Suche zurückgenommen – nur die Handlung, keine Inhalte.
+- Gilt ab dieser Version; frühere Buchungen stehen nur im Server-Protokoll.
+
 ## 3.17.0 – 2026-11-23 – 🚗 Laufschrift: „Mitfahrgelegenheit ausgebucht“ (KC-CLUB-MITFAHRT-AUSGEBUCHT)
 Wunsch Hansi 23.11.: „Schreibe in die Laufschrift, dass meine Mitfahrgelegenheit ausgebucht ist. Immer in solchen Fällen.“
 - Server `mitfahrtLaufbandListe`: Angebote zu kommenden Terminen/Aktionen, deren Plätze belegt sind (Mitfahrer und Gäste aus `kc_club_mitfahrt_gast`), kommen jetzt als `art: "voll"` (mit Platzzahl) statt wegzufallen. Bei mehr als `MITFAHRT_LB_MAX` Einträgen haben Suchen und freie Angebote Vorrang, „voll“ füllt nur auf.
