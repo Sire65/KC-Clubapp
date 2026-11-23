@@ -163,6 +163,7 @@ jobs:
       - run: node tests/zuletzt-weg.test.mjs
       - run: node tests/spur-weg.test.mjs
       - run: node tests/mitfahrt-laufband.test.mjs
+      - run: node tests/mitfahrt-vertretung-gast.test.mjs
       - run: node tests/app-syntax.test.mjs
       - run: node tests/gk-direkt-senden.test.mjs
       - run: node tests/gastgeber-16uhr.test.mjs

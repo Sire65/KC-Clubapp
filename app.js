@@ -2755,7 +2755,9 @@ const HILFE = [
   { id: "chat_neu_markiert", thema: "nachrichten", sym: "✨", t: "Chats mit Neuem fallen auf", x: "Neues auf einen Blick: In der Nachrichten-Übersicht läuft kurz ein Rahmen um jeden Chat mit neuen Nachrichten und die rote Zahl pulsiert. Danach bleibt die Zeile leicht golden mit roter Leiste links – bis du sie gelesen hast. Stummgeschaltete Chats bleiben ruhig.", zeig: () => zeige("nachrichten"), seit: "2.542.0" },
   { id: "anklopfen_wahl", thema: "club", sym: "👋", t: "Anklopfen: schreiben oder sprechen", x: "Ist ein Mitglied gerade online (🟢), tippst du auf <b>👋</b>. Die App fragt: <b>💬 Schreiben</b> oder <b>📞 Sprechen</b> – das sieht der andere gleich beim Anklopfen. Nimmt er bei „Sprechen“ an, seid ihr sofort in der App verbunden. Geht Anklopfen gerade nicht, ist 👋 blass: Antippen sagt dir warum (nicht online, Anklopfen deaktiviert, Online-Status verborgen) und bietet <b>💬 Nachricht schreiben</b> an. Ein verpasstes Anklopfen zeigt die App beim nächsten Öffnen – mit <b>👋 Zurück anklopfen</b>.", zeig: () => zeige("mitglieder"), seit: "2.647.0" },
   { id: "clubmoment", thema: "club", sym: "📸", t: "Mein Clubmoment fürs Clubjahr", x: "Ab 1. November kannst du deinen schönsten Clubmoment des Jahres einreichen: ein Foto und ein, zwei Sätze – bis 15. Dezember, über die Kachel <b>📖 Unser Clubjahr</b> oder den Hinweis im Info-Feld. Daraus entsteht das Clubjahr-Heft fürs Weihnachtsessen.", seit: "2.581.0" },
-  { id: "vertretung", thema: "termine", sym: "🤝", t: "Für ein anderes Mitglied zu- oder absagen", nur: () => { try { return vtListe().length > 0; } catch { return false; } }, x: "Darfst du für jemanden handeln (z. B. für den Partner), steht in Termine, Abstimmungen und Dienstwünschen oben <b>„Handeln für: 👤 Mich · 🤝 …“</b>. Wählst du den Namen, zeigt unten eine Leiste, für wen du gerade handelst – <b>✖ Beenden</b> schaltet zurück. Erlaubt sind Zu- und Absagen, Terminumfragen, Dienstwünsche und offene Abstimmungen; das andere Mitglied bekommt jedes Mal eine E-Mail. Nachrichten und Daten nie.", seit: "2.629.0" },
+  { id: "vertretung", thema: "termine", sym: "🤝", t: "Für ein anderes Mitglied zu- oder absagen", nur: () => { try { return vtListe().length > 0; } catch { return false; } }, x: "Darfst du für jemanden handeln (z. B. für den Partner), steht in Termine, Abstimmungen und Dienstwünschen oben <b>„Handeln für: 👤 Mich · 🤝 …“</b>. Wählst du den Namen, zeigt unten eine Leiste, für wen du gerade handelst – <b>✖ Beenden</b> schaltet zurück. Erlaubt sind Zu- und Absagen, Terminumfragen, Dienstwünsche und offene Abstimmungen – und <b>🚗 Mitfahrten</b>: Im Termin steht dann „🚗 Mitfahren 🤝 für …“; du kannst für das Mitglied einen Platz buchen oder freigeben und eine Mitfahrgelegenheit suchen. Eine Fahrt anbieten oder löschen kann nur jeder selbst. Das andere Mitglied bekommt jedes Mal eine E-Mail (z. B. „Karla hat für dich einen Platz bei Hansi gebucht“), der Fahrer sieht beide Namen. Nachrichten und Daten nie.", seit: "2.629.0" },
+  // KC-CLUB-MITFAHRT-GAST (23.11.2026)
+  { id: "mitfahrt_gast", thema: "termine", sym: "🧳", t: "Jemanden ohne App zur Mitfahrt mitnehmen", x: "Hast du in einer Mitfahrt einen Platz gebucht (oder fährst du selbst), tippst du in der Fahrt auf <b>„＋ Gast mitnehmen“</b> und gibst den Namen ein (z. B. „Ruth“). Der Gast belegt einen weiteren Platz und steht als <b>„Ruth (Gast von Karla)“</b> in der Fahrt; der Fahrer bekommt Bescheid. Geht nur, solange noch Platz frei ist, höchstens 2 Gäste. Mit <b>✖</b> trägst du den Gast wieder aus – gibst du deinen Platz frei, fährt auch dein Gast nicht mehr mit." },
   { id: "kachel_ecken", thema: "darstellung", sym: "📐", t: "Kacheln eckig oder rund", x: "Lieber kantig oder lieber weich? Bei ⚙️ → „✨ Effekte“ → <b>„📐 Ecken der Kacheln“</b> schiebst du den Regler: ganz links sind die Kacheln <b>◼️ eckig</b>, ganz rechts <b>⚪ fast rund</b> – du siehst es sofort. <b>↺ Standard</b> holt die normalen Ecken zurück.", zeig: () => einstiegHin("effekte", "setKachelEcken"), seit: "2.659.0" },
   { id: "schatten", thema: "darstellung", sym: "🌗", t: "Schatten für Knöpfe, Kacheln und Kopf", x: "Ein bisschen Tiefe gefällig? Mit ⚙️ → „✨ Effekte“ → <b>„🌗 Schatten“</b> bekommen Knöpfe, Kacheln, Karten, Chips, Sprechblasen, Leisten und der Kopf einen Schatten. Darunter klappst du <b>„🌗 Schatten einstellen“</b> auf: <b>💪 Stärke</b> (leicht, mittel, kräftig, sehr kräftig), <b>🎨 Farbe</b> (automatisch – passt hell und dunkel –, Schwarz, Braun, Weinrot, Blau, Grün, Gold oder eine eigene) und <b>📍 Position</b> (unten, unten rechts, unten links, oben oder rundum wie ein Leuchten). Für die Felder oben im Kopf gibt es <b>🎩 Schatten im Kopf</b> mit eigener Stärke, und <b>🌙 Kontrast bei Nacht</b> macht den Schatten im dunklen Bild heller, damit man ihn sieht. Die kleine Vorschau zeigt es sofort. Aus: wie bisher.", zeig: () => einstiegHin("effekte", "setSchatten"), seit: "2.656.0" },
   { id: "kopf_effekte", thema: "darstellung", sym: "🎪", t: "Wie geht der Kopf auf und zu?", x: "Tippst du oben am Kopf auf den runden <b>⌃-Knopf mit den vier Punkten</b>, rollt er sich Stufe für Stufe ein – normal wie eine <b>🪟 Jalousie</b> (mehr dazu: „Kopf einfahren: ein Knopf, vier Stufen“). Unter ⚙️ → „✨ Effekte“ → <b>„🪟 Anderer Effekt beim Einrollen des Kopfes“</b> wählst du stattdessen: <b>🎭 Lamellenvorhang</b> (zu den Seiten), <b>🗄️ Climber</b> (krempelt sich Lamelle für Lamelle hoch), <b>🎪 Theatervorhang</b> (weinroter Samt), <b>🍽️ Servierglocke</b> („Voilà!“), <b>🏠 Marktbude</b> (die Holzklappe geht zu), <b>🔄 Automatisch</b> (jedes Mal ein anderer) oder <b>🎭 Passend zum Thema</b> – z. B. im Advent die Marktbude, zu Karneval der Theatervorhang. Mit <b>▶ Ausprobieren</b> siehst du ihn sofort.", zeig: () => einstiegHin("effekte", "setKopfEffekt"), seit: "2.505.0" },
@@ -4798,6 +4800,8 @@ function ansageDeuten(titel, text, url) {
   if (/^#pinnwand/.test(h) && (m = /(wichtiges )?(privates )?Post-it von (.+?)(?: bekommen)?$/.exec(t))) return { art: "pinnwand", text: `${m[3]} hat ${m[2] ? "dir ein privates" : m[1] ? "ein wichtiges" : "ein"} Post-it an die Pinnwand gehängt.` };
   if (/^🚗|Mitfahr/.test(t)) {
     const n = name(/^(.+?) (?:fährt|bietet|sucht)/);
+    if (/Neue Mitfahrt/.test(t) && (m = /^(.+?) hat für (.+?) einen Platz gebucht/.exec(b))) return { art: "mitfahrt", text: `${m[1]} hat für ${m[2]} einen Platz bei dir gebucht.` }; // KC-CLUB-MITFAHRT-VERTRETUNG
+    if (/Neue Mitfahrt/.test(t) && (m = /^(.+?) nimmt (.+?) \(Gast\) mit/.exec(b))) return { art: "mitfahrt", text: `${m[1]} nimmt ${m[2]} als Gast mit.` }; // KC-CLUB-MITFAHRT-GAST
     if (/Neue Mitfahrt/.test(t)) return { art: "mitfahrt", text: `${n} fährt bei dir mit.` };
     if (/Mitfahrt abgesagt/.test(t)) return { art: "mitfahrt", text: `${n} fährt doch nicht bei dir mit.` };
     if (/gefunden/.test(t)) return { art: "mitfahrt", text: `${n} bietet dir eine Mitfahrgelegenheit an.` };
@@ -8458,7 +8462,8 @@ function wartenEnde() {
   clearTimeout(wartenTimer); wartenTimer = null; clearTimeout(wartenLangTimer); wartenLangTimer = null; $("warten").classList.remove("an"); setTimeout(() => { if (!wartenZahl) $("warten").classList.add("versteckt"); }, 200);
 }
 // KC-CLUB-VERTRETUNG (Beschreibung bei vtWahlHtml): hier oben, weil api() schon beim Laden läuft
-const VT_AKTIONEN = new Set(["treffen_liste", "treffen_antwort", "terminumfragen_liste", "terminumfrage_antwort", "dienstwunsch_laden", "dienstwunsch_speichern", "vorschlaege_liste", "vorschlag_stimme"]);
+// KC-CLUB-MITFAHRT-VERTRETUNG (23.11.2026): dazu Mitfahrt-Platz buchen/freigeben und Mitfahrt suchen – nie anbieten/löschen, keine Gäste (wie Server)
+const VT_AKTIONEN = new Set(["treffen_liste", "treffen_antwort", "terminumfragen_liste", "terminumfrage_antwort", "dienstwunsch_laden", "dienstwunsch_speichern", "vorschlaege_liste", "vorschlag_stimme", "mitfahrt_platz", "mitfahrt_suchen"]);
 const VT = { fuer: null }; // { person_id, name, vorname }
 const vtListe = () => (Array.isArray(INIT?.vertretung) ? INIT.vertretung : []);
 // 2.810.0 KC-CLUB-DB-AUSSETZER (Wunsch Hansi 02.11.: „Datenbank hat nicht geantwortet“): kurzer Aussetzer bei Supabase – reine Abfragen in api()
@@ -19643,8 +19648,8 @@ async function antwort(id, a) {
     if (a === "ja" && bisher !== "ja" && TREFFEN_IDX.get(id)?.art !== "veranstaltung") themaFragen(id);
     // KC-CLUB-MITFAHRT-SUCHE (0.87.0): bei Absage nachfragen, ob der gebuchte Platz / die eigene Fahrt frei wird (Suche entfällt automatisch)
     if (a === "nein" || a === "keine") {
-      const mf = TREFFEN_IDX.get(id)?.mitfahrten || [], gebucht = mf.find((m) => m.dabei), eigen = mf.find((m) => m.eigen);
-      if (gebucht && (await frage(`Du hast einen Platz bei ${gebucht.fahrer.name} gebucht.\n\nSoll ich den gebuchten Platz wieder freigeben?`))) {
+      const mf = TREFFEN_IDX.get(id)?.mitfahrten || [], gebucht = mf.find((m) => m.dabei), eigen = VT.fuer ? null : mf.find((m) => m.eigen); // KC-CLUB-MITFAHRT-VERTRETUNG: fremde Fahrt nie löschen
+      if (gebucht && (await frage(`${VT.fuer ? (VT.fuer.vorname || VT.fuer.name) + " hat" : "Du hast"} einen Platz bei ${gebucht.fahrer.name} gebucht.\n\nSoll ich den gebuchten Platz wieder freigeben?`))) {
         await api("mitfahrt_platz", { id: gebucht.id, dabei: false }).then(() => melde("🚗 Platz freigegeben – der Fahrer weiß Bescheid"), (e) => meldeFehler(e)); }
       if (eigen && (await frage(`Du bietest eine Mitfahrgelegenheit an${eigen.mitfahrer.length ? ` (${eigen.mitfahrer.length} fahren mit)` : ""}.\n\nSoll ich sie absagen? Mitfahrer bekommen Bescheid.`))) {
         await api("mitfahrt_loeschen", { id: eigen.id }).then(() => melde("🚗 Mitfahrgelegenheit abgesagt"), (e) => meldeFehler(e)); }
@@ -31457,20 +31462,27 @@ async function umfrageSpeichern() {
 
 // ---------- Mitfahrgelegenheiten (KC-CLUB-MITFAHREN) ----------
 // KC-CLUB-MITFAHREN + KC-CLUB-MITFAHRT-SUCHE (0.87.0): suchen, anbieten, Platz buchen/freigeben – bei Treffen erst nach „Ich komme“ (darf)
+// KC-CLUB-MITFAHRT-VERTRETUNG (23.11.2026): im Modus „Für Ruth handeln“ zeigt der Termin Ruths Mitfahrten (treffen_liste kommt als Ruth) –
+// beschriftet „für Ruth“; buchen/freigeben/suchen geht für Ruth, anbieten/ändern/löschen und Gäste nicht (Fahrer bleibt man selbst).
+// Aktionen kommen nie in Vertretung (eigene Liste) – dort schickt die App ausdrücklich „für mich“ mit (mfFuerMich).
+const mfVt = (art) => (art === "aktion" ? null : VT.fuer);
+const mfVtName = (v) => v ? v.vorname || v.name : "";
+const mfFuerMich = (art) => (art === "aktion" && VT.fuer && ICH?.person_id ? { fuer: ICH.person_id } : {});
 function mitfahrtBlock(art, bezugId, liste, offen, suche = [], darf = true) {
   if (!offen && !liste.length && !suche.length) return "";
   const aktiv = offen && darf, ichFahre = liste.some((m) => m.eigen), ichDabei = liste.some((m) => m.dabei), ichSuche = suche.some((s) => s.eigen);
+  const vt = mfVt(art), vn = esc(mfVtName(vt));
   const zeilen = liste.map((m) => mfAutoHtml(m, art, bezugId, aktiv, offen, ichDabei)).join("");
   const suchZeile = suche.length ? `<div class="hinweis" style="margin:6px 0 2px">🙋 <b>Sucht eine Mitfahrgelegenheit:</b> ${suche.map((s) => esc(s.name) + (s.notiz ? ` <i>(${esc(s.notiz)})</i>` : "")).join(", ")}</div>` : "";
   const knoepfe = aktiv ? [
-    !ichFahre && !ichDabei ? (ichSuche ? `<button class="knopf klein gruen" onclick="mitfahrtSuchen('${art}', '${esc(bezugId)}', false)">✔ Du suchst · zurücknehmen</button>`
-      : `<button class="knopf klein" onclick="mfSuchenFragen('${art}', '${esc(bezugId)}', ${liste.some((m) => !m.eigen && m.frei > 0)})">🙋 Ich suche eine Mitfahrgelegenheit</button>`) : "",
-    !ichFahre && !ichDabei ? `<button class="knopf klein" onclick="mitfahrtAnbieten('${art}', '${esc(bezugId)}')">🚗 Ich biete eine Mitfahrgelegenheit</button>` : "",
+    !ichFahre && !ichDabei ? (ichSuche ? `<button class="knopf klein gruen" onclick="mitfahrtSuchen('${art}', '${esc(bezugId)}', false)">✔ ${vt ? vn + " sucht" : "Du suchst"} · zurücknehmen</button>`
+      : `<button class="knopf klein" onclick="mfSuchenFragen('${art}', '${esc(bezugId)}', ${liste.some((m) => !m.eigen && m.frei > 0)})">🙋 ${vt ? `Mitfahrgelegenheit für ${vn} suchen` : "Ich suche eine Mitfahrgelegenheit"}</button>`) : "",
+    !ichFahre && !ichDabei && !vt ? `<button class="knopf klein" onclick="mitfahrtAnbieten('${art}', '${esc(bezugId)}')">🚗 Ich biete eine Mitfahrgelegenheit</button>` : "",
   ].filter(Boolean).join("") : "";
-  const legende = liste.length ? '<div class="mf-legende"><span><i class="mf-q mf-frei"></i>frei – antippen</span><span><i class="mf-q mf-du"></i>dein Platz</span><span><i class="mf-q mf-belegt"></i>belegt</span></div>' : "";
-  return `<div class="mf-block" style="margin-top:10px;border-top:1px solid var(--linie);padding-top:8px"><b>🚗 Mitfahren</b>${legende}${zeilen || '<p class="hinweis" style="margin:4px 0">Noch keine Mitfahrgelegenheit.</p>'}${suchZeile}
+  const legende = liste.length ? `<div class="mf-legende"><span><i class="mf-q mf-frei"></i>frei – antippen</span><span><i class="mf-q mf-du"></i>${vt ? "Platz von " + vn : "dein Platz"}</span><span><i class="mf-q mf-belegt"></i>belegt</span></div>` : "";
+  return `<div class="mf-block" style="margin-top:10px;border-top:1px solid var(--linie);padding-top:8px"${vt ? ' data-vt="1"' : ""}><b>🚗 Mitfahren${vt ? ` <span class="marke mf-vt-marke">🤝 für ${vn}</span>` : ""}</b>${legende}${zeilen || '<p class="hinweis" style="margin:4px 0">Noch keine Mitfahrgelegenheit.</p>'}${suchZeile}
     ${knoepfe ? `<div class="knoepfe">${knoepfe}</div>` : ""}
-    ${offen && !darf ? '<p class="hinweis" style="margin:6px 0 0;font-size:.85rem">Sag zuerst „✅ Ich komme“ – dann kannst du eine Mitfahrgelegenheit suchen, anbieten oder einen Platz buchen.</p>' : ""}</div>`;
+    ${offen && !darf ? `<p class="hinweis" style="margin:6px 0 0;font-size:.85rem">${vt ? `${vn} muss zuerst zusagen („✅ Ich komme“ für ${vn}) – dann kannst du für ${vn} eine Mitfahrgelegenheit suchen oder einen Platz buchen.` : "Sag zuerst „✅ Ich komme“ – dann kannst du eine Mitfahrgelegenheit suchen, anbieten oder einen Platz buchen."}</p>` : ""}</div>`;
 }
 // KC-CLUB-MITFAHRT-SITZE (1.39.0, Wunsch Hansi): echte Sitzplätze – Auto von oben, Fahrer vorne links, so viele Sitze wie
 // angeboten (bis 8 → weitere Reihen wie ein Kleinbus). Grün = frei (antippen = reservieren), Blau = dein Platz (antippen =
@@ -31478,37 +31490,68 @@ function mitfahrtBlock(art, bezugId, liste, offen, suche = [], darf = true) {
 const mfVorname = (n) => String(n || "").trim().split(/\s+/)[0] || "?";
 const mfKuerzel = (n) => String(n || "").trim().split(/\s+/).map((w) => w[0] || "").join("").slice(0, 2).toUpperCase() || "?";
 function mfAutoHtml(m, art, bezugId, aktiv, offen, ichDabei) {
-  const mit = m.mitfahrer.slice(), meinIdx = m.dabei ? mit.findIndex((n) => n === ICH?.name) : -1;
-  const sitze = Array.from({ length: m.plaetze }, (_, i) => i < mit.length ? (i === (meinIdx >= 0 ? meinIdx : -1) ? { art: "du", name: mit[i] } : { art: "belegt", name: mit[i] }) : { art: "frei" });
-  if (m.dabei && meinIdx < 0) { const b = sitze.findIndex((x) => x.art === "belegt"); if (b >= 0) sitze[b] = { art: "du", name: ICH?.name }; } // Name abweichend → trotzdem „Du“ zeigen
+  const vt = mfVt(art), vn = mfVtName(vt), gaeste = m.gaeste || []; // KC-CLUB-MITFAHRT-VERTRETUNG · KC-CLUB-MITFAHRT-GAST
+  const mit = m.mitfahrer.slice(), ichName = vt ? vt.name : ICH?.name, meinIdx = m.dabei ? mit.findIndex((n) => n === ichName) : -1;
+  // KC-CLUB-MITFAHRT-GAST: Gäste sitzen hinter den Mitgliedern und belegen je einen Platz
+  const sitze = Array.from({ length: m.plaetze }, (_, i) => i < mit.length ? (i === (meinIdx >= 0 ? meinIdx : -1) ? { art: "du", name: mit[i] } : { art: "belegt", name: mit[i] }) : i < mit.length + gaeste.length ? { art: "gast", g: gaeste[i - mit.length] } : { art: "frei" });
+  if (m.dabei && meinIdx < 0) { const b = sitze.findIndex((x) => x.art === "belegt"); if (b >= 0) sitze[b] = { art: "du", name: ichName }; } // Name abweichend → trotzdem „Du“ zeigen
   const fahrer = mfVorname(m.fahrer.name), sicher = jsArg; // 2.209.0: als JSON-Zeichenkette (vorher brach O'Neill den Knopf)
   const sitz = (x) => {
     if (x.art === "fahrer") return `<div class="mf-platz"><div class="mf-sitz mf-fahrer" aria-label="Fahrer ${esc(m.fahrer.name)}"><span class="mf-ic">🛞</span>Fahrer</div><small>${esc(fahrer)}</small></div>`;
     if (x.art === "belegt") return `<div class="mf-platz"><div class="mf-sitz mf-belegt" role="img" aria-label="belegt: ${esc(x.name)}"><span class="mf-ic">👤</span>${esc(mfKuerzel(x.name))}</div><small>${esc(mfVorname(x.name))}</small></div>`;
-    if (x.art === "du") return `<div class="mf-platz"><button class="mf-sitz mf-du" ${aktiv ? `onclick="mfSitzFreigeben('${m.id}', ${sicher(fahrer)})"` : "disabled"} aria-label="Dein Platz – antippen zum Freigeben"><span class="mf-ic">✔</span>Du</button><small>dein Platz</small></div>`;
+    if (x.art === "gast") return `<div class="mf-platz"><div class="mf-sitz mf-belegt mf-gast" role="img" aria-label="belegt: ${esc(mfGastText(x.g))}"><span class="mf-ic">🧳</span>${esc(mfKuerzel(x.g.name))}</div><small>${esc(mfVorname(x.g.name))} (Gast)</small></div>`;
+    if (x.art === "du") return vt ? `<div class="mf-platz"><button class="mf-sitz mf-du" ${aktiv ? `onclick="mfSitzFreigeben('${m.id}', ${sicher(fahrer)})"` : "disabled"} aria-label="Platz von ${esc(vn)} – antippen zum Freigeben"><span class="mf-ic">✔</span>${esc(mfVorname(vn))}</button><small>für ${esc(mfVorname(vn))}</small></div>`
+      : `<div class="mf-platz"><button class="mf-sitz mf-du" ${aktiv ? `onclick="mfSitzFreigeben('${m.id}', ${sicher(fahrer)})"` : "disabled"} aria-label="Dein Platz – antippen zum Freigeben"><span class="mf-ic">✔</span>Du</button><small>dein Platz</small></div>`;
     const waehlbar = aktiv && !m.eigen && !ichDabei;
     return `<div class="mf-platz"><button class="mf-sitz mf-frei${waehlbar ? "" : " mf-aus"}" ${waehlbar ? `onclick="mfSitzBuchen('${m.id}', ${sicher(fahrer)})"` : "disabled"} aria-label="freier Platz${waehlbar ? " – antippen zum Reservieren" : ""}"><span class="mf-ic">＋</span>frei</button><small>${waehlbar ? "antippen" : "frei"}</small></div>`;
   };
   // Reihen: vorne Fahrer + 1, dahinter Bänke mit je 3 (Kleinbus bei mehr als 4 Plätzen)
   const reihen = [[{ art: "fahrer" }, ...sitze.slice(0, 1)]];
   for (let i = 1; i < sitze.length; i += 3) reihen.push(sitze.slice(i, i + 3));
-  const frei = sitze.filter((x) => x.art === "frei").length;
-  const marke = m.dabei ? '<span class="marke mf-m-du">✔ du fährst mit</span>' : frei ? '<span class="marke gruen">🟢 noch Platz</span>' : '<span class="marke rot">🔴 voll</span>';
+  const frei = Math.min(sitze.filter((x) => x.art === "frei").length, m.frei ?? Infinity); // Server zählt Mitglieder und Gäste
+  const marke = m.dabei ? `<span class="marke mf-m-du">✔ ${vt ? esc(mfVorname(vn)) + " fährt mit" : "du fährst mit"}</span>` : frei ? '<span class="marke gruen">🟢 noch Platz</span>' : '<span class="marke rot">🔴 voll</span>';
+  // KC-CLUB-MITFAHRT-GAST: „Ruth (Gast von Karla)“ – ✖ für wen es darf; „＋ Gast mitnehmen“ wer mitfährt (oder fährt), solange Platz frei ist (nicht in Vertretung)
+  const meine = gaeste.filter((g) => g.eigen).length;
+  const gastKnopf = aktiv && !vt && (m.dabei || m.eigen) && frei > 0 && meine < MF_GAST_MAX ? `<button class="knopf klein mf-gast-neu" onclick="mfGastForm('${m.id}', ${sicher(fahrer)})">＋ Gast mitnehmen</button>` : "";
+  const gastZeile = gaeste.length || gastKnopf ? `<div class="mf-gaeste">${gaeste.map((g) => `<span class="mf-gast-name">🧳 ${esc(mfGastText(g))}${offen && !vt && g.darfEntfernen ? ` <button type="button" class="knopf klein" aria-label="Gast ${esc(g.name)} austragen" title="austragen" onclick="mfGastWeg('${esc(g.id)}', ${sicher(g.name)})">✖</button>` : ""}</span>`).join("")}${gastKnopf}</div>` : "";
   return `<div class="mf-karte">
-    <div class="mf-kopf"><div style="flex:1;min-width:0"><b>🚗 ${esc(m.fahrer.name)}</b>${m.eigen ? ' <span class="marke">deine Fahrt</span>' : ""}
+    <div class="mf-kopf"><div style="flex:1;min-width:0"><b>🚗 ${esc(m.fahrer.name)}</b>${m.eigen ? ` <span class="marke">${vt ? "Fahrt von " + esc(mfVorname(vn)) : "deine Fahrt"}</span>` : ""}
       <div class="hinweis" style="font-size:.85rem">${m.treffpunkt ? "📍 " + esc(m.treffpunkt) : "📍 Treffpunkt noch offen"}${m.notiz ? " · " + esc(m.notiz) : ""}</div></div>
-      ${m.eigen && offen ? `<button class="knopf klein" title="ändern" onclick="mitfahrtAnbieten('${art}', '${esc(bezugId)}', ${m.plaetze}, ${esc(JSON.stringify(m.treffpunkt || ""))})">✏️</button>` : ""}
-      ${m.darfLoeschen ? `<button aria-label="Löschen" class="knopf klein" title="löschen" onclick="mitfahrtLoeschen('${m.id}', '${art}')">🗑️</button>` : ""}</div>
+      ${m.eigen && offen && !vt ? `<button class="knopf klein" title="ändern" onclick="mitfahrtAnbieten('${art}', '${esc(bezugId)}', ${m.plaetze}, ${esc(JSON.stringify(m.treffpunkt || ""))})">✏️</button>` : ""}
+      ${m.darfLoeschen && !vt ? `<button aria-label="Löschen" class="knopf klein" title="löschen" onclick="mitfahrtLoeschen('${m.id}', '${art}')">🗑️</button>` : ""}</div>
     <div class="mf-auto${m.plaetze > 4 ? " mf-bus" : ""}">${reihen.map((rh) => `<div class="mf-reihe">${rh.map(sitz).join("")}</div>`).join("")}</div>
-    <div class="mf-status"><span>${frei} von ${m.plaetze} ${m.plaetze === 1 ? "Platz" : "Plätzen"} frei</span>${marke}</div></div>`;
+    ${gastZeile}<div class="mf-status"><span>${frei} von ${m.plaetze} ${m.plaetze === 1 ? "Platz" : "Plätzen"} frei</span>${marke}</div></div>`;
 }
 async function mfSitzBuchen(id, fahrer) {
-  if (!(await frage(`🚗 Diesen Platz bei ${fahrer} für dich reservieren?\n\n${fahrer} bekommt Bescheid.`))) return;
+  const vn = aktuelleAnsicht === "aktion" ? "" : mfVtName(VT.fuer); // KC-CLUB-MITFAHRT-VERTRETUNG
+  if (!(await frage(vn ? `🚗 Diesen Platz bei ${fahrer} für ${vn} reservieren?\n\n${fahrer} und ${vn} bekommen Bescheid.` : `🚗 Diesen Platz bei ${fahrer} für dich reservieren?\n\n${fahrer} bekommt Bescheid. Nimmst du jemanden ohne App mit, tippe danach „＋ Gast mitnehmen“.`))) return;
   mitfahrtPlatz(id, true);
 }
 async function mfSitzFreigeben(id, fahrer) {
-  if (!(await frage(`Deinen Platz bei ${fahrer} wieder freigeben?\n\n${fahrer} bekommt Bescheid.`))) return;
+  const vn = aktuelleAnsicht === "aktion" ? "" : mfVtName(VT.fuer);
+  if (!(await frage(vn ? `Den Platz von ${vn} bei ${fahrer} wieder freigeben?\n\n${fahrer} und ${vn} bekommen Bescheid.` : `Deinen Platz bei ${fahrer} wieder freigeben?\n\n${fahrer} bekommt Bescheid. Eingetragene Gäste fahren dann auch nicht mehr mit.`))) return;
   mitfahrtPlatz(id, false);
+}
+// KC-CLUB-MITFAHRT-GAST (23.11.2026, Wunsch Hansi): Begleitperson ohne App – Name (höchstens 40 Zeichen), belegt einen weiteren Platz in derselben Fahrt
+const MF_GAST_MAX = 2, MF_GAST_LEN = 40;
+const mfGastText = (g) => `${g?.name || "Gast"} (Gast von ${g?.von || "?"})`;
+function mfGastForm(id, fahrer) {
+  blattAuf("mfGast", `<h3 style="margin-top:0">＋ Gast mitnehmen</h3>
+    <p class="hinweis" style="margin:0 0 8px">Jemand ohne Club-App fährt mit dir bei ${esc(fahrer)} mit? Der Gast belegt einen weiteren Platz und steht als „Name (Gast von ${esc(mfVorname(ICH?.name))})“ in der Fahrt. Höchstens ${MF_GAST_MAX} Gäste.</p>
+    <label class="feld">Name des Gastes<input id="mfGastName" maxlength="${MF_GAST_LEN}" placeholder="z. B. Ruth" autocomplete="off"></label>
+    <div class="dlg-knoepfe"><button class="knopf haupt" onclick="mfGastSpeichern('${esc(id)}', this)">✅ Mitnehmen</button><button class="knopf" onclick="$('mfGast').remove()">Abbrechen</button></div>`);
+  setTimeout(() => $("mfGastName")?.focus(), 60);
+}
+async function mfGastSpeichern(id, knopf) {
+  const name = ($("mfGastName")?.value || "").replace(/\s+/g, " ").trim().slice(0, MF_GAST_LEN);
+  if (!name) return melde("Bitte den Namen des Gastes eingeben.", true);
+  knopf.disabled = true;
+  try { await api("mitfahrt_gast", { id, name }); $("mfGast")?.remove(); melde(`🧳 ${name} fährt als dein Gast mit – der Fahrer weiß Bescheid`); mitfahrtNeuLaden(aktuelleAnsicht === "aktion" ? "aktion" : "treffen"); }
+  catch (e) { meldeFehler(e); knopf.disabled = false; }
+}
+async function mfGastWeg(gastId, name) {
+  if (!(await frage(`${name} (Gast) austragen?\n\nDer Platz wird wieder frei.`))) return;
+  try { await api("mitfahrt_gast", { gast_id: gastId, weg: true }); melde("Gast ausgetragen"); mitfahrtNeuLaden(aktuelleAnsicht === "aktion" ? "aktion" : "treffen"); } catch (e) { meldeFehler(e); }
 }
 // KC-CLUB-MITFAHRT-BESCHEID (1.41.0, Wunsch Hansi): Wer mitfahren will, aber es gibt (noch) keine Fahrt mit freiem Platz →
 // Meldungsfenster „Soll ich das für dich im Auge behalten?“ – Ja trägt die Suche ein (vorhandene Funktion: wer danach eine
@@ -31521,13 +31564,13 @@ function mfBescheidFenster(art, bezugId, titel) {
   blattAuf("mfBescheid", `<h3 style="margin-top:0">🚗 Zurzeit gibt es noch keine Mitfahrgelegenheit</h3>
     ${titel ? `<p style="margin:0 0 6px"><b>${esc(titel)}</b></p>` : ""}
     <p style="margin:0 0 8px">Soll ich das für dich im Auge behalten und dich informieren, sobald eine neue Gelegenheit eingestellt wird?</p>
-    <p class="hinweis" style="margin:0 0 10px">Die anderen sehen dann bei diesem Termin „🙋 sucht eine Mitfahrgelegenheit“ mit deinem Namen. Du kannst das jederzeit zurücknehmen.</p>
+    <p class="hinweis" style="margin:0 0 10px">Die anderen sehen dann bei diesem Termin „🙋 sucht eine Mitfahrgelegenheit“ mit ${mfVt(art) ? "dem Namen von " + esc(mfVtName(mfVt(art))) : "deinem Namen"}. Du kannst das jederzeit zurücknehmen.</p>
     <div class="knoepfe" style="flex-direction:column;align-items:stretch"><button class="knopf haupt" style="text-align:center" onclick="mfBescheidJa('${art}', '${esc(bezugId)}')">👀 Ja, bitte Bescheid geben</button>
     <button class="knopf" style="text-align:center" onclick="$('mfBescheid').remove()">Nein, danke</button></div>`);
 }
 async function mfBescheidJa(art, bezugId) {
   $("mfBescheid")?.remove();
-  try { await api("mitfahrt_suchen", { bezug_art: art, bezug_id: bezugId, an: true }, { warten: true }); melde("👀 Mach ich – du bekommst Bescheid, sobald jemand eine Mitfahrgelegenheit einstellt."); mitfahrtNeuLaden(art); }
+  try { await api("mitfahrt_suchen", { bezug_art: art, bezug_id: bezugId, an: true, ...mfFuerMich(art) }, { warten: true }); melde(mfVt(art) ? `👀 Mach ich – ${mfVtName(mfVt(art))} bekommt Bescheid, sobald jemand eine Mitfahrgelegenheit einstellt.` : "👀 Mach ich – du bekommst Bescheid, sobald jemand eine Mitfahrgelegenheit einstellt."); mitfahrtNeuLaden(art); }
   catch (e) { meldeFehler(e); }
 }
 // Schnellstart „🚗 Mitfahrt“: nach dem Sprung zum nächsten Treffen nachsehen – keine Fahrt mit freiem Platz → Meldungsfenster
@@ -31539,7 +31582,7 @@ async function mfNaechstesPruefen(id) {
   if (aktuelleAnsicht === "termine" && !document.querySelector(FENSTER_OFFEN)) mfBescheidFenster("treffen", t.id, t.titel);
 }
 async function mitfahrtSuchen(art, bezugId, an) {
-  try { const r = await api("mitfahrt_suchen", { bezug_art: art, bezug_id: bezugId, an }); melde(an ? `🙋 Eingetragen${r.fahrerBenachrichtigt ? ` – ${r.fahrerBenachrichtigt === 1 ? "ein Fahrer weiß" : r.fahrerBenachrichtigt + " Fahrer wissen"} Bescheid` : " – wer eine Fahrt anbietet, bekommt Bescheid"}` : "Suche zurückgenommen"); mitfahrtNeuLaden(art); }
+  try { const r = await api("mitfahrt_suchen", { bezug_art: art, bezug_id: bezugId, an, ...mfFuerMich(art) }); melde(an ? `🙋 Eingetragen${r.fahrerBenachrichtigt ? ` – ${r.fahrerBenachrichtigt === 1 ? "ein Fahrer weiß" : r.fahrerBenachrichtigt + " Fahrer wissen"} Bescheid` : " – wer eine Fahrt anbietet, bekommt Bescheid"}` : "Suche zurückgenommen"); mitfahrtNeuLaden(art); }
   catch (e) { meldeFehler(e); }
 }
 async function mitfahrtNeuLaden(art) { if (art === "aktion") { AKTIONEN = null; aktionOeffnen(aktionId, true); } else treffenLaden(); }
@@ -31558,7 +31601,8 @@ async function mitfahrtAnbietenSpeichern(art, bezugId, knopf) {
   catch (e) { meldeFehler(e); knopf.disabled = false; }
 }
 async function mitfahrtPlatz(id, dabei) {
-  try { await api("mitfahrt_platz", { id, dabei }); melde(dabei ? "🚗 Du fährst mit – der Fahrer weiß Bescheid" : "Abgemeldet"); mitfahrtNeuLaden(aktuelleAnsicht === "aktion" ? "aktion" : "treffen"); } catch (e) { meldeFehler(e); }
+  const art = aktuelleAnsicht === "aktion" ? "aktion" : "treffen", vn = mfVtName(mfVt(art)); // KC-CLUB-MITFAHRT-VERTRETUNG
+  try { await api("mitfahrt_platz", { id, dabei, ...mfFuerMich(art) }); melde(dabei ? (vn ? `🚗 ${vn} fährt mit – der Fahrer und ${vn} wissen Bescheid` : "🚗 Du fährst mit – der Fahrer weiß Bescheid") : vn ? `Platz von ${vn} freigegeben` : "Abgemeldet"); mitfahrtNeuLaden(aktuelleAnsicht === "aktion" ? "aktion" : "treffen"); } catch (e) { meldeFehler(e); }
 }
 async function mitfahrtLoeschen(id, art) {
   if (!(await frage("Diese Mitfahrgelegenheit löschen? Wer schon mitfährt, bekommt Bescheid."))) return;
@@ -33755,7 +33799,7 @@ async function druckTreffen(id) {
       ${va ? "" : `<p><b>✅ ${t.ja} Zusagen · ❓ ${t.vielleicht} vielleicht · ❌ ${t.nein} Absagen · ${reihen.length - t.teilnahme.length} ohne Antwort</b></p>
       <table><thead><tr><th style="width:8mm">#</th><th>Name</th><th style="width:32mm">Antwort</th><th>Notiz</th><th style="width:14mm">da</th></tr></thead><tbody>
       ${reihen.map((m, i) => { const x = tn.get(m.person_id); return `<tr><td>${i + 1}</td><td>${esc(m.name)}</td><td>${x ? antwort[x.antwort] || "–" : '<span class="dklein">keine Antwort</span>'}</td><td>${esc(x?.notiz || "")}</td><td><span class="kaestchen"></span></td></tr>`; }).join("")}</tbody></table>`}
-      ${mf.length ? `<h2>🚗 Mitfahrten</h2><table><thead><tr><th>Fahrer</th><th>Treffpunkt</th><th>Mitfahrer</th><th style="width:16mm">frei</th></tr></thead><tbody>${mf.map((f) => `<tr><td>${esc(f.fahrer.name)}</td><td>${esc(f.treffpunkt || "–")}${f.notiz ? `<div class="dklein">${esc(f.notiz)}</div>` : ""}</td><td>${esc(f.mitfahrer.join(", ") || "–")}</td><td>${f.frei}</td></tr>`).join("")}</tbody></table>` : ""}` };
+      ${mf.length ? `<h2>🚗 Mitfahrten</h2><table><thead><tr><th>Fahrer</th><th>Treffpunkt</th><th>Mitfahrer</th><th style="width:16mm">frei</th></tr></thead><tbody>${mf.map((f) => `<tr><td>${esc(f.fahrer.name)}</td><td>${esc(f.treffpunkt || "–")}${f.notiz ? `<div class="dklein">${esc(f.notiz)}</div>` : ""}</td><td>${esc([...f.mitfahrer, ...(f.gaeste || []).map(mfGastText)].join(", ") || "–")}</td><td>${f.frei}</td></tr>`).join("")}</tbody></table>` : ""}` };
 }
 // ---- Sitzungsprotokoll ----
 function druckProtokoll() {
@@ -34205,7 +34249,7 @@ function vtSetzen(pid) {
   const neu = pid ? vtListe().find((p) => p.person_id === pid) || null : null;
   if ((neu?.person_id || "") === (VT.fuer?.person_id || "")) return;
   VT.fuer = neu; vtZeigen();
-  melde(neu ? `🤝 Du handelst jetzt für ${neu.vorname || neu.name}: Termine zusagen, Dienstwünsche, Abstimmungen.` : "👤 Du handelst wieder für dich.");
+  melde(neu ? `🤝 Du handelst jetzt für ${neu.vorname || neu.name}: Termine zusagen, Mitfahrten, Dienstwünsche, Abstimmungen.` : "👤 Du handelst wieder für dich.");
   if (aktuelleAnsicht === "termine") treffenLaden();
   if (aktuelleAnsicht === "vorschlaege") vorschlaegeLaden();
   if (document.getElementById("dwFenster")) { dwSchliessen(); dwOeffnen(); } // Twinkey neu – mit den Wünschen des anderen
@@ -37986,6 +38030,7 @@ const SPUR_WAS = { schlaf_ein: "💤 App eingeschlafen (Schlafmodus)", glueckske
 // Registry FENSTER_NAMEN: Fenster-ID → Name in den Wegen. Fehlt ein Name, steht dort „🪟 Fenster: „ID““ – tests/spur-voll.test.mjs meldet fehlende Namen.
 const FENSTER_NAMEN = {
   aqBlatt: "🔳 QR-Codes (Admin)", aqGrossBlatt: "🔳 QR-Code groß", // 3.13.0 KC-CLUB-ADMIN-QR
+  mfGast: "🧳 Gast zur Mitfahrt mitnehmen", // KC-CLUB-MITFAHRT-GAST
   peBlatt: "🏷️ Preisetiketten", // KC-CLUB-PREISETIKETTEN
   aaBlatt: "🤖 Autoantwort einstellen", // KC-CLUB-AUTOANTWORT
   sendeBerichtBlatt: "📊 Sendebericht", // KC-CLUB-SENDEBERICHT (19.11.2026)
