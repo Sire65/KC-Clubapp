@@ -1,6 +1,6 @@
 # Änderungen
 
-## (Version folgt) – 🚗 Laufschrift: „Mitfahrgelegenheit ausgebucht“ (KC-CLUB-MITFAHRT-AUSGEBUCHT)
+## 3.17.0 – 2026-11-23 – 🚗 Laufschrift: „Mitfahrgelegenheit ausgebucht“ (KC-CLUB-MITFAHRT-AUSGEBUCHT)
 Wunsch Hansi 23.11.: „Schreibe in die Laufschrift, dass meine Mitfahrgelegenheit ausgebucht ist. Immer in solchen Fällen.“
 - Server `mitfahrtLaufbandListe`: Angebote zu kommenden Terminen/Aktionen, deren Plätze belegt sind (Mitfahrer und Gäste aus `kc_club_mitfahrt_gast`), kommen jetzt als `art: "voll"` (mit Platzzahl) statt wegzufallen. Bei mehr als `MITFAHRT_LB_MAX` Einträgen haben Suchen und freie Angebote Vorrang, „voll“ füllt nur auf.
 - App `ilMitfahrt`: „🚗 Hansis Mitfahrt ist ausgebucht“ · „Köcheclub-Sitzung · Di., 24.11. um 18:00 · alle 3 Plätze sind vergeben“ – für alle (weiß, ruhiger als ein freies Angebot), eigene „Deine Mitfahrgelegenheit ist ausgebucht ✅“ gelb. Antippen öffnet wie bisher die Mitfahrt beim Termin.
