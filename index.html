@@ -1612,6 +1612,9 @@
   .wtreffen { display: block; width: 100%; margin-top: 8px; text-align: left; border: none; border-radius: 12px; padding: 7px 12px; background: rgba(255,255,255,.18); color: #fff; font: inherit; font-size: .9rem; cursor: pointer; }
   .wfuss { display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-top: 8px; font-size: .78rem; opacity: .9; }
   .wveraltet { background: #ffcc80; color: #4a2a00; padding: 1px 8px; border-radius: 8px; font-weight: 700; }
+  /* 3.14.0 KC-CLUB-ADMIN-QR-FIX: Mitgliederliste im hellen Fenster - Schrift in Textfarbe (vorher .wlink = weiß auf weiß) */
+  .aq-zeile { display: flex; width: 100%; justify-content: space-between; gap: 8px; padding: 12px 6px; border: 0; border-bottom: 1px solid rgba(127,127,127,.35); background: transparent; color: inherit; font: inherit; font-size: 1.05rem; text-align: left; cursor: pointer; }
+  .aq-zeile:active { background: rgba(127,127,127,.15); }
   .wlink { border: 1px solid rgba(255,255,255,.4); background: rgba(255,255,255,.12); color: #fff; border-radius: 10px; padding: 4px 10px; font: inherit; font-weight: 700; cursor: pointer; }
   .wsonne { position: absolute; top: -34px; right: -34px; width: 140px; height: 140px; border-radius: 50%; background: radial-gradient(circle, #ffe27a 0 26%, rgba(255,214,90,.55) 27% 36%, transparent 37%); }
   .wsonne::before { content: ""; position: absolute; inset: -18px; border-radius: 50%; background: repeating-conic-gradient(rgba(255,226,122,.4) 0 7deg, transparent 7deg 22deg);
@@ -7375,7 +7378,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=3.13.0" data-v="3.13.0"></script>
+<script src="app.js?v=3.14.0" data-v="3.14.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

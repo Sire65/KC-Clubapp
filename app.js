@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "3.13.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "3.14.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -35089,7 +35089,7 @@ function aqMitgliederHtml() {
 }
 function aqListeHtml(liste) {
   if (!liste.length) return '<p class="hinweis">Niemand gefunden.</p>';
-  return liste.map((m) => `<button class="wlink" style="display:flex;width:100%;justify-content:space-between;padding:10px 6px;border-bottom:1px solid var(--linie,#ddd)" onclick="aqMitglied(${jsArg(m.nummer)})"><span>${esc(m.name)}</span><span>${esc(m.nummer)} ›</span></button>`).join("");
+  return liste.map((m) => `<button type="button" class="aq-zeile" onclick="aqMitglied(${jsArg(m.nummer)})"><span>${esc(m.name)}</span><span>${esc(m.nummer)} ›</span></button>`).join("");
 }
 function aqListe() {
   const q = AQ.suche.trim().toLowerCase(), z = $("aqListe");

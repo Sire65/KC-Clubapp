@@ -19,4 +19,7 @@ assert.ok(!/localStorage|sessionStorage|indexedDB/.test(qr), "Kassen-Codes werde
 assert.ok(/function adminQrBlatt\(\) \{\s+if \(!ICH\?\.admin\) return;/.test(qr), "nur für Admins");
 assert.ok(app.includes('onclick="adminQrBlatt()">🔳 QR-Codes ›</button>'), "Knopf in der Admin-Zentrale");
 assert.ok(/aqMitglied\(\$\{jsArg\(m\.nummer\)\}\)/.test(qr), "Nummer sicher als Argument");
+assert.ok(/class="aq-zeile"/.test(qr) && !/class="wlink"/.test(qr), "Mitgliederliste lesbar (nicht .wlink = weiß auf weiß)");
+const html = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
+assert.ok(/\.aq-zeile \{[^}]*color: inherit/.test(html), ".aq-zeile in Textfarbe");
 console.log("admin-qr: alle Prüfungen bestanden");

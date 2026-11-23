@@ -1,5 +1,11 @@
 # Änderungen
 
+## 3.14.0 – 2026-11-23 – 🔳 QR-Codes: Mitgliederliste lesbar (KC-CLUB-ADMIN-QR-FIX)
+Fehlerbeseitigung nach 3.13.0, Bildschirmfoto Hansi 23.11.2026: Reiter „🪪 Mitglieder“ zeigte nur leere Zeilen.
+- **Ursache:** die Zeilen nutzten die Knopfart `.wlink` der dunklen Admin-Zentrale (weiße Schrift) – im hellen Fenster weiß auf weiß.
+- **Neu:** eigene Zeile `.aq-zeile` in Textfarbe (hell und dunkel lesbar), größere Schrift, Trennlinie, Rückmeldung beim Antippen.
+- Test `admin-qr` ergänzt (keine `.wlink` in der Liste).
+
 ## 3.13.0 – 2026-11-23 – 🔳 Admin: QR-Codes der Kassen und aller Mitglieder (KC-CLUB-ADMIN-QR)
 Wunsch Hansi 23.11.2026: „die 3 QR-Kassencodes auf meinem Handy in der Club App unter Adminbereich, dazu die QR-Codes aller Mitglieder, damit ich sie bei Bedarf einbuchen kann, wenn sie ihr Handy vergessen haben“. Entschieden: Update-Stopp (KC-EGRESS-STOPP) für dieses Bündel aufgehoben, heute einspielen; Kassen-Codes nur für Admins.
 - **Admin-Zentrale → „🔳 QR-Codes ›“** mit zwei Reitern:
