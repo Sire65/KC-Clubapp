@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-5n+ma5lb9vWt1wGjClGFo/tD4qY+sVqk0FPWkzQfl6E='; style-src 'unsafe-inline'; img-src 'self'; connect-src https://ptblnpiroqftcvlsrhac.supabase.co; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-BUJ5URl+bNbzr3ZO26BOxJ/APqnxjR9BJjY0KN7uKoY='; style-src 'unsafe-inline'; img-src 'self'; connect-src https://ptblnpiroqftcvlsrhac.supabase.co; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#741521">
 <meta name="robots" content="noindex, nofollow">
@@ -28,7 +28,15 @@
   .knopf.ja { background: var(--gruen); }
   .knopf.nein { background: #a51d1d; }
   .knopf.vielleicht { background: #8a5a00; }
-  .knopf.vorwahl { border-color: #111; box-shadow: 0 0 0 4px #ffd54a; }
+  .knopf.blass { opacity: .6; }
+  .knopf.gewaehlt { opacity: 1; border-color: #111; box-shadow: 0 0 0 4px #ffd54a; }
+  .knopf.gewaehlt::after { content: "  ✔"; }
+  .knopf.senden { background: var(--rot); min-height: 72px; font-size: 24px; margin-top: 4px; }
+  .erinnern { border: 2px solid #8a5a00; border-radius: 12px; padding: 12px 12px 6px; margin: 0 0 14px; background: #fbf4e6; }
+  .erinnern legend { float: left; width: 100%; font-weight: 700; padding: 0; margin: 0 0 6px; }
+  .erinnern .wahl { clear: both; }
+  .wahl { display: flex; align-items: center; gap: 10px; font-size: 19px; color: var(--text); min-height: 44px; margin: 0; }
+  .wahl input { width: 24px; height: 24px; accent-color: #8a5a00; }
   .knopf.leise { background: #fff; color: var(--rot); border: 2px solid var(--rot); font-size: 18px; min-height: 52px; }
   .knopf:disabled { opacity: .55; }
   .danke { background: #e5f3e9; color: #174d2a; border-radius: 14px; padding: 18px 16px; margin-bottom: 14px; font-size: 22px; font-weight: 700; }
@@ -45,8 +53,9 @@
 <main id="inhalt" aria-live="polite"><p class="lade">Wird geladen …</p></main>
 <script>
 // KC-CLUB-MAIL-ZUSAGE (Wunsch Hansi 23.11.2026): Zusage/Absage zu einem Treffen per E-Mail-Link – ohne App, ohne Anmeldung.
-// Der persönliche Link steht nur in der Adresse (?t=… bzw. ?k=… aus der Mail) und wird nirgends gespeichert. ?a=ja|nein hebt nur einen Knopf hervor:
-// Mail-Programme öffnen Links oft schon vorab zur Prüfung – darum trägt das Öffnen NIE etwas ein, erst das Antippen eines Knopfs (POST).
+// Der persönliche Link steht nur in der Adresse (?t=… bzw. ?k=… aus der Mail) und wird nirgends gespeichert. ?a=ja|nein (alte Mails) wählt nur vor:
+// Mail-Programme öffnen Links oft schon vorab zur Prüfung – darum trägt das Öffnen NIE etwas ein, erst „📨 Antwort abschicken“ (POST).
+// KC-CLUB-MAIL-ZUSAGE-2 (Rückmeldung Hansi 23.11.2026): alles auf EINER Seite – Antwort wählen, Notiz, bei „Vielleicht“ die Erinnerung – und EIN Abschicken.
 "use strict";
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const Q = new URL(location.href).searchParams;
@@ -54,8 +63,10 @@ const T = Q.get("t") || Q.get("k") || "";
 const VORWAHL = ["ja", "nein", "vielleicht"].includes(Q.get("a")) ? Q.get("a") : "";
 const $ = (id) => document.getElementById(id);
 const WORT = { ja: "✅ Ich komme", nein: "❌ Ich komme nicht", vielleicht: "🤔 Vielleicht" };
-const DANKE = { ja: "Danke, deine Zusage ist eingetragen ✅", nein: "Danke, deine Absage ist eingetragen ❌", vielleicht: "Danke, dein „Vielleicht“ ist eingetragen 🤔" };
-let stand = null, beschaeftigt = false;
+const STATUS = { ja: "✅ Deine Zusage wurde verschickt – schön, dass du dabei bist!", nein: "Deine Absage wurde verschickt – schade, vielleicht beim nächsten Mal.", vielleicht: "🤔 Deine Antwort „vielleicht“ wurde verschickt." };
+// Erinnerung bei „Vielleicht“: Schlüssel → Stunden vor Beginn (der Server rechnet die Zeit selbst nach)
+const ERINNERN = [["1t", "1 Tag vorher", 24], ["tag", "am Tag selbst, 3 Std. vorher", 3], ["2t", "2 Tage vorher", 48], ["nie", "gar nicht", 0]];
+let stand = null, beschaeftigt = false, wahl = "", erinnern = "1t", notiz = "";
 
 function esc(s) { return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
 function wann(iso) {
@@ -78,23 +89,39 @@ function kopf() {
     <p class="titel">${esc(s.titel)}</p><p class="wann">${esc(wann(s.beginn))}</p>${s.ort ? `<p class="ort">📍 ${esc(s.ort)}</p>` : ""}
     ${s.aktuelleAntwort ? `<p class="bisher">Deine Antwort bisher: ${esc(WORT[s.aktuelleAntwort] || s.aktuelleAntwort)}</p>` : ""}</div>`;
 }
+// nur Zeitpunkte, die noch in der Zukunft liegen und vor Beginn („gar nicht“ immer)
+function erinnernMoeglich() {
+  const b = Date.parse(stand.beginn);
+  return ERINNERN.filter(([, , h]) => !h || b - h * 3600000 > Date.now());
+}
+function erinnernHtml() {
+  const m = erinnernMoeglich();
+  if (!m.some(([k]) => k === erinnern)) erinnern = m[0][0];
+  return `<fieldset class="erinnern" id="erinnernFrage"><legend>Wann soll ich dich noch einmal erinnern?</legend>
+    ${m.map(([k, t]) => `<label class="wahl"><input type="radio" name="erinnern" value="${k}"${k === erinnern ? " checked" : ""}> ${esc(t)}</label>`).join("")}</fieldset>`;
+}
 function zeigen(meldung) {
   const s = stand;
   if (!s.gueltig) { $("inhalt").innerHTML = kopf() + `<div class="fehler"><b>Antworten geht hier nicht mehr</b>${esc(s.grund || "Dieser Link ist nicht mehr gültig.")}</div>`; return; }
   $("inhalt").innerHTML = (meldung ? `<div class="meldung">${esc(meldung)}</div>` : "") + kopf() + `<div class="karte">
-    <p style="margin:0 0 12px;font-weight:600">Kommst du? Bitte antippen:</p>
-    ${["ja", "nein", "vielleicht"].map((a) => `<button type="button" class="knopf ${a}${VORWAHL === a ? " vorwahl" : ""}" data-a="${a}">${WORT[a]}</button>`).join("")}
-    ${VORWAHL ? `<p class="hinweis" style="margin:0">Zum Eintragen bitte den umrandeten Knopf antippen.</p>` : ""}</div>`;
-  document.querySelectorAll("button[data-a]").forEach((b) => b.addEventListener("click", () => setzen(b.dataset.a)));
+    <p style="margin:0 0 12px;font-weight:600">1. Kommst du? Bitte wählen:</p>
+    ${["ja", "nein", "vielleicht"].map((a) => `<button type="button" class="knopf ${a}${wahl === a ? " gewaehlt" : wahl ? " blass" : ""}" data-a="${a}" aria-pressed="${wahl === a}">${WORT[a]}</button>`).join("")}
+    ${wahl === "vielleicht" ? erinnernHtml() : ""}
+    <label for="notiz">2. Möchtest du noch etwas dazuschreiben? (freiwillig)</label>
+    <textarea id="notiz" maxlength="300" placeholder="z. B. komme etwas später">${esc(notiz)}</textarea>
+    <button type="button" class="knopf senden" id="abschicken">📨 Antwort abschicken</button>
+    <p class="hinweis" style="margin:0">Erst mit „Antwort abschicken“ wird deine Antwort eingetragen.</p></div>`;
+  document.querySelectorAll("button[data-a]").forEach((b) => b.addEventListener("click", () => waehlen(b.dataset.a)));
+  document.querySelectorAll("input[name=erinnern]").forEach((r) => r.addEventListener("change", () => { erinnern = r.value; }));
+  $("notiz").addEventListener("input", (e) => { notiz = e.target.value; });
+  $("abschicken").addEventListener("click", abschicken);
 }
-function dankeZeigen(antwort) {
-  $("inhalt").innerHTML = `<div class="danke" id="danke">${esc(DANKE[antwort])}</div>` + kopf() + `<div class="karte">
-    <label for="notiz">Möchtest du noch etwas dazuschreiben? (freiwillig)</label>
-    <textarea id="notiz" maxlength="300" placeholder="z. B. komme etwas später"></textarea>
-    <button type="button" class="knopf leise" id="notizSenden">Notiz senden</button>
+function waehlen(a) { wahl = a; zeigen(); }
+function statusZeigen(antwort, erinnernUm) {
+  const zusatz = antwort === "vielleicht" && erinnernUm ? ` Ich erinnere dich ${wann(erinnernUm)} noch einmal per Mail.` : "";
+  $("inhalt").innerHTML = `<div class="danke" id="danke">${esc(STATUS[antwort] + zusatz)}</div>` + kopf() + `<div class="karte">
     <button type="button" class="knopf leise" id="aendern">Antwort ändern</button></div>`;
-  $("notizSenden").addEventListener("click", () => notizSenden(antwort));
-  $("aendern").addEventListener("click", () => zeigen());
+  $("aendern").addEventListener("click", () => { wahl = stand.aktuelleAntwort || ""; notiz = ""; zeigen(); });
 }
 async function laufen(fn) {
   if (beschaeftigt) return; beschaeftigt = true;
@@ -103,24 +130,19 @@ async function laufen(fn) {
   catch (e) { zeigen(e.message); }
   finally { beschaeftigt = false; document.querySelectorAll("button").forEach((b) => (b.disabled = false)); }
 }
-function setzen(antwort) {
+// EIN Abschicken: Antwort + Notiz (+ Erinnerung bei „vielleicht“) in einer Anfrage
+function abschicken() {
+  if (!wahl) { zeigen("Bitte zuerst „Ich komme“, „Ich komme nicht“ oder „Vielleicht“ antippen."); return; }
+  const antwort = wahl, text = notiz.trim();
   laufen(async () => {
-    const r = await api("mail_antwort_setzen", { antwort });
+    const r = await api("mail_antwort_setzen", { antwort, ...(text ? { notiz: text } : {}), ...(antwort === "vielleicht" ? { erinnern } : {}) });
     stand.aktuelleAntwort = r.aktuelleAntwort || antwort;
-    dankeZeigen(antwort); window.scrollTo(0, 0);
-  });
-}
-function notizSenden(antwort) {
-  const notiz = $("notiz").value.trim();
-  if (!notiz) return;
-  laufen(async () => {
-    await api("mail_antwort_setzen", { antwort, notiz });
-    $("inhalt").innerHTML = `<div class="danke">Danke, deine Notiz ist angekommen 📝</div>` + kopf();
+    statusZeigen(antwort, r.erinnernUm || null); window.scrollTo(0, 0);
   });
 }
 async function laden() {
   if (!/^[A-Za-z0-9_-]{43}$/.test(T)) return fehlerZeigen("Bitte öffne diese Seite über den Link aus deiner Mail.");
-  try { stand = await api("mail_antwort_laden"); zeigen(); }
+  try { stand = await api("mail_antwort_laden"); wahl = VORWAHL; zeigen(); }
   catch (e) { fehlerZeigen(e.message); }
 }
 laden();

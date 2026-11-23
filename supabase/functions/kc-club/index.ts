@@ -10255,6 +10255,53 @@ function maTokenNeu() {
   return btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32)))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 const maLink = (token: string, param = "t") => `${APP_URL}antwort.html?${param}=${token}`;
+// KC-CLUB-MAIL-ZUSAGE-2 (Rückmeldung Hansi 23.11.2026): bei „Vielleicht“ wählt man auf der Seite, wann noch einmal erinnert wird. Nur Zeitpunkte in der Zukunft
+// und vor Beginn; sonst wird nicht erinnert. Die Seite schickt nur den Schlüssel – die Zeit rechnet der Server aus dem Beginn.
+const MA_ERINNERN: Record<string, number> = { "1t": 24 * 3600000, "tag": 3 * 3600000, "2t": 48 * 3600000 };
+function maErinnernUm(wahl: unknown, beginn: string): string | null {
+  const vorher = MA_ERINNERN[String(wahl ?? "")];
+  if (!vorher) return null; // „gar nicht“ oder unbekannt
+  const um = Date.parse(beginn) - vorher;
+  return um > Date.now() && um < Date.parse(beginn) ? new Date(um).toISOString() : null;
+}
+// Mail-Text mit EINEM Link (Zusage-Link und Erinnerung): Im Text steht der Link als ?k=… – so schwärzt kc_club_zugangslinks_schwaerzen ihn (KC-CLUB-LINKSCHUTZ)
+function maMailText(vn: string, t: { titel: string; beginn: string; ort?: string | null }, l: string, erinnerung = false) {
+  const wannT = wann(t.beginn, true);
+  return `Hallo${vn ? " " + vn : ""},\n\n${erinnerung ? "du hattest „vielleicht“ geantwortet – kommst du doch?" : "bitte sag kurz Bescheid, ob du kommst:"}\n\n📌 ${t.titel}\n📅 ${wannT}${t.ort ? "\n📍 " + t.ort : ""}\n\n👉 Hier kurz antworten: ${l}\n\nDer Link öffnet eine kleine Seite – dort „Ich komme“, „Ich komme nicht“ oder „Vielleicht“ wählen und auf „Antwort abschicken“ tippen. Du brauchst dafür keine App und keine Anmeldung. Ändern geht bis zum Treffen über denselben Link.\n\nViele Grüße\nKöcheclub Werne`;
+}
+// Erinnerung bei „Vielleicht“ – im Minuten-Lauf (geplant_faellig). Einmalig: erst erinnert_am setzen (belegen), dann senden – zwei Läufe senden nie doppelt.
+// Nur wenn das Treffen noch geplant ist und noch nicht begonnen hat und die Person noch „vielleicht“ geantwortet hat. Klartext-Links sind nicht gespeichert –
+// darum ein NEUER Link (neue Zeile, gleiche Person/gleiches Treffen; der alte bleibt gültig). NOT-AUS: Erinnerungen warten.
+async function maErinnernLauf() {
+  const z = { gesendet: 0, uebersprungen: 0, fehler: 0 };
+  if ((await notausLesen()).aktiv) return { ...z, notaus: true };
+  const { data: faellig, error } = await db.from("kc_club_antwort_links").select("id,person_id,treffen_id,gueltig_bis").lte("erinnern_um", jetzt()).is("erinnert_am", null).order("erinnern_um").limit(20);
+  if (error) return { ...z, fehler: 1 }; // Migration noch nicht eingespielt
+  for (const e of faellig ?? []) {
+    const { data: belegt } = await db.from("kc_club_antwort_links").update({ erinnert_am: jetzt() }).eq("id", e.id).is("erinnert_am", null).select("id");
+    if (!belegt?.length) continue;
+    try {
+      const [{ data: t }, { data: tn }] = await Promise.all([
+        db.from("kc_club_treffen").select("id,titel,beginn,ort,status").eq("id", e.treffen_id).maybeSingle(),
+        db.from("kc_club_teilnahme").select("antwort").eq("treffen_id", e.treffen_id).eq("person_id", e.person_id).maybeSingle(),
+      ]);
+      if (!t || t.status !== "geplant" || Date.parse(t.beginn) <= Date.now() || tn?.antwort !== "vielleicht" || await sperreFuer(e.person_id)) { z.uebersprungen++; continue; }
+      const token = maTokenNeu(), pe = (await personen([e.person_id])).get(e.person_id) ?? null;
+      schreibOk(await db.from("kc_club_antwort_links").insert({ token_hash: await sha256(token), person_id: e.person_id, treffen_id: t.id, erstellt_von: "zusage-erinnerung",
+        gueltig_bis: new Date(Date.parse(t.beginn) + MA_NACH_BEGINN_MS).toISOString() }), "Erinnerungs-Link");
+      const l = maLink(token, "k"), wannT = wann(t.beginn, true);
+      const r: any = await routerSenden("club_treffen_mail", [e.person_id], {
+        titel: `🤔 Kommst du doch? ${t.titel}`, kurz: `${t.titel} – ${wannT}`,
+        betreff: `Köcheclub Werne – 🤔 Kommst du doch? ${t.titel}, ${wannT}`,
+        text: maMailText(vorname(pe) || "", t, l, true), url: l,
+      }, `club-mail-zusage-erinnern:${e.id}`);
+      if (r?.fehler) z.fehler++; else z.gesendet++;
+    } catch (x) { console.error("maErinnernLauf", x); z.fehler++; }
+  }
+  if (z.gesendet || z.fehler) await db.rpc("kc_club_zugangslinks_schwaerzen").then(() => {}, () => {}); // KC-CLUB-LINKSCHUTZ
+  if (z.gesendet) await protokoll(null, "mail_antwort_erinnerung", { gesendet: z.gesendet, fehler: z.fehler }); // ohne Links und Namen
+  return z;
+}
 async function maBremse(req: Request) {
   const netz = await sha256("kc-netz:" + (req.headers.get("x-forwarded-for") || "").split(",")[0].trim());
   const seit = new Date(Date.now() - MA_MIN * 60000).toISOString();
@@ -10335,9 +10382,10 @@ const kcAnfrage = async (req: Request): Promise<Response> => {
       const lauf = await geplantFaelligLauf();
       const warteschlange = await mailWarteschlange().catch((e) => ({ fehler: String(e) })); // 2.520.0 KC-COMM-WARTEN
       const wecker = await weckerFaelligLauf().catch((e) => ({ fehler: String(e) })); // 2.640.0 KC-CLUB-UHR-WECKER
+      const zusage = await maErinnernLauf().catch((e) => ({ fehler: String(e) })); // KC-CLUB-MAIL-ZUSAGE-2: Erinnerung bei „Vielleicht“
       // 2.851.0 KC-CLUB-OFFLINE-PUSH – sparsam (Hansi: „kostet das wieder Datenbank? Da müssen wir sparen“): nur jede 5. Minute → 288 kleine Abfragen am Tag
       const offline = new Date().getUTCMinutes() % OFFLINE_TAKT_MIN === 0 ? await offlinePushLauf().catch((e) => ({ fehler: String(e) })) : null;
-      return json({ ok: true, ...lauf, warteschlange, wecker, offline });
+      return json({ ok: true, ...lauf, warteschlange, wecker, offline, zusage });
     }
     // ----- Zeitplaner: Erinnerung am Vortag (ab 9 Uhr) an alle, die nicht abgesagt haben -----
     if (a === "wartung") {
@@ -10888,6 +10936,7 @@ Köcheclub Werne`,
       return json({ ok: true, vorname: vorname(pe) || "", titel: tr.titel, beginn: tr.beginn, ort: tr.ort ?? null, aktuelleAntwort: tn?.antwort ?? null, gueltig, ...(grund ? { grund } : {}) });
     }
     // Setzen: erst beim Antippen eines Knopfs (POST) – genau wie treffen_antwort (Mitfahrt-Suche, Sitzungs-Abgleich, Protokoll ohne Inhalte).
+    // KC-CLUB-MAIL-ZUSAGE-2: Antwort und Notiz kommen in EINEM Zug („📨 Antwort abschicken“); bei „vielleicht“ dazu die Erinnerungswahl (p.erinnern).
     if (a === "mail_antwort_setzen") {
       const antwort = String(p.antwort || "");
       if (!MA_ANTWORTEN.includes(antwort)) throw new Fehler("Bitte „Ich komme“, „Ich komme nicht“ oder „Vielleicht“ antippen.");
@@ -10898,9 +10947,13 @@ Köcheclub Werne`,
       schreibOk(await db.from("kc_club_teilnahme").upsert({ treffen_id: tr.id, person_id: l.person_id, antwort, notiz, geaendert_am: jetzt() }), "Antworten");
       if (antwort !== "ja") await db.from("kc_club_mitfahrt_suche").delete().eq("bezug_art", "treffen").eq("bezug_id", tr.id).eq("person_id", l.person_id); // KC-CLUB-MITFAHRT-SUCHE
       await sitzungAntwortAbgleich(tr.id, l.person_id, antwort).catch(() => null); // 2.749.0 KC-CLUB-SITZUNG-SCHRITTE
-      await db.from("kc_club_antwort_links").update({ zuletzt_benutzt_am: jetzt(), antwort }).eq("id", l.id);
+      // Erinnerung: nur bei „vielleicht“ und nur EINE offene je Person/Treffen (ältere Links dieser Person zum Treffen werden geleert); bei ja/nein geleert
+      const erinnernUm = antwort === "vielleicht" ? maErinnernUm(p.erinnern, tr.beginn) : null;
+      await db.from("kc_club_antwort_links").update({ erinnern_um: null }).eq("treffen_id", tr.id).eq("person_id", l.person_id).is("erinnert_am", null).neq("id", l.id).then(() => {}, () => {});
+      const { error: eErinnern } = await db.from("kc_club_antwort_links").update({ zuletzt_benutzt_am: jetzt(), antwort, erinnern_um: erinnernUm, erinnert_am: null }).eq("id", l.id);
+      if (eErinnern) await db.from("kc_club_antwort_links").update({ zuletzt_benutzt_am: jetzt(), antwort }).eq("id", l.id); // Migration noch nicht eingespielt
       await protokoll(l.person_id, "treffen_antwort", { treffen: tr.id, antwort, weg: "mail_link" });
-      return json({ ok: true, aktuelleAntwort: antwort });
+      return json({ ok: true, aktuelleAntwort: antwort, erinnernUm: eErinnern ? null : erinnernUm });
     }
 
     const tAnm = Date.now();
@@ -11578,13 +11631,14 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         let versand: Record<string, unknown> | null = null;
         if (senden) {
           // Im Mail-Text steht der Link als ?k=… – so schwärzt kc_club_zugangslinks_schwaerzen ihn nach dem Versand im Mail-Speicher (KC-CLUB-LINKSCHUTZ)
+          // KC-CLUB-MAIL-ZUSAGE-2: nur noch EIN Link (die Seite versteht ?a= weiter für alte Mails)
           const wannT = wann(t.beginn, true);
           const r = await Promise.all(links.map((x) => {
             const vn = vorname(leute.get(x.person_id) ?? null) || "", l = maLink(x.token, "k");
             return routerSenden("club_treffen_mail", [x.person_id], {
               titel: `📅 Kommst du? ${t.titel}`, kurz: `${t.titel} – ${wannT}`,
               betreff: `Köcheclub Werne – Kommst du? ${t.titel}, ${wannT}`,
-              text: `Hallo${vn ? " " + vn : ""},\n\nbitte sag kurz Bescheid, ob du kommst:\n\n📌 ${t.titel}\n📅 ${wannT}${t.ort ? "\n📍 " + t.ort : ""}\n\n✅ Ich komme:\n${l}&a=ja\n\n❌ Ich komme nicht:\n${l}&a=nein\n\nDer Link öffnet eine kleine Seite – dort bitte noch einmal auf den Knopf tippen. Du brauchst dafür keine App und keine Anmeldung. Ändern geht bis zum Treffen über denselben Link.\n\nViele Grüße\nKöcheclub Werne`,
+              text: maMailText(vn, t, l),
               url: l,
             }, `club-mail-zusage:${t.id}:${x.person_id}:${Date.now()}`).catch(() => ({ gesendet: 0, fehler: 1 }));
           }));

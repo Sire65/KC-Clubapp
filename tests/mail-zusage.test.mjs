@@ -1,5 +1,5 @@
 // KC-CLUB-MAIL-ZUSAGE (Wunsch Hansi 23.11.2026): Zusage/Absage zu einem Treffen per E-Mail-Link (antwort.html) – ohne App, ohne Anmeldung.
-// Prüft: Link nur als Fingerabdruck gespeichert, Öffnen setzt nichts, abgelaufen/abgesagt → Fehler, Link-Erzeugung nur Admin, Seite ohne fremde Skripte.
+// Prüft: Link nur als Fingerabdruck gespeichert, Öffnen setzt nichts, abgelaufen/abgesagt → Fehler, Link-Erzeugung nur Admin, Seite ohne fremde Skripte. KC-CLUB-MAIL-ZUSAGE-2: eine Seite/ein Abschicken, ein Link, Erinnerung bei „Vielleicht“.
 // Aufruf: node tests/mail-zusage.test.mjs (offline)
 import fs from "node:fs";
 import assert from "node:assert/strict";
@@ -7,6 +7,7 @@ import { createHash } from "node:crypto";
 const lies = (f) => fs.readFileSync(new URL("../" + f, import.meta.url), "utf8");
 const server = lies("supabase/functions/kc-club/index.ts"), html = lies("app.js"), seite = lies("antwort.html");
 const mig = lies("supabase/migrations/20261123_kc_club_mail_zusage.sql");
+const mig2 = lies("supabase/migrations/20261123_kc_club_mail_zusage_erinnern.sql");
 const zwischen = (s, a, b) => { const i = s.indexOf(a), j = s.indexOf(b, i + 1); assert.ok(i >= 0 && j > i, `Abschnitt fehlt: ${a}`); return s.slice(i, j); };
 
 // 1) Migration: Tabelle mit Fingerabdruck, Rechte nur für den Club-Server, gespiegelt und gesichert
@@ -57,7 +58,10 @@ assert.ok(!/token: x\.token|token_hash: x\.token/.test(ml.slice(ml.indexOf(".ins
 assert.ok(/protokoll\(ich\.person_id, "mail_antwort_link", \{ treffen: t\.id, personen: ziel, senden, versand \}\)/.test(ml), "Protokoll ohne Links");
 assert.ok(/new Date\(Date\.parse\(t\.beginn\) \+ MA_NACH_BEGINN_MS\)/.test(ml) && /t\.status !== "geplant"/.test(ml), "gültig bis Beginn + 2 Std., nur offene Treffen");
 assert.ok(/maLink\(x\.token, "k"\)/.test(ml) && /db\.rpc\("kc_club_zugangslinks_schwaerzen"\)/.test(ml), "Mail-Link wird im Mail-Speicher geschwärzt (KC-CLUB-LINKSCHUTZ)");
-assert.ok(/\$\{l\}&a=ja/.test(ml) && /\$\{l\}&a=nein/.test(ml), "Mail mit zwei Links");
+// KC-CLUB-MAIL-ZUSAGE-2: nur noch EIN Link in der Mail (kein a=ja/a=nein mehr)
+assert.ok(!/&a=(ja|nein)/.test(ml) && /text: maMailText\(vn, t, l\),/.test(ml), "Mail mit nur einem Link");
+const mt = zwischen(server, "function maMailText(", "async function maErinnernLauf(");
+assert.ok((mt.match(/\$\{l\}/g) || []).length === 1 && /👉 Hier kurz antworten: \$\{l\}/.test(mt) && !/&a=/.test(mt), "Mail-Text: genau ein Link „👉 Hier kurz antworten“");
 assert.ok(/const nurAdmin = \(ich: Ich\) => \{ if \(!ich\.admin\) throw new Fehler\("Das darf nur der Admin\.", 403\); \};/.test(server), "nurAdmin prüft admin");
 assert.ok(!/"mail_antwort_(link|laden|setzen)"/.test(zwischen(server, "const ZUGANG_AKTIONEN", "const ZUGANG_ERLAUBT")), "nicht für Gäste/Aushilfen freigegeben");
 
@@ -74,8 +78,41 @@ assert.ok(/default-src 'none'/.test(seite) && /connect-src https:\/\/ptblnpiroqf
 assert.ok(!/localStorage|sessionStorage|document\.cookie|indexedDB/.test(skript), "Link wird nirgends gespeichert");
 const ld = zwischen(skript, "async function laden()", "laden();");
 assert.ok(/api\("mail_antwort_laden"\)/.test(ld) && !/mail_antwort_setzen|setzen\(/.test(ld), "Öffnen lädt nur");
-assert.ok((skript.match(/api\("mail_antwort_setzen"/g) || []).length === 2 && /b\.addEventListener\("click", \(\) => setzen\(b\.dataset\.a\)\)/.test(skript), "Antwort nur per Knopf");
-assert.ok(!/VORWAHL\)\s*setzen|setzen\(VORWAHL\)/.test(skript), "Vorwahl (?a=) setzt nichts");
+// KC-CLUB-MAIL-ZUSAGE-2: eine Seite, EIN Abschicken (Antwort + Notiz + Erinnerung in einer Anfrage); die Antwort-Knöpfe wählen nur
+assert.ok((skript.match(/api\("mail_antwort_setzen"/g) || []).length === 1, "genau ein Abschicken");
+const ab = zwischen(skript, "function abschicken()", "async function laden()");
+assert.ok(/api\("mail_antwort_setzen", \{ antwort, \.\.\.\(text \? \{ notiz: text \} : \{\}\), \.\.\.\(antwort === "vielleicht" \? \{ erinnern \} : \{\}\) \}\)/.test(ab), "Antwort, Notiz und Erinnerung in einem Zug");
+assert.ok(/\$\("abschicken"\)\.addEventListener\("click", abschicken\)/.test(skript) && /📨 Antwort abschicken/.test(skript), "großer Knopf „📨 Antwort abschicken“");
+assert.ok(/b\.addEventListener\("click", \(\) => waehlen\(b\.dataset\.a\)\)/.test(skript) && !/api\(/.test(zwischen(skript, "function waehlen(", "function statusZeigen(")), "Antwort-Knöpfe wählen nur (keine Anfrage)");
+assert.ok(/<textarea id="notiz"/.test(zwischen(skript, "function zeigen(", "function waehlen(")), "Notizfeld auf derselben Seite");
+assert.ok(!/VORWAHL\)\s*(setzen|abschicken)|(setzen|abschicken)\(VORWAHL\)/.test(skript) && /wahl = VORWAHL; zeigen\(\);/.test(skript), "Vorwahl (?a=) wählt nur vor, setzt nichts");
+assert.ok(/ja: "✅ Deine Zusage wurde verschickt – schön, dass du dabei bist!"/.test(skript) && /nein: "Deine Absage wurde verschickt – schade, vielleicht beim nächsten Mal\."/.test(skript)
+  && /vielleicht: "🤔 Deine Antwort „vielleicht“ wurde verschickt\."/.test(skript) && /id="aendern">Antwort ändern</.test(skript), "Statusmeldungen und „Antwort ändern“");
+// Erinnerungsfrage nur bei „vielleicht“, vorgewählt 1 Tag vorher, nur Zeitpunkte in der Zukunft
+assert.ok(/\$\{wahl === "vielleicht" \? erinnernHtml\(\) : ""\}/.test(skript) && /Wann soll ich dich noch einmal erinnern\?/.test(skript), "Erinnerungsfrage nur bei vielleicht");
+assert.ok(/erinnern = "1t"/.test(skript) && /\[\["1t", "1 Tag vorher", 24\], \["tag", "am Tag selbst, 3 Std\. vorher", 3\], \["2t", "2 Tage vorher", 48\], \["nie", "gar nicht", 0\]\]/.test(skript), "Auswahl, vorgewählt 1 Tag vorher");
+assert.ok(/!h \|\| b - h \* 3600000 > Date\.now\(\)/.test(skript), "nur Zeitpunkte in der Zukunft");
+
+// 6) KC-CLUB-MAIL-ZUSAGE-2: Erinnerung bei „Vielleicht“ – Spalten, Teilindex, Zeitplan
+assert.ok(/alter table public\.kc_club_antwort_links add column if not exists erinnern_um timestamptz;/.test(mig2) && /add column if not exists erinnert_am timestamptz;/.test(mig2), "neue Spalten");
+assert.ok(/create index if not exists kc_club_antwort_links_erinnern on public\.kc_club_antwort_links \(erinnern_um\)\s+where erinnern_um is not null and erinnert_am is null;/.test(mig2), "Teilindex");
+assert.ok(/select jobid, command into j from cron\.job where jobname = 'kc-club-geplant-minute';/.test(mig2) && /position\('kc_club_antwort_links' in j\.command\) > 0 then\s+return;/.test(mig2), "Zeitplan aus cron.job lesen, wiederholbar");
+assert.ok(/regexp_replace\(j\.command, ';\\s\*\$', zusatz\)/.test(mig2) && /cron\.alter_job\(job_id := j\.jobid, command := neu\)/.test(mig2), "Bedingung nur angehängt (alter_job)");
+assert.ok(/or exists \(select 1 from public\.kc_club_antwort_links where erinnern_um <= now\(\) and erinnert_am is null\);/.test(mig2), "Bedingung für fällige Erinnerungen");
+assert.ok(/cron\.schedule\('kc-club-mail-erinnern', '\*\/10 \* \* \* \*'/.test(mig2) && /name = 'kc_club_cron_secret'/.test(mig2), "Rückfall: eigene Regel alle 10 Min. mit Geheimnis aus dem Tresor");
+assert.ok(!/cron\.schedule\('kc-club-geplant-minute'/.test(mig2) && !/cron\.unschedule\('kc-club-geplant-minute'/.test(mig2), "Minuten-Zeitplan wird nicht neu geschrieben");
+// Server: Erinnerung nur bei vielleicht, bei ja/nein geleert; Zeit vom Server, nur Zukunft und vor Beginn
+assert.ok(/const erinnernUm = antwort === "vielleicht" \? maErinnernUm\(p\.erinnern, tr\.beginn\) : null;/.test(setzen) && /erinnern_um: erinnernUm, erinnert_am: null/.test(setzen), "erinnern_um nur bei vielleicht, sonst geleert");
+assert.ok(/return um > Date\.now\(\) && um < Date\.parse\(beginn\)/.test(server), "Erinnerungszeit nur in der Zukunft und vor Beginn");
+// Lauf: im Minuten-Lauf, NOT-AUS, einmalig (erst belegen, dann senden), nur geplant + noch vielleicht, neuer Link, Schwärzen
+assert.ok(/const zusage = await maErinnernLauf\(\)\.catch/.test(zwischen(server, 'if (a === "geplant_faellig") {', 'if (a === "wartung") {')), "im Minuten-Lauf");
+const el = zwischen(server, "async function maErinnernLauf(", "// ---------- Hauptprogramm ----------");
+assert.ok(/if \(\(await notausLesen\(\)\)\.aktiv\) return/.test(el), "NOT-AUS: Erinnerungen warten");
+assert.ok(/\.update\(\{ erinnert_am: jetzt\(\) \}\)\.eq\("id", e\.id\)\.is\("erinnert_am", null\)\.select\("id"\)/.test(el) && el.indexOf("erinnert_am: jetzt()") < el.indexOf("routerSenden("), "einmalig: erst belegen, dann senden");
+assert.ok(/if \(!belegt\?\.length\) continue;/.test(el), "schon belegt → nicht noch einmal");
+assert.ok(/t\.status !== "geplant" \|\| Date\.parse\(t\.beginn\) <= Date\.now\(\) \|\| tn\?\.antwort !== "vielleicht"/.test(el), "nur geplant, vor Beginn, noch vielleicht");
+assert.ok(/token_hash: await sha256\(token\)/.test(el) && /maLink\(token, "k"\)/.test(el) && /db\.rpc\("kc_club_zugangslinks_schwaerzen"\)/.test(el), "neuer Link, nur Fingerabdruck, geschwärzt");
+assert.ok(/🤔 Kommst du doch\? \$\{t\.titel\}/.test(el) && /`club-mail-zusage-erinnern:\$\{e\.id\}`/.test(el), "Erinnerungs-Mail, Korrelation je Link (einmalig)");
 assert.ok(/Q\.get\("t"\) \|\| Q\.get\("k"\)/.test(skript), "Link aus ?t= oder ?k=");
 assert.ok(/"antwort\.html"/.test(lies("tools/cloudflare/paket-bauen.mjs")), "Seite in der Positivliste des Cloudflare-Pakets");
 const sw = lies("sw.js");

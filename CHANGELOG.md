@@ -1,5 +1,13 @@
 # Änderungen
 
+## (Version folgt) – ✉️ Zusage-Seite: alles auf einer Seite, ein Link, „Vielleicht“ mit Erinnerung (KC-CLUB-MAIL-ZUSAGE-2)
+Rückmeldung Hansi 23.11.2026 nach seinem Test (hat geklappt): eine Seite, ein Abschicken, nur ein Link in der Mail, bei „Vielleicht“ eine Erinnerung.
+- **Eine Seite, ein Abschicken (`antwort.html`):** Antwort wählen (✅ Ich komme / ❌ Ich komme nicht / 🤔 Vielleicht) und Notiz auf derselben Seite; erst der große Knopf „📨 Antwort abschicken“ schickt beides in **einer** Anfrage (`mail_antwort_setzen` mit Antwort + Notiz). Danach kurze Meldung („✅ Deine Zusage wurde verschickt – schön, dass du dabei bist!“, „Deine Absage wurde verschickt – schade, vielleicht beim nächsten Mal.“, „🤔 Deine Antwort „vielleicht“ wurde verschickt.“) und „Antwort ändern“. Öffnen und Wählen setzen weiterhin nie etwas (Mail-Scanner); `?a=` aus alten Mails wählt nur vor.
+- **Nur noch ein Link in der Mail** („👉 Hier kurz antworten: …“, weiter als `?k=…` und nach dem Versand geschwärzt – KC-CLUB-LINKSCHUTZ).
+- **„Vielleicht“ → Erinnerung:** auf derselben Seite „Wann soll ich dich noch einmal erinnern?“ – vorgewählt „1 Tag vorher“, dazu „am Tag selbst, 3 Std. vorher“, „2 Tage vorher“, „gar nicht“ (nur Zeitpunkte in der Zukunft und vor Beginn; die Zeit rechnet der Server). Bei ja/nein wird eine Erinnerung gelöscht. Der Minuten-Lauf (`geplant_faellig`) schickt sie **einmal** mit neuem persönlichen Link („🤔 Kommst du doch? …“) – nur wenn das Treffen noch geplant ist und die Antwort noch „vielleicht“ lautet; NOT-AUS hält sie an.
+- **Migration `20261123_kc_club_mail_zusage_erinnern.sql`** (vor dem Server-Upload einspielen): Spalten `erinnern_um`, `erinnert_am` an `kc_club_antwort_links` + Teilindex; der Minuten-Zeitplan `kc-club-geplant-minute` bekommt die Bedingung „Erinnerung fällig“ angehängt (aus `cron.job` gelesen, `cron.alter_job`, wiederholbar; sieht der Befehl unerwartet aus, stattdessen eigene Regel `kc-club-mail-erinnern` alle 10 Min.). Ohne Migration antwortet der Server wie bisher (ohne Erinnerung).
+- Tests: `mail-zusage` erweitert (eine Seite/ein Abschicken, ein Link, Erinnerungsauswahl nur bei vielleicht, Erinnerung einmalig, CSP-Fingerabdruck).
+
 ## 3.8.0 – 2026-11-23 – ✉️ Zusagen per E-Mail-Link ohne App (KC-CLUB-MAIL-ZUSAGE)
 Wunsch Hansi 23.11.2026: Mitglieder, die die App nicht öffnen (z. B. App nur auf einem Tablet, das nicht genutzt wird), sollen per E-Mail-Link zu- oder absagen können – ohne App und ohne Anmeldung.
 - **Admin: „✉️ Zusage-Link mailen“** an jedem offenen Treffen – anhaken, wer noch nicht geantwortet hat; jeder bekommt eine Mail mit zwei Links („Ich komme“ / „Ich komme nicht“). Neue Admin-Aktion `mail_antwort_link` (nurAdmin; ohne `senden` gibt sie die Links zurück).

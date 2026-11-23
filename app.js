@@ -19512,7 +19512,7 @@ async function zusageLinkMailen(id) {
   const ohne = (MITGLIEDER || []).filter((m) => !m.passiv && !geantwortet.has(m.person_id)).sort((a, b) => a.name.localeCompare(b.name));
   if (!ohne.length) return melde("Alle haben schon geantwortet. 👍");
   blattAuf("zusageLinkBlatt", `<h3 style="margin-top:0">✉️ Zusage-Link mailen</h3>
-    <p class="hinweis" style="margin:0 0 8px">${esc(t.titel)} · ${esc(wann(t.beginn))}<br>Wer angehakt ist, bekommt eine Mail mit zwei Links („Ich komme“ / „Ich komme nicht“) – zusagen geht dann ohne App.</p>
+    <p class="hinweis" style="margin:0 0 8px">${esc(t.titel)} · ${esc(wann(t.beginn))}<br>Wer angehakt ist, bekommt eine Mail mit einem Link – dort „Ich komme“, „Ich komme nicht“ oder „Vielleicht“ wählen und abschicken, ganz ohne App.</p>
     ${ohne.map((m) => `<label style="display:flex;gap:8px;align-items:center;padding:6px 0"><input type="checkbox" class="zlPerson" value="${esc(m.person_id)}"> ${esc(m.name)}</label>`).join("")}
     <div class="knoepfe"><button class="knopf haupt" onclick="zusageLinkSenden('${t.id}')">✉️ Mail senden</button><button class="knopf" onclick="$('zusageLinkBlatt').remove()">Abbrechen</button></div>`);
 }
