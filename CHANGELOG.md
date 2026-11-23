@@ -1,6 +1,6 @@
 # Änderungen
 
-## (Version folgt) – 📤 Sollplan an DP2 übergeben (KC-DP-SOLL-UEBERGABE)
+## 3.18.0 – 2026-11-23 – 📤 Sollplan an DP2 übergeben (KC-DP-SOLL-UEBERGABE) · 🚗 Wege der Mitglieder: Mitfahrten (KC-CLUB-SPUR-MITFAHRT)
 Hansi 23.11.: „Ein-Klick-Übergabe des in der Club-App berechneten Sollplans nach DP2“ und „wenn der Sollplan sich nochmals ändert, muss der Abgleich erneut laufen“.
 - Migration `20261123_kc_dp_soll_uebergabe.sql` (vor dem Server eingespielt): Tabelle `kc_dp_soll_uebergabe` (RLS, nur service_role) mit dem vollständigen Stand je Übergabe (`rows`, `anzahl`, `pruefsumme`, Status offen/uebernommen/verworfen); DP2 holt über `kc_dp_soll_uebergabe_pending` ab und bestätigt über `kc_dp_soll_uebergabe_ack` (auth.uid() + kc_dp_memberships admin/planner/duty_manager, kein anon, Prüfregister-Einträge).
 - `dp-rechnen.js`: `dpSollZeilen` macht aus dem gerechneten Plan DP2-Schichten (personId, date, start/end, zone front/back/neutral aus vorne/hinten, area, Pause wie DP2: über 6 Std. 30 Min., über 9 Std. 45 Min., stabiler `importKey` `CLUB-<datum>-<personId>`) – Rechnung, Anzeige und PDF bleiben unverändert. Bereitschaft wird nicht übergeben (nur gezählt). Nur veröffentlichte Veranstaltungstage. Die person_id wird beim Rechnen je Zeile mitgeschrieben (`leute[].p`, nur bei eindeutigem Kurznamen; `dp_plaene` gibt sie Mitgliedern nicht heraus) – ohne eindeutige ID, an nicht veröffentlichten Tagen und bei „aus“-Personen wird nichts übergeben, die Zeile geht mit Grund als `uebersprungen` mit (DP2 löscht dazu nichts von selbst).
