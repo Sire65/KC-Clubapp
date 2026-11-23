@@ -18157,6 +18157,13 @@ function rkSchwungKarten(v, ruhig) { // Wischgeschwindigkeit (px/ms) → Anzahl 
   if (ruhig || v < RK_SCHNELL) return 1;
   return Math.max(3, Math.min(10, Math.round(3 + (v - RK_SCHNELL) * 2.8)));
 }
+// KC-CLUB-ROLLKARTEI-SCHLOSS-FIX: Wischtempo (px/ms, nach oben = positiv) aus den letzten 100 ms der Spur [[zeit, y], …];
+// lag der Finger zuletzt länger als 100 ms still, ist es ein langsames Loslassen (0)
+function rkWischTempo(spur, jetzt) {
+  if (!spur?.length) return 0; const b = spur[spur.length - 1]; if (jetzt - b[0] > 100) return 0;
+  const l = spur.filter((p) => b[0] - p[0] <= 100); const a = l[0]; if (!a || a === b || b[0] - a[0] < 8) return 0;
+  return -(b[1] - a[1]) / Math.max(16, b[0] - a[0]);
+}
 const rkRuhig = () => { try { return !fxAn() || schlafWenigBewegung(); } catch { return true; } };
 const rkKarteId = (z, d) => d ? String(z.opts?.id?.(d) ?? d.dataset.klappe ?? "") : "";
 const rkFest = (z) => !!z && !!RK_FEST[z.schluessel] && rkKarteId(z, z.karten?.[z.i]) === RK_FEST[z.schluessel];
@@ -18172,12 +18179,14 @@ function rkFestSchalten(z, d) {
   const id = rkKarteId(z, d); if (!id || d !== z.karten[z.i]) return;
   const zu = RK_FEST[z.schluessel] !== id;
   if (zu) RK_FEST[z.schluessel] = id; else delete RK_FEST[z.schluessel];
-  rkFestZeigen(z); try { navigator.vibrate?.(10); } catch {}
-  melde(zu ? "🔒 Karte festgestellt – Wischen, Mausrad und ▲▼ rollen nicht weiter" : "🔓 Schloss offen – die Kartei rollt wieder");
+  rkFestZeigen(z); try { navigator.vibrate?.(zu ? [12, 30, 12] : 10); } catch {}
+  // KC-CLUB-ROLLKARTEI-SCHLOSS-FIX: kurze, eindeutige Bestätigung (der Sperrhinweis kommt erst danach wieder – keine zwei Meldungen übereinander)
+  rkFestZeit = Date.now(); melde(zu ? "🔒 festgestellt" : "🔓 frei");
+  const b = d.querySelector(":scope > summary > .rk-fest"); if (b && !rkRuhig() && typeof b.animate === "function") b.animate([{ scale: "1" }, { scale: "1.25" }, { scale: "1" }], { duration: 260, easing: "ease-out" });
 }
 function rkFestZeigen(z) {
   (z.karten || []).forEach((d) => { const b = d.querySelector(":scope > summary > .rk-fest"); if (!b) return; const zu = RK_FEST[z.schluessel] === rkKarteId(z, d);
-    b.textContent = zu ? "🔒" : "🔓"; b.classList.toggle("zu", zu); b.setAttribute("aria-pressed", String(zu));
+    b.innerHTML = zu ? '<span class="rk-fest-i" aria-hidden="true">🔒</span><span aria-hidden="true">fest</span>' : '<span class="rk-fest-i" aria-hidden="true">🔓</span><span aria-hidden="true">frei</span>'; b.classList.toggle("zu", zu); // KC-CLUB-ROLLKARTEI-SCHLOSS-FIX: Zustand mit Wort b.setAttribute("aria-pressed", String(zu));
     b.setAttribute("aria-label", zu ? "Karte ist festgestellt – Schloss öffnen" : "Karte feststellen (Schloss schließen)"); b.title = zu ? "Festgestellt – antippen zum Öffnen" : "Karte feststellen"; });
   z.w?.classList.toggle("rk-fest-an", rkFest(z));
 }
@@ -18254,7 +18263,7 @@ function rkAufbauen(z) {
   rkFestZeigen(z);
   // 2.209.0 (Gesamtprüfung 5): Reiter-Name ohne Schloss/Pfeil am Ende und ohne Artikel („Das Wichtigste“ → „Wichtigste“, nicht „Das“)
   const rkKurz = (t) => { const w = t.replace(/^\S+\s*/, "").match(/[\p{L}\d-]+/gu) || []; return /^(das|die|der|mein|meine|dein|deine|ein|eine)$/i.test(w[0] || "") && w[1] ? w[1] : w[0] || ""; };
-  z.reiter.innerHTML = z.karten.map((d, i) => { const t = (d.querySelector(":scope > summary")?.textContent || "").replace(/[\s🔓🔒▾▸▴▼▲]+$/u, "").trim(); const sym = z.opts?.tabSym?.(d) || [...t][0] || "•";
+  z.reiter.innerHTML = z.karten.map((d, i) => { const t = (d.querySelector(":scope > summary")?.textContent || "").replace(/\s*[🔓🔒](frei|fest)$/u, "").replace(/[\s🔓🔒▾▸▴▼▲]+$/u, "").trim(); const sym = z.opts?.tabSym?.(d) || [...t][0] || "•";
     return `<button type="button" role="tab" class="rk-tab" data-i="${i}" title="${esc(t)}" aria-label="${esc(t)}">${z.opts?.tabSym ? sym : esc(sym)}<small>${esc(z.opts?.tabText?.(d) ?? rkKurz(t))}</small></button>`; }).join("");
   z.reiter.querySelectorAll(".rk-tab").forEach((b) => (b.onclick = () => rkGehe(z, Number(b.dataset.i))));
   rkMasse(z); rkStellen(z, true); setTimeout(() => rkJalousie(z, true), 60);
@@ -18393,60 +18402,80 @@ function rkRolleEinrichten(z) {
   z.zaehler.querySelectorAll("[data-r]").forEach((b) => (b.onclick = (e) => { e.stopPropagation(); rkGehe(z, z.i + Number(b.dataset.r), Number(b.dataset.r)); }));
   z.w.insertBefore(z.zaehler, z.platz); // neben den Karten (nicht im Platz – sonst liegt die große Karte darüber)
   const w = z.w;
-  // Finger/Maus: senkrecht ziehen. Hat die vordere Karte mehr Inhalt, scrollt der Finger erst ihren Inhalt – am Ende rollt er nahtlos weiter
-  // zur nächsten Karte (wie am iPad); zurück genauso. So gibt es keinen Streit mehr zwischen „Karte lesen“ und „Rolle drehen“.
-  w.addEventListener("pointerdown", z.pd = (e) => {
-    if (!z.rolle || !z.an || e.button > 0 || !rkRolleImFeld(z, e.clientX, e.clientY)) return;
+  // Finger/Maus: senkrecht ziehen.
+  // KC-CLUB-ROLLKARTEI-SCHLOSS-FIX (Fund Hansi 23.11.2026 nach 3.11.0, Android/Chrome: „schnell und langsam scrollen klappt am Handy nicht“):
+  // Ursache: am echten Handy übernahm Chrome die senkrechte Geste selbst (Karteninhalt/innere Bereiche durften nativ scrollen → „pointercancel“
+  // nach wenigen Pixeln – die Kartei sah nur einen kurzen, langsamen Zug und rastete zurück), und ein langer Karteninhalt schluckte den Wisch
+  // (erst Inhalt scrollen). Jetzt: Finger über Touch-Ereignisse (touchmove nicht passiv, preventDefault – die senkrechte Geste gehört der Kartei),
+  // Maus/Stift über Pointer; inneres Scrollen nur, wenn die Geste IM scrollbaren Inhalt beginnt und dieser in Wischrichtung nicht am Rand ist;
+  // Geschwindigkeit aus den letzten 100 ms der Geste.
+  // Zeit des Ereignisses selbst (nicht der Verarbeitung): am Handy kommen Ereignisse bei vollem Hauptfaden gebündelt/verspätet an –
+  // mit performance.now() wäre der Wisch zu langsam gemessen worden (schnell → nur eine Karte)
+  const zt = (e) => { const t = e?.timeStamp, j = performance.now(); return t > 0 && t <= j + 50 ? t : j; };
+  const rkLos = (id, quelle, x, y, ziel, zeit = performance.now()) => {
+    if (!z.rolle || !z.an || !rkRolleImFeld(z, x, y) || ziel?.closest?.("input, textarea, select, [contenteditable]")) return;
     rkRolleInnenHalt(z); clearTimeout(z.grossUhr);
-    z.zug = { id: e.pointerId, y0: e.clientY, x0: e.clientX, y: e.clientY, p0: z.p, zieht: false, gerollt: false, geschrumpft: false, spur: [[performance.now(), e.clientY]], ziel: e.target };
-  });
-  w.addEventListener("pointermove", z.pm = (e) => {
-    const g = z.zug; if (!g || g.id !== e.pointerId) return;
-    if (!g.zieht) { const dy = e.clientY - g.y0, dx = e.clientX - g.x0; if (Math.abs(dy) < 7 || Math.abs(dy) < Math.abs(dx)) return;
-      g.zieht = true; rkRolleHalt(z); g.y = e.clientY; try { w.setPointerCapture(e.pointerId); } catch {} return; }
-    let rest = g.y - e.clientY; g.y = e.clientY; // Finger nach oben = positiv = vorwärts
-    const schritt = (z.kh || 300) + RK_LUECKE, k = z.karten[z.i], ganz = Math.abs(z.p - Math.round(z.p)) < 0.002;
+    const k = z.karten[z.i]; let innen = null; // scrollbarer Inhalt, in dem die Geste beginnt (die Karte selbst oder ein Bereich darin)
+    for (let el = ziel?.nodeType === 1 ? ziel : ziel?.parentElement; el && k?.contains(el); el = el.parentElement) {
+      if (el.scrollHeight > el.clientHeight + 2 && (el === k || /(auto|scroll)/.test(getComputedStyle(el).overflowY))) { innen = el; break; } if (el === k) break; }
+    z.zug = { id, quelle, y0: y, x0: x, y, p0: z.p, zieht: false, gerollt: false, geschrumpft: false, spur: [[zeit, y]], ziel, innen, modus: "" };
+  };
+  const rkZieh = (id, quelle, x, y, zeit = performance.now()) => { // true = die Geste gehört der Kartei (Touch: preventDefault)
+    const g = z.zug; if (!g || g.id !== id || g.quelle !== quelle) return false;
+    if (!g.zieht) { const dy = y - g.y0, dx = x - g.x0; if (Math.abs(dy) < 7 || Math.abs(dy) < Math.abs(dx)) return Math.abs(dy) >= Math.abs(dx) && Math.abs(dy) > 0;
+      g.zieht = true; rkRolleHalt(z); g.y = y; const vor = dy < 0, n = g.innen, ganz0 = Math.abs(z.p - Math.round(z.p)) < 0.002;
+      g.modus = n && ganz0 && (vor ? n.scrollTop + n.clientHeight < n.scrollHeight - 2 : n.scrollTop > 0) ? "innen" : "rolle"; // Inhalt nur, wenn er in diese Richtung noch scrollen kann
+      g.spur = [[zeit, y]]; return true; }
+    let rest = g.y - y; g.y = y; // Finger nach oben = positiv = vorwärts
+    const jetzt = zeit; g.spur.push([jetzt, y]); while (g.spur.length > 2 && jetzt - g.spur[0][0] > 160) g.spur.shift();
+    if (g.modus === "innen") { g.innen.scrollTop += rest; return true; } // die ganze Geste scrollt den Inhalt
+    const schritt = (z.kh || 300) + RK_LUECKE, k = z.karten[z.i];
     const gummi = () => { if (k) k.style.translate = g.gummi ? `0 ${(-Math.sign(g.gummi) * Math.min(36, Math.abs(g.gummi) * 0.3)).toFixed(1)}px` : ""; }; // KC-CLUB-ROLLKARTEI-SCHLOSS
     if (g.gummi && rest && Math.sign(rest) !== Math.sign(g.gummi)) { const t = Math.sign(rest) * Math.min(Math.abs(rest), Math.abs(g.gummi)); g.gummi += t; rest -= t; gummi(); }
-    if (ganz && k && k.scrollHeight > k.clientHeight + 2) { // erst den Karteninhalt
-      const t = rest > 0 ? Math.min(rest, k.scrollHeight - k.clientHeight - k.scrollTop) : Math.max(rest, -k.scrollTop);
-      if (t) { k.scrollTop += t; rest -= t; }
-    }
     if (rest && rkFest(z)) { g.gummi = (g.gummi || 0) + rest; g.gesperrt = true; rest = 0; gummi(); } // festgestellt: nur leichtes Gummiband, rollt nicht weiter
     if (rest && (z.g || 0) > 0) { // große Karte: erst fließend zurückschrumpfen (≈ 60 px Weg), dann rollen
       cancelAnimationFrame(z.grossRaf || 0); const t = Math.sign(rest) * Math.min(Math.abs(rest), z.g * 60);
       z.g = Math.max(0, z.g - Math.abs(t) / 60); rest -= t; g.geschrumpft = true; rkRolleZeichnen(z);
     }
     if (rest) { z.p += rest / schritt; g.gerollt = true; rkRolleZeichnen(z); }
-    g.spur.push([performance.now(), e.clientY]); if (g.spur.length > 6) g.spur.shift();
-  });
-  const los = (e) => {
-    const g = z.zug; if (!g || g.id !== e.pointerId) return; z.zug = null;
-    try { w.releasePointerCapture(e.pointerId); } catch {}
+    return true;
+  };
+  const rkEnde = (id, quelle, y, abbruch, zeit = performance.now()) => {
+    const g = z.zug; if (!g || g.id !== id || g.quelle !== quelle) return; z.zug = null;
     if (!g.zieht) { // Antippen: Stapel oben = zurück, nächste Karte unten = vor (Knöpfe, Reiter und Zähler regeln sich selbst)
-      if (e.type === "pointerup" && !z.karten[z.i]?.contains(g.ziel) && !g.ziel?.closest?.("button, a, input, select, textarea, .rk-zaehler, .rk-reiter")) {
-        const k = z.karten[z.i]?.getBoundingClientRect(); if (k && e.clientY < k.top) rkGehe(z, z.i - 1, -1); else if (k && e.clientY > k.bottom) rkGehe(z, z.i + 1, 1); }
+      if (!abbruch && !z.karten[z.i]?.contains(g.ziel) && !g.ziel?.closest?.("button, a, input, select, textarea, .rk-zaehler, .rk-reiter")) {
+        const k = z.karten[z.i]?.getBoundingClientRect(); if (k && y < k.top) rkGehe(z, z.i - 1, -1); else if (k && y > k.bottom) rkGehe(z, z.i + 1, 1); }
       return;
     }
     z.klickSperre = performance.now(); // nach dem Ziehen keinen Klick auslösen
-    const s = g.spur, a = s[0], b = s[s.length - 1], dt = Math.max(16, b[0] - a[0]), schritt = (z.kh || 300) + RK_LUECKE;
-    const vPx = performance.now() - b[0] > 90 ? 0 : -(b[1] - a[1]) / dt; // px je ms (nach oben = positiv)
+    const vPx = abbruch ? 0 : rkWischTempo(g.spur, zeit); // px je ms aus den letzten 100 ms (nach oben = positiv)
+    if (g.modus === "innen") return rkRolleInnen(z, vPx, g.innen);
     if (g.gesperrt) { const k = z.karten[z.i], von = parseFloat(String(k?.style.translate || "0 0").split(" ")[1]) || 0; rkFestHinweis(z, g.gummi > 0 ? 1 : -1, von); rkRolleRuhe(z); return; } // KC-CLUB-ROLLKARTEI-SCHLOSS
-    if (!g.gerollt && Math.abs(z.p - Math.round(z.p)) < 0.002) { if (g.geschrumpft) rkRolleGross(z, 1); else rkRolleRuhe(z); return rkRolleInnen(z, vPx); } // nur gelesen: Inhalt läuft mit Schwung aus; kurz angezogen → wieder groß
+    if (!g.gerollt && Math.abs(z.p - Math.round(z.p)) < 0.002) { if (g.geschrumpft) rkRolleGross(z, 1); else rkRolleRuhe(z); return; } // kurz angezogen → wieder groß
     // KC-CLUB-ROLLKARTEI-SCHLOSS: sanftes, langsames Wischen = genau EINE Karte weiter/zurück; schneller Wisch = 3–10 Karten (rkSchwungKarten), weich auslaufend
     const basis = Math.round(g.p0), weg = z.p - basis, ruhig = rkRuhig(), schnell = !ruhig && Math.abs(vPx) >= RK_SCHNELL;
-    const r = schnell ? Math.sign(vPx) : Math.abs(weg) > 0.15 ? Math.sign(weg) : 0;
+    const schritt = (z.kh || 300) + RK_LUECKE, r = schnell ? Math.sign(vPx) : Math.abs(weg * schritt) > 30 ? Math.sign(weg) : 0; // langsam: ab ~30 px Weg genau eine Karte
     let ziel = basis + r * rkSchwungKarten(schnell ? vPx : 0, ruhig);
     if (schnell && Math.sign(ziel - z.p) !== r) ziel = Math.round(z.p) + r; // der Finger war schon weiter: mindestens eine Karte darüber hinaus
     else if (!schnell && Math.abs(weg) > 1.5) ziel = Math.round(z.p); // langsam weit über mehrere Karten gezogen: dort einrasten, wo der Finger ist
     rkRolleFahren(z, ziel);
   };
+  // Maus/Stift: Pointer-Ereignisse (Finger nicht – die laufen über Touch, s. u.)
+  w.addEventListener("pointerdown", z.pd = (e) => { if (e.pointerType !== "touch" && e.button <= 0) rkLos(e.pointerId, "p", e.clientX, e.clientY, e.target, zt(e)); });
+  w.addEventListener("pointermove", z.pm = (e) => { if (e.pointerType === "touch") return; const g = z.zug, war = g?.zieht; if (rkZieh(e.pointerId, "p", e.clientX, e.clientY, zt(e)) && !war && z.zug?.zieht) { try { w.setPointerCapture(e.pointerId); } catch {} } });
+  const los = (e) => { if (e.pointerType === "touch") return; try { w.releasePointerCapture(e.pointerId); } catch {} rkEnde(e.pointerId, "p", e.clientY, e.type === "pointercancel", zt(e)); };
   w.addEventListener("pointerup", z.pu = los); w.addEventListener("pointercancel", z.pc = los);
+  // Finger: Touch-Ereignisse; touchmove NICHT passiv – gehört die Geste der Kartei, kein natives Scrollen der Seite/Karte (KC-CLUB-ROLLKARTEI-SCHLOSS-FIX)
+  const finger = (e, id) => [...e.changedTouches].find((t) => t.identifier === id);
+  w.addEventListener("touchstart", z.rts = (e) => { if (e.touches.length !== 1) { if (z.zug?.quelle === "t") rkEnde(z.zug.id, "t", 0, true); return; } /* zweiter Finger (Zoomen): Geste abbrechen, einrasten */ const t = e.changedTouches[0]; rkLos(t.identifier, "t", t.clientX, t.clientY, e.target, zt(e)); }, { passive: true });
+  w.addEventListener("touchmove", z.rtm = (e) => { const g = z.zug; if (!g || g.quelle !== "t") return; const t = finger(e, g.id); if (!t) return; if (rkZieh(g.id, "t", t.clientX, t.clientY, zt(e)) && e.cancelable) e.preventDefault(); }, { passive: false });
+  const fingerLos = (e) => { const g = z.zug; if (!g || g.quelle !== "t") return; const t = finger(e, g.id); if (t) rkEnde(g.id, "t", t.clientY, e.type === "touchcancel", zt(e)); };
+  w.addEventListener("touchend", z.rte = fingerLos); w.addEventListener("touchcancel", z.rtc = fingerLos);
   w.addEventListener("click", z.kl = (e) => { if (z.klickSperre && performance.now() - z.klickSperre < 350) { e.stopPropagation(); e.preventDefault(); } }, true);
 }
 function rkRolleAbbauen(z) {
   if (!z.rolle) return; rkRolleHalt(z); clearTimeout(z.grossUhr); cancelAnimationFrame(z.grossRaf || 0); z.g = 0; z.rolle = false; const w = z.w; w.classList.remove("rk-rolle", "rk-gross");
-  for (const [t, f] of [["pointerdown", z.pd], ["pointermove", z.pm], ["pointerup", z.pu], ["pointercancel", z.pc]]) if (f) w.removeEventListener(t, f);
+  for (const [t, f] of [["pointerdown", z.pd], ["pointermove", z.pm], ["pointerup", z.pu], ["pointercancel", z.pc], ["touchstart", z.rts], ["touchmove", z.rtm], ["touchend", z.rte], ["touchcancel", z.rtc]]) if (f) w.removeEventListener(t, f);
   if (z.kl) w.removeEventListener("click", z.kl, true); z.zaehler?.remove(); z.zaehler = null; z.zug = null;
   (z.karten || []).forEach((d) => { d.style.transform = d.style.opacity = d.style.zIndex = d.style.clipPath = d.style.visibility = d.style.height = ""; d.classList.remove("rk-scroll"); });
 }
@@ -18507,8 +18536,8 @@ function rkRolleGross(z, ziel) {
   z.grossRaf = requestAnimationFrame(schritt);
 }
 function rkRolleInnenHalt(z) { if (z.innen) { cancelAnimationFrame(z.innen); z.innen = 0; } }
-function rkRolleInnen(z, v) { // Karteninhalt mit Schwung auslaufen lassen (wie natürliches Scrollen)
-  rkRolleInnenHalt(z); const k = z.karten[z.i]; if (!k || Math.abs(v) < 0.05 || !fxAn()) return;
+function rkRolleInnen(z, v, el) { // Karteninhalt (oder innerer Bereich el) mit Schwung auslaufen lassen (wie natürliches Scrollen)
+  rkRolleInnenHalt(z); const k = el || z.karten[z.i]; if (!k || Math.abs(v) < 0.05 || !fxAn()) return;
   let t0 = performance.now(); const lauf = (jetzt) => { const dt = Math.min(40, jetzt - t0); t0 = jetzt; const vor = k.scrollTop; k.scrollTop += v * dt; v *= Math.pow(0.996, dt);
     if (Math.abs(v) < 0.02 || k.scrollTop === vor) { z.innen = 0; return; } z.innen = requestAnimationFrame(lauf); };
   z.innen = requestAnimationFrame(lauf);

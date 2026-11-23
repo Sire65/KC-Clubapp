@@ -17,7 +17,7 @@ assert.ok(/if \(z\.rolle\) \{ z\.griffe\?\.forEach\(\(g\) => \(g\.hidden = true\
 assert.ok(/if \(z\.rolle\) \{ z\.karten\[ziel\]\.scrollTop = 0; rkRolleFahren\(z, /.test(app), "Reiter/▲▼ gleiten statt Stufe für Stufe");
 // Bewegung: dem Finger folgen, Inhalt zuerst, Schwung, Einrasten
 const zug = teil("function rkRolleEinrichten(", "function rkRolleAbbauen(");
-assert.ok(/z\.p \+= rest \/ schritt/.test(zug) && /k\.scrollTop \+= t; rest -= t;/.test(zug), "folgt dem Finger, erst der Karteninhalt");
+assert.ok(/z\.p \+= rest \/ schritt/.test(zug) && /if \(g\.modus === "innen"\) \{ g\.innen\.scrollTop \+= rest; return true; \}/.test(zug), "folgt dem Finger; Inhalt nur, wenn die Geste darin beginnt (KC-CLUB-ROLLKARTEI-SCHLOSS-FIX)");
 assert.ok(/let ziel = basis \+ r \* rkSchwungKarten\(/.test(zug) && /rkRolleFahren\(z, ziel\)/.test(zug), "Schwung über mehrere Karten (KC-CLUB-ROLLKARTEI-SCHLOSS), dann einrasten");
 assert.ok(/z\.klickSperre/.test(zug) && /!g\.ziel\?\.closest\?\.\("button, a, input, select, textarea, \.rk-zaehler, \.rk-reiter"\)/.test(zug), "Ziehen löst keinen Klick aus; Knöpfe bleiben Knöpfe");
 // Lage-Rechnung: vorn 0, kommend unten, gelesen oben gestapelt – reine Rechnung prüfen
