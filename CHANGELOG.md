@@ -1,5 +1,11 @@
 # Änderungen
 
+## 3.15.0 – 2026-11-23 – 🗓️ Dienstplan: „höchstens 5 Tage am Stück“ je Person abschaltbar (KC-CLUB-DP-OHNE-RUHETAG) · Server 3.15.0
+Hansi 23.11.: „Manfred ist nur für 2 Stunden eingetragen … wichtiger ist, wo noch jemand fehlt. Gib ihm etwas mehr Stunden.“ – Vorschlag: Manfred am Di 08.12. abends (Wunsch 15–22) statt 2 Std. am 13.12.; der 08.12. war sein Ruhetag nach 5 Tagen am Stück.
+- Plan-Einstellung `personen[…].ohneRuhetag` (dp-rechnen.js): für diese Person gilt „höchstens maxTageAmStueck Tage am Stück“ nicht. Rechenregel 12 – der Plan rechnet sich beim nächsten Öffnen neu.
+- Eingetragen für Manfred (nach dem Einspielen): ohne Ruhetag, höchstens 53 Std. Ergebnis (nachgerechnet): 08.12. 17–23 Uhr – Abendlücke 20–23 zu; 13.12. ohne Manfred (Andrea ab 16, Frank bis 23, Steven bis 18) – keine neue Lücke; es fehlen 13 statt 16 Std.
+- Test: Block in `tests/app-vertrag.test.mjs`. Rückweg: Server 3.14.0.
+
 ## 3.14.0 – 2026-11-23 – 🔳 QR-Codes: Mitgliederliste lesbar (KC-CLUB-ADMIN-QR-FIX)
 Fehlerbeseitigung nach 3.13.0, Bildschirmfoto Hansi 23.11.2026: Reiter „🪪 Mitglieder“ zeigte nur leere Zeilen.
 - **Ursache:** die Zeilen nutzten die Knopfart `.wlink` der dunklen Admin-Zentrale (weiße Schrift) – im hellen Fenster weiß auf weiß.
