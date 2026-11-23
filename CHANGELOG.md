@@ -2,12 +2,17 @@
 
 ## (Version folgt) – 📤 Sollplan an DP2 übergeben (KC-DP-SOLL-UEBERGABE)
 Hansi 23.11.: „Ein-Klick-Übergabe des in der Club-App berechneten Sollplans nach DP2“ und „wenn der Sollplan sich nochmals ändert, muss der Abgleich erneut laufen“.
-- Migration `20261123_kc_dp_soll_uebergabe.sql` (noch NICHT eingespielt): Tabelle `kc_dp_soll_uebergabe` (RLS, nur service_role) mit dem vollständigen Stand je Übergabe (`rows`, `anzahl`, `pruefsumme`, Status offen/uebernommen/verworfen); DP2 holt über `kc_dp_soll_uebergabe_pending` ab und bestätigt über `kc_dp_soll_uebergabe_ack` (auth.uid() + kc_dp_memberships admin/planner/duty_manager, kein anon, Prüfregister-Einträge).
+- Migration `20261123_kc_dp_soll_uebergabe.sql` (vor dem Server eingespielt): Tabelle `kc_dp_soll_uebergabe` (RLS, nur service_role) mit dem vollständigen Stand je Übergabe (`rows`, `anzahl`, `pruefsumme`, Status offen/uebernommen/verworfen); DP2 holt über `kc_dp_soll_uebergabe_pending` ab und bestätigt über `kc_dp_soll_uebergabe_ack` (auth.uid() + kc_dp_memberships admin/planner/duty_manager, kein anon, Prüfregister-Einträge).
 - `dp-rechnen.js`: `dpSollZeilen` macht aus dem gerechneten Plan DP2-Schichten (personId, date, start/end, zone front/back/neutral aus vorne/hinten, area, Pause wie DP2: über 6 Std. 30 Min., über 9 Std. 45 Min., stabiler `importKey` `CLUB-<datum>-<personId>`) – Rechnung, Anzeige und PDF bleiben unverändert. Bereitschaft wird nicht übergeben (nur gezählt). Nur veröffentlichte Veranstaltungstage. Die person_id wird beim Rechnen je Zeile mitgeschrieben (`leute[].p`, nur bei eindeutigem Kurznamen; `dp_plaene` gibt sie Mitgliedern nicht heraus) – ohne eindeutige ID, an nicht veröffentlichten Tagen und bei „aus“-Personen wird nichts übergeben, die Zeile geht mit Grund als `uebersprungen` mit (DP2 löscht dazu nichts von selbst).
 - Server-Aktion `dp_soll_uebergeben` (nur Admin): prüfen/zählen, übergeben (ältere offene Übergabe → verworfen, gleicher Stand → nichts Neues), „automatisch nachreichen“ an/aus. Nach der ersten Übergabe legt jede Neuberechnung des Plans DIESES Admins (`dp_soll_auto.von`) mit geänderten Schichten (Prüfsumme) von selbst eine neue Übergabe an; in DP2 ändert sich erst nach „Übernehmen“ etwas. Das Anzeigen des Stands rechnet nie neu (nur der Knopf, wenn nötig).
 - App „🗓️ Dienstplan zum Drucken“: Knopf „📤 An DP2 übergeben“ mit Rückfrage und Erfolgsmeldung, Stand der Übergabe und Schalter „Änderungen automatisch nachreichen“.
 - Gegenstück in DP2 (Zweig `dp-soll-uebergabe` in Sire65/dp3): Vorschau mit neu/geändert/entfällt/unverändert, Schutz für in DP2 geänderte Schichten.
 - Test `tests/dp-soll-uebergabe.test.mjs`.
+
+### 🚗 Wege der Mitglieder: Mitfahrten werden angezeigt (KC-CLUB-SPUR-MITFAHRT)
+Fund Hansi 23.11.2026: „Karla hat Sitzplätze gebucht. Das steht aber nicht in ihrer Wege-Übersicht.“ Mitfahrt-Aktionen fehlten in der Liste der Handlungen (SPUR_TATEN).
+- Neu in „Wege der Mitglieder“: Platz gebucht/freigegeben (auch „für ein vertretenes Mitglied“), Gast mitgenommen/ausgetragen, Mitfahrgelegenheit angeboten/geändert/gelöscht, gesucht/Suche zurückgenommen – nur die Handlung, keine Inhalte.
+- Gilt ab dieser Version; frühere Buchungen stehen nur im Server-Protokoll.
 
 ## 3.17.0 – 2026-11-23 – 🚗 Laufschrift: „Mitfahrgelegenheit ausgebucht“ (KC-CLUB-MITFAHRT-AUSGEBUCHT)
 Wunsch Hansi 23.11.: „Schreibe in die Laufschrift, dass meine Mitfahrgelegenheit ausgebucht ist. Immer in solchen Fällen.“
