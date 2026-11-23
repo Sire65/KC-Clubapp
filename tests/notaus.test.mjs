@@ -78,7 +78,7 @@ assert.equal(uhr("2026-11-21T13:03:00Z"), "14:03", "Winterzeit Berlin");
 
 // ---- KC-NOTAUS-OBEN (22.11.2026, Wunsch Hansi „eine ganze Zeile verschwendet“): Knopf oben in der Kopfzeile links neben 🚨 SOS, keine eigene Zeile ----
 const kopf = html.match(/<section id="v-nachrichten"[\s\S]*?<div class="kopf2">([\s\S]*?)<\/div>/)[1];
-assert.ok(/<h2>💬 Nachrichten<\/h2><span id="naNotausPlatz" class="notaus-platz"><\/span>(<!--[^>]*-->)?<button class="knopf klein alarm-knopf" id="naSosKnopf"/.test(kopf), "Platz in der Kopfzeile direkt links neben SOS");
+assert.ok(/<h2>💬 Nachrichten<\/h2>(<button[^>]*id="naAaKnopf"[^>]*>🤖<\/button>(<!--[^>]*-->)?)?<span id="naNotausPlatz" class="notaus-platz"><\/span>(<!--[^>]*-->)?<button class="knopf klein alarm-knopf" id="naSosKnopf"/.test(kopf), "Platz in der Kopfzeile direkt links neben SOS (davor darf 🤖 Autoantwort stehen – KC-CLUB-AUTOANTWORT)");
 assert.ok(!/notaus-zeile|notaus-hinweis/.test(app + html), "keine eigene NOT-AUS-Zeile mehr (auch kein CSS dafür)");
 assert.ok(/const pl = \$\("naNotausPlatz"\);/.test(app) && /pl\.innerHTML = knopf;/.test(app) && /na\.innerHTML = balken;/.test(app), "Knopf in die Kopfzeile, #naNotaus nur noch Balken");
 assert.ok(/const knopf = admin && !NOTAUS\.aktiv \? `<button type="button" class="notaus-knopf klein" id="notausKnopf"/.test(app), "kleiner Knopf, nur Admin, nicht bei aktivem NOT-AUS");

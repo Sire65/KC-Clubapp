@@ -20,7 +20,7 @@ const TEILE_LISTE = {
   spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-NJ7DJt5uvf95NJ5rn9MLHZr1dmZK0XLZYNYM5Frr2Pt/wetRMf4ARaCPhe/O30Zz" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
   tischlive: { einstieg: ["tlStart", "tlStopp", "tlZeichnen", "tlPlatz", "tlRegeln"], sri: "sha384-RCmsKY+DTRfsCMRHkJVG2UJlySANNdHxnEdMps4tkL9kgf8DC5O/b1jMcwVeY3XB" }, // 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: Ton, Kamera, Bildschirm, Unterlagen zeigen am Tisch
   buero: { einstieg: ["ersBuchOeffnen", "eblDruck", "buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-T+Wdipj8BL+ttrwlyNfJ/PA/r5SSBU56NGAI4OrVNYCAyujH60jXQkkuHsqebIma" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
-  hilfe: { einstieg: ["twFrageStart", "twOffenStart", "sucheAuf", "suSucheKnopf"], sri: "sha384-kQ/pCEoGC36q1hgJ8LDEz49OXpMoLtqkmA7pqx4XNc3viLKWIngKuwOUPaRsTYxg" }, // Stufe 5: Hilfe-Werkzeuge (Frag Twinkey, Mitglied fragen, Schnellsuche) – beim ersten Antippen
+  hilfe: { einstieg: ["twFrageStart", "twOffenStart", "sucheAuf", "suSucheKnopf"], sri: "sha384-50UNMIWceEI9exc0cwewXPxce5HBwsInfyhI3ephfVKMHTpbxDvupFpXU25ZzGA4" }, // Stufe 5: Hilfe-Werkzeuge (Frag Twinkey, Mitglied fragen, Schnellsuche) – beim ersten Antippen
   rechner: { einstieg: ["rechnerOeffnen"], sri: "sha384-UWrOf1EIXxhsoWWwxnLDzpzALsaxzNGXgeqoLAjVvqoQ6wbFnIGxYTkQPFpiRuQ4" }, // 2.811.0 KC-CLUB-RECHNER: Tischrechner im Büro, „rechne …“ per Sprache
   tippspiel: { einstieg: ["tpStart", "tpTag", "tpMitmachen", "tpTippen", "tpZeigen"], sri: "sha384-KNPQv0SkmN1bZrgFpl3dE1Osi/OcP0KUNKuIWQeEqe/98OM34+NRwv5m+2ePuBJ6" }, // 2.971.0 KC-CLUB-TIPPSPIEL (Wunschliste #96): Bundesliga-Tippspiel
   glueck: { einstieg: ["kaeferKommt", "kleeKommt"], sri: "sha384-hbPb96l3YrlvBxe1zJJfotwARA0pEPKKaDyb1BBVooEi5BCYbfYqihmMYABmlsg4" }, // KC-CLUB-MARIENKAEFER / KC-CLUB-GLUECKSKLEE (06.11.2026): 🐞 jeder 50., 🍀 jeder 25. Start
@@ -9624,7 +9624,7 @@ function statusBlatt2() {
   $("stExtra").classList.toggle("versteckt", statusWahl === "verfuegbar");
 }
 async function statusSpeichern() {
-  try { await api("status_setzen", { status: statusWahl, bis: $("stBis").value, hinweis: $("stHinweis").value }); $("statusBlatt").classList.add("versteckt"); melde("💾 Status gespeichert"); MITGLIEDER = null; await neuLaden(); if (aktuelleAnsicht === "mitglieder") mitgliederLaden(); }
+  try { await api("status_setzen", { status: statusWahl, bis: $("stBis").value, hinweis: $("stHinweis").value }); $("statusBlatt").classList.add("versteckt"); melde("💾 Status gespeichert"); MITGLIEDER = null; const gewaehlt = statusWahl; await neuLaden(); if (aktuelleAnsicht === "mitglieder") mitgliederLaden(); aaNachStatus(gewaehlt); /* KC-CLUB-AUTOANTWORT */ }
   catch (e) { meldeFehler(e); }
 }
 
@@ -10204,7 +10204,7 @@ const ZUGANG_AKTIONEN = {
     "wetter", "wetter_ort_suchen", "treffen_liste", "treffen_antwort", "erinnerung_setzen", "kalender", "kalender_abo", "kalender_abo_holen", "privattermin_speichern",
     "privattermin_loeschen", "privattermine_liste", "countdowns", "terminumfragen_liste", "terminumfrage_antwort", "mitglieder", "mitglied_details",
     "unterhaltungen", "unterhaltung", "unterhaltung_stand", "tippen_stand", "tippen", "nachricht_senden", "nachricht_details", "einzelchat_finden", "gruppenchat_finden", "express_stand", "express_angezeigt",
-    "express_antwort", "startnachricht_bestaetigen", "stadt_woche", "ferien", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "geplant_abrufen", "wecker_setzen", "wecker_loeschen", "nachricht_erinnerung_setzen", "nachricht_erinnerung_liste", "nachricht_erinnerung_loeschen", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
+    "express_antwort", "autoantwort_laden", "autoantwort_speichern", "startnachricht_bestaetigen", "stadt_woche", "ferien", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "geplant_abrufen", "wecker_setzen", "wecker_loeschen", "nachricht_erinnerung_setzen", "nachricht_erinnerung_liste", "nachricht_erinnerung_loeschen", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
     "chat_selbstloeschen", "link_vorschau", "unterstuetzung_meine", "unterstuetzung_senden", "nachricht_bearbeiten", "nachricht_merken", "gemerkte_nachrichten", "chat_umfrage_stimmen", "nachricht_ausblenden",
     "unterhaltung_ausblenden", "unterhaltung_archivieren", "unterhaltung_leeren", "gruppe_verlassen", "anlage_hochladen", "anlage_url",
     "einmal_foto_ansehen", "meine_nachrichten_statistik", "mf_antwort", "mf_gelesen", "sos_kontakte", "sos_ort", "notfall_setzen", "spiele_liste",
@@ -22708,7 +22708,7 @@ async function chatLaden(scrollen, merk) {
     const anlPuls = merk ? new Set() : new Set([...anlPulsIds(u.nachrichten, ANLS.ids.get(fuer), u.gelesenBis, ANLS.gepulst, anlZaehlt),
       ...[...ANLS.gepulst].filter(([, t]) => Date.now() - t < 1600).map(([id]) => id)]), anlAuf = anlAufSet(); // gleich wieder neu gezeichnet (z. B. Tag aufgeklappt): Aufleuchten nicht abschneiden
     const blaseHtml = (m) => `${m.id === NA.trennerVor ? '<div class="neu-trenner" id="neuTrenner">⬇ Neue Nachrichten</div>' : ""}<div data-id="${m.id}" class="blase${m.eigen ? " eigen" : ""}${istNotfall(m) ? " notfall" : ""}${m.erwaehntMich ? " erwaehnt-mich" : ""}${m.wichtig ? " wichtig" : ""}${!m.eigen && andere.length > 1 ? " farbig" : ""}"${!m.eigen && andere.length > 1 ? ` style="${gruppenFarbe(m.von)}"` : ""} id="msg-${m.id}" title="Antippen: reagieren, antworten, Details" onclick="if(!event.target.closest('button,img,a,audio,video,.sprache,.zitat'))nachrichtMenue('${m.id}')" oncontextmenu="if(!event.target.closest('a,img,audio,video,input,textarea')){event.preventDefault();nachrichtMenue('${m.id}')}">
-      ${istNotfall(m) ? '<div class="notfall-marke">🚨 NOTFALL</div>' : m.wichtig ? '<div class="wichtig-marke">❗ WICHTIG</div>' : ""}${m.express ? '<div class="express-marke">🏎️ EXPRESS</div>' : ""}${!m.eigen && andere.length > 1 ? `<div class="von">${esc(m.von)}</div>` : ""}${m.antwortAuf ? `<div class="zitat" onclick="zuNachricht('${m.antwortAuf.id}')"><b>${esc(m.antwortAuf.von)}</b><span>${esc(vnKurz(m.antwortAuf.text))}</span></div>` : ""}${m.umfrage ? umfrageHtml(m) : m.kontakt ? kontaktKarteHtml(m) : (m.text === "📎" || (m.text === EINMAL_TEXT && m.anlagen.some((a) => a.einmal))) && m.anlagen.length ? "" : khSprachHtml(m) /* KC-CLUB-KLUGE-HELFER */ ?? `<div class="txt">${naText(istNotfall(m) ? m.text.replace(NOTFALL_RE, "") : m.text)}</div>`}${m.link ? lvKarteHtml(m.link) : ""}${ntKnopfHtml(m) /* 2.608.0 KC-CLUB-NACHRICHT-TERMIN */}${erkKnopfHtml(m) /* 2.666.0 KC-CLUB-ERKENNUNG-NACHRICHT */}
+      ${istNotfall(m) ? '<div class="notfall-marke">🚨 NOTFALL</div>' : m.wichtig ? '<div class="wichtig-marke">❗ WICHTIG</div>' : ""}${m.express ? '<div class="express-marke">🏎️ EXPRESS</div>' : ""}${m.autoantwort ? '<div class="aa-marke" title="Automatisch gesendet – höchstens einmal in 12 Stunden">🤖 Autoantwort</div>' : ""}${!m.eigen && andere.length > 1 ? `<div class="von">${esc(m.von)}</div>` : ""}${m.antwortAuf ? `<div class="zitat" onclick="zuNachricht('${m.antwortAuf.id}')"><b>${esc(m.antwortAuf.von)}</b><span>${esc(vnKurz(m.antwortAuf.text))}</span></div>` : ""}${m.umfrage ? umfrageHtml(m) : m.kontakt ? kontaktKarteHtml(m) : (m.text === "📎" || (m.text === EINMAL_TEXT && m.anlagen.some((a) => a.einmal))) && m.anlagen.length ? "" : khSprachHtml(m) /* KC-CLUB-KLUGE-HELFER */ ?? `<div class="txt">${naText(istNotfall(m) ? m.text.replace(NOTFALL_RE, "") : m.text)}</div>`}${m.link ? lvKarteHtml(m.link) : ""}${ntKnopfHtml(m) /* 2.608.0 KC-CLUB-NACHRICHT-TERMIN */}${erkKnopfHtml(m) /* 2.666.0 KC-CLUB-ERKENNUNG-NACHRICHT */}
       ${m.anlagen.map((a) => a.name === VN_ANL_NAME ? vnAnlHtml(a) : a.einmal ? einmalKachel(a) : /^image\//.test(a.mime || "") ? `<img data-anlage="${a.id}" alt="${esc(a.name)}" onclick="event.stopPropagation();anlageAktion(${jsArg(a.id)}, ${jsArg(a.name)}, ${jsArg(a.mime)})">` /* KC-CLUB-CHATFOTO-SPEICHERN */ : /^audio\//.test(a.mime || "") ? `<div class="sprache" data-sprache="${a.id}"><button onclick="spracheAbspielen(this, '${a.id}', ${/^Sprachnachricht/i.test(a.name || "") ? "false" : "true"})">${/^Sprachnachricht/i.test(a.name || "") ? "▶️ Sprachnachricht anhören" : `▶️ 🎵 ${esc(a.name || "Musik")}`}</button></div>` : anlZaehlt(a) ? "" /* KC-CLUB-CHAT-ANLAGEN-SICHTBAR: Dateien stehen in der Anlage-Leiste */ : `<div class="anlage" onclick='event.stopPropagation();anlageAktion(${hlJs(a.id)}, ${hlJs(a.name || "Datei")}, ${hlJs(a.mime || "")})'>📄 ${esc(a.name)}</div>`).join("")}${anlLeisteHtml(m, anlPuls.has(m.id), anlAuf)}
       <div class="na-seite"><button class="na-pfeil" title="Weiterleiten oder kopieren" aria-label="Weiterleiten oder kopieren" onclick="naPfeilMenue('${m.id}')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4.5l7.5 7.5-7.5 7.5v-4.3c-5.2 0-8.8 1.7-11.4 5.3 1-5.2 4.1-10.3 11.4-11.3V4.5z"/></svg></button><button class="na-info" title="Info: wer geschrieben, bekommen und gelesen hat" aria-label="Info zur Nachricht" onclick="nachrichtInfo('${m.id}')">i</button></div>
       ${m.eigen && m.express?.empfaenger ? expressStatusHtml(m.express) : m.express?.quittungen?.length ? `<div class="express-quittung">📬 Empfang bestätigt: ${m.express.quittungen.map((q) => `${esc(q.name)} ${esc(zeitKurz(q.am))}`).join(", ")}</div>` : m.eigen && m.express ? '<div class="express-quittung warte">📭 Empfang noch nicht bestätigt</div>' : ""}
@@ -27517,6 +27517,111 @@ function notausZeigen() {
   }
   $("eingabe")?.classList.toggle("notaus-gesperrt", NOTAUS.aktiv);
   try { sendenFrei(); } catch {}
+  try { aaZeigen(); } catch {} // KC-CLUB-AUTOANTWORT: Knopf und Balken passend zum Stand
+}
+// ---------- KC-CLUB-AUTOANTWORT (Wunschliste #101, Wunsch Hansi 23.11.2026 „alle, Schalter + Zeitraum + Kombination, 1× in 12 Std., nur Einzelchats,
+// freier Text mit Vorlage“ + schneller Schalter ohne Zahnrad). 🤖 oben in 💬 Nachrichten: kurz tippen = an/aus (Meldung), lange drücken oder gleich
+// noch einmal tippen = Fenster (Text, Vorlage, Zeitraum, Kopplung an den Status). Dazu: Eintrag im Status-Fenster (bei Urlaub/krank/nicht erreichbar
+// fragt die App „Autoantwort auch einschalten?“), Balken „🤖 Autoantwort ist an …“ in Nachrichten, ⚙️ → 🔔 Benachrichtigungen.
+// Gesendet wird sie vom Club-Server (nur Zweier-Chats, höchstens 1× in 12 Std. je Person und Chat, nie auf eine Autoantwort).
+const AA_VORLAGE = "Liebe(r) {vorname}, danke für deine Nachricht. Im Moment bin ich nicht online. Ich habe aber eine E-Mail oder Push-Nachricht bekommen, dass eine Nachricht von dir vorliegt. Ich melde mich so schnell wie möglich. Liebe Grüße {meinname}";
+const AA_STATUS = ["urlaub", "krank", "abwesend"], AA_MAX = 500, AA_LANG_MS = 550, AA_NOCHMAL_MS = 3000;
+var AA = { druck: null, lang: false, zuletzt: 0, laeuft: false };
+const aaWert = () => { const w = INIT?.einstellungen?.autoantwort || {}; return { an: w.an === true, text: String(w.text || ""), von: w.von || null, bis: w.bis || null, nachStatus: w.nachStatus === true, nurOffline: w.nurOffline === true }; };
+// "schalter" | "status" | "" – gleiche Regel wie der Club-Server (aaAktiv)
+function aaGrund(w = aaWert(), heute = heuteIso()) {
+  if (w.an && (!w.von || w.von <= heute) && (!w.bis || heute <= w.bis)) return "schalter";
+  const s = INIT?.status;
+  if (w.nachStatus && s && AA_STATUS.includes(s.status) && (!s.bis || s.bis >= heute)) return "status";
+  return "";
+}
+const aaAbgelaufen = (w = aaWert()) => !!(w.an && w.bis && w.bis < heuteIso());
+function aaKurz(w = aaWert()) {
+  const g = aaGrund(w);
+  if (g === "schalter") return `🤖 Autoantwort ist an${w.bis ? ` (bis ${fDatumKurz(w.bis)})` : ""}`;
+  if (g === "status") return `🤖 Autoantwort ist an (solange dein Status „${STATUS[INIT?.status?.status]?.[1] || "abwesend"}“ ist)`;
+  if (w.an && w.von && w.von > heuteIso()) return `🤖 Autoantwort startet am ${fDatumKurz(w.von)}`;
+  if (aaAbgelaufen(w)) return `🤖 Autoantwort ist aus (abgelaufen am ${fDatumKurz(w.bis)})`;
+  return "🤖 Autoantwort ist aus";
+}
+function aaZeigen() {
+  const g = aaGrund(), k = $("naAaKnopf");
+  if (k) {
+    k.classList.toggle("aa-an", !!g); k.setAttribute("aria-pressed", g ? "true" : "false");
+    k.title = `${aaKurz()} – kurz tippen: an/aus · lange drücken: einstellen`; aaKnopfVerbinden(k);
+  }
+  const b = $("naAutoantwort");
+  if (b) {
+    const html = g ? `<div class="aa-balken" role="status"><button type="button" class="aa-balken-text" onclick="aaFenster()">${esc(aaKurz())}</button><button type="button" class="aa-aus" onclick="aaSchalten(false)">Aus</button></div>` : "";
+    if (b.dataset.stand !== html) { b.dataset.stand = html; b.innerHTML = html; b.classList.toggle("versteckt", !html); }
+  }
+  if ($("setAaStand")) $("setAaStand").textContent = aaKurz();
+}
+function aaKnopfVerbinden(k) {
+  if (k.dataset.an) return; k.dataset.an = "1";
+  const ende = () => { clearTimeout(AA.druck); AA.druck = null; };
+  k.addEventListener("pointerdown", (e) => { if (e.button > 0) return; AA.lang = false; ende(); AA.druck = setTimeout(() => { AA.lang = true; AA.druck = null; aaFenster(); }, AA_LANG_MS); });
+  for (const n of ["pointerup", "pointercancel", "pointerleave"]) k.addEventListener(n, ende);
+  k.addEventListener("contextmenu", (e) => { e.preventDefault(); if (!AA.lang) { ende(); aaFenster(); } }); // Maus: rechte Taste
+  k.addEventListener("click", (e) => {
+    e.preventDefault(); if (AA.lang) { AA.lang = false; return; } // lange gedrückt → Fenster ist schon offen
+    if (Date.now() - AA.zuletzt < AA_NOCHMAL_MS) { AA.zuletzt = 0; return aaFenster(); } // gleich noch einmal getippt → einstellen
+    aaSchalten(!aaGrund());
+  });
+}
+async function aaSpeichern(w, meldung) {
+  if (AA.laeuft) return false; AA.laeuft = true;
+  try {
+    const r = await api("autoantwort_speichern", { wert: w });
+    INIT.einstellungen = { ...(INIT.einstellungen || {}), autoantwort: r.wert };
+    aaZeigen(); if (meldung) melde(meldung === true ? aaKurz() : meldung);
+    return true;
+  } catch (e) { meldeFehler(e); return false; } finally { AA.laeuft = false; }
+}
+// schneller Schalter: an = Schalter an (abgelaufener Zeitraum wird geleert); aus = wirklich aus (auch die Status-Kopplung, falls sie gerade wirkt)
+async function aaSchalten(an) {
+  const w = aaWert();
+  if (an) { const n = { ...w, an: true }; if (aaAbgelaufen(n) || (n.von && n.von > heuteIso())) { n.von = null; n.bis = null; }
+    if (await aaSpeichern(n, "🤖 Autoantwort an – hier tippen: Text und Zeitraum einstellen")) {
+      AA.zuletzt = Date.now();
+      // die Meldung liegt oben über dem 🤖 – der zweite Tipp trifft sie: dann gleich das Fenster öffnen (statt die Meldung nur zu schließen)
+      const m = [...document.querySelectorAll("body > .meldung")].pop(); if (m) m.onclick = () => { m.remove(); AA.zuletzt = 0; aaFenster(); };
+    }
+    return; }
+  const n = { ...w, an: false }; if (aaGrund(n)) n.nachStatus = false;
+  AA.zuletzt = 0; await aaSpeichern(n, "🤖 Autoantwort aus");
+}
+function aaFenster() {
+  $("statusBlatt")?.classList.add("versteckt");
+  const w = aaWert();
+  const f = blattAuf("aaBlatt", `<h3 style="margin:0 0 6px">🤖 Autoantwort</h3>
+    <p class="hinweis" style="margin:0 0 8px">Schreibt dir jemand in einem <b>Einzelchat</b>, antwortet die App für dich – höchstens <b>einmal in 12 Stunden</b> je Person und Chat. Die Antwort ist mit <b>🤖 Autoantwort</b> gekennzeichnet. In Gruppen antwortet sie nie.</p>
+    <div class="schalter"><div><b>Autoantwort an</b><div class="hinweis" id="aaStandZeile">${esc(aaKurz(w))}</div></div><input type="checkbox" id="aaAn"${w.an ? " checked" : ""}></div>
+    <label class="feld">Text (bis ${AA_MAX} Zeichen) – <small>{vorname} = Vorname des Absenders, {meinname} = dein Vorname</small>
+      <textarea id="aaText" rows="5" maxlength="${AA_MAX}" placeholder="${esc(AA_VORLAGE)}">${esc(w.text)}</textarea></label>
+    <div class="knoepfe" style="margin:-4px 0 8px"><button type="button" class="knopf klein" id="aaVorlage">📝 Vorlage einsetzen</button><small class="hinweis" id="aaZahl"></small></div>
+    <div class="zwei"><label class="feld">Von (freiwillig)<input type="date" id="aaVon" value="${esc(w.von || "")}"></label><label class="feld">Bis (freiwillig)<input type="date" id="aaBis" value="${esc(w.bis || "")}"></label></div>
+    <button type="button" class="knopf klein" id="aaOhneZeit" style="margin:-4px 0 8px">✖ Zeitraum leeren</button>
+    <div class="schalter"><div><b>Auch automatisch nach Status</b><div class="hinweis">Solange dein Status 🏖️ im Urlaub, 🤒 krank oder 🔴 nicht erreichbar ist – auch wenn der Schalter oben aus ist.</div></div><input type="checkbox" id="aaStatus"${w.nachStatus ? " checked" : ""}></div>
+    <div class="schalter"><div><b>Nur, wenn ich gerade nicht in der App bin</b><div class="hinweis">Bist du gerade online, antwortet die App nicht für dich.</div></div><input type="checkbox" id="aaOffline"${w.nurOffline ? " checked" : ""}></div>
+    <div class="knoepfe"><button type="button" class="knopf haupt" id="aaSichern">💾 Speichern</button><button type="button" class="knopf" id="aaZu">Abbrechen</button></div>`);
+  const t = f.querySelector("#aaText"), zahl = () => { f.querySelector("#aaZahl").textContent = `${t.value.length}/${AA_MAX}`; };
+  t.oninput = zahl; zahl();
+  f.querySelector("#aaVorlage").onclick = () => { t.value = AA_VORLAGE; zahl(); t.focus(); };
+  f.querySelector("#aaOhneZeit").onclick = () => { f.querySelector("#aaVon").value = ""; f.querySelector("#aaBis").value = ""; };
+  f.querySelector("#aaZu").onclick = () => f.remove();
+  f.querySelector("#aaSichern").onclick = async () => {
+    const n = { an: f.querySelector("#aaAn").checked, text: t.value.trim(), von: f.querySelector("#aaVon").value || null, bis: f.querySelector("#aaBis").value || null,
+      nachStatus: f.querySelector("#aaStatus").checked, nurOffline: f.querySelector("#aaOffline").checked };
+    if (n.von && n.bis && n.bis < n.von) return melde("„Bis“ liegt vor „von“.", true);
+    if (await aaSpeichern(n, true)) f.remove();
+  };
+}
+// Status-Fenster: wer Urlaub/krank/nicht erreichbar wählt und keine Autoantwort an hat, wird einmal gefragt
+async function aaNachStatus(status) {
+  if (!AA_STATUS.includes(status) || aaGrund()) return;
+  if (!(await frage(`🤖 Autoantwort auch einschalten?\nWer dir in einem Einzelchat schreibt, bekommt automatisch eine kurze Antwort – solange dein Status „${STATUS[status]?.[1] || status}“ ist.`, { ja: "🤖 Ja, einschalten", nein: "Nein danke" }))) return;
+  await aaSpeichern({ ...aaWert(), nachStatus: true }, true);
 }
 function notausKnopfVerbinden() {
   const k = $("notausKnopf"); if (!k || k.dataset.an) return; k.dataset.an = "1";
@@ -37728,6 +37833,7 @@ const SPUR_WAS = { schlaf_ein: "💤 App eingeschlafen (Schlafmodus)", glueckske
 // Registry FENSTER_NAMEN: Fenster-ID → Name in den Wegen. Fehlt ein Name, steht dort „🪟 Fenster: „ID““ – tests/spur-voll.test.mjs meldet fehlende Namen.
 const FENSTER_NAMEN = {
   peBlatt: "🏷️ Preisetiketten", // KC-CLUB-PREISETIKETTEN
+  aaBlatt: "🤖 Autoantwort einstellen", // KC-CLUB-AUTOANTWORT
   sendeBerichtBlatt: "📊 Sendebericht", // KC-CLUB-SENDEBERICHT (19.11.2026)
   // 2.794.0 KC-CLUB-FENSTER-NAMEN-NACHTRAG (Fund Hansi 31.10.: in den Wegen stand „Fenster: „niFenster““) – Fenster, die nicht über blattAuf entstehen
   niFenster: "ℹ️ Nachricht-Info: gelesen/zugestellt", naMenue: "💬 Nachricht: Menü", naLoeschen: "🗑️ Nachricht löschen?", wlFenster: "↪️ Nachricht weiterleiten",

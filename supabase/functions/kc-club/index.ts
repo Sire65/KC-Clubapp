@@ -3584,7 +3584,7 @@ async function gebGrussLauf() {
       await gebGrussSpeichern(a.person_id, "geb_gruss_lauf", d.lauf);
       const text = gebGrussText(nr, { vorname: vorname(m), anrede: anr.get(m.person_id) }, { vorname: ich.vorname, anrede: anr.get(a.person_id) }, alter);
       try {
-        const r = await aktionAusfuehren("nachricht_senden", { empfaenger: { personen: [m.person_id] }, text, wege: [] }, ich, new Request(APP_URL, { method: "POST" }), Date.now(), 0);
+        const r = await aktionAusfuehren("nachricht_senden", { empfaenger: { personen: [m.person_id] }, text, wege: [], ohne_autoantwort: true }, ich, new Request(APP_URL, { method: "POST" }), Date.now(), 0);
         if (!r.ok) { const j: any = await r.json().catch(() => ({})); throw new Error(txt(j?.error, 200) || `Status ${r.status}`); }
         if (nr <= 100) { d.lauf.verlauf[m.person_id] = [...verlauf, nr].slice(-10); d.lauf.kuerzlich = [...d.lauf.kuerzlich, nr].slice(-8); }
         await gebGrussSpeichern(a.person_id, "geb_gruss_lauf", d.lauf);
@@ -4601,7 +4601,7 @@ const ZUGANG_AKTIONEN: Record<"basis" | "aushilfe", readonly string[]> = {
     "wetter", "wetter_ort_suchen", "treffen_liste", "treffen_antwort", "erinnerung_setzen", "kalender", "kalender_abo", "kalender_abo_holen", "privattermin_speichern",
     "privattermin_loeschen", "privattermine_liste", "countdowns", "terminumfragen_liste", "terminumfrage_antwort", "mitglieder", "mitglied_details",
     "unterhaltungen", "unterhaltung", "unterhaltung_stand", "tippen_stand", "tippen", "nachricht_senden", "nachricht_details", "einzelchat_finden", "gruppenchat_finden", "express_stand", "express_angezeigt",
-    "express_antwort", "startnachricht_bestaetigen", "stadt_woche", "ferien", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "geplant_abrufen", "wecker_setzen", "wecker_loeschen", "nachricht_erinnerung_setzen", "nachricht_erinnerung_liste", "nachricht_erinnerung_loeschen", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
+    "express_antwort", "autoantwort_laden", "autoantwort_speichern", "startnachricht_bestaetigen", "stadt_woche", "ferien", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "geplant_abrufen", "wecker_setzen", "wecker_loeschen", "nachricht_erinnerung_setzen", "nachricht_erinnerung_liste", "nachricht_erinnerung_loeschen", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
     "chat_selbstloeschen", "link_vorschau", "unterstuetzung_meine", "unterstuetzung_senden", "nachricht_bearbeiten", "nachricht_merken", "gemerkte_nachrichten", "chat_umfrage_stimmen", "nachricht_ausblenden",
     "unterhaltung_ausblenden", "unterhaltung_archivieren", "unterhaltung_leeren", "gruppe_verlassen", "anlage_hochladen", "anlage_url",
     "einmal_foto_ansehen", "meine_nachrichten_statistik", "mf_antwort", "mf_gelesen", "sos_kontakte", "sos_ort", "notfall_setzen", "spiele_liste",
@@ -4700,6 +4700,77 @@ async function statusMap(ids?: string[], mitRuhe = false) {
     }
   }
   return m;
+}
+
+// ---------- KC-CLUB-AUTOANTWORT (Wunschliste #101, Wunsch Hansi 23.11.2026 „alle, Schalter + Zeitraum + Kombination, 1× in 12 Std., nur Einzelchats,
+// freier Text mit Vorlage“): Jede/r kann eine Autoantwort einrichten (kc_club_person_einstellung „autoantwort“ = { an, text, von, bis, nachStatus, nurOffline }).
+// Aktiv: Schalter an UND (kein Zeitraum ODER heute zwischen von und bis, Tage deutscher Zeit, einschließlich) – ODER „nachStatus“ und mein Status ist
+// Urlaub/krank/abwesend (abgelaufener Status zählt nicht). Ausgelöst wird sie NUR in nachricht_senden, NUR im Zweier-Chat (2 Teilnehmer, keine Gruppe),
+// höchstens 1× in 12 Std. je (Empfänger → Absender, Chat) – Sperre atomar in kc_club_autoantwort_gesendet. Die Autoantwort selbst legt der Server direkt
+// an (nicht über nachricht_senden) – darum löst sie nie eine weitere Autoantwort aus (keine Schleife). Nie bei Geburtstagsgrüßen/geplanten Nachrichten des
+// Systems (ohne_autoantwort), Notfall, SOS-Probe, NOT-AUS. Gelesen werden nur Teilnehmer und die eigene Einstellung – nie Nachrichteninhalte;
+// ins Protokoll nur „autoantwort_gesendet“ mit der Chat-Kennung.
+const AA_SCHLUESSEL = "autoantwort", AA_TEXT_MAX = 500, AA_SPERRE_MS = 12 * 3600000, AA_STATUS = ["urlaub", "krank", "abwesend"];
+const AA_VORLAGE = "Liebe(r) {vorname}, danke für deine Nachricht. Im Moment bin ich nicht online. Ich habe aber eine E-Mail oder Push-Nachricht bekommen, dass eine Nachricht von dir vorliegt. Ich melde mich so schnell wie möglich. Liebe Grüße {meinname}";
+const aaTag = (x: unknown) => (/^\d{4}-\d{2}-\d{2}$/.test(String(x ?? "")) ? String(x) : null);
+function aaWert(w: any) {
+  const von = aaTag(w?.von), bis = aaTag(w?.bis);
+  return { an: w?.an === true, text: txt(w?.text, AA_TEXT_MAX), von, bis, nachStatus: w?.nachStatus === true, nurOffline: w?.nurOffline === true };
+}
+// "schalter" | "status" | "" – warum sie gerade gilt (für Anzeige und Auslösen)
+function aaAktiv(w: any, st: { status?: string; bis?: string | null } | null, heute = berlinTag(new Date())): "schalter" | "status" | "" {
+  const a = aaWert(w);
+  if (a.an && (!a.von || a.von <= heute) && (!a.bis || heute <= a.bis)) return "schalter";
+  if (a.nachStatus && st && AA_STATUS.includes(String(st.status)) && (!st.bis || st.bis >= heute)) return "status";
+  return "";
+}
+const aaText = (text: string, vonVorname: string, meinName: string) =>
+  txt((text || AA_VORLAGE).split("{vorname}").join(vonVorname || "").split("{meinname}").join(meinName || ""), AA_TEXT_MAX + 200);
+async function aaStand(pid: string) {
+  const [{ data }, st] = await Promise.all([db.from("kc_club_person_einstellung").select("wert").eq("person_id", pid).eq("schluessel", AA_SCHLUESSEL).maybeSingle(), statusMap([pid])]);
+  const s = st.get(pid) ?? null;
+  return { wert: aaWert(data?.wert), aktiv: aaAktiv(data?.wert, s), status: s?.status ?? "verfuegbar", vorlage: AA_VORLAGE, max: AA_TEXT_MAX };
+}
+// nach dem Speichern einer Nachricht (im Hintergrund): alleTn = alle Teilnehmer des Chats, gruppe = Chat ist eine Gruppe
+async function autoantwortAusloesen(ich: Ich, threadId: string, alleTn: string[], gruppe: boolean): Promise<string | null> {
+  if (gruppe || alleTn.length !== 2 || ich.nurLesen) return null;
+  const an = alleTn.find((x) => x !== ich.person_id); if (!an) return null;
+  const { data: e } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", an).eq("schluessel", AA_SCHLUESSEL).maybeSingle();
+  const w: any = e?.wert; if (!w || (w.an !== true && w.nachStatus !== true)) return null; // fast immer: keine Autoantwort → 1 kleine Abfrage
+  const st = w.nachStatus === true ? (await statusMap([an])).get(an) ?? null : null;
+  if (!aaAktiv(w, st)) return null;
+  if ((await notausLesen()).aktiv) return null; // KC-NOTAUS
+  if (w.nurOffline === true && (await geradeInDerApp([an]).catch(() => new Set<string>())).has(an)) return null;
+  // Sperre: 1× in 12 Std. je (Empfänger → Absender, Chat) – erst eintragen (nur einer gewinnt), dann senden
+  const paar = { person_id: an, an_person_id: ich.person_id, thread_id: threadId };
+  const { data: neu } = await db.from("kc_club_autoantwort_gesendet").upsert({ ...paar, am: jetzt() }, { onConflict: "person_id,an_person_id,thread_id", ignoreDuplicates: true }).select("am");
+  let frei = (neu ?? []).length > 0;
+  if (!frei) { const { data: alt } = await db.from("kc_club_autoantwort_gesendet").update({ am: jetzt() }).match(paar).lt("am", new Date(Date.now() - AA_SPERRE_MS).toISOString()).select("am"); frei = (alt ?? []).length > 0; }
+  if (!frei) return null;
+  const leute = await personen([an]);
+  const body = aaText(aaWert(w).text, ich.vorname, vorname(leute.get(an) ?? null));
+  // Kennzeichen VOR der Nachricht (gleiche Kennung) – so zeigt die App sie schon beim ersten Laden als „🤖 Autoantwort“
+  const mid = crypto.randomUUID();
+  const { error: ke } = await db.from("kc_club_autoantwort").insert({ message_id: mid, thread_id: threadId, person_id: an, an_person_id: ich.person_id });
+  const { data: m, error } = ke ? { data: null, error: ke } : await db.from("kc_communication_messages").insert({ id: mid, thread_id: threadId, sender_person_id: an, body }).select("id,created_at").single();
+  if (error || !m) {
+    console.error("autoantwort", error?.message);
+    await Promise.all([db.from("kc_club_autoantwort").delete().eq("message_id", mid), db.from("kc_club_autoantwort_gesendet").delete().match(paar)]);
+    return null;
+  }
+  await Promise.all([
+    db.from("kc_communication_threads").update({ updated_at: jetzt() }).eq("id", threadId),
+    db.from("kc_communication_thread_participants").update({ hidden_at: null }).eq("thread_id", threadId).not("hidden_at", "is", null),
+  ]);
+  // Benachrichtigung an den Absender: nur Push (keine E-Mail) – nicht, wenn er gerade in der App ist (dort kommt sie live) oder den Chat stumm hat
+  const [stumm, inApp] = await Promise.all([stummFuer([ich.person_id], threadId).catch(() => new Set<string>()), geradeInDerApp([ich.person_id]).catch(() => new Set<string>())]);
+  if (!stumm.has(ich.person_id) && !inApp.has(ich.person_id)) {
+    const name = leute.get(an)?.display_name || "Mitglied";
+    await sendenGewaehlt("club_nachricht", [ich.person_id], ["push"], { titel: `🤖 Autoantwort – ${name}`, kurz: txt(body, 140), betreff: `Köcheclub Werne – Autoantwort von ${name}`,
+      text: `Hallo,\n\n${name} hat eine Autoantwort eingerichtet:\n\n${body}\n\nViele Grüße\nKöcheclub Werne`, url: `${APP_URL}#nachricht=${threadId}` }, `club-nachricht:${m.id}`).catch((x) => console.error("autoantwort push", String(x)));
+  }
+  await protokoll(an, "autoantwort_gesendet", { thread: threadId }); // nur die Chat-Kennung – nie der Text
+  return m.id;
 }
 
 // ---------- Geburtstage (KC-CLUB-GEBURTSTAG-FREIGABE) ----------
@@ -9965,7 +10036,7 @@ async function mailWarteschlange() {
   return await r.json().catch(() => ({ status: r.status }));
 }
 async function geplantSenden(g: any, ich: Ich) {
-  const r = await aktionAusfuehren("nachricht_senden", { id: g.thread_id, text: g.text, wege: Array.isArray(g.wege) ? g.wege : ["push"], ...(g.wichtig ? { wichtig: true } : {}) },
+  const r = await aktionAusfuehren("nachricht_senden", { id: g.thread_id, text: g.text, wege: Array.isArray(g.wege) ? g.wege : ["push"], ...(g.wichtig ? { wichtig: true } : {}), ohne_autoantwort: true }, // KC-CLUB-AUTOANTWORT: geplant = Systemweg
     ich, new Request(APP_URL, { method: "POST" }), Date.now(), 0);
   if (!r.ok) { const j: any = await r.json().catch(() => ({})); throw new Fehler(txt(j?.error, 200) || `Nicht gesendet (${r.status}).`, r.status); }
 }
@@ -11497,6 +11568,17 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         schreibOk(await db.from("kc_club_status").upsert({ person_id: ich.person_id, status, hinweis: txt(p.hinweis, 120) || null, bis: status === "verfuegbar" ? null : bis, geaendert_am: jetzt() })); // KC-CLUB-RC-PRUEFUNG (20.10.2026)
         await protokoll(ich.person_id, "status_gesetzt", { status, bis });
         return json({ ok: true });
+      }
+      // ----- KC-CLUB-AUTOANTWORT (Wunschliste #101): eigene Autoantwort laden/speichern – jede/r nur die eigene -----
+      case "autoantwort_laden": return json(await aaStand(ich.person_id));
+      case "autoantwort_speichern": {
+        if (ich.nurLesen) return json(await aaStand(ich.person_id));
+        const w = aaWert(p.wert);
+        if (w.von && w.bis && w.bis < w.von) throw new Fehler("„Bis“ liegt vor „von“.");
+        if (w.bis && w.bis < berlinTag(new Date()) && w.an) throw new Fehler("„Bis“ liegt in der Vergangenheit – bitte ein späteres Datum wählen oder den Zeitraum leeren.");
+        schreibOk(await db.from("kc_club_person_einstellung").upsert({ person_id: ich.person_id, schluessel: AA_SCHLUESSEL, wert: w, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" }));
+        await protokoll(ich.person_id, "autoantwort_gespeichert", { an: w.an, zeitraum: !!(w.von || w.bis), nach_status: w.nachStatus }); // ohne Text
+        return json({ ok: true, ...(await aaStand(ich.person_id)) });
       }
 
       // ----- Treffen -----
@@ -15710,6 +15792,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           return { name: vorname(leute.get(x.person_id)) || "?", angekommen, gelesen, gelesenOhneZeit: !gelesen && !!x.last_read_at && x.last_read_at >= m.created_at, bestaetigt: best };
         });
         const wichtigIds = new Set((wicht ?? []).map((x: any) => x.message_id));
+        // KC-CLUB-AUTOANTWORT: Kennzeichen „🤖 Autoantwort“ – nur im Zweier-Chat (nur dort entstehen sie), 1 kleine Abfrage über die Chat-Kennung
+        const { data: aaRows } = (tn ?? []).length === 2 && mids.length ? await db.from("kc_club_autoantwort").select("message_id").eq("thread_id", id).limit(500) : leer;
+        const aaIds = new Set((aaRows ?? []).map((x: any) => x.message_id));
         const midSet = new Set(mids), pinIds = (pins ?? []).map((x: any) => x.message_id).filter((x: string) => midSet.has(x)).slice(0, 3);
         const gemSet = new Set((gem ?? []).map((x: any) => x.message_id));
         const xLeute = await personen([...(stim ?? []).map((x: any) => x.person_id), ...(kon ?? []).map((x: any) => x.person_id)]);
@@ -15752,6 +15837,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             erwaehnt: erw.map((x: any) => x.person_id === ich.person_id ? "dich" : vorname(rkLeute.get(x.person_id)) || "?"), erwaehntMich: erw.some((x: any) => x.person_id === ich.person_id),
             bearbeitet: bearbMap.get(m.id) ?? null, loeschtAm: ablaufMap.get(m.id) ?? null,
             gemerkt: gemSet.has(m.id), angeheftet: pinIds.includes(m.id), umfrage: umfrageVon(m.id), kontakt: kontaktVon(m.id), wichtig: wichtigIds.has(m.id),
+            ...(aaIds.has(m.id) ? { autoantwort: true } : {}), // KC-CLUB-AUTOANTWORT
             ...(exIds.has(m.id) ? { express: eigen ? { quittungen: exQuittung(m.id), versandt: m.created_at, empfaenger: exEmpfaenger(m) } : true } : {}),
             ...(eigen && !(umf ?? []).some((x: any) => x.message_id === m.id) && !(kon ?? []).some((x: any) => x.message_id === m.id) && Date.now() - Date.parse(m.created_at) < BEARBEITEN_MIN * 60000 ? { bearbeitbarBis: new Date(Date.parse(m.created_at) + BEARBEITEN_MIN * 60000).toISOString() } : {}),
           };
@@ -16199,7 +16285,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // KC-CLUB-ERWAEHNUNG (0.97.0): @Erwähnte (nur Teilnehmer dieser Unterhaltung) bekommen eine eigene, deutliche Meldung –
         // immer aufs Handy (bzw. Mail, wenn sie die App noch nie geöffnet haben), statt der normalen Nachrichten-Meldung.
         const tnIds = new Set((alleTn ?? []).map((x: any) => x.person_id));
-        const erwaehnt = [...new Set((Array.isArray(p.erwaehnt) ? p.erwaehnt : []).map(String))].filter((id) => id !== ich.person_id && tnIds.has(id)).slice(0, 50);
+        // KC-CLUB-AUTOANTWORT: nur Zweier-Chat, nie bei Notfall/Probe und nie aus Systemwegen (Geburtstagsgruß, geplante Nachricht) – im Hintergrund
+        if (!notfall && !probe && p.ohne_autoantwort !== true && tnIds.size === 2 && !grp) nebenbei(autoantwortAusloesen(ich, threadId, [...tnIds], false).catch((e) => console.error("autoantwort", String(e))));
+        const erwaehnt =[...new Set((Array.isArray(p.erwaehnt) ? p.erwaehnt : []).map(String))].filter((id) => id !== ich.person_id && tnIds.has(id)).slice(0, 50);
         let versandErw: any = null;
         if (erwaehnt.length) {
           await db.from("kc_club_erwaehnungen").insert(erwaehnt.map((person_id) => ({ message_id: m.id, person_id })));

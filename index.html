@@ -6217,6 +6217,15 @@
     body:not(.knoepfe-weg) :is(.su-klein, .hz-frage, .hz-klick) { opacity: .72; }
     body:not(.knoepfe-weg) :is(.su-klein, .hz-frage, .hz-klick):is(:active, :focus-visible), body.klick-zeigen:not(.knoepfe-weg) .hz-klick { opacity: 1; }
   }
+/* KC-CLUB-AUTOANTWORT (Wunschliste #101): 🤖 in der Kopfzeile von Nachrichten – grau = aus, leuchtet blau = an; Balken und Kennzeichen an der Sprechblase */
+#v-nachrichten .kopf2 > .aa-knopf { flex: none; min-width: 0; padding: 4px 6px; font-size: 1rem; line-height: 1.2; filter: grayscale(1); opacity: .65; touch-action: manipulation; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+#v-nachrichten .kopf2 > .aa-knopf.aa-an { filter: none; opacity: 1; background: #e3f2fd; border-color: #1e88e5; outline: 2px solid #1e88e5; outline-offset: 0; box-shadow: 0 0 10px rgba(30,136,229,.55); }
+.aa-balken { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; padding: 6px 8px 6px 12px; border-radius: 10px; background: #e3f2fd; color: #0d47a1; border: 1px solid #90caf9; font-size: .9rem; }
+.aa-balken .aa-balken-text { flex: 1; min-width: 0; text-align: left; background: none; border: 0; padding: 0; color: inherit; font: inherit; font-weight: 600; cursor: pointer; }
+.aa-balken .aa-aus { flex: none; border: 1px solid #1e88e5; background: #fff; color: #0d47a1; border-radius: 999px; padding: 3px 12px; font-weight: 700; cursor: pointer; }
+.aa-marke { display: inline-block; margin: 0 0 4px; padding: 1px 8px; border-radius: 999px; background: #1e88e5; color: #fff; font-weight: 700; font-size: .78rem; }
+.blase.eigen .aa-marke { background: #fff; color: #1565c0; }
+:root.dunkel .aa-balken, :root.dunkel #v-nachrichten .kopf2 > .aa-knopf.aa-an { background: var(--blaubg); color: var(--blau); } :root.dunkel .aa-balken .aa-aus { background: var(--blaubg); color: var(--blau); }
 /* KC-NOTAUS (21.11.2026, Wunsch Hansi): roter Pilzknopf auf gelbem Ring wie an Maschinen – 1,5 s halten löst aus; roter Balken für alle */
 .notaus-knopf { --fuell: 0; position: relative; width: 64px; height: 64px; border-radius: 50%; border: 0; padding: 0; cursor: pointer; flex: none;
   background: conic-gradient(#111 calc(var(--fuell) * 1turn), #ffd400 0); box-shadow: 0 0 0 2px #333, 0 2px 6px rgba(0,0,0,.35);
@@ -6482,11 +6491,11 @@
   <!-- NACHRICHTEN -->
   <section id="v-nachrichten" class="versteckt">
     <!-- 1.32.1 (Hinweis Hansi): „＋ Neu“ immer sichtbar in der Kopfzeile, die übrigen Knöpfe beschriftet in einer eigenen Reihe -->
-    <div class="kopf2"><button class="zurueck" onclick="zurueck('start')" aria-label="Zurück">‹</button><button type="button" class="na-netz" id="naNetz" onclick="netzBlatt()" aria-label="Verbindung"></button><h2>💬 Nachrichten</h2><span id="naNotausPlatz" class="notaus-platz"></span><!-- KC-NOTAUS-OBEN: Pilzknopf (nur Admin) links neben SOS --><button class="knopf klein alarm-knopf" id="naSosKnopf" onclick="notfallMeldung()" title="Notfall-Meldung sofort an alle – Push, E-Mail, WhatsApp, SMS">🚨 SOS</button><button class="knopf haupt klein" onclick="uhNeu()">＋ Neu</button></div>
+    <div class="kopf2"><button class="zurueck" onclick="zurueck('start')" aria-label="Zurück">‹</button><button type="button" class="na-netz" id="naNetz" onclick="netzBlatt()" aria-label="Verbindung"></button><h2>💬 Nachrichten</h2><button type="button" class="knopf klein aa-knopf" id="naAaKnopf" aria-pressed="false" aria-label="Autoantwort – kurz tippen: an/aus, lange drücken: einstellen" title="Autoantwort – kurz tippen: an/aus · lange drücken: einstellen">🤖</button><!-- KC-CLUB-AUTOANTWORT --><span id="naNotausPlatz" class="notaus-platz"></span><!-- KC-NOTAUS-OBEN: Pilzknopf (nur Admin) links neben SOS --><button class="knopf klein alarm-knopf" id="naSosKnopf" onclick="notfallMeldung()" title="Notfall-Meldung sofort an alle – Push, E-Mail, WhatsApp, SMS">🚨 SOS</button><button class="knopf haupt klein" onclick="uhNeu()">＋ Neu</button></div>
     <!-- 2.729.0 KC-CLUB-KOM-SYMBOLE (Wunsch Hansi „der obere Bereich ist zu unruhig und übervoll“ → „Symbol mit kleinem Wort darunter, unter ⚙️ einstellbar“):
          alle Knöpfe in EINER Reihe (html.kom-sym), sonst wie bisher mit Text daneben; der Anrufbeantworter steht mit in der Reihe -->
     <div class="kom-leiste"><button class="knopf klein" onclick="gruppeForm()" title="Neue Gruppe anlegen"><span class="kl-i">👥</span><span class="kl-t"> Gruppe</span><span class="kl-k">Gruppe</span></button><button class="knopf klein" id="uhFavKnopf" onclick="uhFavAnsicht(!UH.favAnsicht)" title="Deine Favoriten: Chats mit ⭐ und die, in denen du am meisten schreibst"><span class="kl-i">⭐</span><span class="kl-t"> Favoriten</span><span class="kl-k">Favoriten</span></button><button class="knopf klein" onclick="gemerktZeigen()" title="Nachrichten, die du mit „merken“ markiert hast"><span class="kl-i">🔖</span><span class="kl-t"> Gemerkt</span><span class="kl-k">Gemerkt</span></button><button class="knopf klein versteckt" id="ugKnopf" onclick="ugStart()" title="Clubleitung: welche deiner Nachrichten noch nicht gelesen wurden"><span class="kl-i">📭</span><span class="kl-t"> Ungelesen</span><span class="kl-k">Ungelesen</span></button><button class="knopf klein" onclick="testAnMichStarten()" title="Nachricht an dich selbst – prüft Push und Mail"><span class="kl-i">🧪</span><span class="kl-t"> Test</span><span class="kl-k">Test</span></button><button type="button" class="knopf klein ab-merker" id="abMerker" onclick="abOeffnen()" title="Mein Anrufbeantworter"><span class="kl-i">📼</span><span class="kl-t"> Mein Anrufbeantworter</span><span class="kl-k">Anrufb.</span></button><!-- 2.568.0 KC-CLUB-ANRUFBEANTWORTER --></div>
-    <div id="naNotaus" class="versteckt" aria-live="assertive"></div><!-- KC-NOTAUS: roter Balken (alle); der Pilzknopf steht seit KC-NOTAUS-OBEN in der Kopfzeile -->
+    <div id="naNotaus" class="versteckt" aria-live="assertive"></div><div id="naAutoantwort" class="versteckt"></div><!-- KC-CLUB-AUTOANTWORT: „🤖 Autoantwort ist an … – Aus“ --><!-- KC-NOTAUS: roter Balken (alle); der Pilzknopf steht seit KC-NOTAUS-OBEN in der Kopfzeile -->
     <div id="onlineLeiste"></div>
     <div id="uhMarkLeiste"></div>
     <div class="karte" id="unterhListe"><span class="hinweis">Wird geladen …</span></div>
@@ -6711,6 +6720,8 @@
     <details class="karte" data-klappe="benachrichtigung" open>
       <summary>🔔 Benachrichtigungen</summary>
       <p class="hinweis" style="margin:0 0 6px">Wobei möchtest du eine Nachricht aufs Handy (Push) oder eine E-Mail bekommen?</p>
+      <!-- KC-CLUB-AUTOANTWORT (Wunschliste #101) -->
+      <div class="schalter"><div><b>🤖 Autoantwort</b><div class="hinweis" id="setAaStand">🤖 Autoantwort ist aus</div><div class="hinweis">Antwortet in Einzelchats automatisch für dich, wenn du nicht da bist – schneller: 🤖 oben in 💬 Nachrichten.</div></div><button type="button" class="knopf klein" onclick="aaFenster()">Einstellen</button></div>
       <table class="wahltabelle"><thead><tr><th></th><th>📲 Push</th><th>✉️ E-Mail</th></tr></thead><tbody id="wahlTabelle"></tbody></table>
       <p class="hinweis" style="font-size:.85rem" id="wahlHinweis">Nur Push: Kommt der Push nicht an, schicken wir automatisch eine E-Mail.</p>
       <!-- 2.883.0 KC-CLUB-FRIST-ERINNERUNG -->
@@ -7287,6 +7298,7 @@
 <div class="blatt versteckt" id="statusBlatt" onclick="if(event.target===this)this.classList.add('versteckt')">
   <div class="blatt-innen"><h3>Mein Status</h3><div class="liste" style="display:grid;gap:8px"></div>
     <div id="stExtra"><label class="feld">Bis (freiwillig)<input type="date" id="stBis"></label><label class="feld">Hinweis (freiwillig, z. B. „ab 18 Uhr erreichbar“)<input id="stHinweis" maxlength="120"></label></div>
+    <button type="button" class="knopf klein aa-status-knopf" style="margin:4px 0 10px" onclick="aaFenster()">🤖 Autoantwort …</button><!-- KC-CLUB-AUTOANTWORT -->
     <button class="knopf haupt" onclick="statusSpeichern()">💾 Speichern</button><button class="knopf" onclick="$('statusBlatt').classList.add('versteckt')">Abbrechen</button></div>
 </div>
 <div class="blatt versteckt" id="chatBlatt" onclick="if(event.target===this)this.classList.add('versteckt')">
