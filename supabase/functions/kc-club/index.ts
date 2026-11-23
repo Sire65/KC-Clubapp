@@ -195,7 +195,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "3.15.0";
+const SERVER_VERSION = "3.16.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -5697,7 +5697,7 @@ async function dpDruckNeu(adminId: string) {
   const kmVon = new Map((leute ?? []).map((p: any) => [String(p.person_id), Number.isFinite(Number(pk[p.person_id]?.anfahrtKm)) ? Number(pk[p.person_id].anfahrtKm) : (anfahrt(p.postal_code, p.city)?.fahrt ?? 0)]));
   const grenzeKm = Number(konf.anfahrtGrenzeKm ?? 10), minWeit = Number(konf.anfahrtMinDienst ?? 3);
   const grenzen = (pid: string) => ({ ...(Number.isFinite(Number(pk[pid]?.maxGesamt)) ? { maxGesamt: Number(pk[pid].maxGesamt) } : {}), ...(Number.isFinite(Number(pk[pid]?.maxDienst)) ? { maxDienst: Number(pk[pid].maxDienst) } : {}),
-    ...(Number.isFinite(Number(pk[pid]?.begleitet)) ? { begleitet: Number(pk[pid].begleitet) } : {}), ...(pk[pid]?.hinweis ? { hinweis: String(pk[pid].hinweis).slice(0, 60) } : {}), // 2.722.0
+    ...(Number.isFinite(Number(pk[pid]?.begleitet)) ? { begleitet: Number(pk[pid].begleitet) } : {}), ...(pk[pid]?.ohneRuhetag === true ? { ohneRuhetag: true } : {}), // 3.16.0 KC-CLUB-DP-OHNE-RUHETAG ...(pk[pid]?.hinweis ? { hinweis: String(pk[pid].hinweis).slice(0, 60) } : {}), // 2.722.0
     ...((kmVon.get(pid) ?? 0) >= grenzeKm ? { minDienst: minWeit } : {}) });
   const name = new Map((leute ?? []).map((p: any) => [String(p.person_id), String(p.display_name || p.person_id)]));
   const wRev = new Map((wRoh ?? []).map((w: any) => [String(w.person_id), w]));

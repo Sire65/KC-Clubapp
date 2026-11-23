@@ -1,5 +1,10 @@
 # Änderungen
 
+## 3.16.0 – 2026-11-23 – 🗓️ Dienstplan: „höchstens 5 Tage am Stück“ je Person abschaltbar (KC-CLUB-DP-OHNE-RUHETAG) · Server 3.16.0 · [Hansi: einspielen, Update-Stopp für diese Version aufgehoben]
+Hansi 23.11.: „Manfred ist nur für 2 Stunden eingetragen … wichtiger ist, wo noch jemand fehlt. Gib ihm etwas mehr Stunden.“ – Vorschlag: Manfred am Di 08.12. abends (Wunsch 15–22) statt 2 Std. am 13.12.; der 08.12. war sein Ruhetag nach 5 Tagen am Stück.
+- Plan-Einstellung `personen[…].ohneRuhetag` (dp-rechnen.js): für diese Person gilt „höchstens maxTageAmStueck Tage am Stück“ nicht. Rechenregel 12 – der Plan rechnet sich beim nächsten Öffnen neu.
+- Eingetragen für Manfred (nach dem Einspielen): ohne Ruhetag, höchstens 53 Std. Ergebnis (nachgerechnet): 08.12. 17–23 Uhr – Abendlücke 20–23 zu; 13.12. ohne Manfred (Andrea ab 16, Frank bis 23, Steven bis 18) – keine neue Lücke; es fehlen 13 statt 16 Std.
+- Test: Block in `tests/app-vertrag.test.mjs`. Rückweg: Server 3.15.0.
 ## 3.15.0 – 2026-11-23 – 🚗 Mitfahrt: Vertretung darf Platz buchen · ＋ Gast mitnehmen (KC-CLUB-MITFAHRT-VERTRETUNG, KC-CLUB-MITFAHRT-GAST)
 Wunsch Hansi 23.11.2026 (Arbeitszweig `mitfahrt-vertretung-gast` – Update-Stopp KC-EGRESS-STOPP: erst nach Freigabe einspielen; Migration vorher einspielen).
 - **Vertretung auch für Mitfahrten (KC-CLUB-MITFAHRT-VERTRETUNG):** `mitfahrt_platz` (Platz buchen/freigeben) und `mitfahrt_suchen` (suchen/zurücknehmen) stehen jetzt in `VERTRETUNG_AKTIONEN` (Server) und `VT_AKTIONEN` (App) – anbieten, ändern, löschen und Gäste bleiben beim Mitglied selbst. Die Mitfahrten kommen wie bisher mit `treffen_liste` (in Vertretung als das vertretene Mitglied).

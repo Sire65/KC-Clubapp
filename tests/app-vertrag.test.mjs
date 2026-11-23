@@ -13904,3 +13904,13 @@ assert.ok(/const body = tage\.map\(\(t\) => `<tbody class="dpd-tag">/.test(progr
 // 3.2.0 KC-CLUB-PDF-BLATT-GANZ (Fund Hansi 21.11.: im PDF waren Tage getrennt)
 assert.ok(/DRUCK\.randlos = !!s\.randlos;/.test(programm) && /padding:\$\{DRUCK\.randlos \? 0 : "12mm"\}/.test(programm), "randlos ohne Zusatzrand");
 assert.ok(/\["page", "always"\]\.includes\(cs\(e\)\.breakAfter\)/.test(programm) && /st\.breakInside === "avoid"/.test(programm) && /const ganz = !!DRUCK\?\.randlos && bis - von <= seiteH \+ 2;/.test(programm) && /von === 0 \|\| ganz \? 0 : RAND/.test(programm), "Blattgrenzen und Tage im PDF");
+// 3.16.0 KC-CLUB-DP-OHNE-RUHETAG (Hansi 23.11.: Manfred am 08.12. trotz 5 Tagen am Stück)
+{
+  const { dpRechnen } = await import("../supabase/functions/kc-club/dp-rechnen.js");
+  const tage = ["2026-12-04", "2026-12-05", "2026-12-06"].map((d) => ({ d, art: "Markttag", baender: [{ start: 18, end: 20, total: 1, front: null, back: null }] }));
+  const p = (x) => ({ key: "M", name: "Manfred", eintraege: tage.map((t) => ({ d: t.d, t: "pref", z: "B", a: 18, b: 20 })), ...x });
+  const tageVon = (r) => r.tage.filter((t) => t.leute.some((l) => l.s)).length;
+  assert.equal(tageVon(dpRechnen({ tage, personen: [p({})], maxTageAmStueck: 2 })), 2, "Ruhetag nach 2 Tagen");
+  assert.equal(tageVon(dpRechnen({ tage, personen: [p({ ohneRuhetag: true })], maxTageAmStueck: 2 })), 3, "ohne Ruhetag: alle 3 Tage");
+  assert.ok(/pk\[pid\]\?\.ohneRuhetag === true \? \{ ohneRuhetag: true \}/.test(server), "Server reicht die Ausnahme weiter");
+}
