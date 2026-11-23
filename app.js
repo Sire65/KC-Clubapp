@@ -36051,21 +36051,51 @@ async function dpdFreigeben(btn, zurueck = false) {
   try { await api("dp_plaene_freigeben", zurueck ? { zurueck: true } : {}); melde(zurueck ? "Freigabe zurückgezogen." : "📣 Freigegeben – die Mitglieder sehen die Pläne jetzt."); }
   catch (e) { meldeFehler(e); } finally { if (btn) btn.disabled = false; dpdFreiZeigen(); }
 }
+// KC-DP-SOLL-UEBERGABE (Hansi 23.11.2026): gerechneten Sollplan mit einem Tipp an DP2 übergeben. DP2 zeigt ihn zur Übernahme (neu/geändert/entfällt);
+// erst „Übernehmen“ in DP2 ändert dort etwas, danach steht er wie jeder DP2-Plan auf der Kasse. Bereitschaft geht nicht mit.
+// Nachreichen: nach der ersten Übergabe legt jede Neuberechnung mit geänderten Schichten von selbst eine neue Übergabe an (abschaltbar).
+async function dpdSollZeigen() { const el = $("dpdSollZeile"); if (!el) return;
+  try {
+    const r = await api("dp_soll_uebergeben", { pruefen: true }), l = r.letzte;
+    const st = !l ? "noch nichts übergeben" : l.status === "offen" ? `übergeben ${esc(wann(l.am))} – wartet in DP2 auf „Übernehmen“` : `übergeben ${esc(wann(l.am))} – in DP2 übernommen${l.uebernommenAm ? " " + esc(wann(l.uebernommenAm)) : ""}`;
+    el.innerHTML = `📤 DP2: <b>${st}</b>${l && !l.gleich ? " · <b>der Plan hat sich seitdem geändert</b>" : ""}`
+      + (l ? `<br><label style="display:inline-flex;gap:6px;align-items:center;margin-top:4px"><input type="checkbox" ${r.auto ? "checked" : ""} onchange="dpdSollAuto(this)"> Änderungen automatisch nachreichen</label>` : "")
+      + (r.bereitschaft ? `<br><small>Bereitschaft (${r.bereitschaft}) wird nicht übergeben – sie bleibt in DP2 von Hand.</small>` : "");
+  } catch { el.textContent = "📤 DP2: Stand gerade nicht abrufbar."; } }
+async function dpdSollAuto(box) {
+  try { await api("dp_soll_uebergeben", { auto: !!box.checked }); melde(box.checked ? "📤 Änderungen gehen von selbst an DP2 (zur Übernahme)." : "📤 Automatisches Nachreichen aus."); }
+  catch (e) { box.checked = !box.checked; meldeFehler(e); } }
+async function dpdSollUebergeben(btn) {
+  if (btn) btn.disabled = true;
+  try {
+    const r = await api("dp_soll_uebergeben", { pruefen: true }, { warten: true });
+    if (!r.anzahl) return melde("Im Plan steht noch keine Schicht zum Übergeben.", true);
+    if (r.letzte?.gleich) return melde(r.letzte.status === "offen" ? "📤 Dieser Stand liegt schon in DP2 zur Übernahme bereit." : "📤 Dieser Stand ist in DP2 schon übernommen.");
+    const ohne = r.ohneId?.length ? `\n\nOhne eindeutige Person (nicht übergeben): ${r.ohneId.join(", ")}` : "";
+    const ber = r.bereitschaft ? `\n\nBereitschaft (${r.bereitschaft}) wird nicht übergeben.` : "";
+    if (!(await frage(`${r.anzahl} Schichten an DP2 übergeben? In DP2 erscheinen sie zur Übernahme – erst dort übernehmen, wenn der Plan fertig ist, danach stehen sie sofort auf der Kasse.${ohne}${ber}`, { ja: "📤 Übergeben" }))) return;
+    const e = await api("dp_soll_uebergeben", { stand: r.stand || "" }, { warten: true });
+    melde(e.unveraendert ? "📤 Dieser Stand ist schon bei DP2." : `📤 ${e.anzahl} Schichten an DP2 übergeben – in DP2 unter Sollplan „📥 Plan aus der Club-App übernehmen“.`);
+  } catch (e) { meldeFehler(e); } finally { if (btn) btn.disabled = false; dpdSollZeigen(); }
+}
 // Karte für Mitglieder: erscheint, sobald freigegeben
 const dpdPlaeneKarte = (frei) => frei ? `<div class="karte"><h4 style="margin:0 0 4px">📄 Pläne Weihnachtsmarkt <small class="hinweis">freigegeben ${esc(wann(frei.am))}</small></h4>
   <div class="hinweis">Zum Ansehen, Drucken oder als PDF speichern – alle Tage, mit Uhrzeiten und Stunden, am Ende Stundenübersicht und wo noch Helfer fehlen.</div>
   <div class="knoepfe"><button class="knopf haupt klein" onclick="document.getElementById('mdBlatt')?.remove();druckStarten('dpPlan',{frei:true})">🗓️ Dienstplan</button><button class="knopf klein" onclick="document.getElementById('mdBlatt')?.remove();druckStarten('dpWunsch',{frei:true})">🙋 Wunschplan</button></div></div>` : "";
 function dpdOptionen() {
   setTimeout(dpdFreiZeigen, 0); // 2.999.0 Freigabe-Stand nachladen
+  setTimeout(dpdSollZeigen, 0); // KC-DP-SOLL-UEBERGABE: Stand der Übergabe an DP2 nachladen
   const r = (v, t, x) => `<label class="feld" style="display:flex;gap:8px;align-items:flex-start"><input type="radio" name="dpdBreit" value="${v}" ${DPD.breit === v ? "checked" : ""} onchange="DPD.breit=this.value"><span><b>${t}</b><br><small>${x}</small></span></label>`;
   const i = DPD.info, neu = i?.neu || [];
   const stand = `<div class="karte" style="margin:0 0 10px;padding:10px">
       <div>${i?.stand ? `Stand: <b>${esc(wann(i.stand))}</b>` : "Noch kein Stand abgelegt."}</div>
       ${neu.length ? `<div style="margin-top:4px;color:var(--textRot,#b3261e);font-weight:700">🆕 ${neu.length === 1 ? "1 neuer oder geänderter Wunschplan" : neu.length + " neue oder geänderte Wunschpläne"} seit dem letzten Rechnen: ${neu.map(esc).join(", ")}</div>` : i ? '<div class="hinweis" style="margin-top:4px">✅ Alle Wunschpläne sind eingerechnet.</div>' : ""}
       <button type="button" class="knopf${neu.length ? " haupt" : ""}" style="margin-top:8px" onclick="dpdNeuRechnen(this)">🔄 Jetzt neu rechnen</button>
-      <div class="hinweis" style="margin-top:4px;font-size:.8rem">Rechnet sich von selbst neu, sobald ein Wunschplan, der Bedarf oder die Einstellungen sich ändern. Regel: nie länger als die Wunschzeit, mindestens die Hälfte darin. Nichts geht nach DP2.</div>
+      <div class="hinweis" style="margin-top:4px;font-size:.8rem">Rechnet sich von selbst neu, sobald ein Wunschplan, der Bedarf oder die Einstellungen sich ändern. Regel: nie länger als die Wunschzeit, mindestens die Hälfte darin. Nach DP2 geht er nur mit „📤 An DP2 übergeben“ (dort erst nach „Übernehmen“).</div>
       <div id="dpdFreiZeile" class="hinweis" style="margin-top:8px">📣 Für Mitglieder: wird geprüft …</div>
       <button type="button" class="knopf haupt" style="margin-top:4px" onclick="dpdFreigeben(this)">📣 Diesen Stand für alle Mitglieder freigeben</button>
+      <div id="dpdSollZeile" class="hinweis" style="margin-top:8px">📤 DP2: wird geprüft …</div>
+      <button type="button" class="knopf" style="margin-top:4px" onclick="dpdSollUebergeben(this)">📤 An DP2 übergeben</button>
       <button type="button" class="knopf" style="margin-top:8px" onclick="druckZu();druckStarten('dpWunsch')">🙋 Wunschplan – alle Tage (nur die Wünsche)</button>
       <button type="button" class="knopf" style="margin-top:8px" onclick="druckZu();druckStarten('dpPlan')">🗓️ Dienstplan – alle Tage (nur die Einteilung)</button>
       <button type="button" class="knopf" style="margin-top:8px" onclick="druckZu();druckStarten('dpEinsatz')">📋 Einsatzplan – je Tag eine Seite</button>

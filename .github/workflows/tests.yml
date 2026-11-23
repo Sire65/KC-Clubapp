@@ -283,6 +283,7 @@ jobs:
       - run: node tests/dp-einzelplan.test.mjs
       - run: node tests/dp-pdf-matrix.test.mjs
       - run: node tests/dp-pdf-zebra.test.mjs
+      - run: node tests/dp-soll-uebergabe.test.mjs
       - run: node tests/actions-fest.test.mjs
       - run: node tests/wege-links.test.mjs
       - run: node tests/db-aussetzer.test.mjs

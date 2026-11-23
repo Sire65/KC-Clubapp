@@ -1,5 +1,14 @@
 # Änderungen
 
+## (Version folgt) – 📤 Sollplan an DP2 übergeben (KC-DP-SOLL-UEBERGABE)
+Hansi 23.11.: „Ein-Klick-Übergabe des in der Club-App berechneten Sollplans nach DP2“ und „wenn der Sollplan sich nochmals ändert, muss der Abgleich erneut laufen“.
+- Migration `20261123_kc_dp_soll_uebergabe.sql` (noch NICHT eingespielt): Tabelle `kc_dp_soll_uebergabe` (RLS, nur service_role) mit dem vollständigen Stand je Übergabe (`rows`, `anzahl`, `pruefsumme`, Status offen/uebernommen/verworfen); DP2 holt über `kc_dp_soll_uebergabe_pending` ab und bestätigt über `kc_dp_soll_uebergabe_ack` (auth.uid() + kc_dp_memberships admin/planner/duty_manager, kein anon, Prüfregister-Einträge).
+- `dp-rechnen.js`: `dpSollZeilen` macht aus dem gerechneten Plan DP2-Schichten (personId, date, start/end, zone front/back/neutral aus vorne/hinten, area, Pause wie DP2: über 6 Std. 30 Min., über 9 Std. 45 Min., stabiler `importKey` `CLUB-<datum>-<personId>`) – Rechnung, Anzeige und PDF bleiben unverändert. Bereitschaft wird nicht übergeben (nur gezählt). Nur veröffentlichte Veranstaltungstage, Person über eindeutigen Namen.
+- Server-Aktion `dp_soll_uebergeben` (nur Admin): prüfen/zählen, übergeben (ältere offene Übergabe → verworfen, gleicher Stand → nichts Neues), „automatisch nachreichen“ an/aus. Nach der ersten Übergabe legt jede Neuberechnung mit geänderten Schichten (Prüfsumme) von selbst eine neue Übergabe an; in DP2 ändert sich erst nach „Übernehmen“ etwas.
+- App „🗓️ Dienstplan zum Drucken“: Knopf „📤 An DP2 übergeben“ mit Rückfrage und Erfolgsmeldung, Stand der Übergabe und Schalter „Änderungen automatisch nachreichen“.
+- Gegenstück in DP2 (Zweig `dp-soll-uebergabe` in Sire65/dp3): Vorschau mit neu/geändert/entfällt/unverändert, Schutz für in DP2 geänderte Schichten.
+- Test `tests/dp-soll-uebergabe.test.mjs`.
+
 ## 3.17.0 – 2026-11-23 – 🚗 Laufschrift: „Mitfahrgelegenheit ausgebucht“ (KC-CLUB-MITFAHRT-AUSGEBUCHT)
 Wunsch Hansi 23.11.: „Schreibe in die Laufschrift, dass meine Mitfahrgelegenheit ausgebucht ist. Immer in solchen Fällen.“
 - Server `mitfahrtLaufbandListe`: Angebote zu kommenden Terminen/Aktionen, deren Plätze belegt sind (Mitfahrer und Gäste aus `kc_club_mitfahrt_gast`), kommen jetzt als `art: "voll"` (mit Platzzahl) statt wegzufallen. Bei mehr als `MITFAHRT_LB_MAX` Einträgen haben Suchen und freie Angebote Vorrang, „voll“ füllt nur auf.
