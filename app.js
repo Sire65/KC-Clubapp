@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "3.12.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "3.13.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -14177,7 +14177,7 @@ function infoAdmin() {
       <span>👥 <b>${m.gesamt}</b> Mitglieder</span><span>🔑 <b>${m.mitZugang}</b> mit Zugang</span><span>🟢 <b>${m.online}</b> online</span>
       <span>📅 <b>${m.heute}</b> heute</span><span>🗓️ <b>${m.woche}</b> in 7 Tagen</span><span>⏳ <b>${m.nieAngemeldet}</b> nie angemeldet</span>
       <span>🔔 <b>${m.pushAbos}</b> mit Push</span><span>🔄 <b>${m.alteVersion}</b> alte Version</span></div>
-    <div class="knoepfe" style="margin-top:8px"><button class="wlink" onclick="inkognitoSetzen(!inkognitoAn())" aria-pressed="${inkognitoAn()}">${inkognitoAn() ? "🕶️ Inkognito: AN – ausschalten" : "🕶️ Inkognito einschalten"}</button><button class="wlink" onclick="adminBlatt()">📋 Einzelheiten ›</button><button class="wlink" onclick="INFO_DATEN.admin.geholt=0;infoDatenLaden(INFO_FELDER[INFO_I], true)">↻ Neu prüfen</button></div>`;
+    <div class="knoepfe" style="margin-top:8px"><button class="wlink" onclick="inkognitoSetzen(!inkognitoAn())" aria-pressed="${inkognitoAn()}">${inkognitoAn() ? "🕶️ Inkognito: AN – ausschalten" : "🕶️ Inkognito einschalten"}</button><button class="wlink" onclick="adminQrBlatt()">🔳 QR-Codes ›</button><button class="wlink" onclick="adminBlatt()">📋 Einzelheiten ›</button><button class="wlink" onclick="INFO_DATEN.admin.geholt=0;infoDatenLaden(INFO_FELDER[INFO_I], true)">↻ Neu prüfen</button></div>`;
 }
 // Notfall: Spiegel sofort anstoßen (verbraucht Neon-Rechenzeit – daher mit Rückfrage)
 async function adminSpiegeln() {
@@ -35061,6 +35061,70 @@ async function ausweisZeigen() {
     const f = $("ausweisBlatt")?.querySelector(".blatt-innen"); if (f) f.innerHTML = ausweisHtml(x, true);
   } catch (e) { if (!alt) { $("ausweisBlatt")?.remove(); meldeFehler(e); } }
 }
+// ---------- 3.13.0 KC-CLUB-ADMIN-QR (Wunsch Hansi 23.11.2026 „die 3 QR-Kassencodes auf meinem Handy in der Club App unter Adminbereich,
+// dazu die QR-Codes aller Mitglieder, damit ich sie einbuchen kann, wenn sie ihr Handy vergessen haben“) ----------
+// Admin-Zentrale → „🔳 QR-Codes“. Kassen-QR kommt vom Mini-PC (enthält den Kassen-Schlüssel – nur Admin, nicht gespeichert, nur im Arbeitsspeicher).
+// Mitglieder-QR = Mitgliedsnummer wie auf dem Plastik-Ausweis (an Kasse/Stechuhr vor den Scanner halten).
+const AQ = { reiter: "kassen", kassen: null, mitglieder: null, suche: "", fehler: "" };
+function aqKopf() {
+  const r = (id, t) => `<button class="knopf klein${AQ.reiter === id ? " haupt" : ""}" aria-pressed="${AQ.reiter === id}" onclick="AQ.reiter='${id}';aqZeichnen()">${t}</button>`;
+  return `<div class="kopf2" style="margin:0 0 8px"><h3 style="margin:0;flex:1">🔳 QR-Codes</h3><button class="knopf klein" onclick="$('aqBlatt').remove()" aria-label="Schließen" title="Schließen">✕</button></div>
+    <div class="knoepfe" style="margin-bottom:8px">${r("kassen", "🧾 Kassen")}${r("mitglieder", "🪪 Mitglieder")}</div>`;
+}
+function aqKassenHtml() {
+  if (AQ.kassen === null) return '<p class="hinweis">⏳ Wird geladen …</p>';
+  if (!AQ.kassen.length) return '<p class="hinweis">Noch keine Kassen-Codes da. Sie kommen vom Mini-PC am Stand, sobald dort „KC Kasse starten“ läuft und er Internet hat.</p>';
+  return `<p class="hinweis">Mit dem Tablet scannen, um es als diese Kasse zu koppeln. <b>Nur im WLAN des Stand-Routers gültig.</b> Nicht weitergeben – bei Verlust im PC-Manager „Gerät verloren“.</p>`
+    + AQ.kassen.map((k, i) => `<div class="ausweis-karte" style="margin-bottom:12px"><div class="ausweis-kopf"><b>${esc(k.kasse)}</b> · ${esc(k.stand)}</div>
+      <div class="ausweis-qr" onclick="aqGross(${i})" style="cursor:zoom-in">${ausweisSvg(k.url)}</div>
+      <div class="unter" style="font-size:.8rem">Stand: ${esc(wann(k.gemeldet_am))}${k.zettel === "veraltet" ? " · ⚠️ gedruckter Zettel ist veraltet" : ""}</div></div>`).join("");
+}
+function aqMitgliederHtml() {
+  if (AQ.mitglieder === null) return '<p class="hinweis">⏳ Wird geladen …</p>';
+  const q = AQ.suche.trim().toLowerCase();
+  const liste = AQ.mitglieder.filter((m) => !q || m.name.toLowerCase().includes(q) || m.nummer.toLowerCase().includes(q));
+  return `<p class="hinweis">Handy vergessen? Namen antippen und den QR-Code an der <b>Kasse</b> oder <b>Stechuhr</b> vor den Scanner halten (Bildschirm hell).</p>
+    <input id="aqSuche" type="search" placeholder="Name oder KC-Nummer suchen" value="${esc(AQ.suche)}" oninput="AQ.suche=this.value;aqListe()" style="width:100%;margin-bottom:8px" autocomplete="off">
+    <div id="aqListe">${aqListeHtml(liste)}</div>`;
+}
+function aqListeHtml(liste) {
+  if (!liste.length) return '<p class="hinweis">Niemand gefunden.</p>';
+  return liste.map((m) => `<button class="wlink" style="display:flex;width:100%;justify-content:space-between;padding:10px 6px;border-bottom:1px solid var(--linie,#ddd)" onclick="aqMitglied(${jsArg(m.nummer)})"><span>${esc(m.name)}</span><span>${esc(m.nummer)} ›</span></button>`).join("");
+}
+function aqListe() {
+  const q = AQ.suche.trim().toLowerCase(), z = $("aqListe");
+  if (z) z.innerHTML = aqListeHtml((AQ.mitglieder || []).filter((m) => !q || m.name.toLowerCase().includes(q) || m.nummer.toLowerCase().includes(q)));
+}
+function aqZeichnen() {
+  const f = $("aqBlatt")?.querySelector(".blatt-innen"); if (!f) return;
+  f.innerHTML = aqKopf() + (AQ.fehler ? `<p class="hinweis">⚠️ ${esc(AQ.fehler)}</p>` : "") + (AQ.reiter === "kassen" ? aqKassenHtml() : aqMitgliederHtml());
+  if (AQ.reiter === "mitglieder" && AQ.mitglieder === null) aqLaden("mitglieder");
+}
+async function aqLaden(was) {
+  try {
+    await qrLaden();
+    if (was === "kassen") AQ.kassen = (await api("admin_qr_kassen")).kassen || [];
+    else AQ.mitglieder = (await api("admin_qr_mitglieder")).liste || [];
+    AQ.fehler = "";
+  } catch (e) { AQ.fehler = e?.message || "Gerade nicht abrufbar."; if (was === "kassen") AQ.kassen = []; else AQ.mitglieder = []; }
+  aqZeichnen();
+}
+function adminQrBlatt() {
+  if (!ICH?.admin) return;
+  Object.assign(AQ, { reiter: "kassen", kassen: null, mitglieder: null, suche: "", fehler: "" }); // Kassen-Codes nie aufheben – jedes Öffnen frisch
+  blattAuf("aqBlatt", aqKopf() + aqKassenHtml());
+  aqLaden("kassen");
+}
+function aqGrossHtml(titel, unter, inhalt) {
+  return `<div class="kopf2" style="margin:0 0 6px"><h3 style="margin:0;flex:1">${esc(titel)}</h3><button class="knopf klein" onclick="$('aqGrossBlatt').remove()" aria-label="Schließen" title="Schließen">✕</button></div>
+    <div class="ausweis-karte"><div class="ausweis-qr">${ausweisSvg(inhalt)}</div><div class="ausweis-name">${esc(unter)}</div></div>
+    <p class="hinweis" style="text-align:center">Bildschirm ganz hell stellen und vor den Scanner halten.</p>`;
+}
+function aqGross(i) { const k = AQ.kassen?.[i]; if (k) blattAuf("aqGrossBlatt", aqGrossHtml(`🧾 ${k.kasse}`, k.stand, k.url)); }
+function aqMitglied(nummer) {
+  const m = (AQ.mitglieder || []).find((x) => x.nummer === nummer); if (!m) return;
+  blattAuf("aqGrossBlatt", aqGrossHtml("🪪 Ausweis", `${m.name} · ${m.nummer}`, m.nummer));
+}
 // ---------- 2.690.0 KC-CLUB-HAENDLERAUSWEIS (Wunsch Hansi „Händler und Marktbeschicker bekommen auf dem Weihnachtsmarkt Rabatt – vorher einen Ausweis,
 // den sie am Stand vorzeigen; draufstehen soll ‚nicht übertragbar‘ usw.“ + „QR-Code oben rechts“ + „ins Büro, wo die Formulare und Druckvorlagen sind“) ----------
 // Scheckkarte 85 × 54 mm, 10 je A4 mit Schnittmarken an jeder Ecke; Blatt 1 Vorderseiten (fortlaufend nummeriert), Blatt 2 Rückseiten (gespiegelt für
@@ -37921,6 +37985,7 @@ const SPUR_WAS = { schlaf_ein: "💤 App eingeschlafen (Schlafmodus)", glueckske
 // (Fenster-ID, Hilfe-ID, Video-/Film-ID) – erst der Admin-Bildschirm übersetzt sie in Namen (spurMitName). Übersicht je Mitglied: spurUebersicht().
 // Registry FENSTER_NAMEN: Fenster-ID → Name in den Wegen. Fehlt ein Name, steht dort „🪟 Fenster: „ID““ – tests/spur-voll.test.mjs meldet fehlende Namen.
 const FENSTER_NAMEN = {
+  aqBlatt: "🔳 QR-Codes (Admin)", aqGrossBlatt: "🔳 QR-Code groß", // 3.13.0 KC-CLUB-ADMIN-QR
   peBlatt: "🏷️ Preisetiketten", // KC-CLUB-PREISETIKETTEN
   aaBlatt: "🤖 Autoantwort einstellen", // KC-CLUB-AUTOANTWORT
   sendeBerichtBlatt: "📊 Sendebericht", // KC-CLUB-SENDEBERICHT (19.11.2026)

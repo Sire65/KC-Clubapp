@@ -21,6 +21,7 @@ Anlass: Supabase-Ausgang (Egress) 4,64 von 5 GB am 22.11. (Zeitraum bis 26.11.) 
 1. **Bis einschließlich 22.11.2026** dürfen die geplanten Bündel noch eingespielt werden.
 2. **Ab 23.11.2026** nur noch **Fehlerbeseitigung** (App für Mitglieder kaputt, falsche Daten, Sicherheit, Datensicherung) – keine neuen Funktionen,
    keine Umbauten, keine Schönheitskorrekturen. Neuerungen auf Arbeitszweigen fertigstellen und liegen lassen.
+   - **Ausnahme 23.11.2026:** Hansi hat für das Bündel 3.13.0 (🔳 QR-Codes im Adminbereich) „Update-Stopp aufheben, heute einspielen“ gewählt.
 3. Der Stopp gilt, **bis Hansi die Übersicht freigibt** (ausdrücklich, z. B. „Update-Stopp aufheben“). Ein neuer Abrechnungszeitraum (26.11.) hebt ihn nicht von selbst auf.
 4. Auch beim Fehlerbeseitigen: so wenige Versionen wie möglich (bündeln), keine Supabase-Protokolle durchsuchen (Protokollabfrage 115/100 GB am 22.11.).
 5. Bis 26.11. sind Hintergrundjobs gedrosselt (Rückstellung automatisch, `kc_db_mirror_audit` action `hintergrund_spartakt_egress`, `mirror_spartakt_egress`).

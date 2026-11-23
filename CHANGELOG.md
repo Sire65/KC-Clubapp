@@ -1,5 +1,13 @@
 # Änderungen
 
+## 3.13.0 – 2026-11-23 – 🔳 Admin: QR-Codes der Kassen und aller Mitglieder (KC-CLUB-ADMIN-QR)
+Wunsch Hansi 23.11.2026: „die 3 QR-Kassencodes auf meinem Handy in der Club App unter Adminbereich, dazu die QR-Codes aller Mitglieder, damit ich sie bei Bedarf einbuchen kann, wenn sie ihr Handy vergessen haben“. Entschieden: Update-Stopp (KC-EGRESS-STOPP) für dieses Bündel aufgehoben, heute einspielen; Kassen-Codes nur für Admins.
+- **Admin-Zentrale → „🔳 QR-Codes ›“** mit zwei Reitern:
+  - **🧾 Kassen:** die QR-Codes von KASSE-01/02/03 (wie die gedruckten Zettel), groß antippbar, mit Stand und Zeitpunkt. Sie kommen vom Mini-PC am Stand (Kasse-Repo, Stand-Brücke `kc_stand_kassen_qr_melden`, nur mit Stand-Geheimnis; Migration `20261123_kc_stand_kassen_qr.sql` im Kasse-Repo). Der Code enthält den Kassen-Schlüssel (gilt nur im Stand-WLAN): nur Admin, **nie auf dem Handy gespeichert** (jedes Öffnen frisch), jeder Abruf im Protokoll (`admin_qr_kassen`, nur Anzahl). Neuer Schlüssel nach „Gerät verloren“ → der Mini-PC meldet den neuen Code von selbst.
+  - **🪪 Mitglieder:** alle aktiven Mitglieder mit gültiger Mitgliedsnummer, Suche nach Name/Nummer; antippen = großer Ausweis-QR (Inhalt = Mitgliedsnummer, genau wie Plastik-Ausweis und „Mein Ausweis-QR“) zum Einbuchen an Kasse oder Stechuhr.
+- **Server:** neue Aktionen `admin_qr_kassen`, `admin_qr_mitglieder` (zuerst `nurAdmin`).
+- Tests: neu `admin-qr` (Admin-Prüfung in Server und App, Protokoll, keine Speicherung der Kassen-Codes, nur gültige Nummern).
+
 ## 3.12.0 – 2026-11-23 – 🗂️ Rollkartei: Schloss deutlich sichtbar, Wischen am Handy repariert (KC-CLUB-ROLLKARTEI-SCHLOSS-FIX)
 Fehlerbeseitigung nach 3.11.0, Rückmeldung Hansi 23.11.2026 (Android-Handy, Chrome, installierte App).
 - **Ursache Wischen:** Chrome hat am echten Handy die senkrechte Geste selbst übernommen. Der Inhalt der Karte (z. B. der Nachrichtenverlauf in der Chats-Kartei) durfte nativ scrollen, das löste nach wenigen Pixeln `pointercancel` aus. Die Kartei sah dann nur einen kurzen, langsamen Zug und rastete zurück. Dazu hat ein langer Karteninhalt den Wisch zuerst für sich genommen, und das Tempo wurde zur Verarbeitungszeit gemessen statt zur Zeit des Ereignisses; bei vollem Hauptfaden kamen die Ereignisse gebündelt an, sodass ein schneller Wisch zu langsam gemessen wurde. Nachgestellt mit Android-Emulation (Pixel 7, CDP-Touch): Mit 3.11.0 gab es beim Wischen im Verlauf `pointercancel`, und 203 von 215 `touchmove` ließen sich nicht mehr abfangen; jetzt sind es 0.

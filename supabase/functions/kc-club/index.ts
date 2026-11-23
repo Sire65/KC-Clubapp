@@ -195,7 +195,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "3.12.0";
+const SERVER_VERSION = "3.13.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -21913,6 +21913,28 @@ Köcheclub-App`,
         if (error) throw new Fehler("Ausweis gerade nicht abrufbar.", 503);
         const nr = String(p?.mitgliedsnummer ?? "").trim().toUpperCase();
         return json({ nummer: /^KC-\d{3,5}$/.test(nr) ? nr : null });
+      }
+      // ----- 3.13.0 KC-CLUB-ADMIN-QR (Wunsch Hansi 23.11.2026): QR-Codes der Tablet-Kassen und aller Mitglieder im Adminbereich -----
+      // Kassen-QR: kommt vom Mini-PC am Stand (kc_stand_kassen_qr, nur service_role); enthält den Kassen-Schlüssel → nur Admin,
+      // jedes Abrufen wird protokolliert (ohne Inhalt). Mitglieder-QR = nur die Mitgliedsnummer (wie der Plastik-Ausweis).
+      case "admin_qr_kassen": {
+        nurAdmin(ich);
+        const { data: st, error: e1 } = await db.from("kc_stand").select("id,name").eq("aktiv", true);
+        if (e1) throw new Fehler("Kassen-QR-Codes gerade nicht abrufbar.", 503);
+        const ids = (st ?? []).map((x: any) => x.id);
+        const { data, error } = ids.length ? await db.from("kc_stand_kassen_qr").select("stand_id,kasse,url,port,zettel,gemeldet_am").in("stand_id", ids).order("kasse") : { data: [], error: null };
+        if (error) throw new Fehler("Kassen-QR-Codes gerade nicht abrufbar.", 503);
+        await protokoll(ich.person_id, "admin_qr_kassen", { anzahl: (data ?? []).length });
+        const name = new Map((st ?? []).map((x: any) => [x.id, x.name]));
+        return json({ kassen: (data ?? []).map((k: any) => ({ stand: name.get(k.stand_id) || "Stand", kasse: k.kasse, url: k.url, zettel: k.zettel, gemeldet_am: k.gemeldet_am })) });
+      }
+      case "admin_qr_mitglieder": {
+        nurAdmin(ich);
+        const { data, error } = await db.from("kc_core_personen").select("person_id,vorname,nachname,name,mitgliedsnummer").eq("aktiv", true).limit(1000);
+        if (error) throw new Fehler("Mitglieder gerade nicht abrufbar.", 503);
+        const liste = (data ?? []).map((x: any) => ({ name: String(x.name || [x.vorname, x.nachname].filter(Boolean).join(" ") || "").trim(), nummer: String(x.mitgliedsnummer ?? "").trim().toUpperCase() }))
+          .filter((x: any) => /^KC-\d{3,5}$/.test(x.nummer)).sort((a: any, b: any) => a.name.localeCompare(b.name, "de"));
+        return json({ liste });
       }
       case "wl_liste": {
         nurAdmin(ich);
