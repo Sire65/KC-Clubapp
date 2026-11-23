@@ -1,6 +1,6 @@
 # Änderungen
 
-## (Version folgt) – 🤖 Autoantwort für Einzelchats (KC-CLUB-AUTOANTWORT)
+## 3.10.0 – 2026-11-23 – 🤖 Autoantwort für Einzelchats (KC-CLUB-AUTOANTWORT)
 Wunschliste #101, Wunsch Hansi 23.11.2026, entschieden: „alle, Schalter + Zeitraum + Kombination, 1× in 12 Std., nur Einzelchats, freier Text mit Vorlage“ + schneller Schalter ohne Zahnrad.
 - **Für alle mit Chat-Zugang** (Mitglieder, Aushilfen, Gäste): eigener Text (bis 500 Zeichen) oder Vorlage „Liebe(r) {vorname}, danke für deine Nachricht. … Liebe Grüße {meinname}“ ({vorname} = Vorname des Absenders, {meinname} = eigener Vorname). Gespeichert in `kc_club_person_einstellung` (Schlüssel `autoantwort` = `{ an, text, von, bis, nachStatus, nurOffline }`) – dafür keine neue Tabelle.
 - **Wann aktiv:** Schalter an UND (kein Zeitraum ODER heute zwischen „von“ und „bis“, ganze Tage deutscher Zeit) – oder „auch automatisch, solange mein Status 🏖️ Urlaub / 🤒 krank / 🔴 nicht erreichbar ist“. Nach „bis“ gilt sie als aus (Anzeige „abgelaufen am …“). Wahlweise „nur, wenn ich gerade nicht in der App bin“.
