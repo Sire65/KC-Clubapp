@@ -18,7 +18,7 @@ assert.ok(/if \(z\.rolle\) \{ z\.karten\[ziel\]\.scrollTop = 0; rkRolleFahren\(z
 // Bewegung: dem Finger folgen, Inhalt zuerst, Schwung, Einrasten
 const zug = teil("function rkRolleEinrichten(", "function rkRolleAbbauen(");
 assert.ok(/z\.p \+= rest \/ schritt/.test(zug) && /k\.scrollTop \+= t; rest -= t;/.test(zug), "folgt dem Finger, erst der Karteninhalt");
-assert.ok(/const weit = Math\.max\(-4, Math\.min\(4, /.test(zug) && /rkRolleFahren\(z, ziel\)/.test(zug), "Schwung über bis zu 4 Karten, dann einrasten");
+assert.ok(/let ziel = basis \+ r \* rkSchwungKarten\(/.test(zug) && /rkRolleFahren\(z, ziel\)/.test(zug), "Schwung über mehrere Karten (KC-CLUB-ROLLKARTEI-SCHLOSS), dann einrasten");
 assert.ok(/z\.klickSperre/.test(zug) && /!g\.ziel\?\.closest\?\.\("button, a, input, select, textarea, \.rk-zaehler, \.rk-reiter"\)/.test(zug), "Ziehen löst keinen Klick aus; Knöpfe bleiben Knöpfe");
 // Lage-Rechnung: vorn 0, kommend unten, gelesen oben gestapelt – reine Rechnung prüfen
 const zeichnen = teil("function rkRolleZeichnen(", "function rkRolleStand(");
@@ -32,7 +32,7 @@ assert.ok(/rkRast\(\);/.test(zeichnen), "bei jeder Karte ein Rasten");
 const rast = teil("function rkRast()", "function rkRolleEinrichten(");
 assert.ok(/if \(!einst\("ton", true\) \|\| !einst\("rkRast", true\)\) return;/.test(rast) && /jetzt - rkRastZeit < 35/.test(rast) && /navigator\.vibrate\?\.\(4\)/.test(rast), "abschaltbar, gedrosselt, kurzes Zucken");
 // sanft und rücksichtsvoll
-assert.ok(/if \(!fxAn\(\) \|\| Math\.abs\(weg\) < 0\.001\) \{ z\.p = ziel;/.test(app), "ohne Effekte: springt direkt (kein Ruckeln)");
+assert.ok(/if \(rkRuhig\(\) \|\| Math\.abs\(weg\) < 0\.001\) \{ z\.p = ziel;/.test(app), "ohne Effekte: springt direkt (kein Ruckeln)");
 assert.ok(/\.rk\.rk-rolle > \.rk-karte \{ transition: none !important;[^}]*touch-action: none;/.test(html), "keine CSS-Übergänge, eigener Finger");
 console.log("✅ rollkartei-rolle: alle Prüfungen bestanden");
 // KC-CLUB-ROLLKARTEI-GROSS (2.996.0, Wunsch Hansi 21.11.: „wenn sie im Vordergrund ist und ich nicht weiter rolle, soll sie groß werden und einrasten –

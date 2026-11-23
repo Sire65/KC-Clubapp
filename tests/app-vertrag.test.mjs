@@ -9961,14 +9961,14 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 
 // 2.182.0 KC-CLUB-ROLLKARTEI: schwebende Knöpfe (🎙️, ?, 🔍) liegen nicht mehr über dem Rad (Fund Hansi)
 {
-  assert.ok(/document\.querySelectorAll\("\.sb-knopf, \.hz-frage, \.su-klein"\)/.test(html) && /rad\.style\.left = l \+ "px"; rad\.style\.right = r \+ "px";/.test(html) && /if \(still\) rkMasse\(z\);/.test(html), "Rad spart schwebende Knöpfe aus");
+  assert.ok(/document\.querySelectorAll\("\.sb-knopf, \.hz-frage, \.su-klein"\)/.test(html) && /rad\.style\.left = l \+ "px"; rad\.style\.right = r \+ "px";/.test(html) && /if \(still\) \{ if \(z\.rolle && !z\.lauf\) z\.p = z\.i; rkMasse\(z\); \}/.test(html), "Rad spart schwebende Knöpfe aus");
 }
 
 // 2.183.0 KC-CLUB-ROLLKARTEI-2 (Wunsch Hansi: hintere Karten antippen, mit dem Finger drehen, aktive Karte farbig, Endlos-Rolle)
 {
   const idx = lies("index.html");
   assert.ok(/g\.className = "rk-griff"; g\.dataset\.k = k; g\.onclick = \(\) => rkGehe\(z, z\.i \+ k, 1\);/.test(html) && /\.rk-griff\[data-k="2"\] \{ top: calc\(var\(--rk-oben\) - 84px\); \}/.test(idx), "hintere Karten direkt antippbar");
-  assert.ok(/const quer = Math\.abs\(dx\) > 50/.test(html) && /schwung = Math\.max\(1, Math\.min\(5,/.test(html) && /if \(hoch && s0\.karte && !\(r > 0 \? s0\.unten : s0\.oben\)\) return;/.test(html), "Wischen dreht (mit Schwung), Karteninhalt scrollt zuerst");
+  assert.ok(/const quer = Math\.abs\(dx\) > 50/.test(html) && /schwung = rkSchwungKarten\(Math\.abs\(weg\) \/ dt, rkRuhig\(\)\)/.test(html) && /if \(hoch && s0\.karte && !\(r > 0 \? s0\.unten : s0\.oben\)\) return;/.test(html), "Wischen dreht (mit Schwung), Karteninhalt scrollt zuerst");
   assert.ok(/const k = \(i - z\.i \+ n\) % n;/.test(html) && /const ziel = \(\(i % n\) \+ n\) % n;/.test(html), "Endlos-Rolle: nach der letzten kommt die erste");
   assert.ok(/\.rk > \.rk-karte\[data-rk="vorn"\] \{ border-top: 7px solid var\(--rot\);/.test(idx), "aktive Karte mit farbigem Rand oben");
 }
@@ -9999,7 +9999,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 {
   const idx = lies("index.html");
   assert.ok(/function rkJalousie\(z, still\)/.test(html) && /if \(!rkJalAn\(\) \|\| !fxAn\(\) \|\| !z\?\.an\) return;/.test(html) && /const warte = still \? 60 : 160, hoch = 360/.test(html), "2.190.0: rollt sofort und zügig hoch, aus bei Effekte aus");
-  assert.ok(/if \(--rest > 0\) setTimeout\(weiter, 90\); else rkJalousie\(z\);/.test(html), "beim schnellen Drehen nur auf der letzten Karte");
+  assert.ok(/if \(--rest > 0\) setTimeout\(weiter, [^;]+\); else rkJalousie\(z\);/.test(html), "beim schnellen Drehen nur auf der letzten Karte");
   assert.ok(!/class="rk-jal-knopf/.test(html) && /const rkJalAn = \(\) => false;/.test(html), "2.191.0: Jalousie auf Wunsch weggelassen, kein Umschalter mehr");
 }
 

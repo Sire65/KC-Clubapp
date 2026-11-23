@@ -1891,6 +1891,13 @@
   /* KC-CLUB-ROLLKARTEI-GROSS (2.996.0): große Karte – vorn mit rotem Leuchten, Zähler etwas zurückhaltender */
   .rk.rk-rolle.rk-gross > .rk-karte.rk-vorn { box-shadow: 0 -3px 16px -2px var(--rot), 0 10px 28px rgba(0,0,0,.35); }
   .rk.rk-gross .rk-zaehler { opacity: .88; }
+  /* KC-CLUB-ROLLKARTEI-SCHLOSS (23.11.2026): gelbes Schloss oben rechts auf der Karte (neben „?“) – 🔓 offen / 🔒 zu = Karte festgestellt */
+  :is(.rk, .rk-box) > .rk-karte > summary:has(> .rk-fest) { padding-right: 60px; }
+  .rk-fest { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); z-index: 3; display: grid; place-items: center; width: 38px; height: 38px; min-height: 0; padding: 0;
+    border-radius: 50%; border: 2px solid #c99a00; background: #fff4c2; color: #4a3700; font: 1.05rem/1 system-ui, sans-serif; cursor: pointer; pointer-events: auto; box-shadow: 0 1px 4px rgba(0,0,0,.2); }
+  .rk-fest.zu { background: #ffd21f; border-color: #7a5800; box-shadow: 0 0 0 3px rgba(255,210,31,.5), 0 2px 6px rgba(0,0,0,.3); }
+  .rk-fest:focus-visible { outline: 3px solid var(--rot); outline-offset: 2px; }
+  :is(.rk, .rk-box).rk-fest-an > .rk-karte.rk-vorn { outline: 3px solid #ffd21f; outline-offset: -3px; }
   /* 2.187.0 Jalousie über der vorderen Karte: Lamellen klappen von unten nach oben weg */
   .rk-jal { position: absolute; left: 0; right: 0; top: 0; height: 100%; z-index: 5; pointer-events: none; overflow: hidden; border-radius: inherit; }
   .rk-jal-zug { position: absolute; inset: 0; }
@@ -6219,13 +6226,17 @@
   }
 /* KC-CLUB-AUTOANTWORT (Wunschliste #101): 🤖 in der Kopfzeile von Nachrichten – grau = aus, leuchtet blau = an; Balken und Kennzeichen an der Sprechblase */
 #v-nachrichten .kopf2 > .aa-knopf { flex: none; min-width: 0; padding: 4px 6px; font-size: 1rem; line-height: 1.2; filter: grayscale(1); opacity: .65; touch-action: manipulation; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
-#v-nachrichten .kopf2 > .aa-knopf.aa-an { filter: none; opacity: 1; background: #e3f2fd; border-color: #1e88e5; outline: 2px solid #1e88e5; outline-offset: 0; box-shadow: 0 0 10px rgba(30,136,229,.55); }
+/* KC-CLUB-AUTOANTWORT-PULS (Wunsch Hansi 23.11.2026): an = ROT und schwillt sanft auf und ab (nur transform/box-shadow – nichts verschiebt sich); weniger Bewegung: rot, ruhig */
+#v-nachrichten .kopf2 > .aa-knopf.aa-an { filter: none; opacity: 1; background: #ffebee; color: #b71c1c; border-color: #d32f2f; outline: 2px solid #d32f2f; outline-offset: 0; box-shadow: 0 0 8px rgba(211,47,47,.55); animation: aa-puls 1.6s ease-in-out infinite; will-change: transform; }
+@keyframes aa-puls { 0%, 100% { transform: scale(1); box-shadow: 0 0 4px rgba(211,47,47,.45); } 50% { transform: scale(1.1); box-shadow: 0 0 14px 3px rgba(211,47,47,.75); } }
+@media (prefers-reduced-motion: reduce) { #v-nachrichten .kopf2 > .aa-knopf.aa-an { animation: none; transform: none; } }
+:root.ohne-anim #v-nachrichten .kopf2 > .aa-knopf.aa-an { animation: none; }
 .aa-balken { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; padding: 6px 8px 6px 12px; border-radius: 10px; background: #e3f2fd; color: #0d47a1; border: 1px solid #90caf9; font-size: .9rem; }
 .aa-balken .aa-balken-text { flex: 1; min-width: 0; text-align: left; background: none; border: 0; padding: 0; color: inherit; font: inherit; font-weight: 600; cursor: pointer; }
 .aa-balken .aa-aus { flex: none; border: 1px solid #1e88e5; background: #fff; color: #0d47a1; border-radius: 999px; padding: 3px 12px; font-weight: 700; cursor: pointer; }
 .aa-marke { display: inline-block; margin: 0 0 4px; padding: 1px 8px; border-radius: 999px; background: #1e88e5; color: #fff; font-weight: 700; font-size: .78rem; }
 .blase.eigen .aa-marke { background: #fff; color: #1565c0; }
-:root.dunkel .aa-balken, :root.dunkel #v-nachrichten .kopf2 > .aa-knopf.aa-an { background: var(--blaubg); color: var(--blau); } :root.dunkel .aa-balken .aa-aus { background: var(--blaubg); color: var(--blau); }
+:root.dunkel .aa-balken { background: var(--blaubg); color: var(--blau); } :root.dunkel #v-nachrichten .kopf2 > .aa-knopf.aa-an { background: #4a1414; color: #ffcdd2; } :root.dunkel .aa-balken .aa-aus { background: var(--blaubg); color: var(--blau); }
 /* KC-NOTAUS (21.11.2026, Wunsch Hansi): roter Pilzknopf auf gelbem Ring wie an Maschinen – 1,5 s halten löst aus; roter Balken für alle */
 .notaus-knopf { --fuell: 0; position: relative; width: 64px; height: 64px; border-radius: 50%; border: 0; padding: 0; cursor: pointer; flex: none;
   background: conic-gradient(#111 calc(var(--fuell) * 1turn), #ffd400 0); box-shadow: 0 0 0 2px #333, 0 2px 6px rgba(0,0,0,.35);

@@ -147,6 +147,7 @@ jobs:
       - run: node tests/spur-online.test.mjs
       - run: node tests/sb-region.test.mjs
       - run: node tests/rollkartei-rolle.test.mjs
+      - run: node tests/rollkartei-schloss.test.mjs
       - run: node tests/anfrage-gegenvorschlag.test.mjs
       - run: node tests/anfrage-vorschlag-bleibt.test.mjs
       - run: node tests/anfrage-andere-zeit.test.mjs

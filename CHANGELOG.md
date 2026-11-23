@@ -1,5 +1,14 @@
 # Änderungen
 
+## (Version folgt) – 🗂️ Rollkartei: sanft eine Karte, schnell durchrollen, 🔒 Karte feststellen (KC-CLUB-ROLLKARTEI-SCHLOSS) · 🤖 Autoantwort-Knopf rot pulsierend (KC-CLUB-AUTOANTWORT-PULS)
+Wunsch Hansi 23.11.2026 (Arbeitszweig `rollkartei-wischen` – wegen Update-Stopp KC-EGRESS-STOPP erst nach Freigabe einspielen).
+- **Wischen:** leichtes, langsames Wischen = genau **eine** Karte weiter/zurück (einrasten); schneller Wisch = je nach Schwung **3–10 Karten**, sanft auslaufend, dann Einrasten. Reine Rechnung `rkSchwungKarten(v, ruhig)` (px/ms → Karten, Schwelle `RK_SCHNELL` = 0,9). Gilt für die neue Rolle und die klassische Rollkartei.
+- **Mausrad:** ein Raster = eine Karte (Zeilen/Seiten umgerechnet), Touchpad-Schritte werden gesammelt. ▲▼ und „1 / 2“ bleiben.
+- **Gelbes Schloss** oben rechts auf jeder Karteikarte (neben dem „?“ für Wege, Platz rechts reserviert): 🔓 offen (Standard) / 🔒 zu (gelb, Karte gelb umrandet). Zu = Karte festgestellt: Wischen, Mausrad, ▲▼, Reiter rollen nicht weiter, die Karte federt zurück (Gummiband) und kurz erscheint „🔒 Karte festgestellt – zum Weiterrollen erst das Schloss öffnen“. Knöpfe und Scrollen innerhalb der Karte gehen weiter. Gemerkt je Kartei für die Sitzung (nur Arbeitsspeicher, `RK_FEST`), auch beim Schließen/erneuten Öffnen der Kartei und beim Neuzeichnen (Chats, Mitglieder).
+- **Barrierefrei:** Schloss als Knopf mit `aria-pressed`/`aria-label`; `prefers-reduced-motion` oder ✨ Effekte aus → kein Schwung, direkt einrasten, kein Gummiband (`rkRuhig`).
+- **🤖 Autoantwort-Knopf:** eingeschaltet jetzt **rot** und schwillt sanft auf und ab (1,6 s, nur `transform`/`box-shadow` – keine Layoutverschiebung); aus = grau wie bisher; weniger Bewegung = rot ohne Animation.
+- Tests: neu `rollkartei-schloss` (Rechnung Schwung → Karten, Sperre, Hinweistext, Sitzung, Aussehen); `rollkartei-rolle`, `app-vertrag`, `autoantwort` angepasst/ergänzt.
+
 ## 3.10.0 – 2026-11-23 – 🤖 Autoantwort für Einzelchats (KC-CLUB-AUTOANTWORT)
 Wunschliste #101, Wunsch Hansi 23.11.2026, entschieden: „alle, Schalter + Zeitraum + Kombination, 1× in 12 Std., nur Einzelchats, freier Text mit Vorlage“ + schneller Schalter ohne Zahnrad.
 - **Für alle mit Chat-Zugang** (Mitglieder, Aushilfen, Gäste): eigener Text (bis 500 Zeichen) oder Vorlage „Liebe(r) {vorname}, danke für deine Nachricht. … Liebe Grüße {meinname}“ ({vorname} = Vorname des Absenders, {meinname} = eigener Vorname). Gespeichert in `kc_club_person_einstellung` (Schlüssel `autoantwort` = `{ an, text, von, bis, nachStatus, nurOffline }`) – dafür keine neue Tabelle.

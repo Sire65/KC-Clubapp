@@ -169,4 +169,15 @@ assert.ok(/AA_LANG_MS = 550/.test(app) && /addEventListener\("contextmenu"/.test
 const appRegel = app.slice(app.indexOf("function aaGrund("), app.indexOf("const aaAbgelaufen"));
 assert.ok(/w\.an && \(!w\.von \|\| w\.von <= heute\) && \(!w\.bis \|\| heute <= w\.bis\)/.test(appRegel) && /AA_STATUS\.includes\(s\.status\) && \(!s\.bis \|\| s\.bis >= heute\)/.test(appRegel), "App rechnet wie der Server");
 assert.ok(lies("teile/hilfe.js").includes('{ id: "autoantwort", sym: "🤖"'), "Hilfe-Tipp");
+// KC-CLUB-AUTOANTWORT-PULS (Wunsch Hansi 23.11.2026): an = rot und pulsierend, aus = grau; weniger Bewegung = rot ohne Animation
+{
+  const an = html.match(/#v-nachrichten \.kopf2 > \.aa-knopf\.aa-an \{[^}]*\}/)?.[0] || "";
+  assert.ok(/border-color: #d32f2f/.test(an) && /outline: 2px solid #d32f2f/.test(an) && !/1e88e5/.test(an), "an = rot (nicht mehr blau)");
+  assert.ok(/animation: aa-puls 1\.6s ease-in-out infinite/.test(an), "an = pulsiert sanft (1,6 s)");
+  const kf = html.match(/@keyframes aa-puls \{[^\n]*/)?.[0] || "";
+  assert.ok(/transform: scale\(1\.1\)/.test(kf) && /box-shadow/.test(kf) && !/(width|height|padding|margin)\s*:/.test(kf), "nur Größe/Leuchten – keine Layoutverschiebung");
+  assert.ok(/@media \(prefers-reduced-motion: reduce\) \{ #v-nachrichten \.kopf2 > \.aa-knopf\.aa-an \{ animation: none; transform: none; \} \}/.test(html), "weniger Bewegung: rot ohne Animation");
+  assert.ok(/#v-nachrichten \.kopf2 > \.aa-knopf \{[^}]*filter: grayscale\(1\); opacity: \.65;/.test(html), "aus = grau wie bisher");
+  assert.ok(/k\.classList\.toggle\("aa-an", !!g\)/.test(app), "Klasse aa-an folgt dem Stand");
+}
 console.log("autoantwort: ok");
