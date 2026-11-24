@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "3.18.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "3.19.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -9860,6 +9860,9 @@ const DOKUMENTE = [
   { id: "kasse-karteikarten", sym: "🗂️", t: "Bilderrechner-Training Karteikarten", u: "Version 4.6 · 74 Karten · beidseitig drucken", datei: "dokumente/Bilderrechner-Training_Karteikarten_V4.6.pdf", ort: "technik" }, // 2.705.0: V4.6 – Name Bilderrechner-Training (Wunsch Hansi „nicht Kasse“), Fußzeile auf Seite 1; V4.5/V4.4 bleiben als Datei · // 2.703.0: V4.5 – Seite 1 (Anleitung) passt wieder auf eine Seite; V4.4 bleibt als Datei
   // 2.756.0 KC-CLUB-SICHERHEITSKONZEPT: ort "sicherheit" = nicht in „Meine Dokumente“, sondern über Technik → 🔐 Sicherheit & Datenschutz (‹ Zurück → Startseite)
   { id: "sicherheitskonzept", sym: "🔐", t: "Sicherheit & Datenschutz", u: "So sicher sind deine Daten · 10 Seiten", datei: "dokumente/Sicherheit_und_Datenschutz_V2.pdf", ort: "sicherheit" }, // V2 (30.10.2026): „Die KI liest keine Chats“ (KC-CHATS-PRIVAT) – V1 bleibt als Datei
+  // 3.19.0 KC-CLUB-PREISLISTEN-WM2026 (Wunsch Hansi 24.11.2026 „baue sie in die Club-App ein“ – Vorstellung in der Sitzung):
+  // 30 Entwürfe der Preisliste Weihnachtsmarkt 2026 mit Allergen-Aushang und Stimmzettel (Club-App-Fassung, 6,2 MB) – liegt auf GitHub Pages, kein Supabase-Datenverkehr
+  { id: "preislisten-wm2026", sym: "🏷️", t: "Preislisten Weihnachtsmarkt 2026", u: "30 Entwürfe · Allergen-Aushang · Stimmzettel · 34 Seiten", datei: "dokumente/Preislisten_Weihnachtsmarkt_2026_Entwuerfe.pdf", neuBis: "2026-12-13" },
   { id: "bilderrechner", sym: "🧮", t: "Schnellanleitung Bilderrechner", u: "Kurzanleitung V4.3 · 33 Seiten", datei: "dokumente/Kurzanleitung_Bilderrechner_V4.3.pdf" }, // 2.233.1: ersetzt V4.2 (Kombi-Bilder halb Getränk/halb Essen, jede Kombi nur einmal, Sammelbestellung neu fotografiert) – V4.2 bleibt als Datei · 2.154.1: ersetzt V4.1 (Reklamation mit Bildern, Parken verbinden, halbe Portion, Gutschein-Teilzahlung)
 ];
 // Gesamtprüfung 3 (2.23.84): lange zusammengesetzte Wörter auf schmalen Kacheln an der richtigen Stelle trennen (weiches Trennzeichen)

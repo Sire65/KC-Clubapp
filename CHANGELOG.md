@@ -1,5 +1,12 @@
 # Änderungen
 
+## 3.19.0 – 2026-11-24 – 🏷️ Preislisten Weihnachtsmarkt 2026 in „Meine Dokumente“ (KC-CLUB-PREISLISTEN-WM2026)
+Wunsch Hansi 24.11.2026: „baue sie in die Club-App ein“ (Vorstellung in der Sitzung am Abend).
+- Neues Dokument `dokumente/Preislisten_Weihnachtsmarkt_2026_Entwuerfe.pdf` (Club-App-Fassung, 34 Seiten, 6,2 MB): Übersicht, 30 Entwürfe mit Allergenkennzeichnung, Allergen-Aushang, Stimmzettel.
+  Geprüft: Preise wie in der Kasse, Kennzeichen auf allen Entwürfen gleich, „Mettendchen“, nichts abgeschnitten.
+- Kachel in „Meine Dokumente“ mit leisem „NEU“ bis 13.12.2026. Nur App, Server unverändert. Die PDF kommt von GitHub Pages (kein Supabase-Datenverkehr).
+- Test: Block in `tests/app-vertrag.test.mjs`.
+
 ## 3.18.0 – 2026-11-23 – 📤 Sollplan an DP2 übergeben (KC-DP-SOLL-UEBERGABE) · 🚗 Wege der Mitglieder: Mitfahrten (KC-CLUB-SPUR-MITFAHRT)
 Hansi 23.11.: „Ein-Klick-Übergabe des in der Club-App berechneten Sollplans nach DP2“ und „wenn der Sollplan sich nochmals ändert, muss der Abgleich erneut laufen“.
 - Migration `20261123_kc_dp_soll_uebergabe.sql` (vor dem Server eingespielt): Tabelle `kc_dp_soll_uebergabe` (RLS, nur service_role) mit dem vollständigen Stand je Übergabe (`rows`, `anzahl`, `pruefsumme`, Status offen/uebernommen/verworfen); DP2 holt über `kc_dp_soll_uebergabe_pending` ab und bestätigt über `kc_dp_soll_uebergabe_ack` (auth.uid() + kc_dp_memberships admin/planner/duty_manager, kein anon, Prüfregister-Einträge).

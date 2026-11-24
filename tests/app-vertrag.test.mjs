@@ -13914,3 +13914,11 @@ assert.ok(/\["page", "always"\]\.includes\(cs\(e\)\.breakAfter\)/.test(programm)
   assert.equal(tageVon(dpRechnen({ tage, personen: [p({ ohneRuhetag: true })], maxTageAmStueck: 2 })), 3, "ohne Ruhetag: alle 3 Tage");
   assert.ok(/pk\[pid\]\?\.ohneRuhetag === true \? \{ ohneRuhetag: true \}/.test(server), "Server reicht die Ausnahme weiter");
 }
+
+// 3.19.0 KC-CLUB-PREISLISTEN-WM2026: Preislisten-Entwürfe Weihnachtsmarkt 2026 in „Meine Dokumente“
+{
+  const html = fs.readFileSync(new URL("../app.js", import.meta.url), "utf8");
+  assert.ok(/\{ id: "preislisten-wm2026",[^}]*datei: "dokumente\/Preislisten_Weihnachtsmarkt_2026_Entwuerfe\.pdf"/.test(html), "Preislisten in Meine Dokumente");
+  const g = fs.statSync(new URL("../dokumente/Preislisten_Weihnachtsmarkt_2026_Entwuerfe.pdf", import.meta.url)).size;
+  assert.ok(g > 1e6 && g < 10.5e6, "Preislisten-PDF vorhanden, nicht zu groß");
+}
