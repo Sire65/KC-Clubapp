@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "3.18.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "3.19.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -21324,6 +21324,13 @@ const fTagDp = new Intl.DateTimeFormat("de-DE", { timeZone: "UTC", weekday: "sho
 const minuten = (hhmm) => { const [h, m] = String(hhmm || "0:0").split(":").map(Number); return h * 60 + (m || 0); };
 const hhmm = (min) => `${String(Math.floor(min / 60) % 24).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`;
 let dpStart = null, dpWahl = null, DP = null;
+// 3.19.0 KC-CLUB-DP-STAND (Wunschliste #102 „in der Übersicht das Datum anzeigen, von wann die Pläne sind, damit man weiß, ob sie aktuell sind“):
+// eine Zeile für Mein Dienst und Club → Dienstpläne. Älter als 7 Tage → sichtbar markiert (AGENTS.md 11); ohne Stand steht das auch so da.
+const dpStandZeile = (stand) => {
+  if (!stand) return `<div class="hinweis dp-stand">📅 Noch kein Dienstplan veröffentlicht.</div>`;
+  const tage = Math.floor((Date.now() - Date.parse(stand)) / 86400000);
+  return `<div class="hinweis dp-stand${tage >= 7 ? " dp-stand-alt" : ""}">📅 Stand des Dienstplans: <b>${esc(new Date(stand).toLocaleString("de-DE", { timeZone: "Europe/Berlin", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }))} Uhr</b>${tage >= 7 ? ` · ⚠️ vor ${tage} Tagen – vielleicht nicht mehr aktuell` : ""}</div>`;
+};
 function dpNurIch() { dpWahl = ICH ? [ICH.person_id] : null; zeige("dienste"); }
 // ---------- KC-CLUB-DP-EINZELPLAN (Wunsch Hansi 30.10.2026 „für jede Person eine Einzelübersicht, Querformat. Vorne Name, Regelzeit … alle Tage untereinander,
 // Zeitbereiche, die Stunden der Person“ · Regelzeit = ab wann Dienst gemacht werden muss (eine Stunde vor Öffnung) bis Schluss · Farben wie in Twinkey/DP2 ·
@@ -21406,6 +21413,7 @@ async function mdStart() {
       ${w.phase ? `<div class="hinweis">Wunschphase: ${w.phase === "open" || w.phase === "offen" ? "offen" : "geschlossen"}${w.schluss ? ` · bis ${esc(zeitKurz(w.schluss))}` : ""}</div>` : ""}
       <div class="knoepfe"><button class="knopf haupt klein" onclick="$('mdBlatt').remove();dwOeffnen()">📝 Wünsche ${w.status ? "ansehen/ändern" : "eintragen"}</button></div></div>
     <div class="karte"><h4 style="margin:0 0 4px">${schritt("2", so.anzahl > 0)} 📅 Sollplan <small class="hinweis">vom Planer veröffentlicht</small></h4>
+      ${dpStandZeile(so.stand)}
       ${so.anzahl ? `<div>${so.anzahl} kommende Dienste · ${so.monat} in diesem Monat</div>${so.naechste.map((d) => `<div>• <b>${esc(mdTag(d.datum))}</b> ${esc(d.start)}–${esc(d.ende)} Uhr${d.bereich ? ` <span class="hinweis">${esc(d.bereich)}</span>` : ""}${d.getauscht ? ' <span class="hinweis">🔁 übernommen</span>' : ""}</div>`).join("")}`
         : "<div>Noch keine Dienste für dich veröffentlicht.</div>"}
       <div class="knoepfe"><button class="knopf haupt klein" onclick="$('mdBlatt').remove();dpNurIch()">📅 Meinen Dienstplan ansehen</button>${frei("dp_einzelplan") ? `<button class="knopf klein" onclick="$('mdBlatt').remove();epStart()">📄 Mein Einzelplan${nurTest("dp_einzelplan") ? " 🔒" : ""}</button>` : ""}${frei("dienst_tausch") ? `<button class="knopf klein" onclick="$('mdBlatt').remove();dtOeffnen()">🔁 Tauschbörse${nurTest("dienst_tausch") ? " 🔒" : ""}</button>` : ""}</div></div>${dpdPlaeneKarte(MD_D?.plaene)}
@@ -22289,6 +22297,7 @@ function dpZeichnen() {
   if (DP.plaene) $("dpListe").insertAdjacentHTML("afterbegin", dpdPlaeneKarte(DP.plaene)); // 2.999.0 KC-CLUB-DP-PLAENE-FREI: Wunschplan/Dienstplan oben
   // Rule 11: Datenstand sichtbar machen
   $("dpStand").textContent = DP.stand ? `Stand des Dienstplans: veröffentlicht ${zeitKurz(DP.stand)} Uhr` : "";
+  const dpOben = $("dpStandOben"); if (dpOben) dpOben.innerHTML = dpStandZeile(DP.stand); // 3.19.0 KC-CLUB-DP-STAND: der Stand auch gleich oben
 }
 async function dienstFreigabe(an) {
   try { await api("dienst_freigabe", { erlaubt: an }); melde(an ? "Andere Mitglieder können deine Dienstzeiten jetzt sehen." : "Deine Dienstzeiten sind nur noch für dich sichtbar."); }

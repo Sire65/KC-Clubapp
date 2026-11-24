@@ -1,5 +1,14 @@
 # Änderungen
 
+## 3.19.0 – 2026-11-24 – 📅 Dienstplan: von wann ist der Stand? (Wunschliste #102) · Server 3.19.0
+
+### 📅 Stand des Dienstplans (KC-CLUB-DP-STAND)
+Wunsch #102 „in der Übersicht das Datum anzeigen, von wann die Pläne sind, damit man weiß, ob sie aktuell sind“.
+- **Meins → 🗓️ Mein Dienst:** beim Sollplan steht jetzt „📅 Stand des Dienstplans: <Datum, Uhrzeit>“ (wann der Planer zuletzt veröffentlicht hat).
+- **Club → 🗓️ Dienstpläne:** derselbe Stand jetzt gleich **oben** über den Wochen (unten bleibt er wie bisher).
+- Ist der Stand **7 Tage oder älter**, steht er orange da: „⚠️ vor X Tagen – vielleicht nicht mehr aktuell“. Ohne veröffentlichten Plan steht „Noch kein Dienstplan veröffentlicht“.
+- Server: `mein_dienst` liefert `soll.stand` (letzte Veröffentlichung, nur lesend). Test `tests/dp-stand.test.mjs`.
+
 ## 3.18.0 – 2026-11-23 – 📤 Sollplan an DP2 übergeben (KC-DP-SOLL-UEBERGABE) · 🚗 Wege der Mitglieder: Mitfahrten (KC-CLUB-SPUR-MITFAHRT)
 Hansi 23.11.: „Ein-Klick-Übergabe des in der Club-App berechneten Sollplans nach DP2“ und „wenn der Sollplan sich nochmals ändert, muss der Abgleich erneut laufen“.
 - Migration `20261123_kc_dp_soll_uebergabe.sql` (vor dem Server eingespielt): Tabelle `kc_dp_soll_uebergabe` (RLS, nur service_role) mit dem vollständigen Stand je Übergabe (`rows`, `anzahl`, `pruefsumme`, Status offen/uebernommen/verworfen); DP2 holt über `kc_dp_soll_uebergabe_pending` ab und bestätigt über `kc_dp_soll_uebergabe_ack` (auth.uid() + kc_dp_memberships admin/planner/duty_manager, kein anon, Prüfregister-Einträge).
