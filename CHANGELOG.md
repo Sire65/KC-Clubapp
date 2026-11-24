@@ -1,5 +1,12 @@
 # Änderungen
 
+## 3.22.0 – 2026-11-24 – 📱 „Doppelt offen“: die Meldung sagt jetzt genau, was zu tun ist (KC-CLUB-ZWEI-BROWSER-KLAR) · Server 3.22.0
+Fund Hansi 24.11.: Marianne (iPhone) bekam „die App ist 2 × offen“ und fand das zweite Fenster nicht. Ursache: App-Icon (über Safari installiert) und zusätzlich Chrome – Links aus Mail/WhatsApp öffnen sich im Standard-Browser.
+- Die App meldet beim Online-Abgleich mit, ob das Fenster das **App-Icon** ist (`a: 1`); der Server merkt es je Fenster und gibt es beim „anderen Fenster“ zurück.
+- Meldung „📱 Die Club-App ist doppelt offen“: im Icon → „Du hast sie auch in **Chrome** geöffnet … Tab-Symbol → ✕ … nur noch über das Icon öffnen“; im Browser-Tab bei installiertem Icon → „Bitte diesen Tab schließen … nur noch das Icon“. Sonst wie bisher. „Das ist ein anderes Gerät“ bleibt.
+- Hilfe „Die App ist zweimal offen“ nennt den häufigsten Handy-Fall.
+- Test: `tests/zwei-browser-klar.test.mjs`. Rückweg: App/Server 3.21.0 (ältere Apps senden kein `a` → Meldung wie bisher).
+
 ## 3.21.0 – 2026-11-24 – 🛎️ Bereitschaft geht mit nach DP2 (KC-DP-SOLL-BEREITSCHAFT) · Server 3.21.0 · Datenbank: Spalte `bereitschaft`
 Wunsch Hansi 24.11.: „Ja, Bereitschaft soll auch im Dienstplan stehen.“
 - „📤 An DP2 übergeben“ nimmt jetzt auch die Bereitschaft des gerechneten Plans mit (je Person und Tag, Schlüssel `CLUB-B-<datum>-<person>`). DP2 (ab Build 324) trägt sie als **Bereitschaft** ein – nicht als Dienst, also nicht auf der Kasse.
