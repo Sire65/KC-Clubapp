@@ -176,6 +176,8 @@ jobs:
       - run: node tests/erstattung-buchungen.test.mjs
       # KICC-F-112 KC-CLUB-ERSTATTUNG-STUNDEN (3.22.0): Zeit mit der Erstattung einreichen
       - run: node tests/erstattung-stunden.test.mjs
+      # KICC-F-113 KC-CLUB-STUNDENKONTO (3.22.0): Mein Stundenkonto
+      - run: node tests/stundenkonto.test.mjs
       - run: node tests/nutzung-person.test.mjs
       - run: node tests/ist-rueckfrage.test.mjs
       - run: node tests/start-balken.test.mjs

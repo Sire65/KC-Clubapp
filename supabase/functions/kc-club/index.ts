@@ -15487,6 +15487,20 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         return json({ orte });
       }
 
+      // KICC-F-113 KC-CLUB-STUNDENKONTO: eigenes Konto; Vorstand und Planer auch das eines anderen Mitglieds (protokolliert, ohne Inhalte)
+      case "stundenkonto": {
+        const darf = skDarfAndere(ich), wunsch = txt(p.person, 80);
+        let pid = ich.person_id;
+        if (wunsch && wunsch !== ich.person_id) {
+          if (!darf) throw new Fehler("Andere Stundenkonten dürfen nur Clubleitung und Planer ansehen.", 403);
+          if (!(await aktiveMitglieder()).some((m) => m.person_id === wunsch)) throw new Fehler("Mitglied nicht gefunden.", 404);
+          pid = wunsch; await protokoll(ich.person_id, "stundenkonto_angesehen", { person: pid });
+        }
+        const k = await stundenkontoLaden(pid), name = pid === ich.person_id ? ich.name : (await personen([pid])).get(pid)?.display_name || pid;
+        return json({ person: { id: pid, name }, ...k, darfAndere: darf,
+          mitglieder: darf ? (await aktiveMitglieder()).map((m) => ({ id: m.person_id, name: m.display_name })).sort((a, b) => String(a.name).localeCompare(String(b.name), "de")) : [] });
+      }
+
       case "mein_dienst": {
         const heute = berlinTag(new Date()), vor60 = berlinTag(new Date(Date.now() - 60 * 86400000)), monat = heute.slice(0, 7);
         const [{ data: w }, { data: ph }, { data: sollRoh }, { data: sollAlt }, { data: ist }, tausch] = await Promise.all([
@@ -23554,6 +23568,56 @@ const shZeile = (r: any) => ({ id: r.id, sammel_id: r.sammel_id, event_id: r.eve
   start_h: Number(r.start_h), end_h: Number(r.end_h), break_minutes: r.break_minutes, taetigkeit: r.taetigkeit, bemerkung: r.bemerkung,
   status: r.status, verspaetet: r.verspaetet, gemeldet_am: r.gemeldet_am, ablehngrund: r.ablehngrund, version: r.version });
 const SH_SPALTEN = "id,sammel_id,event_id,special_event_id,special_event_title,person_id,gemeldet_von,work_date,start_h,end_h,break_minutes,taetigkeit,bemerkung,status,verspaetet,gemeldet_am,ablehngrund,version";
+// ---------- KICC-F-113 / KC-CLUB-STUNDENKONTO (Wunsch Hansi 24.11.2026): alle eigenen Stunden + km an einer Stelle ----------
+// Phase 1 (Konzept KICC docs/KONZEPT-CLUB-STUNDENKONTO.md): Quellen 2–4 bestätigt (Sonderstunden, Zeit aus Erstattung, km aus Erstattung),
+// Dienste am Stand vorläufig aus der Kasse-Stechuhr (geprüftes Ist liegt noch nur in DP2 – Phase 2). Entscheidungen Hansi: vorläufig zählt nicht
+// in die Summe; km schon ab „eingereicht“ (gekennzeichnet); Soll als Vergleich; Vorstand und Planer dürfen andere Konten ansehen (protokolliert).
+const SK = { tage: 800 }; // so weit zurück (gut zwei Jahre) – die App filtert Tag/Monat/Jahr/Anlass selbst
+const skDarfAndere = (ich: Ich) => !!ich.vorstand || dtPlaner(ich);
+const skKurz = (v: unknown) => String(v ?? "").replace(/[^0-9a-z]/gi, "").slice(0, 6).toUpperCase();
+const skHHMM = (h: number) => `${String(Math.floor(h % 24)).padStart(2, "0")}:${String(Math.round((h % 1) * 60)).padStart(2, "0")}`;
+const skMinZeit = (a: unknown, b: unknown, pause: unknown) => { const t = (x: unknown) => { const [h, m] = String(x || "0:0").split(":").map(Number); return h * 60 + (m || 0); };
+  let d = t(b) - t(a); if (d < 0) d += 1440; return Math.max(0, d - (Number(pause) || 0)); };
+async function stundenkontoLaden(pid: string) {
+  const ab = berlinTag(new Date(Date.now() - SK.tage * 86400000));
+  const [{ data: hr }, { data: tc }, { data: soll }, { data: ers }] = await Promise.all([
+    db.from("kc_dp_hour_reports").select("id,event_id,special_event_title,work_date,start_h,end_h,break_minutes,taetigkeit,status,source,erstattung_id,updated_at")
+      .eq("org_id", ORG).eq("person_id", pid).in("status", ["gemeldet", "bestaetigt"]).gte("work_date", ab).limit(2000),
+    db.from("kc_dp_timeclock_actuals").select("id,event_id,work_date,start_time,end_time,break_minutes,status,updated_at")
+      .eq("org_id", ORG).eq("person_id", pid).neq("status", "voided").gte("work_date", ab).limit(2000),
+    db.from("kc_dp_plan_published").select("event_id,work_date,start_time,end_time,break_minutes").eq("org_id", ORG).eq("person_id", pid).eq("status", "published").gte("work_date", ab).limit(2000),
+    db.from("kc_club_erstattung").select("id,positionen,status,erstellt_am").eq("person_id", pid).neq("status", "abgelehnt").gte("erstellt_am", ab).limit(500)]);
+  const veranst = (ev: unknown) => (ev === DW.veranstaltung ? DW.name : String(ev || "Sonstiges"));
+  const zeilen: any[] = [];
+  // km je Stundenzeile (Zeit aus Erstattung) bzw. eigene km-Zeile
+  const kmZu = new Map<string, { km: number; erstattet: boolean }>();
+  for (const a of ers ?? []) (a.positionen || []).forEach((x: any, i: number) => {
+    if (x?.art !== "fahrt" || !(Number(x.km) > 0)) return;
+    const km = Math.round(Number(x.km) * 10) / 10, erstattet = a.status === "erstattet";
+    if (x.stunden?.report_id) { kmZu.set(String(x.stunden.report_id), { km, erstattet }); return; }
+    zeilen.push({ id: `K-${skKurz(a.id)}-${i + 1}`, quelle: "km", datum: x.datum, von: null, bis: null, min: 0, art: "erstattung", veranstaltung: x.sonder_titel ? DW.name : "Fahrten",
+      anlass: txt(x.sonder_titel || x.grund || "Fahrt", 80), taetigkeit: "Fahrt", km, kmErstattet: erstattet, status: "bestaetigt" });
+  });
+  for (const r of hr ?? []) {
+    const k = kmZu.get(String(r.id)), erst = r.source === "erstattung";
+    zeilen.push({ id: `${erst ? "E" : "S"}-${skKurz(r.id)}`, quelle: erst ? "erstattung" : "sonder", datum: r.work_date, von: skHHMM(Number(r.start_h)), bis: skHHMM(Number(r.end_h)),
+      min: Math.max(0, Math.round((Number(r.end_h) - Number(r.start_h)) * 60)), // Pausen zählen wie in DP2 und „Mein Dienst“ (bezahlt)
+      art: erst ? "erstattung" : "sonder", veranstaltung: veranst(r.event_id), anlass: txt(r.special_event_title || "Sondereinsatz", 80), taetigkeit: r.taetigkeit || null,
+      km: k?.km ?? 0, kmErstattet: k?.erstattet ?? null, status: r.status === "bestaetigt" ? "bestaetigt" : "vorlaeufig", hinweis: r.status === "gemeldet" ? "wartet auf den Planer" : null });
+  }
+  for (const r of tc ?? []) {
+    const ganz = r.status === "complete" && r.start_time && r.end_time;
+    zeilen.push({ id: `D-${skKurz(r.id)}`, quelle: "kasse", datum: r.work_date, von: String(r.start_time || "").slice(0, 5) || null, bis: String(r.end_time || "").slice(0, 5) || null,
+      min: ganz ? skMinZeit(r.start_time, r.end_time, r.break_minutes) : 0, art: "stand", veranstaltung: veranst(r.event_id), anlass: "Dienst am Stand", taetigkeit: null, km: 0, kmErstattet: null,
+      status: "vorlaeufig", hinweis: ganz ? "Kasse-Stechuhr – vom Planer noch nicht geprüft" : "Stechuhr unvollständig (Kommen oder Gehen fehlt)" });
+  }
+  zeilen.sort((a, b) => String(b.datum).localeCompare(String(a.datum)) || String(a.von || "").localeCompare(String(b.von || "")));
+  const sollTage = new Map<string, number>();
+  for (const x of soll ?? []) sollTage.set(x.work_date, (sollTage.get(x.work_date) || 0) + skMinZeit(x.start_time, x.end_time, x.break_minutes));
+  const stand = [...(tc ?? []), ...(hr ?? [])].reduce((m: string, x: any) => (String(x.updated_at || "") > m ? String(x.updated_at) : m), "");
+  return { zeilen, soll: [...sollTage.entries()].map(([datum, min]) => ({ datum, min, veranstaltung: DW.name })).sort((a, b) => a.datum.localeCompare(b.datum)),
+    stand: stand || null, phase: 1 };
+}
 async function sonderstundenLaden(pid: string) {
   const [{ data: ev }, { data: st }] = await Promise.all([
     db.from("kc_dp_special_events").select("source_id,titel,ort,art,termin_status,datum_von,datum_bis,wiederkehrend,version,vorgesehen:payload->vorgesehen")
