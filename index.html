@@ -2620,6 +2620,8 @@
   .stift-wort i { font-style: normal; display: inline-block; max-width: 0; overflow: hidden; vertical-align: bottom; animation: stiftBuchstabe 3.6s calc(var(--n) * .12s) infinite both; }
   @keyframes stiftBuchstabe { 0% { max-width: 0; } 6%, 86% { max-width: 1em; } 92%, 100% { max-width: 0; } }
   @media (prefers-reduced-motion: reduce) { .stift-wort i { animation: none; max-width: none; } }
+  /* 3.19.0 KC-CLUB-DP-STAND: Stand des Dienstplans – alt (ab 7 Tagen) in Orange */
+  .dp-stand { margin: 4px 0 6px; font-size: .9rem; } .dp-stand-alt { color: #b86b00; font-weight: 600; }
   @keyframes tippWelle { 0%, 60%, 100% { transform: translateY(0) scale(1); opacity: .35; } 30% { transform: translateY(-8px) scale(1.15); opacity: 1; } }
   .tippt .zeile { display: flex; align-items: center; gap: 10px; font-size: .98rem; font-style: normal; font-weight: 600; margin: 2px 0; }
   /* KC-CLUB-SPRICHT (1.11.0): Oszilloskop – bei den anderen als laufende Welle, bei mir echt vom Mikrofon */
@@ -6512,6 +6514,7 @@
     </details>
     <div class="dpnav"><button class="knopf klein" onclick="dpWoche(-1)">‹ Woche</button><b id="dpZeitraum"></b><button class="knopf klein" onclick="dpWoche(1)">Woche ›</button></div>
     <div style="text-align:center"><button class="knopf klein" onclick="dpWoche(0)">Heute</button></div>
+    <div id="dpStandOben"></div>
     <div id="dpListe"></div>
     <p class="hinweis" id="dpStand" style="font-size:.85rem"></p>
     <div class="karte">
@@ -7385,7 +7388,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=3.18.0" data-v="3.18.0"></script>
+<script src="app.js?v=3.19.0" data-v="3.19.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

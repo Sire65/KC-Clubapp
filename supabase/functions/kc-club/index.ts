@@ -196,7 +196,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "3.18.0";
+const SERVER_VERSION = "3.19.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -15409,6 +15409,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           .eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("person_id", ich.person_id).in("status", ["gemeldet", "bestaetigt", "abgelehnt"]).order("work_date", { ascending: false }).limit(100);
         const sonderMin = (x: any) => Math.max(0, Math.round((Number(x.end_h) - Number(x.start_h)) * 60)); // Pausen zählen wie in DP2 (bezahlt)
         const { data: plFrei } = await db.from("kc_club_konfig").select("geaendert_am").eq("schluessel", "dp_plaene_frei").maybeSingle(); // 2.999.0 KC-CLUB-DP-PLAENE-FREI
+        // 3.19.0 KC-CLUB-DP-STAND (Wunschliste #102): wann der Sollplan zuletzt veröffentlicht wurde – damit man sieht, ob er aktuell ist
+        const { data: sollLetzte } = await db.from("kc_dp_plan_published").select("published_at").eq("org_id", ORG).eq("status", "published").order("published_at", { ascending: false }).limit(1);
         const uhrH = (h: number) => `${String(Math.floor(h % 24)).padStart(2, "0")}:${String(Math.round((h % 1) * 60)).padStart(2, "0")}`;
         const min = (a: unknown, b: unknown, pause: unknown) => { const t = (x: unknown) => { const [h, m] = String(x || "0:0").split(":").map(Number); return h * 60 + (m || 0); };
           let d = t(b) - t(a); if (d < 0) d += 1440; return Math.max(0, d - (Number(pause) || 0)); };
@@ -15417,7 +15419,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           plaene: plFrei ? { am: plFrei.geaendert_am } : null, // 2.999.0 KC-CLUB-DP-PLAENE-FREI: Wunschplan/Dienstplan für alle freigegeben
           wunsch: { veranstaltung: DW.name, phase: ph?.status || null, schluss: ph?.close_at || ph?.deadline_date || null,
             status: w?.status || null, tage: Array.isArray(w?.entries) ? w.entries.length : 0, abgegeben: w?.submitted_at || null, uebernommen: w?.taken_at || null },
-          soll: { naechste: (soll ?? []).slice(0, 5).map(zeit), anzahl: (soll ?? []).length, monat: (soll ?? []).filter((x: any) => String(x.work_date).startsWith(monat)).length },
+          soll: { naechste: (soll ?? []).slice(0, 5).map(zeit), anzahl: (soll ?? []).length, monat: (soll ?? []).filter((x: any) => String(x.work_date).startsWith(monat)).length,
+            stand: sollLetzte?.[0]?.published_at ?? null }, // 3.19.0 KC-CLUB-DP-STAND
           ist: { liste: (ist ?? []).slice(0, 10).map((x: any) => ({ ...zeit(x), status: x.status })), anzahl: (ist ?? []).length,
             istMin: (ist ?? []).reduce((a: number, x: any) => a + min(x.start_time, x.end_time, x.break_minutes), 0),
             sollMin: (sollAlt ?? []).reduce((a: number, x: any) => a + min(x.start_time, x.end_time, x.break_minutes), 0) },
