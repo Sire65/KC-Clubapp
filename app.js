@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "3.19.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "3.20.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -36237,7 +36237,7 @@ function dpdBedarf(tage, von, bis, teil = dpdSlots(von, bis), rechts = true) {
       const stunden = teil.map((s) => { const n = t.leute.filter((p) => wunsch(p.w[ix(s)])).length; return n ? `<td class="wu${dpdHk(s)}"><b>${n}</b></td>` : `<td class="zu${dpdHk(s)}"></td>`; }).join("");
       const zeit = (f) => dpdBereicheAus(t.leute[0].w.split("").map((_, i) => f(i)), von);
       const pers = t.leute.filter((p) => [...p.w].some(wunsch)).sort((a, b) => a.n.localeCompare(b.n, "de")).map((p) => `${esc(p.n.split(" ")[0])} ${zeit((i) => wunsch(p.w[i]))}`);
-      return `<tr class="ohne"><th class="tg"><b>${t.wt} ${t.dt}</b><small>${esc(t.name)}</small></th><td class="rz"><b>keine Vorgabe</b><small>eingetragen ${zeit((i) => t.leute.some((p) => wunsch(p.w[i])))} Uhr</small></td>${stunden}${rechts ? `<td class="bd zwei"><span class="ganz">So haben sich eingetragen:</span>${pers.join("<br>")}</td>` : ""}</tr>`;
+      return `<tr class="ohne"><th class="tg"><b>${t.wt} ${t.dt}</b><small>${esc(t.name)}</small></th><td class="rz"><b>keine Vorgabe</b><small>eingetragen ${zeit((i) => t.leute.some((p) => wunsch(p.w[i])))} Uhr</small></td>${stunden}${rechts ? `<td class="bd zwei"><span class="ganz">So haben sich eingetragen:</span><span class="nl">${pers.map((x) => `<span>${x}</span>`).join("")}</span></td>` : ""}</tr>`;
     }
     const stunden = teil.map((s) => { const i = ix(s), z = zelle(t, i), ist = t.besetzt?.[i] || 0, plus = plusVon(z);
       if (!z[0] && !ist) return `<td class="zu${dpdHk(s)}"></td>`;

@@ -3479,9 +3479,9 @@
     #druck .dpe-tab .zahlen .gruen { background: #e3f1dc; color: #2f5a1f; font-weight: 800; } #druck .dpe-tab .zahlen .rot { background: #f7d4d0; color: #9b1c13; font-weight: 800; } #druck .dpe-tab .zahlen .gelb { background: #fbefc6; color: #7a5b00; font-weight: 800; } #druck .dpe-tab .zahlen .soll { color: #8a8076; }
     #druck .dpe-tab td.rot { color: #9b1c13; font-weight: 800; } #druck .dpe-tab .ber td { height: 4.2mm; } #druck .dpe-tab .leer { color: #8a8076; font-style: italic; }
     #druck .dpd-bed { border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 7pt; font-variant-numeric: tabular-nums; }
-    #druck .dpd-bed th, #druck .dpd-bed td { border: .15mm solid var(--lin); padding: .6mm .5mm; text-align: center; vertical-align: middle; height: 9.4mm; }
+    #druck .dpd-bed th, #druck .dpd-bed td { border: .15mm solid var(--lin); padding: .5mm .5mm; text-align: center; vertical-align: middle; height: 8.2mm; }
     #druck .dpd-bed thead th { background: #f3e9dc; font-weight: 700; font-size: 6.5pt; height: auto; }
-    #druck .dpd-bed col.tg { width: 16mm; } #druck .dpd-bed col.rz { width: 22mm; } #druck .dpd-bed col.bd { width: 50mm; } #druck .dpd.breit .dpd-bed col.bd { width: 70mm; }
+    #druck .dpd-bed col.tg { width: 16mm; } #druck .dpd-bed col.rz { width: 22mm; } #druck .dpd-bed col.bd { width: 60mm; } #druck .dpd.breit .dpd-bed col.bd { width: 70mm; }
     /* 3.3.0 KC-CLUB-DP-PDF-MATRIX: Besetzungsmatrix halbstündig – Soll/eingeteilt, darunter V/H, Ampel wie im Tagesraster, +1 🎵 Konzertabend */
     #druck .dpd-bed thead th.hk { text-align: left; padding-left: .8mm; } #druck .dpd-bed thead tr.hm th { font-size: 5pt; font-weight: 400; color: var(--mut); padding: 0 0 .2mm; background: #faf5ef; }
     #druck .dpd-bed .hv { border-left: .4mm solid #6d655c; } #druck .dpd-bed .hb { border-left: .2mm dashed #a89f93; }
@@ -3495,7 +3495,8 @@
     #druck .dpd-bed th.tg, #druck .dpd-bed td.rz, #druck .dpd-bed td.bd { text-align: left; padding: .8mm 1.2mm; }
     #druck .dpd-bed small { display: block; font-size: 5.5pt; color: var(--mut); font-weight: 400; white-space: nowrap; }
     #druck .dpd-bed td b { font-size: 9pt; } #druck .dpd-bed td.rz b, #druck .dpd-bed td.bd b { font-size: 7pt; }
-    #druck .dpd-bed td.bd { font-size: 6.2pt; line-height: 1.5; white-space: normal; } #druck .dpd-bed td.bd.zwei { column-count: 2; column-gap: 2mm; font-size: 5.8pt; line-height: 1.25; }
+    #druck .dpd-bed td.bd { font-size: 6.2pt; line-height: 1.5; white-space: normal; } #druck .dpd-bed td.bd.zwei { display: table-cell; font-size: 5.2pt; line-height: 1.2; vertical-align: top; } /* KC-CLUB-DRUCK-NAMENLISTE (Fund Hansi 24.11. „Text überschneidet sich“): kein column-count in Tabellenzellen – lief über die Zeilen */
+    #druck .dpd-bed .nl { display: grid; grid-template-columns: 1fr 1fr 1fr; column-gap: 1.2mm; } #druck .dpd-bed .nl > span { white-space: nowrap; overflow: hidden; }
     #druck .dpd-bed td.zu { background: #fff; } #druck .dpd-bed .bnd { white-space: nowrap; margin-right: 2.2mm; display: inline-block; }
     #druck .dpd-bed td.wu, #druck .dpd-leg i.wu { background: #eef0fa; } #druck .dpd-bed td.wu b, #druck .dpd-bed tr.ohne td.rz b { color: #3d5fa8; }
     #druck .dpd-bed tr.ohne small { white-space: normal; } #druck .dpd-bed .ganz { display: block; column-span: all; color: var(--mut); margin-bottom: .4mm; }
@@ -7388,7 +7389,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=3.19.0" data-v="3.19.0"></script>
+<script src="app.js?v=3.20.0" data-v="3.20.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>
