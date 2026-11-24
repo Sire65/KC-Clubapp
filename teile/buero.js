@@ -1791,7 +1791,8 @@ function ekErstattet(id) {
 }
 async function ekErstAblehnen(id) {
   const x = ekErst(id); if (!x) return;
-  const grund = await eingabe(`Erstattung von ${x.name.split(" ")[0]} ablehnen – warum? (${x.name.split(" ")[0]} bekommt den Grund)`, "", { mehrzeilig: true });
+  const zeit = (x.positionen || []).some((y) => /⏱️/.test(y.text || "")); // KICC-F-112: mitgemeldete Zeit wird beim Ablehnen zurückgenommen
+  const grund = await eingabe(`Erstattung von ${x.name.split(" ")[0]} ablehnen – warum? (${x.name.split(" ")[0]} bekommt den Grund)${zeit ? "\n\n⏱️ Die mitgemeldete Zeit wird dann auch wieder aus dem Stundenkonto genommen." : ""}`, "", { mehrzeilig: true });
   if (!grund || !grund.trim()) return;
   ekErledigen(id, "abgelehnt", null, grund);
 }

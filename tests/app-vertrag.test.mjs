@@ -11584,7 +11584,14 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/if \(ev\.termin_status === "OFFEN"\) throw new Fehler/.test(server) && /if \(datum > heute\) throw new Fehler/.test(server) && /ende - start > SH\.maxSpanne/.test(server)
     && /const mitglieder = new Map\(\(await aktiveMitglieder\(\)\)/.test(server), "Serverprüfung (Termin offen, Zukunft, Spanne, Mitglieder) fehlt");
   assert.ok(/\.in\("status", \["gemeldet", "bestaetigt"\]\)/.test(server) && /uebersprungen\.push\(\{ personId: e\.pid, grund: "schon gemeldet"/.test(server), "Doppelschutz fehlt");
-  assert.ok(/status: "gemeldet", verspaetet, source: "club_app"/.test(server) && !/from\("kc_dp_hour_reports"\)\.update/.test(server.replace('db.from("kc_dp_hour_reports").update({ benachrichtigt_am: jetzt() })', "")) && !/from\("kc_dp_hour_reports"\)\.delete/.test(server),
+  // KICC-F-112 (Entscheidung Hansi 24.11.2026 „nicht erst in DP2 freigeben“): einzige Ausnahme ist Zeit aus der Erstattung (Quelle 'erstattung') –
+  // nur im Block KC-CLUB-ERSTATTUNG-STUNDEN: sofort bestätigt anlegen, bei Fehler zurückrollen, bei abgelehntem Antrag zurückziehen.
+  const ers112 = server.slice(server.indexOf("// ---------- KICC-F-112 / KC-CLUB-ERSTATTUNG-STUNDEN"), server.indexOf("// KC-CLUB-ERSTATTUNG-BESUCHE (2.25.4): Besuche, die schon"));
+  const ohne112 = server.replace(ers112, "");
+  assert.ok(ers112.length > 500 && /status: "bestaetigt", verspaetet: [^\n]*?, source: "erstattung", erstattung_id: antragId/.test(ers112)
+    && /\.eq\("erstattung_id", antragId\)\.eq\("source", "erstattung"\)\.eq\("status", "bestaetigt"\)/.test(ers112) && /update\(\{ status: "zurueckgezogen"/.test(ers112),
+    "Zeit aus der Erstattung: nur Quelle erstattung, sofort bestätigt, Rücknahme nur eigener bestätigter Zeilen");
+  assert.ok(/status: "gemeldet", verspaetet, source: "club_app"/.test(server) && !/from\("kc_dp_hour_reports"\)\.update/.test(ohne112.replace('db.from("kc_dp_hour_reports").update({ benachrichtigt_am: jetzt() })', "")) && !/from\("kc_dp_hour_reports"\)\.delete/.test(ohne112),
     "Club-App darf nur melden (Status gemeldet), nicht bestätigen/ändern/löschen");
   assert.ok(/\.or\(`person_id\.eq\.\$\{pid\},gemeldet_von\.eq\.\$\{pid\}`\)/.test(server), "Mitglied sieht nur eigene und selbst gemeldete Zeilen");
   assert.ok(/const mitglieder = \(await aktiveMitglieder\(\)\)\.map\(\(m\) => \(\{ personId: m\.person_id, name: m\.display_name \}\)\);/.test(server)

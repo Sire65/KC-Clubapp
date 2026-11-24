@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "3.21.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "3.22.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -19,7 +19,7 @@ const TEILE_LISTE = {
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-NDuho5dgDL13uhtcTY8d0cGESAWhk+B+5qyWyvBuOxPgmADzmvY9YFCcwWM0s+kx" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
   spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-NJ7DJt5uvf95NJ5rn9MLHZr1dmZK0XLZYNYM5Frr2Pt/wetRMf4ARaCPhe/O30Zz" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
   tischlive: { einstieg: ["tlStart", "tlStopp", "tlZeichnen", "tlPlatz", "tlRegeln"], sri: "sha384-RCmsKY+DTRfsCMRHkJVG2UJlySANNdHxnEdMps4tkL9kgf8DC5O/b1jMcwVeY3XB" }, // 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: Ton, Kamera, Bildschirm, Unterlagen zeigen am Tisch
-  buero: { einstieg: ["ersBuchOeffnen", "eblDruck", "buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-T+Wdipj8BL+ttrwlyNfJ/PA/r5SSBU56NGAI4OrVNYCAyujH60jXQkkuHsqebIma" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
+  buero: { einstieg: ["ersBuchOeffnen", "eblDruck", "buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-PiWnqvoOu5768bW0DkVrWPeiw3hLJ1Sfso9N0/VKnANETlNUJbdaVCjVxTkWOy1n" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
   hilfe: { einstieg: ["twFrageStart", "twOffenStart", "sucheAuf", "suSucheKnopf"], sri: "sha384-50UNMIWceEI9exc0cwewXPxce5HBwsInfyhI3ephfVKMHTpbxDvupFpXU25ZzGA4" }, // Stufe 5: Hilfe-Werkzeuge (Frag Twinkey, Mitglied fragen, Schnellsuche) – beim ersten Antippen
   rechner: { einstieg: ["rechnerOeffnen"], sri: "sha384-UWrOf1EIXxhsoWWwxnLDzpzALsaxzNGXgeqoLAjVvqoQ6wbFnIGxYTkQPFpiRuQ4" }, // 2.811.0 KC-CLUB-RECHNER: Tischrechner im Büro, „rechne …“ per Sprache
   tippspiel: { einstieg: ["tpStart", "tpTag", "tpMitmachen", "tpTippen", "tpZeigen"], sri: "sha384-KNPQv0SkmN1bZrgFpl3dE1Osi/OcP0KUNKuIWQeEqe/98OM34+NRwv5m+2ePuBJ6" }, // 2.971.0 KC-CLUB-TIPPSPIEL (Wunschliste #96): Bundesliga-Tippspiel
@@ -2967,6 +2967,7 @@ const HILFE = [
   { id: "zeitumstellung", thema: "toene", sym: "🕐", t: "Erinnerung an die Zeitumstellung", x: "Am Samstag vor der Zeitumstellung (im März und im Oktober) bekommst du ab 18 Uhr einen Push, ob du die Uhr vor- oder zurückstellen musst. Seit 2.496.0 steht es ab Donnerstag auch im Info-Feld oben auf der Startseite – am Samstag gelb, am Sonntag mit der Frage, ob Backofen- und Autouhr schon umgestellt sind. Das passiert jedes Jahr von selbst – einstellen musst du nichts.", seit: "2.442.0" },
   { id: "schreiben_klappen", thema: "nachrichten", sym: "▾", t: "Mehr Nachrichten sehen: Schreibbereich wegklappen", x: "Im Chat sitzt oben mittig über dem Schreibfeld ein kleiner <b>▾-Griff</b>. Antippen klappt den Schreibbereich weg – es bleibt nur eine schmale Leiste <b>„▴ ✏️ Schreiben“</b>, und du siehst mehr Nachrichten. Ein Tipp auf die Leiste holt das Schreibfeld zurück. Öffnest du einen Chat, ist der Schreibbereich immer offen.", seit: "2.433.0" },
   { id: "sonderstunden", thema: "termine", sym: "★", t: "Sonderstunden melden und den Stand sehen", x: "Hast du bei einem Sondereinsatz geholfen (z. B. Grünkohl kochen), meldest du die Zeit über <b>📝 Dienstwunsch → Twinkey → „Sonderstunden melden“</b>: Einsatz, Tag, Zeit von zuhause bis zuhause, Tätigkeit und wer noch dabei war. Danach kannst du gleich Fahrtkosten oder Auslagen erfassen. Den Stand siehst du in <b>🗓️ Mein Dienst</b> auf der Karte <b>„★ Sonderstunden“</b>: gutgeschrieben, offen (zählt erst nach Bestätigung) oder abgelehnt mit Grund.", seit: "2.423.0" },
+  { id: "erstattung_zeit", thema: "club", sym: "⏱️", t: "Zeit gleich mit der Erstattung melden", x: "Fährst du z. B. mit deinem Auto zum Metzger und bringst die Wurst zum Weihnachtsmarkt, meldest du Kilometer <b>und</b> Zeit in einem Antrag: <b>💶 Erstattung → 🚗 Fahrtkosten</b> (oder 🛒 Einkauf) ausfüllen, bei <b>„⏱️ Zeit fürs Stundenkonto mitmelden?“</b> auf <b>Ja</b> tippen und <b>Von</b>/<b>Bis</b> wählen (Fahrzeit von zuhause bis zuhause zählt). Die Kilometer bekommst du mit dem km-Satz erstattet, die Zeit steht <b>sofort</b> in deinem Stundenkonto – ohne Freigabe. Lehnt der Kassenwart den Antrag ab, wird die Zeit wieder herausgenommen. Den Stand siehst du unter „Meine Anträge“.", seit: "3.22.0" },
   { id: "fernhilfe_bedienen", thema: "technik", sym: "🖱️", t: "Wenn dir jemand aus der Ferne hilft", x: "Bittet dich Hansi (oder ein freigeschalteter Helfer), mitschauen zu dürfen, entscheidest du: Erst wenn du zusagst, sieht er live, was in deiner Club-App angezeigt wird – oben steht dann eine rote Leiste mit <b>Beenden</b>. Soll er dir etwas direkt einstellen, tippst du in der Leiste auf <b>„🖱️ Bedienen erlauben“</b>: Dann darf er in deiner App tippen und blättern; jeder Tipp wird grün markiert. Was etwas senden, löschen oder auslösen könnte, fragt die App dich vorher. Mit <b>„🔊 Ton an“</b> in der Leiste könnt ihr dabei miteinander sprechen – dein Mikrofon geht erst an, wenn du selbst annimmst. Mit <b>„🖱️ Bedienen aus“</b> oder <b>Beenden</b> ist sofort Schluss (auch der Ton). Andere Apps auf deinem Handy sieht und bedient niemand.", seit: "2.475.0" },
   // 2.855.0 KC-CLUB-HILFE-NACHTRAG-6 (Wunsch Hansi 04.11.2026 „Hilfetexte, Lupe, Twinkey, Videos aktuell?“): Neuheiten 2.672.0–2.847.0
   { id: "lesestand_liste", thema: "nachrichten", sym: "✔️", t: "Lese-Stand schon in der Chat-Übersicht", x: "In der Nachrichten-Übersicht steht unter jedem Chat, wie es um <b>deine letzte eigene Nachricht</b> steht. In Gruppen z. B. <b>„17 → ✓✓ 10 · ✓✓ 4“</b>: an 17 geschickt, bei 10 angekommen, davon 4 gelesen (blaue Haken). Im Einzelchat wie bei WhatsApp: ✓ gesendet, graue ✓✓ angekommen, blaue ✓✓ gelesen. Hat danach noch jemand geschrieben, steht <b>„Deine letzte:“</b> davor. Antippen zeigt die Namen (ℹ️ Details).", zeig: () => zeige("nachrichten"), seit: "2.855.0" },
@@ -4291,7 +4292,7 @@ const HZ_SICHT_HILFEN = {
   "spiele": ["e:spiele", "h:spiel_schach", "h:spiel_mitglieder", "h:spiel_pause"],
   "aktionen": ["e:aktionen", "h:aktionen_kacheln", "t:mitfahren"],
   "aktion": ["e:aktionen", "h:aktionen_kacheln", "t:mitfahren"],
-  "erstattung": ["e:erstattung", "h:erstattung", "h:sonderstunden"],
+  "erstattung": ["e:erstattung", "h:erstattung", "h:erstattung_zeit", "h:sonderstunden"],
   "feedback": ["e:feedback", "h:feedback", "h:erst_feedback"],
   "protokolle": ["e:protokolle", "h:protokoll_aufgaben", "h:protokoll_schreiben"],
   "protokoll": ["e:protokolle", "h:protokoll_aufgaben", "h:protokoll_schreiben"],
@@ -7642,7 +7643,7 @@ const TW_VIDEOS = { // 2.955.0 KC-CLUB-HILFE-2955: Neuheiten mit passendem Video
   // 2.348.0 KC-CLUB-VIDEO-VERKNUEPFT (Wunsch Hansi „alle Themen mit Videos“): Hilfe-Themen, zu denen es schon ein Video gibt
   // 18.10.2026 KC-CLUB-HILFE-AKTUELL: neue Hilfe-Themen mit passendem Video
   "h:info_laufband": ["oberflaeche"], "h:kachel_auswahl": ["oberflaeche"], "h:kachel_vorschlag": ["oberflaeche"], "h:gelesen_von": ["chatprofi"], "h:tastatur_knopf": ["chatprofi"],
-  "h:schreiben_klappen": ["chatprofi"], "h:tage_einklappen": ["chatprofi"], "h:anlage_mitschicken": ["vorschlag"], "h:termin_link_prospekt": ["termin"], "h:sonderstunden": ["dienst", "erstattung"],
+  "h:schreiben_klappen": ["chatprofi"], "h:tage_einklappen": ["chatprofi"], "h:anlage_mitschicken": ["vorschlag"], "h:termin_link_prospekt": ["termin"], "h:sonderstunden": ["dienst", "erstattung"], "h:erstattung_zeit": ["erstattung", "dienst"],
   "h:avatar_bearbeiten": ["figur", "figurbau"], "h:schuerze": ["figurbau"], "h:foto_muetze": ["figur"], "h:bild_zuletzt": ["figur"], "h:stundenuhren": ["effekte"], "h:kuckuck_ton": ["effekte"],
   "h:unterwasserwelt": ["anpassen"], "h:weltraum": ["anpassen"], "h:bauernhof": ["anpassen"], "h:kegeln": ["anpassen"], "h:wildwest": ["anpassen"], "h:wueste": ["anpassen"], "h:disco": ["anpassen"], "h:baustelle": ["anpassen"], "h:seifenblasen": ["anpassen"], "h:see": ["anpassen"], "h:eingangskorb_mitglied": ["archiv"], "f:wer-gelesen": ["chatprofi"], "f:sonderstunden-melden": ["dienst"],
   "h:status": ["status"], "h:erstattung": ["erstattung"], "h:feedback": ["feedback"], "h:daten_geaendert": ["meinedaten"], "h:meine_daten": ["privat", "meinedaten"], "h:aenderung_rueckfrage": ["meinedaten"], "h:wer_online": ["mitglieder"], "h:anruf_kachel": ["mitglieder"], "h:mitglieder_ansicht": ["mitglieder"], "h:bild_punkt": ["mitglieder"], "h:pinnwand_antwort": ["pinnwand"], "h:pinnwand_wichtig": ["pinnwand"], "h:pinnwand_alt": ["pinnwand"], "h:foto_details": ["fotos"], "h:foto_teilen": ["fotos"], "h:hilfe_anbieten": ["helfen"], "h:hilfe_veroeffentlichen": ["helfen"], "h:hilfe_absprache": ["helfen"], "h:vorschlag_unterstuetzen": ["vorschlag"], "h:spende": ["vorschlag"], "h:abstimmung_ziel": ["vorschlag"], "h:spiel_mitglieder": ["spiele"], "h:spiel_schach": ["spiele"], "h:spiel_pause": ["spiele"], "h:ttt_toene": ["spiele"], "h:spiele_fdk_dk_mg": ["spiele"], "h:spiele_leiste": ["spiele"], "h:aktionen_kacheln": ["aktionen"], "h:wo_bin_ich": ["sos"], "h:notfallkontakt": ["sos"], "h:notfallpass_sichern": ["sos"], "h:notfallkontakt_wer": ["sos"], "h:mein_dienst": ["dienst"], "h:dienst_erinnerung": ["dienst"], "h:dw_fertig": ["dienst"], "h:wunschbogen": ["dienst"], "h:meine_schulung": ["schulung"], "h:kalender_blaettern": ["zusagen"], "h:naechstes_treffen": ["zusagen"], "h:termin_zahl": ["zusagen"], "h:drucken": ["zusagen"], "h:wiederholen": ["terminfinden", "termin"], "h:kachel_lang": ["oberflaeche"], "h:kachel_aus": ["oberflaeche"], "h:register_ziehen": ["oberflaeche"], "h:register_wischen": ["oberflaeche"], "h:ansicht": ["einfach", "oberflaeche"], "h:rundgang": ["ueberblick"], "h:ueberblick": ["ueberblick"], "h:twinkey": ["hilfe"], "h:einstellung_suchen": ["hilfe"], "h:diktat_feld": ["sprache"], "h:sprache_einstellung": ["sprache"], "h:installieren": ["installieren"], "h:pc_tablet": ["inst_geraet"], "h:code_geraet": ["privat", "inst_codes", "inst_geraet"], "h:code_ipad": ["inst_safari", "inst_codes"], "h:update": ["probleme", "technik"], "h:version": ["probleme", "technik"], "h:sicherheitscheck": ["probleme", "technik"], "h:programme_frei": ["technik"], "h:nacht": ["anpassen"], "h:schrift": ["anpassen"], "h:animiert": ["anpassen"], "h:wetter_tage": ["effekte"], "h:protokoll_aufgaben": ["todo", "lesen"], "h:push": ["push"], "h:push_selbst": ["push"], "h:test_an_mich": ["push"], "h:meine_geraete": ["push"], "h:anklopfton": ["push"], "h:ansage_nachholen": ["push"], "h:ansage_verlassen": ["push"], "t:ruhe": ["push"], "f:ruhe": ["push"], "h:privatsphaere": ["privat"], "h:zugangslink": ["privat"], "h:live_tippen": ["privat"], "h:zuletzt_da": ["privat"], "h:link_verloren": ["privat"], "h:abmelden": ["privat"], "f:daten": ["privat"], "h:haengt": ["probleme"], "h:laden_dauert": ["probleme"], "h:zwei_fenster": ["probleme"], "h:verbindung": ["probleme"], "h:mikrofon": ["probleme"], "h:verbindung_senden": ["probleme"], "h:app_schliessen": ["probleme"], "h:twinkey_haengt": ["probleme"], "h:pfeil_menue": ["chatprofi"], "h:anheften": ["chatprofi"], "h:merken": ["chatprofi"], "h:weiterleiten": ["chatprofi"], "h:haken": ["chatprofi"], "h:sprachtempo": ["chatprofi"], "h:chat_vorlesen": ["chatprofi"], "h:chat_abstimmung": ["chatprofi"], "h:selbstloeschen": ["chatprofi"], "h:entwurf": ["chatprofi"], "h:ohne_netz": ["chatprofi"], "h:chat_archiv": ["chatprofi"], "h:chat_ganz": ["chatprofi"], "h:wichtig_nachtraeglich": ["chatprofi"], "h:kopieren": ["chatprofi"], "h:neue_linie": ["chatprofi"], "h:gruppe_bereiche": ["gruppen"], "h:gruppen_admin": ["gruppen"], "h:gruppe_loeschen": ["gruppen"], "h:terminanfrage": ["terminfinden"], "h:anfrage_status": ["terminfinden"], "h:anfrage_vorbehalt": ["terminfinden"], "h:terminfindung": ["terminfinden"], "h:todo": ["todo"], "h:erst_einfach": ["einfach"], "h:es_musik": ["buehne"], "h:club_song": ["buehne"], "h:bw_einladung": ["buehne"], "h:eingangskorb": ["buero"], "h:eingang_hinweis": ["buero"], "h:ablage_mehrere": ["buero"], "h:buero_sprache": ["buero"], "h:buero_einlesen": ["buero"], "h:buero_einlesen_eingang": ["buero"], "h:buero_mail": ["buero"], "h:schilder": ["buero"],
@@ -7850,9 +7851,10 @@ async function erstattungLaden() {
     if ($("ersLeitung")) $("ersLeitung").innerHTML = ICH?.vorstand || ICH?.admin || (ICH?.aemter || []).some((a) => /^(kassenwart|clubsprecher)/i.test(a)) ? '<div class="karte" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span style="flex:1;min-width:180px"><b>Für die Clubleitung:</b> Buchungsliste mit Summen und alle Erstattungen als Datei für Excel</span><button type="button" class="knopf haupt" style="width:auto" onclick="ersBuchOeffnen()">📒 Buchungsliste</button><button type="button" class="knopf" style="width:auto" onclick="ersCsvOeffnen()">📊 CSV für Excel erstellen</button></div>' : ""; // KC-CLUB-ERSTATTUNG-BUCHUNGEN: auch Kassenwart/Clubsprecher
     const r = await api("erstattung_meine");
     Object.assign(ERS, { kmSatz: r.kmSatz, standard: r.standard, saetze: r.saetze || [], gruende: r.gruende, arten: r.arten, antraege: r.antraege || [], abgerechnet: r.besucheAbgerechnet || [], geladen: true,
-      sondereinsaetze: r.sondereinsaetze || [] }); // KC-CLUB-ERSTATTUNG-SONDER (2.419.0)
+      sondereinsaetze: r.sondereinsaetze || [], // KC-CLUB-ERSTATTUNG-SONDER (2.419.0)
+      stunden: r.stunden || { moeglich: false, einsaetze: [] }, taetigkeiten: r.taetigkeiten || [] }); // KICC-F-112
     if (!$("ersForm").innerHTML) erstattungArt("fahrt");
-    $("ersMeine").innerHTML = r.antraege.length ? r.antraege.map((a) => `<div class="zeile"><div style="flex:1"><b>${eur(a.summe)}</b> · ${a.anzahl} Position${a.anzahl === 1 ? "" : "en"}<div class="hinweis" style="margin:0;font-size:.85rem">${esc(wann(a.zeit))} · ${a.auszahlung === "bar" ? "bar" : "Überweisung"}</div></div>
+    $("ersMeine").innerHTML = r.antraege.length ? r.antraege.map((a) => `<div class="zeile"><div style="flex:1"><b>${eur(a.summe)}</b> · ${a.anzahl} Position${a.anzahl === 1 ? "" : "en"}<div class="hinweis" style="margin:0;font-size:.85rem">${esc(wann(a.zeit))} · ${a.auszahlung === "bar" ? "bar" : "Überweisung"}${ersZeitStandText(a.zeit_stand)}</div></div>
       <span class="stmarke ${a.status === "erstattet" ? "st-verfuegbar" : a.status === "abgelehnt" ? "st-abwesend" : "st-beschaeftigt"}">${a.status === "erstattet" ? "✅ erstattet" : a.status === "abgelehnt" ? "❌ abgelehnt" : "📨 eingereicht"}</span></div>`).join("")
       : '<p class="hinweis" style="margin:0">Noch keine Anträge.</p>';
     // KC-CLUB-RC-PRUEFUNG (20.10.2026): Rot über var(--textRot) – im Dunkelmodus lesbar
@@ -7881,7 +7883,7 @@ function ersBelegStatus(st) {
   document.querySelector("#ersForm .belegfeld")?.classList.toggle("versteckt", st !== "foto");
 }
 function erstattungArt(art, getippt) {
-  ERS.art = art; ERS.belege = []; ERS.belegStatus = null; if (getippt) ERS.gewaehlt = true; // 2.81.0: für die Schritt-Hilfe – Art selbst gewählt?
+  ERS.art = art; ERS.belege = []; ERS.belegStatus = null; ERS.zeitJa = false; if (getippt) ERS.gewaehlt = true; // 2.81.0: für die Schritt-Hilfe – Art selbst gewählt?
   document.querySelectorAll("#ersArt button").forEach((b) => b.classList.toggle("an", b.dataset.a === art));
   const heute = heuteIso(), beleg = `<div class="feld belegfeld">Belege (freiwillig, bis ${BELEG_MAX})
        <div class="knopfreihe belegknoepfe"><button type="button" class="knopf klein" onclick="$('ersFoto').click()">📷 Foto aufnehmen</button><button type="button" class="knopf klein" onclick="$('ersDatei').click()">📁 Datei wählen</button></div>
@@ -7902,9 +7904,47 @@ function erstattungArt(art, getippt) {
        ${art === "kaution" ? `<label class="feld">An wen? (freiwillig)<input id="ersGeschaeft" maxlength="120" placeholder="z. B. Kühlhaus Hamm"></label>
          <div class="feld">Bezahlt aus<div class="umschalter" id="ersKautionAus" style="margin:4px 0 0"><button type="button" data-k="eigen" class="an" onclick="ersKautionAus('eigen')">👛 Eigenem Geld</button><button type="button" data-k="vorschuss" onclick="ersKautionAus('vorschuss')">🏦 Club-Vorschuss</button></div></div>
          <p class="hinweis" style="margin:0">Die Kaution zählt nicht zur Summe. Kommt sie zurück, geht sie an dich (eigenes Geld) bzw. an den Club (Vorschuss). Kommt sie nicht zurück, wird sie dir erstattet.</p>` : ""}
-       ${ersBelegStatusFeld()}${beleg}`) + ersSonderFeld();
+       ${ersBelegStatusFeld()}${beleg}`) + ersZeitFeld(art) + ersSonderFeld();
   if (art !== "fahrt") ersBelegStatus("foto");
   if (art === "kaution") ERS.kautionAus = "eigen";
+}
+// ---------- KICC-F-112 / KC-CLUB-ERSTATTUNG-STUNDEN (Wunsch Hansi 24.11.2026): Zeit fürs Stundenkonto gleich mit der Erstattung ----------
+// Nur bei Fahrt und Einkauf; nur Auswahl (Viertelstunden, Einsatz, Tätigkeit) – kein Freitext. Die Zeit zählt sofort (keine Freigabe in DP2);
+// lehnt der Kassenwart den Antrag ab, wird sie wieder herausgenommen. Vorbelegt: ständiger Einsatz (z. B. „Besorgungen & Fahrten“).
+const ERS_TAET = { kochen: "Kochen", vorbereitung: "Vorbereitung", transport: "Transport / Fahrt", einkauf: "Einkauf / Besorgung", getraenke: "Getränke mischen", aufraeumen: "Aufräumen / Spülen", sonstiges: "Sonstiges" };
+const ersUhr = (h) => `${String(Math.floor(h % 24)).padStart(2, "0")}:${String(Math.round((h % 1) * 60)).padStart(2, "0")}${h >= 24 ? " (+1)" : ""}`;
+const ersStd = (st) => Math.max(0, Number(st.bis) - Number(st.von) - Number(st.pause || 0) / 60);
+const ersStdText = (n) => String(Math.round(n * 100) / 100).replace(".", ",");
+function ersZeitStandText(z) {
+  if (!z) return "";
+  return (z.gebucht ? ` · ⏱️ ${ersStdText(z.gebucht)} Std. im Stundenkonto` : "") + (z.zurueck ? ` · ⏱️ ${ersStdText(z.zurueck)} Std. zurückgenommen${z.grund ? " (" + esc(z.grund) + ")" : ""}` : "");
+}
+function ersZeitFeld(art) {
+  const st = ERS.stunden || {}; if (!st.moeglich || !["fahrt", "einkauf"].includes(art)) return "";
+  const opt = (von, bis, wahl) => { let h = ""; for (let x = von; x <= bis; x += 0.25) h += `<option value="${x}" ${x === wahl ? "selected" : ""}>${ersUhr(x)}</option>`; return h; };
+  const taet = (ERS.taetigkeiten || Object.keys(ERS_TAET)), vor = art === "fahrt" ? "transport" : "einkauf";
+  return `<div class="feld" id="ersZeitFrage">⏱️ Zeit fürs Stundenkonto mitmelden?<div class="umschalter" id="ersZeitJa" style="margin:4px 0 0">
+      <button type="button" data-z="nein" class="an" onclick="ersZeit(false)">Nein</button><button type="button" data-z="ja" onclick="ersZeit(true)">Ja</button></div></div>
+    <div id="ersZeitFelder" class="versteckt">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><label class="feld">Von<select id="ersVon" onchange="ersZeitVorschau()">${opt(0, 23.75, 9)}</select></label>
+        <label class="feld">Bis<select id="ersBis" onchange="ersZeitVorschau()">${opt(0.25, 30, 10)}</select></label></div>
+      <label class="feld">Wofür?<select id="ersZeitEinsatz">${(st.einsaetze || []).map((e) => `<option value="${esc(e.id)}" ${e.id === (ERS.vorSonder && st.einsaetze.some((x) => x.id === ERS.vorSonder) ? ERS.vorSonder : st.standard) ? "selected" : ""}>${esc(e.titel)}${e.laufend ? "" : e.markttage ? " · Markttage" : e.von ? " · " + esc(e.von.split("-").reverse().join(".")) : ""}</option>`).join("")}</select></label>
+      <label class="feld">Tätigkeit<select id="ersTaet">${taet.map((t) => `<option value="${esc(t)}" ${t === vor ? "selected" : ""}>${esc(ERS_TAET[t] || t)}</option>`).join("")}</select></label>
+      <p class="hinweis" id="ersZeitVorschau" style="margin:0"></p></div>`;
+}
+function ersZeit(ja) {
+  ERS.zeitJa = !!ja;
+  document.querySelectorAll("#ersZeitJa button").forEach((b) => b.classList.toggle("an", b.dataset.z === (ja ? "ja" : "nein")));
+  $("ersZeitFelder")?.classList.toggle("versteckt", !ja); if (ja) ersZeitVorschau();
+}
+function ersZeitLesen() {
+  if (!ERS.zeitJa || !$("ersZeitFelder")) return null;
+  return { von: Number($("ersVon").value), bis: Number($("ersBis").value), pause: 0, special_event_id: $("ersZeitEinsatz").value, taetigkeit: $("ersTaet").value,
+    titel: (ERS.stunden?.einsaetze || []).find((e) => e.id === $("ersZeitEinsatz").value)?.titel || "" };
+}
+function ersZeitVorschau() {
+  const st = ersZeitLesen(); if (!st || !$("ersZeitVorschau")) return;
+  $("ersZeitVorschau").textContent = st.bis > st.von ? `= ${ersStdText(ersStd(st))} Std. – zählt sofort in deinem Stundenkonto (${ERS.stunden?.veranstaltung || "Veranstaltung"}). Fahrzeit von zuhause bis zuhause zählt mit.` : "Bitte „Bis“ nach „Von“ wählen.";
 }
 function ersKautionAus(k) { ERS.kautionAus = k; document.querySelectorAll("#ersKautionAus button").forEach((b) => b.classList.toggle("an", b.dataset.k === k)); }
 // Vorbelegung aus Twinkey („🚗 Fahrtkosten / Auslagen erfassen“ nach der Sonderstunden-Meldung)
@@ -7938,7 +7978,7 @@ async function erstattungBeleg(input) {
   }
   input.value = "";
 }
-function erstattungHinzu() {
+async function erstattungHinzu() {
   const datum = $("ersDatum").value; if (!datum) return melde("Bitte ein Datum angeben.", true);
   if (ERS.belege.some((b) => b.laedt)) return melde("Bitte kurz warten – der Beleg wird noch hochgeladen.", true);
   let p;
@@ -7962,6 +8002,17 @@ function erstattungHinzu() {
     if (ERS.art === "kaution") p.bezahlt_aus = ERS.kautionAus === "vorschuss" ? "vorschuss" : "eigen";
   }
   const se = $("ersSonder")?.value; if (se) { p.special_event_id = se; p.sonder_titel = (ERS.sondereinsaetze || []).find((e) => e.id === se)?.titel || ""; }
+  const zeit = ersZeitLesen(); // KICC-F-112
+  if (zeit) {
+    if (!zeit.special_event_id) return melde("Bitte wählen, wofür die Zeit war.", true);
+    if (!(zeit.bis > zeit.von)) return melde("Bitte bei der Zeit „Bis“ nach „Von“ wählen.", true);
+    if (zeit.bis - zeit.von > 16) return melde("Mehr als 16 Stunden am Stück bitte beim Planer melden.", true);
+    if (ERS.pos.some((y) => y.stunden && y.datum === datum && y.stunden.von < zeit.bis && y.stunden.bis > zeit.von)) return melde("Diese Zeit steht schon in einer anderen Position.", true);
+    const h = ersStd(zeit); // Plausi (keine Sperre): viel Zeit für wenig Strecke bzw. sehr langer Einkauf
+    if ((p.art === "fahrt" && h > 2 && h > p.km / 10 + 2) || (p.art === "einkauf" && h > 6))
+      if (!(await frage(`⏱️ ${ersStdText(h)} Stunden${p.art === "fahrt" ? ` für ${String(p.km).replace(".", ",")} km` : " für den Einkauf"} – stimmt das?`, { ja: "Ja, stimmt", nein: "Ändern" }))) return;
+    p.stunden = zeit;
+  }
   ERS.pos.push(p); erstattungArt(ERS.art); erstattungZeigen(); melde("➕ Position hinzugefügt");
 }
 // ---------- KC-CLUB-ERSTATTUNG-BESUCHE (2.25.4, Wunsch Hansi „die km-Abrechnung muss auch unter Erstattung laufen – von dort an den Kassenwart“) ----------
@@ -8005,24 +8056,26 @@ function erstattungZeigen() {
   const d = (iso) => iso.split("-").reverse().join(".");
   const summe = ERS.pos.filter(ersZaehlt).reduce((a, x) => a + x.betrag, 0), vorschuss = zahlDe($("ersVorschuss")?.value) || 0;
   $("ersListe").innerHTML = ERS.pos.length ? `<table class="todotab">${ERS.pos.map((x, i) => `<tr><td class="kat">${ERS_SYM[x.art] || "📦"}</td>
-      <td><div class="aufgabe">${x.art === "fahrt" ? `${String(x.km).replace(".", ",")} km – ${esc(x.grund)}` : esc(x.was || ({ kraftstoff: "Kraftstoff", parken: "Parkgebühren", kaution: "Kaution" })[x.art] || "")}</div>${x.art === "fahrt" ? `<div class="meta">${String(x.km).replace(".", ",")} km × ${eur(x.satz)}</div>` : ""}<div class="meta">${d(x.datum)}${x.besuch_id ? " · 🎓 " + esc(x.besuch_id) : ""}${x.ziel ? " · " + esc(x.ziel) : ""}${x.geschaeft ? " · " + esc(x.geschaeft) : ""}${x.belege?.length ? " · 📎 Beleg" : x.beleg_status === "papier" ? " · 🧾 Beleg auf Papier" : x.beleg_status === "kein" ? " · ❌ kein Beleg" : ""}${x.fahrzeug ? " · " + (x.fahrzeug === "miete" ? "Mietfahrzeug" : "Clubfahrzeug") : ""}${x.art === "kaution" ? ` · aus ${x.bezahlt_aus === "vorschuss" ? "Club-Vorschuss" : "eigenem Geld"} · zählt nicht zur Summe` : ""}${x.sonder_titel ? " · ★ " + esc(x.sonder_titel) : ""}</div></td>
+      <td><div class="aufgabe">${x.art === "fahrt" ? `${String(x.km).replace(".", ",")} km – ${esc(x.grund)}` : esc(x.was || ({ kraftstoff: "Kraftstoff", parken: "Parkgebühren", kaution: "Kaution" })[x.art] || "")}</div>${x.art === "fahrt" ? `<div class="meta">${String(x.km).replace(".", ",")} km × ${eur(x.satz)}</div>` : ""}${x.stunden ? `<div class="meta">⏱️ ${ersUhr(x.stunden.von)}–${ersUhr(x.stunden.bis)} Uhr = <b>${ersStdText(ersStd(x.stunden))} Std.</b> aufs Stundenkonto${x.stunden.titel ? " · " + esc(x.stunden.titel) : ""}</div>` : ""}<div class="meta">${d(x.datum)}${x.besuch_id ? " · 🎓 " + esc(x.besuch_id) : ""}${x.ziel ? " · " + esc(x.ziel) : ""}${x.geschaeft ? " · " + esc(x.geschaeft) : ""}${x.belege?.length ? " · 📎 Beleg" : x.beleg_status === "papier" ? " · 🧾 Beleg auf Papier" : x.beleg_status === "kein" ? " · ❌ kein Beleg" : ""}${x.fahrzeug ? " · " + (x.fahrzeug === "miete" ? "Mietfahrzeug" : "Clubfahrzeug") : ""}${x.art === "kaution" ? ` · aus ${x.bezahlt_aus === "vorschuss" ? "Club-Vorschuss" : "eigenem Geld"} · zählt nicht zur Summe` : ""}${x.sonder_titel ? " · ★ " + esc(x.sonder_titel) : ""}</div></td>
       <td style="text-align:right;font-weight:800;white-space:nowrap${ersZaehlt(x) ? "" : ";opacity:.55;text-decoration:line-through"}">${eur(x.betrag)}</td><td style="width:34px"><button aria-label="Löschen" class="weg" onclick="ERS.pos.splice(${i},1);erstattungZeigen()">🗑️</button></td></tr>`).join("")}
       <tr><td></td><td><b>Summe</b></td><td style="text-align:right;font-weight:900;font-size:1.1rem;white-space:nowrap">${eur(summe)}</td><td></td></tr>${vorschuss > 0 ? `<tr><td></td><td>abzüglich Vorschuss → ${summe - vorschuss >= 0 ? "Auszahlung" : "Rückzahlung an den Club"}</td><td style="text-align:right;font-weight:800;white-space:nowrap">${eur(Math.abs(summe - vorschuss))}</td><td></td></tr>` : ""}</table>`
     : '<p class="hinweis" style="margin:0">Noch keine Position – oben ausfüllen und „＋ Position hinzufügen“ tippen.</p>';
   $("ersSendenKnopf").disabled = !ERS.pos.length;
-  $("ersSendenKnopf").textContent = ERS.pos.length ? `📨 Antrag über ${eur(summe)} senden` : "📨 Antrag senden";
+  const std = ERS.pos.filter((x) => x.stunden).reduce((n, x) => n + ersStd(x.stunden), 0); // KICC-F-112
+  $("ersSendenKnopf").textContent = ERS.pos.length ? `📨 Antrag über ${eur(summe)} senden${std ? ` · ⏱️ ${ersStdText(std)} Std.` : ""}` : "📨 Antrag senden";
 }
 function erstattungAuszahlung(a) { ERS.auszahlung = a; document.querySelectorAll("#ersAuszahlung button").forEach((b) => b.classList.toggle("an", b.dataset.a === a)); }
 async function erstattungSenden() {
   if (!ERS.pos.length) return;
   const summe = ERS.pos.filter(ersZaehlt).reduce((a, x) => a + x.betrag, 0);
-  if (!(await frage(`Erstattung über ${eur(summe)} beantragen?\n\nDer Antrag geht per Mail an Kassenwart und Clubsprecher. Du bekommst eine Kopie.`))) return;
+  const std = ERS.pos.filter((x) => x.stunden).reduce((n, x) => n + ersStd(x.stunden), 0); // KICC-F-112
+  if (!(await frage(`Erstattung über ${eur(summe)} beantragen?${std ? `\n\n⏱️ ${ersStdText(std)} Std. kommen sofort auf dein Stundenkonto.` : ""}\n\nDer Antrag geht per Mail an Kassenwart und Clubsprecher. Du bekommst eine Kopie.`))) return;
   try {
     const kopie = { pos: ERS.pos.slice(), auszahlung: ERS.auszahlung, bemerkung: $("ersBemerkung").value.trim(), vorschuss: zahlDe($("ersVorschuss")?.value) || 0 };
-    const r = await api("erstattung_senden", { positionen: ERS.pos.map(({ belegNamen, belegDateien, satz, sonder_titel, ...x }) => x), auszahlung: ERS.auszahlung, bemerkung: kopie.bemerkung,
+    const r = await api("erstattung_senden", { positionen: ERS.pos.map(({ belegNamen, belegDateien, satz, sonder_titel, ...x }) => x), // stunden.titel nimmt der Server nicht an (ersStundenPruefen) auszahlung: ERS.auszahlung, bemerkung: kopie.bemerkung,
       vorschuss: kopie.vorschuss });
     ERS.pos = []; ERS.gewaehlt = false; Object.assign(ERS, { vorSonder: null, vorDatum: null, vorGrund: null, vorZiel: null }); $("ersBemerkung").value = ""; if ($("ersVorschuss")) $("ersVorschuss").value = ""; erstattungZeigen();
-    melde(`📨 Antrag über ${eur(r.summe)} verschickt an ${[...r.an, ...r.cc].join(" und ")} – du bekommst eine Kopie per Mail.`);
+    melde(`📨 Antrag über ${eur(r.summe)} verschickt an ${[...r.an, ...r.cc].join(" und ")} – du bekommst eine Kopie per Mail.${r.stunden ? ` ⏱️ ${ersStdText(r.stunden)} Std. stehen schon in deinem Stundenkonto.` : ""}`);
     erstattungLaden();
     // 2.526.0 KC-CLUB-ERSTATTUNG-BRIEFBOGEN: Antrag auf dem Club-Briefbogen anbieten (PDF/Drucken), danach wie bisher die Ablage-Frage
     const blatt = erstDaten({ positionen: kopie.pos, auszahlung: kopie.auszahlung, bemerkung: kopie.bemerkung, vorschuss: kopie.vorschuss, summe: r.summe, name: ICH?.name || "", zeit: new Date().toISOString(), status: "eingereicht" });
@@ -8043,7 +8096,8 @@ function erstattungAblageFragen(k, r) {
     dateien: async () => {
       const zeilen = [["Antragsteller", ICH?.name || ""], ["Eingereicht am", dz(heute)], ["Empfänger", [...(r.an || []), ...(r.cc || [])].join(", ")],
         ...k.pos.map((x, i) => [`Position ${i + 1} · ${x.art === "fahrt" ? "Fahrtkosten" : x.art === "einkauf" ? "Einkauf vorgestreckt" : "Sonstige Auslage"} · ${dz(x.datum)}`,
-          x.art === "fahrt" ? `${String(x.km).replace(".", ",")} km × ${eur(x.satz)} = ${eur(x.betrag)}\nGrund: ${x.grund}${x.ziel ? " · Ziel: " + x.ziel : ""}` : `${eur(x.betrag)} – ${x.was}${x.geschaeft ? " · " + x.geschaeft : ""}${(x.belege || []).length ? " · Beleg anbei" : ""}`]),
+          (x.art === "fahrt" ? `${String(x.km).replace(".", ",")} km × ${eur(x.satz)} = ${eur(x.betrag)}\nGrund: ${x.grund}${x.ziel ? " · Ziel: " + x.ziel : ""}` : `${eur(x.betrag)} – ${x.was}${x.geschaeft ? " · " + x.geschaeft : ""}${(x.belege || []).length ? " · Beleg anbei" : ""}`)
+            + (x.stunden ? `\n⏱️ ${ersUhr(x.stunden.von)}–${ersUhr(x.stunden.bis)} Uhr = ${ersStdText(ersStd(x.stunden))} Std. aufs Stundenkonto` : "")]), // KICC-F-112
         ["Summe", eur(summe)], ["Auszahlung", k.auszahlung === "bar" ? "bar" : "per Überweisung"], ...(k.bemerkung ? [["Bemerkung", k.bemerkung]] : [])];
       const bild = await ablageBild({ kopf: "Antrag auf Erstattung", zeilen, fuss: `Gesendet am ${dz(heute)} über die Köcheclub-App` });
       const aus = [{ titel: `Erstattungsantrag ${eur(summe)} (${dz(heute)})`, name: `Erstattungsantrag-${heute}.png`, mime: "image/png", blob: bild, stichworte: "Antrag" }];
@@ -33871,7 +33925,8 @@ const ERST_ART = { fahrt: "🚗 Fahrtkosten", einkauf: "🛒 Einkauf vorgestreck
 function erstDaten(a) { // eigene Anträge (ERS) und Anträge aus dem Eingang auf eine Form bringen
   const pos = (a.positionen || []).map((x) => ({ datum: x.datum, betrag: Number(x.betrag || 0), kaution: !!x.kaution || x.art === "kaution",
     art: x.text ? "" : ERST_ART[x.art] || "📦 Sonstige Auslage", beleg: x.beleg || ((x.belege || []).length ? "anbei" : ""),
-    text: x.text || (x.art === "fahrt" ? `${String(x.km).replace(".", ",")} km × ${eur(x.satz)} – ${x.grund || ""}${x.ziel ? " (" + x.ziel + ")" : ""}` : `${x.was || x.sonder_titel || ""}${x.geschaeft ? " · " + x.geschaeft : ""}`) }));
+    text: x.text || (x.art === "fahrt" ? `${String(x.km).replace(".", ",")} km × ${eur(x.satz)} – ${x.grund || ""}${x.ziel ? " (" + x.ziel + ")" : ""}` : `${x.was || x.sonder_titel || ""}${x.geschaeft ? " · " + x.geschaeft : ""}`)
+      + (x.stunden && !x.text ? ` · ⏱️ ${ersUhr(Number(x.stunden.von))}–${ersUhr(Number(x.stunden.bis))} Uhr = ${ersStdText(ersStd(x.stunden))} Std. aufs Stundenkonto` : "") })); // KICC-F-112
   const summe = a.summe ?? pos.filter((x) => !x.kaution).reduce((s, x) => s + x.betrag, 0);
   return { name: a.name || "", zeit: a.zeit || a.erstellt_am || null, status: a.status || "", auszahlung: a.auszahlung, bemerkung: a.bemerkung || "", vorschuss: Number(a.vorschuss || 0), positionen: pos, summe };
 }
