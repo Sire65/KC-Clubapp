@@ -13,18 +13,13 @@ Gilt für Claude, Codex/ChatGPT und jeden anderen Agent, ohne Ausnahme:
 4. Erlaubt bleibt nur Technik ohne Inhalt: Tabellen- und Spaltennamen, Zeilenzahlen, Prüfsummen, Speichergrößen, Fehlermeldungen ohne Nachrichtentext.
 5. Bei Fehlersuche in Chat-Funktionen: mit Beispieldaten oder Testkonten arbeiten, nie mit echten Nachrichten.
 
-## ⛔ Update-Stopp: ab 23.11.2026 nur Fehlerbeseitigung (KC-EGRESS-STOPP, Hansi 22.11.2026)
+## ✅ Update-Stopp aufgehoben (KC-EGRESS-STOPP, 22.11.–24.11.2026)
 
-Hansi 22.11.: „Die heutigen Updates müssen noch laufen. Danach nur Fehlerbeseitigung, bis wir eine klare Übersicht haben.“
-Anlass: Supabase-Ausgang (Egress) 4,64 von 5 GB am 22.11. (Zeitraum bis 26.11.) – jede neue Version startet alle Apps neu und kostet Datenverkehr.
-
-1. **Bis einschließlich 22.11.2026** dürfen die geplanten Bündel noch eingespielt werden.
-2. **Ab 23.11.2026** nur noch **Fehlerbeseitigung** (App für Mitglieder kaputt, falsche Daten, Sicherheit, Datensicherung) – keine neuen Funktionen,
-   keine Umbauten, keine Schönheitskorrekturen. Neuerungen auf Arbeitszweigen fertigstellen und liegen lassen.
-   - **Ausnahme 23.11.2026:** Hansi hat für das Bündel 3.13.0 (🔳 QR-Codes im Adminbereich) „Update-Stopp aufheben, heute einspielen“ gewählt.
-3. Der Stopp gilt, **bis Hansi die Übersicht freigibt** (ausdrücklich, z. B. „Update-Stopp aufheben“). Ein neuer Abrechnungszeitraum (26.11.) hebt ihn nicht von selbst auf.
-4. Auch beim Fehlerbeseitigen: so wenige Versionen wie möglich (bündeln), keine Supabase-Protokolle durchsuchen (Protokollabfrage 115/100 GB am 22.11.).
-5. Bis 26.11. sind Hintergrundjobs gedrosselt (Rückstellung automatisch, `kc_db_mirror_audit` action `hintergrund_spartakt_egress`, `mirror_spartakt_egress`).
+Vom 23.11. bis 24.11.2026 galt ein Update-Stopp (nur Fehlerbeseitigung), weil der Supabase-Ausgang (Egress) im kostenlosen Tarif fast voll war
+(4,885 von 5 GB am 24.11. früh). **Am 24.11.2026 hat Hansi auf den Pro-Tarif umgestellt und „Update-Stopp aufheben“ gesagt.**
+Seitdem gelten wieder die normalen Regeln unten (Bündel 12 und 23:50 Uhr, Ruhe prüfen, eine Version je Termin).
+Die Egress-Spartakte (Spiegel, Hintergrundjobs, Wächter, Notpaket) sind seit 24.11. aufgehoben (`kc_db_mirror_audit` action `spartakt_egress_aufgehoben`).
+Weiter gilt: keine Supabase-Protokolle durchsuchen (KC-SPARSAM-PROTOKOLLE).
 
 ## Neuerungen gebündelt einspielen (KC-DB-SPARSAM, 18.10.2026, Freigabe Hansi)
 
