@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "3.20.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "3.21.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -36064,7 +36064,8 @@ async function dpdFreigeben(btn, zurueck = false) {
   catch (e) { meldeFehler(e); } finally { if (btn) btn.disabled = false; dpdFreiZeigen(); }
 }
 // KC-DP-SOLL-UEBERGABE (Hansi 23.11.2026): gerechneten Sollplan mit einem Tipp an DP2 übergeben. DP2 zeigt ihn zur Übernahme (neu/geändert/entfällt);
-// erst „Übernehmen“ in DP2 ändert dort etwas, danach steht er wie jeder DP2-Plan auf der Kasse. Bereitschaft geht nicht mit.
+// erst „Übernehmen“ in DP2 ändert dort etwas, danach steht er wie jeder DP2-Plan auf der Kasse.
+// 3.21.0 KC-DP-SOLL-BEREITSCHAFT (Hansi 24.11.2026): Bereitschaft geht mit – in DP2 als Bereitschaft (nicht als Dienst, nicht auf der Kasse).
 // Nachreichen: nach der ersten Übergabe legt jede Neuberechnung mit geänderten Schichten von selbst eine neue Übergabe an (abschaltbar).
 async function dpdSollZeigen() { const el = $("dpdSollZeile"); if (!el) return;
   try {
@@ -36073,7 +36074,7 @@ async function dpdSollZeigen() { const el = $("dpdSollZeile"); if (!el) return;
     el.innerHTML = `📤 DP2: <b>${st}</b>${l && !l.gleich && r.anzahl !== null ? " · <b>der Plan hat sich seitdem geändert</b>" : ""}`
       + (l ? `<br><label style="display:inline-flex;gap:6px;align-items:center;margin-top:4px"><input type="checkbox" ${r.auto ? "checked" : ""} onchange="dpdSollAuto(this)"> Änderungen automatisch nachreichen</label>` : "")
       + (r.autoFremd ? `<br><small>Nachgereicht wird zurzeit der Plan eines anderen Admins – mit „📤 An DP2 übergeben“ übernimmst du das.</small>` : "")
-      + (r.bereitschaft ? `<br><small>Bereitschaft (${r.bereitschaft}) wird nicht übergeben – sie bleibt in DP2 von Hand.</small>` : "");
+      + (r.bereitschaft ? `<br><small>Bereitschaft (${r.bereitschaft}) geht mit – in DP2 als Bereitschaft, nicht auf der Kasse.</small>` : "");
   } catch { el.textContent = "📤 DP2: Stand gerade nicht abrufbar."; } }
 async function dpdSollAuto(box) {
   try { await api("dp_soll_uebergeben", { auto: !!box.checked }); melde(box.checked ? "📤 Änderungen gehen von selbst an DP2 (zur Übernahme)." : "📤 Automatisches Nachreichen aus."); }
@@ -36085,10 +36086,10 @@ async function dpdSollUebergeben(btn) {
     if (!r.anzahl) return melde("Im Plan steht noch keine Schicht zum Übergeben.", true);
     if (r.letzte?.gleich) return melde(r.letzte.status === "offen" ? "📤 Dieser Stand liegt schon in DP2 zur Übernahme bereit." : "📤 Dieser Stand ist in DP2 schon übernommen.");
     const ohne = r.ohneId?.length ? `\n\nOhne eindeutige Person (nicht übergeben, DP2 löscht dazu nichts): ${r.ohneId.join(", ")}` : "";
-    const ber = r.bereitschaft ? `\n\nBereitschaft (${r.bereitschaft}) wird nicht übergeben.` : "";
+    const ber = r.bereitschaft ? `\n\nDazu ${r.bereitschaft} × Bereitschaft – in DP2 als Bereitschaft, nicht auf der Kasse.` : "";
     if (!(await frage(`${r.anzahl} Schichten an DP2 übergeben? In DP2 erscheinen sie zur Übernahme – erst dort übernehmen, wenn der Plan fertig ist, danach stehen sie sofort auf der Kasse.${ohne}${ber}`, { ja: "📤 Übergeben" }))) return;
     const e = await api("dp_soll_uebergeben", { stand: r.stand || "" }, { warten: true });
-    melde(e.unveraendert ? "📤 Dieser Stand ist schon bei DP2." : `📤 ${e.anzahl} Schichten an DP2 übergeben – in DP2 unter Sollplan „📥 Plan aus der Club-App übernehmen“.`);
+    melde(e.unveraendert ? "📤 Dieser Stand ist schon bei DP2." : `📤 ${e.anzahl} Schichten${e.bereitschaft ? ` und ${e.bereitschaft} × Bereitschaft` : ""} an DP2 übergeben – in DP2 unter Sollplan „📥 Plan aus der Club-App übernehmen“.`);
   } catch (e) { meldeFehler(e); } finally { if (btn) btn.disabled = false; dpdSollZeigen(); }
 }
 // Karte für Mitglieder: erscheint, sobald freigegeben

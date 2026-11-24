@@ -245,7 +245,10 @@ export function dpRechnen(e) {
 // KC-DP-SOLL-UEBERGABE (Hansi 23.11.2026: „Ein-Klick-Übergabe des berechneten Sollplans nach DP2“, „wenn der Sollplan sich nochmals ändert,
 // muss der Abgleich erneut laufen“): macht aus dem gerechneten Plan (Ausgabe von dpRechnen, gespeichert als „dp_druck“) die Zeilen im
 // DP2-Schichtformat – ohne die Rechnung, die Anzeige oder das PDF zu verändern. Je Person und Tag ein Dienst mit stabilem importKey
-// 'CLUB-<datum>-<personId>', damit DP2 bei einer neuen Übergabe neu/geändert/entfällt erkennt. Bereitschaft wird NICHT übergeben (nur gezählt).
+// 'CLUB-<datum>-<personId>', damit DP2 bei einer neuen Übergabe neu/geändert/entfällt erkennt.
+// KC-DP-SOLL-BEREITSCHAFT (Hansi 24.11.2026 „Bereitschaft soll auch im Dienstplan stehen“): Bereitschaft geht als eigene Liste mit
+// (importKey 'CLUB-B-<datum>-<personId>', nur personId/date/start/end) – DP2 legt sie als Bereitschaft an, nicht als Dienst (nicht auf die Kasse).
+// Person: ber[].p (seit 3.21.0 beim Rechnen mitgeschrieben), sonst die person_id, die derselbe Plan für denselben Namen in leute[] trägt (nur wenn eindeutig).
 // Zone: am Markttag aus der Wunschangabe der Person (vorne → front, hinten → back, beides → neutral), an Aufbau/Nachbereitung neutral.
 // Pause wie DP2 (src/core/breaks.js, KC_STANDARD): über 6 Std. 30 Min., über 9 Std. 45 Min.
 export const DP_SOLL_VERTRAG = "KC_DP_SOLL_UEBERGABE_V1";
@@ -256,12 +259,30 @@ export function dpSollPause(stunden) { const h = Number(stunden) || 0; return h 
 export function dpSollZeilen(plan, eventTage, { aus = [] } = {}) {
   const tage = new Set([...(eventTage || [])].map(String)), ausSet = new Set([...aus].map(String)), rows = [], ohneId = new Set(), keys = new Set(), uebersprungen = [];
   const gueltig = (pid) => typeof pid === "string" && /^KC-P-[A-Z0-9-]{1,30}$/.test(pid) && !pid.startsWith("KC-P-TEST");
-  let bereitschaft = 0;
+  const bereitschaft = [], bKeys = new Set();
+  // Name → person_id aus den Dienstzeilen desselben Plans (vom Server beim Rechnen eindeutig zugeordnet); mehrdeutig → keine
+  const pidName = new Map();
+  for (const t of Array.isArray(plan?.tage) ? plan.tage : []) for (const l of Array.isArray(t?.leute) ? t.leute : []) {
+    if (!gueltig(l?.p)) continue; const n = String(l.n || ""), alt = pidName.get(n);
+    pidName.set(n, alt === undefined || alt === l.p ? l.p : null);
+  }
   for (const t of Array.isArray(plan?.tage) ? plan.tage : []) {
     const d = String(t?.d || "");
     if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) continue;
     const markt = t.art === "Markttag", veroeffentlicht = tage.has(d);
-    if (veroeffentlicht) bereitschaft += Array.isArray(t.ber) ? t.ber.length : 0;
+    for (const x of Array.isArray(t.ber) ? t.ber : []) {
+      if (!Array.isArray(x?.s) || x.s.length !== 2) continue;
+      const a = Number(x.s[0]), b = Number(x.s[1]), name = String(x.n || "?");
+      if (!Number.isFinite(a) || !Number.isFinite(b) || a < 0 || b > 30 || b <= a) continue;
+      const pid = gueltig(x.p) ? x.p : gueltig(pidName.get(name)) ? pidName.get(name) : null;
+      if (!pid) { ohneId.add(name); uebersprungen.push({ typ: "bereitschaft", name, date: d, personIds: [], grund: "Person in der Club-App nicht eindeutig" }); continue; }
+      if (ausSet.has(pid)) { uebersprungen.push({ typ: "bereitschaft", name, date: d, personId: pid, grund: "In der Club-App ausgenommen" }); continue; }
+      if (!veroeffentlicht) { uebersprungen.push({ typ: "bereitschaft", name, date: d, personId: pid, grund: "Tag nicht veröffentlicht" }); continue; }
+      const importKey = `CLUB-B-${d}-${pid}`;
+      if (bKeys.has(importKey)) continue; // je Person und Tag eine Bereitschaft
+      bKeys.add(importKey);
+      bereitschaft.push({ importKey, personId: pid, name, date: d, start: a, end: b });
+    }
     for (const l of Array.isArray(t.leute) ? t.leute : []) {
       if (!Array.isArray(l?.s) || l.s.length !== 2) continue;
       const a = Number(l.s[0]), b = Number(l.s[1]), name = String(l.n || "?");
@@ -282,9 +303,12 @@ export function dpSollZeilen(plan, eventTage, { aus = [] } = {}) {
   // „aus“-Personen ohne Zeile im Plan: DP2 soll ihre schon übernommenen Dienste nicht stillschweigend löschen
   for (const pid of ausSet) if (gueltig(pid) && !uebersprungen.some((u) => u.personId === pid)) uebersprungen.push({ name: "", date: null, personId: pid, grund: "In der Club-App ausgenommen" });
   rows.sort((x, y) => vgl(x.date, y.date) || x.start - y.start || vgl(x.personId, y.personId));
-  return { rows, ohneId: [...ohneId].sort(vgl), uebersprungen: uebersprungen.slice(0, 300), bereitschaft };
+  bereitschaft.sort((x, y) => vgl(x.date, y.date) || x.start - y.start || vgl(x.personId, y.personId));
+  return { rows, bereitschaft, ohneId: [...ohneId].sort(vgl), uebersprungen: uebersprungen.slice(0, 300) };
 }
-// Grundlage der Prüfsumme: nur was DP2 übernimmt (ohne Namen) – gleicher Plan → gleiche Zeichenkette
-export function dpSollKanonisch(rows) {
-  return JSON.stringify([...(rows || [])].map((r) => [r.importKey, r.personId, r.date, r.start, r.end, r.zone, r.area, r.breakMinutes]).sort((x, y) => vgl(x[0], y[0])));
+// Grundlage der Prüfsumme: nur was DP2 übernimmt (ohne Namen) – gleicher Plan → gleiche Zeichenkette. Ohne Bereitschaft wie bisher (gleiche Prüfsumme).
+export function dpSollKanonisch(rows, bereitschaft = []) {
+  const d = [...(rows || [])].map((r) => [r.importKey, r.personId, r.date, r.start, r.end, r.zone, r.area, r.breakMinutes]).sort((x, y) => vgl(x[0], y[0]));
+  const b = [...(bereitschaft || [])].map((r) => [r.importKey, r.personId, r.date, r.start, r.end]).sort((x, y) => vgl(x[0], y[0]));
+  return JSON.stringify(b.length ? [...d, ...b] : d);
 }

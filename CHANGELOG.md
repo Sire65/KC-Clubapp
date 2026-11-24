@@ -1,5 +1,14 @@
 # Änderungen
 
+## 3.21.0 – 2026-11-24 – 🛎️ Bereitschaft geht mit nach DP2 (KC-DP-SOLL-BEREITSCHAFT) · Server 3.21.0 · Datenbank: Spalte `bereitschaft`
+Wunsch Hansi 24.11.: „Ja, Bereitschaft soll auch im Dienstplan stehen.“
+- „📤 An DP2 übergeben“ nimmt jetzt auch die Bereitschaft des gerechneten Plans mit (je Person und Tag, Schlüssel `CLUB-B-<datum>-<person>`). DP2 (ab Build 324) trägt sie als **Bereitschaft** ein – nicht als Dienst, also nicht auf der Kasse.
+- Person: beim Rechnen mitgeschrieben (`ber[].p`), für ältere Stände die Person, die derselbe Plan für denselben Namen bei den Diensten trägt (nur eindeutig, nie raten). „aus“-Personen, nicht veröffentlichte Tage und unklare Personen gehen mit Grund in „übersprungen“ (`typ: bereitschaft`) – DP2 löscht dazu nichts.
+- Prüfsumme umfasst die Bereitschaft (ohne Bereitschaft gleich wie bisher) – eine geänderte Bereitschaft löst eine neue Übergabe aus (auch automatisch nachgereicht).
+- Mitglieder bekommen auch bei der Bereitschaft keine Personen-IDs (`dp_plaene`).
+- Datenbank: `kc_dp_soll_uebergabe.bereitschaft` (jsonb, leer als Vorgabe), `kc_dp_soll_uebergabe_pending` gibt sie zusätzlich zurück (Rechte/Prüfungen unverändert) – Migration `20261124_kc_dp_soll_bereitschaft.sql`. Ältere DP2-Stände ignorieren das Feld.
+- Test: `tests/dp-soll-uebergabe.test.mjs`. Probe mit dem echten Plan (offline): 128 Dienste unverändert, 4 × Bereitschaft neu, keine Fehler. Rückweg: App/Server 3.20.0, Funktion aus `20261123_kc_dp_soll_uebergabe.sql`.
+
 ## 3.20.0 – 2026-11-24 – 🖨️ Fehler: Text überschnitt sich auf „Regelzeit und Besetzung je Stunde“ (KC-CLUB-DRUCK-NAMENLISTE) · nur App · Fehlerbeseitigung
 Fund Hansi 24.11. beim Drucken für die Clubsitzung: „Text überschneidet sich!!!“
 - Ursache: in der Spalte „Besetzung“ der Aufbau-/Nachbereitungstage stand die Namensliste „So haben sich eingetragen“ in einer Tabellenzelle mit `column-count` – zusätzlich machte eine allgemeine Regel für die Klasse „zwei“ die Zelle zum Raster. Die Zeile wuchs nicht mit, die Namen liefen über die nächsten Tage (03.12. über 04.12.) und am 14.12. über den Seitenrand.

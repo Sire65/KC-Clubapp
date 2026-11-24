@@ -196,7 +196,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "3.19.0";
+const SERVER_VERSION = "3.21.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -5766,6 +5766,7 @@ async function dpDruckNeu(adminId: string) {
   const pidVon = new Map<string, string>(), mehrdeutig = new Map<string, string[]>();
   for (const pid of ids) { const n = name.get(pid) || pid, alle = jeKurz.get(dpKurzname(n))!; if (alle.size === 1) pidVon.set(n, pid); else mehrdeutig.set(n, [...alle]); }
   for (const t of ergebnis.tage || []) for (const p of (t.leute || []) as any[]) { const pid = pidVon.get(p.n); if (pid) p.p = pid; else if (mehrdeutig.has(p.n)) p.pm = mehrdeutig.get(p.n); }
+  for (const t of ergebnis.tage || []) for (const b of (t.ber || []) as any[]) { const pid = pidVon.get(b.n); if (pid) b.p = pid; } // KC-DP-SOLL-BEREITSCHAFT
   const stand = jetzt(), wert = { ...ergebnis, titel: konf.titel || "Weihnachtsmarkt Werne 2026", stand, gerechnet: "club-server", pids: 1 };
   const { error } = await db.from("kc_club_person_einstellung").upsert({ person_id: adminId, schluessel: "dp_druck", wert, geaendert_am: stand }, { onConflict: "person_id,schluessel" });
   if (error) throw new Fehler("Der neue Stand konnte nicht gespeichert werden.", 500);
@@ -5776,7 +5777,7 @@ async function dpDruckNeu(adminId: string) {
 }
 // KC-DP-SOLL-UEBERGABE (Hansi 23.11.2026): gerechneten Plan als vollständigen Stand an DP2 übergeben (Tabelle kc_dp_soll_uebergabe, DP2 holt ab
 // über kc_dp_soll_uebergabe_pending/_ack). Personen nur über die beim Rechnen mitgeschriebene person_id (leute[].p, eindeutig), nie „aus“-Personen,
-// nur veröffentlichte Veranstaltungstage, Bereitschaft nicht. Übersprungenes geht mit Grund mit (DP2 löscht dazu nichts von selbst).
+// nur veröffentlichte Veranstaltungstage; Bereitschaft seit 3.21.0 als eigene Liste (KC-DP-SOLL-BEREITSCHAFT). Übersprungenes geht mit Grund mit (DP2 löscht dazu nichts von selbst).
 // In DP2 ändert sich erst etwas, wenn dort „Übernehmen“ getippt wird.
 // Nachreichen (Hansi: „wenn der Sollplan sich nochmals ändert, muss der Abgleich erneut laufen“): kc_club_konfig „dp_soll_auto“ = { an, von }
 // (nach der ersten Übergabe von selbst an, von = Admin, der übergeben hat) – nur DESSEN Neuberechnung mit geänderten Zeilen (Prüfsumme) legt eine neue
@@ -5789,7 +5790,7 @@ async function dpSollStand(adminId: string, w: any) {
   const pk: any = (k?.wert as any)?.personen && typeof (k!.wert as any).personen === "object" ? (k!.wert as any).personen : {};
   const aus = [...new Set([...ausReg, ...Object.entries(pk).filter(([, v]: any) => v?.aus === true).map(([id]) => id)])];
   const z = dpSollZeilen(w, (tg ?? []).map((t: any) => String(t.work_date)), { aus });
-  return { ...z, pruefsumme: await sha256(dpSollKanonisch(z.rows)) };
+  return { ...z, pruefsumme: await sha256(dpSollKanonisch(z.rows, z.bereitschaft)) };
 }
 async function dpSollLetzte(ohneVerworfen: boolean) {
   let q = db.from("kc_dp_soll_uebergabe").select("id,status,pruefsumme,anzahl,created_at,uebernommen_am").eq("org_id", ORG).eq("event_id", DW.veranstaltung);
@@ -5797,11 +5798,11 @@ async function dpSollLetzte(ohneVerworfen: boolean) {
   const { data } = await q.order("created_at", { ascending: false }).limit(1);
   return (data ?? [])[0] as any || null;
 }
-async function dpSollAblegen(von: string, w: any, s: { rows: any[]; uebersprungen: any[]; pruefsumme: string }) {
+async function dpSollAblegen(von: string, w: any, s: { rows: any[]; bereitschaft: any[]; uebersprungen: any[]; pruefsumme: string }) {
   const { error: e1 } = await db.from("kc_dp_soll_uebergabe").update({ status: "verworfen" }).eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("status", "offen");
   if (e1) throw new Fehler("Die Übergabe an DP2 konnte nicht gespeichert werden.", 500);
   const { data, error } = await db.from("kc_dp_soll_uebergabe").insert({ org_id: ORG, event_id: DW.veranstaltung, stand: w?.stand || null, erstellt_von: von,
-    rows: s.rows, uebersprungen: s.uebersprungen, anzahl: s.rows.length, pruefsumme: s.pruefsumme, status: "offen" }).select("id").single();
+    rows: s.rows, bereitschaft: s.bereitschaft, uebersprungen: s.uebersprungen, anzahl: s.rows.length, pruefsumme: s.pruefsumme, status: "offen" }).select("id").single();
   if (error || !data) throw new Fehler("Die Übergabe an DP2 konnte nicht gespeichert werden.", 500);
   return String(data.id);
 }
@@ -13072,7 +13073,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           throw new Fehler("Der Plan wurde inzwischen neu gerechnet – bitte noch einmal tippen.", 409);
         }
         const s = await dpSollStand(ich.person_id, w);
-        const info = { ...basis, anzahl: s.rows.length, ohneId: s.ohneId, uebersprungen: s.uebersprungen.filter((u: any) => u.date).length, bereitschaft: s.bereitschaft,
+        const info = { ...basis, anzahl: s.rows.length, ohneId: s.ohneId, uebersprungen: s.uebersprungen.filter((u: any) => u.date).length, bereitschaft: s.bereitschaft.length,
           letzte: letzte ? { status: letzte.status, am: letzte.created_at, anzahl: letzte.anzahl, uebernommenAm: letzte.uebernommen_am, gleich: letzte.pruefsumme === s.pruefsumme } : null };
         if (p.pruefen === true) return json(info);
         if (typeof p.stand !== "string" || p.stand !== String(w.stand || "")) throw new Fehler("Der Plan wurde inzwischen neu gerechnet – bitte noch einmal tippen.", 409);
@@ -13081,7 +13082,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const id = await dpSollAblegen(ich.person_id, w, s);
         // nach der ersten Übergabe: Nachreichen an – für den Plan dieses Admins (wer zuletzt übergibt, dessen Plan reicht nach)
         if (auto === null || (auto.an && auto.von !== ich.person_id)) await db.from("kc_club_konfig").upsert({ schluessel: "dp_soll_auto", wert: { an: true, von: ich.person_id }, geaendert_von: ich.person_id, geaendert_am: jetzt() });
-        await protokoll(ich.person_id, "dp_soll_uebergeben", { id, anzahl: s.rows.length, ohneId: s.ohneId.length });
+        await protokoll(ich.person_id, "dp_soll_uebergeben", { id, anzahl: s.rows.length, bereitschaft: s.bereitschaft.length, ohneId: s.ohneId.length });
         return json({ ...info, ok: true, id, auto: auto ? auto.an : true, autoFremd: false });
       }
       case "dp_plaene": {
@@ -13090,7 +13091,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (!f?.plan || !Array.isArray(f.plan.tage)) return json({ frei: null });
         if (p.nurInfo === true) return json({ frei: { am: f.am, stand: f.stand } });
         // KC-DP-SOLL-UEBERGABE: Personen-IDs (leute[].p/pm) nur für die Übergabe an DP2 – nicht an Mitglieder herausgeben
-        const tage = f.plan.tage.map((t: any) => ({ ...t, leute: (Array.isArray(t.leute) ? t.leute : []).map(({ p: _p, pm: _pm, ...rest }: any) => rest) }));
+        const tage = f.plan.tage.map((t: any) => ({ ...t, leute: (Array.isArray(t.leute) ? t.leute : []).map(({ p: _p, pm: _pm, ...rest }: any) => rest),
+          ber: (Array.isArray(t.ber) ? t.ber : []).map(({ p: _p, ...rest }: any) => rest) })); // KC-DP-SOLL-BEREITSCHAFT: auch ber[].p nicht an Mitglieder
         const { pids: _pids, ...plan } = f.plan;
         return json({ ...plan, tage, frei: { am: f.am, stand: f.stand } });
       }

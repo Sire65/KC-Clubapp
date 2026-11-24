@@ -34,8 +34,29 @@ assert.deepEqual(ue("Tag nicht veröffentlicht").map((u) => [u.date, u.personId]
 assert.deepEqual(ue("In der Club-App ausgenommen").map((u) => [u.date, u.personId]), [["2026-12-04", "KC-P-M0004"], [null, "KC-P-M0019"]], "„aus“ nie übergeben, DP2 löscht nichts von selbst");
 assert.ok(!z.rows.some((r) => r.personId === "KC-P-M0004"));
 assert.equal(dpSollZeilen({ tage: [{ d: "2026-12-04", art: "Markttag", leute: [{ n: "Anna Muster", z: "vorne", s: [11, 15] }] }] }, tage).rows.length, 0, "ohne mitgeschriebene ID nie per Name raten");
-assert.equal(z.bereitschaft, 1, "Bereitschaft wird gezählt …");
-assert.ok(!z.rows.some((r) => r.area === "Bereitschaft" || r.personId === "KC-P-M0002" && r.start === 11), "… aber nicht übergeben");
+// KC-DP-SOLL-BEREITSCHAFT (24.11.2026): Bereitschaft als eigene Liste – nicht als Dienst
+assert.deepEqual(z.bereitschaft, [{ importKey: "CLUB-B-2026-12-04-KC-P-M0002", personId: "KC-P-M0002", name: "Bernd Beispiel", date: "2026-12-04", start: 11, end: 15 }],
+  "Bereitschaft geht mit (Person aus den Dienstzeilen desselben Plans)");
+assert.ok(!z.rows.some((r) => r.area === "Bereitschaft" || r.personId === "KC-P-M0002" && r.start === 11), "… aber nicht als Dienst");
+{ const b = structuredClone(plan); b.tage[1].ber = [{ n: "Bernd Beispiel", p: "KC-P-M0002", s: [11, 15] }, { n: "Bernd Beispiel", p: "KC-P-M0002", s: [16, 18] },
+    { n: "Fridbert Aus", s: [18, 23] }, { n: "Niemand Bekannt", s: [18, 23] }, { n: "Anne Müller", s: [18, 23] }];
+  b.tage[3].ber = [{ n: "Anna Muster", p: "KC-P-M0001", s: [20, 23] }];
+  const zb = dpSollZeilen(b, tage, { aus: ["KC-P-M0004"] });
+  assert.deepEqual(zb.bereitschaft.map((r) => r.importKey), ["CLUB-B-2026-12-04-KC-P-M0002"], "je Person und Tag eine; aus/unbekannt/mehrdeutig/unveröffentlicht nie");
+  const ub = zb.uebersprungen.filter((u) => u.typ === "bereitschaft").map((u) => [u.name, u.grund]);
+  assert.deepEqual(ub, [["Fridbert Aus", "In der Club-App ausgenommen"], ["Niemand Bekannt", "Person in der Club-App nicht eindeutig"], ["Anne Müller", "Person in der Club-App nicht eindeutig"], ["Anna Muster", "Tag nicht veröffentlicht"]]);
+  assert.ok(zb.ohneId.includes("Niemand Bekannt"), "nie per Name raten, wenn der Plan die Person nicht eindeutig kennt"); }
+for (const r of z.bereitschaft) { assert.deepEqual(Object.keys(r).sort(), ["date", "end", "importKey", "name", "personId", "start"]); assert.equal(r.importKey, `CLUB-B-${r.date}-${r.personId}`); }
+{ const hb = (zz) => createHash("sha256").update(dpSollKanonisch(zz.rows, zz.bereitschaft)).digest("hex");
+  assert.equal(dpSollKanonisch(z.rows, []), dpSollKanonisch(z.rows), "ohne Bereitschaft dieselbe Prüfsumme wie bisher");
+  assert.notEqual(hb(z), createHash("sha256").update(dpSollKanonisch(z.rows)).digest("hex"), "Bereitschaft gehört zur Prüfsumme");
+  const b2 = structuredClone(plan); b2.tage[1].ber[0].s = [12, 15]; assert.notEqual(hb(dpSollZeilen(b2, tage, { aus: ["KC-P-M0004", "KC-P-M0019"] })), hb(z), "geänderte Bereitschaft → neue Übergabe"); }
+assert.ok(/dpSollKanonisch\(z\.rows, z\.bereitschaft\)/.test(server) && /bereitschaft: s\.bereitschaft, uebersprungen/.test(server), "Server legt Bereitschaft mit ab");
+assert.ok(/for \(const b of \(t\.ber \|\| \[\]\) as any\[\]\) \{ const pid = pidVon\.get\(b\.n\); if \(pid\) b\.p = pid; \}/.test(server), "ber[].p beim Rechnen");
+assert.ok(/ber: \(Array\.isArray\(t\.ber\) \? t\.ber : \[\]\)\.map\(\(\{ p: _p, \.\.\.rest \}: any\) => rest\)/.test(server), "ber[].p nicht an Mitglieder");
+{ const sql2 = fs.readFileSync(new URL("../supabase/migrations/20261124_kc_dp_soll_bereitschaft.sql", import.meta.url), "utf8");
+  assert.ok(/add column if not exists bereitschaft jsonb not null default '\[\]'::jsonb/.test(sql2) && /'bereitschaft', u\.bereitschaft/.test(sql2), "Spalte + Abruf");
+  assert.ok(/if \(select auth\.uid\(\)\) is null then raise exception/.test(sql2) && /m\.role in \('admin', 'planner', 'duty_manager'\)/.test(sql2) && /revoke all on function public\.kc_dp_soll_uebergabe_pending\(text, text\) from public, anon;/.test(sql2), "Prüfungen bleiben"); }
 // DP2-Schichtschema (src/core/model.js): personId KC-P-…, date YYYY-MM-DD, start/end Stunden als Zahl, zone front|back|neutral, area Text, breakMinutes
 for (const r of z.rows) {
   assert.deepEqual(Object.keys(r).sort(), ["area", "breakMinutes", "date", "end", "importKey", "name", "personId", "start", "zone"]);
@@ -91,7 +112,7 @@ assert.ok(/uebersprungen: s\.uebersprungen/.test(server) && /'uebersprungen', u\
 // ---- App: Knopf, Rückfrage, Erfolgsmeldung ----
 assert.ok(app.includes('onclick="dpdSollUebergeben(this)">📤 An DP2 übergeben</button>'), "Knopf beim berechneten Plan");
 assert.ok(app.includes("Schichten an DP2 übergeben? In DP2 erscheinen sie zur Übernahme – erst dort übernehmen, wenn der Plan fertig ist, danach stehen sie sofort auf der Kasse."), "Rückfrage");
-assert.ok(/Schichten an DP2 übergeben – in DP2 unter Sollplan/.test(app), "Erfolgsmeldung");
+assert.ok(/Schichten\$\{e\.bereitschaft \? ` und \$\{e\.bereitschaft\} × Bereitschaft` : ""\} an DP2 übergeben – in DP2 unter Sollplan/.test(app), "Erfolgsmeldung (mit Bereitschaft)");
 assert.ok(/Änderungen automatisch nachreichen/.test(app) && /api\("dp_soll_uebergeben", \{ auto: !!box\.checked \}\)/.test(app), "Nachreichen an/aus");
 
 // ---- Migration ----
