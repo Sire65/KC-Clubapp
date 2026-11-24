@@ -1,5 +1,12 @@
 # Änderungen
 
+## 3.20.0 – 2026-11-24 – 🖨️ Fehler: Text überschnitt sich auf „Regelzeit und Besetzung je Stunde“ (KC-CLUB-DRUCK-NAMENLISTE) · nur App · Fehlerbeseitigung
+Fund Hansi 24.11. beim Drucken für die Clubsitzung: „Text überschneidet sich!!!“
+- Ursache: in der Spalte „Besetzung“ der Aufbau-/Nachbereitungstage stand die Namensliste „So haben sich eingetragen“ in einer Tabellenzelle mit `column-count` – zusätzlich machte eine allgemeine Regel für die Klasse „zwei“ die Zelle zum Raster. Die Zeile wuchs nicht mit, die Namen liefen über die nächsten Tage (03.12. über 04.12.) und am 14.12. über den Seitenrand.
+- Jetzt: Zelle bleibt Tabellenzelle (wächst mit), Namen als festes Raster in drei Spalten; Spalte „Besetzung“ 60 statt 50 mm, Zeilen etwas flacher (8,2 statt 9,4 mm) – das Blatt passt mit Hinweiszeile auf eine Seite.
+- Geprüft: automatische Überlappungsprüfung aller Dienstplan-Ausdrucke (Wunschplan, Dienstplan, Gesamt, Einsatzplan, Fehlliste, Vorschläge) – 0 Überlappungen (mit dem alten Stand meldete sie genau diesen Fehler).
+- Test: Block in `tests/app-vertrag.test.mjs`. Rückweg: App 3.19.0.
+
 ## 3.19.0 – 2026-11-24 – 📅 Dienstplan: von wann ist der Stand? (Wunschliste #102) · 🏷️ Preislisten Weihnachtsmarkt 2026 · Server 3.19.0
 Bündel nach dem Update-Stopp (Hansi 24.11.: „Alles sofort bauen und einspielen“).
 

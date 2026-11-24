@@ -13922,3 +13922,5 @@ assert.ok(/\["page", "always"\]\.includes\(cs\(e\)\.breakAfter\)/.test(programm)
   const g = fs.statSync(new URL("../dokumente/Preislisten_Weihnachtsmarkt_2026_Entwuerfe.pdf", import.meta.url)).size;
   assert.ok(g > 1e6 && g < 10.5e6, "Preislisten-PDF vorhanden, nicht zu groß");
 }
+// 3.20.0 KC-CLUB-DRUCK-NAMENLISTE (Fund Hansi 24.11.: Text überschneidet sich auf „Regelzeit und Besetzung“)
+assert.ok(/<span class="nl">\$\{pers\.map\(\(x\) => `<span>\$\{x\}<\/span>`\)\.join\(""\)\}<\/span>/.test(programm) && /#druck \.dpd-bed td\.bd\.zwei \{ display: table-cell;/.test(seite) && !/td\.bd\.zwei \{[^}]*column-count/.test(seite), "Namensliste als Raster in einer echten Tabellenzelle");
