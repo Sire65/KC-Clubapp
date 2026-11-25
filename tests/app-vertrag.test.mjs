@@ -13935,3 +13935,5 @@ assert.ok(/<span class="nl">\$\{pers\.map\(\(x\) => `<span>\$\{x\}<\/span>`\)\.j
 assert.ok(/async function dpIstFest\(adminId: string\)/.test(server) && /if \(w && Array\.isArray\(w\.tage\) && await dpIstFest\(adminId\)\) return false;/.test(server)
   && /if \(konf\.fest === true\) throw new Fehler\("Der Dienstplan ist festgeschrieben/.test(server) && /!\(await dpIstFest\(r\.person_id\)\.catch\(\(\) => false\)\)/.test(server), "festgeschrieben: nie automatisch neu rechnen");
 assert.ok(/fest: d\.fest === true/.test(programm) && /🔒 Festgeschrieben:/.test(programm), "Hinweis im Ordner");
+// 3.24.0 KC-CLUB-DRUCK-HELL (Hansi 25.11.: keine Drucke im Dunkelmodus)
+assert.ok(/#druck \{ --bg: #fff; --karte: #fff;[^}]*--schatten: none;[^}]*color-scheme: light; \}/.test(seite) && /#druck td\.tag, #druck th\.tag \{ background: #fff; box-shadow: none; border-radius: 0; \}/.test(seite), "Ausdruck immer hell, Tageszellen ohne Karten-Optik");
