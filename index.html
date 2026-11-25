@@ -3361,7 +3361,7 @@
     #druck .dpd.breit .dpd-raster th, #druck .dpd.breit .dpd-raster td { height: 5.6mm; }
     #druck .dpd-raster thead th { font-weight: 600; color: var(--mut); text-align: left; padding-left: .5mm; height: 4mm; }
     /* 3.3.0 KC-CLUB-DP-PDF-MATRIX: Kopf zweizeilig („8 Uhr“ über :00 | :30), kräftige Linie je volle Stunde, dünne gestrichelte zur halben */
-    #druck .dpd-raster thead th.hk { color: var(--ink); padding-left: .6mm; } #druck .dpd-raster thead tr.hm th { height: 2.8mm; font-size: 4.8pt; font-weight: 400; text-align: center; padding: 0; color: var(--mut); }
+    #druck .dpd-raster thead th.hk { color: var(--ink); padding-left: 0; text-align: center; } /* 3.28.0: Uhrzeit mittig über der Doppelspalte (Wunsch Hansi 25.11.) */ #druck .dpd-raster thead tr.hm th { height: 2.8mm; font-size: 4.8pt; font-weight: 400; text-align: center; padding: 0; color: var(--mut); }
     #druck .dpd-raster .hv { border-left: .35mm solid #6d655c; } #druck .dpd-raster .hb { border-left: .2mm dashed #a89f93; }
     #druck .dpd-raster th.tag { text-align: left; vertical-align: top; padding: 1mm; border-right: .4mm solid var(--ink); font-weight: 400; }
     #druck .dpd-raster th.tag b { display: block; font-size: 8.5pt; } #druck .dpd-raster th.tag span { display: block; font-size: 6.5pt; line-height: 1.25; }
@@ -3488,7 +3488,7 @@
     #druck .dpe-tab .gr .rl { position: absolute; inset: 0; display: flex; pointer-events: none; } #druck .dpe-tab .gr .rl i { flex: 1; border-right: .25mm solid #d9cab8; } #druck .dpe-tab .gr .rl i.d { border-right: .2mm dashed #e6dccf; }
     html #druck .dv-zelle { background-image: none; } html #druck .dv-bal.sperre { background: #f1948a; }
     #druck .dpe-tab th.achse { padding: 0; height: 4.4mm; } #druck .dpe-tab .achse { display: flex; } #druck .dpe-tab .achse i { display: block; flex: 1; font-style: normal; text-align: left; font-size: 6.5pt; border-left: .3mm solid #b9a58e; line-height: 1.05; }
-    #druck .dpe-tab .achse i.zwei { flex: 2; } /* KC-CLUB-DP-PDF-ACHSE: display:block gegen die allgemeine Regel .zwei { display: grid } – sonst stand „:00 | :30“ neben „10 Uhr“ statt darunter */ #druck .dpe-tab .achse i span { display: block; padding-left: .6mm; font-weight: 700; color: #3a332d; white-space: nowrap; }
+    #druck .dpe-tab .achse i.zwei { flex: 2; } /* KC-CLUB-DP-PDF-ACHSE: display:block gegen die allgemeine Regel .zwei { display: grid } – sonst stand „:00 | :30“ neben „10 Uhr“ statt darunter */ #druck .dpe-tab .achse i span { display: block; text-align: center; font-weight: 700; color: #3a332d; white-space: nowrap; } /* 3.28.0: Uhrzeit mittig (Hansi 25.11.) */
     #druck .dpe-tab .achse i small { display: flex; font-size: 4.8pt; font-weight: 400; } #druck .dpe-tab .achse i small em { flex: 1; font-style: normal; text-align: center; } #druck .dpe-tab .achse i.zwei small em + em { border-left: .2mm dashed #cbbba7; }
     #druck .dpe-tab .wz td { height: 3.6mm; border-bottom: none; } #druck .dpe-tab .sz td { height: 4.6mm; border-bottom: .5mm solid #b9a58e; } #druck .dpe-tab .nm[rowspan] { border-bottom: .5mm solid #b9a58e; } #druck .dpe-tab .frei .nm { color: #8a8076; }
     #druck .dpe-tab .seg { position: absolute; top: .45mm; bottom: .45mm; border-radius: .7mm; font-size: 5.8pt; color: #5b4a3a; display: flex; align-items: center; padding-left: .8mm; white-space: nowrap; overflow: hidden; }
@@ -3506,7 +3506,7 @@
     #druck .dpd-bed thead th { background: #f3e9dc; font-weight: 700; font-size: 6.5pt; height: auto; }
     #druck .dpd-bed col.tg { width: 16mm; } #druck .dpd-bed col.rz { width: 22mm; } #druck .dpd-bed col.bd { width: 60mm; } #druck .dpd.breit .dpd-bed col.bd { width: 70mm; }
     /* 3.3.0 KC-CLUB-DP-PDF-MATRIX: Besetzungsmatrix halbstündig – Soll/eingeteilt, darunter V/H, Ampel wie im Tagesraster, +1 🎵 Konzertabend */
-    #druck .dpd-bed thead th.hk { text-align: left; padding-left: .8mm; } #druck .dpd-bed thead tr.hm th { font-size: 5pt; font-weight: 400; color: var(--mut); padding: 0 0 .2mm; background: #faf5ef; }
+    #druck .dpd-bed thead th.hk { text-align: center; padding-left: 0; } #druck .dpd-bed thead tr.hm th { font-size: 5pt; font-weight: 400; color: var(--mut); padding: 0 0 .2mm; background: #faf5ef; }
     #druck .dpd-bed .hv { border-left: .4mm solid #6d655c; } #druck .dpd-bed .hb { border-left: .2mm dashed #a89f93; }
     #druck .dpd-bed td.hv, #druck .dpd-bed td.hb { padding: .3mm 0; line-height: 1.1; white-space: nowrap; overflow: hidden; }
     #druck .dpd-bed td.hv b, #druck .dpd-bed td.hb b { font-size: 7pt; } #druck .dpd.breit .dpd-bed td.hv b, #druck .dpd.breit .dpd-bed td.hb b { font-size: 9pt; }
