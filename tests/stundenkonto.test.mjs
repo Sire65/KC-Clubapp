@@ -56,6 +56,27 @@ assert.equal(k.stand, "2026-11-23T18:00:00Z"); assert.equal(k.zeilen[0].datum, "
 assert.equal(S.skDarfAndere({ vorstand: true, admin: false, aemter: [] }), true); assert.equal(S.skDarfAndere({ vorstand: false, admin: false, aemter: ["Dienstplaner"] }), true);
 assert.equal(S.skDarfAndere({ vorstand: false, admin: false, aemter: ["Kassenwart"] }), false, "Mitglied ohne Leitung/Planung: nur das eigene Konto");
 
+assert.equal(k.phase, 1, "ohne DP2-Kontoauszug: Phase 1"); assert.equal(k.standDp2, null);
+
+// ---------- 1b. Phase 2: DP2-Kontoauszug (kc_dp_konto_published) ----------
+T.kc_dp_konto_published = [
+  { org_id: "KC_WERNE", person_id: "P1", status: "published", entry_key: "A-1700000001", event_id: "KC-WM-2026", work_date: "2026-11-23", start_h: 11, end_h: 17.5, minutes: 390, art: "stand", anlass: "Dienst am Stand", taetigkeit: "Stand vorne", korrigiert: true, abgeschlossen: false, published_at: "2026-11-24T19:00:00Z" },
+  { org_id: "KC_WERNE", person_id: "P1", status: "published", entry_key: "A-SE-aaaa1111", event_id: "KC-WM-2026", work_date: "2026-11-10", start_h: 7, end_h: 15.5, minutes: 480, art: "sonder", anlass: "Grünkohl kochen", taetigkeit: "Kochen", hour_report_id: "aaaa1111-0000", korrigiert: false, abgeschlossen: true, published_at: "2026-11-24T19:00:00Z" },
+  { org_id: "KC_WERNE", person_id: "P1", status: "published", entry_key: "A-1700000002", event_id: "KC-WM-2026", work_date: "2026-11-02", start_h: 9, end_h: 12, minutes: 180, art: "sonder", anlass: "Aufbau", taetigkeit: null, korrigiert: false, abgeschlossen: true, published_at: "2026-11-24T18:00:00Z" },
+  { org_id: "KC_WERNE", person_id: "P1", status: "removed", entry_key: "A-weg", event_id: "KC-WM-2026", work_date: "2026-11-01", minutes: 60, art: "stand", published_at: "2026-11-24T18:00:00Z" },
+  { org_id: "KC_WERNE", person_id: "P2", status: "published", entry_key: "A-fremd", event_id: "KC-WM-2026", work_date: "2026-11-23", minutes: 60, art: "stand", published_at: "2026-11-24T18:00:00Z" }];
+const k2 = await S.stundenkontoLaden("P1"), z2 = (id) => k2.zeilen.find((x) => x.id === id);
+assert.equal(k2.phase, 2); assert.equal(k2.standDp2, "2026-11-24T19:00:00Z", "Stand DP2 = letzte Veröffentlichung");
+assert.ok(!z2("D-FFFF66"), "Kasse-Rohbuchung fällt weg, wo DP2 den Tag hat");
+const stand = k2.zeilen.find((x) => x.quelle === "dp2" && x.art === "stand");
+assert.equal(stand.status, "bestaetigt", "DP2-Ist ist bestätigt"); assert.equal(stand.min, 390); assert.equal(stand.ort, "Stand vorne"); assert.match(stand.hinweis, /korrigiert/);
+assert.equal(z2("S-AAAA11").min, 480, "Meldung mit DP2-Buchung: DP2 zählt (hier ohne bezahlte Pause)"); assert.match(z2("S-AAAA11").hinweis, /abgeschlossen/);
+assert.equal(k2.zeilen.filter((x) => x.datum === "2026-11-10").length, 1, "Meldung und DP2-Buchung nicht doppelt");
+assert.ok(k2.zeilen.some((x) => x.quelle === "dp2" && x.anlass === "Aufbau" && x.status === "bestaetigt"), "DP2-Sondereinsatz ohne Club-App-Meldung erscheint");
+assert.ok(z2("D-GGGG77"), "Kasse-Tag ohne DP2-Zeile bleibt vorläufig"); assert.equal(z2("D-GGGG77").status, "vorlaeufig");
+assert.ok(!k2.zeilen.some((x) => x.datum === "2026-11-01"), "entfernte DP2-Zeilen fehlen"); assert.equal(k2.zeilen.filter((x) => x.quelle === "dp2").length, 2, "fremde Person nie");
+delete T.kc_dp_konto_published;
+
 // ---------- 2. Server: Aktion ----------
 const fall = server.slice(server.indexOf('case "stundenkonto": {'), server.indexOf('case "mein_dienst": {'));
 assert.match(fall, /if \(!darf\) throw new Fehler\("Andere Stundenkonten dürfen nur Clubleitung und Planer ansehen\.", 403\);/);

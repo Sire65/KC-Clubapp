@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "3.24.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "3.25.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -32,7 +32,7 @@ const TEILE_LISTE = {
   nutzperson: { einstieg: ["npStart", "npAlle"], sri: "sha384-Z+v9oW3/Vp/DObApKnj6423OFyD/mLKqkI6+rUmBzRUYABaoE9X1rnta/qubtMEX" }, // KC-CLUB-NUTZUNG-PERSON: „📊 Meine Nutzung“ / „📊 Nutzung je Mitglied“ (nur beim Öffnen)
   nutzung: { einstieg: ["nuStart"], sri: "sha384-V8qj7CYfmmydkhppRZkaB/XjF0ATARL/4dwYcdXMeRUQ+cFMm2ijWGLzZIt1uha/" }, // 2.829.0 KC-CLUB-NUTZUNG-ALLE: „📈 So nutzen wir die App“ für alle (nur beim Öffnen)
   garten: { einstieg: ["gartenStart", "gartenTag", "gartenReif"], sri: "sha384-/ydTNoIDsiedFVIAayJkP6bgrCAPv+fa7q5ktl5nts9bsSIypSeVNedb6aiUIVx/" }, // KC-CLUB-SAMEN (#84): „🌱 Mein Garten“ – nur beim Öffnen und einmal am Tag beim Start
-  stundenkonto: { einstieg: ["skStart"], sri: "sha384-8PjWeWhFl3QyY1sup1GYM9xVxTLrQl8LkVM40tI05UvE39b8700R0r5J8F9Nq/RB" }, // KICC-F-113 KC-CLUB-STUNDENKONTO (3.22.0): „⏱️ Mein Stundenkonto“ – Filter, Diagramme, PDF
+  stundenkonto: { einstieg: ["skStart"], sri: "sha384-a6yxrh5N7eGrHH0R7igOcIlHWsIK+RQmP4HSiTUDDNbQ4kHYEoJaoK4X1uLs3ymU" }, // KICC-F-113 KC-CLUB-STUNDENKONTO (3.22.0): „⏱️ Mein Stundenkonto“ – Filter, Diagramme, PDF
   probe: { einstieg: ["teilProbe"], sri: "sha384-11uzQ0U/9pY4FZjTqOq5jlmzO0XsA4hQVrV8iqqTT7Jp9y3/VSG/gTIggGmcZud8" }, // Probe für den Nachlade-Weg (Klick-Rundgang, Sicherheits-Check)
 };
 const TEILE_STAND = {};

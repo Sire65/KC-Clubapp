@@ -196,7 +196,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "3.23.0";
+const SERVER_VERSION = "3.25.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -23589,13 +23589,16 @@ const skMinZeit = (a: unknown, b: unknown, pause: unknown) => { const t = (x: un
   let d = t(b) - t(a); if (d < 0) d += 1440; return Math.max(0, d - (Number(pause) || 0)); };
 async function stundenkontoLaden(pid: string) {
   const ab = berlinTag(new Date(Date.now() - SK.tage * 86400000));
-  const [{ data: hr }, { data: tc }, { data: soll }, { data: ers }] = await Promise.all([
+  const [{ data: hr }, { data: tc }, { data: soll }, { data: ers }, { data: dp }] = await Promise.all([
     db.from("kc_dp_hour_reports").select("id,event_id,special_event_title,work_date,start_h,end_h,break_minutes,taetigkeit,status,source,erstattung_id,updated_at")
       .eq("org_id", ORG).eq("person_id", pid).in("status", ["gemeldet", "bestaetigt"]).gte("work_date", ab).limit(2000),
     db.from("kc_dp_timeclock_actuals").select("id,event_id,work_date,start_time,end_time,break_minutes,status,updated_at")
       .eq("org_id", ORG).eq("person_id", pid).neq("status", "voided").gte("work_date", ab).limit(2000),
     db.from("kc_dp_plan_published").select("event_id,work_date,start_time,end_time,break_minutes").eq("org_id", ORG).eq("person_id", pid).eq("status", "published").gte("work_date", ab).limit(2000),
-    db.from("kc_club_erstattung").select("id,positionen,status,erstellt_am").eq("person_id", pid).neq("status", "abgelehnt").gte("erstellt_am", ab).limit(500)]);
+    db.from("kc_club_erstattung").select("id,positionen,status,erstellt_am").eq("person_id", pid).neq("status", "abgelehnt").gte("erstellt_am", ab).limit(500),
+    // Phase 2 (Build 326 DP2): geprüfte Ist-Zeilen aus dem DP2-Kontoauszug – gleiche Zahlen wie in DP2
+    db.from("kc_dp_konto_published").select("entry_key,event_id,work_date,start_h,end_h,minutes,art,anlass,taetigkeit,hour_report_id,korrigiert,abgeschlossen,published_at")
+      .eq("org_id", ORG).eq("person_id", pid).eq("status", "published").gte("work_date", ab).limit(3000)]);
   const veranst = (ev: unknown) => (ev === DW.veranstaltung ? DW.name : String(ev || "Sonstiges"));
   const zeilen: any[] = [];
   // km je Stundenzeile (Zeit aus Erstattung) bzw. eigene km-Zeile
@@ -23607,14 +23610,28 @@ async function stundenkontoLaden(pid: string) {
     zeilen.push({ id: `K-${skKurz(a.id)}-${i + 1}`, quelle: "km", datum: x.datum, von: null, bis: null, min: 0, art: "erstattung", veranstaltung: x.sonder_titel ? DW.name : "Fahrten",
       anlass: txt(x.sonder_titel || x.grund || "Fahrt", 80), taetigkeit: "Fahrt", km, kmErstattet: erstattet, status: "bestaetigt" });
   });
+  // DP2-Zeilen: zu einer Meldung gehörende ersetzen deren Minuten (DP2 zählt), Stand-Zeilen kommen dazu und verdrängen die Kasse-Rohdaten desselben Tages
+  const dpZuMeldung = new Map<string, any>(), dpStandTage = new Set<string>();
+  for (const d of dp ?? []) if (d.hour_report_id) dpZuMeldung.set(String(d.hour_report_id), d);
+  for (const d of dp ?? []) {
+    if (d.hour_report_id && (hr ?? []).some((r: any) => String(r.id) === String(d.hour_report_id))) continue;
+    if (d.art === "stand") dpStandTage.add(d.work_date);
+    zeilen.push({ id: `${d.art === "stand" ? "D" : d.art === "erstattung" ? "E" : "S"}-${skKurz(d.entry_key.replace(/^A-(SE-)?/, ""))}`, quelle: "dp2", datum: d.work_date,
+      von: d.start_h == null ? null : skHHMM(Number(d.start_h)), bis: d.end_h == null ? null : skHHMM(Number(d.end_h)), min: Number(d.minutes) || 0, art: d.art,
+      veranstaltung: veranst(d.event_id), anlass: txt(d.anlass || (d.art === "stand" ? "Dienst am Stand" : "Sondereinsatz"), 80), taetigkeit: d.art === "stand" ? null : d.taetigkeit || null,
+      ort: d.art === "stand" ? txt(d.taetigkeit, 40) || null : null, km: 0, kmErstattet: null, status: "bestaetigt",
+      hinweis: [d.korrigiert ? "vom Planer korrigiert" : "", d.abgeschlossen ? "🔒 Istplan abgeschlossen" : ""].filter(Boolean).join(" · ") || null });
+  }
   for (const r of hr ?? []) {
-    const k = kmZu.get(String(r.id)), erst = r.source === "erstattung";
+    const k = kmZu.get(String(r.id)), erst = r.source === "erstattung", g = dpZuMeldung.get(String(r.id));
     zeilen.push({ id: `${erst ? "E" : "S"}-${skKurz(r.id)}`, quelle: erst ? "erstattung" : "sonder", datum: r.work_date, von: skHHMM(Number(r.start_h)), bis: skHHMM(Number(r.end_h)),
-      min: Math.max(0, Math.round((Number(r.end_h) - Number(r.start_h)) * 60)), // Pausen zählen wie in DP2 und „Mein Dienst“ (bezahlt)
+      min: g ? Number(g.minutes) || 0 : Math.max(0, Math.round((Number(r.end_h) - Number(r.start_h)) * 60)), // DP2 gebucht → DP2 zählt; sonst Pausen bezahlt wie „Mein Dienst“
       art: erst ? "erstattung" : "sonder", veranstaltung: veranst(r.event_id), anlass: txt(r.special_event_title || "Sondereinsatz", 80), taetigkeit: r.taetigkeit || null,
-      km: k?.km ?? 0, kmErstattet: k?.erstattet ?? null, status: r.status === "bestaetigt" ? "bestaetigt" : "vorlaeufig", hinweis: r.status === "gemeldet" ? "wartet auf den Planer" : null });
+      km: k?.km ?? 0, kmErstattet: k?.erstattet ?? null, status: r.status === "bestaetigt" ? "bestaetigt" : "vorlaeufig",
+      hinweis: r.status === "gemeldet" ? "wartet auf den Planer" : g?.abgeschlossen ? "🔒 Istplan abgeschlossen" : null });
   }
   for (const r of tc ?? []) {
+    if (dpStandTage.has(r.work_date)) continue; // DP2 hat den Tag schon geprüft – die Rohbuchung der Kasse steckt darin
     const ganz = r.status === "complete" && r.start_time && r.end_time;
     zeilen.push({ id: `D-${skKurz(r.id)}`, quelle: "kasse", datum: r.work_date, von: String(r.start_time || "").slice(0, 5) || null, bis: String(r.end_time || "").slice(0, 5) || null,
       min: ganz ? skMinZeit(r.start_time, r.end_time, r.break_minutes) : 0, art: "stand", veranstaltung: veranst(r.event_id), anlass: "Dienst am Stand", taetigkeit: null, km: 0, kmErstattet: null,
@@ -23624,8 +23641,9 @@ async function stundenkontoLaden(pid: string) {
   const sollTage = new Map<string, number>();
   for (const x of soll ?? []) sollTage.set(x.work_date, (sollTage.get(x.work_date) || 0) + skMinZeit(x.start_time, x.end_time, x.break_minutes));
   const stand = [...(tc ?? []), ...(hr ?? [])].reduce((m: string, x: any) => (String(x.updated_at || "") > m ? String(x.updated_at) : m), "");
-  return { zeilen, soll: [...sollTage.entries()].map(([datum, min]) => ({ datum, min, veranstaltung: DW.name })).sort((a, b) => a.datum.localeCompare(b.datum)),
-    stand: stand || null, phase: 1 };
+  const standDp2 = (dp ?? []).reduce((m: string, x: any) => (String(x.published_at || "") > m ? String(x.published_at) : m), "") || null;
+  return { standDp2, zeilen, soll: [...sollTage.entries()].map(([datum, min]) => ({ datum, min, veranstaltung: DW.name })).sort((a, b) => a.datum.localeCompare(b.datum)),
+    stand: stand || null, phase: (dp ?? []).length ? 2 : 1 };
 }
 async function sonderstundenLaden(pid: string) {
   const [{ data: ev }, { data: st }] = await Promise.all([

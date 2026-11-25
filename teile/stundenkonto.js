@@ -151,7 +151,14 @@ function skDiagramm(art, zeilen, s, druck) {
 // Legende mit festen Abständen im Element selbst – das Druckblatt übernimmt nur die #druck-Regeln
 const skPunkt = (farbe, op = 1) => `<i style="display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px;background:${farbe};opacity:${op}"></i>`;
 const skLegende = (druck) => `<div class="sk-legende" style="display:flex;flex-wrap:wrap;gap:4px 12px;font-size:${druck ? "8pt" : ".8rem"}">${SK_ARTEN.map((a) => `<span>${skPunkt(skFarbe(a, druck))}${SK_ART[a]}</span>`).join("")}<span>${skPunkt(skFarbe("vorl", druck), 0.45)}⏳ vorläufig</span></div>`;
-const skAnlassText = (z) => { const t = skTaet(z.taetigkeit); return t && t.toLowerCase() !== String(z.anlass).toLowerCase() ? `${z.anlass} · ${t}` : z.anlass; };
+const skAnlassText = (z) => { const t = skTaet(z.taetigkeit) || z.ort || ""; return t && t.toLowerCase() !== String(z.anlass).toLowerCase() ? `${z.anlass} · ${t}` : z.anlass; };
+
+// KICC-F-113 Phase 2: „Stand DP2“ = letzte Veröffentlichung des Kontoauszugs aus DP2; älter als 7 Tage → orange (AGENTS 11: veraltet sichtbar)
+function skStandText(d) {
+  if (!d.standDp2) return `${d.stand ? `Stand der Daten: ${esc(wann(d.stand))} · ` : ""}Dienste am Stand sind ⏳ vorläufig, bis der Planer sie in DP2 prüft.`;
+  const alt = Date.now() - Date.parse(d.standDp2) > 7 * 86400000;
+  return `<span${alt ? ' style="color:var(--textOrange)"' : ""}>📅 Stand DP2: ${esc(wann(d.standDp2))}${alt ? " – vielleicht nicht mehr aktuell" : ""}</span> · Tage, die DP2 noch nicht hat, stehen als ⏳ vorläufig da.`;
+}
 
 // ---------- Ansicht ----------
 function skZeichnen() {
@@ -160,7 +167,7 @@ function skZeichnen() {
   const zeilen = (d.zeilen || []).filter((z) => skPasst(z)), s = skSummen(zeilen), soll = skSoll().reduce((n, x) => n + x.min, 0);
   const dia = [["saeulen", "📊 Säulen"], ["balken", "📶 Balken"], ["linie", "📈 Linie"], ["kreis", "🍩 Kreis"]];
   $("skInhalt").innerHTML = `${skFilterHtml()}
-    <p class="hinweis" style="margin:4px 0">${esc(skZeitraumText())} · ${d.stand ? `Stand der Daten: ${esc(wann(d.stand))}` : "noch keine Daten"} · Dienste am Stand sind ⏳ vorläufig, bis der Planer sie in DP2 prüft.</p>
+    <p class="hinweis" style="margin:4px 0">${esc(skZeitraumText())} · ${skStandText(d)}</p>
     <div class="sk-summen">
       <div class="karte" data-z="Bestätigte Stunden – nur diese zählen"><b>${skStd(s.min)}</b><small>Std. bestätigt</small></div>
       <div class="karte" data-z="Vorläufig: noch nicht vom Planer geprüft – zählt nicht in die Summe"><b>${skStd(s.minVorl)}</b><small>⏳ vorläufig</small></div>
@@ -193,7 +200,7 @@ function skDruckSeite() {
   const filter = [SKS.anlass ? `Anlass: ${SKS.anlass.slice(2)}` : "alle Anlässe", SKS.art ? `Art: ${SK_ART[SKS.art]}` : "", nurBest ? "nur bestätigte" : SKS.status === "beide" ? "" : SKS.status === "bestaetigt" ? "nur bestätigte" : "nur vorläufige"].filter(Boolean).join(" · ");
   const html = `<table class="dinfo"><tbody><tr><th style="width:38mm">Mitglied</th><td>${esc(d.person.name)} <small>(${esc(d.person.id)})</small></td></tr>
       <tr><th>Zeitraum</th><td>${esc(skZeitraumText())}</td></tr><tr><th>Auswahl</th><td>${esc(filter)}</td></tr>
-      <tr><th>Stand der Daten</th><td>${d.stand ? esc(wann(d.stand)) : "–"}</td></tr></tbody></table>
+      <tr><th>Stand der Daten</th><td>${d.standDp2 ? `DP2-Kontoauszug vom ${esc(wann(d.standDp2))}` : d.stand ? esc(wann(d.stand)) : "–"}</td></tr></tbody></table>
     ${mitDia && zeilen.length ? `<div style="display:flex;gap:6mm;align-items:flex-start;margin:3mm 0 1mm;color:#1d1a17;max-height:55mm"><div style="flex:3">${skSaeulen(zeilen, true)}</div><div style="flex:2">${skKreis(s, true)}</div></div>${skLegende(true)}` : ""}
     <table style="margin-top:3mm"><thead><tr><th style="width:21mm">ID</th><th style="width:25mm">Datum</th><th style="width:21mm">Zeit</th><th style="width:11mm;text-align:right">Std.</th><th>Anlass / Tätigkeit</th><th style="width:10mm;text-align:right">km</th><th style="width:10mm;text-align:center">Stand</th></tr></thead><tbody>
       ${zeilen.map((z) => `<tr${z.status === "bestaetigt" ? "" : ' style="color:#7a6f69;font-style:italic"'}><td style="white-space:nowrap;font-size:8pt">${esc(z.id)}</td><td style="white-space:nowrap">${esc(z.datum.split("-").reverse().join("."))}</td><td>${z.von ? esc(`${z.von}–${z.bis}`) : "–"}</td><td style="text-align:right">${z.min ? skStd(z.min) : "–"}</td>
@@ -201,6 +208,6 @@ function skDruckSeite() {
       <tr><td colspan="3" style="text-align:right"><b>Summe bestätigt</b></td><td style="text-align:right"><b>${skStd(s.min)}</b></td><td></td><td style="text-align:right"><b>${skKm(s.km)}</b></td><td></td></tr>
       ${s.minVorl ? `<tr><td colspan="3" style="text-align:right">⏳ vorläufig (nicht in der Summe)</td><td style="text-align:right">${skStd(s.minVorl)}</td><td colspan="3"></td></tr>` : ""}
       ${soll ? `<tr><td colspan="3" style="text-align:right">Soll zum Vergleich</td><td style="text-align:right">${skStd(soll)}</td><td colspan="3"></td></tr>` : ""}</tbody></table>
-    <p class="dklein">✓ bestätigt · ⏳ vorläufig = vom Planer in DP2 noch nicht geprüft, zählt nicht in die Summe.${s.km > s.kmErst ? " * km eingereicht, noch nicht erstattet." : ""} Stunden in Dezimal (1,5 = 1 Std. 30 Min.).</p>`;
+    <p class="dklein">✓ bestätigt (wie im DP2-Kontoauszug) · ⏳ vorläufig = vom Planer in DP2 noch nicht geprüft, zählt nicht in die Summe.${s.km > s.kmErst ? " * km eingereicht, noch nicht erstattet." : ""} Stunden in Dezimal (1,5 = 1 Std. 30 Min.).</p>`;
   return { titel: "Stundenkonto", unter: d.person.name, rechts: esc(skZeitraumText()), html, fuss: `${skStd(s.min)} Std. · ${skKm(s.km)} km` };
 }

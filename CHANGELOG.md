@@ -1,5 +1,11 @@
 # Änderungen
 
+## 3.25.0 – 2026-11-25 – ⏱️ Mein Stundenkonto: Dienste am Stand aus dem DP2-Kontoauszug (KICC-F-113 Phase 2) · Server 3.25.0 · Datenbank: `20261125_kc_dp_konto_published.sql` · DP2 ab Build 326
+Hansi 25.11.: „Erst einspielen und dann Schritt 2.“ – Die Club-App zeigt jetzt dieselben Zahlen wie der DP2-Kontoauszug (eine Wahrheit, keine zweite Rechnung).
+- **Datenbank:** neue Tabelle `kc_dp_konto_published` (nur Club-Server liest, RLS dicht) und `kc_dp_konto_publish` (nur DP2-Planungsrollen, Prüfregister): Gesamtstand je Veranstaltung, nur geänderte Zeilen werden geschrieben, fehlende weich entfernt. Spiegel/Sicherung wie die anderen `kc_dp_*`-Tabellen. Lokal mit Postgres 16 geprüft (zweimal einspielbar, unveränderter Stand schreibt 0 Zeilen, Nicht-Planer abgewiesen).
+- **Server `stundenkonto`:** liest die eigenen DP2-Zeilen (bzw. die des gewählten Mitglieds). Dienste am Stand aus DP2 sind **bestätigt** (Bereich z. B. „Stand vorne“, Hinweis „vom Planer korrigiert“ / „🔒 Istplan abgeschlossen“); Kasse-Rohbuchungen erscheinen nur noch für Tage, die DP2 noch nicht hat (⏳ vorläufig). Meldungen, die DP2 gebucht hat, zählen mit den DP2-Minuten – keine Doppelzeilen.
+- **Seite und PDF:** „📅 Stand DP2: …“ (älter als 7 Tage orange), im PDF „DP2-Kontoauszug vom …“.
+- Test `tests/stundenkonto.test.mjs` um Phase 2 erweitert. Rückweg: App/Server 3.24.0 (die Tabelle stört nicht).
 ## 3.24.0 – 2026-11-25 – 🖨️ Ausdrucke immer hell, auch im Dunkelmodus (KC-CLUB-DRUCK-HELL)
 Fund 25.11. beim Druck des festgeschriebenen Dienstplans um 5:30 Uhr, Wunsch Hansi „keine Drucke im Dunkelmodus“: nachts schaltet die App auf dunkel – im Ausdruck („Hier fehlen noch Helfer“, Einsatzplan) wurde jede zweite Tageszelle dunkel mit Schatten.
 - Druck-CSS: `#druck` setzt die hellen Farben (Karte, Text, Linien, Schatten …) selbst – gilt für Drucken, Vorschau und PDF, egal ob Tag oder Nacht.
