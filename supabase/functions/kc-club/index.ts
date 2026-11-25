@@ -196,7 +196,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "3.21.0";
+const SERVER_VERSION = "3.22.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -2998,6 +2998,10 @@ const ERS_NAME: Record<string, string> = { fahrt: "Fahrtkosten", einkauf: "Einka
 const ERS_BELEG: Record<string, string> = { foto: "Beleg anbei", papier: "Beleg auf Papier – wird abgegeben", erhalten: "Beleg (Papier) erhalten", kein: "kein Beleg" };
 const ERS_KAUTION: Record<string, string> = { offen: "offen", zurueck_mitglied: "an das Mitglied zurück", beim_club: "beim Club eingegangen", verfallen: "verfallen – wird erstattet" };
 function ersPosText(x: any, kurz = false) {
+  const st = x.stunden ? (kurz ? ` · ⏱️ ${String(Math.round(ersStunden(x.stunden) * 100) / 100).replace(".", ",")} Std.` : " · " + ersStundenText(x.stunden)) : "";
+  return ersPosTextOhneZeit(x, kurz) + st;
+}
+function ersPosTextOhneZeit(x: any, kurz = false) {
   if (x.art === "fahrt") return kurz ? `🚗 ${String(x.km).replace(".", ",")} km · ${x.grund || ""}${x.hinweis ? " ⚠" : ""}` : `🚗 Fahrtkosten: ${String(x.km).replace(".", ",")} km × ${euro(Number(x.satz))} = ${euro(Number(x.betrag))} · ${x.grund || ""}${x.ziel ? " · Ziel: " + x.ziel : ""}${x.besuch_id ? " · Besuch " + x.besuch_id : ""}${x.sonder_titel ? " · Einsatz: " + x.sonder_titel : ""}${x.hinweis ? " · ⚠ " + x.hinweis : ""}`;
   const extra = [x.geschaeft, x.art === "kraftstoff" && x.fahrzeug ? (x.fahrzeug === "miete" ? "Mietfahrzeug" : "Clubfahrzeug") + (x.liter ? ` · ${String(x.liter).replace(".", ",")} l` : "") : "",
     x.art === "kaution" ? `bezahlt aus ${x.bezahlt_aus === "vorschuss" ? "Club-Vorschuss" : "eigenem Geld"} · Kaution ${ERS_KAUTION[x.kaution_status] || "offen"}` : "",
@@ -3297,9 +3301,97 @@ function erstattungPruefen(roh: unknown, ich: Ich, saetze: KmSatz[]) {
     }
     // Bezug zum Sondereinsatz (KICC-F-100) – Titel wird im Server ergänzt
     const se = txt(x?.special_event_id, 80); if (se) letzte.special_event_id = se;
+    // KICC-F-112 (KC-CLUB-ERSTATTUNG-STUNDEN): Zeit fürs Stundenkonto – nur bei Fahrt und Einkauf; Einsatz/Datum/Doppelzeit prüft erstattung_senden
+    if (x?.stunden && typeof x.stunden === "object") {
+      if (!ERS_STUNDEN.arten.includes(letzte.art)) throw new Fehler("Zeit fürs Stundenkonto geht nur bei Fahrtkosten und Einkauf.");
+      letzte.stunden = ersStundenPruefen(x.stunden, letzte.art);
+    }
   }
   if (!pos.length) throw new Fehler("Bitte mindestens eine Position hinzufügen.");
   return pos;
+}
+// ---------- KICC-F-112 / KC-CLUB-ERSTATTUNG-STUNDEN (Wunsch Hansi 24.11.2026): Zeit mit der Erstattung einreichen ----------
+// Entscheidungen Hansi: sofort gutschreiben (ohne Freigabe in DP2), Schalter immer wenn eine Veranstaltung mit meldbarem Einsatz aktiv ist,
+// Vorbelegung ständiger Einsatz „Besorgungen & Fahrten“ (DP2 wiederkehrend 'laufend'). Lehnt der Kassenwart den Antrag ab, wird die Zeit
+// zurückgenommen (status 'zurueckgezogen'); DP2 bucht/bucht aus automatisch (Build 325). Konzept: KICC docs/KONZEPT-CLUB-ERSTATTUNG-STUNDEN.md.
+const ERS_STUNDEN = { arten: ["fahrt", "einkauf"], taetigkeit: { fahrt: "transport", einkauf: "einkauf" } as Record<string, string> };
+function ersStundenPruefen(roh: any, art: string) {
+  const zahl = (v: unknown) => { const n = Number(v); return Number.isFinite(n) ? Math.round(n * 100) / 100 : NaN; };
+  const viertel = (n: number) => Number.isFinite(n) && Math.abs(n * 4 - Math.round(n * 4)) < 1e-9;
+  const von = zahl(roh?.von), bis = zahl(roh?.bis), pause = Number(roh?.pause ?? 0), se = txt(roh?.special_event_id, 80);
+  const taet = SH.taetigkeiten.includes(String(roh?.taetigkeit)) ? String(roh.taetigkeit) : ERS_STUNDEN.taetigkeit[art];
+  if (!se) throw new Fehler("Bitte wählen, wofür die Zeit war (Einsatz).");
+  if (!viertel(von) || !viertel(bis) || von < 0 || von >= 24 || bis <= von || bis > SH.maxEnde) throw new Fehler("Zeit fürs Stundenkonto: Bitte gültige Von-/Bis-Zeiten wählen.");
+  if (bis - von > SH.maxSpanne) throw new Fehler(`Mehr als ${SH.maxSpanne} Stunden am Stück bitte beim Planer melden.`);
+  if (!Number.isInteger(pause) || pause < 0 || pause > SH.maxPause || pause / 60 >= bis - von) throw new Fehler("Zeit fürs Stundenkonto: Die Pause passt nicht zur Zeit.");
+  return { von, bis, pause, special_event_id: se, taetigkeit: taet };
+}
+const ersStunden = (st: any) => Math.max(0, Number(st.bis) - Number(st.von) - Number(st.pause || 0) / 60);
+const ersUhr = (h: number) => `${String(Math.floor(h % 24)).padStart(2, "0")}:${String(Math.round((h % 1) * 60)).padStart(2, "0")}`;
+function ersStundenText(st: any) {
+  if (!st) return "";
+  return `⏱️ ${ersUhr(Number(st.von))}–${ersUhr(Number(st.bis))} Uhr${st.pause ? ` (Pause ${st.pause} Min.)` : ""} = ${String(Math.round(ersStunden(st) * 100) / 100).replace(".", ",")} Std. aufs Stundenkonto${st.titel ? ` („${st.titel}“)` : ""}`;
+}
+// Vor dem Speichern: Einsatz/Datum wie bei Sonderstunden, keine Dienstplan-Ausnahme, keine doppelte Zeit (im Antrag und schon gemeldet)
+async function ersStundenVorpruefen(ich: Ich, pos: any[]) {
+  const mit = pos.filter((x) => x.stunden); if (!mit.length) return;
+  if ((await dienstAusnahmen()).has(ich.person_id)) throw new Fehler("Du bist für den Dienstplan ausgenommen – Zeit fürs Stundenkonto bitte beim Planer melden.", 409);
+  const heute = berlinTag(new Date());
+  for (const [i, x] of mit.entries()) {
+    if (x.datum > heute) throw new Fehler("Zeit kann erst nach dem Einsatz gemeldet werden.");
+    const ev = await shEinsatzPruefen(x.stunden.special_event_id, x.datum);
+    x.stunden.titel = txt(ev.titel, 120);
+    for (const y of mit.slice(i + 1)) if (y.datum === x.datum && y.stunden.von < x.stunden.bis && y.stunden.bis > x.stunden.von) throw new Fehler("Zwei Positionen haben dieselbe Zeit – bitte nur einmal angeben.");
+  }
+  const tage = [...new Set(mit.map((x) => x.datum))];
+  const { data: vorhanden } = await db.from("kc_dp_hour_reports").select("id,work_date,start_h,end_h").eq("org_id", ORG).eq("event_id", DW.veranstaltung)
+    .eq("person_id", ich.person_id).in("work_date", tage).in("status", ["gemeldet", "bestaetigt"]);
+  for (const x of mit) {
+    const dup = (vorhanden ?? []).find((v: any) => v.work_date === x.datum && Number(v.start_h) < x.stunden.bis && Number(v.end_h) > x.stunden.von);
+    if (dup) throw new Fehler(`Für ${x.datum.split("-").reverse().join(".")} ist zu dieser Zeit schon eine Stundenmeldung da – bitte nicht doppelt melden.`, 409);
+  }
+}
+// Nach dem Speichern des Antrags: je Position eine Stundenzeile, gleich bestätigt (Quelle 'erstattung'). Schlägt das fehl, wird der Antrag
+// wieder entfernt (noch keine Mail verschickt) – es gibt nie einen Antrag mit verlorener Zeit.
+async function ersStundenAnlegen(ich: Ich, antragId: string, pos: any[]) {
+  const mit = pos.map((x, i) => ({ x, i })).filter((y) => y.x.stunden); if (!mit.length) return 0;
+  const heute = berlinTag(new Date()), sammel = crypto.randomUUID(), zeit = jetzt();
+  const zeilen = mit.map(({ x }) => { const frist = new Date(x.datum + "T12:00:00Z"); frist.setUTCDate(frist.getUTCDate() + SH.fristTage);
+    return { org_id: ORG, event_id: DW.veranstaltung, special_event_id: x.stunden.special_event_id, special_event_title: x.stunden.titel || null, sammel_id: sammel,
+      person_id: ich.person_id, gemeldet_von: ich.person_id, work_date: x.datum, start_h: x.stunden.von, end_h: x.stunden.bis, break_minutes: x.stunden.pause || 0,
+      fahrt_rolle: x.art === "fahrt" ? "fahrer" : null, taetigkeit: x.stunden.taetigkeit, bemerkung: txt(x.art === "fahrt" ? `Erstattung: ${x.km} km · ${x.grund || ""}` : `Erstattung: Einkauf · ${x.was || ""}`, 500),
+      status: "bestaetigt", verspaetet: heute > frist.toISOString().slice(0, 10), source: "erstattung", erstattung_id: antragId,
+      entschieden_am: zeit, benachrichtigt_am: zeit }; }); // benachrichtigt_am: kein „gutgeschrieben“-Push – das Mitglied sieht es sofort
+  const r = await db.from("kc_dp_hour_reports").insert(zeilen).select("id");
+  if (r.error || (r.data ?? []).length !== zeilen.length) {
+    if ((r.data ?? []).length) await db.from("kc_dp_hour_reports").delete().in("id", (r.data ?? []).map((z: any) => z.id));
+    await db.from("kc_club_erstattung").delete().eq("id", antragId);
+    throw new Fehler("Die Zeit konnte nicht ins Stundenkonto eingetragen werden – der Antrag wurde nicht verschickt. Bitte nochmal versuchen.", 500);
+  }
+  (r.data ?? []).forEach((z: any, k: number) => { mit[k].x.stunden.report_id = z.id; });
+  await db.from("kc_club_erstattung").update({ positionen: pos }).eq("id", antragId);
+  return zeilen.length;
+}
+// Antrag abgelehnt → Zeit zurücknehmen (DP2 bucht automatisch aus). Liefert die zurückgenommenen Stunden.
+async function ersStundenZuruecknehmen(antragId: string) {
+  const { data } = await db.from("kc_dp_hour_reports").select("id,version,start_h,end_h,break_minutes").eq("erstattung_id", antragId).eq("source", "erstattung").eq("status", "bestaetigt");
+  let std = 0;
+  for (const r of data ?? []) {
+    const { error } = await db.from("kc_dp_hour_reports").update({ status: "zurueckgezogen", ablehngrund: "Erstattungsantrag abgelehnt", version: Number(r.version || 1) + 1, updated_at: jetzt() }).eq("id", r.id).eq("status", "bestaetigt");
+    if (!error) std += Math.max(0, Number(r.end_h) - Number(r.start_h) - Number(r.break_minutes || 0) / 60);
+  }
+  return Math.round(std * 100) / 100;
+}
+// Für das Formular: darf ich Zeit mitmelden, welche Einsätze, welcher ist vorbelegt
+async function ersStundenAngebot(ich: Ich) {
+  const aus = await dienstAusnahmen().catch(() => null);
+  if (!aus || aus.has(ich.person_id)) return { moeglich: false, einsaetze: [], standard: null };
+  const { data: ev } = await db.from("kc_dp_special_events").select("source_id,titel,termin_status,datum_von,datum_bis,wiederkehrend")
+    .eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("status", "published").neq("termin_status", "OFFEN").order("datum_von", { nullsFirst: true }).limit(50);
+  const heute = berlinTag(new Date());
+  const einsaetze = (ev ?? []).filter((e: any) => e.wiederkehrend || !e.datum_von || e.datum_von <= heute)
+    .map((e: any) => ({ id: e.source_id, titel: e.titel, laufend: e.wiederkehrend === "laufend", markttage: e.wiederkehrend === "markttage", von: e.wiederkehrend ? null : e.datum_von, bis: e.wiederkehrend ? null : (e.datum_bis || e.datum_von) }));
+  return { moeglich: einsaetze.length > 0, einsaetze, standard: einsaetze.find((e: any) => e.laufend)?.id || null, veranstaltung: DW.name };
 }
 // KC-CLUB-ERSTATTUNG-BESUCHE (2.25.4): Besuche, die schon in einem nicht abgelehnten Antrag dieser Person stehen
 async function erstattungBesucheAbgerechnet(pid: string): Promise<Set<string>> {
@@ -15395,6 +15487,20 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         return json({ orte });
       }
 
+      // KICC-F-113 KC-CLUB-STUNDENKONTO: eigenes Konto; Vorstand und Planer auch das eines anderen Mitglieds (protokolliert, ohne Inhalte)
+      case "stundenkonto": {
+        const darf = skDarfAndere(ich), wunsch = txt(p.person, 80);
+        let pid = ich.person_id;
+        if (wunsch && wunsch !== ich.person_id) {
+          if (!darf) throw new Fehler("Andere Stundenkonten dürfen nur Clubleitung und Planer ansehen.", 403);
+          if (!(await aktiveMitglieder()).some((m) => m.person_id === wunsch)) throw new Fehler("Mitglied nicht gefunden.", 404);
+          pid = wunsch; await protokoll(ich.person_id, "stundenkonto_angesehen", { person: pid });
+        }
+        const k = await stundenkontoLaden(pid), name = pid === ich.person_id ? ich.name : (await personen([pid])).get(pid)?.display_name || pid;
+        return json({ person: { id: pid, name }, ...k, darfAndere: darf,
+          mitglieder: darf ? (await aktiveMitglieder()).map((m) => ({ id: m.person_id, name: m.display_name })).sort((a, b) => String(a.name).localeCompare(String(b.name), "de")) : [] });
+      }
+
       case "mein_dienst": {
         const heute = berlinTag(new Date()), vor60 = berlinTag(new Date(Date.now() - 60 * 86400000)), monat = heute.slice(0, 7);
         const [{ data: w }, { data: ph }, { data: sollRoh }, { data: sollAlt }, { data: ist }, tausch] = await Promise.all([
@@ -18381,6 +18487,14 @@ Köcheclub-App`,
       // ----- Erstattung (KC-CLUB-ERSTATTUNG) -----
       case "erstattung_meine": {
         const { data } = await db.from("kc_club_erstattung").select("id,positionen,summe,auszahlung,bemerkung,status,erstellt_am,vorschuss").eq("person_id", ich.person_id).order("erstellt_am", { ascending: false }).limit(20);
+        // KICC-F-112: Stand der mitgemeldeten Zeit je Antrag (bestätigt = zählt; abgelehnt/zurückgezogen = zurückgenommen, mit Grund)
+        const ersIds = (data ?? []).filter((a: any) => (a.positionen || []).some((x: any) => x?.stunden)).map((a: any) => a.id);
+        const { data: hr } = ersIds.length ? await db.from("kc_dp_hour_reports").select("erstattung_id,status,start_h,end_h,break_minutes,ablehngrund").in("erstattung_id", ersIds) : { data: [] as any[] };
+        const zeitStand = (id: string) => { const z = (hr ?? []).filter((r: any) => r.erstattung_id === id); if (!z.length) return null;
+          const h = (r: any) => Math.max(0, Number(r.end_h) - Number(r.start_h) - Number(r.break_minutes || 0) / 60);
+          return { gebucht: Math.round(z.filter((r: any) => r.status === "bestaetigt").reduce((n: number, r: any) => n + h(r), 0) * 100) / 100,
+            zurueck: Math.round(z.filter((r: any) => r.status !== "bestaetigt").reduce((n: number, r: any) => n + h(r), 0) * 100) / 100,
+            grund: z.find((r: any) => r.status === "abgelehnt" && r.ablehngrund)?.ablehngrund || null }; };
         const { data: rollen } = await db.from("kc_club_rollen").select("person_id,aemter");
         const hat = (amt: string) => (rollen ?? []).some((r: any) => (r.aemter || []).includes(amt));
         const saetze = await kmSaetze();
@@ -18389,9 +18503,10 @@ Köcheclub-App`,
         return json({ kmSatz: satzFuer(saetze, berlinTag(new Date())), standard: ERSTATTUNG.kmSatzStandard, saetze, gruende: ERSTATTUNG.gruende, arten: ERSTATTUNG.arten, empfaengerDa: hat(ERSTATTUNG.empfaenger.an) || hat(ERSTATTUNG.empfaenger.cc),
           fahrzeuge: ERSTATTUNG.fahrzeuge, sondereinsaetze: (se ?? []).map((x: any) => ({ id: x.source_id, titel: x.titel, ort: x.ort || "", datum: x.datum_von || null })),
           besucheAbgerechnet: ich.admin ? [...(await erstattungBesucheAbgerechnet(ich.person_id))] : [], // KC-CLUB-ERSTATTUNG-BESUCHE (2.25.4)
+          stunden: await ersStundenAngebot(ich), taetigkeiten: SH.taetigkeiten, // KICC-F-112
           // KC-CLUB-DRUCK (0.53.0): Positionen und Bemerkung mitliefern – eigener Antrag lässt sich später ausdrucken
           antraege: (data ?? []).map((a: any) => ({ id: a.id, summe: Number(a.summe), anzahl: (a.positionen || []).length, status: a.status, zeit: a.erstellt_am, auszahlung: a.auszahlung,
-            positionen: a.positionen || [], bemerkung: a.bemerkung ?? null, vorschuss: Number(a.vorschuss || 0) })) });
+            positionen: a.positionen || [], bemerkung: a.bemerkung ?? null, vorschuss: Number(a.vorschuss || 0), zeit_stand: zeitStand(a.id) })) });
       }
 
       // KC-CLUB-KMSATZ (0.39.0): Kilometerpauschale mit „gilt ab“ – nur Admin
@@ -18765,6 +18880,7 @@ Köcheclub-App`,
             if (x.art === "fahrt" && mit) x.hinweis = "laut Fahrgemeinschaft Mitfahrer – km-Pauschale bitte prüfen";
           }
         }
+        await ersStundenVorpruefen(ich, pos); // KICC-F-112: Zeit fürs Stundenkonto vor dem Speichern prüfen
         const summe = ersSumme(pos);
         const vorschuss = Math.min(5000, Math.max(0, Math.round(Number(String(p.vorschuss ?? 0).replace(",", ".")) * 100) / 100 || 0));
         const auszahlung = p.auszahlung === "bar" ? "bar" : "ueberweisung", bemerkung = txt(p.bemerkung, 1000);
@@ -18783,12 +18899,14 @@ Köcheclub-App`,
         const text = `Hallo,\n\n${ich.name} beantragt eine Erstattung über die Köcheclub-App:\n\n${zeilen}\n\n────────────\nSumme: ${euro(summe)}\nAuszahlung: ${auszahlung === "bar" ? "bar" : "per Überweisung"}${bemerkung ? "\nBemerkung: " + bemerkung : ""}\n\n(Kilometerpauschale je nach Fahrtdatum laut Club-Einstellung. Belege, falls vorhanden, sind angehängt.)\n\nViele Grüße\nKöcheclub Werne`;
         const { data: a, error } = await db.from("kc_club_erstattung").insert({ person_id: ich.person_id, positionen: pos, summe, km_satz: satzFuer(saetze, berlinTag(new Date())), auszahlung, bemerkung: bemerkung || null, ...(vorschuss ? { vorschuss } : {}) }).select("id").single();
         if (error || !a) throw new Fehler("Antrag konnte nicht gespeichert werden.", 500);
+        const stundenZeilen = await ersStundenAnlegen(ich, a.id, pos); // KICC-F-112: sofort gutgeschrieben (vor dem Versand; Fehler → Antrag zurück)
         const versand = await routerSenden("club_nachricht_mail", an, {
           titel: `💶 Erstattung von ${ich.vorname}: ${euro(summe)}`, kurz: `${pos.length} Position${pos.length === 1 ? "" : "en"} · ${euro(summe)}`,
           betreff: `Köcheclub Werne – Erstattungsantrag ${ich.name}: ${euro(summe)}`, text, url: APP_URL, attachmentIds: belege,
         }, `club-erstattung:${a.id}`, { cc, bcc });
         await db.from("kc_club_erstattung").update({ versand: { an, cc, bcc: bcc.length, ...versand } }).eq("id", a.id);
-        await protokoll(ich.person_id, "erstattung_beantragt", { antrag: a.id, summe, positionen: pos.length, versand });
+        await protokoll(ich.person_id, "erstattung_beantragt", { antrag: a.id, summe, positionen: pos.length, versand, ...(stundenZeilen ? { stunden: stundenZeilen } : {}) });
+        if (stundenZeilen) await spurServer(ich.person_id, "tat_stunden").catch(() => null); // KC-CLUB-SPUR-DIENST
         // KC-CLUB-EINGANGSKORB (2.23.6): alle drei der Clubleitung bekommen zusätzlich eine Push-Meldung – bearbeitet wird im Büro-Eingang
         { const leitung = (await leitungIds()).filter((id) => id !== ich.person_id);
           if (leitung.length) await sendenGewaehlt("club_nachricht", leitung, ["push"], { titel: `📥 Erstattung von ${ich.vorname}: ${euro(summe)}`, kurz: "Liegt im Büro-Eingangskorb",
@@ -18798,7 +18916,7 @@ Köcheclub-App`,
         if (versand.gesendet) await routerSenden("club_nachricht_push", [ich.person_id], erstattungBestaetigung(ich.vorname, { id: a.id, positionen: pos, summe, auszahlung }), `club-bestaetigung-ers:${a.id}`).catch(() => null);
         if (!versand.gesendet) throw new Fehler("Der Antrag ist gespeichert, aber die Mail konnte nicht verschickt werden – bitte später nochmal versuchen oder Hansi Bescheid geben.", 502);
         const leute = await personen([...an, ...cc]);
-        return json({ ok: true, id: a.id, summe, an: an.map((id) => leute.get(id)?.display_name || id), cc: cc.map((id) => leute.get(id)?.display_name || id) });
+        return json({ ok: true, id: a.id, summe, stunden: Math.round(pos.filter((x) => x.stunden).reduce((n, x) => n + ersStunden(x.stunden), 0) * 100) / 100, an: an.map((id) => leute.get(id)?.display_name || id), cc: cc.map((id) => leute.get(id)?.display_name || id) });
       }
 
       // ----- KC-CLUB-AENDERUNG (2.22.7): „Meine Daten haben sich geändert“ -----
@@ -19335,12 +19453,13 @@ Köcheclub Werne`,
         const { data: ok } = await db.from("kc_club_erstattung").update({ status, ausgezahlt, antwort: antwort || null, erledigt_von: ich.person_id, erledigt_am: jetzt() })
           .eq("id", String(p.id || "")).eq("status", "eingereicht").select("id,person_id,summe").maybeSingle();
         if (!ok) throw new Fehler("Der Antrag ist schon bearbeitet.", 409);
+        const zurueck = status === "abgelehnt" ? await ersStundenZuruecknehmen(ok.id) : 0; // KICC-F-112
         const titel = status === "erstattet" ? `✅ Erstattung ${euroText(ok.summe)} ${ausgezahlt === "bar" ? "wird bar ausgezahlt" : "wird überwiesen"}` : `❌ Erstattung ${euroText(ok.summe)} abgelehnt`;
         const versand = await sendenGewaehlt("club_nachricht", [ok.person_id], ["push", "email"], { titel, kurz: antwort || (status === "erstattet" ? "Danke für deinen Einsatz!" : ""),
           betreff: `Köcheclub Werne – ${titel.replace(/^\S+\s/, "")}`,
-          text: `Hallo,\n\n${status === "erstattet" ? `dein Erstattungsantrag über ${euroText(ok.summe)} ist bearbeitet: ${ausgezahlt === "bar" ? "Du bekommst das Geld bar." : "Das Geld wird überwiesen."}` : `dein Erstattungsantrag über ${euroText(ok.summe)} wurde leider abgelehnt.`}${antwort ? `\n\n${ich.name}: ${antwort}` : ""}\n\nViele Grüße\nKöcheclub Werne`,
+          text: `Hallo,\n\n${status === "erstattet" ? `dein Erstattungsantrag über ${euroText(ok.summe)} ist bearbeitet: ${ausgezahlt === "bar" ? "Du bekommst das Geld bar." : "Das Geld wird überwiesen."}` : `dein Erstattungsantrag über ${euroText(ok.summe)} wurde leider abgelehnt.${zurueck ? ` Die mitgemeldete Zeit (${String(zurueck).replace(".", ",")} Std.) wurde wieder aus deinem Stundenkonto genommen.` : ""}`}${antwort ? `\n\n${ich.name}: ${antwort}` : ""}\n\nViele Grüße\nKöcheclub Werne`,
           url: APP_URL }, `club-erstattung-erledigt:${ok.id}`).catch(() => null);
-        await protokoll(ich.person_id, "erstattung_" + status, { antrag: ok.id, ausgezahlt, informiert: !!versand });
+        await protokoll(ich.person_id, "erstattung_" + status, { antrag: ok.id, ausgezahlt, informiert: !!versand, ...(zurueck ? { stunden_zurueck: zurueck } : {}) });
         return json({ ok: true });
       }
 
@@ -23449,6 +23568,56 @@ const shZeile = (r: any) => ({ id: r.id, sammel_id: r.sammel_id, event_id: r.eve
   start_h: Number(r.start_h), end_h: Number(r.end_h), break_minutes: r.break_minutes, taetigkeit: r.taetigkeit, bemerkung: r.bemerkung,
   status: r.status, verspaetet: r.verspaetet, gemeldet_am: r.gemeldet_am, ablehngrund: r.ablehngrund, version: r.version });
 const SH_SPALTEN = "id,sammel_id,event_id,special_event_id,special_event_title,person_id,gemeldet_von,work_date,start_h,end_h,break_minutes,taetigkeit,bemerkung,status,verspaetet,gemeldet_am,ablehngrund,version";
+// ---------- KICC-F-113 / KC-CLUB-STUNDENKONTO (Wunsch Hansi 24.11.2026): alle eigenen Stunden + km an einer Stelle ----------
+// Phase 1 (Konzept KICC docs/KONZEPT-CLUB-STUNDENKONTO.md): Quellen 2–4 bestätigt (Sonderstunden, Zeit aus Erstattung, km aus Erstattung),
+// Dienste am Stand vorläufig aus der Kasse-Stechuhr (geprüftes Ist liegt noch nur in DP2 – Phase 2). Entscheidungen Hansi: vorläufig zählt nicht
+// in die Summe; km schon ab „eingereicht“ (gekennzeichnet); Soll als Vergleich; Vorstand und Planer dürfen andere Konten ansehen (protokolliert).
+const SK = { tage: 800 }; // so weit zurück (gut zwei Jahre) – die App filtert Tag/Monat/Jahr/Anlass selbst
+const skDarfAndere = (ich: Ich) => !!ich.vorstand || dtPlaner(ich);
+const skKurz = (v: unknown) => String(v ?? "").replace(/[^0-9a-z]/gi, "").slice(0, 6).toUpperCase();
+const skHHMM = (h: number) => `${String(Math.floor(h % 24)).padStart(2, "0")}:${String(Math.round((h % 1) * 60)).padStart(2, "0")}`;
+const skMinZeit = (a: unknown, b: unknown, pause: unknown) => { const t = (x: unknown) => { const [h, m] = String(x || "0:0").split(":").map(Number); return h * 60 + (m || 0); };
+  let d = t(b) - t(a); if (d < 0) d += 1440; return Math.max(0, d - (Number(pause) || 0)); };
+async function stundenkontoLaden(pid: string) {
+  const ab = berlinTag(new Date(Date.now() - SK.tage * 86400000));
+  const [{ data: hr }, { data: tc }, { data: soll }, { data: ers }] = await Promise.all([
+    db.from("kc_dp_hour_reports").select("id,event_id,special_event_title,work_date,start_h,end_h,break_minutes,taetigkeit,status,source,erstattung_id,updated_at")
+      .eq("org_id", ORG).eq("person_id", pid).in("status", ["gemeldet", "bestaetigt"]).gte("work_date", ab).limit(2000),
+    db.from("kc_dp_timeclock_actuals").select("id,event_id,work_date,start_time,end_time,break_minutes,status,updated_at")
+      .eq("org_id", ORG).eq("person_id", pid).neq("status", "voided").gte("work_date", ab).limit(2000),
+    db.from("kc_dp_plan_published").select("event_id,work_date,start_time,end_time,break_minutes").eq("org_id", ORG).eq("person_id", pid).eq("status", "published").gte("work_date", ab).limit(2000),
+    db.from("kc_club_erstattung").select("id,positionen,status,erstellt_am").eq("person_id", pid).neq("status", "abgelehnt").gte("erstellt_am", ab).limit(500)]);
+  const veranst = (ev: unknown) => (ev === DW.veranstaltung ? DW.name : String(ev || "Sonstiges"));
+  const zeilen: any[] = [];
+  // km je Stundenzeile (Zeit aus Erstattung) bzw. eigene km-Zeile
+  const kmZu = new Map<string, { km: number; erstattet: boolean }>();
+  for (const a of ers ?? []) (a.positionen || []).forEach((x: any, i: number) => {
+    if (x?.art !== "fahrt" || !(Number(x.km) > 0)) return;
+    const km = Math.round(Number(x.km) * 10) / 10, erstattet = a.status === "erstattet";
+    if (x.stunden?.report_id) { kmZu.set(String(x.stunden.report_id), { km, erstattet }); return; }
+    zeilen.push({ id: `K-${skKurz(a.id)}-${i + 1}`, quelle: "km", datum: x.datum, von: null, bis: null, min: 0, art: "erstattung", veranstaltung: x.sonder_titel ? DW.name : "Fahrten",
+      anlass: txt(x.sonder_titel || x.grund || "Fahrt", 80), taetigkeit: "Fahrt", km, kmErstattet: erstattet, status: "bestaetigt" });
+  });
+  for (const r of hr ?? []) {
+    const k = kmZu.get(String(r.id)), erst = r.source === "erstattung";
+    zeilen.push({ id: `${erst ? "E" : "S"}-${skKurz(r.id)}`, quelle: erst ? "erstattung" : "sonder", datum: r.work_date, von: skHHMM(Number(r.start_h)), bis: skHHMM(Number(r.end_h)),
+      min: Math.max(0, Math.round((Number(r.end_h) - Number(r.start_h)) * 60)), // Pausen zählen wie in DP2 und „Mein Dienst“ (bezahlt)
+      art: erst ? "erstattung" : "sonder", veranstaltung: veranst(r.event_id), anlass: txt(r.special_event_title || "Sondereinsatz", 80), taetigkeit: r.taetigkeit || null,
+      km: k?.km ?? 0, kmErstattet: k?.erstattet ?? null, status: r.status === "bestaetigt" ? "bestaetigt" : "vorlaeufig", hinweis: r.status === "gemeldet" ? "wartet auf den Planer" : null });
+  }
+  for (const r of tc ?? []) {
+    const ganz = r.status === "complete" && r.start_time && r.end_time;
+    zeilen.push({ id: `D-${skKurz(r.id)}`, quelle: "kasse", datum: r.work_date, von: String(r.start_time || "").slice(0, 5) || null, bis: String(r.end_time || "").slice(0, 5) || null,
+      min: ganz ? skMinZeit(r.start_time, r.end_time, r.break_minutes) : 0, art: "stand", veranstaltung: veranst(r.event_id), anlass: "Dienst am Stand", taetigkeit: null, km: 0, kmErstattet: null,
+      status: "vorlaeufig", hinweis: ganz ? "Kasse-Stechuhr – vom Planer noch nicht geprüft" : "Stechuhr unvollständig (Kommen oder Gehen fehlt)" });
+  }
+  zeilen.sort((a, b) => String(b.datum).localeCompare(String(a.datum)) || String(a.von || "").localeCompare(String(b.von || "")));
+  const sollTage = new Map<string, number>();
+  for (const x of soll ?? []) sollTage.set(x.work_date, (sollTage.get(x.work_date) || 0) + skMinZeit(x.start_time, x.end_time, x.break_minutes));
+  const stand = [...(tc ?? []), ...(hr ?? [])].reduce((m: string, x: any) => (String(x.updated_at || "") > m ? String(x.updated_at) : m), "");
+  return { zeilen, soll: [...sollTage.entries()].map(([datum, min]) => ({ datum, min, veranstaltung: DW.name })).sort((a, b) => a.datum.localeCompare(b.datum)),
+    stand: stand || null, phase: 1 };
+}
 async function sonderstundenLaden(pid: string) {
   const [{ data: ev }, { data: st }] = await Promise.all([
     db.from("kc_dp_special_events").select("source_id,titel,ort,art,termin_status,datum_von,datum_bis,wiederkehrend,version,vorgesehen:payload->vorgesehen")
@@ -23464,6 +23633,22 @@ async function sonderstundenLaden(pid: string) {
     db.from("kc_dp_carpools").select("special_event_id,source_id,fahrer_id,mitfahrer,startort").eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("status", "published")]);
   return { sondereinsaetze: ev ?? [], stunden: (st ?? []).map(shZeile), mitglieder, zusagen: zu ?? [], fahrgemeinschaften: fg ?? [] };
 }
+// Gemeinsame Prüfung „Einsatz und Datum“ – Sonderstunden-Meldung (Twinkey) und Zeit aus der Erstattung (KICC-F-112).
+// 'laufend' (Build 325 DP2, z. B. „Besorgungen & Fahrten“): fester Termin ohne Datumsgrenze – jeder vergangene Tag zählt.
+async function shEinsatzPruefen(evId: string, datum: string) {
+  const { data: ev } = await db.from("kc_dp_special_events").select("source_id,titel,termin_status,datum_von,datum_bis,wiederkehrend")
+    .eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("source_id", evId).eq("status", "published").maybeSingle();
+  if (!ev) throw new Fehler("Diesen Sondereinsatz gibt es nicht (mehr).", 404);
+  if (ev.termin_status === "OFFEN") throw new Fehler("Für diesen Einsatz steht der Termin noch nicht fest.", 409);
+  if (ev.termin_status === "FEST" && ev.wiederkehrend !== "laufend") {
+    if (ev.wiederkehrend === "markttage") {
+      const { data: tag } = await db.from("kc_dp_days_published").select("work_date").eq("org_id", ORG).eq("event_id", DW.veranstaltung)
+        .eq("status", "published").eq("day_type", "market").eq("work_date", datum).maybeSingle();
+      if (!tag) throw new Fehler("Das Datum ist kein Markttag.");
+    } else if (ev.datum_von && (datum < ev.datum_von || datum > (ev.datum_bis || ev.datum_von))) throw new Fehler("Das Datum gehört nicht zu diesem Einsatz.");
+  }
+  return ev;
+}
 async function sonderstundenMelden(ich: Ich, p: any) {
   const heute = berlinTag(new Date()), zahl = (v: unknown) => { const n = Number(v); return Number.isFinite(n) ? Math.round(n * 100) / 100 : NaN; };
   const viertel = (n: number) => Number.isFinite(n) && Math.abs(n * 4 - Math.round(n * 4)) < 1e-9;
@@ -23471,17 +23656,7 @@ async function sonderstundenMelden(ich: Ich, p: any) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(datum)) throw new Fehler("Bitte ein gültiges Datum wählen.");
   if (datum > heute) throw new Fehler("Stunden können erst nach dem Einsatz gemeldet werden.");
   if (!SH.taetigkeiten.includes(taet)) throw new Fehler("Bitte eine Tätigkeit aus der Liste wählen.");
-  const { data: ev } = await db.from("kc_dp_special_events").select("source_id,titel,termin_status,datum_von,datum_bis,wiederkehrend")
-    .eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("source_id", evId).eq("status", "published").maybeSingle();
-  if (!ev) throw new Fehler("Diesen Sondereinsatz gibt es nicht (mehr).", 404);
-  if (ev.termin_status === "OFFEN") throw new Fehler("Für diesen Einsatz steht der Termin noch nicht fest.", 409);
-  if (ev.termin_status === "FEST") {
-    if (ev.wiederkehrend === "markttage") {
-      const { data: tag } = await db.from("kc_dp_days_published").select("work_date").eq("org_id", ORG).eq("event_id", DW.veranstaltung)
-        .eq("status", "published").eq("day_type", "market").eq("work_date", datum).maybeSingle();
-      if (!tag) throw new Fehler("Das Datum ist kein Markttag.");
-    } else if (ev.datum_von && (datum < ev.datum_von || datum > (ev.datum_bis || ev.datum_von))) throw new Fehler("Das Datum gehört nicht zu diesem Einsatz.");
-  }
+  const ev = await shEinsatzPruefen(evId, datum);
   const roh = Array.isArray(p?.eintraege) ? p.eintraege : [];
   if (!roh.length) throw new Fehler("Bitte mindestens eine Person mit Zeiten angeben.");
   if (roh.length > SH.maxPersonen) throw new Fehler(`Höchstens ${SH.maxPersonen} Personen je Meldung.`);
