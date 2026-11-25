@@ -1049,7 +1049,7 @@ async function sammelmailSenden(jetztD = new Date()) {
     const teil = liste.slice(0, SAMMEL_MAX_JE_MAIL), uhr = (d: string) => new Intl.DateTimeFormat("de-DE", { timeZone: TZ, day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }).format(new Date(d));
     const titel = `📬 Sammel-E-Mail: ${liste.length} ${liste.length === 1 ? "neue Nachricht" : "neue Nachrichten"}`;
     // Hansi 25.11.2026: „schön sauber geordnet, ein Inhalt nach dem anderen, mit Trennlinie dazwischen, damit man sieht, dass es mehrere Mails sind“
-    const LINIE = "──────────────"; // Hansi 25.11.2026: kürzer – passt auf dem Handy in eine Zeile
+    const LINIE = "────────────────────"; // Hansi 25.11.2026: kürzer als zuerst, dann „etwas länger“ – 20 Zeichen passen auf dem Handy in eine Zeile
     const block = (x: any, i: number) => `${LINIE}\n✉️ ${i + 1}/${liste.length} · ${uhr(x.erstellt_am)} · ${x.titel}\n${x.text || x.kurz || ""}${x.anlagen && !String(x.text || "").includes("📎") ? `\n📎 ${x.anlagen} Anlage${x.anlagen === 1 ? "" : "n"} – in der App` : ""}`;
     const text = `Hallo,\n\nhier ist deine Sammel-E-Mail aus der Köcheclub-App: ${liste.length === 1 ? "1 Nachricht" : liste.length + " Nachrichten"} seit der letzten Sammel-E-Mail, die älteste zuerst.\n\n`
       + teil.map(block).join("\n\n")

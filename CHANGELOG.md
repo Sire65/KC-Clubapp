@@ -2,7 +2,7 @@
 
 ## 3.31.0 – 2026-11-25 – 📬 Sammel-E-Mail übersichtlicher (KC-CLUB-SAMMELMAIL) · Server 3.31.0
 Hansi 25.11. nach der Testmail: „Sieht unübersichtlich aus. Die Linien können dann etwas kürzer sein.“
-- Trennlinie kurz (14 Zeichen) – passt auf dem Handy in eine Zeile, kein Umbruch mehr.
+- Trennlinie kürzer (20 Zeichen) – passt auf dem Handy in eine Zeile, kein Umbruch mehr.
 - Je Nachricht kompakt: Linie, dann eine Kopfzeile „✉️ 1/3 · 25.11., 09:41 · 💬 Chat“, darunter „Name:“ und der Text.
 - Weggelassen je Nachricht: „Neue Nachricht von …“, „… hat dir im Köcheclub geschrieben“ und der Antwort-Link (steht einmal unten).
 - Test: `tests/sammelmail.test.mjs`. Rückweg: Server 3.30.0.
