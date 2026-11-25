@@ -47,6 +47,7 @@ import { FDK_FELD, fdkNeu, fdkOptionen, fdkZiehen, fdkWurfBeginn, fdkAugen, fdkW
 import { dkNeu, dkVorbehalt, dkErlaubt, dkSpielen, dkStichAbschliessen, dkErgebnis, dkComputerKarte } from "./doppelkopf.js"; // KC-CLUB-DK-MG (2.219.0): Regeln = wörtliche Kopie aus app.js (tools/dk/server-kopie.mjs)
 import { dpRechnen, DP_REGEL, wunschZeile } from "./dp-rechnen.js";
 import { dpSollZeilen, dpSollKanonisch } from "./dp-rechnen.js"; // KC-DP-SOLL-UEBERGABE
+import { DPG, dpgHeute, dpgMorgenText, dpgAenderungen, dpgAenderungText } from "./dp-gruss.js"; // 3.25.0 KC-CLUB-DP-GRUSS
 import { anfahrt } from "./anfahrt.js"; // 2.721.0 KC-CLUB-ANFAHRT: km Wohnort → Markt aus der PLZ (ohne fremde Dienste) // 2.665.0 KC-CLUB-DP-NEU-RECHNEN: Dienstplan-Entwurf (gleiche Rechnung wie das Planungswerkzeug)
 import { KT_FRAGEN } from "./kt-fragen.js"; // KC-CLUB-KUECHENTERROR (2.14.0): Fragen = wörtliche Kopie aus lib/kuechenterror/fragen.js
 
@@ -196,7 +197,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "3.27.0";
+const SERVER_VERSION = "3.28.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -5876,6 +5877,50 @@ async function dpDruckNeu(adminId: string) {
 // Nachreichen (Hansi: „wenn der Sollplan sich nochmals ändert, muss der Abgleich erneut laufen“): kc_club_konfig „dp_soll_auto“ = { an, von }
 // (nach der ersten Übergabe von selbst an, von = Admin, der übergeben hat) – nur DESSEN Neuberechnung mit geänderten Zeilen (Prüfsumme) legt eine neue
 // offene Übergabe an (ältere offene → verworfen); die Pläne anderer Admins reichen nichts nach.
+// 3.25.0 KC-CLUB-DP-GRUSS (Wunsch Hansi 25.11.): Nachricht aus dem FREIGEGEBENEN Sollplan – am Morgen des Diensttags und sofort bei Änderungen.
+// Weg: wer ein aktives Push-Abo hat → Push, sonst E-Mail (unabhängig von der eigenen Wahl „Dienste“ – Hansi: „jedes Mitglied“).
+// „Keine Benachrichtigungen“/Sperren gelten weiter (routerSenden). Jede Nachricht wird VOR dem Senden im Protokoll gemerkt (nie doppelt).
+async function dpgSenden(pid: string, v: { titel: string; kurz: string; text: string }, korrelation: string) {
+  const { data: abo } = await db.from("kc_member_push_subscriptions").select("id").eq("person_id", pid).eq("active", true).limit(1);
+  const weg = abo?.length ? "push" : "mail";
+  const r: any = await routerSenden(`club_dienst_${weg}`, [pid], { ...v, betreff: `Köcheclub Werne – ${v.titel.replace(/^\S+ /, "")}`, url: `${APP_URL}#dienste` }, korrelation);
+  return { weg, ok: Number(r?.gesendet || 0) > 0 };
+}
+async function dpgFrei(): Promise<any | null> {
+  const { data } = await db.from("kc_club_konfig").select("wert").eq("schluessel", "dp_plaene_frei").maybeSingle();
+  const f: any = data?.wert; return f?.plan && Array.isArray(f.plan.tage) ? f : null;
+}
+// Morgengruß: in der Wartung ab DPG.ab Uhr – je Person und Tag genau einmal
+async function dpgMorgen() {
+  const std = berlinStunde(new Date()); if (std < DPG.ab || std >= DPG.bis) return 0;
+  const f = await dpgFrei(); if (!f) return 0;
+  const heute = berlinTag(new Date()), wer = dpgHeute(f.plan, heute); if (!wer.size) return 0;
+  const { data: schon } = await db.from("kc_club_protokoll").select("details").eq("aktion", DPG.aktion).contains("details", { tag: heute }).limit(500);
+  const fertig = new Set((schon ?? []).map((x: any) => String(x.details?.person || "")));
+  const leute = new Map((await aktiveMitglieder()).map((m: any) => [m.person_id, m]));
+  let n = 0;
+  for (const [pid, e] of wer) {
+    if (fertig.has(pid) || !leute.has(pid)) continue;
+    await protokoll(null, DPG.aktion, { tag: heute, person: pid, dienst: e.dienst, ber: e.ber }); // erst merken, dann senden
+    const r = await dpgSenden(pid, dpgMorgenText(vorname(leute.get(pid)), e), `club-dp-gruss:${heute}:${pid}`).catch((x) => { console.error("dp gruss", String(x)); return null; });
+    if (r) n++;
+  }
+  return n;
+}
+// Änderungen: nach jeder Freigabe – alter gegen neuen freigegebenen Plan, ab heute; je betroffener Person EINE Nachricht mit allen geänderten Tagen
+async function dpgAenderungenSenden(altPlan: any, neuPlan: any, stand: string) {
+  if (!altPlan) return 0; // erste Freigabe: nichts „geändert“ – die Morgengrüße kommen trotzdem
+  const heute = berlinTag(new Date()), ae = dpgAenderungen(altPlan, neuPlan, heute); if (!ae.size) return 0;
+  const leute = new Map((await aktiveMitglieder()).map((m: any) => [m.person_id, m]));
+  let n = 0;
+  for (const [pid, x] of ae) {
+    if (!leute.has(pid)) continue;
+    await protokoll(null, DPG.aenderung, { stand, person: pid, tage: x.tage.map((t: any) => t.d) });
+    const r = await dpgSenden(pid, dpgAenderungText(vorname(leute.get(pid)), x.tage), `club-dp-aenderung:${stand}:${pid}`).catch((e) => { console.error("dp aenderung", String(e)); return null; });
+    if (r) n++;
+  }
+  return n;
+}
 async function dpSollStand(adminId: string, w: any) {
   const [{ data: tg }, { data: k }, ausReg] = await Promise.all([
     db.from("kc_dp_days_published").select("work_date").eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("status", "published").limit(400),
@@ -10741,6 +10786,8 @@ const kcAnfrage = async (req: Request): Promise<Response> => {
       }
       // 2.590.0 KC-CLUB-DIENST-STEMPEL: Erinnerungen rund um den Dienst (nur wer die Funktion hat – bis zur Freigabe nur Admins):
       // kurz vor Beginn (noch nicht angemeldet), zum geplanten Ende (noch angemeldet), 1 Std. danach (Gehen vergessen). Je Dienst und Art einmal.
+      const dpGruss = await dpgMorgen().catch((e) => { console.error("dp gruss", String(e)); return 0; }); // 3.25.0 KC-CLUB-DP-GRUSS: Morgengruß am Diensttag
+      if (dpGruss) console.log(JSON.stringify({ dp_gruss: dpGruss }));
       const dsErin = await dienstStempelErinnern().catch((e) => { console.error("dienst stempel erinnern", String(e)); return 0; });
       const irErin = await irErinnern().catch((e) => { console.error("ist rueckfrage", String(e)); return 0; }); // KC-CLUB-IST-RUECKFRAGE
       if (irErin) console.log(JSON.stringify({ ist_rueckfrage: irErin }));
@@ -13145,11 +13192,16 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (await dpDruckVeraltet(ich.person_id, w).catch(() => false)) { await dpDruckNeu(ich.person_id);
           w = (await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "dp_druck").maybeSingle()).data?.wert; }
         if (!w || !Array.isArray(w.tage) || !w.tage.length) throw new Fehler("Es gibt noch keinen gerechneten Plan zum Freigeben.", 409);
+        const altFrei = await dpgFrei().catch(() => null); // 3.25.0 KC-CLUB-DP-GRUSS: vorheriger Stand für die Änderungs-Nachrichten
+        if (p.vorschau === true) return json({ benachrichtigt: altFrei ? dpgAenderungen(altFrei.plan, w, berlinTag(new Date())).size : 0, erste: !altFrei }); // nur zählen
         const frei = { am: jetzt(), stand: w.stand || null, plan: w };
         const { error } = await db.from("kc_club_konfig").upsert({ schluessel: "dp_plaene_frei", wert: frei, geaendert_von: ich.person_id, geaendert_am: frei.am });
         if (error) throw new Fehler("Die Freigabe konnte nicht gespeichert werden.", 500);
         await protokoll(ich.person_id, "dp_plaene_frei", { stand: frei.stand });
-        return json({ ok: true, frei: { am: frei.am, stand: frei.stand } });
+        // 3.25.0 KC-CLUB-DP-GRUSS: wessen Dienst sich (ab heute) geändert hat, bekommt sofort eine Nachricht mit den neuen Zeiten – nebenbei
+        const betroffen = altFrei ? dpgAenderungen(altFrei.plan, w, berlinTag(new Date())).size : 0;
+        if (betroffen) nebenbei(dpgAenderungenSenden(altFrei.plan, w, frei.am).catch((e) => console.error("dp aenderungen", String(e))));
+        return json({ ok: true, frei: { am: frei.am, stand: frei.stand }, benachrichtigt: betroffen });
       }
       // KC-DP-SOLL-UEBERGABE (Hansi 23.11.2026): gerechneten Sollplan an DP2 übergeben – nur Admin (wie dp_plaene_freigeben).
       // { pruefen: true } → nur den gespeicherten Stand zählen (rechnet nie neu – Datenverkehr sparen)

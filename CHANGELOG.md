@@ -1,7 +1,14 @@
 # Änderungen
 
-## 3.27.0 – 2026-11-25 – 🚗 km-Satz: immer 0,30 € (KC-CLUB-ERSTATTUNG-KM-030) · Server 3.27.0
-Hansi 25.11.: „Die App muss vor dem Datum auch mit 0,30 rechnen … die 0,38 waren mal als Testbetrag hinterlegt, in der vorletzten Köcheclubsitzung wurde der Betrag von 0,30 festgelegt.“ Beschluss: Sitzung 30.10.2026, Protokoll TOP 7 – Km-Pauschale (30 Cent pro km).
+## 3.28.0 – 2026-11-25 – 🗓️ Dienst-Nachricht am Morgen und bei Änderungen (KC-CLUB-DP-GRUSS) · App + Server 3.28.0 · 🚗 km-Satz immer 0,30 € (KC-CLUB-ERSTATTUNG-KM-030)
+Wunsch Hansi 25.11.: „jedes Mitglied soll eine Pushnachricht bekommen am gleichen Morgen, wie der Dienst geplant ist lt. Solldienstplan. Wer kein Push hat, per E-Mail. Bei Dienstplanänderungen für das Mitglied sofort neu. Schreibe immer die Zeiten dazu … Aber erst senden, wenn der Plan freigegeben ist.“
+- **Morgengruß:** am Diensttag ab 8 Uhr (Wartung, je Person und Tag einmal, gemerkt im Protokoll `dp_soll_gruss`): „Hallo Manfred, heute hast du Dienst von 17:00 – 23:00 Uhr. Wir wünschen dir einen angenehmen Dienst in der Weihnachtsmarkthütte. Liebe Grüße“ – mit Bereitschaft („… und Bereitschaft von 18:00 – 23:00 Uhr“) bzw. nur Bereitschaft.
+- **Änderungen:** bei jeder Freigabe vergleicht der Server den neuen mit dem vorher freigegebenen Plan (ab heute) – wessen Dienst/Bereitschaft sich geändert hat, bekommt sofort EINE Nachricht mit allen geänderten Tagen („Fr 04.12.: jetzt Dienst 18:00 – 23:00 Uhr (vorher …)“, „kein Dienst mehr“, „neu“). Vor dem Freigeben zeigt die Rückfrage, wie viele Mitglieder benachrichtigt werden.
+- Grundlage ist nur der **freigegebene** Sollplan (`dp_plaene_frei`) – ohne Freigabe geht nichts raus. Weg: aktives Push-Abo → Push, sonst E-Mail (unabhängig von der eigenen Wahl „Dienste“); „Keine Benachrichtigungen“/Sperren gelten weiter.
+- **🗓️ Dienstplan-Druck lesbarer (KC-CLUB-DP-PLAN-LESBAR, Wunsch Hansi 25.11.):** im Blatt „Dienstplan – berechnete Einteilung“ zwischen zwei Tagen eine freie Zeile, die Tabelle füllt das Blatt bis unten, höhere Zeilen (höchstens 27 statt 34 je Blatt), Schrift wächst mit der Zeilenhöhe (bis 1,25-fach), breitere Namensspalte, Dienstbalken mit dünnerem Rahmen. Uhrzeit („8 Uhr“) in allen Halbstunden-Rastern mittig über der Doppelspalte.
+- Neues Modul `supabase/functions/kc-club/dp-gruss.js`, Test `tests/dp-gruss.test.mjs` + Block in `tests/app-vertrag.test.mjs`. Rückweg: App + Server 3.26.0.
+
+**Dazu 🚗 KC-CLUB-ERSTATTUNG-KM-030:** Hansi 25.11.: „Die App muss vor dem Datum auch mit 0,30 rechnen … die 0,38 waren mal als Testbetrag hinterlegt, in der vorletzten Köcheclubsitzung wurde der Betrag von 0,30 festgelegt.“ Beschluss: Sitzung 30.10.2026, Protokoll TOP 7 – Km-Pauschale (30 Cent pro km).
 - Anlass: Steven rechnete Fahrten aus Nov./Dez. 2025 ab – der eingetragene Satz 0,30 € galt erst ab 19.10.2026, davor nahm die App den eingebauten Grundwert 0,38 €.
 - Daten (25.11., schon wirksam): Eintrag 0,30 € gilt jetzt ab 01.01.2000 (also immer); alle offenen Anträge mit anderem Satz neu gerechnet (nur Stevens: 785b8be6 → 204,00 €; der doppelte ältere Antrag c03c49a2 auf Hansis Wunsch storniert). Änderungsmeldung an Steven, Kopie Kassenwart, Clubsprecher, Admin.
 - Code: eingebauter Grundwert (falls kein Satz eingetragen ist) in Server und App 0,38 → 0,30.

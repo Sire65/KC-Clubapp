@@ -13937,3 +13937,12 @@ assert.ok(/async function dpIstFest\(adminId: string\)/.test(server) && /if \(w 
 assert.ok(/fest: d\.fest === true/.test(programm) && /🔒 Festgeschrieben:/.test(programm), "Hinweis im Ordner");
 // 3.24.0 KC-CLUB-DRUCK-HELL (Hansi 25.11.: keine Drucke im Dunkelmodus)
 assert.ok(/#druck \{ --bg: #fff; --karte: #fff;[^}]*--schatten: none;[^}]*color-scheme: light; \}/.test(seite) && /#druck td\.tag, #druck th\.tag \{ background: #fff; box-shadow: none; border-radius: 0; \}/.test(seite), "Ausdruck immer hell, Tageszellen ohne Karten-Optik");
+// 3.28.0 KC-CLUB-DP-GRUSS (Hansi 25.11.: Dienst-Nachricht am Morgen und bei Änderungen – nur aus dem freigegebenen Plan)
+assert.ok(/import \{ DPG, dpgHeute, dpgMorgenText, dpgAenderungen, dpgAenderungText \} from "\.\/dp-gruss\.js";/.test(server)
+  && /const dpGruss = await dpgMorgen\(\)/.test(server) && /schluessel", "dp_plaene_frei"\)\.maybeSingle\(\);\n  const f: any = data\?\.wert; return f\?\.plan/.test(server)
+  && /await protokoll\(null, DPG\.aktion, \{ tag: heute, person: pid/.test(server) && /routerSenden\(`club_dienst_\$\{weg\}`/.test(server)
+  && /if \(p\.vorschau === true\) return json\(\{ benachrichtigt:/.test(server) && /nebenbei\(dpgAenderungenSenden\(altFrei\.plan, w, frei\.am\)/.test(server), "Dienst-Nachrichten nur aus dem freigegebenen Plan, je Person einmal");
+assert.ok(/api\("dp_plaene_freigeben", \{ vorschau: true \}\)/.test(programm) && /Am Morgen jedes Diensttags \(ab 8 Uhr\)/.test(programm), "Rückfrage vor dem Freigeben nennt die Nachrichten");
+// 3.28.0 KC-CLUB-DP-PLAN-LESBAR (Hansi 25.11.: freie Zeile zwischen Tagen, Blatt bis unten, höhere Zeilen, dünnere Balken)
+assert.ok(/const DPD_ZEILEN_PLAN = 27;/.test(programm) && /\.join\(luft \? `<tbody class="dpd-luft">/.test(programm) && /zf = luft \? Math\.min\(1\.25, Math\.max\(1, 172 \/ zeilen \/ 6\.4\)\) : 1;/.test(programm)
+  && /#druck \.dpd\.plan \.dpd-blatt > \.dpd-raster \{ flex: 1 1 auto;/.test(seite) && /#druck \.dpd\.plan \.dpd-raster td\.dienst\.anf\.end \{ box-shadow: inset 0 0 0 \.45mm var\(--dienst\); \}/.test(seite), "Dienstplan-Druck: Luft zwischen Tagen, füllt das Blatt, dünnere Balken");
