@@ -1,5 +1,14 @@
 # Änderungen
 
+## 3.29.0 – 2026-11-25 – 🔑 Stempeluhr: für alle, Gruppen oder einzelne freischalten · Tage ohne Kasse immer (KC-CLUB-DS-WER) · 🚗 km-Satz immer 0,30 € (KC-CLUB-ERSTATTUNG-KM-030) · App + Server 3.29.0
+Wunsch Hansi 25.11.: „so bauen, dass man es für alle, Gruppen, einzelne freischalten kann – wenn einige die Stechuhr nicht benutzen wollen. An den beiden Vorbereitungstagen und der Nachbereitung gibt es die Kassen nicht – dann muss die Funktion da sein für alle, die Dienst haben.“
+- **Wer darf stempeln** (Admin → Freigaben → „🟢 Dienst anmelden/abmelden“ → „👥 Gruppen, einzelne Mitglieder, Ausnahmen …“, auch in der Stempeluhr „🔑 Wer darf stempeln“): Schalter „für alle“, Club-Gruppen, je Mitglied „✅ ja“ / „🚫 nutzt es nicht“. Gespeichert in `kc_club_konfig` „dienst_stempel_wer“.
+- **Tage ohne Kasse** (DP2-Tagesart Aufbau/Nachbereitung, z. B. 02./03./14.12.): jeder mit Dienst an dem Tag darf stempeln – auch wer sonst ausgenommen ist. Die Morgen-Nachricht sagt an diesen Tagen dazu: „Heute gibt es keine Kasse: Bitte melde dich in der Club-App zum Dienst an und ab.“
+- Erinnerungen rund um den Dienst gehen genau an alle, die stempeln dürfen. Buchen/Ändern prüft der Server mit derselben Regel.
+- Bedienung: die Karte „🟢 Dienst beginnen“ erscheint 60 statt 30 Min. vor Dienstbeginn (Aufbau: viele kommen früher).
+- **🚗 km-Satz immer 0,30 €** (gebündelt aus der Sitzung „km-Satz“, Zweig km-satz-030b): Hansi 25.11.: „Die App muss vor dem Datum auch mit 0,30 rechnen … die 0,38 waren mal als Testbetrag hinterlegt, in der vorletzten Köcheclubsitzung wurde der Betrag von 0,30 festgelegt.“ Beschluss Sitzung 30.10.2026, Protokoll TOP 7. Daten waren schon korrigiert (Satz 0,30 € gilt ab 01.01.2000, offene Anträge neu gerechnet); hier der eingebaute Grundwert in Server und App 0,38 → 0,30.
+- Tests: `tests/dienst-stempel.test.mjs`, `tests/dp-gruss.test.mjs`, `tests/app-vertrag.test.mjs` (Registry km-Satz). Rückweg: App + Server 3.28.0.
+
 ## 3.28.0 – 2026-11-25 – 🗓️ Dienst-Nachricht am Morgen und bei Änderungen (KC-CLUB-DP-GRUSS) · App + Server 3.28.0
 Wunsch Hansi 25.11.: „jedes Mitglied soll eine Pushnachricht bekommen am gleichen Morgen, wie der Dienst geplant ist lt. Solldienstplan. Wer kein Push hat, per E-Mail. Bei Dienstplanänderungen für das Mitglied sofort neu. Schreibe immer die Zeiten dazu … Aber erst senden, wenn der Plan freigegeben ist.“
 - **Morgengruß:** am Diensttag ab 8 Uhr (Wartung, je Person und Tag einmal, gemerkt im Protokoll `dp_soll_gruss`): „Hallo Manfred, heute hast du Dienst von 17:00 – 23:00 Uhr. Wir wünschen dir einen angenehmen Dienst in der Weihnachtsmarkthütte. Liebe Grüße“ – mit Bereitschaft („… und Bereitschaft von 18:00 – 23:00 Uhr“) bzw. nur Bereitschaft.
