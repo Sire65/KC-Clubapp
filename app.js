@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "3.25.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "3.27.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -2946,7 +2946,7 @@ const HILFE = [
   // 2.110.0 (Wunsch Hansi „Hilfetexte und Handbuch anpassen“): Hilfen zu den Neuerungen seit Anleitung V8 (2.96.0)
   { id: "tiefentest", thema: "technik", sym: "🔬", t: "Internet hakt? Der Tiefentest", x: "Hängt das Internet immer wieder (Schnecken in der App, Sanduhr am Fernseher)? Tippe oben auf das <b>Netz-Symbol</b> und dann auf <b>„🔬 Tiefentest“</b>. Der <b>gründliche Test</b> (ca. 1 Minute) misst Aussetzer, Schwankungen, Download/Upload, ob der Router unter Last staut und ob Datenpakete verloren gehen. Der <b>Dauertest</b> (5, 15 oder 30 Minuten) findet kurze Aussetzer, die ein kurzer Test verpasst. Am Ende steht in einfachen Sätzen, was los ist und was du tun kannst – und mit <b>📤 Teilen</b> hast du einen Nachweis für deinen Internet-Anbieter. Tipp: einmal im WLAN und einmal mit Mobilfunk testen.", seit: "2.592.0" },
   { id: "schnecke", thema: "technik", sym: "🐌", t: "Was bedeutet die Schnecke oben?", x: "Erscheint oben in der Mitte eine kleine <b>🐌</b>, ist das Netz gerade langsam – die App misst das selbst an den Antwortzeiten. Alles funktioniert weiter, dauert aber länger: bitte etwas Geduld und <b>nicht mehrfach tippen</b>. Antippen erklärt es kurz. Ist das Netz wieder schnell, verschwindet die Schnecke von selbst.", seit: "2.106.0" },
-  { id: "zwei_fenster", thema: "technik", sym: "🪟", t: "Die App ist zweimal offen", x: "Läuft die Club-App auf demselben Gerät <b>zweimal</b> (zweites Fenster oder ein anderer Browser), meldet sie das. <b>„Hier weitermachen“</b> legt das andere Fenster schlafen, <b>„Dieses Fenster schließen“</b> schließt dieses. Ist es in Wahrheit ein anderes Gerät im selben WLAN (z. B. das Tablet), tippst du <b>„Das ist ein anderes Gerät“</b> – dann fragt die App dafür nie wieder.", seit: "2.315.0" }, // 2.337.0 KC-CLUB-TUEV-4
+  { id: "zwei_fenster", thema: "technik", sym: "🪟", t: "Die App ist zweimal offen", x: "Läuft die Club-App auf demselben Gerät <b>zweimal</b> (zweites Fenster oder ein anderer Browser), meldet sie das. <b>„Hier weitermachen“</b> legt das andere Fenster schlafen, <b>„Dieses Fenster schließen“</b> schließt dieses. Ist es in Wahrheit ein anderes Gerät im selben WLAN (z. B. das Tablet), tippst du <b>„Das ist ein anderes Gerät“</b> – dann fragt die App dafür nie wieder. Häufigster Fall am Handy: die App ist als <b>Icon</b> installiert und zusätzlich in Chrome oder Safari als Tab offen (z. B. über einen Link aus einer Mail) – dann im Browser den Club-App-Tab mit ✕ schließen und nur noch das Icon benutzen.", seit: "2.315.0" }, // 2.337.0 KC-CLUB-TUEV-4
   { id: "laden_dauert", thema: "technik", sym: "🔄", t: "„Laden dauert zu lange“ – was tun?", x: "Lädt etwas wegen langsamem Netz länger als 12 Sekunden oder klappt gar nicht, erscheint unten eine Leiste mit <b>„🔄 Nochmal versuchen“</b> und <b>„Abbrechen“</b>. Nochmal versuchen lädt neu; Abbrechen beendet das Warten – du kannst es später nochmal öffnen. Beim <b>Senden</b> (Nachricht, Zusage …) wird nie abgebrochen oder doppelt geschickt: Dort steht nur „bitte warten“.", seit: "2.107.0" },
   { id: "twinkey_haengt", thema: "technik", sym: "🧑‍🍳", t: "Twinkey lädt nicht", x: "Bei langsamem Netz zeigt Twinkey nach 8 Sekunden „🐌 Das Netz ist gerade langsam – noch einen Moment …“. Klappt es gar nicht, kommt <b>„🔄 Nochmal versuchen“</b> – antippen, oder mit „Zurück zur Club-App“ später wiederkommen.", seit: "2.106.0" },
   { id: "termin_zahl", thema: "termine", sym: "✅", t: "Was heißt „7/18 angemeldet“?", x: "Auf der Termin-Kachel oben auf der Startseite steht, wie viele schon zugesagt haben – z. B. <b>„✅ 7/18 angemeldet“</b> heißt: 7 von 18 Mitgliedern kommen. So siehst du auf einen Blick, wie voll es wird.", zeig: () => zeige("start"), seit: "2.102.0" },
@@ -4947,7 +4947,9 @@ function fpGeraet() {
   if (/Android/i.test(ua)) return "tablet";
   return tp > 1 && Math.min(screen.width, screen.height) >= 600 && !/Windows|CrOS/.test(ua) ? "tablet" : "pc";
 }
-const fensterKennung = () => ({ i: window.KCFP?.geraet?.() || "", b: fpBrowser(), s: fpSystem(), g: fpGeraet() });
+// 3.22.0 KC-CLUB-ZWEI-BROWSER-KLAR (Fund Hansi 24.11.: Marianne – iPhone, App-Icon und zusätzlich Chrome): a = 1, wenn dieses Fenster die installierte App (Icon) ist
+const fensterIstApp = () => { try { return matchMedia("(display-mode: standalone)").matches || navigator.standalone === true; } catch (e) { return false; } };
+const fensterKennung = () => ({ i: window.KCFP?.geraet?.() || "", b: fpBrowser(), s: fpSystem(), g: fpGeraet(), ...(fensterIstApp() ? { a: 1 } : {}) });
 const FENSTER = { id: Math.random().toString(36).slice(2, 10), kanal: null, schlaeft: false, gefragt: false };
 function fensterStart() {
   if (!("BroadcastChannel" in window)) return;
@@ -4983,7 +4985,15 @@ function zweiBrowserMelden(a) {
   const g = zweiBrowserGemerkt(), w = g[a.i]; if (w === "anderes" || (w && Date.now() < Number(w)) || $("dlgZweiBrowser")) return;
   const wo = a.b && a.b !== "unbekannt" ? `in <b>${esc(a.b)}</b>` : "in einem anderen Browser", wann = a.vorSek < 60 ? "gerade eben" : `vor ${Math.round(a.vorSek / 60)} Min.`;
   const merken = (wert) => { try { localStorage.setItem("kc_club_zwei_browser", JSON.stringify({ ...zweiBrowserGemerkt(), [a.i]: wert })); } catch (e) { /* ohne Speicher fragt sie eben nochmal */ } };
-  const f = dlgOeffnen(`<div id="dlgZweiBrowser"></div><h3 class="dlg-kopf">📱 Die Club-App ist noch woanders offen</h3><p class="dlg-text">Die Club-App war ${wann} auf diesem Gerät auch ${wo} offen. Zwei Browser gleichzeitig machen die App langsamer und verbrauchen Akku und Daten.<br><b>Bitte ${a.b && a.b !== "unbekannt" ? esc(a.b) : "den anderen Browser"} schließen</b> und nur hier weitermachen.</p>
+  // 3.22.0 KC-CLUB-ZWEI-BROWSER-KLAR: sagen, WAS zu tun ist – App-Icon und Browser-Tab unterscheiden (Server meldet a = 1 für das App-Icon)
+  const hierApp = fensterIstApp(), dortApp = a.a === 1, name = a.b && a.b !== "unbekannt" ? esc(a.b) : "dem Browser";
+  const tabs = /iPhone|iPod/i.test(navigator.userAgent) ? "unten" : "oben";
+  const text = hierApp && !dortApp
+    ? `Du hast die Club-App ${wann} auf diesem Gerät auch in <b>${name}</b> geöffnet – zusätzlich zum App-Icon. Doppelt offen macht die App langsamer und verbraucht Akku und Daten.<br><b>So geht's:</b> ${name} öffnen → ${tabs} das Tab-Symbol (Quadrat mit Zahl) antippen → beim Club-App-Tab auf <b>✕</b>. Danach die Club-App <b>nur noch über das Icon</b> öffnen.<br><small>Links aus Mails oder WhatsApp öffnen sich im Browser – danach lieber das Icon antippen.</small>`
+    : !hierApp && dortApp
+    ? `Auf diesem Gerät ist die Club-App als <b>App-Icon</b> installiert und war ${wann} dort offen – dieses Fenster hier ist zusätzlich ein Browser-Tab.<br><b>Bitte diesen Tab schließen</b> (${tabs} das Tab-Symbol → ✕) und die Club-App <b>nur noch über das Icon</b> öffnen.`
+    : `Die Club-App war ${wann} auf diesem Gerät auch ${wo} offen. Zwei Browser gleichzeitig machen die App langsamer und verbrauchen Akku und Daten.<br><b>Bitte ${a.b && a.b !== "unbekannt" ? esc(a.b) : "den anderen Browser"} schließen</b> und nur hier weitermachen.`;
+  const f = dlgOeffnen(`<div id="dlgZweiBrowser"></div><h3 class="dlg-kopf">📱 Die Club-App ist doppelt offen</h3><p class="dlg-text">${text}</p>
     <div class="dlg-knoepfe"><button class="knopf haupt" data-w="ok">👍 Mach ich</button><button class="knopf" data-w="anderes">📲 Das ist ein anderes Gerät</button></div>`, () => { f.remove(); merken(String(Date.now() + 3600000)); });
   f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => { f.remove(); merken(b.dataset.w === "anderes" ? "anderes" : String(Date.now() + 3600000));
     if (b.dataset.w === "anderes") melde("👍 Alles klar – dafür frage ich nicht mehr."); }));

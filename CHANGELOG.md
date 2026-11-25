@@ -1,5 +1,12 @@
 # Änderungen
 
+## 3.27.0 – 2026-11-25 – 📱 „Doppelt offen“: die Meldung sagt jetzt genau, was zu tun ist (KC-CLUB-ZWEI-BROWSER-KLAR) · Server 3.27.0
+Fund Hansi 24.11.: Marianne (iPhone) bekam „die App ist 2 × offen“ und fand das zweite Fenster nicht. Ursache: App-Icon (über Safari installiert) und zusätzlich Chrome – Links aus Mail/WhatsApp öffnen sich im Standard-Browser.
+- Die App meldet beim Online-Abgleich mit, ob das Fenster das **App-Icon** ist (`a: 1`); der Server merkt es je Fenster und gibt es beim „anderen Fenster“ zurück.
+- Meldung „📱 Die Club-App ist doppelt offen“: im Icon → „Du hast sie auch in **Chrome** geöffnet … Tab-Symbol → ✕ … nur noch über das Icon öffnen“; im Browser-Tab bei installiertem Icon → „Bitte diesen Tab schließen … nur noch das Icon“. Sonst wie bisher. „Das ist ein anderes Gerät“ bleibt.
+- Hilfe „Die App ist zweimal offen“ nennt den häufigsten Handy-Fall.
+- Test: `tests/zwei-browser-klar.test.mjs`. Rückweg: App/Server der Vorversion (ältere Apps senden kein `a` → Meldung wie bisher).
+
 ## 3.25.0 – 2026-11-25 – ⏱️ Mein Stundenkonto: Dienste am Stand aus dem DP2-Kontoauszug (KICC-F-113 Phase 2) · Server 3.25.0 · Datenbank: `20261125_kc_dp_konto_published.sql` · DP2 ab Build 326
 Hansi 25.11.: „Erst einspielen und dann Schritt 2.“ – Die Club-App zeigt jetzt dieselben Zahlen wie der DP2-Kontoauszug (eine Wahrheit, keine zweite Rechnung).
 - **Datenbank:** neue Tabelle `kc_dp_konto_published` (nur Club-Server liest, RLS dicht) und `kc_dp_konto_publish` (nur DP2-Planungsrollen, Prüfregister): Gesamtstand je Veranstaltung, nur geänderte Zeilen werden geschrieben, fehlende weich entfernt. Spiegel/Sicherung wie die anderen `kc_dp_*`-Tabellen. Lokal mit Postgres 16 geprüft (zweimal einspielbar, unveränderter Stand schreibt 0 Zeilen, Nicht-Planer abgewiesen).

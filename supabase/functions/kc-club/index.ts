@@ -196,7 +196,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "3.25.0";
+const SERVER_VERSION = "3.27.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -1433,18 +1433,19 @@ async function fensterAbgleich(ich: Ich, f: any, req: Request, vorab?: { wert: a
   if (!f || typeof f !== "object" || ich.nurLesen) return null;
   const i = txt(f.i, 40).replace(/[^A-Za-z0-9-]/g, ""), b = txt(f.b, 30), sy = txt(f.s, 30);
   const g = geraetAus(req.headers.get("user-agent") || "", f.g); // 2.477.0 KC-CLUB-ONLINE-GERAET
+  const ap = f.a === 1 ? 1 : 0; // 3.22.0 KC-CLUB-ZWEI-BROWSER-KLAR: dieses Fenster ist das App-Icon (installiert)
   if (!i) return null;
   const netz = (await sha256("kc-netz:" + (req.headers.get("x-forwarded-for") || "").split(",")[0].trim())).slice(0, 16), t = Date.now();
   const { data } = vorab !== undefined ? { data: vorab } : await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "fenster").maybeSingle();
   const roh = Array.isArray((data?.wert as any)?.liste) ? (data!.wert as any).liste : [];
   const alt = roh.filter((x: any) => x && x.i !== i && t - Number(x.t) < 3600000);
   const anders = alt.filter((x: any) => x.n === netz && x.s === sy && t - Number(x.t) < FENSTER_SEK * 1000).sort((x: any, y: any) => y.t - x.t)[0];
-  const liste = [{ i, b, s: sy, n: netz, t, ...(g ? { g } : {}) }, ...alt].slice(0, 6);
+  const liste = [{ i, b, s: sy, n: netz, t, ...(g ? { g } : {}), ...(ap ? { a: 1 } : {}) }, ...alt].slice(0, 6);
   // KC-CLUB-ONLINE-SPARSAM: dasselbe Fenster hat sich vor < FENSTER_SCHREIB_MS schon gleich gemeldet → nicht neu schreiben (andere prüfen mit FENSTER_SEK = 180 s)
   const ich0 = roh.find((x: any) => x && x.i === i);
-  if (ich0 && ich0.b === b && ich0.s === sy && ich0.n === netz && (ich0.g || "") === (g || "") && t - Number(ich0.t) < FENSTER_SCHREIB_MS && t >= Number(ich0.t)) return anders ? { i: anders.i, b: anders.b, vorSek: Math.round((t - Number(anders.t)) / 1000) } : null;
+  if (ich0 && ich0.b === b && ich0.s === sy && ich0.n === netz && (ich0.g || "") === (g || "") && (ich0.a || 0) === ap && t - Number(ich0.t) < FENSTER_SCHREIB_MS && t >= Number(ich0.t)) return anders ? { i: anders.i, b: anders.b, vorSek: Math.round((t - Number(anders.t)) / 1000), ...(anders.a === 1 ? { a: 1 } : {}) } : null;
   await db.from("kc_club_person_einstellung").upsert({ person_id: ich.person_id, schluessel: "fenster", wert: { liste }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
-  return anders ? { i: anders.i, b: anders.b, vorSek: Math.round((t - Number(anders.t)) / 1000) } : null;
+  return anders ? { i: anders.i, b: anders.b, vorSek: Math.round((t - Number(anders.t)) / 1000), ...(anders.a === 1 ? { a: 1 } : {}) } : null;
 }
 // ---------- KC-CLUB-FP-UEBERWACHUNG (1.58.0, Wunsch Hansi): Fehlerprotokoll einstufen, leeren, überwachen ----------
 // Eine Regel für die Einstufung (Server liefert sie der App mit): 🔴 schwer – sofort Push an den Admin; 🟡 Hinweis; ⚪ Info.

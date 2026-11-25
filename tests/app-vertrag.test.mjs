@@ -6868,7 +6868,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const anAdmins = ger \? ids\.filter\(\(id\) => admins\.has\(id\)\) : \[\];/.test(server) && /senden\(anAdmins, `\$\{name\} \(\$\{ger\}\)`, ":a"\)/.test(server), "Push mit Gerät nur an Admins");
   assert.ok(/const oaName = \(x\) => \{ const n = x\.vorname \|\| x\.name; return ICH\?\.admin && OA_GERAET\[x\.geraet\]/.test(html) && /onlineAnsageSprechen\(neu\.map\(oaName\)\)/.test(html), "App: Admin hört das Gerät");
   assert.ok(/sprechen\(onlineAnsageText\(alle\)\.replace\(\/\[\(\)\]\/g, ""\)\)/.test(html), "Klammern werden nicht vorgelesen");
-  assert.ok(/g: fpGeraet\(\) \}\);/.test(html) && /\(\/Macintosh\/\.test\(ua\) && tp > 1\)\) return "tablet"/.test(html), "App schickt Geräte-Hinweis (iPad erkannt)");
+  assert.ok(/g: fpGeraet\(\)(, \.\.\.\(fensterIstApp\(\) \? \{ a: 1 \} : \{\}\))? \}\);/.test(html) && /\(\/Macintosh\/\.test\(ua\) && tp > 1\)\) return "tablet"/.test(html), "App schickt Geräte-Hinweis (iPad erkannt)");
   const swq = lies("sw.js"); assert.ok(/\^🟢 \(\.\+\?\) ist jetzt online\(\?: \\\(\(\\d\\d\):\(\\d\\d\) Uhr\\\)\)\?\$/.test(swq), "Push-Titel-Muster im Service Worker unverändert passend");
 }
 
