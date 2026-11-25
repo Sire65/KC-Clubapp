@@ -196,7 +196,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "3.22.0";
+const SERVER_VERSION = "3.23.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -5774,6 +5774,7 @@ async function dpDruckNeu(adminId: string) {
     dpZuschlag(),
   ]);
   const konf: any = k?.wert && typeof k.wert === "object" ? k.wert : {};
+  if (konf.fest === true) throw new Fehler("Der Dienstplan ist festgeschrieben – er wird nicht mehr neu gerechnet. Änderungen trägt Claude gezielt ein.", 409); // 3.23.0 KC-CLUB-DP-FEST
   // 2.721.0 KC-CLUB-DP-NACHBESSERN: Angaben je Person in dp_druck_konfig.personen[pid] – aus (nie einplanen), maxGesamt, maxDienst, anfahrtKm (statt der
   // km aus der Adresse, z. B. „wohnt in der Zeit bei ihrem Bruder in Werne“), notiz. Wer ab anfahrtGrenzeKm (10) fährt, bekommt Dienste ab anfahrtMinDienst (3) Std.
   const pk: Record<string, any> = konf.personen && typeof konf.personen === "object" ? konf.personen : {};
@@ -5926,7 +5927,14 @@ async function erkNachricht(ich: Ich, id: string) {
 }
 // 2.676.0 KC-CLUB-DP-AUTO (Wunsch Hansi „so bauen, dass es sich von allein anpasst, wenn sich was ändert“): Der gespeicherte Stand ist veraltet, wenn
 // seitdem ein Wunschplan, der Bedarf oder die Einstellungen (dp_druck_konfig) geändert wurden oder die Rechenregel neu ist (DP_REGEL).
+// 3.23.0 KC-CLUB-DP-FEST (Hansi 25.11.2026 nach dem Clubabend: „ja, festschreiben“): mit dp_druck_konfig.fest = true bleibt der gerechnete Plan stehen –
+// keine automatische Neuberechnung mehr (neue Wunschpläne, Bedarf, Einstellungen, Rechenregel), Änderungen trägt Claude gezielt in „dp_druck“ ein.
+async function dpIstFest(adminId: string) {
+  const { data } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", adminId).eq("schluessel", "dp_druck_konfig").maybeSingle();
+  return (data?.wert as any)?.fest === true;
+}
 async function dpDruckVeraltet(adminId: string, w: any) {
+  if (w && Array.isArray(w.tage) && await dpIstFest(adminId)) return false; // 3.23.0 festgeschrieben – nie automatisch neu rechnen
   if (!w || !Array.isArray(w.tage) || w.regel !== DP_REGEL) return true;
   const seit = String(w.stand || "");
   const [{ count: wn }, { count: tn }, { data: k }, { count: zn }] = await Promise.all([
@@ -5939,7 +5947,7 @@ async function dpDruckVeraltet(adminId: string, w: any) {
 async function dpDruckAlleNeu() { // für jeden Admin mit eigener Dienstplan-Druck-Einstellung (nach einem neuen Wunschplan)
   const { data } = await db.from("kc_club_person_einstellung").select("person_id").eq("schluessel", "dp_druck_konfig").limit(5);
   const adm = new Set(await adminIds());
-  for (const r of data ?? []) if (adm.has(r.person_id)) await dpDruckNeu(r.person_id).catch((e) => console.error("dp auto", String(e)));
+  for (const r of data ?? []) if (adm.has(r.person_id) && !(await dpIstFest(r.person_id).catch(() => false))) await dpDruckNeu(r.person_id).catch((e) => console.error("dp auto", String(e)));
 }
 async function dpDruckNeueWuensche(seit: string | null) {
   let q = db.from("kc_dp_wish_inbox").select("person_id,updated_at").eq("org_id", ORG).eq("event_id", DW.veranstaltung).limit(300);
@@ -13198,7 +13206,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         }
         const stand = w && Array.isArray(w.tage) ? w.stand || zeile!.geaendert_am : null;
         const neu = await dpDruckNeueWuensche(stand).catch(() => [] as string[]); // 2.650.0: neue/geänderte Wunschpläne seit dem Stand (nur lesen)
-        return json(w && Array.isArray(w.tage) ? { ...w, stand, neu } : { tage: [], neu });
+        const fest = await dpIstFest(ich.person_id).catch(() => false); // 3.23.0 KC-CLUB-DP-FEST: für den Hinweis im Ordner
+        return json(w && Array.isArray(w.tage) ? { ...w, stand, neu, fest } : { tage: [], neu, fest });
       }
       // KC-CLUB-DP-EINZELPLAN (Wunsch Hansi 30.10.2026 „für jede Person eine Einzelübersicht, Querformat … erst mal nur unter Mein Dienst“): nur die eigene Zeile
       // aus dem Dienstplan-Entwurf des Admins (dp_druck) – Regelzeit je Tag (Bedarf, eine Stunde vor Öffnung), eigene Dienste, Bereitschaft, eigene Wünsche.

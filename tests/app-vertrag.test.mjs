@@ -13931,3 +13931,7 @@ assert.ok(/\["page", "always"\]\.includes\(cs\(e\)\.breakAfter\)/.test(programm)
 }
 // 3.20.0 KC-CLUB-DRUCK-NAMENLISTE (Fund Hansi 24.11.: Text überschneidet sich auf „Regelzeit und Besetzung“)
 assert.ok(/<span class="nl">\$\{pers\.map\(\(x\) => `<span>\$\{x\}<\/span>`\)\.join\(""\)\}<\/span>/.test(programm) && /#druck \.dpd-bed td\.bd\.zwei \{ display: table-cell;/.test(seite) && !/td\.bd\.zwei \{[^}]*column-count/.test(seite), "Namensliste als Raster in einer echten Tabellenzelle");
+// 3.23.0 KC-CLUB-DP-FEST (Hansi 25.11.: Plan festschreiben)
+assert.ok(/async function dpIstFest\(adminId: string\)/.test(server) && /if \(w && Array\.isArray\(w\.tage\) && await dpIstFest\(adminId\)\) return false;/.test(server)
+  && /if \(konf\.fest === true\) throw new Fehler\("Der Dienstplan ist festgeschrieben/.test(server) && /!\(await dpIstFest\(r\.person_id\)\.catch\(\(\) => false\)\)/.test(server), "festgeschrieben: nie automatisch neu rechnen");
+assert.ok(/fest: d\.fest === true/.test(programm) && /🔒 Festgeschrieben:/.test(programm), "Hinweis im Ordner");

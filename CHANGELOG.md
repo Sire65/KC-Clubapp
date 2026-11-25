@@ -1,5 +1,12 @@
 # Änderungen
 
+## 3.23.0 – 2026-11-25 – 🔒 Dienstplan festschreiben (KC-CLUB-DP-FEST) · App + Server 3.23.0
+Hansi 25.11. nach dem Clubabend („jede Menge Änderungswünsche … ja, einspielen und festschreiben“): bei jeder Änderung rechnete der Plan alles neu und verschob auch Tage, die nicht besprochen waren.
+- Plan-Einstellung `dp_druck_konfig.fest`: der gerechnete Plan bleibt stehen – keine automatische Neuberechnung (neue Wunschpläne, Bedarf, Einstellungen, Rechenregel), „🔄 Jetzt neu rechnen“ entfällt. Änderungen vom Clubabend werden gezielt in den Plan eingetragen (Lücken und Stunden werden dabei neu gezählt).
+- Im Ordner „🗓️ Dienstplan-Druck“: Hinweis „🔒 Festgeschrieben …“; neue oder geänderte Wunschpläne werden weiter angezeigt, aber nicht mehr eingerechnet.
+- Freigeben, Ausdrucke, Mein Dienst/Dienstpläne unverändert. Zurück: `fest` entfernen – dann rechnet der Plan wieder selbst.
+- Test: Block in `tests/app-vertrag.test.mjs`. Rückweg: App + Server 3.22.0.
+
 ## 3.22.0 – 2026-11-24 – ⏱️ Zeit gleich mit der Erstattung melden (KICC-F-112, KC-CLUB-ERSTATTUNG-STUNDEN) · ⏱️ Mein Stundenkonto (KICC-F-113, KC-CLUB-STUNDENKONTO) · Server 3.22.0 · Datenbank: `20261124_kc_dp_erstattung_stunden.sql` · DP2 ab Build 325
 Wunsch Hansi 24.11.: „Darüber müssen sich auch zusätzliche Stunden anmelden lassen. Z. B. holt ein Mitglied Wurst mit dem eigenen Pkw beim Metzger ab und bringt sie zum Weihnachtsmarkt. Die km werden mit dem Satz erstattet und die Stunden müssen aufs Stundenkonto … nicht erst in DP2 freigeben.“ Entscheidungen: sofort gutschreiben · immer (wenn ein meldbarer Einsatz da ist) · ständiger Einsatz „Besorgungen & Fahrten“. Konzept: KICC `docs/KONZEPT-CLUB-ERSTATTUNG-STUNDEN.md`.
 - **💶 Erstattung → 🚗 Fahrtkosten / 🛒 Einkauf:** neuer Schalter „⏱️ Zeit fürs Stundenkonto mitmelden?“ (Vorgabe Nein). Bei Ja nur Auswahl: **Von/Bis** (Viertelstunden, bis 06:00 Folgetag), **Wofür?** (vorbelegt: ständiger Einsatz, z. B. „Besorgungen & Fahrten“), **Tätigkeit** (aus der Art vorbelegt). Vorschau „= 1,5 Std. – zählt sofort“. Rückfrage (keine Sperre), wenn viel Zeit für wenig Strecke angegeben ist.
