@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "3.26.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "3.28.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -36096,6 +36096,7 @@ async function sprAktion(a, extra = {}) { try { SPA.daten = await api("spruch_ar
 // (größer; 8–16 und 15:30–23 Uhr, die halbe Stunde 15:30–16 ist die Klebekante).
 const DPD = { daten: null, breit: "1", nurFrei: true }; // 2.998.0 nurFrei: Wunschplan zum Verschicken nur mit freigegebenen Angaben
 const DPD_ZEILEN = 34; // so viele Zeilen passen auf ein Blatt; ein Tag wird nie geteilt
+const DPD_ZEILEN_PLAN = 27; // 3.28.0 KC-CLUB-DP-PLAN-LESBAR (Hansi 25.11.: „Zeilenhöhe etwas höher … Schrift etwas größer“): Dienstplan mit weniger, dafür höheren Zeilen; das Blatt wird bis unten gefüllt
 const DPD_WD = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"], DPD_ART = { p: "pref", a: "avai", i: "if_n", u: "unav" };
 const dpdUhr = (v) => { const h = Math.floor(v), m = Math.round((v - h) * 60); return m ? `${h}:${String(m).padStart(2, "0")}` : String(h); };
 const dpdStd = (v) => String(+v.toFixed(1)).replace(".", ",");
@@ -36128,9 +36129,13 @@ async function dpdFreiZeigen() { const el = $("dpdFreiZeile"); if (!el) return;
   try { const r = await api("dp_plaene", { nurInfo: true }); el.innerHTML = r?.frei ? `📣 Für Mitglieder freigegeben: <b>${esc(wann(r.frei.am))}</b> <button type="button" class="knopf klein" onclick="dpdFreigeben(this, true)">zurückziehen</button>` : "📣 Für Mitglieder: <b>noch nicht freigegeben</b>"; }
   catch { el.textContent = "📣 Freigabe-Stand gerade nicht abrufbar."; } }
 async function dpdFreigeben(btn, zurueck = false) {
-  if (!(await frage(zurueck ? "Wunschplan und Dienstplan für die Mitglieder zurückziehen?" : "Wunschplan und Dienstplan in diesem Stand für alle Mitglieder freigeben? Sie finden ihn unter Meins → 🗓️ Mein Dienst und Club → 🗓️ Dienstpläne. Spätere Änderungen erst nach erneuter Freigabe."))) return;
+  // 3.25.0 KC-CLUB-DP-GRUSS: vorher zählen, wer über geänderte Dienste sofort eine Nachricht bekommt (Push, sonst E-Mail)
+  let v = null; if (!zurueck) try { v = await api("dp_plaene_freigeben", { vorschau: true }); } catch {}
+  const nachricht = !v ? "" : v.benachrichtigt ? `\n\n📨 ${v.benachrichtigt} ${v.benachrichtigt === 1 ? "Mitglied bekommt" : "Mitglieder bekommen"} sofort eine Nachricht mit den geänderten Dienstzeiten (Push, sonst E-Mail).` : "\n\nKein Dienst hat sich geändert – es gehen jetzt keine Nachrichten raus.";
+  if (!(await frage(zurueck ? "Wunschplan und Dienstplan für die Mitglieder zurückziehen?" : "Wunschplan und Dienstplan in diesem Stand für alle Mitglieder freigeben? Sie finden ihn unter Meins → 🗓️ Mein Dienst und Club → 🗓️ Dienstpläne. Spätere Änderungen erst nach erneuter Freigabe."
+    + nachricht + "\n\n🗓️ Am Morgen jedes Diensttags (ab 8 Uhr) bekommt jedes eingeteilte Mitglied seine Zeiten als Nachricht."))) return;
   if (btn) btn.disabled = true;
-  try { await api("dp_plaene_freigeben", zurueck ? { zurueck: true } : {}); melde(zurueck ? "Freigabe zurückgezogen." : "📣 Freigegeben – die Mitglieder sehen die Pläne jetzt."); }
+  try { const r = await api("dp_plaene_freigeben", zurueck ? { zurueck: true } : {}); melde(zurueck ? "Freigabe zurückgezogen." : `📣 Freigegeben – die Mitglieder sehen die Pläne jetzt.${r?.benachrichtigt ? ` 📨 ${r.benachrichtigt} über Änderungen benachrichtigt.` : ""}`); }
   catch (e) { meldeFehler(e); } finally { if (btn) btn.disabled = false; dpdFreiZeigen(); }
 }
 // KC-DP-SOLL-UEBERGABE (Hansi 23.11.2026): gerechneten Sollplan mit einem Tipp an DP2 übergeben. DP2 zeigt ihn zur Übernahme (neu/geändert/entfällt);
@@ -36258,7 +36263,7 @@ function dpdKopfHalb(S) {
 const dpdHk = (s) => (s % 1 ? " hb" : " hv");
 // KC-CLUB-DP-PDF-ZEBRA: jede zweite Person eines Tages (rows = Zeilen nur dieses Tages → je Tag neu, erste Person weiß; nur art p zählt)
 const dpdZebra = (rows, i) => rows[i].art === "p" && rows.slice(0, i).filter((x) => x.art === "p").length % 2 === 1;
-function dpdTabelle(tage, von, teil, letzte) {
+function dpdTabelle(tage, von, teil, letzte, luft = false) { // luft (3.28.0): freie Zeile zwischen zwei Tagen
   const S = dpdSlots(von, von + tage[0].rows[0].cells.length / 2), idx = teil.map((s) => S.indexOf(s)), rechts = teil[teil.length - 1] === letzte, K = dpdKopfHalb(teil);
   const kopf = `<colgroup><col class="tag"><col class="wer">${teil.map(() => "<col>").join("")}${rechts ? '<col class="std">' : ""}</colgroup><thead><tr><th class="tag" rowspan="2">Tag · Regelzeit</th><th class="wer" rowspan="2">Mitglied</th>${K.oben}${rechts ? '<th class="std" rowspan="2">Std.</th>' : ""}</tr><tr class="hm">${K.unten}</tr></thead>`;
   // 3.0.0 KC-CLUB-DRUCK-TAG-GANZ (Hansi 21.11.: „trenne keine Tage – keinen Tagesumbruch, sonst verliert man die Übersicht“): jeder Tag eigenes <tbody>, nie geteilt
@@ -36270,7 +36275,8 @@ function dpdTabelle(tage, von, teil, letzte) {
       if (j === 0 && r.dienst && !txt && teil[0] > r.dienst[0] && teil[0] < r.dienst[1]) txt = `${dpdUhr(r.dienst[0])}–${dpdUhr(r.dienst[1])}`; // läuft vom linken Blatt herüber
       return `<td class="${cl}${dpdHk(teil[j])}">${txt ? `<span>${esc(txt)}</span>` : ""}</td>`; }).join("");
     const std = rechts ? `<td class="std ${r.art}"><b>${esc(r.std)}</b><small>${esc(r.klein)}</small></td>` : "";
-    return `<tr class="${r.art}${i ? "" : " erste"}${dpdZebra(t.rows, i) ? " zb" : ""}">${tag}<th class="wer ${r.art}">${esc(r.name)}<small>${esc(r.sub)}</small></th>${zellen}${std}</tr>`; }).join("")}</tbody>`).join("");
+    return `<tr class="${r.art}${i ? "" : " erste"}${dpdZebra(t.rows, i) ? " zb" : ""}">${tag}<th class="wer ${r.art}">${esc(r.name)}<small>${esc(r.sub)}</small></th>${zellen}${std}</tr>`; }).join("")}</tbody>`)
+    .join(luft ? `<tbody class="dpd-luft"><tr><td colspan="${2 + teil.length + (rechts ? 1 : 0)}"></td></tr></tbody>` : "");
   return `<table class="dpd-raster">${kopf}${body}</table>`;
 }
 function dpdUebersichtWunsch(tage, ges) { // 2.996.0 letztes Blatt des Wunschplans: Wunschstunden je Person und Tag
@@ -36332,7 +36338,9 @@ async function dpdBauen(art = "voll", frei = false) {
   const tageP = d.tage.map((t) => { const x = new Date(t.d + "T12:00:00"); return { ...t, ...dpdTag(t, von, bis, gesP, "plan"), wt: DPD_WD[x.getDay()], dt: `${t.d.slice(8, 10)}.${t.d.slice(5, 7)}.` }; });
   const tage = d.tage.map((t) => { const x = new Date(t.d + "T12:00:00"); return { ...t, ...dpdTag(t, von, bis, ges, art), name: dpdArtName(t.art, x), wt: DPD_WD[x.getDay()], dt: `${t.d.slice(8, 10)}.${t.d.slice(5, 7)}.`, regel: dpdBereiche(t, von) }; });
   const blaetter = [[]]; let n = 0; // 3.3.0: −0,6 Zeilen für die zweite Kopfzeile („:00 | :30“)
-  for (const t of tage) { const z = t.rows.length + 0.6; if (blaetter[blaetter.length - 1].length && n + z > DPD_ZEILEN - 0.6 - (breit === "2" ? 4.5 : 0)) { blaetter.push([]); n = 0; } blaetter[blaetter.length - 1].push(t); n += z; }
+  // 3.28.0 KC-CLUB-DP-PLAN-LESBAR: im Dienstplan („plan“) zwischen zwei Tagen eine freie Zeile – zählt beim Aufteilen mit
+  const luft = art === "plan", zeilenMax = luft ? DPD_ZEILEN_PLAN : DPD_ZEILEN;
+  for (const t of tage) { const z = t.rows.length + 0.6, l = luft && blaetter[blaetter.length - 1].length ? 1 : 0; if (blaetter[blaetter.length - 1].length && n + l + z > zeilenMax - 0.6 - (breit === "2" ? 4.5 : 0)) { blaetter.push([]); n = 0; } else n += l; blaetter[blaetter.length - 1].push(t); n += z; }
   const S = dpdSlots(von, bis), teile = breit === "2" ? [S.filter((s) => s < 16), S.filter((s) => s >= 15.5)] : [S];
   const stand = d.stand ? wann(d.stand) : "", eb = `<p class="dpd-eb">Köcheclub Werne · ${esc(d.titel || "Dienstplan")} · ${art === "wunsch" ? "Wünsche der Mitglieder" : frei ? "Dienstplan" : "Entwurf, nicht veröffentlicht"}${frei && d.frei?.am ? " · freigegeben " + esc(wann(d.frei.am)) : ""}${stand ? " · Stand " + esc(stand) : ""}</p>`;
   const legW = '<div class="dpd-leg"><span><i class="pref"></i>Wunschzeit</span><span><i class="avai"></i>kann</span><span><i class="if_n"></i>nur wenn nötig</span><span><i class="unav">×</i>gesperrt</span><span><b>5/3</b> = Bedarf / so viele wünschen sich die Zeit</span><span><i class="zu"></i>kein Bedarf</span></div>';
@@ -36346,12 +36354,14 @@ async function dpdBauen(art = "voll", frei = false) {
     const fuss = [teile.length > 1 ? `Blatt ${i + 1} ${k ? "rechts" : "links"}` : `Blatt ${i + 1} von ${nb}`,
       teile.length > 1 ? (k ? `linken Rand bis 16 Uhr umknicken und auf Blatt ${i + 1} links legen` : `rechts an Blatt ${i + 1} rechts anlegen (Klebekante 15:30–16 Uhr)`) : "",
       i < nb - 1 ? `unten geht es mit Blatt ${i + 2} weiter` : "danach: Stunden je Person"].filter(Boolean).join(" · ");
-    return `<section class="dpd-blatt"><header class="dpd-kopf"><div>${eb}
-      <h1>${ueberschrift}</h1></div>${leg}</header>${dpdTabelle(bl, von, teil, S[S.length - 1])}<footer class="dpd-fuss">${esc(fuss)}</footer></section>`; })).join("")
+    // 3.28.0 KC-CLUB-DP-PLAN-LESBAR: Schrift wächst mit der Zeilenhöhe des Blatts (Platz ≈ 172 mm für alle Zeilen, Grundmaß 6,4 mm, höchstens 1,25-fach)
+    const zeilen = bl.reduce((a, t) => a + t.rows.length + 0.6, 0) + (luft ? bl.length - 1 : 0), zf = luft ? Math.min(1.25, Math.max(1, 172 / zeilen / 6.4)) : 1;
+    return `<section class="dpd-blatt"${luft ? ` style="--zf:${zf.toFixed(2)}"` : ""}><header class="dpd-kopf"><div>${eb}
+      <h1>${ueberschrift}</h1></div>${leg}</header>${dpdTabelle(bl, von, teil, S[S.length - 1], luft)}<footer class="dpd-fuss">${esc(fuss)}</footer></section>`; })).join("")
     + (art === "wunsch" ? `<section class="dpd-blatt"><header class="dpd-kopf"><div>${eb}<h1>Wunschstunden je Person – alle Tage</h1></div></header>${dpdUebersichtWunsch(tage, ges)}<footer class="dpd-fuss">Wunschstunden · danach: Stunden laut Sollplan</footer></section>` : "")
     + `<section class="dpd-blatt"><header class="dpd-kopf"><div>${eb}<h1>Stunden je Person laut Sollplan – alle Tage</h1></div></header>${dpdUebersicht(tageP, gesP, gesBer)}<footer class="dpd-fuss">Stundenauswertung nach Sollplan${art === "voll" ? " · letztes Blatt" : " · danach: wo noch Helfer fehlen"}</footer></section>`
     + (art === "voll" ? "" : dpdLueckenBlatt(d)); // 2.999.0: zuletzt Stundenauswertung nach Sollplan und wo noch Personen fehlen
-  return { titel: `${art === "wunsch" ? "Wunschplan" : "Dienstplan"} ${d.titel || ""}`.trim(), ohneRahmen: true, randlos: true, quer: true, html: `<div class="dpd${breit === "2" ? " breit" : ""}">${html}</div>` };
+  return { titel: `${art === "wunsch" ? "Wunschplan" : "Dienstplan"} ${d.titel || ""}`.trim(), ohneRahmen: true, randlos: true, quer: true, html: `<div class="dpd${breit === "2" ? " breit" : ""}${luft ? " plan" : ""}">${html}</div>` };
 }
 // ---------- 2.676.0 KC-CLUB-DP-LUECKEN (Wunsch Hansi „Übersicht, an welchen Tagen zu welchen Zeiten noch Leute fehlen – mit Kopf und Logo nach CD,
 // darunter Tage und Stundenbereiche als Tabelle mit Längs- und Querlinien“): je Tag eine Zeile, je Stunde eine Spalte (Zahl = so viele fehlen,
