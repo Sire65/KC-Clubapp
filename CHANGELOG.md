@@ -1,6 +1,6 @@
 # Änderungen
 
-## (Version folgt) – 👋 Begrüßung beim ersten Start wieder ohne Programmfehler (KC-CLUB-BEGRUESSUNG-FIX)
+## 3.26.0 – 2026-11-25 – 👋 Begrüßung beim ersten Start wieder ohne Programmfehler (KC-CLUB-BEGRUESSUNG-FIX)
 Fehlermeldung 25.11. 9:25 (neues Mitglied, iPhone): „null is not an object (evaluating $("kopfGruss").innerHTML …)“. Seit 2.905.0 (10.11., Englisch-Umbau) schrieb die Begrüßung in ein Feld, das es nicht gibt – jedes neue Mitglied bekam beim ersten Start einen Programmfehler statt der Begrüßung mit den drei Tipps. Jetzt wieder `begruessungText`; fehlt das Feld, wird die Begrüßung still übersprungen. Test `tests/begruessung-fix.test.mjs`.
 
 ## 3.25.0 – 2026-11-25 – ⏱️ Mein Stundenkonto: Dienste am Stand aus dem DP2-Kontoauszug (KICC-F-113 Phase 2) · Server 3.25.0 · Datenbank: `20261125_kc_dp_konto_published.sql` · DP2 ab Build 326
