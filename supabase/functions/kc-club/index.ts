@@ -197,7 +197,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "3.28.0";
+const SERVER_VERSION = "3.29.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -5898,11 +5898,12 @@ async function dpgMorgen() {
   const { data: schon } = await db.from("kc_club_protokoll").select("details").eq("aktion", DPG.aktion).contains("details", { tag: heute }).limit(500);
   const fertig = new Set((schon ?? []).map((x: any) => String(x.details?.person || "")));
   const leute = new Map((await aktiveMitglieder()).map((m: any) => [m.person_id, m]));
+  const ohneKasse = (await dsTageOhneKasse().catch(() => new Set<string>())).has(heute); // 3.29.0: Aufbau/Nachbereitung – Hinweis aufs Stempeln
   let n = 0;
   for (const [pid, e] of wer) {
     if (fertig.has(pid) || !leute.has(pid)) continue;
     await protokoll(null, DPG.aktion, { tag: heute, person: pid, dienst: e.dienst, ber: e.ber }); // erst merken, dann senden
-    const r = await dpgSenden(pid, dpgMorgenText(vorname(leute.get(pid)), e), `club-dp-gruss:${heute}:${pid}`).catch((x) => { console.error("dp gruss", String(x)); return null; });
+    const r = await dpgSenden(pid, dpgMorgenText(vorname(leute.get(pid)), e, ohneKasse), `club-dp-gruss:${heute}:${pid}`).catch((x) => { console.error("dp gruss", String(x)); return null; });
     if (r) n++;
   }
   return n;
@@ -6387,15 +6388,52 @@ async function dsOrte(): Promise<{ name: string; lat: number; lon: number; radiu
   const { data } = await konfigZeile("dienst_orte");
   return (Array.isArray((data?.wert as any)?.orte) ? (data!.wert as any).orte : []).filter((o: any) => Number.isFinite(o?.lat) && Number.isFinite(o?.lon));
 }
-const dsDarf = async (ich: Ich) => ich.admin || (await freigaben()).dienst_stempel === "alle";
+// 3.29.0 KC-CLUB-DS-WER (Wunsch Hansi 25.11.: „so bauen, dass man es für alle, Gruppen, einzelne freischalten kann – wenn einige die Stechuhr nicht
+// benutzen wollen. An den beiden Vorbereitungstagen und der Nachbereitung gibt es die Kassen nicht – dann muss die Funktion da sein für alle, die Dienst haben“).
+// Wer darf stempeln? Admin immer · an Tagen ohne Kasse (DP2-Tagesart prep/after) jeder mit Dienst an dem Tag (auch wer sonst ausgenommen ist) ·
+// sonst: (Freigabe „alle“ ODER in einer gewählten Gruppe ODER einzeln gewählt) UND nicht ausgenommen. Auswahl in kc_club_konfig „dienst_stempel_wer“.
+const DS_OHNE_KASSE = new Set(["prep", "after"]);
+const dsIds = (x: unknown) => (Array.isArray(x) ? [...new Set(x.map(String).filter((v) => /^[A-Za-z0-9_-]{1,80}$/.test(v)))] : []) as string[];
+async function dsWer() {
+  const { data } = await konfigZeile("dienst_stempel_wer"); const w: any = data?.wert || {};
+  return { gruppen: dsIds(w.gruppen), personen: dsIds(w.personen), ohne: dsIds(w.ohne) };
+}
+let DS_TAGE_MERK: { t: number; v: Set<string> } | null = null; // Tage ohne Kasse (5 Min. je Server-Instanz)
+async function dsTageOhneKasse(): Promise<Set<string>> {
+  if (DS_TAGE_MERK && Date.now() - DS_TAGE_MERK.t < 300000) return DS_TAGE_MERK.v;
+  const { data, error } = await db.from("kc_dp_days_published").select("work_date,day_type").eq("org_id", ORG).eq("status", "published").gte("work_date", berlinTag(new Date(Date.now() - 2 * 86400000))).limit(400);
+  const v = new Set((data ?? []).filter((x: any) => DS_OHNE_KASSE.has(String(x.day_type))).map((x: any) => String(x.work_date)));
+  if (!error) DS_TAGE_MERK = { t: Date.now(), v }; return v;
+}
+async function dsGruppenMitglieder(gruppen: string[]): Promise<Set<string>> {
+  if (!gruppen.length) return new Set();
+  const { data } = await db.from("kc_communication_thread_participants").select("person_id").in("thread_id", gruppen).limit(2000);
+  return new Set((data ?? []).map((x: any) => String(x.person_id)));
+}
+// Hat die Person heute/gestern (über Mitternacht) einen Dienst an einem Tag ohne Kasse?
+async function dsPflicht(pid: string): Promise<boolean> {
+  const t = Date.now(), tage = [berlinTag(new Date(t - 86400000)), berlinTag(new Date(t))], ohne = await dsTageOhneKasse(), d = tage.filter((x) => ohne.has(x));
+  if (!d.length) return false;
+  const { data } = await db.from("kc_dp_plan_published").select("work_date").eq("org_id", ORG).eq("person_id", pid).eq("status", "published").in("work_date", d).limit(1);
+  if (data?.length) return true;
+  return (await dtUebergaben(d, pid)).some((u: any) => u.an_person === pid); // übernommener Dienst (Tauschbörse)
+}
+async function dsDarfId(pid: string, admin = false): Promise<boolean> {
+  if (admin) return true;
+  const [f, w] = await Promise.all([freigaben(), dsWer()]);
+  if (!w.ohne.includes(pid) && (f.dienst_stempel === "alle" || w.personen.includes(pid) || (await dsGruppenMitglieder(w.gruppen)).has(pid))) return true;
+  return await dsPflicht(pid).catch(() => false);
+}
+const dsDarf = async (ich: Ich) => ich.zugang !== "tischgast" && ich.zugang !== "gast" && await dsDarfId(ich.person_id, ich.admin);
 async function dienstStempelErinnern() {
-  const t = Date.now(), heute = berlinTag(new Date(t)), alle = (await freigaben()).dienst_stempel === "alle";
-  const ziel = alle ? null : await adminIds(); // vor der Freigabe nur Admins (zum Testen)
-  let q = db.from("kc_dp_plan_published").select("person_id,source_shift_id,work_date,start_time,end_time,break_minutes,area,zone,event_id").eq("org_id", ORG).eq("status", "published").in("work_date", [berlinTag(new Date(t - 86400000)), heute]);
-  if (ziel) { if (!ziel.length) return 0; q = q.in("person_id", ziel); }
+  const t = Date.now(), heute = berlinTag(new Date(t));
+  const q = db.from("kc_dp_plan_published").select("person_id,source_shift_id,work_date,start_time,end_time,break_minutes,area,zone,event_id").eq("org_id", ORG).eq("status", "published").in("work_date", [berlinTag(new Date(t - 86400000)), heute]);
   const tage = [berlinTag(new Date(t - 86400000)), heute], ueb = await dtUebergaben(tage); // 2.606.0 KC-CLUB-DIENST-TAUSCH: Erinnerung geht an den Übernehmer
   const { data: plan } = await q.limit(300);
-  const dienste = dtPlanZeilen(plan ?? [], ueb).filter((r: any) => !ziel || ziel.includes(r.person_id)).map((r: any) => ({ ...dsDienstAus(r), person: r.person_id }));
+  // 3.29.0 KC-CLUB-DS-WER: Erinnerung nur an alle, die stempeln dürfen (Auswahl, Ausnahmen, Tage ohne Kasse; Admins immer)
+  const zeilen = dtPlanZeilen(plan ?? [], ueb), admins = new Set(await adminIds()), darf = new Map<string, boolean>();
+  for (const pid of new Set(zeilen.map((r: any) => String(r.person_id)))) darf.set(pid, await dsDarfId(pid, admins.has(pid)).catch(() => false));
+  const dienste = zeilen.filter((r: any) => darf.get(String(r.person_id))).map((r: any) => ({ ...dsDienstAus(r), person: r.person_id }));
   const faellig = dienste.flatMap((d: any) => [
     t >= d.startMs - (DS.erinnerVorMin + 20) * 60000 && t < d.startMs + 5 * 60000 ? { d, art: "vorher" } : null,
     t >= d.endeMs && t < d.endeMs + 20 * 60000 ? { d, art: "ende" } : null,
@@ -11700,7 +11738,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const dienstwunschFehlt = await pDwFehlt; // KC-CLUB-DW-LAUFBAND
         const neuesGeraet = await siGeraetPruefen(ich, req).catch(() => null); // 2.726.0 KC-CLUB-NEUES-GERAET
         const notaus = await pNotaus;
-        return json({ meinGeburtstag, alarm, express, dienstwunschFehlt, schwerZeiten: SCHWER_ZEITEN, serverJetzt: Date.now(), /* KC-CLUB-ADVENT-SERVERUHR: Uhr des Servers für den Adventskalender */ gericht: await pGericht, /* KC-CLUB-GEMEINSCHAFTSGERICHT */ /* 2.806.0 KC-CLUB-DB-VIEL-ZU-TUN */ startnachrichtDarf: await pSnDarf, kz, hilfeTipps: await pTipps, /* 2.835.0 KC-CLUB-HILFE-TIPPS */ studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, neuesGeraet, meinGeraet: siGeraetKlasse(req.headers.get("user-agent")), /* 2.726.0 KC-CLUB-NEUES-GERAET */ ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtClub: ich.zugang === "tischgast" ? null : await rtClubKanal().catch(() => null), /* KC-CLUB-ANWESENHEIT */ rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, rezeptThema: await pRzThema, themenNaechste: await pThemenN, sitzungVorgaben: SV, /* 2.751.0 KC-CLUB-SITZUNG-VORGABEN */ naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, ablagekorb: await pAblk, clubjahr: await pCj, wartung, communicator, notfall: nf ?? null, einstellungen, rose, /* KC-CLUB-ROSE */ gkOffen: await pGk, mitfahrtenOffen: await pMfLb, /* KC-CLUB-MITFAHRT-LAUFBAND */ /* 2.977.0 KC-CLUB-GK-NACHFRAGE */ vertretung: await pVertretung, /* KC-CLUB-VERTRETUNG */ freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, protokollNeu, protokollPruefen, /* 2.818.0 KC-CLUB-PROTOKOLL-PRUEFUNG */ naechstesTreffen: naechstes[0] ?? null, ...(aufgabenDran ? { aufgabenDran } : {}), /* KC-CLUB-AUFGABEN-STAND */ mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw, ab: await pAb, dienstStempel: await pDs, runderTisch: await pTisch, /* 2.762.0 KC-CLUB-RUNDER-TISCH */
+        return json({ meinGeburtstag, alarm, express, dienstwunschFehlt, schwerZeiten: SCHWER_ZEITEN, serverJetzt: Date.now(), /* KC-CLUB-ADVENT-SERVERUHR: Uhr des Servers für den Adventskalender */ gericht: await pGericht, /* KC-CLUB-GEMEINSCHAFTSGERICHT */ /* 2.806.0 KC-CLUB-DB-VIEL-ZU-TUN */ startnachrichtDarf: await pSnDarf, kz, hilfeTipps: await pTipps, /* 2.835.0 KC-CLUB-HILFE-TIPPS */ studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, neuesGeraet, meinGeraet: siGeraetKlasse(req.headers.get("user-agent")), /* 2.726.0 KC-CLUB-NEUES-GERAET */ ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtClub: ich.zugang === "tischgast" ? null : await rtClubKanal().catch(() => null), /* KC-CLUB-ANWESENHEIT */ rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, rezeptThema: await pRzThema, themenNaechste: await pThemenN, sitzungVorgaben: SV, /* 2.751.0 KC-CLUB-SITZUNG-VORGABEN */ naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, ablagekorb: await pAblk, clubjahr: await pCj, wartung, communicator, notfall: nf ?? null, einstellungen, rose, /* KC-CLUB-ROSE */ gkOffen: await pGk, mitfahrtenOffen: await pMfLb, /* KC-CLUB-MITFAHRT-LAUFBAND */ /* 2.977.0 KC-CLUB-GK-NACHFRAGE */ vertretung: await pVertretung, /* KC-CLUB-VERTRETUNG */ freigaben: { ...await freigaben(), ...(!ich.admin && await pDs ? { dienst_stempel: "alle" } : {}) } /* 3.29.0 KC-CLUB-DS-WER: für dich freigeschaltet */, kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, protokollNeu, protokollPruefen, /* 2.818.0 KC-CLUB-PROTOKOLL-PRUEFUNG */ naechstesTreffen: naechstes[0] ?? null, ...(aufgabenDran ? { aufgabenDran } : {}), /* KC-CLUB-AUFGABEN-STAND */ mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw, ab: await pAb, dienstStempel: await pDs, runderTisch: await pTisch, /* 2.762.0 KC-CLUB-RUNDER-TISCH */
           ...(notaus.aktiv ? { notaus } : {}), // KC-NOTAUS
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
             ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen,
@@ -15068,13 +15106,36 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       }
 
       // KC-CLUB-MEIN-DIENST (2.23.74, Wunsch Hansi): eine Übersicht Wunsch → Soll → Ist – nur lesend (den Dienstplan pflegt DP2)
+      // 3.29.0 KC-CLUB-DS-WER: Stempeluhr freischalten – für alle, Gruppen, einzelne; Ausnahmen (wer sie nicht nutzen will). Nur Admin.
+      case "dienst_stempel_wer": {
+        nurAdmin(ich);
+        const [f, w, { data: gr }, leute, ohneKasse] = await Promise.all([freigaben(), dsWer(), db.from("kc_club_gruppen").select("thread_id,name,symbol").order("name"),
+          aktiveMitglieder(), dsTageOhneKasse()]);
+        return json({ alle: f.dienst_stempel === "alle", gruppen: (gr ?? []).map((g: any) => ({ id: g.thread_id, name: g.name, symbol: g.symbol || "👥", an: w.gruppen.includes(g.thread_id) })),
+          personen: leute.map((m: any) => ({ id: m.person_id, name: m.display_name, an: w.personen.includes(m.person_id), ohne: w.ohne.includes(m.person_id) })),
+          tageOhneKasse: [...ohneKasse].sort() });
+      }
+      case "dienst_stempel_wer_setzen": {
+        nurAdmin(ich);
+        const aktiv = new Set((await aktiveMitglieder()).map((m: any) => m.person_id));
+        const { data: gr } = await db.from("kc_club_gruppen").select("thread_id"); const gIds = new Set((gr ?? []).map((g: any) => g.thread_id));
+        const wert = { gruppen: dsIds(p.gruppen).filter((x) => gIds.has(x)), personen: dsIds(p.personen).filter((x) => aktiv.has(x)), ohne: dsIds(p.ohne).filter((x) => aktiv.has(x)) };
+        schreibOk(await db.from("kc_club_konfig").upsert({ schluessel: "dienst_stempel_wer", wert, geaendert_von: ich.person_id, geaendert_am: jetzt() }), "Speichern");
+        if (typeof p.alle === "boolean") {
+          const { error } = await db.from("kc_club_funktion_freigabe").upsert({ funktion: "dienst_stempel", fuer: p.alle ? "alle" : "admin", geaendert_am: jetzt(), von: ich.person_id }, { onConflict: "funktion" });
+          if (error) throw new Fehler("Freigabe konnte nicht gespeichert werden.", 500);
+          FREIGABE.bis = 0;
+        }
+        await protokoll(ich.person_id, "dienst_stempel_wer", { alle: p.alle === true, gruppen: wert.gruppen.length, personen: wert.personen.length, ohne: wert.ohne.length });
+        return json({ ok: true });
+      }
       // ----- 2.590.0 KC-CLUB-DIENST-STEMPEL: Kommen/Gehen in der App (bis zur Freigabe nur Admin) -----
       case "dienst_stand": {
         if (!(await dsDarf(ich))) return json({ aktiv: false });
         return json(await dsLage(ich));
       }
       case "dienst_buchen": {
-        await nurWennFrei("dienst_stempel", ich, "Dienst anmelden");
+        if (!(await dsDarf(ich))) throw new Fehler("Dienst anmelden ist für dich nicht freigeschaltet.", 403); // 3.29.0 KC-CLUB-DS-WER
         const t = Date.now(), zeitMs = Date.parse(String(p.zeit || ""));
         const { data: plan } = await db.from("kc_dp_plan_published").select("source_shift_id,event_id,work_date,start_time,end_time,break_minutes,area,zone").eq("org_id", ORG).eq("person_id", ich.person_id).eq("status", "published")
           .in("work_date", [berlinTag(new Date(t - 86400000)), berlinTag(new Date(t))]).limit(10);
@@ -15113,7 +15174,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         return json({ ok: true, art: zeilen.at(-1).art, vorOrt, summe, lage: neu });
       }
       case "dienst_korrigieren": {
-        await nurWennFrei("dienst_stempel", ich, "Dienst anmelden");
+        if (!(await dsDarf(ich))) throw new Fehler("Dienst anmelden ist für dich nicht freigeschaltet.", 403); // 3.29.0 KC-CLUB-DS-WER
         const t = Date.now(), zeitMs = Date.parse(String(p.zeit || "")), grund = txt(p.grund, 120);
         const { data: alt } = await db.from("kc_dp_stempel").select("*").eq("id", String(p.id || "")).eq("person_id", ich.person_id).maybeSingle();
         if (!alt || alt.quelle !== "app") throw new Fehler("Buchung nicht gefunden.", 404);

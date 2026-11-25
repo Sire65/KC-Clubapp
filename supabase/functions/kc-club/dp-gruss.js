@@ -27,14 +27,14 @@ export function dpgPlan(plan) {
 export function dpgHeute(plan, tag) { return dpgPlan(plan).get(String(tag)) ?? new Map(); }
 
 // „Hallo Manfred, heute hast du Dienst von 17:00 – 23:00 Uhr. Wir wünschen dir einen angenehmen Dienst in der Weihnachtsmarkthütte. Liebe Grüße“
-export function dpgMorgenText(vorname, e) {
+export function dpgMorgenText(vorname, e, ohneKasse = false) { // ohneKasse (3.29.0): Aufbau/Nachbereitung – Hinweis aufs Stempeln in der App
   const teile = [];
   if (e.dienst) teile.push(`Dienst von ${dpgZeit(e.dienst)}`);
   if (e.ber) teile.push(`Bereitschaft von ${dpgZeit(e.ber)}`);
   const wunsch = e.dienst ? "Wir wünschen dir einen angenehmen Dienst in der Weihnachtsmarkthütte." : "Wir melden uns, falls wir dich brauchen.";
   const kurz = `Heute ${teile.join(" und ")}`;
   return { titel: e.dienst ? "🗓️ Heute hast du Dienst" : "🛎️ Heute hast du Bereitschaft", kurz,
-    text: `Hallo ${vorname || ""},\n\nheute hast du ${teile.join(" und ")}. ${wunsch}\n\nLiebe Grüße\nKöcheclub Werne` };
+    text: `Hallo ${vorname || ""},\n\nheute hast du ${teile.join(" und ")}. ${wunsch}${ohneKasse && e.dienst ? "\n\nHeute gibt es keine Kasse: Bitte melde dich in der Club-App zum Dienst an und ab („🟢 Dienst beginnen“ / „🔴 Dienst beenden“)." : ""}\n\nLiebe Grüße\nKöcheclub Werne` };
 }
 
 // Änderungen je Person ab einem Tag (einschließlich): alter → neuer freigegebener Plan. Ergebnis: Map pid → { name, tage: [{ d, alt, neu }] }
