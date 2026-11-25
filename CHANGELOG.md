@@ -1,5 +1,8 @@
 # Änderungen
 
+## (Version folgt) – 👋 Begrüßung beim ersten Start wieder ohne Programmfehler (KC-CLUB-BEGRUESSUNG-FIX)
+Fehlermeldung 25.11. 9:25 (neues Mitglied, iPhone): „null is not an object (evaluating $("kopfGruss").innerHTML …)“. Seit 2.905.0 (10.11., Englisch-Umbau) schrieb die Begrüßung in ein Feld, das es nicht gibt – jedes neue Mitglied bekam beim ersten Start einen Programmfehler statt der Begrüßung mit den drei Tipps. Jetzt wieder `begruessungText`; fehlt das Feld, wird die Begrüßung still übersprungen. Test `tests/begruessung-fix.test.mjs`.
+
 ## 3.25.0 – 2026-11-25 – ⏱️ Mein Stundenkonto: Dienste am Stand aus dem DP2-Kontoauszug (KICC-F-113 Phase 2) · Server 3.25.0 · Datenbank: `20261125_kc_dp_konto_published.sql` · DP2 ab Build 326
 Hansi 25.11.: „Erst einspielen und dann Schritt 2.“ – Die Club-App zeigt jetzt dieselben Zahlen wie der DP2-Kontoauszug (eine Wahrheit, keine zweite Rechnung).
 - **Datenbank:** neue Tabelle `kc_dp_konto_published` (nur Club-Server liest, RLS dicht) und `kc_dp_konto_publish` (nur DP2-Planungsrollen, Prüfregister): Gesamtstand je Veranstaltung, nur geänderte Zeilen werden geschrieben, fehlende weich entfernt. Spiegel/Sicherung wie die anderen `kc_dp_*`-Tabellen. Lokal mit Postgres 16 geprüft (zweimal einspielbar, unveränderter Stand schreibt 0 Zeilen, Nicht-Planer abgewiesen).
