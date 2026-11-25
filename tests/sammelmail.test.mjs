@@ -9,7 +9,7 @@ const html = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const srv = fs.readFileSync(new URL("../supabase/functions/kc-club/index.ts", import.meta.url), "utf8");
 const sql = fs.readFileSync(new URL("../supabase/migrations/20261125_kc_club_sammelmail.sql", import.meta.url), "utf8");
 // sammelPasst als Funktion prüfen
-const fq = srv.slice(srv.indexOf("function sammelPasst("), srv.indexOf("async function sammelAbzweigen("));
+const fq = srv.slice(srv.indexOf("function sammelPasst("), srv.indexOf("// Text der Einzel-Mail ohne Anrede"));
 const sammelPasst = new Function(`${fq.replace(/: string|: Record<string, unknown>/g, "")}; return sammelPasst;`)();
 const v = {};
 assert.equal(sammelPasst("club_nachricht", v, "club-nachricht:abc"), true, "Standardweg");
@@ -21,7 +21,13 @@ assert.equal(sammelPasst("club_nachricht_push", v, "club-nachricht:abc"), false,
 assert.equal(sammelPasst("club_nachricht_mail", v, "club-nachricht:abc:kopie"), false, "Kopien nie");
 assert.equal(sammelPasst("club_nachricht_mail", v, "club-erstattung:abc"), false, "nur Chat-Nachrichten");
 assert.equal(sammelPasst("club_treffen_mail", v, "club-nachricht:abc"), false, "andere Ereignisse nie");
-for (const x of [{ wichtigkeit: "hoch" }, { wichtigkeit: "notfall" }, { eilig: true }, { express: true }]) assert.equal(sammelPasst("club_nachricht", x, "club-nachricht:abc"), false, "sofort: " + JSON.stringify(x));
+for (const x of [{ wichtigkeit: "notfall" }, { eilig: true }, { express: true }]) assert.equal(sammelPasst("club_nachricht", x, "club-nachricht:abc"), false, "sofort: " + JSON.stringify(x));
+assert.equal(sammelPasst("club_nachricht", { wichtigkeit: "hoch" }, "club-nachricht:abc"), true, "Hansi: nur Express als Einzel-Mail – ❗ Wichtig wird gesammelt");
+// Standard AN für alle (Hansi 25.11.: „für alle einschalten“), nur ausdrücklich an: false schaltet ab
+assert.ok(/wert\?\.an === false \? "aus"/.test(srv) && /wer = personIds\.filter\(\(id\) => takt\.get\(id\) !== "aus"\)/.test(srv), "Standard an");
+assert.ok(/sammelmail \|\| \{ an: true, takt: "3std" \}/.test(app) && /\$\("sammelAn"\)\.checked = w\.an !== false/.test(app), "App zeigt Standard an");
+// sauber geordnet: Trennlinie, „n von N“, älteste zuerst
+assert.ok(/const LINIE = "━+"/.test(srv) && /✉️ \$\{i \+ 1\} von \$\{liste\.length\}/.test(srv) && /die älteste zuerst/.test(srv) && /\.order\("erstellt_am"\)/.test(srv), "Trennlinie + Reihenfolge");
 // Abzweig im zentralen Versand, nicht beim Nachsenden des Admins
 assert.ok(/const gesammelt = opt\.trotzStumm \? null : await sammelAbzweigen\(eventKey, personIds, vars, korrelation\)\.catch\(/.test(srv), "zentral, Fehler → normal senden");
 assert.ok(/if \(gesammelt\) \{ ergebnis\.gesendet \+= gesammelt\.ids\.size;/.test(srv), "zählt als zugestellt");
@@ -46,4 +52,8 @@ assert.ok(/\{ id: "sammelmail", thema: "nachrichten"/.test(app), "Hilfe");
 // Migration
 assert.ok(/enable row level security/.test(sql) && /revoke all on public\.kc_club_sammelmail from public, anon, authenticated/.test(sql) && /grant select, insert, update, delete on public\.kc_club_sammelmail to service_role/.test(sql));
 assert.ok(/'kc_club_sammelmail', 'Club-App', 'sensitive', false, false, false/.test(sql), "nicht spiegeln, nicht sichern");
+{ const i = srv.indexOf("const sammelText ="), j = srv.indexOf("async function sammelAbzweigen(");
+  const sammelText = new Function(srv.slice(i, j).replace(": unknown", "") + "; return sammelText;")();
+  assert.equal(sammelText("Hallo,\n\nKlaus hat dir geschrieben:\n\nTest\n\n📎 Im Anhang: a.jpg\n\nAntworten in der Köcheclub-App: X\n\nViele Grüße\nKöcheclub Werne"),
+    "Klaus hat dir geschrieben:\n\nTest\n\n📎 Anlage: a.jpg – in der App\n\nAntworten in der Köcheclub-App: X", "Anrede/Gruß weg, Anhang als Hinweis"); }
 console.log("sammelmail: ok");

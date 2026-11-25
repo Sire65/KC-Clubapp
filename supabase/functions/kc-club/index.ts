@@ -987,18 +987,23 @@ async function sammelLeute(): Promise<Map<string, string>> {
   const { data, error } = await db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "sammelmail");
   if (error) { if (SAMMEL_STAND) return SAMMEL_STAND.takt; throw new Error("sammelmail nicht lesbar"); }
   const takt = new Map<string, string>();
-  for (const x of data ?? []) if ((x as any).wert?.an === true) takt.set(String((x as any).person_id), (x as any).wert?.takt === "tag" ? "tag" : "3std");
+  // Hansi 25.11.2026 „für alle einschalten“: Standard AN (3std) – nur wer ausdrücklich abschaltet (an: false), bekommt Einzel-Mails
+  for (const x of data ?? []) takt.set(String((x as any).person_id), (x as any).wert?.an === false ? "aus" : (x as any).wert?.takt === "tag" ? "tag" : "3std");
   SAMMEL_STAND = { t: Date.now(), takt };
   return takt;
 }
 function sammelPasst(eventKey: string, vars: Record<string, unknown>, korrelation: string) {
   if (eventKey !== "club_nachricht" && !/^club_nachricht_(mail|beide)$/.test(eventKey)) return false; // nur Chat-Nachrichten; reiner Push bleibt
   if (!/^club-nachricht:[^:]+(:erwaehnt|:ruhe)?$/.test(korrelation)) return false; // keine Kopien/Push-Nachzügler/Nachsenden (Ruhezeit-Mail wird mitgesammelt)
-  return !(vars.wichtigkeit === "hoch" || vars.wichtigkeit === "notfall" || vars.eilig === true || vars.express === true);
+  // Hansi 25.11.2026: „Nur wenn ich Express sende, dann als Einzel-Mail“ – ❗ Wichtig wird mitgesammelt (Push kommt sofort); Express und Notfall nie
+  return !(vars.wichtigkeit === "notfall" || vars.eilig === true || vars.express === true);
 }
+// Text der Einzel-Mail ohne Anrede und Gruß (stehen einmal in der Sammel-E-Mail); Anhänge gehen nicht mit → Hinweis „in der App“
+const sammelText = (t: unknown) => String(t ?? "").replace(/^Hallo,\s*\n\s*\n/, "").replace(/\n+Viele Grüße\nKöcheclub Werne\s*$/, "")
+  .replace(/📎 Im Anhang: ([^\n]+)/, "📎 Anlage: $1 – in der App").trim();
 async function sammelAbzweigen(eventKey: string, personIds: string[], vars: Record<string, unknown>, korrelation: string) {
   if (!personIds.length || !sammelPasst(eventKey, vars, korrelation)) return null;
-  const takt = await sammelLeute(), wer = personIds.filter((id) => takt.has(id));
+  const takt = await sammelLeute(), wer = personIds.filter((id) => takt.get(id) !== "aus");
   if (!wer.length) return null;
   // Push sofort: bei „_beide“ immer, beim Standardweg (Push, sonst Mail) nur für Geräte mit Push – Mail geht dann ohnehin nicht
   let pushJetzt: string[] = [];
@@ -1011,7 +1016,7 @@ async function sammelAbzweigen(eventKey: string, personIds: string[], vars: Reco
   }
   const sammeln = eventKey === "club_nachricht" ? wer.filter((id) => !pushJetzt.includes(id)) : wer;
   const zeilen = sammeln.map((pid) => ({ person_id: pid, korrelation: txt(korrelation, 120), titel: txt(vars.titel ?? vars.betreff, 200) || "Neue Nachricht",
-    kurz: txt(vars.kurz, 300) || null, text: txt(vars.text, SAMMEL_MAX_TEXT) || null, url: txt(vars.url, 300) || null, anlagen: Array.isArray(vars.attachmentIds) ? vars.attachmentIds.length : 0 }));
+    kurz: txt(vars.kurz, 300) || null, text: txt(sammelText(vars.text), SAMMEL_MAX_TEXT) || null, url: txt(vars.url, 300) || null, anlagen: Array.isArray(vars.attachmentIds) ? vars.attachmentIds.length : 0 }));
   const { error } = await db.from("kc_club_sammelmail").insert(zeilen);
   if (error) throw new Error("sammelmail speichern: " + error.message); // dann normal senden (Aufrufer fängt ab)
   if (pushJetzt.length) await routerSendenRoh("club_nachricht_push", pushJetzt, vars, korrelation + ":push", undefined, { trotzStumm: false }).catch((e) => console.error("sammelmail push", String(e)));
@@ -1040,10 +1045,13 @@ async function sammelmailSenden(jetztD = new Date()) {
     await db.from("kc_club_person_einstellung").upsert({ person_id: pid, schluessel: "sammelmail_stand", wert: { slot, am: jetztD.toISOString(), anzahl: liste.length }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
     const teil = liste.slice(0, SAMMEL_MAX_JE_MAIL), uhr = (d: string) => new Intl.DateTimeFormat("de-DE", { timeZone: TZ, day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }).format(new Date(d));
     const titel = `📬 Sammel-E-Mail: ${liste.length} ${liste.length === 1 ? "neue Nachricht" : "neue Nachrichten"}`;
-    const text = `Hallo,\n\nhier ist deine Sammel-E-Mail aus der Köcheclub-App (${liste.length === 1 ? "1 Benachrichtigung" : liste.length + " Benachrichtigungen"} seit der letzten):\n\n`
-      + teil.map((x: any) => `— ${uhr(x.erstellt_am)} · ${x.titel}${x.kurz && x.kurz !== x.titel ? `\n${x.kurz}` : ""}${x.text ? `\n${x.text}` : ""}${x.anlagen ? `\n(📎 ${x.anlagen} Anlage${x.anlagen === 1 ? "" : "n"} – in der App)` : ""}`).join("\n\n")
-      + (liste.length > teil.length ? `\n\n… und ${liste.length - teil.length} weitere – alles in der App.` : "")
-      + `\n\nAntworten und alles Weitere in der App: ${APP_URL}\n\n(Sammel-E-Mail statt einzelner Mails – ändern unter Einstellungen → 🔔 Benachrichtigungen.)\n\nViele Grüße\nKöcheclub Werne`;
+    // Hansi 25.11.2026: „schön sauber geordnet, ein Inhalt nach dem anderen, mit Trennlinie dazwischen, damit man sieht, dass es mehrere Mails sind“
+    const LINIE = "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━";
+    const block = (x: any, i: number) => `${LINIE}\n✉️ ${i + 1} von ${liste.length} · ${uhr(x.erstellt_am)} Uhr\n${x.titel}${x.kurz && x.kurz !== x.titel ? `\n${x.kurz}` : ""}\n${LINIE}${x.text ? `\n\n${x.text}` : ""}${x.anlagen && !String(x.text || "").includes("📎") ? `\n\n📎 ${x.anlagen} Anlage${x.anlagen === 1 ? "" : "n"} – in der App` : ""}`;
+    const text = `Hallo,\n\nhier ist deine Sammel-E-Mail aus der Köcheclub-App: ${liste.length === 1 ? "1 Nachricht" : liste.length + " Nachrichten"} seit der letzten Sammel-E-Mail, die älteste zuerst.\n\n`
+      + teil.map(block).join("\n\n\n")
+      + (liste.length > teil.length ? `\n\n\n… und ${liste.length - teil.length} weitere – alles in der App.` : "")
+      + `\n\n${LINIE}\nAntworten und alles Weitere in der App: ${APP_URL}\n\n(Sammel-E-Mail statt einzelner Mails – ändern unter Einstellungen → 🔔 Benachrichtigungen → „📬 Sammel-E-Mail“.)\n\nViele Grüße\nKöcheclub Werne`;
     const r = await routerSenden("club_nachricht_mail", [pid], { titel, kurz: `${liste.length} ${liste.length === 1 ? "Benachrichtigung" : "Benachrichtigungen"}`, betreff: `Köcheclub Werne – ${titel.replace(/^\S+\s/, "")}`, text, url: APP_URL },
       `club-sammel:${pid}:${slot.replace(" ", "T")}`);
     if (r.gesendet > 0 || (r.fehler === 0)) { await db.from("kc_club_sammelmail").delete().in("id", liste.map((x: any) => x.id)); n++; }

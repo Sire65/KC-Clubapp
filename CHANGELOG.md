@@ -2,10 +2,10 @@
 
 ## 3.29.0 – 2026-11-25 – 📬 Sammel-E-Mail (KC-CLUB-SAMMELMAIL) · 🚗 km-Satz: immer 0,30 € (KC-CLUB-ERSTATTUNG-KM-030) · Server 3.29.0 · Datenbank: `20261125_kc_club_sammelmail.sql`
 Hansi 25.11. (Thomas: „13 E-Mails seit gestern“): „Bau die Sammelmail, die ist gut für alle, aber in Einstellungen anhaken – ich möchte Sammel-E-Mail bekommen.“
-- **Einstellungen → 🔔 Benachrichtigungen → „📬 Sammel-E-Mail“** (Häkchen, aus als Vorgabe) mit Termin: um 9, 12, 15, 18 und 21 Uhr (Standard) oder einmal am Tag um 18 Uhr.
-- Gesammelt werden nur **Benachrichtigungen über neue Chat-Nachrichten per E-Mail** (auch @Erwähnung und Ruhezeit-Mail). **Sofort** wie bisher: Push, ❗ Wichtig, 🏎️ Express, 🚨 Notfall, Nachsenden durch den Admin und alle anderen Mails (Termine, Erstattung, Dienstplan …).
+- **Für alle eingeschaltet** (Hansi: „ja für alle einschalten, da ich schon von mehreren gehört habe, dass sie zu viele bekommen“) – abschaltbar unter **Einstellungen → 🔔 Benachrichtigungen → „📬 Sammel-E-Mail“**, mit Termin: um 9, 12, 15, 18 und 21 Uhr (Standard) oder einmal am Tag um 18 Uhr.
+- Gesammelt werden nur **Benachrichtigungen über neue Chat-Nachrichten per E-Mail** (auch @Erwähnung und Ruhezeit-Mail). Auch ❗ Wichtig wird gesammelt (Push kommt sofort). **Als Einzel-Mail** nur 🏎️ Express und 🚨 Notfall (Hansi: „Nur wenn ich Express sende, dann als Einzelmail“), dazu Nachsenden durch den Admin und alle anderen Mails (Termine, Erstattung, Dienstplan …).
 - Server: Abzweig im zentralen Versand (`routerSendenRoh` → `sammelAbzweigen`): wer angehakt hat und Push hat, bekommt den Push sofort; die E-Mail landet in `kc_club_sammelmail`. Klappt das Speichern nicht, geht die Mail wie bisher einzeln raus.
-- Versand in der Wartung (alle 15 Min.): je Person höchstens eine Sammel-E-Mail je Termin-Stunde (erst gemerkt, dann gesendet – nie doppelt), danach werden die Einträge gelöscht (spätestens nach 14 Tagen). Die Mail listet Uhrzeit, Betreff und Text jeder Benachrichtigung, Anlagen nur als Hinweis „in der App“.
+- Versand in der Wartung (alle 15 Min.): je Person höchstens eine Sammel-E-Mail je Termin-Stunde (erst gemerkt, dann gesendet – nie doppelt), danach werden die Einträge gelöscht (spätestens nach 14 Tagen). Die Mail ist sauber geordnet (Hansi: „ein Inhalt nach dem anderen, mit Trennlinie“): die älteste zuerst, je Nachricht eine Trennlinie mit „✉️ 1 von 5 · Uhrzeit“, Betreff, Text; Anlagen nur als Hinweis „in der App“.
 - Datenbank: `kc_club_sammelmail` (RLS, nur Club-Server, nicht gespiegelt, nicht gesichert). Hilfe-Eintrag „Zu viele E-Mails? Sammel-E-Mail“, Suche in den Einstellungen.
 - Test: `tests/sammelmail.test.mjs`.
 
