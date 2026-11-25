@@ -27,7 +27,7 @@ assert.equal(sammelPasst("club_nachricht", { wichtigkeit: "hoch" }, "club-nachri
 assert.ok(/wert\?\.an === false \? "aus"/.test(srv) && /wer = personIds\.filter\(\(id\) => takt\.get\(id\) !== "aus"\)/.test(srv), "Standard an");
 assert.ok(/sammelmail \|\| \{ an: true, takt: "3std" \}/.test(app) && /\$\("sammelAn"\)\.checked = w\.an !== false/.test(app), "App zeigt Standard an");
 // sauber geordnet: Trennlinie, „n von N“, älteste zuerst
-assert.ok(/const LINIE = "━+"/.test(srv) && /✉️ \$\{i \+ 1\} von \$\{liste\.length\}/.test(srv) && /die älteste zuerst/.test(srv) && /\.order\("erstellt_am"\)/.test(srv), "Trennlinie + Reihenfolge");
+assert.ok(/const LINIE = "─{10,16}";/.test(srv) && /✉️ \$\{i \+ 1\}\/\$\{liste\.length\} · \$\{uhr\(x\.erstellt_am\)\} · \$\{x\.titel\}/.test(srv) && /die älteste zuerst/.test(srv) && /\.order\("erstellt_am"\)/.test(srv), "Trennlinie + Reihenfolge");
 // Abzweig im zentralen Versand, nicht beim Nachsenden des Admins
 assert.ok(/const gesammelt = opt\.trotzStumm \? null : await sammelAbzweigen\(eventKey, personIds, vars, korrelation\)\.catch\(/.test(srv), "zentral, Fehler → normal senden");
 assert.ok(/if \(gesammelt\) \{ ergebnis\.gesendet \+= gesammelt\.ids\.size;/.test(srv), "zählt als zugestellt");
@@ -55,5 +55,7 @@ assert.ok(/'kc_club_sammelmail', 'Club-App', 'sensitive', false, false, false/.t
 { const i = srv.indexOf("const sammelText ="), j = srv.indexOf("async function sammelAbzweigen(");
   const sammelText = new Function(srv.slice(i, j).replace(": unknown", "") + "; return sammelText;")();
   assert.equal(sammelText("Hallo,\n\nKlaus hat dir geschrieben:\n\nTest\n\n📎 Im Anhang: a.jpg\n\nAntworten in der Köcheclub-App: X\n\nViele Grüße\nKöcheclub Werne"),
-    "Klaus hat dir geschrieben:\n\nTest\n\n📎 Anlage: a.jpg – in der App\n\nAntworten in der Köcheclub-App: X", "Anrede/Gruß weg, Anhang als Hinweis"); }
+    "Klaus hat dir geschrieben:\n\nTest\n\n📎 Anlage: a.jpg – in der App", "Anrede/Gruß/Antwort-Link weg, Anhang als Hinweis");
+  assert.equal(sammelText("Hallo,\n\nKlaus Beispiel hat dir im Köcheclub geschrieben („Stand“):\n\nMorgen?\n\nAntworten in der Köcheclub-App: https://x#nachricht=1\n\nViele Grüße\nKöcheclub Werne"),
+    "Klaus Beispiel:\nMorgen?", "kompakt: „Name:“"); }
 console.log("sammelmail: ok");

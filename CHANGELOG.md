@@ -1,5 +1,12 @@
 # Änderungen
 
+## 3.31.0 – 2026-11-25 – 📬 Sammel-E-Mail übersichtlicher (KC-CLUB-SAMMELMAIL) · Server 3.31.0
+Hansi 25.11. nach der Testmail: „Sieht unübersichtlich aus. Die Linien können dann etwas kürzer sein.“
+- Trennlinie kurz (14 Zeichen) – passt auf dem Handy in eine Zeile, kein Umbruch mehr.
+- Je Nachricht kompakt: Linie, dann eine Kopfzeile „✉️ 1/3 · 25.11., 09:41 · 💬 Chat“, darunter „Name:“ und der Text.
+- Weggelassen je Nachricht: „Neue Nachricht von …“, „… hat dir im Köcheclub geschrieben“ und der Antwort-Link (steht einmal unten).
+- Test: `tests/sammelmail.test.mjs`. Rückweg: Server 3.30.0.
+
 ## 3.30.0 – 2026-11-25 – 📬 Sammel-E-Mail (KC-CLUB-SAMMELMAIL) · 🚗 km-Satz: immer 0,30 € (KC-CLUB-ERSTATTUNG-KM-030) · Server 3.30.0 · Datenbank: `20261125_kc_club_sammelmail.sql`
 Hansi 25.11. (Thomas: „13 E-Mails seit gestern“): „Bau die Sammelmail, die ist gut für alle, aber in Einstellungen anhaken – ich möchte Sammel-E-Mail bekommen.“
 - **Für alle eingeschaltet** (Hansi: „ja für alle einschalten, da ich schon von mehreren gehört habe, dass sie zu viele bekommen“) – abschaltbar unter **Einstellungen → 🔔 Benachrichtigungen → „📬 Sammel-E-Mail“**, mit Termin: um 9, 12, 15, 18 und 21 Uhr (Standard) oder einmal am Tag um 18 Uhr.

@@ -197,7 +197,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "3.30.0";
+const SERVER_VERSION = "3.31.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -999,7 +999,10 @@ function sammelPasst(eventKey: string, vars: Record<string, unknown>, korrelatio
   return !(vars.wichtigkeit === "notfall" || vars.eilig === true || vars.express === true);
 }
 // Text der Einzel-Mail ohne Anrede und Gruß (stehen einmal in der Sammel-E-Mail); Anhänge gehen nicht mit → Hinweis „in der App“
+// Hansi 25.11.2026 („sieht unübersichtlich aus“): kompakt – „Name:“ statt „Name hat dir im Köcheclub geschrieben:“, kein Antwort-Link je Nachricht (steht einmal unten)
 const sammelText = (t: unknown) => String(t ?? "").replace(/^Hallo,\s*\n\s*\n/, "").replace(/\n+Viele Grüße\nKöcheclub Werne\s*$/, "")
+  .replace(/\n+Antworten in der Köcheclub-App: \S+\s*$/, "")
+  .replace(/^(.{1,80}?) hat dir im Köcheclub geschrieben( \(„[^\n]*“\))?:\n\n/, "$1:\n")
   .replace(/📎 Im Anhang: ([^\n]+)/, "📎 Anlage: $1 – in der App").trim();
 async function sammelAbzweigen(eventKey: string, personIds: string[], vars: Record<string, unknown>, korrelation: string) {
   if (!personIds.length || !sammelPasst(eventKey, vars, korrelation)) return null;
@@ -1046,11 +1049,11 @@ async function sammelmailSenden(jetztD = new Date()) {
     const teil = liste.slice(0, SAMMEL_MAX_JE_MAIL), uhr = (d: string) => new Intl.DateTimeFormat("de-DE", { timeZone: TZ, day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }).format(new Date(d));
     const titel = `📬 Sammel-E-Mail: ${liste.length} ${liste.length === 1 ? "neue Nachricht" : "neue Nachrichten"}`;
     // Hansi 25.11.2026: „schön sauber geordnet, ein Inhalt nach dem anderen, mit Trennlinie dazwischen, damit man sieht, dass es mehrere Mails sind“
-    const LINIE = "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━";
-    const block = (x: any, i: number) => `${LINIE}\n✉️ ${i + 1} von ${liste.length} · ${uhr(x.erstellt_am)} Uhr\n${x.titel}${x.kurz && x.kurz !== x.titel ? `\n${x.kurz}` : ""}\n${LINIE}${x.text ? `\n\n${x.text}` : ""}${x.anlagen && !String(x.text || "").includes("📎") ? `\n\n📎 ${x.anlagen} Anlage${x.anlagen === 1 ? "" : "n"} – in der App` : ""}`;
+    const LINIE = "──────────────"; // Hansi 25.11.2026: kürzer – passt auf dem Handy in eine Zeile
+    const block = (x: any, i: number) => `${LINIE}\n✉️ ${i + 1}/${liste.length} · ${uhr(x.erstellt_am)} · ${x.titel}\n${x.text || x.kurz || ""}${x.anlagen && !String(x.text || "").includes("📎") ? `\n📎 ${x.anlagen} Anlage${x.anlagen === 1 ? "" : "n"} – in der App` : ""}`;
     const text = `Hallo,\n\nhier ist deine Sammel-E-Mail aus der Köcheclub-App: ${liste.length === 1 ? "1 Nachricht" : liste.length + " Nachrichten"} seit der letzten Sammel-E-Mail, die älteste zuerst.\n\n`
-      + teil.map(block).join("\n\n\n")
-      + (liste.length > teil.length ? `\n\n\n… und ${liste.length - teil.length} weitere – alles in der App.` : "")
+      + teil.map(block).join("\n\n")
+      + (liste.length > teil.length ? `\n\n… und ${liste.length - teil.length} weitere – alles in der App.` : "")
       + `\n\n${LINIE}\nAntworten und alles Weitere in der App: ${APP_URL}\n\n(Sammel-E-Mail statt einzelner Mails – ändern unter Einstellungen → 🔔 Benachrichtigungen → „📬 Sammel-E-Mail“.)\n\nViele Grüße\nKöcheclub Werne`;
     const r = await routerSenden("club_nachricht_mail", [pid], { titel, kurz: `${liste.length} ${liste.length === 1 ? "Benachrichtigung" : "Benachrichtigungen"}`, betreff: `Köcheclub Werne – ${titel.replace(/^\S+\s/, "")}`, text, url: APP_URL },
       `club-sammel:${pid}:${slot.replace(" ", "T")}`);
