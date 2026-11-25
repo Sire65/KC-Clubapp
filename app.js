@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "3.22.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "3.23.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -36095,7 +36095,7 @@ const dpdRuecken = () => ICH?.admin ? `<button class="ordner" style="--of:#1f5a3
 // 2.665.0 KC-CLUB-DP-NEU-RECHNEN: vor dem Öffnen den Stand holen (Stand, neue Wunschpläne seit dem Rechnen) – „🔄 Jetzt neu rechnen“ rechnet auf dem Club-Server
 async function dpdStart() {
   if (!ICH?.admin) return;
-  try { const d = await api("dp_druck", {}); DPD.daten = d; DPD.info = { stand: d.stand || null, neu: Array.isArray(d.neu) ? d.neu : [] }; } catch { DPD.info = null; }
+  try { const d = await api("dp_druck", {}); DPD.daten = d; DPD.info = { stand: d.stand || null, neu: Array.isArray(d.neu) ? d.neu : [], fest: d.fest === true }; } catch { DPD.info = null; } // 3.23.0 fest: KC-CLUB-DP-FEST
   druckStarten("dpDruck");
 }
 async function dpdNeuRechnen(k) {
@@ -36162,8 +36162,8 @@ function dpdOptionen() {
   const stand = `<div class="karte" style="margin:0 0 10px;padding:10px">
       <div>${i?.stand ? `Stand: <b>${esc(wann(i.stand))}</b>` : "Noch kein Stand abgelegt."}</div>
       ${neu.length ? `<div style="margin-top:4px;color:var(--textRot,#b3261e);font-weight:700">🆕 ${neu.length === 1 ? "1 neuer oder geänderter Wunschplan" : neu.length + " neue oder geänderte Wunschpläne"} seit dem letzten Rechnen: ${neu.map(esc).join(", ")}</div>` : i ? '<div class="hinweis" style="margin-top:4px">✅ Alle Wunschpläne sind eingerechnet.</div>' : ""}
-      <button type="button" class="knopf${neu.length ? " haupt" : ""}" style="margin-top:8px" onclick="dpdNeuRechnen(this)">🔄 Jetzt neu rechnen</button>
-      <div class="hinweis" style="margin-top:4px;font-size:.8rem">Rechnet sich von selbst neu, sobald ein Wunschplan, der Bedarf oder die Einstellungen sich ändern. Regel: nie länger als die Wunschzeit, mindestens die Hälfte darin. Nach DP2 geht er nur mit „📤 An DP2 übergeben“ (dort erst nach „Übernehmen“).</div>
+      ${i?.fest ? `<div class="hinweis" style="margin-top:6px;font-weight:700">🔒 Festgeschrieben: Der Plan rechnet sich nicht mehr von selbst um. Änderungen vom Clubabend trägt Claude gezielt ein${neu.length ? " – die neuen Wünsche oben sind noch nicht eingetragen" : ""}.</div>` : `<button type="button" class="knopf${neu.length ? " haupt" : ""}" style="margin-top:8px" onclick="dpdNeuRechnen(this)">🔄 Jetzt neu rechnen</button>`}
+      ${i?.fest ? "" : `<div class="hinweis" style="margin-top:4px;font-size:.8rem">Rechnet sich von selbst neu, sobald ein Wunschplan, der Bedarf oder die Einstellungen sich ändern. Regel: nie länger als die Wunschzeit, mindestens die Hälfte darin. Nach DP2 geht er nur mit „📤 An DP2 übergeben“ (dort erst nach „Übernehmen“).</div>`}
       <div id="dpdFreiZeile" class="hinweis" style="margin-top:8px">📣 Für Mitglieder: wird geprüft …</div>
       <button type="button" class="knopf haupt" style="margin-top:4px" onclick="dpdFreigeben(this)">📣 Diesen Stand für alle Mitglieder freigeben</button>
       <div id="dpdSollZeile" class="hinweis" style="margin-top:8px">📤 DP2: wird geprüft …</div>
