@@ -2984,7 +2984,7 @@ async function ekDienstwunschMelden() {
   return neu.length;
 }
 const ERSTATTUNG = {
-  kmSatzStandard: 0.38, // € je km, nur falls in kc_club_km_satz nichts eingetragen ist (0.39.0: Satz pflegt der Admin mit „gilt ab“)
+  kmSatzStandard: 0.30, // € je km (Beschluss Clubsitzung 30.10.2026, Protokoll TOP 7 Km-Pauschale; 0,38 war ein Testbetrag – Hansi 25.11.2026), nur falls in kc_club_km_satz nichts eingetragen ist (0.39.0: Satz pflegt der Admin mit „gilt ab“)
   gruende: ["Kochen in Dortmund", "Fahrt zum Budendienst", "Einkaufsfahrt für den Club", "Club-Treffen / Sitzung", "Veranstaltung / Weihnachtsmarkt", "Schulung / Fortbildung", "Abholen / Liefern von Material"],
   arten: [{ id: "fahrt", sym: "🚗", name: "Fahrtkosten" }, { id: "einkauf", sym: "🛒", name: "Einkauf vorgestreckt" }, { id: "sonstiges", sym: "📦", name: "Sonstige Auslage" },
     // KC-CLUB-ERSTATTUNG-SONDER (2.419.0, KICC-F-100): weitere Auslagen bei Sondereinsätzen
