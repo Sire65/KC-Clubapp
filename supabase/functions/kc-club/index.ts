@@ -939,6 +939,13 @@ async function routerSendenRoh(eventKey: string, personIds: string[], vars: Reco
     if (kopie) kopie = { cc: kopie.cc?.filter((id) => !stumm.has(id)), bcc: kopie.bcc?.filter((id) => !stumm.has(id)) };
     if (!personIds.length && !kopie?.cc?.length && !kopie?.bcc?.length) return { gesendet: 0, fehler: 0 };
   }
+  // 3.29.0 KC-CLUB-SAMMELMAIL: Chat-Benachrichtigungen an Mitglieder mit „Sammel-E-Mail“ – die E-Mail wird gesammelt (kc_club_sammelmail) und zum
+  // nächsten Termin als EINE Mail verschickt; Push geht wie immer sofort. Nie gesammelt: ❗ wichtig, 🚨 Notfall, Express, Nachsenden durch den Admin.
+  const gesammelt = opt.trotzStumm ? null : await sammelAbzweigen(eventKey, personIds, vars, korrelation).catch((e) => { console.error("sammelmail", String(e)); return null; });
+  if (gesammelt) {
+    personIds = personIds.filter((id) => !gesammelt.ids.has(id));
+    if (!personIds.length && !kopie?.cc?.length && !kopie?.bcc?.length) return { gesendet: gesammelt.ids.size, fehler: 0, wege: gesammelt.wege };
+  }
   dbPufferLeeren(); // KC-CLUB-DB-SPARSAM: der Communicator schreibt selbst
   // KC-CLUB-TEMPO-VERSAND (26.10.2026, Wunsch Hansi „Versanddienst parallel“): Der Versanddienst arbeitet die Empfänger eines Auftrags nacheinander ab
   // (je Empfänger ca. 0,6–1,2 s → 18 Empfänger 15–25 s, Zeitlimit 20 s). Ab ROUTER_STUECK+1 Empfängern daher in Stücke geteilt, höchstens ROUTER_PARALLEL
@@ -964,10 +971,86 @@ async function routerSendenRoh(eventKey: string, personIds: string[], vars: Reco
   // 2.403.0 KC-CLUB-EXPRESS-WEGE: je Empfänger, was auf welchem Weg wirklich passiert ist (aus der Antwort des Versanddienstes) –
   // „ja“ = raus, „kein“ = kein Push-Gerät bzw. keine Mail-Adresse, „fehler“ = versucht und gescheitert, „-“ = nicht vorgesehen
   if (out.results.length) ergebnis.wege = Object.fromEntries(out.results.filter((x: any) => x?.personId).map((x: any) => [x.personId, routerWege(x.attempts)]));
+  if (gesammelt) { ergebnis.gesendet += gesammelt.ids.size; ergebnis.wege = { ...(ergebnis.wege || {}), ...gesammelt.wege }; } // KC-CLUB-SAMMELMAIL
   if (VORGANG_KOPIE.test(korrelation) && !korrelation.endsWith(":kopie")) await vorgangKopie(eventKey, personIds, vars, korrelation, ergebnis).catch((e) => console.error("vorgangKopie", String(e)));
   return ergebnis;
 }
 const ROUTER_STUECK = 4, ROUTER_PARALLEL = 4, ROUTER_VERSATZ_MS = 300; // KC-CLUB-TEMPO-VERSAND
+// ---------- 3.29.0 KC-CLUB-SAMMELMAIL (Wunsch Hansi 25.11.2026 nach Thomas: „13 E-Mails seit gestern“ – „bau die Sammelmail … in Einstellungen anhaken“) ----------
+// Wer in den Einstellungen „📬 Sammel-E-Mail“ anhakt, bekommt Chat-Benachrichtigungen per E-Mail nicht mehr einzeln, sondern gesammelt:
+// takt „3std“ um 9, 12, 15, 18 und 21 Uhr, takt „tag“ um 18 Uhr (Wartung alle 15 Min.). Push bleibt sofort. Die gesammelten Einträge sind genau die Texte,
+// die sonst einzeln per E-Mail gegangen wären; sie werden nach dem Versand gelöscht (spätestens nach 14 Tagen). Niemand liest sie – nur der Versand.
+const SAMMEL_STUNDEN: Record<string, number[]> = { "3std": [9, 12, 15, 18, 21], tag: [18] }, SAMMEL_MAX_TEXT = 1500, SAMMEL_MAX_JE_MAIL = 60;
+let SAMMEL_STAND: { t: number; takt: Map<string, string> } | null = null;
+async function sammelLeute(): Promise<Map<string, string>> {
+  if (SAMMEL_STAND && Date.now() - SAMMEL_STAND.t < 60000) return SAMMEL_STAND.takt;
+  const { data, error } = await db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "sammelmail");
+  if (error) { if (SAMMEL_STAND) return SAMMEL_STAND.takt; throw new Error("sammelmail nicht lesbar"); }
+  const takt = new Map<string, string>();
+  for (const x of data ?? []) if ((x as any).wert?.an === true) takt.set(String((x as any).person_id), (x as any).wert?.takt === "tag" ? "tag" : "3std");
+  SAMMEL_STAND = { t: Date.now(), takt };
+  return takt;
+}
+function sammelPasst(eventKey: string, vars: Record<string, unknown>, korrelation: string) {
+  if (eventKey !== "club_nachricht" && !/^club_nachricht_(mail|beide)$/.test(eventKey)) return false; // nur Chat-Nachrichten; reiner Push bleibt
+  if (!/^club-nachricht:[^:]+(:erwaehnt|:ruhe)?$/.test(korrelation)) return false; // keine Kopien/Push-Nachzügler/Nachsenden (Ruhezeit-Mail wird mitgesammelt)
+  return !(vars.wichtigkeit === "hoch" || vars.wichtigkeit === "notfall" || vars.eilig === true || vars.express === true);
+}
+async function sammelAbzweigen(eventKey: string, personIds: string[], vars: Record<string, unknown>, korrelation: string) {
+  if (!personIds.length || !sammelPasst(eventKey, vars, korrelation)) return null;
+  const takt = await sammelLeute(), wer = personIds.filter((id) => takt.has(id));
+  if (!wer.length) return null;
+  // Push sofort: bei „_beide“ immer, beim Standardweg (Push, sonst Mail) nur für Geräte mit Push – Mail geht dann ohnehin nicht
+  let pushJetzt: string[] = [];
+  if (eventKey === "club_nachricht_beide") pushJetzt = wer;
+  else if (eventKey === "club_nachricht") {
+    const { data: abo } = await db.from("kc_member_push_subscriptions").select("person_id").eq("active", true).in("person_id", wer);
+    const mitPush = new Set((abo ?? []).map((x: any) => String(x.person_id)));
+    pushJetzt = wer.filter((id) => mitPush.has(id));
+    if (pushJetzt.length === wer.length) return null; // alle haben Push → wie bisher (keine Mail)
+  }
+  const sammeln = eventKey === "club_nachricht" ? wer.filter((id) => !pushJetzt.includes(id)) : wer;
+  const zeilen = sammeln.map((pid) => ({ person_id: pid, korrelation: txt(korrelation, 120), titel: txt(vars.titel ?? vars.betreff, 200) || "Neue Nachricht",
+    kurz: txt(vars.kurz, 300) || null, text: txt(vars.text, SAMMEL_MAX_TEXT) || null, url: txt(vars.url, 300) || null, anlagen: Array.isArray(vars.attachmentIds) ? vars.attachmentIds.length : 0 }));
+  const { error } = await db.from("kc_club_sammelmail").insert(zeilen);
+  if (error) throw new Error("sammelmail speichern: " + error.message); // dann normal senden (Aufrufer fängt ab)
+  if (pushJetzt.length) await routerSendenRoh("club_nachricht_push", pushJetzt, vars, korrelation + ":push", undefined, { trotzStumm: false }).catch((e) => console.error("sammelmail push", String(e)));
+  const ids = new Set(eventKey === "club_nachricht" ? sammeln : wer);
+  const wege: Record<string, { push: string; mail: string }> = {};
+  for (const id of ids) wege[id] = { push: pushJetzt.includes(id) ? "ja" : "-", mail: "ja" };
+  return { ids, wege };
+}
+// Wartung (alle 15 Min.): fällige Sammel-E-Mails verschicken – je Person höchstens eine je Termin-Stunde; danach die Einträge löschen
+async function sammelmailSenden(jetztD = new Date()) {
+  const std = berlinStunde(jetztD), tag = berlinTag(jetztD);
+  await db.from("kc_club_sammelmail").delete().lt("erstellt_am", new Date(jetztD.getTime() - 14 * 86400000).toISOString());
+  if (![...SAMMEL_STUNDEN["3std"], ...SAMMEL_STUNDEN.tag].includes(std)) return 0;
+  const { data: offen } = await db.from("kc_club_sammelmail").select("id,person_id,titel,kurz,text,url,anlagen,erstellt_am").order("erstellt_am").limit(2000);
+  if (!offen?.length) return 0;
+  const je = new Map<string, any[]>();
+  for (const x of offen) { const l = je.get(x.person_id) ?? []; l.push(x); je.set(x.person_id, l); }
+  const { data: ein } = await db.from("kc_club_person_einstellung").select("person_id,schluessel,wert").in("person_id", [...je.keys()]).in("schluessel", ["sammelmail", "sammelmail_stand"]);
+  const w = (pid: string, k: string) => (ein ?? []).find((x: any) => x.person_id === pid && x.schluessel === k)?.wert as any;
+  const slot = `${tag} ${std}`;
+  let n = 0;
+  for (const [pid, liste] of je) {
+    const takt = w(pid, "sammelmail")?.takt === "tag" ? "tag" : "3std"; // auch wenn inzwischen abgeschaltet: Gesammeltes geht zum nächsten Termin raus
+    if (!SAMMEL_STUNDEN[takt].includes(std) || w(pid, "sammelmail_stand")?.slot === slot) continue;
+    // erst merken, dann senden – nie doppelt (Wartung kann sich überschneiden)
+    await db.from("kc_club_person_einstellung").upsert({ person_id: pid, schluessel: "sammelmail_stand", wert: { slot, am: jetztD.toISOString(), anzahl: liste.length }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
+    const teil = liste.slice(0, SAMMEL_MAX_JE_MAIL), uhr = (d: string) => new Intl.DateTimeFormat("de-DE", { timeZone: TZ, day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }).format(new Date(d));
+    const titel = `📬 Sammel-E-Mail: ${liste.length} ${liste.length === 1 ? "neue Nachricht" : "neue Nachrichten"}`;
+    const text = `Hallo,\n\nhier ist deine Sammel-E-Mail aus der Köcheclub-App (${liste.length === 1 ? "1 Benachrichtigung" : liste.length + " Benachrichtigungen"} seit der letzten):\n\n`
+      + teil.map((x: any) => `— ${uhr(x.erstellt_am)} · ${x.titel}${x.kurz && x.kurz !== x.titel ? `\n${x.kurz}` : ""}${x.text ? `\n${x.text}` : ""}${x.anlagen ? `\n(📎 ${x.anlagen} Anlage${x.anlagen === 1 ? "" : "n"} – in der App)` : ""}`).join("\n\n")
+      + (liste.length > teil.length ? `\n\n… und ${liste.length - teil.length} weitere – alles in der App.` : "")
+      + `\n\nAntworten und alles Weitere in der App: ${APP_URL}\n\n(Sammel-E-Mail statt einzelner Mails – ändern unter Einstellungen → 🔔 Benachrichtigungen.)\n\nViele Grüße\nKöcheclub Werne`;
+    const r = await routerSenden("club_nachricht_mail", [pid], { titel, kurz: `${liste.length} ${liste.length === 1 ? "Benachrichtigung" : "Benachrichtigungen"}`, betreff: `Köcheclub Werne – ${titel.replace(/^\S+\s/, "")}`, text, url: APP_URL },
+      `club-sammel:${pid}:${slot.replace(" ", "T")}`);
+    if (r.gesendet > 0 || (r.fehler === 0)) { await db.from("kc_club_sammelmail").delete().in("id", liste.map((x: any) => x.id)); n++; }
+  }
+  if (n) await protokoll(null, "sammelmail_gesendet", { mails: n, slot });
+  return n;
+}
 // Ein Auftrag an den Versanddienst (bis 20 s). Antwort: { sent, failed, results } – bei Ablehnung/Zeitüberschreitung alle Empfänger als Fehler.
 async function routerAufruf(eventKey: string, personIds: string[], vars: Record<string, unknown>, korrelation: string, kopie?: { cc?: string[]; bcc?: string[] }) {
   const r = await fetch(`${SUPA}/functions/v1/kc-communication-router`, { signal: AbortSignal.timeout(20000),
@@ -2590,6 +2673,8 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
     const zeit = (x: unknown, std: string) => /^([01]\d|2[0-3]):[0-5]\d$/.test(String(x)) ? String(x) : std;
     return { art: w?.art === "zeit" || w?.art === "aus" ? w.art : "immer", von: zeit(w?.von, "22:00"), bis: zeit(w?.bis, "07:00") };
   },
+  // 3.29.0 KC-CLUB-SAMMELMAIL (Wunsch Hansi 25.11.2026): Chat-Benachrichtigungen per E-Mail gesammelt – 9/12/15/18/21 Uhr oder einmal täglich 18 Uhr
+  sammelmail: (w) => ({ an: w?.an === true, takt: w?.takt === "tag" ? "tag" : "3std" }),
   ruhezeit: (w) => {
     const zeit = (x: unknown, std: string) => /^([01]\d|2[0-3]):[0-5]\d$/.test(String(x)) ? String(x) : std;
     return { an: w?.an === true, von: zeit(w?.von, "22:00"), bis: zeit(w?.bis, "07:00"), erwaehnung: w?.erwaehnung !== false };
@@ -11092,7 +11177,8 @@ Köcheclub Werne`,
       }
       const leiheErinnert = await leihErinnern().catch((e) => { console.error("leihe erinnern", String(e)); return 0; }); // KC-CLUB-LEIHEN
       const boerse = await boerseWartung().catch((e) => { console.error("boerse wartung", String(e)); return null; }); // KC-CLUB-BOERSE
-      return json({ ok: true, erinnerungen: n, beendet, dienst, geb, aufg, aufStand, nachfass, fotosEntfernt, archivEntfernt, anfragenErinnert: anfr, standorteGeloescht: (stWeg ?? []).length, ruheMeldungen, privErinnert, leiheErinnert, boerse });
+      const sammelmail = await sammelmailSenden().catch((e) => { console.error("sammelmail", String(e)); return 0; }); // 3.29.0 KC-CLUB-SAMMELMAIL
+      return json({ ok: true, sammelmail, erinnerungen: n, beendet, dienst, geb, aufg, aufStand, nachfass, fotosEntfernt, archivEntfernt, anfragenErinnert: anfr, standorteGeloescht: (stWeg ?? []).length, ruheMeldungen, privErinnert, leiheErinnert, boerse });
     }
 
     // ----- KC-CLUB-ZUGANG-SELBST: Link verloren → neuen Link an die hinterlegte Mail-Adresse (ohne Anmeldung) -----
