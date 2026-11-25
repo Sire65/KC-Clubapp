@@ -1,5 +1,11 @@
 # Änderungen
 
+## 3.24.0 – 2026-11-25 – 🖨️ Ausdrucke immer hell, auch im Dunkelmodus (KC-CLUB-DRUCK-HELL)
+Fund 25.11. beim Druck des festgeschriebenen Dienstplans um 5:30 Uhr, Wunsch Hansi „keine Drucke im Dunkelmodus“: nachts schaltet die App auf dunkel – im Ausdruck („Hier fehlen noch Helfer“, Einsatzplan) wurde jede zweite Tageszelle dunkel mit Schatten.
+- Druck-CSS: `#druck` setzt die hellen Farben (Karte, Text, Linien, Schatten …) selbst – gilt für Drucken, Vorschau und PDF, egal ob Tag oder Nacht.
+- Tabellenzellen `td.tag`/`th.tag` im Ausdruck ohne die Kalender-Karten-Optik (Hintergrund, Schatten, Rundung) – auch tagsüber sauberer.
+- Test: Block in `tests/app-vertrag.test.mjs`. Rückweg: App 3.23.0.
+
 ## 3.23.0 – 2026-11-25 – 🔒 Dienstplan festschreiben (KC-CLUB-DP-FEST) · App + Server 3.23.0
 Hansi 25.11. nach dem Clubabend („jede Menge Änderungswünsche … ja, einspielen und festschreiben“): bei jeder Änderung rechnete der Plan alles neu und verschob auch Tage, die nicht besprochen waren.
 - Plan-Einstellung `dp_druck_konfig.fest`: der gerechnete Plan bleibt stehen – keine automatische Neuberechnung (neue Wunschpläne, Bedarf, Einstellungen, Rechenregel), „🔄 Jetzt neu rechnen“ entfällt. Änderungen vom Clubabend werden gezielt in den Plan eingetragen (Lücken und Stunden werden dabei neu gezählt).

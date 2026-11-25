@@ -3268,6 +3268,12 @@
     #druck { display: block !important; font: 10.5pt/1.35 "Segoe UI", Roboto, Arial, sans-serif; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     /* KC-CLUB-CD (2.130.0): Corporate Design – Kochmütze im weinroten Kreis, Schriftzug „Köcheclub Werne“, Weinrot + Beige; gilt für ALLE Ausdrucke */
     #druck { --cd-rot: #741521; --cd-beige: #f3e9dc; --cd-beige-rand: #e0cfb9; --cd-grau: #5b544d; }
+    /* 3.24.0 KC-CLUB-DRUCK-HELL (25.11.2026, Wunsch Hansi „keine Drucke im Dunkelmodus“): nachts schaltet die App auf dunkel (:root.dunkel) –
+       der Ausdruck nimmt trotzdem immer die hellen Farben; und die Kalender-Karte „.tag“ (Hintergrund, Schatten, Rundung) gilt nicht für Tabellenzellen im Ausdruck */
+    #druck { --bg: #fff; --karte: #fff; --karte2: #efe5d6; --text: #2b1a1c; --grau: #6b5c57; --linie: #e4d7c4; --gruenbg: #e3f2e8; --gelb: #9a6b00; --gelbbg: #fbf0d6; --rotbg: #fbe3e3;
+      --schatten: none; --blau: #1f5f99; --blaubg: #e3edf7; --lila: #7b3fa0; --lilabg: #f1e6f7; --tuerkis: #0e7c86; --tuerkisbg: #dcf1f3;
+      --textRot: #741521; --textGruen: #17663a; --textOrange: #8a5200; --textNotruf: #c0392b; color-scheme: light; }
+    #druck td.tag, #druck th.tag { background: #fff; box-shadow: none; border-radius: 0; }
     /* KC-CLUB-REISE-CHECKLISTE (2.223.0): zweispaltig, Blöcke mit Überschrift, Kästchen; unten ein leerer Block mit Linien */
     #druck .rc-kopf { margin: 0 0 3mm; font-size: 10pt; color: var(--cd-grau); }
     #druck .rc-spalten { column-count: 2; column-gap: 7mm; }
@@ -7398,7 +7404,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=3.23.0" data-v="3.23.0"></script>
+<script src="app.js?v=3.24.0" data-v="3.24.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>
