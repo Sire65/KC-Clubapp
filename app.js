@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "3.27.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "3.26.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1830,7 +1830,9 @@ function begruessungPruefen() {
   BG_GEZEIGT = true;
   const installiert = START_ART === "app";
   const tipp = (nr, titel, text) => `<div class="bgtipp"><b class="nr">${nr}</b><div><b>${titel}</b><div class="hinweis" style="margin:2px 0 0">${text}</div></div></div>`;
-  $("kopfGruss").innerHTML = `<h3 style="font-size:1.3rem">Hallo ${esc(ICH.vorname || ICH.name)}! 👋</h3>
+  // 25.11.2026 KC-CLUB-BEGRUESSUNG-FIX: seit 2.905.0 (10.11.) stand hier versehentlich „kopfGruss“ – das Feld heißt begruessungText (index.html)
+  const bgText = $("begruessungText"); if (!bgText) return false;
+  bgText.innerHTML = `<h3 style="font-size:1.3rem">Hallo ${esc(ICH.vorname || ICH.name)}! 👋</h3>
     <p style="margin:0 0 6px">Schön, dass du dabei bist – ich freue mich, dass du die <b>Köcheclub-App</b> ausprobierst. Drei kleine Tipps für den Start:</p>
     ${tipp(1, installiert ? "✅ Richtig installiert – prima!" : "📲 Richtig installieren", installiert
       ? "Die App öffnest du ab jetzt einfach über ihr Symbol."

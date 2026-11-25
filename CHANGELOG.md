@@ -1,7 +1,9 @@
 # Änderungen
 
-## 3.27.0 – 2026-11-25 – 📱 „Doppelt offen“: die Meldung sagt jetzt genau, was zu tun ist (KC-CLUB-ZWEI-BROWSER-KLAR) · Server 3.27.0
-Fund Hansi 24.11.: Marianne (iPhone) bekam „die App ist 2 × offen“ und fand das zweite Fenster nicht. Ursache: App-Icon (über Safari installiert) und zusätzlich Chrome – Links aus Mail/WhatsApp öffnen sich im Standard-Browser.
+## 3.26.0 – 2026-11-25 – 👋 Begrüßung beim ersten Start wieder ohne Programmfehler (KC-CLUB-BEGRUESSUNG-FIX) · 📱 „Doppelt offen“: Meldung sagt genau, was zu tun ist (KC-CLUB-ZWEI-BROWSER-KLAR) · Server 3.26.0
+Fehlermeldung 25.11. 9:25 (neues Mitglied, iPhone): „null is not an object (evaluating $("kopfGruss").innerHTML …)“. Seit 2.905.0 (10.11., Englisch-Umbau) schrieb die Begrüßung in ein Feld, das es nicht gibt – jedes neue Mitglied bekam beim ersten Start einen Programmfehler statt der Begrüßung mit den drei Tipps. Jetzt wieder `begruessungText`; fehlt das Feld, wird die Begrüßung still übersprungen. Test `tests/begruessung-fix.test.mjs`.
+
+**Dazu 📱 KC-CLUB-ZWEI-BROWSER-KLAR:** Fund Hansi 24.11.: Marianne (iPhone) bekam „die App ist 2 × offen“ und fand das zweite Fenster nicht. Ursache: App-Icon (über Safari installiert) und zusätzlich Chrome – Links aus Mail/WhatsApp öffnen sich im Standard-Browser.
 - Die App meldet beim Online-Abgleich mit, ob das Fenster das **App-Icon** ist (`a: 1`); der Server merkt es je Fenster und gibt es beim „anderen Fenster“ zurück.
 - Meldung „📱 Die Club-App ist doppelt offen“: im Icon → „Du hast sie auch in **Chrome** geöffnet … Tab-Symbol → ✕ … nur noch über das Icon öffnen“; im Browser-Tab bei installiertem Icon → „Bitte diesen Tab schließen … nur noch das Icon“. Sonst wie bisher. „Das ist ein anderes Gerät“ bleibt.
 - Hilfe „Die App ist zweimal offen“ nennt den häufigsten Handy-Fall.
