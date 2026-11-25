@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "3.28.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "3.29.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -7853,12 +7853,12 @@ function spEinladung(versuch = 0) {
 }
 // ---------- KC-CLUB-ERSTATTUNG (0.38.0): Fahrtkosten, vorgestreckter Einkauf, sonstige Auslagen beantragen ----------
 // Positionen sammeln → Summe → Mail an Kassenwart (An) + Clubsprecher (CC); Antragsteller und Admin bekommen eine Blindkopie.
-let ERS = { pos: [], art: "fahrt", kmSatz: 0.38, saetze: [], gruende: [], arten: [], belege: [], auszahlung: "ueberweisung", geladen: false };
+let ERS = { pos: [], art: "fahrt", kmSatz: 0.30, saetze: [], gruende: [], arten: [], belege: [], auszahlung: "ueberweisung", geladen: false };
 const eur = (n) => (Math.round(n * 100) / 100).toFixed(2).replace(".", ",") + " €";
 // 2.425.0 KC-CLUB-GENERALCHECK: Zahl wie man sie in Deutschland tippt – „1.250,00“ → 1250 (Tausenderpunkt vor genau 3 Ziffern weg), „23,90“ → 23.9, „12.5“ → 12.5
 const zahlDe = (v) => Number(String(v ?? "").trim().replace(/\s*(?:€|km|l|liter)$/i, "").replace(/\.(?=\d{3}(?:\D|$))/g, "").replace(",", "."));
 // KC-CLUB-KMSATZ (0.39.0): Satz, der am Tag der Fahrt galt (gleiche Regel wie im Server)
-const satzAm = (datum) => { let s = ERS.standard ?? 0.38; for (const x of ERS.saetze || []) if (x.ab <= datum) s = x.satz; return s; };
+const satzAm = (datum) => { let s = ERS.standard ?? 0.30; /* 0,30 €/km (Beschluss Clubsitzung; 0,38 war ein Testbetrag – Hansi 25.11.2026) */ for (const x of ERS.saetze || []) if (x.ab <= datum) s = x.satz; return s; };
 async function erstattungLaden() {
   try {
     // 2.588.0 KC-CLUB-ERSTATTUNG-CSV (Hansi suchte „CSV-Datei erstellen“ unter Erstattung): der Excel-Knopf auch hier – nur für die Clubleitung
