@@ -1,6 +1,15 @@
 # Änderungen
 
-## 3.29.0 – 2026-11-25 – 🚗 km-Satz: immer 0,30 € (KC-CLUB-ERSTATTUNG-KM-030) · Server 3.29.0
+## 3.29.0 – 2026-11-25 – 📬 Sammel-E-Mail (KC-CLUB-SAMMELMAIL) · 🚗 km-Satz: immer 0,30 € (KC-CLUB-ERSTATTUNG-KM-030) · Server 3.29.0 · Datenbank: `20261125_kc_club_sammelmail.sql`
+Hansi 25.11. (Thomas: „13 E-Mails seit gestern“): „Bau die Sammelmail, die ist gut für alle, aber in Einstellungen anhaken – ich möchte Sammel-E-Mail bekommen.“
+- **Einstellungen → 🔔 Benachrichtigungen → „📬 Sammel-E-Mail“** (Häkchen, aus als Vorgabe) mit Termin: um 9, 12, 15, 18 und 21 Uhr (Standard) oder einmal am Tag um 18 Uhr.
+- Gesammelt werden nur **Benachrichtigungen über neue Chat-Nachrichten per E-Mail** (auch @Erwähnung und Ruhezeit-Mail). **Sofort** wie bisher: Push, ❗ Wichtig, 🏎️ Express, 🚨 Notfall, Nachsenden durch den Admin und alle anderen Mails (Termine, Erstattung, Dienstplan …).
+- Server: Abzweig im zentralen Versand (`routerSendenRoh` → `sammelAbzweigen`): wer angehakt hat und Push hat, bekommt den Push sofort; die E-Mail landet in `kc_club_sammelmail`. Klappt das Speichern nicht, geht die Mail wie bisher einzeln raus.
+- Versand in der Wartung (alle 15 Min.): je Person höchstens eine Sammel-E-Mail je Termin-Stunde (erst gemerkt, dann gesendet – nie doppelt), danach werden die Einträge gelöscht (spätestens nach 14 Tagen). Die Mail listet Uhrzeit, Betreff und Text jeder Benachrichtigung, Anlagen nur als Hinweis „in der App“.
+- Datenbank: `kc_club_sammelmail` (RLS, nur Club-Server, nicht gespiegelt, nicht gesichert). Hilfe-Eintrag „Zu viele E-Mails? Sammel-E-Mail“, Suche in den Einstellungen.
+- Test: `tests/sammelmail.test.mjs`.
+
+**Dazu 🚗 KC-CLUB-ERSTATTUNG-KM-030:**
 Hansi 25.11.: „Die App muss vor dem Datum auch mit 0,30 rechnen … die 0,38 waren mal als Testbetrag hinterlegt, in der vorletzten Köcheclubsitzung wurde der Betrag von 0,30 festgelegt.“ Beschluss: Sitzung 30.10.2026, Protokoll TOP 7 – Km-Pauschale (30 Cent pro km).
 - Anlass: Steven rechnete Fahrten aus Nov./Dez. 2025 ab – der eingetragene Satz 0,30 € galt erst ab 19.10.2026, davor nahm die App den eingebauten Grundwert 0,38 €.
 - Daten (25.11., schon wirksam): Eintrag 0,30 € gilt jetzt ab 01.01.2000 (also immer); alle offenen Anträge mit anderem Satz neu gerechnet (nur Stevens: 785b8be6 → 204,00 €; der doppelte ältere Antrag c03c49a2 auf Hansis Wunsch storniert). Änderungsmeldung an Steven, Kopie Kassenwart, Clubsprecher, Admin.

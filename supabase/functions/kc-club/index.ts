@@ -2673,12 +2673,12 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
     const zeit = (x: unknown, std: string) => /^([01]\d|2[0-3]):[0-5]\d$/.test(String(x)) ? String(x) : std;
     return { art: w?.art === "zeit" || w?.art === "aus" ? w.art : "immer", von: zeit(w?.von, "22:00"), bis: zeit(w?.bis, "07:00") };
   },
-  // 3.29.0 KC-CLUB-SAMMELMAIL (Wunsch Hansi 25.11.2026): Chat-Benachrichtigungen per E-Mail gesammelt – 9/12/15/18/21 Uhr oder einmal täglich 18 Uhr
-  sammelmail: (w) => ({ an: w?.an === true, takt: w?.takt === "tag" ? "tag" : "3std" }),
   ruhezeit: (w) => {
     const zeit = (x: unknown, std: string) => /^([01]\d|2[0-3]):[0-5]\d$/.test(String(x)) ? String(x) : std;
     return { an: w?.an === true, von: zeit(w?.von, "22:00"), bis: zeit(w?.bis, "07:00"), erwaehnung: w?.erwaehnung !== false };
   },
+  // 3.29.0 KC-CLUB-SAMMELMAIL (Wunsch Hansi 25.11.2026): Chat-Benachrichtigungen per E-Mail gesammelt – 9/12/15/18/21 Uhr oder einmal täglich 18 Uhr
+  sammelmail: (w) => ({ an: w?.an === true, takt: w?.takt === "tag" ? "tag" : "3std" }),
   // KC-CLUB-PINNWAND-ERINNERUNG (0.64.0): „hängen lassen“ je eigenem Zettel – wann frühestens wieder erinnern (höchstens 20)
   pinnwand_erinnert: (w) => ({ bis: Object.fromEntries(Object.entries(w?.bis && typeof w.bis === "object" ? w.bis : {})
     .filter(([id, d]) => /^[0-9a-f-]{36}$/.test(id) && typeof d === "string" && !isNaN(Date.parse(d))).slice(-20)) }),
