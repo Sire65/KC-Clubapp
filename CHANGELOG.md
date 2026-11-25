@@ -1,7 +1,7 @@
 # Änderungen
 
 ## 3.27.0 – 2026-11-25 – 🚗 km-Satz: immer 0,30 € (KC-CLUB-ERSTATTUNG-KM-030) · Server 3.27.0
-Hansi 25.11.: „Die App muss vor dem Datum auch mit 0,30 rechnen … die 0,38 waren mal als Testbetrag hinterlegt, in der vorletzten Köcheclubsitzung wurde der Betrag von 0,30 festgelegt.“
+Hansi 25.11.: „Die App muss vor dem Datum auch mit 0,30 rechnen … die 0,38 waren mal als Testbetrag hinterlegt, in der vorletzten Köcheclubsitzung wurde der Betrag von 0,30 festgelegt.“ Beschluss: Sitzung 30.10.2026, Protokoll TOP 7 – Km-Pauschale (30 Cent pro km).
 - Anlass: Steven rechnete Fahrten aus Nov./Dez. 2025 ab – der eingetragene Satz 0,30 € galt erst ab 19.10.2026, davor nahm die App den eingebauten Grundwert 0,38 €.
 - Daten (25.11., schon wirksam): Eintrag 0,30 € gilt jetzt ab 01.01.2000 (also immer); alle offenen Anträge mit anderem Satz neu gerechnet (nur Stevens: 785b8be6 → 204,00 €; der doppelte ältere Antrag c03c49a2 auf Hansis Wunsch storniert). Änderungsmeldung an Steven, Kopie Kassenwart, Clubsprecher, Admin.
 - Code: eingebauter Grundwert (falls kein Satz eingetragen ist) in Server und App 0,38 → 0,30.
