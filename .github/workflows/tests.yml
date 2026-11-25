@@ -313,6 +313,8 @@ jobs:
       - run: node tests/admin-verborgen.test.mjs
       # KC-CLUB-MAIL-ZUSAGE (23.11.2026): Zusagen per E-Mail-Link ohne App
       - run: node tests/mail-zusage.test.mjs
+      # 3.28.0 KC-CLUB-DP-GRUSS (25.11.2026): Dienst-Nachricht am Morgen und bei Änderungen – nur Beispieldaten
+      - run: node tests/dp-gruss.test.mjs
   # 2.725.0 KC-CLUB-RUNDGANG: Klick-Rundgang im echten Browser (Testdaten, nichts nach draußen) – Programmfehler und Schutzschild-Sperren werden rot
   rundgang:
     runs-on: ubuntu-latest

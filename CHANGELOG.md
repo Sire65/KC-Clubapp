@@ -1,5 +1,13 @@
 # Änderungen
 
+## 3.28.0 – 2026-11-25 – 🗓️ Dienst-Nachricht am Morgen und bei Änderungen (KC-CLUB-DP-GRUSS) · App + Server 3.28.0
+Wunsch Hansi 25.11.: „jedes Mitglied soll eine Pushnachricht bekommen am gleichen Morgen, wie der Dienst geplant ist lt. Solldienstplan. Wer kein Push hat, per E-Mail. Bei Dienstplanänderungen für das Mitglied sofort neu. Schreibe immer die Zeiten dazu … Aber erst senden, wenn der Plan freigegeben ist.“
+- **Morgengruß:** am Diensttag ab 8 Uhr (Wartung, je Person und Tag einmal, gemerkt im Protokoll `dp_soll_gruss`): „Hallo Manfred, heute hast du Dienst von 17:00 – 23:00 Uhr. Wir wünschen dir einen angenehmen Dienst in der Weihnachtsmarkthütte. Liebe Grüße“ – mit Bereitschaft („… und Bereitschaft von 18:00 – 23:00 Uhr“) bzw. nur Bereitschaft.
+- **Änderungen:** bei jeder Freigabe vergleicht der Server den neuen mit dem vorher freigegebenen Plan (ab heute) – wessen Dienst/Bereitschaft sich geändert hat, bekommt sofort EINE Nachricht mit allen geänderten Tagen („Fr 04.12.: jetzt Dienst 18:00 – 23:00 Uhr (vorher …)“, „kein Dienst mehr“, „neu“). Vor dem Freigeben zeigt die Rückfrage, wie viele Mitglieder benachrichtigt werden.
+- Grundlage ist nur der **freigegebene** Sollplan (`dp_plaene_frei`) – ohne Freigabe geht nichts raus. Weg: aktives Push-Abo → Push, sonst E-Mail (unabhängig von der eigenen Wahl „Dienste“); „Keine Benachrichtigungen“/Sperren gelten weiter.
+- **🗓️ Dienstplan-Druck lesbarer (KC-CLUB-DP-PLAN-LESBAR, Wunsch Hansi 25.11.):** im Blatt „Dienstplan – berechnete Einteilung“ zwischen zwei Tagen eine freie Zeile, die Tabelle füllt das Blatt bis unten, höhere Zeilen (höchstens 27 statt 34 je Blatt), Schrift wächst mit der Zeilenhöhe (bis 1,25-fach), breitere Namensspalte, Dienstbalken mit dünnerem Rahmen. Uhrzeit („8 Uhr“) in allen Halbstunden-Rastern mittig über der Doppelspalte.
+- Neues Modul `supabase/functions/kc-club/dp-gruss.js`, Test `tests/dp-gruss.test.mjs` + Block in `tests/app-vertrag.test.mjs`. Rückweg: App + Server 3.26.0.
+
 ## 3.26.0 – 2026-11-25 – 👋 Begrüßung beim ersten Start wieder ohne Programmfehler (KC-CLUB-BEGRUESSUNG-FIX) · 📱 „Doppelt offen“: Meldung sagt genau, was zu tun ist (KC-CLUB-ZWEI-BROWSER-KLAR) · Server 3.26.0
 Fehlermeldung 25.11. 9:25 (neues Mitglied, iPhone): „null is not an object (evaluating $("kopfGruss").innerHTML …)“. Seit 2.905.0 (10.11., Englisch-Umbau) schrieb die Begrüßung in ein Feld, das es nicht gibt – jedes neue Mitglied bekam beim ersten Start einen Programmfehler statt der Begrüßung mit den drei Tipps. Jetzt wieder `begruessungText`; fehlt das Feld, wird die Begrüßung still übersprungen. Test `tests/begruessung-fix.test.mjs`.
 
