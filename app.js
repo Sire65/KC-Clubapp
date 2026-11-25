@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "3.29.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "3.30.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -2823,7 +2823,7 @@ const HILFE = [
   { id: "versand_leiste", thema: "nachrichten", sym: "📝", t: "Normal, ❗ Wichtig oder 🏎️ Express – die Leiste über dem Schreibfeld", x: "Sobald du etwas ins Schreibfeld tippst (oder etwas anhängst), erscheint darüber die Leiste <b>📝 Normal · ❗ Wichtig · 🏎️ Express</b>. <b>Normal</b> ist schon angehakt – eine normale Nachricht braucht nur ➤. Hakst du <b>❗ Wichtig</b> oder <b>🏎️ Express</b> an, geht der Haken bei Normal weg; beides zusammen geht auch. Neben Express steht, wie viele du heute schon hattest (z. B. 2/5). Nach dem Senden und beim Chatwechsel steht wieder Normal. Soll die Leiste immer zu sehen sein: ⚙️ → „🔔 Benachrichtigungen“ → <b>„📝❗🏎️ Versand-Leiste immer zeigen“</b>.", zeig: () => einstiegHin("benachrichtigung", "setWichtigFrage"), seit: "2.524.0" },
   { id: "schreibt_hinweis", thema: "nachrichten", sym: "✍️", t: "„… schreibt dir gerade“ – auch wenn der Chat zu ist", x: "Schreibt dir jemand im <b>Zweier-Chat</b>, während du woanders in der App bist, steht oben kurz <b>„✍️ Anne schreibt dir gerade …“</b> – oder <b>„🗣️ … diktiert dir gerade eine Nachricht …“</b> bzw. <b>„🎤 … nimmt gerade eine Sprachnachricht für dich auf …“</b>. So weißt du: Gleich kommt etwas. Antippen öffnet den Chat; ist die Nachricht da, verschwindet der Hinweis. Im offenen Chat steht es wie gewohnt über dem Schreibfeld – der ✏️ Stift schreibt dabei mit. Nicht in Gruppen und nicht bei stumm geschalteten Chats; wer seine Online-Anzeige ausgeschaltet hat, meldet kein Schreiben.", seit: "2.529.0" },
   { id: "druck_pdf", thema: "club", sym: "📄", t: "Aus jeder Druckvorschau ein PDF", x: "Überall, wo die App etwas zum Drucken zeigt (Termine, Protokoll, Erstattung, Wunschbogen …), gibt es neben <b>🖨️ Drucken</b> den Knopf <b>📄 PDF speichern / teilen</b>. Die App baut das PDF selbst auf dem Handy – du kannst es z. B. per WhatsApp oder Mail weiterschicken oder speichern. Noch einfacher: <b>💬 In der Club-App senden</b> macht dasselbe PDF und öffnet „Neue Nachricht“ mit dem PDF als Anlage. Nichts geht dafür an fremde Dienste.", seit: "2.526.0" },
-  { id: "sammelmail", thema: "nachrichten", sym: "📬", t: "Zu viele E-Mails? Sammel-E-Mail", x: "Bekommst du Benachrichtigungen über neue Nachrichten per E-Mail (zum Beispiel, weil auf deinem Handy kein Push eingerichtet ist), kommen sie <b>gesammelt</b> – das ist für alle eingeschaltet (Einstellungen → 🔔 Benachrichtigungen → <b>„📬 Sammel-E-Mail“</b>; dort abschaltbar). Es kommt <b>eine</b> E-Mail um 9, 12, 15, 18 und 21 Uhr – oder, wenn du es so einstellst, einmal am Tag um 18 Uhr – mit allem, was seitdem kam – sauber untereinander, mit Trennlinie zwischen den Nachrichten. Push kommt weiter sofort; nur Express und Notfall kommen als Einzel-Mail.", testen: () => einstiegHin("benachrichtigung", "sammelAn"), seit: "3.29.0" },
+  { id: "sammelmail", thema: "nachrichten", sym: "📬", t: "Zu viele E-Mails? Sammel-E-Mail", x: "Bekommst du Benachrichtigungen über neue Nachrichten per E-Mail (zum Beispiel, weil auf deinem Handy kein Push eingerichtet ist), kommen sie <b>gesammelt</b> – das ist für alle eingeschaltet (Einstellungen → 🔔 Benachrichtigungen → <b>„📬 Sammel-E-Mail“</b>; dort abschaltbar). Es kommt <b>eine</b> E-Mail um 9, 12, 15, 18 und 21 Uhr – oder, wenn du es so einstellst, einmal am Tag um 18 Uhr – mit allem, was seitdem kam – sauber untereinander, mit Trennlinie zwischen den Nachrichten. Push kommt weiter sofort; nur Express und Notfall kommen als Einzel-Mail.", testen: () => einstiegHin("benachrichtigung", "sammelAn"), seit: "3.30.0" },
   { id: "nachsenden", thema: "nachrichten", sym: "📨", t: "Nachricht per E-Mail nachschicken (Admin)", nur: () => !!ICH?.admin, x: "Wer auf <b>„Keine Benachrichtigungen“</b> steht, bekommt Chat-Nachrichten weder als Push noch als E-Mail. Musst du jemandem eine bestimmte Nachricht trotzdem zukommen lassen: Nachricht antippen → <b>„📨 Per E-Mail nachschicken“</b>. Die App zeigt, wer in diesem Chat nichts bekommen hat, und schickt genau diese Nachricht mit Anlagen <b>einmal</b> per E-Mail (über web.de). Die Einstellung der Person bleibt, doppelt geht nichts raus.", seit: "2.654.0" },
   { id: "chat_filter", thema: "nachrichten", sym: "👥", t: "Nur die anderen, nur meine – oder nur den Hintergrund", x: "Im Chat in der kleinen Zeile über dem Schreibfeld sitzt der Knopf <b>👥</b>. Einmal antippen: <b>👤 nur die Nachrichten der anderen</b>. Zweimal: <b>🙋 nur deine</b>. Dreimal: <b>🖼️ nur der Hintergrund</b> – alle Nachrichten verschwinden, und du siehst dein Hintergrundbild in voller Stärke (eins wählen: oben ⋮ → Chat-Farben). Viermal: wieder alle. Oben steht dabei ein gelber Hinweis – antippen zeigt sofort wieder alles. Es wird nur ausgeblendet, nichts gelöscht; beim nächsten Öffnen des Chats siehst du wieder alle Nachrichten.", seit: "2.591.0" },
   // 2.534.0 KC-CLUB-EINST-WEGWEISER
@@ -3157,7 +3157,7 @@ const SB_EINST = [
   { k: "ferien", re: /ferien|schulferien|bundesl/, klappe: "startseite", id: "setFerien", t: "Schulferien" }, // 2.484.0 KC-CLUB-FERIEN
   { k: "ansicht", re: /mitglieder ?ansicht|ansicht der mitglieder/, klappe: "startseite", id: "mgAnsichtWahl", t: "Mitglieder-Ansicht" },
   { k: "ruhezeit", re: /ruhe ?zeit|nachtruhe|nicht stören/, klappe: "benachrichtigung", id: "ruheVon", t: "Ruhezeit" },
-  { k: "sammelmail", re: /sammel.?(e.?)?mail|zu viele (e.?)?mails|mails? bündeln/, klappe: "benachrichtigung", id: "sammelAn", t: "Sammel-E-Mail" }, // 3.29.0 KC-CLUB-SAMMELMAIL
+  { k: "sammelmail", re: /sammel.?(e.?)?mail|zu viele (e.?)?mails|mails? bündeln/, klappe: "benachrichtigung", id: "sammelAn", t: "Sammel-E-Mail" }, // 3.30.0 KC-CLUB-SAMMELMAIL
   { k: "schlafmodus", re: /schlaf ?modus|bildschirmschoner|einschlafen|schlafen legen/, klappe: "darstellung", id: "schlafWahl", t: "Schlafmodus" }, // KC-CLUB-SCHLAFMODUS
   { k: "vorlesen", re: /vorlesen|vorlese/, klappe: "ansagen", id: "setVorlesenZeile", t: "Vorlesen" },
   { k: "tipps", re: /tipps?\b|tagestipp/, klappe: "ansagen", id: "setTipps", t: "Tipps" },
@@ -16545,7 +16545,7 @@ async function fgLaden() {
   try {
     const { funktionen } = await api("freigaben_liste"); if (!$("adFreigaben")) return;
     $("adFreigaben").innerHTML = `<div style="display:grid;gap:6px">${funktionen.map((f) => `<div class="ps-schritt"><b>${esc(f.t)}</b><small class="hinweis">${esc(f.u)}</small>
-      <div class="umschalter" style="margin:4px 0 0"><button type="button" class="${f.fuer === "admin" ? "an" : ""}" onclick="fgSetzen('${f.id}','admin',this)">🔒 Nur für mich (Test)</button><button type="button" class="${f.fuer === "alle" ? "an" : ""}" onclick="fgSetzen('${f.id}','alle',this)">✅ Für alle frei</button></div></div>`).join("")}</div>`;
+      <div class="umschalter" style="margin:4px 0 0"><button type="button" class="${f.fuer === "admin" ? "an" : ""}" onclick="fgSetzen('${f.id}','admin',this)">🔒 Nur für mich (Test)</button><button type="button" class="${f.fuer === "alle" ? "an" : ""}" onclick="fgSetzen('${f.id}','alle',this)">✅ Für alle frei</button></div>${f.id === "dienst_stempel" ? '<button type="button" class="knopf klein" style="margin-top:6px" onclick="dsWerOeffnen()">👥 Gruppen, einzelne Mitglieder, Ausnahmen …</button>' : ""}</div>`).join("")}</div>`;
   } catch (e) { if ($("adFreigaben")) $("adFreigaben").innerHTML = `<p class="hinweis" style="margin:0">⚠️ ${esc(fehlerText(e))}</p>`; }
 }
 async function fgSetzen(id, fuer, knopf) {
@@ -19225,7 +19225,7 @@ function zeige(v, ausHistorie) {
 // stehende werden versteckt, alle zur Laufzeit gebauten entfernt (Rückfragen über ihr „Abbrechen“). Gilt für Handy-Zurück und Escape.
 document.querySelectorAll(".blatt").forEach((b) => { b.dataset.fest = "1"; });
 // 2.24.6 (Fehlerprotokoll Hansi: avSetzen → fensterZu(null), wenn „Mein Bild“ schon zu war): ein nicht (mehr) offenes Fenster ist schon zu
-function einstFuellen() { leitungStartZeigen(); setTimeout(abhKlappen, 900); /* 2.469.0 KC-CLUB-EINST-ABHAENGIG (Häkchen kommen teils erst vom Server) */ notProbeZeigen(); infoStartZeigen(); cdEinstellungenZeigen(); try { schalterZeilen($("v-einstellungen")); } catch {} tippSchalterZeigen(); einwSchalterZeigen(); stimmeWahlZeigen(); ansageSchalterZeigen(); ansStandZeigen(); ruheZeigen(); sammelZeigen(); /* 3.29.0 KC-CLUB-SAMMELMAIL */ schlafEinstZeigen(); /* KC-CLUB-SCHLAFMODUS */ if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); anrufAntwortenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); fristZeigen(); /* 2.883.0 KC-CLUB-FRIST-ERINNERUNG */ neuWahlZeigen(); meinWetterortZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); anklopfenZeigen(); zuletztSchalterZeigen(); inkognitoZeigen(); elternMeineZeigen(); spEinstZeigen(); schnellWahlZeigen(); mgAnsichtWahlZeigen(); }
+function einstFuellen() { leitungStartZeigen(); setTimeout(abhKlappen, 900); /* 2.469.0 KC-CLUB-EINST-ABHAENGIG (Häkchen kommen teils erst vom Server) */ notProbeZeigen(); infoStartZeigen(); cdEinstellungenZeigen(); try { schalterZeilen($("v-einstellungen")); } catch {} tippSchalterZeigen(); einwSchalterZeigen(); stimmeWahlZeigen(); ansageSchalterZeigen(); ansStandZeigen(); ruheZeigen(); sammelZeigen(); /* 3.30.0 KC-CLUB-SAMMELMAIL */ schlafEinstZeigen(); /* KC-CLUB-SCHLAFMODUS */ if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); anrufAntwortenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); fristZeigen(); /* 2.883.0 KC-CLUB-FRIST-ERINNERUNG */ neuWahlZeigen(); meinWetterortZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); anklopfenZeigen(); zuletztSchalterZeigen(); inkognitoZeigen(); elternMeineZeigen(); spEinstZeigen(); schnellWahlZeigen(); mgAnsichtWahlZeigen(); }
 function fensterZu(b) { if (!b) return; if (b._zu) b._zu(); else if (b.dataset.fest) b.classList.add("versteckt"); else b.remove(); }
 // 2.425.0 KC-CLUB-GENERALCHECK (Eingaben schützen): wer in einem Fenster etwas getippt hat und es aus Versehen schließt (daneben tippen,
 // ✕, Escape, Handy-„Zurück“), wird gefragt – vorher war der Text (z. B. SOS-Text, Termin-Vorschlag, Schild) ohne Rückfrage weg.
@@ -22079,7 +22079,7 @@ async function rundStartKarte(id) { if (!RUND.lage) await rundOeffnen(id); else 
 setInterval(() => { try { rundKarteZeichnen(); if (RUND.offen) rundTischZeichnen(); } catch {} }, 60000);
 addEventListener("resize", () => { if (RUND.offen) { clearTimeout(RUND.gross); RUND.gross = setTimeout(rundTischZeichnen, 200); } }); // Handy gedreht → Plätze neu ausmessen
 // ---------- 2.590.0 KC-CLUB-DIENST-STEMPEL (Wunsch Hansi, Konzept „Dienst-Anmeldung in der Club-App“, Stufe 1) ----------
-// Kommen/Gehen in der App: Karte auf der Startseite (ab 30 Min. vor Dienstbeginn bzw. solange angemeldet), Blatt mit Vorschlag aus dem
+// Kommen/Gehen in der App: Karte auf der Startseite (ab 60 Min. (3.29.0; vorher 30) vor Dienstbeginn bzw. solange angemeldet), Blatt mit Vorschlag aus dem
 // Dienstplan (nahe am Plan = geplante Zeit, sonst jetzt, 5-Min.-Schritte), Grund ab 15 Min. Abweichung, Pause beim Gehen, Standort nur als
 // „vor Ort ja/nein“ (wird nicht gespeichert). Die Regeln prüft der Server (dienst-stempel.js); hier nur Anzeige und Vorschlag.
 // Bis zur Freigabe (Admin → Freigaben → „Dienst anmelden/abmelden“) sieht es nur der Admin (🔒 Test).
@@ -22096,9 +22096,9 @@ function dsLageSetzen(l) { DSL = l && l.aktiv ? l : null; dsKarteZeichnen(); }
 function dsKarteZeichnen() {
   const el = $("dsKarte"); if (!el) return;
   const l = DSL, t = Date.now();
-  if (l && !l.dienst && !l.stand?.angemeldet && (l.spaeter || []).some((s) => t >= Date.parse(s.start) - 31 * DS_MIN && !DS_NACHLADEN.lief)) { DS_NACHLADEN.lief = true; api("dienst_stand", {}).then(dsLageSetzen).catch(() => {}).finally(() => setTimeout(() => (DS_NACHLADEN.lief = false), 5 * DS_MIN)); }
+  if (l && !l.dienst && !l.stand?.angemeldet && (l.spaeter || []).some((s) => t >= Date.parse(s.start) - 61 * DS_MIN && !DS_NACHLADEN.lief)) { DS_NACHLADEN.lief = true; api("dienst_stand", {}).then(dsLageSetzen).catch(() => {}).finally(() => setTimeout(() => (DS_NACHLADEN.lief = false), 5 * DS_MIN)); }
   const d = l?.dienst, an = !!l?.stand?.angemeldet;
-  const zeigen = !!l && (an || (!!d && t >= Date.parse(d.start) - 30 * DS_MIN && t <= Date.parse(d.start) + (l.regeln?.nachMin || 120) * DS_MIN));
+  const zeigen = !!l && (an || (!!d && t >= Date.parse(d.start) - 60 * DS_MIN && t <= Date.parse(d.start) + (l.regeln?.nachMin || 120) * DS_MIN));
   const warte = dsWarte().length;
   if (!zeigen && !warte) { el.innerHTML = ""; return; }
   const test = nurTest("dienst_stempel") ? ' <span class="ds-test" title="Nur für dich sichtbar – noch nicht freigegeben">🔒 Test</span>' : "";
@@ -22223,7 +22223,38 @@ async function dsKorrigieren(id) {
   };
 }
 // Admin: wer ist im Dienst, nachtragen, Dienst-Orte
-function dsAdminKnoepfe() { return ICH?.admin ? `<button class="knopf" onclick="dsWerHeute()">👥 Wer ist im Dienst</button><button class="knopf" onclick="dsOrteZeigen()">📍 Dienst-Orte</button>` : ""; }
+function dsAdminKnoepfe() { return ICH?.admin ? `<button class="knopf" onclick="dsWerHeute()">👥 Wer ist im Dienst</button><button class="knopf" onclick="dsWerOeffnen()">🔑 Wer darf stempeln</button><button class="knopf" onclick="dsOrteZeigen()">📍 Dienst-Orte</button>` : ""; }
+// 3.29.0 KC-CLUB-DS-WER (Wunsch Hansi 25.11.): Stempeluhr für alle, Gruppen oder einzelne freischalten – und Ausnahmen für alle, die sie nicht nutzen wollen.
+// An Tagen ohne Kasse (Aufbau, Nachbereitung) dürfen immer alle mit Dienst stempeln – das regelt der Server von selbst.
+let DSW = null;
+async function dsWerOeffnen() {
+  const f = blattAuf("dsWerAuswahl", '<div id="dsWerInhalt"><p class="hinweis">Wird geladen …</p></div>');
+  try { DSW = await api("dienst_stempel_wer", {}, { warten: true }); } catch (e) { $("dsWerInhalt").innerHTML = `<p>⚠️ ${esc(fehlerText(e, ""))}</p><button class="knopf" onclick="fensterZu($('dsWerAuswahl'))">Schließen</button>`; return; }
+  DSW.wahl = Object.fromEntries(DSW.personen.map((x) => [x.id, x.ohne ? "nein" : x.an ? "ja" : ""]));
+  dsWerZeichnen(); return f;
+}
+function dsWerZeichnen() {
+  const el = $("dsWerInhalt"); if (!el || !DSW) return;
+  const tage = (DSW.tageOhneKasse || []).map((d) => `${d.slice(8, 10)}.${d.slice(5, 7)}.`).join(", ");
+  const sel = (x) => `<select aria-label="${esc(x.name)}" onchange="DSW.wahl[${jsArg(x.id)}]=this.value">${[["", DSW.alle ? "wie alle (ja)" : "wie Gruppe"], ["ja", "✅ ja"], ["nein", "🚫 nutzt es nicht"]].map(([v, t]) => `<option value="${v}"${DSW.wahl[x.id] === v ? " selected" : ""}>${t}</option>`).join("")}</select>`;
+  el.innerHTML = `<h3 style="margin-top:0">🔑 Wer darf stempeln?</h3>
+    <p class="hinweis" style="margin:0 0 10px">Kommen und Gehen in der App („🟢 Dienst beginnen“). Admins dürfen immer.${tage ? ` <b>An Tagen ohne Kasse (${esc(tage)}) dürfen alle stempeln, die an dem Tag Dienst haben</b> – auch wer hier „nutzt es nicht“ hat.` : ""}</p>
+    <label class="schalter"><div><b>✅ Für alle Mitglieder und Aushilfen</b><div class="hinweis">Ausnahmen unten mit „🚫 nutzt es nicht“</div></div><input type="checkbox" ${DSW.alle ? "checked" : ""} onchange="DSW.alle=this.checked;dsWerZeichnen()"></label>
+    ${DSW.alle ? "" : `<h4 style="margin:12px 0 4px">👥 Gruppen</h4>${DSW.gruppen.length ? `<div class="ds-gruende">${DSW.gruppen.map((g) => `<button type="button" class="chip${g.an ? " an" : ""}" onclick="DSW.gruppen.find((x)=>x.id===${jsArg(g.id)}).an=${!g.an};dsWerZeichnen()">${esc(g.symbol)} ${esc(g.name)}</button>`).join("")}</div>` : '<p class="hinweis">Noch keine Gruppen angelegt (Nachrichten → Gruppe).</p>'}`}
+    <h4 style="margin:12px 0 4px">🙋 Einzelne Mitglieder</h4>
+    <div style="display:grid;gap:4px">${DSW.personen.map((x) => `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span>${esc(x.name)}</span>${sel(x)}</div>`).join("")}</div>
+    <div class="knoepfe" style="margin-top:12px"><button class="knopf haupt" onclick="dsWerSpeichern(this)">💾 Speichern</button><button class="knopf" onclick="fensterZu($('dsWerAuswahl'))">Abbrechen</button></div>
+    <p class="hinweis" style="margin:8px 0 0">Es wird nichts verschickt. Wer freigeschaltet ist, sieht die Karte „🟢 Dienst beginnen“ ab 1 Std. vor seinem Dienst und bekommt die Erinnerungen rund um den Dienst.</p>`;
+}
+async function dsWerSpeichern(knopf) {
+  await einmal(knopf, async () => {
+    const w = DSW.wahl, ids = (v) => Object.keys(w).filter((k) => w[k] === v);
+    try { await api("dienst_stempel_wer_setzen", { alle: !!DSW.alle, gruppen: DSW.gruppen.filter((g) => g.an).map((g) => g.id), personen: ids("ja"), ohne: ids("nein") }, { warten: true });
+      if (INIT) INIT.freigaben = { ...(INIT.freigaben || {}), dienst_stempel: DSW.alle ? "alle" : "admin" };
+      fensterZu($("dsWerAuswahl")); melde("💾 Gespeichert – gilt beim nächsten Öffnen der App."); if ($("adFreigaben")) fgLaden(); }
+    catch (e) { meldeFehler(e); }
+  });
+}
 const DS_AMPEL = { rot: "🔴 fehlt", gelb: "🟡 noch angemeldet", gruen: "🟢 da", grau: "⚪ noch nicht da" };
 async function dsWerHeute() {
   let r; try { r = await api("dienst_heute", {}, { warten: true }); } catch (e) { return meldeFehler(e); }
@@ -24784,7 +24815,7 @@ function ruheZeigen() {
     : "In dieser Zeit kein Push. Anrufe kommen trotzdem durch, danach eine Sammelmeldung.";
 }
 function ruheSchnell(an) { $("ruheAn").checked = an; ruheSpeichern(); }
-// 📬 3.29.0 KC-CLUB-SAMMELMAIL (Wunsch Hansi 25.11.2026): Chat-Benachrichtigungen per E-Mail gesammelt statt einzeln – Häkchen + Termin
+// 📬 3.30.0 KC-CLUB-SAMMELMAIL (Wunsch Hansi 25.11.2026): Chat-Benachrichtigungen per E-Mail gesammelt statt einzeln – Häkchen + Termin
 function sammelZeigen() {
   if (!$("sammelAn")) return;
   const w = INIT?.einstellungen?.sammelmail || { an: true, takt: "3std" }; // Hansi 25.11.2026 „für alle einschalten“: Standard an
@@ -38199,7 +38230,7 @@ const FENSTER_NAMEN = {
   buGruss: "🏢 Büro: Tagesinfo", buSprachBlatt: "🏢 Büro: Sprechen", buTelBlatt: "🏢 Büro: Person wählen", buTermin: "🍽️ Büro: Termin ansehen", buWahl: "🏢 Büro: Sitzung wählen",
   buWeiter: "🏢 Büro: Wie weiter?", bwEinBlatt: "👋 Bühne: Einladung", caBlatt: "🍽️ Clubabend Live", cfBlatt: "🎨 Chat-Farben", chatBlatt: "💬 Unterhaltung (Fenster)",
   chatMitgliederBlatt: "👥 Teilnehmer der Unterhaltung", cjBlatt: "📅 Clubjahr", cuFenster: "📊 Kurze Abstimmung", dgBlatt: "👨‍🍳 Dienst-Gruß", diagBlatt: "🩺 Server-Diagnose",
-  diktatBlatt: "✍️ Diktieren", druckBlatt: "🖨️ Drucken", dsBlatt: "🗓️ Dienstplan", dsOrteBlatt: "📍 Dienst-Orte", dsWerBlatt: "👥 Wer ist heute im Dienst",
+  diktatBlatt: "✍️ Diktieren", druckBlatt: "🖨️ Drucken", dsBlatt: "🗓️ Dienstplan", dsOrteBlatt: "📍 Dienst-Orte", dsWerBlatt: "👥 Wer ist heute im Dienst", dsWerAuswahl: "🔑 Wer darf stempeln",
   rundBlatt: "🪑 Runder Tisch", rundNeuBlatt: "🪑 Zum Runden Tisch einladen", rundTischBlatt: "🪑 Am Runden Tisch", rundTascheBlatt: "💼 Tasche für den Runden Tisch", rundArchivBlatt: "🗄️ Tasche: aus dem Archiv", // 2.762.0 KC-CLUB-RUNDER-TISCH
   dtBlatt: "🗓️ Dienst-Tausch", dvBlatt: "📊 Dienstzeiten-Übersicht", dwSperreBlatt: "💡 Sperrzeit nicht nötig", egBlatt: "📥 Mein Eingangskorb", eingangBlatt: "📥 In den Eingangskorb eines Mitglieds",
   einlBlatt: "📥 Dokument einlesen", ekAblageBlatt: "🗄️ Eingangskorb: ablegen", ekDwBlatt: "📅 Dienstzeiten", ekErstBlatt: "💶 Erstattung", ekErstOkBlatt: "✅ Erstattung als erstattet markieren?", gkBlatt: "💐 Genesungskarte", tpBlatt: "⚽ Bundesliga-Tippspiel", gkGemBlatt: "👥 Gemeinsame Karte", gknBlatt: "💐 Frage: Gemeinsame Karte", astBlatt: "📌 Wie steht's mit deiner Aufgabe?", anlAlleBlatt: "📎 Alle Anlagen im Chat", /* KC-CLUB-CHAT-ANLAGEN-SICHTBAR */ekHinweisBlatt: "📥 Hinweis: Eingangskorb",

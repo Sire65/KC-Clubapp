@@ -4464,7 +4464,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   for (const c of ['case "rezepte_liste": {', 'case "rezept_speichern": {', 'case "rezept_loeschen": {']) assert.ok(server.includes(c + '\n        await nurWennFrei("rezepte", ich, "Das Rezeptbuch");'), "Server sperrt Rezeptbuch ohne Freigabe: " + c);
   const fg = server.slice(server.indexOf('case "freigaben_liste"'), server.indexOf('case "communicator_status"'));
   assert.equal((fg.match(/nurAdmin\(ich\);/g) || []).length, 2, "Freigaben nur Admin"); assert.ok(/"funktion_freigabe"/.test(fg), "Protokoll");
-  assert.ok(/freigaben: await freigaben\(\),/.test(server) && /const frei = \(id\) => !!ICH\?\.admin \|\| INIT\?\.freigaben\?\.\[id\] === "alle";/.test(html), "App blendet nicht Freigegebenes aus");
+  assert.ok(/freigaben: (await freigaben\(\)|\{ \.\.\.await freigaben\(\), \.\.\.\(!ich\.admin && await pDs \? \{ dienst_stempel: "alle" \} : \{\}\) \})/.test(server) /* 3.29.0 KC-CLUB-DS-WER */ && /const frei = \(id\) => !!ICH\?\.admin \|\| INIT\?\.freigaben\?\.\[id\] === "alle";/.test(html), "App blendet nicht Freigegebenes aus");
   assert.ok(/aktion: "rzStart\(\)", nur: \(\) => frei\("rezepte"\) \}/.test(html) && /aktion: "avWahl\(\)", nur: \(\) => frei\("avatar"\) \}/.test(html), "Kacheln hängen an der Freigabe");
   assert.ok(/\["freigaben", "🚦", "Freigaben", "app"\]/.test(html) && /api\("freigabe_setzen", \{ funktion: id, fuer \}/.test(html), "Admin-Kachel Freigaben");
   assert.ok(server.includes('nurWennFrei(/^p/.test(fig) ? "avatar_premium" : /^[bc]/.test(fig) ? "avatar_baukasten" : "avatar"'), "Baukasten-Figur (b… und c…, 2.23.99) bzw. hochwertige (p…, 2.414.0) nur mit Freigabe speicherbar");

@@ -21,7 +21,7 @@ assert.deepEqual(dsStand([]).angemeldet, false);
 // welcher Dienst + Karte
 assert.equal(dsDienstJetzt([dienst], T0 - 3 * H, null), null, "3 Std. vorher noch nicht");
 assert.equal(dsDienstJetzt([dienst], T0 - 90 * M, null), dienst);
-assert.ok(!dsKarteZeigen(dienst, T0 - 40 * M, null) && dsKarteZeigen(dienst, T0 - 30 * M, null), "Karte ab 30 Min. vorher");
+assert.ok(!dsKarteZeigen(dienst, T0 - 70 * M, null) && dsKarteZeigen(dienst, T0 - 60 * M, null), "Karte ab 60 Min. vorher (3.29.0)");
 assert.ok(dsKarteZeigen(null, T0, { angemeldet: true }), "angemeldet: Karte immer");
 // Vorschlag: nahe am Plan = Plan, sonst jetzt (5 Min.)
 assert.equal(dsVorschlag("in", dienst, T0 - 8 * M), T0, "13:52 → 14:00");
@@ -75,7 +75,11 @@ assert.equal(dsVorOrt(null, [heim]), null); assert.equal(dsVorOrt({ lat: 1, lon:
   assert.ok(/case "dienst_heute": \{\s*nurAdmin\(ich\);/.test(server) && /case "dienst_nachtragen": \{\s*nurAdmin\(ich\);/.test(server) && /case "dienst_orte": \{\s*nurAdmin\(ich\);/.test(server), "Admin-Aktionen nur Admin");
   assert.ok(/"mein_ausweis", "dienst_stand", "dienst_buchen", "dienst_korrigieren"(, "dienst_tausch_liste", "dienst_tausch_anbieten", "dienst_tausch_aktion")?(, "dp_einzelplan"(, "ist_offen", "ist_antworten"(, "ist_feedback")?)?)?\]/.test(server), "Aushilfen dürfen buchen");
   assert.ok(/const pDs = dsDarf\(ich\)\.then\(\(ok\) => \(ok \? dsLage\(ich\) : null\)\)/.test(server) && /dienstStempel: await pDs/.test(server), "init: nur wenn freigegeben (keine Abfragen sonst)");
-  assert.ok(/const ziel = alle \? null : await adminIds\(\);/.test(server), "Erinnerungen vor der Freigabe nur an Admins");
+  // 3.29.0 KC-CLUB-DS-WER: Erinnerungen nur an alle, die stempeln dürfen (Auswahl, Ausnahmen, Tage ohne Kasse, Admins)
+  assert.ok(/darf\.set\(pid, await dsDarfId\(pid, admins\.has\(pid\)\)/.test(server) && /zeilen\.filter\(\(r: any\) => darf\.get\(String\(r\.person_id\)\)\)/.test(server), "Erinnerungen nur an alle, die stempeln dürfen");
+  assert.ok(/const DS_OHNE_KASSE = new Set\(\["prep", "after"\]\);/.test(server) && /if \(!w\.ohne\.includes\(pid\) && \(f\.dienst_stempel === "alle" \|\| w\.personen\.includes\(pid\) \|\| \(await dsGruppenMitglieder\(w\.gruppen\)\)\.has\(pid\)\)\) return true;\n  return await dsPflicht\(pid\)/.test(server), "Freischaltung: alle/Gruppe/einzeln, Ausnahmen – an Tagen ohne Kasse immer für alle mit Dienst");
+  assert.ok(/if \(!\(await dsDarf\(ich\)\)\) throw new Fehler\("Dienst anmelden ist für dich nicht freigeschaltet\.", 403\);/.test(server) && /case "dienst_stempel_wer_setzen": \{\s*nurAdmin\(ich\);/.test(server) && /case "dienst_stempel_wer": \{\s*nurAdmin\(ich\);/.test(server), "Buchen nur wer darf; Auswahl nur Admin");
+  assert.ok(/async function dsWerOeffnen\(\)/.test(app) && /api\("dienst_stempel_wer_setzen"/.test(app), "App: Auswahl „Wer darf stempeln“");
   assert.ok(/id="dsKarte"/.test(html) && /dsLageSetzen\(INIT\?\.dienstStempel\)/.test(app) && /h === "#dienststempel"/.test(app) && /if \(!frei\("dienst_stempel"\)\) return/.test(app), "App: Karte, Start, Link, Freigabe");
   assert.ok(lies(".github/workflows/tests.yml").includes("node tests/dienst-stempel.test.mjs"), "läuft in der CI");
 }

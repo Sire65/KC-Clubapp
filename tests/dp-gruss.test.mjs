@@ -47,3 +47,7 @@ const ganzWeg = dpgAenderungen(alt, plan([]), "2026-12-02").get("KC-P-M0003").ta
 assert.ok(dpgAenderungText("Frank", [ganzWeg]).text.includes("🗓️ Fr 04.12.: kein Dienst mehr (vorher Dienst 19:30 – 23:00 Uhr)"));
 assert.equal(dpgAenderungen(neu, neu, "2026-12-01").size, 0, "gleicher Plan → keine Nachricht");
 console.log("OK – Dienst-Nachrichten aus dem freigegebenen Sollplan (Morgengruß, Änderungen)");
+// 3.29.0: an Tagen ohne Kasse Hinweis aufs Stempeln (nur mit Dienst)
+assert.ok(dpgMorgenText("Hans", { dienst: [9, 13], ber: null }, true).text.includes("Heute gibt es keine Kasse: Bitte melde dich in der Club-App zum Dienst an und ab"));
+assert.ok(!dpgMorgenText("Hans", { dienst: [9, 13], ber: null }).text.includes("keine Kasse") && !dpgMorgenText("Ruth", { dienst: null, ber: [13, 17] }, true).text.includes("keine Kasse"));
+console.log("OK – Hinweis an Tagen ohne Kasse");

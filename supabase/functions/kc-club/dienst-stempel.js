@@ -4,7 +4,7 @@
 // Entscheidungen Hansi (22.10.): Ort nur markieren (300 m), Zeitfenster ±2 Std., Grund ab 15 Min., selbst korrigieren 24 Std.,
 // „spontan mithelfen“ erlaubt (Planer bestätigt), Aushilfen dürfen auch. Rein (ohne Datenbank/Netz) – tests/dienst-stempel.test.mjs.
 
-export const DS = { vorMin: 120, nachMin: 120, gehenMaxStd: 12, grundMin: 15, korrekturStd: 24, radiusM: 300, karteVorMin: 30, planNaheMin: 30,
+export const DS = { vorMin: 120, nachMin: 120, gehenMaxStd: 12, grundMin: 15, korrekturStd: 24, radiusM: 300, karteVorMin: 60, planNaheMin: 30, /* 3.29.0: Karte ab 60 Min. vorher (Aufbau: viele kommen früher) */
   zukunftMin: 5, erinnerVorMin: 15, vergessenMin: 60, schrittMin: 5 };
 export const DS_GRUENDE = ["Länger geblieben", "Früher entlassen", "Später gekommen", "Früher gekommen", "Krank geworden", "Eigener Wunsch", "Abbau", "Notfall", "Spontan mitgeholfen"]; // wie die Kasse + Kommen
 const MIN = 60000;
@@ -19,7 +19,7 @@ export function dsStand(buchungen) {
 
 // welcher geplante Dienst ist jetzt dran? dienste: [{ref, startMs, endeMs, …}] (heute/gestern), t = jetzt (ms)
 // angemeldet → der Dienst der Anmeldung bzw. der laufende; sonst der nächste, dessen Fenster (Beginn −2 Std. … Beginn +2 Std.) offen ist,
-// oder der bald beginnt (Karte ab 30 Min. vorher)
+// oder der bald beginnt (Karte ab 60 Min. vorher, 3.29.0)
 export function dsDienstJetzt(dienste, t, stand) {
   const l = (dienste || []).filter((d) => d && Number.isFinite(d.startMs) && Number.isFinite(d.endeMs)).sort((a, b) => a.startMs - b.startMs);
   if (stand?.angemeldet) {
@@ -28,7 +28,7 @@ export function dsDienstJetzt(dienste, t, stand) {
   }
   return l.find((d) => t >= d.startMs - DS.vorMin * MIN && t <= d.startMs + DS.nachMin * MIN && t < d.endeMs) || null;
 }
-// soll die Karte auf der Startseite stehen? (angemeldet immer; sonst ab 30 Min. vor Beginn bis Fenster-Ende)
+// soll die Karte auf der Startseite stehen? (angemeldet immer; sonst ab 60 Min. vor Beginn (3.29.0) bis Fenster-Ende)
 export const dsKarteZeigen = (dienst, t, stand) => !!stand?.angemeldet || (!!dienst && t >= dienst.startMs - DS.karteVorMin * MIN && t <= dienst.startMs + DS.nachMin * MIN);
 
 // auf 5 Minuten runden

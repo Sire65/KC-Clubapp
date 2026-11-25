@@ -1,4 +1,4 @@
-// 3.29.0 KC-CLUB-SAMMELMAIL (Wunsch Hansi 25.11.2026): Chat-Benachrichtigungen per E-Mail für Mitglieder mit Häkchen gesammelt (9/12/15/18/21 Uhr oder 18 Uhr).
+// 3.30.0 KC-CLUB-SAMMELMAIL (Wunsch Hansi 25.11.2026): Chat-Benachrichtigungen per E-Mail für Mitglieder mit Häkchen gesammelt (9/12/15/18/21 Uhr oder 18 Uhr).
 // Prüft: nur Chat-Nachrichten, nie ❗/Notfall/Express/Nachsenden, Push sofort, Abzweig im zentralen Versand, Versand in der Wartung (erst merken, dann senden,
 // danach löschen), Einstellung + Häkchen, Migration (RLS, Rechte, kein Spiegel). Aufruf: node tests/sammelmail.test.mjs (offline)
 import fs from "node:fs";

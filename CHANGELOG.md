@@ -1,6 +1,6 @@
 # Änderungen
 
-## 3.29.0 – 2026-11-25 – 📬 Sammel-E-Mail (KC-CLUB-SAMMELMAIL) · 🚗 km-Satz: immer 0,30 € (KC-CLUB-ERSTATTUNG-KM-030) · Server 3.29.0 · Datenbank: `20261125_kc_club_sammelmail.sql`
+## 3.30.0 – 2026-11-25 – 📬 Sammel-E-Mail (KC-CLUB-SAMMELMAIL) · 🚗 km-Satz: immer 0,30 € (KC-CLUB-ERSTATTUNG-KM-030) · Server 3.30.0 · Datenbank: `20261125_kc_club_sammelmail.sql`
 Hansi 25.11. (Thomas: „13 E-Mails seit gestern“): „Bau die Sammelmail, die ist gut für alle, aber in Einstellungen anhaken – ich möchte Sammel-E-Mail bekommen.“
 - **Für alle eingeschaltet** (Hansi: „ja für alle einschalten, da ich schon von mehreren gehört habe, dass sie zu viele bekommen“) – abschaltbar unter **Einstellungen → 🔔 Benachrichtigungen → „📬 Sammel-E-Mail“**, mit Termin: um 9, 12, 15, 18 und 21 Uhr (Standard) oder einmal am Tag um 18 Uhr.
 - Gesammelt werden nur **Benachrichtigungen über neue Chat-Nachrichten per E-Mail** (auch @Erwähnung und Ruhezeit-Mail). Auch ❗ Wichtig wird gesammelt (Push kommt sofort). **Als Einzel-Mail** nur 🏎️ Express und 🚨 Notfall (Hansi: „Nur wenn ich Express sende, dann als Einzelmail“), dazu Nachsenden durch den Admin und alle anderen Mails (Termine, Erstattung, Dienstplan …).
@@ -14,7 +14,16 @@ Hansi 25.11.: „Die App muss vor dem Datum auch mit 0,30 rechnen … die 0,38 w
 - Anlass: Steven rechnete Fahrten aus Nov./Dez. 2025 ab – der eingetragene Satz 0,30 € galt erst ab 19.10.2026, davor nahm die App den eingebauten Grundwert 0,38 €.
 - Daten (25.11., schon wirksam): Eintrag 0,30 € gilt jetzt ab 01.01.2000 (also immer); alle offenen Anträge mit anderem Satz neu gerechnet (nur Stevens: 785b8be6 → 204,00 €; der doppelte ältere Antrag c03c49a2 auf Hansis Wunsch storniert). Änderungsmeldung an Steven, Kopie Kassenwart, Clubsprecher, Admin.
 - Code: eingebauter Grundwert (falls kein Satz eingetragen ist) in Server und App 0,38 → 0,30.
-- Test: `tests/app-vertrag.test.mjs` (Registry). Rückweg: App/Server 3.28.0.
+- Test: `tests/app-vertrag.test.mjs` (Registry). Rückweg: App/Server 3.29.0.
+
+## 3.29.0 – 2026-11-25 – 🔑 Stempeluhr: für alle, Gruppen oder einzelne freischalten · Tage ohne Kasse immer (KC-CLUB-DS-WER) · 🚗 km-Satz immer 0,30 € (KC-CLUB-ERSTATTUNG-KM-030) · App + Server 3.29.0
+Wunsch Hansi 25.11.: „so bauen, dass man es für alle, Gruppen, einzelne freischalten kann – wenn einige die Stechuhr nicht benutzen wollen. An den beiden Vorbereitungstagen und der Nachbereitung gibt es die Kassen nicht – dann muss die Funktion da sein für alle, die Dienst haben.“
+- **Wer darf stempeln** (Admin → Freigaben → „🟢 Dienst anmelden/abmelden“ → „👥 Gruppen, einzelne Mitglieder, Ausnahmen …“, auch in der Stempeluhr „🔑 Wer darf stempeln“): Schalter „für alle“, Club-Gruppen, je Mitglied „✅ ja“ / „🚫 nutzt es nicht“. Gespeichert in `kc_club_konfig` „dienst_stempel_wer“.
+- **Tage ohne Kasse** (DP2-Tagesart Aufbau/Nachbereitung, z. B. 02./03./14.12.): jeder mit Dienst an dem Tag darf stempeln – auch wer sonst ausgenommen ist. Die Morgen-Nachricht sagt an diesen Tagen dazu: „Heute gibt es keine Kasse: Bitte melde dich in der Club-App zum Dienst an und ab.“
+- Erinnerungen rund um den Dienst gehen genau an alle, die stempeln dürfen. Buchen/Ändern prüft der Server mit derselben Regel.
+- Bedienung: die Karte „🟢 Dienst beginnen“ erscheint 60 statt 30 Min. vor Dienstbeginn (Aufbau: viele kommen früher).
+- **🚗 km-Satz immer 0,30 €** (gebündelt aus der Sitzung „km-Satz“, Zweig km-satz-030b): Hansi 25.11.: „Die App muss vor dem Datum auch mit 0,30 rechnen … die 0,38 waren mal als Testbetrag hinterlegt, in der vorletzten Köcheclubsitzung wurde der Betrag von 0,30 festgelegt.“ Beschluss Sitzung 30.10.2026, Protokoll TOP 7. Daten waren schon korrigiert (Satz 0,30 € gilt ab 01.01.2000, offene Anträge neu gerechnet); hier der eingebaute Grundwert in Server und App 0,38 → 0,30.
+- Tests: `tests/dienst-stempel.test.mjs`, `tests/dp-gruss.test.mjs`, `tests/app-vertrag.test.mjs` (Registry km-Satz). Rückweg: App + Server 3.28.0.
 
 ## 3.28.0 – 2026-11-25 – 🗓️ Dienst-Nachricht am Morgen und bei Änderungen (KC-CLUB-DP-GRUSS) · App + Server 3.28.0
 Wunsch Hansi 25.11.: „jedes Mitglied soll eine Pushnachricht bekommen am gleichen Morgen, wie der Dienst geplant ist lt. Solldienstplan. Wer kein Push hat, per E-Mail. Bei Dienstplanänderungen für das Mitglied sofort neu. Schreibe immer die Zeiten dazu … Aber erst senden, wenn der Plan freigegeben ist.“

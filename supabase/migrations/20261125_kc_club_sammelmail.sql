@@ -1,4 +1,4 @@
--- 3.29.0 KC-CLUB-SAMMELMAIL (Wunsch Hansi 25.11.2026 nach Thomas: „13 E-Mails seit gestern“ – „bau die Sammelmail, die ist gut für alle, aber in Einstellungen anhaken“).
+-- 3.30.0 KC-CLUB-SAMMELMAIL (Wunsch Hansi 25.11.2026 nach Thomas: „13 E-Mails seit gestern“ – „bau die Sammelmail, die ist gut für alle, aber in Einstellungen anhaken“).
 -- Wer „📬 Sammel-E-Mail“ anhakt (kc_club_person_einstellung „sammelmail“ {an, takt}), bekommt Chat-Benachrichtigungen per E-Mail nicht mehr einzeln:
 -- der Club-Server legt sie hier ab und schickt sie zum nächsten Termin (9/12/15/18/21 Uhr bzw. 18 Uhr) als EINE Mail, danach werden die Zeilen gelöscht
 -- (spätestens nach 14 Tagen). Nur der Club-Server (service_role) liest und schreibt; kein Spiegel, keine Sicherung (kurzlebige Versandschlange).
