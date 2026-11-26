@@ -197,7 +197,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "3.33.0";
+const SERVER_VERSION = "3.34.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -15721,6 +15721,44 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         }
         return json({ profil: await fsProfil(ich.person_id), kmMax: FS.kmMax });
       }
+      // KC-CLUB-PARKAUSWEIS: eigenen Wunsch lesen/setzen (ja: Kennzeichen + von/bis in der Veranstaltung; nein: Wunsch weg, Kennzeichen bleibt gemerkt)
+      case "parkausweis": {
+        const ev = await fsZeitraum(DW.veranstaltung);
+        if (p.ja !== undefined) {
+          const { data: alt } = await db.from("kc_club_fahrtprofil").select("art,km").eq("person_id", ich.person_id).maybeSingle();
+          const basis = { person_id: ich.person_id, art: alt?.art || "keine", km: alt?.art === "auto" ? alt.km : null, geaendert_am: jetzt() };
+          if (p.ja === true) {
+            const kz = fsKennzeichen(p.kennzeichen);
+            if (!kz) throw new Fehler("Bitte das Kennzeichen so eingeben: z. B. UN-AB 123.");
+            const von = String(p.von || ""), bis = String(p.bis || "");
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(von) || !/^\d{4}-\d{2}-\d{2}$/.test(bis)) throw new Fehler("Bitte „von“ und „bis“ wählen.");
+            if (bis < von) throw new Fehler("„bis“ liegt vor „von“.");
+            if (ev.von && ev.bis && (von < ev.von || bis > ev.bis)) throw new Fehler(`Der Zeitraum muss im ${ev.name} liegen (${ev.von.split("-").reverse().join(".")} bis ${ev.bis.split("-").reverse().join(".")}).`);
+            const { error } = await db.from("kc_club_fahrtprofil").upsert({ ...basis, kennzeichen: kz, park_event: DW.veranstaltung, park_von: von, park_bis: bis });
+            if (error) throw new Fehler("Der Parkausweis-Wunsch konnte nicht gespeichert werden.", 500);
+            await protokoll(ich.person_id, "parkausweis_gewuenscht", { veranstaltung: DW.veranstaltung, von, bis });
+          } else {
+            const { error } = await db.from("kc_club_fahrtprofil").upsert({ ...basis, park_event: null, park_von: null, park_bis: null });
+            if (error) throw new Fehler("Konnte nicht gespeichert werden.", 500);
+            await protokoll(ich.person_id, "parkausweis_abgemeldet", { veranstaltung: DW.veranstaltung });
+          }
+        }
+        return json({ park: await fsPark(ich.person_id), veranstaltung: ev });
+      }
+      // Clubleitung: Liste für die Stadt (ID = Mitgliedsnummer, Name, Vorname, Kennzeichen, Zeitraum)
+      case "parkausweis_liste": {
+        nurLeitung(ich);
+        const ev = await fsZeitraum(DW.veranstaltung);
+        const { data } = await db.from("kc_club_fahrtprofil").select("person_id,kennzeichen,park_von,park_bis,geaendert_am").eq("park_event", DW.veranstaltung).limit(500);
+        const ids = (data ?? []).map((x: any) => String(x.person_id));
+        const [{ data: ps }, leute] = await Promise.all([ids.length ? db.from("kc_core_personen").select("person_id,mitgliedsnummer,vorname,nachname").in("person_id", ids) : Promise.resolve({ data: [] as any[] }), personen(ids)]);
+        const pm = new Map((ps ?? []).map((x: any) => [String(x.person_id), x]));
+        const liste = (data ?? []).map((x: any) => { const q: any = pm.get(String(x.person_id)) || {}, n = String(leute.get(x.person_id)?.display_name || "").trim(), teile = n.split(" ");
+          return { id: q.mitgliedsnummer || x.person_id, nachname: q.nachname || teile.slice(1).join(" ") || n, vorname: q.vorname || teile[0] || "", kennzeichen: x.kennzeichen, von: x.park_von, bis: x.park_bis, geaendert: x.geaendert_am }; })
+          .sort((a: any, b: any) => String(a.nachname).localeCompare(String(b.nachname), "de") || String(a.vorname).localeCompare(String(b.vorname), "de"));
+        await protokoll(ich.person_id, "parkausweis_liste", { veranstaltung: DW.veranstaltung, anzahl: liste.length });
+        return json({ veranstaltung: ev, liste });
+      }
       case "fahrt_sammel_vorschlag": {
         return json(await fsVorschlag(ich.person_id, txt(p.veranstaltung, 80)));
       }
@@ -23983,6 +24021,24 @@ async function fsSammelVorbereiten(ich: Ich, p: any) {
   Object.assign(p, { positionen: pos, vorschuss: 0, auszahlung: p.auszahlung === "bar" ? "bar" : "ueberweisung",
     bemerkung: txt(`Sammel-Abrechnung ${v.veranstaltung.name}: ${pos.length} Fahrt${pos.length === 1 ? "" : "en"}${minuten ? `, dabei ${String(Math.round(minuten / 60 * 100) / 100).replace(".", ",")} Std. (stehen im Stundenkonto)` : ""}.`, 1000) });
   FS_SAMMEL.set(p, { event: v.veranstaltung.id, name: v.veranstaltung.name });
+}
+// ---------- KC-CLUB-PARKAUSWEIS (Hansi 26.11.2026): Parkausweis für die Veranstaltung (Kennzeichen, von–bis); Kassenwart druckt die Liste für die Stadt ----------
+// Kennzeichen deutsches Format „UN-AB 123“ (E/H am Ende erlaubt), höchstens 8 Zeichen ohne Trennzeichen; Zeitraum innerhalb der Veranstaltungstage.
+function fsKennzeichen(roh: unknown) {
+  const t = String(roh ?? "").toUpperCase().replace(/\s+/g, " ").trim();
+  const m = /^([A-ZÄÖÜ]{1,3})[\s-]+([A-Z]{1,2})[\s-]*([1-9]\d{0,3})([EH]?)$/.exec(t);
+  if (!m || (m[1] + m[2] + m[3]).length > 8) return null;
+  return `${m[1]}-${m[2]} ${m[3]}${m[4]}`;
+}
+async function fsZeitraum(eventId: string) { // erster und letzter veröffentlichter Veranstaltungstag
+  const [{ data: a }, { data: b }] = await Promise.all([
+    db.from("kc_dp_days_published").select("work_date").eq("org_id", ORG).eq("event_id", eventId).eq("status", "published").order("work_date", { ascending: true }).limit(1),
+    db.from("kc_dp_days_published").select("work_date").eq("org_id", ORG).eq("event_id", eventId).eq("status", "published").order("work_date", { ascending: false }).limit(1)]);
+  return { id: eventId, name: fsName(eventId), von: (a ?? [])[0]?.work_date || null, bis: (b ?? [])[0]?.work_date || null };
+}
+async function fsPark(pid: string) {
+  const { data } = await db.from("kc_club_fahrtprofil").select("kennzeichen,park_event,park_von,park_bis").eq("person_id", pid).maybeSingle();
+  return { kennzeichen: data?.kennzeichen || null, ja: !!data?.park_event && data.park_event === DW.veranstaltung, von: data?.park_von || null, bis: data?.park_bis || null };
 }
 // Wartung: nach dem letzten Tag der aktuellen Veranstaltung einmal erinnern (nur 9–20 Uhr, nur Fahrtprofil „Auto“, nur wer Zeilen hat und noch nicht abgerechnet hat)
 async function fsErinnern() {

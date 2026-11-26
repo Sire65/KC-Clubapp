@@ -3,8 +3,10 @@
 // Meins → 🚗 Fahrten & Abrechnung: 1. Fahrtprofil (🚶 keine Fahrtkosten = Vorgabe | 🚗 eigenes Auto, km hin und zurück – gilt für alle Veranstaltungen),
 // 2. Sammel-Abrechnung je Veranstaltung (Vorschlag vom Server aus den geprüften Diensten; km je Zeile änderbar, Zeile abwählbar; ausgegraut mit Grund).
 // Clubleitung: 📋 Sammel-Freigabe (alle auf einmal, über die vorhandene Aktion erstattung_erledigen – jedes Mitglied bekommt seine Nachricht) und 🚗 Fahrtprofile.
+// KC-CLUB-PARKAUSWEIS (Hansi 26.11.2026): Block „🅿️ Parkausweis“ (Nein/Ja, Kennzeichen, von–bis in der Veranstaltung) – unabhängig von den Fahrtkosten;
+// Clubleitung: Reiter „🅿️ Parkausweise“ mit Druckliste (ID, Name, Vorname, Kennzeichen, Zeitraum) für Stadtmarketing/Tourist-Info, Betrag je Ausweis eintragbar.
 // Konzept: KICC docs/KONZEPT-CLUB-FAHRTKOSTEN-SAMMEL.md. Nach jeder Änderung: node tools/teile-pruefsumme.mjs
-const FSS = { profil: null, kmMax: 500, v: null, ev: null, aend: {}, auszahlung: "ueberweisung", leit: null, leitTab: "freigabe", leitEv: null, wahl: new Set() };
+const FSS = { park: null, parkEv: null, parkJa: false, profil: null, kmMax: 500, v: null, ev: null, aend: {}, auszahlung: "ueberweisung", leit: null, leitTab: "freigabe", leitEv: null, wahl: new Set() };
 const FS_PLAUSI = { kmHoch: 300, abweichung: 0.5, profilHoch: 150 };
 const fsEuro = (n) => (Math.round(n * 100) / 100).toFixed(2).replace(".", ",") + " €";
 const fsZahl = (n, st = 1) => (Math.round(Number(n) * 10 ** st) / 10 ** st).toLocaleString("de-DE", { maximumFractionDigits: st });
@@ -15,8 +17,8 @@ const fsKmLesen = (v) => { const n = Number(String(v ?? "").trim().replace(",", 
 async function fsStart(veranstaltung) {
   if (!$("fsBlatt")) blattAuf("fsBlatt", `<h3 style="margin:0">🚗 Fahrten &amp; Abrechnung</h3><div id="fsInhalt"><p class="hinweis">Wird geladen …</p></div>`);
   try {
-    const [p, v] = await Promise.all([api("fahrtprofil", {}, { warten: true }), api("fahrt_sammel_vorschlag", veranstaltung ? { veranstaltung } : {}, { warten: true })]);
-    Object.assign(FSS, { profil: p.profil, kmMax: p.kmMax || 500, v, ev: v.veranstaltung?.id || null, aend: {} });
+    const [p, v, pk] = await Promise.all([api("fahrtprofil", {}, { warten: true }), api("fahrt_sammel_vorschlag", veranstaltung ? { veranstaltung } : {}, { warten: true }), api("parkausweis", {}, { warten: true })]);
+    Object.assign(FSS, { profil: p.profil, kmMax: p.kmMax || 500, v, ev: v.veranstaltung?.id || null, aend: {}, park: pk.park, parkEv: pk.veranstaltung, parkJa: !!pk.park?.ja });
   } catch (e) { if ($("fsInhalt")) $("fsInhalt").innerHTML = `<div class="karte">⚠️ ${esc(fehlerText(e, "Nicht geladen"))}</div>`; return; }
   fsZeichnen();
 }
@@ -85,8 +87,47 @@ function fsZeichnen(nurAbrechnung) {
       <button type="button" class="knopf haupt" style="margin-top:10px;width:100%" ${v.abrechenbar && s.fahrten && !s.fehler ? "" : "disabled"} onclick="fsEinreichen()">✅ Abrechnung einreichen · ${esc(fsEuro(s.euro))}</button>
       ${s.fehler ? '<p class="hinweis fs-fehler" style="margin:4px 0 0">Bitte die rot markierten km korrigieren.</p>' : ""}`}</section>`;
   if (nurAbrechnung && $("fsAbr")) { const y = $("fsInhalt").scrollTop; $("fsAbr").outerHTML = abr; $("fsInhalt").scrollTop = y; return; }
-  $("fsInhalt").innerHTML = fsProfilHtml() + abr;
+  $("fsInhalt").innerHTML = fsProfilHtml() + fsParkHtml() + abr;
 }
+// ---------- 🅿️ Parkausweis ----------
+const fsKz = (roh) => { const t = String(roh ?? "").toUpperCase().replace(/\s+/g, " ").trim(), m = /^([A-ZÄÖÜ]{1,3})[\s-]+([A-Z]{1,2})[\s-]*([1-9]\d{0,3})([EH]?)$/.exec(t);
+  return m && (m[1] + m[2] + m[3]).length <= 8 ? `${m[1]}-${m[2]} ${m[3]}${m[4]}` : null; }; // gleiche Regel wie im Server
+function fsParkHtml() {
+  const pk = FSS.park || {}, ev = FSS.parkEv || {}, ja = FSS.parkJa, dt = (iso) => (iso ? iso.split("-").reverse().join(".") : "–");
+  if (!ev.von) return `<section class="karte fs-karte fs-aus"><div class="fs-kopf"><b>🅿️ Parkausweis</b></div><p class="hinweis" style="margin:0">Für ${esc(ev.name || "die Veranstaltung")} gibt es noch keine Termine – der Parkausweis kommt, sobald der Dienstplan steht.</p></section>`;
+  return `<section class="karte fs-karte" id="fsPark"><div class="fs-kopf"><b>🅿️ Parkausweis ${esc(ev.name)}</b><small>${esc(dt(ev.von))} – ${esc(dt(ev.bis))}</small></div>
+    <p class="hinweis" style="margin:0 0 6px">Brauchst du einen Parkausweis? Der Kassenwart beantragt ihn kurz vor dem Markt bei der Stadt und bringt ihn mit.</p>
+    <div class="umschalter fs-wahl" role="radiogroup" aria-label="Parkausweis">
+      <button type="button" role="radio" aria-checked="${!ja}" class="${ja ? "" : "an"}" onclick="fsParkJa(false)">Nein<small>brauche keinen</small></button>
+      <button type="button" role="radio" aria-checked="${ja}" class="${ja ? "an" : ""}" onclick="fsParkJa(true)">🅿️ Ja<small>Kennzeichen und Zeitraum</small></button></div>
+    <div class="${ja ? "" : "versteckt"}" id="fsParkFelder">
+      <label class="feld" style="margin:8px 0 0">Kennzeichen<input id="fsKz" autocapitalize="characters" autocomplete="off" placeholder="z. B. UN-AB 123" value="${esc(pk.kennzeichen || "")}" oninput="fsKzPruefen()"></label>
+      <p class="hinweis" id="fsKzHinweis" style="margin:2px 0 0"></p>
+      <div class="fs-kmzeile" style="grid-template-columns:1fr 1fr"><label class="feld" style="margin:0">von<input type="date" id="fsParkVon" min="${esc(ev.von)}" max="${esc(ev.bis)}" value="${esc(pk.von || ev.von)}"></label>
+        <label class="feld" style="margin:0">bis<input type="date" id="fsParkBis" min="${esc(ev.von)}" max="${esc(ev.bis)}" value="${esc(pk.bis || ev.bis)}"></label></div>
+      <button type="button" class="knopf haupt" style="margin-top:8px;width:100%" onclick="fsParkSpeichern()">💾 Parkausweis-Wunsch speichern</button></div>
+    ${pk.ja ? `<p class="fs-status fs-ok" style="margin:6px 0 0">✓ Gewünscht: ${esc(pk.kennzeichen)} · ${esc(dt(pk.von))} – ${esc(dt(pk.bis))}</p>` : ""}</section>`;
+}
+function fsKzPruefen() {
+  const roh = $("fsKz")?.value || "", kz = fsKz(roh), h = $("fsKzHinweis"); if (!h) return kz;
+  h.textContent = !roh.trim() ? "" : kz ? `✓ ${kz}` : "Bitte so: Ort-Buchstaben Zahl, z. B. UN-AB 123";
+  h.className = "hinweis" + (roh.trim() && !kz ? " fs-fehler" : ""); return kz;
+}
+async function fsParkJa(ja) {
+  FSS.parkJa = ja;
+  if (!ja) { if (FSS.park?.ja) { try { const r = await api("parkausweis", { ja: false }); FSS.park = r.park; melde("✓ Kein Parkausweis"); } catch (e) { return meldeFehler(e); } } fsZeichnen(); return; }
+  fsZeichnen(); $("fsKz")?.focus();
+}
+async function fsParkSpeichern() {
+  const kz = fsKzPruefen(), von = $("fsParkVon")?.value, bis = $("fsParkBis")?.value, ev = FSS.parkEv || {};
+  if (!kz) return melde("Bitte das Kennzeichen prüfen – z. B. UN-AB 123.", true);
+  if (!von || !bis) return melde("Bitte „von“ und „bis“ wählen.", true);
+  if (bis < von) return melde("„bis“ liegt vor „von“.", true);
+  if (ev.von && (von < ev.von || bis > ev.bis)) return melde("Der Zeitraum muss in der Marktzeit liegen.", true);
+  try { const r = await api("parkausweis", { ja: true, kennzeichen: kz, von, bis }); FSS.park = r.park; FSS.parkJa = true; melde(`✓ Parkausweis-Wunsch gespeichert: ${kz}`); fsZeichnen(); }
+  catch (e) { meldeFehler(e); }
+}
+
 async function fsEinreichen() {
   const s = fsSummen(), v = FSS.v; if (!v?.abrechenbar || !s.fahrten || s.fehler) return;
   if (!(await frage(`Fahrtkosten ${v.veranstaltung.name} einreichen?\n\n${s.fahrten} Fahrt${s.fahrten === 1 ? "" : "en"} · ${fsZahl(s.km)} km = ${fsEuro(s.euro)} (${FSS.auszahlung === "bar" ? "bar" : "Überweisung"})${s.warn.length ? `\n\nBitte prüfen:\n• ${s.warn.join("\n• ")}` : ""}\n\nDer Antrag geht an den Kassenwart. Du bekommst eine Kopie.`, { ja: "✅ Einreichen", nein: "Zurück" }))) return;
@@ -102,15 +143,25 @@ async function fsEinreichen() {
 async function fsLeitung(tab) {
   if (tab) FSS.leitTab = tab;
   if (!$("fsLeitBlatt")) blattAuf("fsLeitBlatt", `<h3 style="margin:0">🚗 Fahrtkosten – Clubleitung</h3><div class="umschalter" style="margin:8px 0" role="tablist" id="fsLeitTabs"></div><div id="fsLeitInhalt"><p class="hinweis">Wird geladen …</p></div>`);
-  $("fsLeitTabs").innerHTML = [["freigabe", "📋 Sammel-Freigabe"], ["profile", "🚗 Fahrtprofile"]].map(([t, n]) => `<button type="button" role="tab" aria-selected="${FSS.leitTab === t}" class="${FSS.leitTab === t ? "an" : ""}" onclick="fsLeitung('${t}')">${n}</button>`).join("");
+  $("fsLeitTabs").innerHTML = [["freigabe", "📋 Sammel-Freigabe"], ["profile", "🚗 Fahrtprofile"], ["park", "🅿️ Parkausweise"]].map(([t, n]) => `<button type="button" role="tab" aria-selected="${FSS.leitTab === t}" class="${FSS.leitTab === t ? "an" : ""}" onclick="fsLeitung('${t}')">${n}</button>`).join("");
   try {
-    FSS.leit = FSS.leitTab === "profile" ? await api("fahrtprofil_liste", {}, { warten: true }) : await api("erstattung_sammel_liste", FSS.leitEv ? { veranstaltung: FSS.leitEv } : {}, { warten: true });
+    FSS.leit = FSS.leitTab === "profile" ? await api("fahrtprofil_liste", {}, { warten: true }) : FSS.leitTab === "park" ? await api("parkausweis_liste", {}, { warten: true })
+      : await api("erstattung_sammel_liste", FSS.leitEv ? { veranstaltung: FSS.leitEv } : {}, { warten: true });
   } catch (e) { $("fsLeitInhalt").innerHTML = `<div class="karte">⚠️ ${esc(fehlerText(e, "Nicht geladen"))}</div>`; return; }
   if (FSS.leitTab === "freigabe") FSS.wahl = new Set((FSS.leit.antraege || []).filter((a) => a.status === "eingereicht").map((a) => a.id));
   fsLeitZeichnen();
 }
 function fsLeitZeichnen() {
   const d = FSS.leit; if (!d || !$("fsLeitInhalt")) return;
+  if (FSS.leitTab === "park") {
+    const dt = (iso) => (iso ? iso.split("-").reverse().join(".") : "–"), l = d.liste || [];
+    $("fsLeitInhalt").innerHTML = `<p class="hinweis" style="margin:0 0 6px">${l.length} Parkausweis${l.length === 1 ? "" : "e"} für ${esc(d.veranstaltung?.name || "")} gewünscht. Die Liste druckst du aus und legst sie bei Stadtmarketing bzw. Tourist-Info vor.</p>
+      <div class="fs-tabelle"><div class="fs-zeile fs-kopfzeile"><div class="fs-links">Name · ID · Zeitraum</div><div class="fs-rechts" style="grid-template-columns:auto"><span>Kennzeichen</span></div></div>
+      ${l.map((x) => `<div class="fs-zeile"><div class="fs-links"><b>${esc(x.nachname)}, ${esc(x.vorname)}</b><div class="fs-z2">${esc(x.id)} · ${esc(dt(x.von))} – ${esc(dt(x.bis))}</div></div><div class="fs-rechts" style="grid-template-columns:auto"><b class="fs-euro">${esc(x.kennzeichen)}</b></div></div>`).join("") || '<p class="hinweis" style="padding:8px 0">Noch niemand hat einen Parkausweis gewünscht.</p>'}</div>
+      <div class="fs-kmzeile"><label class="feld" style="margin:0">Betrag je Ausweis (laut Schreiben der Stadt)<input id="fsParkBetrag" inputmode="decimal" placeholder="z. B. 25,00"></label>
+        <button type="button" class="knopf haupt" ${l.length ? "" : "disabled"} onclick="fsParkDrucken()">📄 Liste drucken</button></div>`;
+    return;
+  }
   if (FSS.leitTab === "profile") {
     const auto = (d.liste || []).filter((x) => x.art === "auto");
     $("fsLeitInhalt").innerHTML = `<p class="hinweis" style="margin:0 0 6px">${auto.length} von ${(d.liste || []).length} Mitgliedern rechnen Fahrtkosten ab. Jeder entscheidet selbst – hier nur zum Draufschauen.</p>
@@ -127,6 +178,19 @@ function fsLeitZeichnen() {
       <div class="fs-zeile fs-summe"><div class="fs-links"><b>${gew.length} ausgewählt</b></div><div class="fs-rechts"><b class="fs-euro">${esc(fsEuro(summe))}</b><span class="fs-haken"></span></div></div></div>
     <button type="button" class="knopf haupt" style="margin-top:10px;width:100%" ${gew.length ? "" : "disabled"} onclick="fsAlleFreigeben()">✅ ${gew.length === offen.length && gew.length > 1 ? "Alle" : gew.length} freigeben · ${esc(fsEuro(summe))}</button>
     <p class="hinweis" id="fsLeitFortschritt" style="margin:6px 0 0"></p>`;
+}
+function fsParkDrucken() {
+  const d = FSS.leit, l = d?.liste || []; if (!l.length) return;
+  const betrag = fsKmLesen($("fsParkBetrag")?.value), dt = (iso) => (iso ? iso.split("-").reverse().join(".") : "–"), ev = d.veranstaltung || {};
+  if ($("fsParkBetrag")?.value && !(betrag >= 0)) return melde("Bitte den Betrag als Zahl eingeben, z. B. 25,00.", true);
+  DRUCKARTEN.parkausweise = { bauen: () => ({ titel: "Parkausweise", unter: ev.name || "", rechts: esc(`${dt(ev.von)} – ${dt(ev.bis)}`), fuss: `${l.length} Parkausweise`,
+    html: `<p>Antrag auf Parkausweise für die Helferinnen und Helfer des Köcheclubs Werne am Stand ${esc(ev.name || "")}.</p>
+      <table><thead><tr><th style="width:9mm">Nr.</th><th style="width:22mm">ID</th><th>Name</th><th>Vorname</th><th style="width:30mm">Kennzeichen</th><th style="width:40mm">Zeitraum</th></tr></thead><tbody>
+      ${l.map((x, i) => `<tr><td>${i + 1}</td><td>${esc(x.id)}</td><td>${esc(x.nachname)}</td><td>${esc(x.vorname)}</td><td style="white-space:nowrap"><b>${esc(x.kennzeichen)}</b></td><td style="white-space:nowrap">${esc(dt(x.von))} – ${esc(dt(x.bis))}</td></tr>`).join("")}
+      <tr><td colspan="4" style="text-align:right"><b>Anzahl</b></td><td colspan="2"><b>${l.length}</b></td></tr>
+      ${Number.isFinite(betrag) && betrag > 0 ? `<tr><td colspan="4" style="text-align:right">je Ausweis ${esc(fsEuro(betrag))}</td><td colspan="2"><b>Summe ${esc(fsEuro(betrag * l.length))}</b></td></tr>` : ""}</tbody></table>
+      <div class="unterschrift"><div>Datum, Unterschrift Kassenwart – Köcheclub Werne</div><div>Ausweise erhalten / bezahlt am</div></div>` }) };
+  druckStarten("parkausweise");
 }
 function fsWahl(id, an) { if (an) FSS.wahl.add(id); else FSS.wahl.delete(id); fsLeitZeichnen(); }
 async function fsAlleFreigeben() {

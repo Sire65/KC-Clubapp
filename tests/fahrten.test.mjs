@@ -116,4 +116,23 @@ assert.match(app, /\{ id: "fahrten", thema: "club", sym: "🚗", t: "Fahrtkosten
 assert.match(teil, /api\("erstattung_erledigen", \{ id: a\.id, status: "erstattet", ausgezahlt: a\.auszahlung === "bar" \? "bar" : "ueberweisung" \}\)/, "Freigabe über die vorhandene Aktion");
 assert.ok(!/https?:\/\//.test(teil), "kein fremder Dienst");
 assert.match(ci, /node tests\/fahrten\.test\.mjs/, "Test läuft in den GitHub-Tests");
+// ---------- 5. KC-CLUB-PARKAUSWEIS ----------
+const S2 = Function("db", "ORG", "DW", "berlinTag", "berlinStunde", "txt", "dtPlaner", "Fehler", "kmSaetze", "satzFuer", "senden", "APP_URL", "jetzt",
+  `${stripTypeScriptTypes(block)}\nreturn { fsKennzeichen, fsZeitraum, fsPark };`)(
+  db, "KC_WERNE", { veranstaltung: "KC-WM-2026", name: "Weihnachtsmarkt Werne 2026" }, () => HEUTE, () => 10, (v, max) => String(v ?? "").trim().slice(0, max), () => false, Fehler,
+  async () => [], () => 0.3, async () => null, "https://x", () => "x");
+for (const [roh, soll] of [["UN-AB 123", "UN-AB 123"], ["un ab 123", "UN-AB 123"], ["UNAB123", null], ["UN AB123", "UN-AB 123"], ["d-x 1", "D-X 1"], ["HAM-K 77E", "HAM-K 77E"], ["MÜ-A 12", "MÜ-A 12"],
+  ["UN-AB 0123", null], ["UN 123", null], ["UNNA-AB 1", null], ["UN-ABC 1", null], ["HAM-XY 1234", null], ["", null]]) {
+  assert.equal(S2.fsKennzeichen(roh), soll, `Kennzeichen „${roh}“`);
+  assert.equal(ctx2KZ(roh), soll, `App gleiche Regel „${roh}“`);
+}
+function ctx2KZ(roh) { const c = { console }; vm.createContext(c); vm.runInContext(teil.slice(teil.indexOf("const fsKz ="), teil.indexOf("function fsParkHtml")) + "\nthis.f = fsKz;", c); return c.f(roh); }
+const zr = await S2.fsZeitraum("KC-WM-2026"); assert.equal(zr.von, "2026-12-04"); assert.equal(zr.bis, "2026-12-20");
+assert.match(sql + fs.readFileSync(new URL("../supabase/migrations/20261126_kc_club_parkausweis.sql", import.meta.url), "utf8"), /kennzeichen ~ '\^\[A-ZÄÖÜ\]\{1,3\}-\[A-Z\]\{1,2\} \[1-9\]\[0-9\]\{0,3\}\[EH\]\?\$'/, "Datenbank prüft das Format");
+const pk = server.slice(server.indexOf('case "parkausweis": {'), server.indexOf('case "fahrt_sammel_vorschlag": {'));
+assert.match(pk, /if \(!kz\) throw new Fehler/); assert.match(pk, /von < ev\.von \|\| bis > ev\.bis/, "Zeitraum in der Veranstaltung");
+assert.match(pk, /case "parkausweis_liste": \{\s*nurLeitung\(ich\);/, "Liste nur Clubleitung");
+assert.match(pk, /kc_core_personen"\)\.select\("person_id,mitgliedsnummer,vorname,nachname"\)/, "ID, Name, Vorname aus der Mitgliederverwaltung");
+assert.match(teil, /\["park", "🅿️ Parkausweise"\]/); assert.match(teil, /druckStarten\("parkausweise"\)/);
+assert.match(teil, /<th style="width:22mm">ID<\/th><th>Name<\/th><th>Vorname<\/th><th style="width:30mm">Kennzeichen<\/th>/, "Druckliste mit ID, Name, Vorname, Kennzeichen");
 console.log("fahrten: alle Prüfungen bestanden");

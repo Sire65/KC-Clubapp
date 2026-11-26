@@ -1,5 +1,11 @@
 # Änderungen
 
+## 3.34.0 – 2026-11-26 – 🅿️ Parkausweis für den Weihnachtsmarkt (KC-CLUB-PARKAUSWEIS) · Server 3.34.0 · Datenbank: `20261126_kc_club_parkausweis.sql`
+Hansi 26.11.: „Einige Kollegen bekommen einen Parkausweis für die Zeit des Weihnachtsmarktes. Die muss der Kassenwart beantragen … Das sollte man noch einbauen unter Meins mit den Kilometern. Kennzeichen und ‚brauchst du einen Parkausweis für den Weihnachtsmarkt‘. Von bis. Wenn ja angeklickt wird, kann der Kassenwart sich eine Liste ausdrucken mit ID, Name, Vorname, Kennzeichen, die er dort vorlegt.“
+- **Meins → 🚗 Fahrten & Abrechnung → 🅿️ Parkausweis** (zwischen Fahrtprofil und Abrechnung, unabhängig von den Fahrtkosten): Nein / 🅿️ Ja; bei Ja **Kennzeichen**, **von** und **bis** (vorbelegt mit erstem und letztem Markttag). Plausibilität: Kennzeichen im Format „UN-AB 123“ (Großbuchstaben von selbst, Hinweis beim Tippen; ohne Trennzeichen zwischen Ort und Buchstaben mehrdeutig → Hinweis), Zeitraum in der Marktzeit, „bis“ nicht vor „von“. Nein meldet den Wunsch ab, das Kennzeichen bleibt für nächstes Jahr gemerkt.
+- **Kassenwart/Clubleitung** (Erstattung → 🚗 Sammel-Freigabe → Reiter **🅿️ Parkausweise**): Liste nach Name; **📄 Liste drucken** auf dem Club-Kopfbogen mit Nr., ID (Mitgliedsnummer), Name, Vorname, Kennzeichen, Zeitraum, Anzahl, optional Betrag je Ausweis und Summe (Betrag laut Schreiben der Stadt eintragen), Unterschriftsfelder. Abruf der Liste wird protokolliert.
+- **Datenbank** `20261126_kc_club_parkausweis.sql`: `kc_club_fahrtprofil` + Kennzeichen (Formatprüfung), Parkausweis-Veranstaltung, von, bis (Prüfung: alles vorhanden, bis ≥ von). Test-Block in `tests/fahrten.test.mjs`. Rückweg: App/Server 3.33.0.
+
 ## 3.33.0 – 2026-11-26 – Bündel: 🚗 Fahrten & Abrechnung (KICC-F-114) · 📖 Hilfe, Erklär-Videos, Lupe und Twinkey passend zu 2.955–3.32 (KC-CLUB-HILFE-3330) · 🛡️ Lastwächter leise bei geplanter Sicherung · Server 3.33.0 · Datenbank: `20261126_kc_club_fahrtprofil.sql`
 
 ### 🚗 Fahrten & Abrechnung: Fahrtprofil und Sammel-Abrechnung (KICC-F-114, KC-CLUB-FAHRTKOSTEN-SAMMEL)
