@@ -50,5 +50,5 @@ assert.equal(lage({ anbieter: [{ name: "A", status: [{ art: "stoerung", erledigt
 assert.equal(lage({ anbieter: [{ name: "A", status: [], fehler: ["x"] }] })[0], "grau", "nicht abrufbar → grau");
 assert.equal(lage({ anbieter: [{ name: "A", status: [], wartung: [{ bis: new Date(Date.now() + 86400000).toISOString() }] }] })[0], "gelb", "Wartung angekündigt");
 assert.ok(/api\("wl_speichern", \{ text: `Anbieter-Neuerung prüfen/.test(teil), "„Prüfen lassen“ → Wunschliste");
-assert.ok(/\{ id: "anbieter_neues", thema: "technik"/.test(app), "Hilfe-Eintrag");
+assert.ok(!/\{ id: "anbieter_neues", thema: "technik"/.test(app), "kein Hilfe-Eintrag (Admin) "); /* Wunsch Hansi 26.11.2026: keine Admin-Funktionen in den allgemeinen Hilfen – Eintrag entfernt */
 console.log("anbieter-neues: alle Prüfungen bestanden");
