@@ -133,20 +133,20 @@ function doMplHtml() {
     <div class="mpl-kopf"><span class="mpl-logo"><img src="${esc(new URL(KC_CD.logo, location.href).href)}" alt=""></span><div class="mpl-marke"><b>${e(KC_CD.name)}</b><i>${e(KC_CD.zeile)}</i></div>
       <div class="mpl-titel"><h1>Interne Preisliste ${new Date().getFullYear()}</h1><div>Nur für Mitarbeiter · nicht für Kunden</div></div></div>
     <table><thead><tr><th class="n">Anzahl →<small>Preise in € · Getränke inkl. Pfand</small></th>${Array.from({ length: 10 }, (_, k) => `<th>${k + 1}</th>`).join("")}</tr></thead><tbody>${zeilen}</tbody></table>
-    <div class="mpl-hinweis"><b>Pfand</b> ist in den Getränkepreisen schon enthalten${glas ? `: Glaspfand ${doGeld(glas.preis)} €` : ""}${zange ? ` · Feuerzangenpfand ${doGeld(zange.preis)} €` : ""}. Pfand gibt es bei Rückgabe von Glas bzw. Feuerzange zurück.<span>Stand ${heute} · Preise aus dem PC-Manager</span></div>
+    <div class="mpl-hinweis"><span><b>Pfand</b> ist in den Getränkepreisen schon enthalten${glas ? `: Glaspfand ${doGeld(glas.preis)} €` : ""}${zange ? ` · Feuerzangenpfand ${doGeld(zange.preis)} €` : ""}. Pfand gibt es bei Rückgabe von Glas bzw. Feuerzange zurück.</span><span class="st">Stand ${heute} · Preise aus dem PC-Manager</span></div>
     <div class="mpl-fuss"><span>${e(KC_CD.name)} · <b>Weihnachtsmarkt ${new Date().getFullYear()}</b></span><span class="mpl-bar">Nur Barzahlung</span></div></div></div>`;
 }
 const DO_MPL_CSS = `.mpl{width:1123px;height:794px;box-sizing:border-box;background:#741521;padding:14px;font-family:"KPL Sans",Arial,sans-serif;color:#1d1a17}
-.mpl-rahmen{height:100%;box-sizing:border-box;background:#fbf7f0;border:2.5px solid #c9a227;border-radius:10px;padding:14px 22px 0;display:flex;flex-direction:column}
+.mpl-rahmen{height:100%;box-sizing:border-box;background:#fbf7f0;border:2.5px solid #c9a227;border-radius:10px;padding:12px 22px 0;display:flex;flex-direction:column}
 .mpl-kopf{display:flex;align-items:center;gap:14px;border-bottom:3px solid #c9a227;padding-bottom:8px}.mpl-logo{width:58px;height:58px;border-radius:50%;background:#741521;display:grid;place-items:center;box-shadow:0 0 0 3px #c9a227}
 .mpl-logo img{width:40px;height:40px;object-fit:contain}.mpl-marke{display:flex;flex-direction:column}.mpl-marke b{font-family:"KPL Serif",Georgia,serif;font-size:26px;color:#741521}.mpl-marke i{font-size:13px;color:#5b544d;white-space:nowrap}
 .mpl-titel{margin-left:auto;text-align:right}.mpl-titel h1{margin:0;font-family:"KPL Serif",Georgia,serif;font-size:40px;line-height:1;color:#741521}.mpl-titel div{color:#a87a1c;font-weight:700;font-size:13px;letter-spacing:.08em;text-transform:uppercase;margin-top:4px}
-.mpl table{width:100%;border-collapse:collapse;margin-top:8px;font-size:15px}.mpl thead th{background:#741521;color:#f6e7b8;font-size:20px;padding:4px 6px;text-align:right;font-family:"KPL Serif",Georgia,serif}
+.mpl table{width:100%;border-collapse:collapse;margin-top:6px;font-size:15.5px;line-height:1.3}.mpl thead th{background:#741521;color:#f6e7b8;font-size:19px;padding:2px 6px;text-align:right;font-family:"KPL Serif",Georgia,serif}
 .mpl thead th.n{text-align:left;font-size:17px}.mpl thead th.n small{display:block;font-size:11px;font-family:"KPL Sans",Arial;font-weight:400;opacity:.85}
 .mpl-gr th{background:var(--f);color:#fff;text-align:left;padding:3px 8px;font-size:16px;font-family:"KPL Serif",Georgia,serif;font-style:italic}
-.mpl td{padding:2px 6px;text-align:right;border-bottom:1px solid #e6d9c6;font-variant-numeric:tabular-nums;font-weight:600}.mpl tr.ug td{background:#f3e9dc}
+.mpl td{padding:1px 6px;text-align:right;border-bottom:1px solid #e6d9c6;font-variant-numeric:tabular-nums;font-weight:600}.mpl tr.ug td{background:#f3e9dc}
 .mpl td.n{text-align:left;font-weight:700;border-left:5px solid var(--f)}.mpl td.n small{display:block;font-size:10.5px;color:var(--f);font-weight:700}.mpl td.e{color:var(--f);font-weight:800;font-size:17px}
-.mpl tr.kl td{font-size:13px}.mpl-hinweis{margin-top:auto;padding:6px 0;font-size:12px;display:flex;justify-content:space-between;gap:10px}.mpl-hinweis b{color:#741521}.mpl-hinweis span{font-style:italic;color:#5b544d;white-space:nowrap}
+.mpl tr.kl td{font-size:13px}.mpl-hinweis{margin-top:auto;padding:6px 0;font-size:12px;display:flex;justify-content:space-between;gap:10px}.mpl-hinweis b{color:#741521}.mpl-hinweis span.st{font-style:italic;color:#5b544d;white-space:nowrap}
 .mpl-fuss{margin:0 -22px;padding:7px 22px;background:#741521;color:#f3e9dc;display:flex;justify-content:space-between;align-items:center;font-size:14px;border-radius:0 0 8px 8px}.mpl-fuss b{color:#e7c35a}
 .mpl-bar{border:2px solid #c9a227;color:#f6e7b8;border-radius:6px;padding:2px 10px;font-weight:700}`;
 
