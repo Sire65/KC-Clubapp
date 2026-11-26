@@ -192,7 +192,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   // Leserecht aus der Rollen-Registry (Aushilfen nein), nicht hart codiert im Server
   assert.ok(/protokolle: r \? r\.protokolle_lesen !== false : true/.test(server), "Protokoll-Recht aus kc_club_rollen fehlt");
   assert.ok(!/["'`]Aushilfe/.test(server), "Server darf das Amt „Aushilfe“ nicht hart codieren");
-  assert.equal((server.match(/nurProtokolle\(ich\)/g) || []).length, 23, "jede Protokoll-/Aufgaben-Aktion prüft das Leserecht"); // 2.818.0: +4 Prüf-Aktionen (KC-CLUB-PROTOKOLL-PRUEFUNG); KC-CLUB-AUFGABEN-STAND: +3 (Stand melden, Später, Nachfragen)
+  assert.equal((server.match(/nurProtokolle\(ich\)/g) || []).length, 24, "jede Protokoll-/Aufgaben-Aktion prüft das Leserecht"); // 3.44.0: +1 ablagekorb_zu_protokoll (KC-CLUB-ABLAGEKORB-PROTOKOLL); 2.818.0: +4 Prüf-Aktionen (KC-CLUB-PROTOKOLL-PRUEFUNG); KC-CLUB-AUFGABEN-STAND: +3 (Stand melden, Später, Nachfragen)
   // 7 Tage Einspruch; genehmigt erst nach Fristablauf ohne offene Einwände
   assert.ok(/const EINSPRUCH_TAGE = 7;/.test(server), "Einspruchsfrist 7 Tage fehlt");
   assert.ok(/if \(offeneEinwaende > 0\) return "einwand";/.test(server), "offener Einwand darf nicht als genehmigt gelten");

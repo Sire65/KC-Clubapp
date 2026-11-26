@@ -197,7 +197,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "3.42.0";
+const SERVER_VERSION = "3.44.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -19530,6 +19530,38 @@ Köcheclub Werne`,
         else await db.from("kc_club_ablagekorb").update({ anlagen: rest }).eq("id", z.id);
         await protokoll(ich.person_id, "ablagekorb_abgespalten", { id: z.id, neu: neu.id, anzahl: mit.length, ergebnis: txt(p.ergebnis, 300) });
         return json({ ok: true, id: neu.id, rest: rest.length });
+      }
+      // 3.44.0 KC-CLUB-ABLAGEKORB-PROTOKOLL (Wunsch Hansi 26.11.2026 „im Ablagekorb als Option: als Protokoll-Anlage einfügen mit Protokoll-Auswahl“):
+      // gewählte Dateien (leer = alle) werden als eigene Kopie des Admins ans Protokoll gehängt (dateiDuplizieren – die Originale räumt der Korb
+      // nach ABLK_TAGE weg, die Kopie bleibt beim Protokoll). Gleiche Regeln wie „protokoll_anlage“: nur Entwurf, nur wer bearbeiten darf, höchstens 20.
+      // Alle Dateien → Eintrag erledigt; nur ein Teil → als erledigter Eintrag abgespalten, der Rest bleibt offen.
+      case "ablagekorb_zu_protokoll": {
+        nurAdmin(ich); nurProtokolle(ich);
+        const z = await ablkHolen(p.id), pr = await protokollHolen(p.protokoll);
+        if (!darfBearbeiten(ich, pr)) throw new Fehler("Anhängen darf nur, wer das Protokoll schreibt.", 403);
+        if (pr.status !== "entwurf") throw new Fehler("Das Protokoll ist veröffentlicht – bitte dort erst „Korrigieren“ tippen.", 409);
+        const alle = ablkIds(z), roh = (Array.isArray(p.ids) ? p.ids : []).map(String), ids = roh.length ? alle.filter((x) => roh.includes(x)) : alle;
+        if (!ids.length) throw new Fehler("Bitte zuerst Dateien auswählen.");
+        const { count } = await db.from("kc_club_sitzungsprotokoll_anlagen").select("attachment_id", { count: "exact", head: true }).eq("protokoll_id", pr.id);
+        if ((count ?? 0) + ids.length > 20) throw new Fehler(`Höchstens 20 Anlagen je Protokoll – es sind schon ${count ?? 0}.`);
+        let n = count ?? 0;
+        for (const aid of ids) {
+          const k = await dateiDuplizieren(ich, aid);
+          const { error } = await db.from("kc_club_sitzungsprotokoll_anlagen").insert({ protokoll_id: pr.id, attachment_id: k.id, reihenfolge: n++ });
+          if (error) { await dateienEntfernen([k.id]); throw new Fehler("Konnte nicht angehängt werden.", 500); }
+        }
+        await db.from("kc_club_sitzungsprotokolle").update({ geaendert_am: jetzt() }).eq("id", pr.id);
+        const ergebnis = `📋 ${ids.length === 1 ? "Als Anlage" : ids.length + " Dateien als Anlage"} zum Protokoll „${txt(pr.titel, 80) || "Sitzung"}“ (${pr.datum ? tagText(pr.datum) : "ohne Datum"})`;
+        let rest = 0;
+        if (ids.length === alle.length) await db.from("kc_club_ablagekorb").update({ status: "erledigt", ergebnis, erledigt_von: ich.person_id, erledigt_am: jetzt() }).eq("id", z.id);
+        else {
+          const mit = (z.anlagen || []).filter((x: any) => ids.includes(String(x.id))), bleibt = (z.anlagen || []).filter((x: any) => !ids.includes(String(x.id)));
+          await db.from("kc_club_ablagekorb").insert({ von: z.von, titel: z.titel, text: null, anlagen: mit, status: "erledigt", ergebnis, erledigt_von: ich.person_id, erledigt_am: jetzt(), erstellt_am: z.erstellt_am });
+          await db.from("kc_club_ablagekorb").update({ anlagen: bleibt }).eq("id", z.id);
+          rest = bleibt.length;
+        }
+        await protokoll(ich.person_id, "ablagekorb_zu_protokoll", { id: z.id, protokoll: pr.id, anzahl: ids.length });
+        return json({ ok: true, anzahl: ids.length, rest, ergebnis });
       }
 
       case "ablagekorb_liste": {

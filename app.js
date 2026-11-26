@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "3.43.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "3.44.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -2813,7 +2813,7 @@ const HILFE = [
   { id: "foto_teilen", thema: "club", sym: "📥", t: "Fotos direkt aus der Galerie schicken", x: "Ist die Club-App installiert, taucht sie beim Teilen in der Handy-Galerie auf: Foto auswählen → <b>Teilen → Köcheclub</b>. Es landet im <b>📥 Ablagekorb</b>, und Hansi legt es ins Fotoalbum – Fotos bleiben im Original, das Aufnahmedatum bleibt erhalten. Bis 10 Dateien auf einmal.", seit: "2.23.1" },
   { id: "nachricht_termin", thema: "nachrichten", sym: "📅", t: "Nachricht als Termin übernehmen", x: "Steht in einer Nachricht ein Termin – z. B. <b>„Samstag 18 Uhr Grillen bei Klaus“</b> oder <b>„am 14.11. um 19:30 Sitzung“</b> –, liest die App Tag, Uhrzeit, Ort und Titel selbst heraus. Drei Wege: <b>1.</b> Unter der Nachricht steht ein Knopf <b>„📅 Sa., 24.10., 18:00 Uhr – eintragen“</b>. <b>2.</b> Nachricht antippen → <b>„📅 Als Termin übernehmen“</b>. <b>3.</b> In der kleinen Zeile am Schreibfeld (neben ▾ und ⌨️) das <b>📅</b> – es nimmt, was du gerade schreibst, sonst die neueste Nachricht mit Termin. Im Fenster ist alles vorausgefüllt: kurz prüfen, <b>✅ Eintragen</b> – fertig. Der Termin steht dann in deinem Kalender (nur du siehst ihn), auf Wunsch mit Erinnerung und zusätzlich im Kalender deines Handys. Die App versteht viele Schreibweisen: 14.11. · 14.11.2026 · 14. November · morgen · übermorgen · nächsten Freitag · nächste Woche Dienstag · in 3 Tagen · 19 Uhr · 19:30 · 19.30 Uhr · 18–20 Uhr · halb 8 · viertel nach 7 · „um 7“ (= 19 Uhr).", seit: "2.608.0" },
   { id: "verschluesselt", thema: "nachrichten", sym: "🔒", t: "Nachricht verschlüsselt senden", x: "Für Geheimes: im Chat oben am Schreibfeld in der kleinen Zeile (neben ▾, ⌨️ und 🔊) auf das Schloss <b>🔒</b> tippen (es wird grün), Nachricht schreiben, senden. Die App fragt erst: <b>„🔒 Ja, mit Schlüssel“</b> oder <b>„✉️ Normal senden“</b> – „Normal senden“ schaltet das Schloss aus und schickt die Nachricht wie immer. Mit „Ja“ legst du einen <b>Schlüssel</b> fest (mindestens 6 Zeichen, z. B. „Kochmütze7“); ein 🔑 dreht sich, und der <b>🕵️ Geheimagent</b> bringt die Nachricht. Beim Wechsel in einen anderen Chat geht das Schloss von selbst aus. Die Nachricht wird auf deinem Handy verschlüsselt; niemand sonst kann sie lesen – auch nicht der Server. Den Schlüssel sagst du dem Empfänger <b>auf einem anderen Weg</b>: persönlich, am Telefon oder per SMS. Er tippt auf „🔒 Verschlüsselte Nachricht“ und gibt ihn ein. Das Handy merkt sich den Schlüssel je Unterhaltung. Bequemer im Zweier-Chat: oben ⋮ → <b>🔑 Schlüsselbund</b> – die App legt 5 zufällige Schlüssel an, die du per WhatsApp oder Signal als Datei schickst; der Partner liest sie ein (Teilen → Club-App). Danach geht alles ohne Eintippen, passt kein Schlüssel, kommt eine Fehlermeldung. Fotos und Dateien, die du auswählst, während das Schloss an ist, werden ebenfalls verschlüsselt – ohne Schlüssel sieht man nur „🔒 Verschlüsselte Anlage“. Achtung: Schlüssel vergessen = Nachricht nicht mehr lesbar. Alles im Video <b>„🕵️ Geheim schreiben“</b>.", zeig: () => rgListeAbspielen(["geheim"]), seit: "2.517.0" },
-  { id: "ablagekorb", thema: "club", sym: "📥", t: "Teilen → Köcheclub: alles landet im Ablagekorb", x: "Fotos, Dokumente oder Texte aus anderen Programmen (Galerie, WhatsApp, Mail, Dateien) schickst du mit <b>Teilen → Köcheclub</b>. Alles kommt zuerst in den <b>📥 Ablagekorb</b> – bis 10 Dateien, jeder Dateityp (Fotos, PDF, Word, Excel, Videos …). Du siehst „Im Ablagekorb abgelegt“; Hansi kümmert sich darum und legt es ab – Fotoalbum, Ordner, Chat, Aufgabe, Thema für die Sitzung oder weiter an Clubsprecher bzw. Kassenwart. Gibt es die Datei schon in der Club-App, sagt dir die App: <b>„… gibt es schon in der Club-App“</b>. Kommt nichts an, nennt die App den Grund und was hilft (z. B. App neu installieren, bis dahin im Chat über 📎).", seit: "2.511.0" },
+  { id: "ablagekorb", thema: "club", sym: "📥", t: "Teilen → Köcheclub: alles landet im Ablagekorb", x: "Fotos, Dokumente oder Texte aus anderen Programmen (Galerie, WhatsApp, Mail, Dateien) schickst du mit <b>Teilen → Köcheclub</b>. Alles kommt zuerst in den <b>📥 Ablagekorb</b> – bis 10 Dateien, jeder Dateityp (Fotos, PDF, Word, Excel, Videos …). Du siehst „Im Ablagekorb abgelegt“; Hansi kümmert sich darum und legt es ab – Fotoalbum, Ordner, Chat, Aufgabe, Thema für die Sitzung, <b>📋 Anlage zu einem Protokoll</b> (z. B. der Scan der Mitschrift) oder weiter an Clubsprecher bzw. Kassenwart. Gibt es die Datei schon in der Club-App, sagt dir die App: <b>„… gibt es schon in der Club-App“</b>. Kommt nichts an, nennt die App den Grund und was hilft (z. B. App neu installieren, bis dahin im Chat über 📎).", seit: "2.511.0" },
   // 2.533.0 KC-CLUB-HILFE-NACHTRAG-4 (Wunsch Hansi „Prüfe alles und baue die Hilfen neu auf wie Twinkey, Lupe, Suchfunktion, Sprachsuche, Video auch mit Verschlüsselung“)
   { id: "schluesselbund", thema: "nachrichten", sym: "🔑", t: "Schlüsselbund: verschlüsselt schreiben ohne Eintippen", x: "Schreibst du jemandem öfter geheim, geht es bequemer mit einem <b>Schlüsselbund</b>: im Zweier-Chat oben <b>⋮ → „🔑 Schlüsselbund mit …“</b> → <b>„🔑 Anlegen und … schicken“</b>. Die App legt 5 zufällige Schlüssel an und gibt sie als <b>Datei</b> weiter – am besten per WhatsApp oder Signal, nicht per E-Mail. Der Partner tippt die Datei an → <b>Teilen → Club-App</b> (oder im Fenster „📥 Datei einlesen“); sie landet nicht im Ablagekorb und geht nie über den Club-Server. Danach: 🔒 an und senden – kein Eintippen, beim Partner öffnet sich die Nachricht von selbst. Passt kein Schlüssel, kommt eine Fehlermeldung. Neues Handy? Im Fenster <b>„💾 Sicherung speichern“</b>. Das Fenster schließt du mit ✕.", zeig: () => rgListeAbspielen(["geheim"]), seit: "2.518.0" },
   { id: "versand_leiste", thema: "nachrichten", sym: "📝", t: "Normal, ❗ Wichtig oder 🏎️ Express – die Leiste über dem Schreibfeld", x: "Sobald du etwas ins Schreibfeld tippst (oder etwas anhängst), erscheint darüber die Leiste <b>📝 Normal · ❗ Wichtig · 🏎️ Express</b>. <b>Normal</b> ist schon angehakt – eine normale Nachricht braucht nur ➤. Hakst du <b>❗ Wichtig</b> oder <b>🏎️ Express</b> an, geht der Haken bei Normal weg; beides zusammen geht auch. Neben Express steht, wie viele du heute schon hattest (z. B. 2/5). Nach dem Senden und beim Chatwechsel steht wieder Normal. Soll die Leiste immer zu sehen sein: ⚙️ → „🔔 Benachrichtigungen“ → <b>„📝❗🏎️ Versand-Leiste immer zeigen“</b>.", zeig: () => einstiegHin("benachrichtigung", "setWichtigFrage"), seit: "2.524.0" },
@@ -26812,6 +26812,7 @@ async function ablkZeigen(fokus) {
         <button class="knopf klein" onclick="ablkChat('${x.id}')">💬 In Chat</button>
         <button class="knopf klein" onclick="ablkPerson('${x.id}', 'weiter')">👤 Weitergeben</button>
         ${x.anlagen.some((f) => ARCHIV_TYP_OK(String(f.mime || "").split(";")[0])) ? `<button class="knopf klein" onclick="ablkEingang('${x.id}')">📥 In Eingangskörbe</button>` : ""}
+        ${x.anlagen.length && ICH?.protokolle !== false ? `<button class="knopf klein" onclick="ablkProtokoll('${x.id}')">📋 Als Protokoll-Anlage</button>` : ""}
         <button class="knopf klein" onclick="ablkPerson('${x.id}', 'aufgabe')">✅ Als Aufgabe</button>
         <button class="knopf klein" onclick="ablkVorschlag('${x.id}')">🗳️ Vorschlag Sitzung</button>
         ${x.anlagen.length ? `<button class="knopf klein" onclick="ablkDublettenPruefen('${x.id}')">🔍 Dubletten prüfen</button>` : ""}
@@ -26917,6 +26918,48 @@ async function ablkEgSenden(knopf, id) {
       await ablkFertig(id, `📥 In die Eingangskörbe: ${wer} (${r?.empfaenger ?? ids.length})`, true); ablkZeigen(id);
       melde(`📥 Liegt jetzt im Eingangskorb von ${r?.empfaenger ?? ids.length} ${(r?.empfaenger ?? ids.length) === 1 ? "Mitglied" : "Mitgliedern"} – sie bekommen Bescheid${weg.length ? ` · nicht möglich bei: ${weg.map((y) => `${y.name} (${y.grund})`).join(", ")}` : ""}`);
     } catch (e) { meldeFehler(e); ablkEgKnopf(); }
+  });
+}
+// ---------- 3.44.0 KC-CLUB-ABLAGEKORB-PROTOKOLL (Wunsch Hansi 26.11.2026 „im Ablagekorb als Option einbauen, dass ich es als Protokoll-Anlage
+// einfügen kann – mit Protokoll-Auswahl“; Anlass: gescanntes Sitzungsprotokoll per Mail → Teilen → Köcheclub, kam aus dem Korb nicht ans Protokoll).
+// Dateien anhaken (vorbelegt mit der Auswahl im Korb, sonst alle), Protokoll wählen (nur Entwürfe, die ich bearbeiten darf; veröffentlichte grau mit
+// Hinweis „erst Korrigieren“). Der Server hängt eine eigene Kopie an (ablagekorb_zu_protokoll) und erledigt den Eintrag bzw. spaltet ihn ab.
+const ablkPrTag = (d) => d ? String(d).split("-").reverse().join(".") : "ohne Datum";
+async function ablkProtokoll(id) {
+  const x = ablkEintrag(id); if (!x || !x.anlagen.length) return;
+  blattAuf("ablkPrBlatt", `<h3 style="margin:0">📋 Als Protokoll-Anlage</h3><p class="hinweis">⏳ Protokolle werden geladen …</p>`); $("ablkPrBlatt").style.zIndex = "2050";
+  let liste;
+  try { liste = (await api("protokolle_liste", {}, { warten: true })).protokolle || []; } catch (e) { $("ablkPrBlatt")?.remove(); return meldeFehler(e); }
+  if (!$("ablkPrBlatt")) return; // inzwischen geschlossen
+  const geht = liste.filter((p) => p.status === "entwurf" && p.darfBearbeiten), zu = liste.filter((p) => p.status !== "entwurf" && p.darfBearbeiten).slice(0, 8), w = ablkGewaehlt(id);
+  const name = (p) => `${esc(p.titel || "Sitzung")} · ${ablkPrTag(p.datum)}${p.anlagen ? ` · 📎 ${p.anlagen}` : ""}`;
+  blattAuf("ablkPrBlatt", `<h3 style="margin:0">📋 Als Protokoll-Anlage</h3>
+    <p class="hinweis" style="margin:2px 0 6px">Die Datei kommt als Anlage ins gewählte Protokoll – z. B. der Scan der handschriftlichen Mitschrift. Anhängen geht nur bei Entwürfen.</p>
+    ${x.anlagen.map((f) => `<label class="at-wahl"><input type="checkbox" data-pf="${esc(f.id)}" ${!w.size || w.has(f.id) ? "checked" : ""} onchange="ablkPrKnopf()"><span><b>${ablkSym(f)} ${esc(f.name)}</b></span></label>`).join("")}
+    ${geht.length ? `<label class="feld" style="margin-top:8px">In welches Protokoll?<select id="ablkPrWahl" onchange="ablkPrKnopf()">${geht.map((p) => `<option value="${esc(p.id)}">${name(p)}</option>`).join("")}
+        ${zu.length ? `<optgroup label="Veröffentlicht – dort erst „Korrigieren“ tippen">${zu.map((p) => `<option disabled>${name(p)}</option>`).join("")}</optgroup>` : ""}</select></label>`
+      : `<div class="karte hinweis" style="margin-top:8px">Kein Protokoll im Entwurf. Bei einem veröffentlichten Protokoll erst <b>„Korrigieren“</b> tippen – dann ist es wieder ein Entwurf und hier wählbar.</div>`}
+    <div class="knoepfe bs-fuss"><button class="knopf haupt" id="ablkPrLos" onclick="ablkPrSenden(this, '${esc(id)}')" disabled>📋 Anhängen</button><button class="knopf" onclick="$('ablkPrBlatt').remove()">Abbrechen</button></div>`);
+  $("ablkPrBlatt").style.zIndex = "2050";
+  ablkPrKnopf();
+}
+const ablkPrDateien = () => [...document.querySelectorAll("#ablkPrBlatt [data-pf]:checked")].map((c) => c.dataset.pf);
+function ablkPrKnopf() {
+  const k = $("ablkPrLos"); if (!k) return;
+  const t = ablkPrDateien().length, p = $("ablkPrWahl")?.value;
+  k.disabled = !t || !p; k.textContent = !p ? "Kein Protokoll wählbar" : !t ? "Bitte eine Datei anhaken" : `📋 ${t === 1 ? "1 Datei" : t + " Dateien"} anhängen`;
+}
+async function ablkPrSenden(knopf, id) {
+  const x = ablkEintrag(id), ids = ablkPrDateien(), protokoll = $("ablkPrWahl")?.value;
+  if (!x || !ids.length || !protokoll) return ablkPrKnopf();
+  await einmal(knopf, async () => {
+    try {
+      knopf.textContent = "⏳ Wird angehängt …";
+      const r = await api("ablagekorb_zu_protokoll", { id, protokoll, ids: ids.length === x.anlagen.length ? [] : ids }, { warten: true });
+      $("ablkPrBlatt")?.remove(); delete ABLK.wahl[id];
+      if (!r.rest && INIT?.ablagekorb) INIT.ablagekorb--;
+      melde(`✔ ${r.ergebnis || "Ans Protokoll angehängt"}`); ablkZeigen(r.rest ? id : undefined); ilZeigen?.();
+    } catch (e) { meldeFehler(e); ablkPrKnopf(); }
   });
 }
 async function ablkFertig(id, ergebnis, still) {
@@ -38316,7 +38359,7 @@ const FENSTER_NAMEN = {
   abBlatt: "📼 Mein Anrufbeantworter", ttBlatt: "🔬 Internet-Tiefentest", wchBlatt: "🛡️ Wächter", wchInfoBlatt: "🛡️ Wächter: Einzelheiten", wuBlatt: "📝 Wunschliste",
   stadtBlatt: "🏙️ Termine der Stadt Werne", uaBlatt: "🙋 Unterstützung bei der Club-App", treffenInfo: "📅 Termin-Details", ugBlatt: "📭 Noch nicht gelesen", snAdmin: "📣 Startnachricht schreiben",
   ltBlatt: "🔴 Live-Abstimmung", aeBlatt: "✏️ Meine Daten haben sich geändert", aeEingBlatt: "📬 Änderungen der Mitglieder", ausweisBlatt: "🪪 Mitgliedsausweis", fdkAbgabeBlatt: "🃏 Fang den Koch: Abgabe",
-  abAufnahmeBlatt: "🎙️ Sprachaufnahme", ablageBlatt: "🗄️ Ablage", ablkBlatt: "📥 Ablagekorb", ablkEgBlatt: "📥 In die Eingangskörbe der Mitglieder", pfoBlatt: "🔎 Protokoll-Fotos lesen", prWunschBlatt: "✏️ Protokoll: Änderung wünschen", nuBlatt: "📈 So nutzen wir die App", npBlatt: "📊 Nutzungsstatistik", irBlatt: "🗓️ Meine Ist-Zeiten", kwxBlatt: "📤 Kontakt weiterleiten", kkBlatt: "📇 Kontaktkarte",irAeBlatt: "📋 Zeitänderungen", impressumBlatt: "§ Impressum", teilnahmeBlatt: "👥 Teilnahme an den Sitzungen", einlEgBlatt: "👥 Einlesen: in die Eingangskörbe", adBlatt: "🛠️ Verwaltung",
+  abAufnahmeBlatt: "🎙️ Sprachaufnahme", ablageBlatt: "🗄️ Ablage", ablkBlatt: "📥 Ablagekorb", ablkEgBlatt: "📥 In die Eingangskörbe der Mitglieder", ablkPrBlatt: "📋 Als Protokoll-Anlage", pfoBlatt: "🔎 Protokoll-Fotos lesen", prWunschBlatt: "✏️ Protokoll: Änderung wünschen", nuBlatt: "📈 So nutzen wir die App", npBlatt: "📊 Nutzungsstatistik", irBlatt: "🗓️ Meine Ist-Zeiten", kwxBlatt: "📤 Kontakt weiterleiten", kkBlatt: "📇 Kontaktkarte",irAeBlatt: "📋 Zeitänderungen", impressumBlatt: "§ Impressum", teilnahmeBlatt: "👥 Teilnahme an den Sitzungen", einlEgBlatt: "👥 Einlesen: in die Eingangskörbe", adBlatt: "🛠️ Verwaltung",
   adbBlatt: "📒 Adressbuch", akPreisBlatt: "📋 Adventskalender – wer bekommt was", adbFormBlatt: "📒 Adresse melden/ändern", adminBlatt: "🛠️ Verwaltungsfenster", akBlatt: "🎄 Adventskalender", alarmBlatt: "🚨 Notfall-Meldung",
   alarmVorschau: "🚨 Notfall-Probe", ampelInfo: "🚦 Die Ampel", angebotInfo: "🎁 Angebot ansehen", anlAnsehBlatt: "📎 Anhang", anlBlatt: "📄 Anhang",
   anlLinkBlatt: "📄 Anhang (Link)", anlageBlatt: "📎 Anlage hinzufügen", ansichtBlatt: "👓 Ansicht wählen", arMenue: "🗄️ Archiv: Dokument", arWegBlatt: "🗑️ Dokument entfernen",

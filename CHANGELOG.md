@@ -1,5 +1,11 @@
 # Änderungen
 
+## 3.44.0 – 2026-11-26 – 📋 Ablagekorb: als Protokoll-Anlage einfügen, mit Protokoll-Auswahl (KC-CLUB-ABLAGEKORB-PROTOKOLL) · Server 3.44.0
+Wunsch Hansi 26.11.2026: „Und baue dort als Option auch ein, dass ich es als Protokoll-Anlage einfügen kann mit Protokoll-Auswahl.“ Anlass: der Scan der Mitschrift vom 24.11. kam per Mail → Teilen → Köcheclub in den Ablagekorb, von dort ging es nicht ans Protokoll.
+- 📥 Ablagekorb: neuer Knopf **📋 Als Protokoll-Anlage** (bei Einträgen mit Dateien). Im Fenster Dateien anhaken (vorbelegt mit der Auswahl im Korb, sonst alle) und das Protokoll wählen – wählbar sind Entwürfe, die man bearbeiten darf; veröffentlichte stehen grau dabei mit Hinweis „dort erst Korrigieren tippen“.
+- Server `ablagekorb_zu_protokoll` (nur Admin mit Protokoll-Recht): gleiche Regeln wie das Anhängen im Protokoll (nur Entwurf, Bearbeitungsrecht, höchstens 20 Anlagen). Angehängt wird eine **eigene Kopie** (`dateiDuplizieren`) – die Originale räumt der Ablagekorb nach 14 Tagen weg, die Anlage am Protokoll bleibt. Alle Dateien → Eintrag erledigt („📋 Als Anlage zum Protokoll …“); nur ein Teil → als erledigter Eintrag abgespalten, der Rest bleibt offen.
+- Hilfe „Ablagekorb“ nennt die neue Möglichkeit. Test `tests/ablagekorb-protokoll.test.mjs` (CI). Keine Datenbank-Änderung. Rückweg: App und Server 3.43.0.
+
 ## 3.43.0 – 2026-11-26 – 🗂️ Druckordner: lesbar im dunklen Design (KC-CLUB-DRUCKORDNER-KONTRAST)
 Fund Hansi 26.11.2026 (Bildschirmfoto „Kontrast???“): im dunklen Design waren gewählte Zeilen hell hinterlegt, die Schrift aber auch hell – kaum lesbar.
 - `teile/druckordner.js`: Zeilen, Überschriften und Anzahl nehmen die Farben des gewählten Designs (`--karte2`, `--text`, `--textRot`, `--linie`) statt fester heller Farben. Nur App, Server unverändert.

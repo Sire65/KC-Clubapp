@@ -196,6 +196,8 @@ jobs:
       - run: node tests/aktentasche-freigeben.test.mjs
       # KC-CLUB-ABLAGEKORB-EINGANG, KC-CLUB-EINGANG-WEITER (2.743.0)
       - run: node tests/ablagekorb-eingang.test.mjs
+      # KC-CLUB-ABLAGEKORB-PROTOKOLL (3.44.0)
+      - run: node tests/ablagekorb-protokoll.test.mjs
       - run: node tests/einlesen-eingang.test.mjs
       - run: node tests/update-dw-schutz.test.mjs
       - run: node tests/eingabe-ruhe.test.mjs
