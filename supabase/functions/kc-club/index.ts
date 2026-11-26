@@ -197,7 +197,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "3.44.0";
+const SERVER_VERSION = "3.45.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -22636,6 +22636,49 @@ Köcheclub-App`,
           pseudonym: pseudo.get(x.person_id) || "" })).sort((a: any, b: any) => a.name.localeCompare(b.name, "de"));
         const liste = alle.filter((x: any) => /^KC-\d{3,5}$/.test(x.nummer));
         return json({ liste, alle });
+      }
+      // ----- 3.45.0 KC-CLUB-AUFBAU-CHECK (Wunsch Hansi 26.11.2026 „wenn am 03.12. der Stand aufgebaut ist und das ganze System steht, checken ob alles
+      // läuft – Mini-PC, Router, 3 Kassen, TV mit Präsentation usw. Alles checken und abhaken“). Nur Clubleitung. Automatisch aus den Technik-Meldungen
+      // des Mini-PCs (kc_stand, kc_stand_spiegel: Kassen-Verbindungen, Verbindungsqualität – keine Umsätze, keine Namen), dazu Haken je Tag (kc_club_aufbau_check).
+      case "aufbau_check": {
+        nurVorstand(ich);
+        const tag = berlinTag(new Date());
+        const [{ data: st }, { data: qr }, { data: hb }, { data: preise }, { data: haken }] = await Promise.all([
+          db.from("kc_stand").select("id,name,zuletzt_gemeldet,info").eq("aktiv", true).order("zuletzt_gemeldet", { ascending: false }).limit(1),
+          db.from("kc_stand_kassen_qr").select("kasse,gemeldet_am").limit(20),
+          db.from("kicc_program_heartbeats").select("received_at").eq("program_id", "kc-pc-manager").order("received_at", { ascending: false }).limit(1),
+          db.from("kc_etikett_artikel_stand").select("veroeffentlicht_am").eq("org_id", ORG).maybeSingle(),
+          db.from("kc_club_aufbau_check").select("punkt,erledigt,notiz,geaendert_von,geaendert_am").eq("tag", tag).limit(200),
+        ]);
+        const stand = st?.[0] ?? null;
+        const { data: sp } = stand ? await db.from("kc_stand_spiegel").select("pfad,inhalt,stand_zeit").eq("stand_id", stand.id).in("pfad", ["/kassen-verbindungen", "/verbindungsqualitaet"]) : { data: [] as any[] };
+        const spiegel = new Map((sp ?? []).map((x: any) => [x.pfad, x]));
+        const kv: any = spiegel.get("/kassen-verbindungen"), vq: any = spiegel.get("/verbindungsqualitaet");
+        // Verbindungsqualität: Mittelwert der letzten 20 Messungen je Kasse (nur Zahlen)
+        const lag = new Map<string, number[]>();
+        for (const e of (Array.isArray(vq?.inhalt?.eintraege) ? vq.inhalt.eintraege : []).slice(-200)) { const k = String(e?.register_id || ""); if (k && Number.isFinite(Number(e?.lag_ms))) lag.set(k, [...(lag.get(k) || []), Number(e.lag_ms)].slice(-20)); }
+        const kassen = (Array.isArray(kv?.inhalt?.kassen) ? kv.inhalt.kassen : []).map((k: any) => {
+          const l = lag.get(String(k.kasse)) || [];
+          return { kasse: txt(k.kasse, 40), gekoppelt: !!k.gekoppelt, zustand: txt(k.zustand, 30), zuletzt: k.zuletztGemeldet || null, lag_ms: l.length ? Math.round(l.reduce((s, x) => s + x, 0) / l.length) : null };
+        }).sort((a: any, b: any) => a.kasse.localeCompare(b.kasse));
+        const info: any = stand?.info || {};
+        const nameNamen = new Map([...(await personen((haken ?? []).map((h: any) => h.geaendert_von))).entries()].map(([k, v]) => [k, vorname(v)]));
+        return json({ tag, jetzt: jetzt(),
+          stand: stand ? { name: stand.name, zuletzt: stand.zuletzt_gemeldet, version: txt(info.version, 40) || null, rueckstand: Number(info.rueckstand) || 0,
+            sperre: info.update?.sperre ? { aktiv: !!info.update.sperre.aktiv, von: info.update.sperre.von || null, bis: info.update.sperre.bis || null } : null,
+            router: info.router ?? null, tv: info.tv?.zuletzt ? { zuletzt: info.tv.zuletzt } : null, manager: kv?.inhalt?.managerLaeuft ?? null, kassen_stand: kv?.stand_zeit || null } : null,
+          kassen, qr: (qr ?? []).length, pc_manager: hb?.[0]?.received_at || null, preise: preise?.veroeffentlicht_am || null,
+          haken: (haken ?? []).map((h: any) => ({ punkt: h.punkt, erledigt: !!h.erledigt, notiz: h.notiz || "", von: nameNamen.get(h.geaendert_von) || "", am: h.geaendert_am })) });
+      }
+      case "aufbau_haken": {
+        nurVorstand(ich);
+        const punkt = txt(p.punkt, 60);
+        if (!/^[a-z0-9_-]{2,60}$/.test(punkt)) throw new Fehler("Unbekannter Prüfpunkt.");
+        const zeile = { tag: berlinTag(new Date()), punkt, erledigt: p.erledigt === true, notiz: txt(p.notiz, 300) || null, geaendert_von: ich.person_id, geaendert_am: jetzt() };
+        const { error } = await db.from("kc_club_aufbau_check").upsert(zeile, { onConflict: "tag,punkt" });
+        if (error) throw new Fehler("Konnte nicht gespeichert werden.", 500);
+        await protokoll(ich.person_id, "aufbau_haken", { punkt, erledigt: zeile.erledigt });
+        return json({ ok: true });
       }
       case "wl_liste": {
         nurAdmin(ich);

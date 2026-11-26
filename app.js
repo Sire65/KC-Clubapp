@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "3.44.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "3.45.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12,6 +12,7 @@ const APP_STUFE = "RC";
 // Pflege: gleiche Namen in sw.js (TEILE); nach jeder Änderung an teile/*.js: node tools/teile-pruefsumme.mjs (der Vertragstest prüft beides).
 // Rückweg: docs/AUFTEILEN.md.
 const TEILE_LISTE = {
+  aufbaucheck: { einstieg: ["acStart"], sri: "sha384-XWeJa+qY3nmywidwZucd9NOaxjYTWlbMmPaSLhK8fXItikbSwUUiUSH1Tdxo9R1K" }, // 3.45.0 KC-CLUB-AUFBAU-CHECK: Admin-Zentrale → 🧰 Aufbau-Check (Stand startklar? Mini-PC, Kassen, WLAN, TV + Liste zum Abhaken)
   druckordner: { einstieg: ["doStart"], sri: "sha384-YQEJJCXp+VdJG4XkILmd2+loS4OPngF+P1YWX6hjREO2g9SvaYdM7GRrcHGwyd6J" }, // KC-CLUB-DRUCKORDNER: Büro → Drucker → 🗂️ Druckordner (Kundenpreisliste, Interne Preisliste, Allergene, Etiketten, Kassen-Karten, Ordner Weihnachtsmarkt)
   kundenpreisliste: { einstieg: ["kplStart"], sri: "sha384-DmV0OmLTEZVKfp4uw7N4JOQiUPdTz7iX4jWgoO06oZyE/PknYjdPdRiO7x/QM9CD" }, // KC-CLUB-KUNDENPREISLISTE (3.32.0): Büro → Drucker → 📋 Kundenpreisliste (Entwurf 20, Preise/Allergene automatisch, nur Clubleitung)
   etiketten: { einstieg: ["peStart"], sri: "sha384-hZPVTBtZRkjm/gH7EiiPwId/cpV/5bFoQ/Zasy+rHzKYdMbfrZ1Muv762mCmZd7d" }, // KC-CLUB-PREISETIKETTEN (12.11.2026): Büro → Drucker → 🏷️ Preisetiketten (nur Clubleitung)
@@ -2839,6 +2840,7 @@ const HILFE = [
   // 🔔 Benachrichtigungen & Töne
   { id: "meine_geraete", thema: "toene", sym: "📱", t: "Auf welchen Geräten kommt Push an?", x: "Kommt auf dem Tablet nichts an? Unter ⚙️ → „🔔 Benachrichtigungen“ zeigt <b>„📱 Meine Geräte“</b>, welche deiner Handys und Tablets Benachrichtigungen bekommen. Daneben schickt „Test-Push senden“ eine Probe.", zeig: () => einstiegHin("benachrichtigung"), seit: "2.23.1" },
   { id: "spassstimme", thema: "toene", sym: "🎭", t: "Spaßstimmen im Gespräch", x: "Im App-Gespräch auf <b>🎭</b> tippen und eine Stimme wählen – z. B. 🐭 Mäusestimme, 🎈 Helium, 🤖 Roboter, 🐻 Brummbär oder 👻 Gespenst. Dein Gegenüber hört dich damit, du selbst hörst normal; mit 🙂 Normal geht es zurück. Klopft jemand mit „Sprechen“ an, kannst du gleich <b>„🎭 Mit Spaßstimme annehmen“</b>. Ausprobieren: ⚙️ → Privatsphäre → beim Anklopfton.", seit: "2.650.0" },
+  { id: "aufbau_check", thema: "club", sym: "🧰", t: "Aufbau-Check: Ist der Stand startklar?", nur: () => !!(ICH?.vorstand || ICH?.admin), x: "Admin-Zentrale → <b>🧰 Aufbau-Check</b>: oben prüft die App selbst, was der Stand meldet – <b>Mini-PC</b> (und damit Internet über den Router), <b>Manager-Dienst</b>, <b>Kasse 1–3</b> gekoppelt und aktiv, <b>WLAN-Verzögerung</b> je Kasse, ob der <b>Fernseher</b> die Präsentation holt, Kassen-QR-Codes, PC-Manager und veröffentlichte Preise (✅ grün, ⚠️ gelb, ❌ rot). Darunter die Liste zum <b>Abhaken</b> (Strom, Router, Tablets, Testbuchung, Scanner, Stechuhr, Fernseher, Aushänge, Gläser …) – gilt für heute, alle aus der Clubleitung sehen denselben Stand mit Name und Uhrzeit. Prüft alle 30 Sekunden neu, solange die Seite offen ist.", zeig: () => acStart(), seit: "3.45.0" },
   { id: "haendlerausweis", thema: "club", sym: "🪪", t: "Händler-Ausweis für den Weihnachtsmarkt", nur: () => !!(ICH?.vorstand || ICH?.admin), x: "Büro → <b>🖨️ Drucker</b> → <b>🪪 Händler-Ausweis</b>: Jahr, Rabatt in % und die Nummern wählen – je A4-Blatt 10 Ausweise mit Schnittmarken, beidseitig drucken (lange Kante). Jeder Ausweis hat Nummer und QR-Code mit Prüfcode. Mit <b>📋 Ausgabeliste</b> trägst du ein, wer welchen Ausweis bekommen hat; am Stand QR-Code scannen und Prüfcode vergleichen. Rabatt ist auf 10 % vorbelegt. Verloren oder missbraucht? <b>🚫 Sperren / Entsperren</b> – die Kasse gibt darauf nach dem nächsten Abgleich keinen Rabatt mehr.", seit: "2.690.0" },
   { id: "fett", thema: "nachrichten", sym: "𝐅", t: "Ein Wort fett, kursiv oder durchgestrichen", x: "Im Schreibfeld ein Wort <b>markieren</b> (lange drücken oder doppelt tippen) – darüber erscheinen <b>F fett</b>, <i>K kursiv</i> und <s>D durch</s>. Antippen, fertig. Oder in der kleinen Zeile über dem Schreibfeld auf <b>F</b> tippen. Wie bei WhatsApp geht es auch mit Zeichen: <b>*fett*</b>, <i>_kursiv_</i>, <s>~durchgestrichen~</s>. Nochmal antippen nimmt es wieder weg. Daneben die Farben <span class=\"nf nf-rot\">Rot</span>, <span class=\"nf nf-blau\">Blau</span>, <span class=\"nf nf-gruen\">Grün</span> und <span class=\"nf nf-gelb\">Gelb</span> (Textmarker) – genauso: markieren, Farbe antippen.", seit: "2.686.0" },
   { id: "anklopfton", thema: "toene", sym: "🔔", t: "Ein Anklopfton nach deinem Geschmack", x: "Holz-Klopfen, Ding-Dong, Gong oder Glöckchen: Welcher Ton erklingt, wenn jemand bei dir anklopft, suchst du dir unter ⚙️ → „🔒 Privatsphäre“ aus.", zeig: () => einstiegHin("privat"), seit: "2.23.1" },
@@ -14289,7 +14291,7 @@ function infoAdmin() {
       <span>👥 <b>${m.gesamt}</b> Mitglieder</span><span>🔑 <b>${m.mitZugang}</b> mit Zugang</span><span>🟢 <b>${m.online}</b> online</span>
       <span>📅 <b>${m.heute}</b> heute</span><span>🗓️ <b>${m.woche}</b> in 7 Tagen</span><span>⏳ <b>${m.nieAngemeldet}</b> nie angemeldet</span>
       <span>🔔 <b>${m.pushAbos}</b> mit Push</span><span>🔄 <b>${m.alteVersion}</b> alte Version</span></div>
-    <div class="knoepfe" style="margin-top:8px"><button class="wlink" onclick="inkognitoSetzen(!inkognitoAn())" aria-pressed="${inkognitoAn()}">${inkognitoAn() ? "🕶️ Inkognito: AN – ausschalten" : "🕶️ Inkognito einschalten"}</button><button class="wlink" onclick="adminQrBlatt()">🔳 QR-Codes ›</button><button class="wlink" onclick="adminBlatt()">📋 Einzelheiten ›</button><button class="wlink" onclick="INFO_DATEN.admin.geholt=0;infoDatenLaden(INFO_FELDER[INFO_I], true)">↻ Neu prüfen</button></div>`;
+    <div class="knoepfe" style="margin-top:8px"><button class="wlink" onclick="inkognitoSetzen(!inkognitoAn())" aria-pressed="${inkognitoAn()}">${inkognitoAn() ? "🕶️ Inkognito: AN – ausschalten" : "🕶️ Inkognito einschalten"}</button><button class="wlink" onclick="adminQrBlatt()">🔳 QR-Codes ›</button><button class="wlink" onclick="acStart()">🧰 Aufbau-Check ›</button><button class="wlink" onclick="adminBlatt()">📋 Einzelheiten ›</button><button class="wlink" onclick="INFO_DATEN.admin.geholt=0;infoDatenLaden(INFO_FELDER[INFO_I], true)">↻ Neu prüfen</button></div>`;
 }
 // Notfall: Spiegel sofort anstoßen (verbraucht Neon-Rechenzeit – daher mit Rückfrage)
 async function adminSpiegeln() {
@@ -38350,6 +38352,7 @@ const FENSTER_NAMEN = {
   peBlatt: "🏷️ Preisetiketten", // KC-CLUB-PREISETIKETTEN
   kplBlatt: "📋 Kundenpreisliste", // KC-CLUB-KUNDENPREISLISTE
   doBlatt: "🗂️ Druckordner", // KC-CLUB-DRUCKORDNER
+  acBlatt: "🧰 Aufbau-Check", // 3.45.0 KC-CLUB-AUFBAU-CHECK
   aaBlatt: "🤖 Autoantwort einstellen", // KC-CLUB-AUTOANTWORT
   sendeBerichtBlatt: "📊 Sendebericht", // KC-CLUB-SENDEBERICHT (19.11.2026)
   // 2.794.0 KC-CLUB-FENSTER-NAMEN-NACHTRAG (Fund Hansi 31.10.: in den Wegen stand „Fenster: „niFenster““) – Fenster, die nicht über blattAuf entstehen

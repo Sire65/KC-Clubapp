@@ -1,5 +1,12 @@
 # Änderungen
 
+## 3.45.0 – 2026-11-26 – 🧰 Aufbau-Check: Ist der Stand startklar? (KC-CLUB-AUFBAU-CHECK) · Server 3.45.0
+Wunsch Hansi 26.11.2026: „Wenn am 03.12. der Stand aufgebaut ist und das ganze System steht, checken ob alles läuft – Mini-PC, Router, 3 Kassen, TV mit Präsentation usw. Alles checken und abhaken.“
+- Admin-Zentrale → **🧰 Aufbau-Check** (nur Clubleitung), Programmteil `teile/aufbaucheck.js`.
+- 🤖 **Automatisch geprüft** (Server `aufbau_check`, nur Technik-Meldungen des Mini-PCs): Mini-PC meldet sich (= Internet über den Router), Manager-Dienst, Kasse 1–3 gekoppelt und aktiv, WLAN-Verzögerung je Kasse, Fernseher holt die Präsentation (neu vom Mini-PC gemeldet, Kasse-Repo), Kassen-QR-Codes, PC-Manager, Preise veröffentlicht, Update-Sperre. ✅/⚠️/❌, alle 30 Sekunden neu (ruht im Schlafmodus).
+- ☑️ **Liste zum Abhaken** (Strom & Netz, Mini-PC, Kassen inkl. Testbuchung, Scanner, Pfand, BAR, Stechuhr, Wechselgeld, Fernseher, Aushänge, Gläser/Schalen) – je Tag gespeichert (`kc_club_aufbau_check`, nur Server), alle sehen denselben Stand mit Name und Uhrzeit.
+- Hilfe-Eintrag, Test `tests/aufbau-check.test.mjs` (CI).
+
 ## 3.44.0 – 2026-11-26 – 📋 Ablagekorb: als Protokoll-Anlage einfügen, mit Protokoll-Auswahl (KC-CLUB-ABLAGEKORB-PROTOKOLL) · Server 3.44.0
 Wunsch Hansi 26.11.2026: „Und baue dort als Option auch ein, dass ich es als Protokoll-Anlage einfügen kann mit Protokoll-Auswahl.“ Anlass: der Scan der Mitschrift vom 24.11. kam per Mail → Teilen → Köcheclub in den Ablagekorb, von dort ging es nicht ans Protokoll.
 - 📥 Ablagekorb: neuer Knopf **📋 Als Protokoll-Anlage** (bei Einträgen mit Dateien). Im Fenster Dateien anhaken (vorbelegt mit der Auswahl im Korb, sonst alle) und das Protokoll wählen – wählbar sind Entwürfe, die man bearbeiten darf; veröffentlichte stehen grau dabei mit Hinweis „dort erst Korrigieren tippen“.
