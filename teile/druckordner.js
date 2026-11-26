@@ -8,7 +8,7 @@
 // Gespeichert wie das Druckpaket der Schilder-Druckerei (kc_club_schilder, daten.vorlage = "druckpaket", Teile mit typ live/etikett/karte/archiv).
 // Gedruckt: jede Seite als A4-Bild (Querformat gedreht), alles hintereinander über den zentralen Druck (randlos; dort auch 📄 PDF).
 
-const DO = { auswahl: new Map(), id: null, titel: "Druckvorlagen Weihnachtsmarkt 2026", archiv: [], format: 6, seiten: [], geladen: false };
+const DO = { auswahl: new Map(), id: null, titel: "Druckvorlagen Weihnachtsmarkt 2026", archiv: [], format: 6, formatK: 5, kassen: [], seiten: [], geladen: false };
 const DO_FEST = [["kpl", "📋", "Kundenpreisliste", "Entwurf 20 · A4 quer · Preise zzgl. Pfand"], ["mpl", "📊", "Interne Preisliste", "Mengen 1–10 inkl. Pfand · nur für Mitarbeiter · A4 quer"],
   ["allergene", "🧾", "Allergen-Aushang", "Allergene & Zusatzstoffe aus den Artikeldaten · A4 quer"]];
 const doKey = (typ, ref) => `${typ}:${ref}`;
@@ -20,9 +20,12 @@ const doPfand = (a) => (Array.isArray(a?.pfand) ? a.pfand : []).reduce((s, k) =>
 const doArtikel = () => (PE.artikel || []).filter((a) => a && a.nummer && a.name);
 const doVerkauf = () => doArtikel().filter((a) => !a.spezial && !/^(Pfand|Sonstiges)$/i.test(a.kategorie || "") && Number(a.preis) > 0);
 const doPfandArt = () => doArtikel().filter((a) => /^Pfand$/i.test(a.kategorie || ""));
-// 26.11.2026 (Hansi: „Die Etiketten haben kein Scheckkarten-Format. Es sollen nur die Kassen-QR-Codes haben“): Scheckkarten nur für die
-// Kassen-Codes – Pfandartikel (Pfand, Rückgaben) und der Bezahl-Code BAR. Getränke und Speisen gibt es als Preisetiketten.
+// 26.11.2026 (Hansi: „Glaspfand und Feuerzange und Check-Out müssen wie die anderen Etiketten sein, in z. B. 5 × 5. Nur die 3 Kassen-QR-Codes
+// zum Verbinden sollen im Scheckkarten-Format sein“): Pfandartikel (Pfand, Rückgaben) und BAR sind Etiketten mit eigener Größe (Vorgabe 5 cm);
+// Scheckkarten gibt es nur für die QR-Codes, mit denen ein Tablet als Kasse gekoppelt wird (vom Mini-PC gemeldet, nur Admin – Admin-Zentrale → 🔳 QR-Codes).
 const doKassenCodes = () => [...doPfandArt(), ...doArtikel().filter((a) => a.spezial === "bar")];
+const doPreisArtikel = () => doArtikel().filter((a) => !a.spezial && !/^Pfand$/i.test(a.kategorie || ""));
+const doKasseRef = (k) => String(k.kasse || "").replace(/[^A-Za-z0-9_-]/g, "-").slice(0, 60) || "kasse";
 
 async function doStart() {
   const f = blattAuf("doBlatt", `<h3 style="margin-top:0">🗂️ Druckordner</h3><div id="doInhalt"><p class="hinweis">⏳ Aktuelle Preise, Etiketten und Ordner werden geholt …</p></div>`);
@@ -31,19 +34,20 @@ async function doStart() {
     let r = null; try { r = await api("archiv_liste", {}, { warten: true }); } catch { /* ohne Archiv geht der Rest */ }
     const ordner = (r?.ordner || []).filter((o) => /weihnachtsmarkt/i.test(o.titel || "")), oids = new Set(ordner.map((o) => o.id));
     DO.archiv = (r?.dokumente || []).filter((d) => oids.has(d.ordner_id) && d.status === "ok" && d.datei && (istPdf(d.name, d.mime) || /^image\//.test(d.mime || ""))).slice(0, 40);
+    DO.kassen = []; if (ICH?.admin) try { await qrLaden(); DO.kassen = (await api("admin_qr_kassen", {}, { warten: true })).kassen || []; } catch { /* Kassen-Codes nur, wenn der Mini-PC sie gemeldet hat */ }
     let liste = null; try { liste = await api("schild_liste", {}, { warten: true }); } catch {}
     const gesp = (liste?.schilder || []).find((x) => x?.daten?.vorlage === "druckpaket" && /^Druckvorlagen/i.test(x.titel || "") && (x.daten.paket || []).some((t) => t.typ === "live"));
     DO.auswahl = new Map();
-    if (gesp) { DO.id = gesp.id; DO.titel = gesp.titel; for (const t of gesp.daten.paket) { if (t.typ === "etformat") DO.format = Number(t.ref.slice(1)) || 6; else DO.auswahl.set(doKey(t.typ, t.ref), { ...t, n: t.an === false ? 0 : t.n }); } }
+    if (gesp) { DO.id = gesp.id; DO.titel = gesp.titel; for (const t of gesp.daten.paket) { if (t.typ === "etformat") { if (t.ref[0] === "k") DO.formatK = Number(t.ref.slice(1)) || 5; else DO.format = Number(t.ref.slice(1)) || 6; } else DO.auswahl.set(doKey(t.typ, t.ref), { ...t, n: t.an === false ? 0 : t.n }); } }
     else for (const [ref, , t] of DO_FEST) doSet("live", ref, 1, t);
   } catch (e) { $("doBlatt")?.remove(); return meldeFehler(e); }
   if (!$("doInhalt")) return;
   doZeigen(f);
 }
 
-function doZeile(typ, ref, sym, titel, unter, extra = "") {
+function doZeile(typ, ref, sym, titel, unter, extra = "", gr = "") {
   const x = doGet(typ, ref);
-  return `<div class="do-z${x.n > 0 ? " an" : ""}" data-typ="${typ}" data-ref="${esc(ref)}" data-titel="${esc(titel)}">
+  return `<div class="do-z${x.n > 0 ? " an" : ""}" data-gr="${gr || (typ === "etikett" ? "preis" : "")}" data-typ="${typ}" data-ref="${esc(ref)}" data-titel="${esc(titel)}">
     <label><input type="checkbox" ${x.n > 0 ? "checked" : ""} data-do="haken"><span><b>${sym} ${esc(titel)}</b>${unter ? `<small>${esc(unter)}</small>` : ""}</span></label>${extra}
     <span class="do-n"><button type="button" class="knopf" data-do="-" aria-label="weniger">−</button><b>${x.n}</b><button type="button" class="knopf" data-do="+" aria-label="mehr">＋</button></span></div>`;
 }
@@ -52,14 +56,18 @@ function doZeigen(f) {
   const quelle = PE.quelle === "manager" ? `✅ Preise und Allergene aus dem PC-Manager${stand ? ` (veröffentlicht ${esc(stand)})` : ""}` : "⚠️ Grundstand der Kasse – im PC-Manager „An Kassen senden“ drücken, dann stehen hier die aktuellen Preise.";
   const art = (a) => `${doGeld(Number(a.preis) + doPfand(a))} €${doPfand(a) ? " inkl. Pfand" : ""} · ${a.nummer}`;
   const grp = (titel, inhalt, knoepfe = "") => `<section class="do-grp"><div class="do-gk"><h4>${titel}</h4>${knoepfe}</div>${inhalt}</section>`;
-  const alle = (typ) => `<span class="do-alle"><button type="button" class="knopf klein" data-alle="${typ}" data-wert="1">alle 1 ×</button><button type="button" class="knopf klein" data-alle="${typ}" data-wert="0">keine</button></span>`;
+  const alle = (typ, gr = "") => `<span class="do-alle"><button type="button" class="knopf klein" data-alle="${typ}" data-gr="${gr}" data-wert="1">alle 1 ×</button><button type="button" class="knopf klein" data-alle="${typ}" data-gr="${gr}" data-wert="0">keine</button></span>`;
+  const groesse = (feld) => [8, 7, 6, 5].map((k) => `<button type="button" class="chip${DO[feld] === k ? " an" : ""}" data-feld="${feld}" data-format="${k}">${k} cm</button>`).join("");
   $("doInhalt").innerHTML = `<p class="hinweis" style="margin:0 0 6px">${quelle}</p>
     <p class="hinweis" style="margin:0 0 10px">Haken setzen oder mit ＋ die Anzahl wählen – alles bleibt auf dieser Seite. Unten „🖨️ Alles drucken“.</p>
     ${grp("⭐ Immer aktuell", DO_FEST.map(([ref, sym, t, u]) => doZeile("live", ref, sym, t, u)).join(""))}
-    ${grp(`🏷️ Preisetiketten <small class="hinweis">(Größe ${[8, 7, 6, 5].map((k) => `<button type="button" class="chip${DO.format === k ? " an" : ""}" data-format="${k}">${k} cm</button>`).join("")})</small>`,
-      doArtikel().filter((a) => !a.spezial).map((a) => doZeile("etikett", a.id, "🏷️", a.name, `${a.kategorie || ""} · ${art(a)}`)).join(""), alle("etikett"))}
-    ${grp("🔳 Kassen-Codes als Scheckkarte <small class=\"hinweis\">(Pfand, Rückgaben, BAR · 85 × 54 mm zum Ausschneiden, 10 je Bogen)</small>",
-      doKassenCodes().map((a) => doZeile("karte", a.id, a.spezial ? "💶" : /^Pfand$/i.test(a.kategorie || "") ? "♻️" : "🔳", a.name, a.spezial ? "Bezahl-Code: scannen = bar kassieren" : art(a))).join(""), alle("karte"))}
+    ${grp(`🏷️ Preisetiketten <small class="hinweis">(Größe ${groesse("format")})</small>`,
+      doPreisArtikel().map((a) => doZeile("etikett", a.id, "🏷️", a.name, `${a.kategorie || ""} · ${art(a)}`)).join(""), alle("etikett", "preis"))}
+    ${grp(`♻️ Pfand- und Kassen-Etiketten <small class="hinweis">(Pfand, Rückgaben, BAR · Größe ${groesse("formatK")})</small>`,
+      doKassenCodes().map((a) => doZeile("etikett", a.id, a.spezial ? "💶" : "♻️", a.name, a.spezial ? "Bezahl-Code: scannen = bar kassieren" : art(a), "", "kasse")).join(""), alle("etikett", "kasse"))}
+    ${ICH?.admin ? grp("🔳 Kassen verbinden – QR als Scheckkarte <small class=\"hinweis\">(85 × 54 mm · nur Admin · nur im WLAN des Stand-Routers gültig)</small>",
+      DO.kassen.length ? DO.kassen.map((k) => doZeile("karte", doKasseRef(k), "🧾", k.kasse, `${k.stand || ""} · Tablet damit als diese Kasse koppeln`)).join("")
+        : '<p class="hinweis">Noch keine Kassen-Codes da. Sie kommen vom Mini-PC am Stand, sobald dort „KC Kasse starten“ läuft und er Internet hat.</p>') : ""}
     ${grp("📁 Aus dem Büro-Ordner „Weihnachtsmarkt“", DO.archiv.length ? DO.archiv.map((d) => doZeile("archiv", d.datei, arDateiSym(d.mime), d.titel || d.name, d.datum ? wann(d.datum) : "")).join("")
       : `<p class="hinweis">Im Büro-Ordner „Weihnachtsmarkt“ liegt noch nichts. Dateien dort ablegen (📥 Einlesen), dann erscheinen sie hier.</p>`)}
     <div class="do-fuss"><b id="doSumme"></b>
@@ -77,8 +85,8 @@ function doZeigen(f) {
     z.querySelector("[data-do='+']").onclick = () => { doSet(typ, ref, doGet(typ, ref).n + 1, titel); zeile(z); };
     z.querySelector("[data-do='-']").onclick = () => { doSet(typ, ref, doGet(typ, ref).n - 1, titel); zeile(z); };
   });
-  f.querySelectorAll("[data-alle]").forEach((b) => (b.onclick = () => f.querySelectorAll(`.do-z[data-typ="${b.dataset.alle}"]`).forEach((z) => { doSet(z.dataset.typ, z.dataset.ref, Number(b.dataset.wert), z.dataset.titel); zeile(z); })));
-  f.querySelectorAll("[data-format]").forEach((b) => (b.onclick = () => { DO.format = Number(b.dataset.format); f.querySelectorAll("[data-format]").forEach((x) => x.classList.toggle("an", x === b)); }));
+  f.querySelectorAll("[data-alle]").forEach((b) => (b.onclick = () => f.querySelectorAll(`.do-z[data-typ="${b.dataset.alle}"]${b.dataset.gr ? `[data-gr="${b.dataset.gr}"]` : ""}`).forEach((z) => { doSet(z.dataset.typ, z.dataset.ref, Number(b.dataset.wert), z.dataset.titel); zeile(z); })));
+  f.querySelectorAll("[data-format]").forEach((b) => (b.onclick = () => { DO[b.dataset.feld] = Number(b.dataset.format); f.querySelectorAll(`[data-feld="${b.dataset.feld}"]`).forEach((x) => x.classList.toggle("an", x === b)); }));
   f.querySelector("[data-zu]").onclick = () => $("doBlatt")?.remove();
   $("doDruck").onclick = (e) => doDrucken(e.currentTarget);
   $("doSpeichern").onclick = (e) => doSpeichern(e.currentTarget);
@@ -87,7 +95,7 @@ function doZeigen(f) {
 
 async function doSpeichern(knopf) {
   const paket = [...DO.auswahl.values()].filter((x) => x.n > 0 || x.typ === "live").map((x) => ({ typ: x.typ, ref: x.ref, titel: x.titel, n: Math.max(1, x.n), an: x.n > 0 }));
-  paket.push({ typ: "etformat", ref: "f" + DO.format, titel: `Etiketten ${DO.format} cm`, n: 1, an: true });
+  paket.push({ typ: "etformat", ref: "f" + DO.format, titel: `Etiketten ${DO.format} cm`, n: 1, an: true }, { typ: "etformat", ref: "k" + DO.formatK, titel: `Pfand-/Kassen-Etiketten ${DO.formatK} cm`, n: 1, an: true });
   const name = await eingabe("💾 Unter welchem Namen speichern?", DO.titel); if (!name || !name.trim()) return;
   await einmal(knopf, async () => {
     const r = await api("schild_speichern", { id: DO.id, titel: name.trim(), anlass: "weihnachtsmarkt", daten: { vorlage: "druckpaket", paket } });
@@ -184,18 +192,25 @@ const DO_ALA_CSS = `.ala{width:1123px;height:794px;box-sizing:border-box;backgro
 .ala-leg{margin-top:auto;display:flex;flex-direction:column;gap:3px;font-size:11.5px;border-top:1px solid #d9cbb8;padding-top:6px}.ala-leg b{color:#741521}.ala-leg i{width:14px;height:14px;line-height:14px;font-size:10px;vertical-align:-2px}`;
 
 // Preisetiketten: wie „🖨️ Drucken“ im Etiketten-Fenster (gleiches Raster, gleiche Schnittmarken), aber mit den Anzahlen aus dem Druckordner
-async function doEtikettSeiten(liste) {
-  PE.format = DO.format; await qrLaden(); const r = peRaster(DO.format), K = r.K, je = r.sp * r.ze, W = Math.round(210 * PE_MM), H = Math.round(297 * PE_MM), seiten = [];
+async function doEtikettSeiten(liste, format = DO.format) {
+  PE.format = format; await qrLaden(); const r = peRaster(format), K = r.K, je = r.sp * r.ze, W = Math.round(210 * PE_MM), H = Math.round(297 * PE_MM), seiten = [];
   for (let i = 0; i < liste.length; i += je) {
     const teil = liste.slice(i, i + je), c = document.createElement("canvas"); c.width = W; c.height = H; const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, W, H);
     const ze = Math.ceil(teil.length / r.sp), x0 = (210 - r.sp * K) / 2, y0 = (297 - r.ze * K) / 2;
-    for (let k = 0; k < teil.length; k++) await peEtikett(g, teil[k], x0 + (k % r.sp) * K, y0 + Math.floor(k / r.sp) * K, K);
+    for (let k = 0; k < teil.length; k++) await doEtikett(g, teil[k], x0 + (k % r.sp) * K, y0 + Math.floor(k / r.sp) * K, K);
     g.fillStyle = "#000"; const mk = (x, y, w, h) => g.fillRect(x * PE_MM, y * PE_MM, w * PE_MM, h * PE_MM);
     for (let c2 = 0; c2 <= r.sp; c2++) { const x = x0 + c2 * K; mk(x - 0.125, y0 - 6, 0.25, 4); mk(x - 0.125, y0 + ze * K + 2, 0.25, 4); }
     for (let z = 0; z <= ze; z++) { const y = y0 + z * K; mk(x0 - 6, y - 0.125, 4, 0.25); mk(x0 + r.sp * K + 2, y - 0.125, 4, 0.25); }
     seiten.push(c.toDataURL("image/jpeg", 0.9)); c.width = c.height = 0;
   }
   return seiten;
+}
+// Ein Etikett wie im Etiketten-Fenster; BAR (Check-out) im selben Format wie die anderen, aber ohne Foto: Farbband „KASSEN-CODE / BAR – bezahlen“,
+// darunter groß der QR-Code mit der Nummer (statt des eigenen BAR-Etiketts aus dem Etiketten-Fenster)
+async function doEtikett(g, a, x, y, K) {
+  if (a.spezial !== "bar") return peEtikett(g, a, x, y, K);
+  const alt = { ...PE.aus }; Object.assign(PE.aus, { foto: false, preis: false, pfand: false, allergene: false, zusatz: false, alkohol: false });
+  try { await peEtikett(g, { ...a, spezial: undefined, kategorie: "Kassen-Code", name: "BAR – bezahlen", warengruppeFarbe: "#1b5e20", farbe: "#1b5e20" }, x, y, K); } finally { PE.aus = alt; }
 }
 // Kassen-Codes als Scheckkarte (85,6 × 54 mm, ISO-Kartengröße): 2 × 5 je A4-Bogen, Schnittmarken außen. Oben das Farbband (Warengruppe bzw.
 // Grün für BAR), links Name und Preis (Getränke inkl. Pfand), rechts der QR-Code mit der Artikelnummer – dieselbe Nummer wie auf den Etiketten.
@@ -214,34 +229,20 @@ async function doKartenSeiten(liste) {
 // 26.11.2026 (Hansi: „Bei den Pfandrückgaben müssen noch die Bilder drauf wie bei den Artikel-Etiketten. Und die Check-Out müssen auch das
 // Format haben, aber ohne Bild“): jede Karte gleich aufgebaut – Farbband mit Name, links das Foto (wie auf den Preisetiketten, aus der Kasse),
 // daneben Preis und Zusatz, rechts der QR-Code; ohne Foto (BAR, Artikel ohne Bild) rückt der Text nach links.
-async function doKarte(g, a, x, y, w, h) {
-  const M = PE_MM, X = (v) => (x + v) * M, Y = (v) => (y + v) * M, bar = a.spezial === "bar", pf = /^Pfand$/i.test(a.kategorie || "");
-  const farbe = bar ? "#1b5e20" : pf ? "#29689a" : /^#[0-9a-f]{6}$/i.test(a.warengruppeFarbe || "") ? a.warengruppeFarbe : "#741521", S = PE_SCHRIFT;
-  const foto = bar ? null : await peFoto(a).catch(() => null);
+async function doKarte(g, k, x, y, w, h) {
+  const M = PE_MM, X = (v) => (x + v) * M, Y = (v) => (y + v) * M, farbe = "#741521", S = PE_SCHRIFT;
   g.save(); g.fillStyle = "#fff"; peRund(g, X(0.6), Y(0.6), (w - 1.2) * M, (h - 1.2) * M, 3 * M); g.fill(); g.lineWidth = 0.5 * M; g.strokeStyle = farbe; g.stroke(); g.clip();
   g.fillStyle = farbe; g.fillRect(X(0), Y(0), w * M, 10 * M);
-  const qs = 32, qx0 = w - qs - 3, qy0 = 12.5;
-  g.fillStyle = "#fff"; g.textAlign = "left"; g.textBaseline = "middle";
-  let gr = 5; g.font = `800 ${gr * M}px ${S}`; const titel = bar ? "BAR – bezahlen" : a.name; while (g.measureText(titel).width > (w - 8) * M && gr > 3) { gr -= 0.1; g.font = `800 ${gr * M}px ${S}`; }
-  g.fillText(titel, X(4), Y(5.3));
-  // Foto links (quadratischer Ausschnitt wie auf dem Etikett)
-  let tx = 4;
-  if (foto) { const fs = 27, fh = Math.min(fs, fs * foto.height / foto.width); g.save(); peRund(g, X(4), Y(qy0), fs * M, fh * M, 2 * M); g.clip(); g.drawImage(foto, X(4), Y(qy0), fs * M, fh * M); g.restore(); tx = 4 + fs + 2.5; }
-  const tb = qx0 - tx - 1.5; // Platz zwischen Foto und QR-Code
-  const q = qrcode(0, "M"); q.addData(String(a.nummer)); q.make(); const n = q.getModuleCount(), z = (qs * M) / (n + 2), qx = X(qx0), qy = Y(qy0);
+  g.fillStyle = "#fff"; g.textAlign = "left"; g.textBaseline = "middle"; g.font = `800 ${5 * M}px ${S}`; g.fillText(`Kasse verbinden · ${k.kasse}`, X(4), Y(5.3));
+  const qs = 38, q = qrcode(0, "M"); q.addData(String(k.url)); q.make(); const n = q.getModuleCount(), z = (qs * M) / (n + 2), qx = X(w - qs - 2.5), qy = Y(11.5);
   g.fillStyle = "#000"; for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (q.isDark(r, c)) g.fillRect(Math.floor(qx + (c + 1) * z), Math.floor(qy + (r + 1) * z), Math.ceil(z), Math.ceil(z));
-  const passen = (t, gr0, min, gew) => { let k = gr0; g.font = `${gew} ${k * M}px ${S}`; while (g.measureText(t).width > tb * M && k > min) { k -= 0.1; g.font = `${gew} ${k * M}px ${S}`; } return k; };
-  const zeilen = (t, gr0, y0, gew, farb) => { g.font = `${gew} ${gr0 * M}px ${S}`; g.fillStyle = farb; const w0 = t.split(" "), l = []; let z0 = "";
-    for (const wort of w0) { const v = z0 ? z0 + " " + wort : wort; if (g.measureText(v).width > tb * M && z0) { l.push(z0); z0 = wort; } else z0 = v; } if (z0) l.push(z0);
-    l.slice(0, 3).forEach((zz, i) => g.fillText(zz, X(tx), Y(y0 + i * gr0 * 1.2))); };
-  g.textBaseline = "alphabetic";
-  if (bar) { const k = passen("BAR", 14, 6, 900); g.fillStyle = farbe; g.fillText("BAR", X(tx), Y(qy0 + k * 0.85)); zeilen("Scannen = Verkauf bar abschließen", 3, qy0 + k * 0.85 + 5, 600, "#333"); }
-  else {
-    const pfand = doPfand(a), preis = Number(a.preis) + pfand, t = doGeld(preis).replace("-", "−"), k = passen(t, foto ? 9.5 : 12, 5, 900);
-    g.fillStyle = "#1d1a17"; g.fillText(t, X(tx), Y(qy0 + k * 0.85));
-    zeilen(pf ? (preis < 0 ? "Rückgabe – Pfand zurück" : "Pfand") : pfand ? `inkl. ${doGeld(pfand)} € Pfand` : "€ · ohne Pfand", 2.8, qy0 + k * 0.85 + 4.5, 700, farbe);
-  }
-  g.fillStyle = "#555"; g.font = `600 ${2.6 * M}px ${S}`; g.fillText(`${a.kategorie || "Kasse"} · Nr. ${a.nummer}`, X(4), Y(h - 3.2));
+  g.textBaseline = "alphabetic"; const tb = w - qs - 2.5 - 4 - 2; let ty = 18;
+  const zeile = (t, gr, gew, farb, abst = 1.35) => { g.font = `${gew} ${gr * M}px ${S}`; g.fillStyle = farb; const l = []; let z0 = "";
+    for (const wort of String(t).split(" ")) { const v = z0 ? z0 + " " + wort : wort; if (g.measureText(v).width > tb * M && z0) { l.push(z0); z0 = wort; } else z0 = v; } if (z0) l.push(z0);
+    for (const zz of l) { g.fillText(zz, X(4), Y(ty)); ty += gr * abst; } };
+  zeile(k.kasse, 7, 900, farbe, 1.2); ty += 0.5; zeile("Mit dem Tablet scannen – es wird diese Kasse.", 2.9, 700, "#1d1a17"); ty += 0.8;
+  zeile("Nur im WLAN des Stand-Routers gültig.", 2.6, 600, "#5b544d"); zeile("Nicht weitergeben – bei Verlust im PC-Manager „Gerät verloren“.", 2.4, 600, "#b91c1c");
+  g.fillStyle = "#555"; g.font = `600 ${2.4 * M}px ${S}`; g.fillText(`${k.stand || "Stand"} · Köcheclub Werne`, X(4), Y(h - 3.2));
   g.restore();
 }
 
@@ -258,11 +259,14 @@ async function doDrucken(knopf) {
         for (let i = 0; i < t.n; i++) seiten.push(b);
       } catch (e) { fehlt.push(`${t.titel} (${e?.message || e})`); }
     }
-    const et = reihe("etikett"); if (et.length) { melde(`⏳ ${et.length} Preisetiketten …`); try { seiten.push(...(await doEtikettSeiten(et))); } catch (e) { fehlt.push(`Preisetiketten (${e?.message || e})`); } }
-    const ka = doKassenCodes().filter((a) => doGet("karte", a.id).n > 0).flatMap((a) => Array(doGet("karte", a.id).n).fill(a));
+    const kasse = new Set(doKassenCodes().map((a) => a.id)), et = reihe("etikett");
+    for (const [teil, fmt, name] of [[et.filter((a) => !kasse.has(a.id)), DO.format, "Preisetiketten"], [et.filter((a) => kasse.has(a.id)), DO.formatK, "Pfand- und Kassen-Etiketten"]]) {
+      if (!teil.length) continue; melde(`⏳ ${teil.length} ${name} …`); try { seiten.push(...(await doEtikettSeiten(teil, fmt))); } catch (e) { fehlt.push(`${name} (${e?.message || e})`); } }
+    const ka = DO.kassen.filter((k) => doGet("karte", doKasseRef(k)).n > 0).flatMap((k) => Array(doGet("karte", doKasseRef(k)).n).fill(k));
     if (ka.length) { melde(`⏳ ${ka.length} Kassen-Karten …`); try { seiten.push(...(await doKartenSeiten(ka))); } catch (e) { fehlt.push(`Kassen-Karten (${e?.message || e})`); } }
     for (const t of L.filter((x) => x.typ === "archiv")) { melde(`⏳ ${t.titel} …`); try { const b = await schPaketBilder(t); for (let i = 0; i < t.n; i++) seiten.push(...b); } catch (e) { fehlt.push(`${t.titel} (${e?.message || e})`); } }
-    for (const x of L.filter((x) => (x.typ === "etikett" || x.typ === "karte") && !nach.has(x.ref))) fehlt.push(`${x.titel} (Artikel gibt es nicht mehr)`);
+    for (const x of L.filter((x) => x.typ === "etikett" && !nach.has(x.ref))) fehlt.push(`${x.titel} (Artikel gibt es nicht mehr)`);
+    for (const x of L.filter((x) => x.typ === "karte" && !DO.kassen.some((k) => doKasseRef(k) === x.ref))) fehlt.push(`${x.titel} (Kassen-Code gerade nicht da – Mini-PC am Stand prüfen${ICH?.admin ? "" : ", nur für Admin"})`);
     if (fehlt.length) {
       if (!seiten.length) return melde("⚠️ Nichts druckbar: " + fehlt.join(", "), true);
       if (!(await frage(`⚠️ Nicht druckbar:\n${fehlt.join("\n")}\n\nDen Rest trotzdem drucken?`, { ja: "🖨️ Rest drucken", nein: "Abbrechen" }))) return;

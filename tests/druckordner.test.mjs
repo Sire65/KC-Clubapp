@@ -34,10 +34,12 @@ assert.ok(t.doAllergenHtml().includes("Allergene &amp; Zusatzstoffe"));
 t.doSet("karte", "cmd-bar", 3, "BAR"); assert.deepEqual(J([t.doGet("karte", "cmd-bar").n, t.doGet("karte", "cmd-bar").an]), [3, true]);
 t.doSet("karte", "cmd-bar", 0); assert.equal(t.doGet("karte", "cmd-bar").an, false);
 assert.deepEqual(J(t.doPfandArt().map((a) => a.id)), ["glasplus", "zangeplus", "glasminus"]);
-// Scheckkarten nur für Kassen-Codes: Pfandartikel und BAR, keine Getränke/Speisen
+// Pfand-/Kassen-Etiketten (eigene Größe): Pfandartikel und BAR; Scheckkarten nur für „Kasse verbinden“ (Admin)
 assert.deepEqual(J(t.doKassenCodes().map((a) => a.id)), ["glasplus", "zangeplus", "glasminus", "cmd-bar"]);
 // eingebunden: Teil, Abhängigkeiten, Druckart, Kachel, Server nimmt die neuen Teile an
 const app = lies("app.js"), buero = lies("teile/buero.js"), server = lies("supabase/functions/kc-club/index.ts");
 assert.ok(/druckordner: \{ einstieg: \["doStart"\]/.test(app) && /druckordner: \["kundenpreisliste", "etiketten"\]/.test(app) && /druckordner: \{ bauen: \(\) => doDruckSeite\(\) \}/.test(app));
 assert.ok(/"doStart\(\)"/.test(buero) && /SCHILD_PAKET_TYP = \["schild", "vorlage", "archiv", "live", "etikett", "karte", "etformat"\]/.test(server) && /\.slice\(0, 150\)/.test(server));
 console.log("OK – Druckordner: interne Preisliste inkl. Pfand, Allergen-Aushang aus den Daten, Auswahl, Einbindung");
+const quelle = lies("teile/druckordner.js");
+assert.ok(/admin_qr_kassen/.test(quelle) && /Kasse verbinden/.test(quelle) && /formatK: 5/.test(quelle) && /if \(a\.spezial !== "bar"\) return peEtikett/.test(quelle), "Kassen-Karten nur Verbinden-QR, BAR als Etikett, Größe 5 cm vorgegeben");
