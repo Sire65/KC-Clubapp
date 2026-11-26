@@ -17,6 +17,7 @@ jobs:
           node-version: 22
       - run: node tests/app-vertrag.test.mjs
       - run: node tests/admin-qr.test.mjs
+      - run: node tests/ausweis-pseudonym.test.mjs
       - run: node tests/fra-verschluesselung.test.mjs
       - run: node tests/fra-teile.test.mjs
       - run: node tests/notfall-tresor.test.mjs

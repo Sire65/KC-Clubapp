@@ -197,7 +197,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "3.41.0";
+const SERVER_VERSION = "3.42.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -22571,10 +22571,11 @@ Köcheclub-App`,
       // KC-CLUB-AUSWEIS-QR (2.443.0, Wunschliste #9): die EIGENE Mitgliedsnummer (= QR auf dem Ausweis, so liest ihn die Kasse
       // für Bedieneranmeldung und Stechuhr) – nur lesen, nur für sich selbst; ohne gültige Nummer kommt null (nie ein geratener Wert)
       case "mein_ausweis": {
-        const { data: p, error } = await db.from("kc_core_personen").select("mitgliedsnummer").eq("person_id", ich.person_id).eq("aktiv", true).maybeSingle();
+        // 3.42.0 KC-CLUB-AUSWEIS-PSEUDONYM (Wunsch Hansi 26.11.2026): das eigene Pseudonym (Kasse/Dienstplan) verdeckt unter dem QR – nur das eigene
+        const { data: p, error } = await db.from("kc_core_personen").select("mitgliedsnummer,pseudonym").eq("person_id", ich.person_id).eq("aktiv", true).maybeSingle();
         if (error) throw new Fehler("Ausweis gerade nicht abrufbar.", 503);
         const nr = String(p?.mitgliedsnummer ?? "").trim().toUpperCase();
-        return json({ nummer: /^KC-\d{3,5}$/.test(nr) ? nr : null });
+        return json({ nummer: /^KC-\d{3,5}$/.test(nr) ? nr : null, pseudonym: String(p?.pseudonym ?? "").trim().slice(0, 40) || null });
       }
       // ----- 3.13.0 KC-CLUB-ADMIN-QR (Wunsch Hansi 23.11.2026): QR-Codes der Tablet-Kassen und aller Mitglieder im Adminbereich -----
       // Kassen-QR: kommt vom Mini-PC am Stand (kc_stand_kassen_qr, nur service_role); enthält den Kassen-Schlüssel → nur Admin,

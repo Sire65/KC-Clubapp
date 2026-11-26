@@ -1,5 +1,11 @@
 # Änderungen
 
+## 3.42.0 – 2026-11-26 – 🎭 Pseudonym verdeckt unter dem Ausweis-QR (KC-CLUB-AUSWEIS-PSEUDONYM) · Server 3.42.0
+Wunsch Hansi 26.11.2026: „Der Pseudoname ist zur Sicherheit unter dem Code, aber verdeckt. Ansehen kann man mit dem Auge.“
+- 🪪 Mein Ausweis-QR: unter Name und Mitgliedsnummer „🎭 Pseudonym: ••••••“ mit 👁️ – zeigt das eigene Pseudonym 10 Sekunden, dann wieder verdeckt (nochmal tippen verdeckt sofort). Ohne Netz aus dem gemerkten Stand.
+- Server `mein_ausweis` liefert zusätzlich das eigene Pseudonym (nur das eigene, aus `kc_core_personen`).
+- Hilfe „Mein Ausweis-QR“: Pseudonym mit Auge; Notlösung an der Kasse: Geburtsdatum.
+
 ## 3.41.0 – 2026-11-26 – 🗂️ Druckordner Weihnachtsmarkt: alles auf einmal drucken (KC-CLUB-DRUCKORDNER) · Server 3.41.0
 Wunsch Hansi 26.11.2026: „Druckordner ähnlich wie die Aktentasche – Preislisten, interne Listen, Etiketten, Kassen-QR-Codes reinlegen, dahinter die Anzahl, dann wird alles gedruckt“; zum Druckpaket der Schilder-Druckerei: „anhaken und alle übernehmen statt eins wählen – zurück – wieder eins“, „keine alten Archiv-Sachen“; interne Mengenliste „in Weinrot mit Logo und Gold, groß oben ‚Interne Preisliste‘“; Kassen-Codes „als Ausschneide-Scheckkarte, dann Pfandartikel und Bezahl-Code, jeweils die gewünschte Menge“.
 - Büro → 🖨️ Drucker → **🗂️ Druckordner** (nur Clubleitung), neues Programmteil `teile/druckordner.js` (lädt Kundenpreisliste und Etiketten mit). EINE Seite: an jeder Zeile Haken und − Anzahl ＋, „alle 1 ×“/„keine“ je Gruppe – nichts springt zurück.
