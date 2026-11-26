@@ -1,5 +1,16 @@
 # Änderungen
 
+## 3.40.0 – 2026-11-26 – 🗂️ Druckordner Weihnachtsmarkt: alles auf einmal drucken (KC-CLUB-DRUCKORDNER) · Server 3.40.0
+Wunsch Hansi 26.11.2026: „Druckordner ähnlich wie die Aktentasche – Preislisten, interne Listen, Etiketten, Kassen-QR-Codes reinlegen, dahinter die Anzahl, dann wird alles gedruckt“; zum Druckpaket der Schilder-Druckerei: „anhaken und alle übernehmen statt eins wählen – zurück – wieder eins“, „keine alten Archiv-Sachen“; interne Mengenliste „in Weinrot mit Logo und Gold, groß oben ‚Interne Preisliste‘“; Kassen-Codes „als Ausschneide-Scheckkarte, dann Pfandartikel und Bezahl-Code, jeweils die gewünschte Menge“.
+- Büro → 🖨️ Drucker → **🗂️ Druckordner** (nur Clubleitung), neues Programmteil `teile/druckordner.js` (lädt Kundenpreisliste und Etiketten mit). EINE Seite: an jeder Zeile Haken und − Anzahl ＋, „alle 1 ×“/„keine“ je Gruppe – nichts springt zurück.
+- **Immer aktuell** (aus den veröffentlichten Artikeldaten wie die Preisetiketten): 📋 Kundenpreisliste (Entwurf 20), 📊 **Interne Preisliste** Mengen 1–10 inkl. Pfand (Weinrot/Gold/Kochmütze, Gruppen „Getränke mit Alkohol“, „Alkoholfreie Getränke“, „Speisen“, Schuss als Zuschlag ohne Pfand), 🧾 **Allergen-Aushang** (✕ enthalten, gestrichelt = Spuren, leer = noch nicht erfasst; Zusatzstoff-Ziffern).
+- 🏷️ **Preisetiketten**: alle Artikel mit Anzahl je Etikett, Größe 8/7/6/5 cm (gleiches Raster und gleiche Schnittmarken wie im Etiketten-Fenster).
+- 🔳 **Kassen-Codes als Scheckkarte** (85,6 × 54 mm, 10 je A4, Schnittmarken): Getränke/Speisen (Preis inkl. Pfand), dann Pfandartikel (Pfand, Rückgaben), dann BAR (CMD-CHECKOUT); QR = Artikelnummer wie auf den Etiketten.
+- 📁 Nur Dateien aus dem Büro-Ordner „Weihnachtsmarkt“, nicht das ganze Archiv.
+- 🖨️ Alles drucken: alle Seiten hintereinander über den zentralen Druck (dort auch 📄 PDF); 💾 Speichern als „Druckvorlagen Weihnachtsmarkt 2026“ (Anlass Weihnachtsmarkt) – beim nächsten Öffnen ist alles wieder so eingestellt. Ein gespeicherter Druckordner öffnet sich auch aus der Schilder-Druckerei.
+- Server: Druckpaket nimmt die neuen Teile an (`live`, `etikett`, `karte`, `etformat`), bis 150 Teile statt 40.
+- Test `tests/druckordner.test.mjs`.
+
 ## 3.39.0 – 2026-11-26 – 📨 Terminanfragen aufräumen: abgelaufene löschen, Absage mit oder ohne Info (KC-CLUB-TA-AUFRAEUMEN) · Server 3.39.0
 Wunsch Hansi 26.11.: „Wenn es Termine gibt, die abgelaufen sind, dass ich die löschen kann – und wenn ich auf Absage klicke, dann erst fragen, ob ich Absage-Infos rausschicken will.“
 - **🗑️ Löschen:** Auf jeder eigenen Terminanfrage, die vorbei oder abgesagt ist, ein Knopf „🗑️ Löschen“; ab zwei solchen oben „🗑️ Abgelaufene löschen (n)“. Rückfrage vorher; es geht **keine** Nachricht an die Angefragten. Kommende Anfragen lassen sich nicht löschen (dafür „Absagen“). Der Admin darf auch fremde abgelaufene löschen.

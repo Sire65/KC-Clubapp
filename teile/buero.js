@@ -979,6 +979,7 @@ function buDrucker() {
     [!!ICH?.admin, "📲", "Einrichtungskarte", "QR-Code + Schritte für ein Mitglied", "buPersonWahl('🖨️ Einrichtungskarte für wen?', '📲', einrichtungskarte)"],
     [L, "🪪", "Händler-Ausweis", "Weihnachtsmarkt · Rabatt · QR-Code", "haStart()"],
     [L, "🏷️", "Preisetiketten", "8–5 cm · Foto · Preis · Allergene · QR", "peStart()"], // KC-CLUB-PREISETIKETTEN (12.11.2026)
+    [L, "🗂️", "Druckordner", "Alles für den Weihnachtsmarkt auf einmal drucken", "doStart()"], // KC-CLUB-DRUCKORDNER
     [L, "📋", "Kundenpreisliste", "Weihnachtsmarkt 2026 · Preise & Allergene automatisch · A4 quer", "kplStart()"], // KC-CLUB-KUNDENPREISLISTE
     [L, "🪧", "Schild drucken", "Hinweis · Preisliste · Öffnungszeiten", "schStart()"]].filter((x) => x[0]); // 2.811.0: Schild vom Füller zum Drucker // 2.690.0 KC-CLUB-HAENDLERAUSWEIS
   const f = blattAuf("buDruckerBlatt", `${einwHtml("b-bu-drucker")}<h3 style="margin-top:0">🖨️ Was möchtest du drucken?</h3>

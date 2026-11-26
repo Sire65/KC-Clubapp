@@ -197,7 +197,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "3.39.0";
+const SERVER_VERSION = "3.40.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -1413,11 +1413,11 @@ const BEARBEITEN_MIN = 52_560_000; // 2.635.0 KC-CLUB-BEARBEITEN-JEDERZEIT (Wuns
 // KC-CLUB-SCHILDER (2.150.0): nur bekannte Felder, kurze Texte, Auswahl-Kennungen als Kurzwörter – Gestaltung kommt aus den Listen der App
 const SCHILD_ID = /^[a-z0-9_-]{0,30}$/;
 // 2.766.0 KC-CLUB-SCHILDER-DRUCKPAKET: gespeichertes Druckpaket = Liste von Verweisen (Schild, Vorlage, Archiv-Datei) mit Anzahl und Haken
-const SCHILD_PAKET_TYP = ["schild", "vorlage", "archiv"];
+const SCHILD_PAKET_TYP = ["schild", "vorlage", "archiv", "live", "etikett", "karte", "etformat"]; // KC-CLUB-DRUCKORDNER: live = Kundenpreisliste/Interne Preisliste/Allergen-Aushang, etikett/karte = Artikel-Id, etformat = Etikettengröße
 function schildDaten(d: any) {
   if (!d || typeof d !== "object" || Array.isArray(d)) throw new Fehler("Ungültiges Schild.");
   if (d.vorlage === "druckpaket") {
-    const paket = (Array.isArray(d.paket) ? d.paket : []).slice(0, 40).map((x: any) => ({
+    const paket = (Array.isArray(d.paket) ? d.paket : []).slice(0, 150).map((x: any) => ({ // KC-CLUB-DRUCKORDNER: bis 150 Teile (je Artikel Etikett und Karte)
       typ: SCHILD_PAKET_TYP.includes(String(x?.typ)) ? String(x.typ) : "", ref: /^[A-Za-z0-9_-]{1,60}$/.test(String(x?.ref ?? "")) ? String(x.ref) : "",
       titel: txt(x?.titel, 120), n: Math.min(50, Math.max(1, Math.round(Number(x?.n) || 1))), an: x?.an !== false })).filter((x: any) => x.typ && x.ref);
     if (!paket.length) throw new Fehler("Das Druckpaket ist noch leer.");

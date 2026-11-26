@@ -7861,7 +7861,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   const app = lies("app.js"), rs = lies("teile/rueckseite.js");
   assert.match(app, /rueckseite: \{ einstieg: \["bwClubSong"\], sri: "sha384-/, "Rückseiten-Teil registriert");
-  assert.match(app, /const TEILE_BRAUCHT = \{ videos: \["rueckseite", "szenen", "hilfe"\] \};/, "Videos laden Rückseite, Szenen und Hilfe mit (sie führen Rätsel, Bühne, Jahreszeiten und die Lupe vor)"); // 2.758.0: + szenen; 2.798.0: + hilfe (rgHilfeLupe öffnet die Suche direkt)
+  assert.match(app, /const TEILE_BRAUCHT = \{ videos: \["rueckseite", "szenen", "hilfe"\], druckordner: \["kundenpreisliste", "etiketten"\] \};/, "Videos laden Rückseite, Szenen und Hilfe mit (sie führen Rätsel, Bühne, Jahreszeiten und die Lupe vor)"); // 2.758.0: + szenen; 2.798.0: + hilfe (rgHilfeLupe öffnet die Suche direkt)
   assert.match(app, /Promise\.all\(\(TEILE_BRAUCHT\[name\] \|\| \[\]\)\.map\(teilLaden\)\)\.then\(\(\) => versuch\(1\)\)/, "abhängige Teile zuerst");
   assert.match(app, /TEILE_DA\[name\] = true;/, "teilDa() weiß, was geladen ist");
   assert.match(app, /if \(k !== "uhr" && !teilDa\("rueckseite"\)\) return teilLaden\("rueckseite"\)\.then\(\(\) => esTab\(k\), \(e\) => \{ meldeFehler\(e\); esTab\("uhr"\); \}\);/, "Reiter laden die Rückseite nach; geht das nicht, bleibt die Uhr");
@@ -9297,7 +9297,8 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   // 2.526.0 KC-CLUB-ERSTATTUNG-BRIEFBOGEN: Erstattungsantrag als Briefbogen-Blatt (erstBlatt mit cdKopf + cdFuss) – zwei Einstiege
   // 2.766.0 KC-CLUB-SCHILDER-DRUCKPAKET: Druckpaket = Seiten als Bild (dseite) wie Originalseiten
   // 2.926.0 KC-CLUB-SCHILD-QUER: Schild quer hat eine zweite Rückgabe (gedreht für den Druck, aufrecht für die Vorschau)
-  assert.ok(ohne.length === 7 && ohne.every((x) => /dseite|titel: b\.betreff|SDR\.bildUrl|html: erstBlatt\(/.test(x)), "nur Originalseiten (Bild), Brief und Schild ohne zentralen Rahmen");
+  // 3.40.0 KC-CLUB-DRUCKORDNER: Druckordner = Seiten als Bild (dseite) wie das Druckpaket
+  assert.ok(ohne.length === 8 && ohne.every((x) => /dseite|titel: b\.betreff|SDR\.bildUrl|html: erstBlatt\(/.test(x)), "nur Originalseiten (Bild), Brief und Schild ohne zentralen Rahmen");
   assert.ok(/return `<div class="cd-blatt cd-brief">\$\{cdKopf\("Antrag auf Erstattung"/.test(programm) && /\$\{cdFuss\(`Erstellt mit der Köcheclub-App am/.test(programm), "Erstattungsantrag = Briefbogen-CD");
   const schild = programm.slice(programm.indexOf("function schZeichnen("), programm.indexOf("function schBild()"));
   assert.ok(/ctx\.fillStyle = KC_CD\.weinrot/.test(schild) && /ctx\.drawImage\(SCH_LOGO/.test(schild) && /ctx\.fillText\(KC_CD\.name/.test(schild) && /const SCH_LOGO = new Image\(\); SCH_LOGO\.src = KC_CD\.logo;/.test(programm), "Schild trägt das CD selbst");
@@ -9568,7 +9569,7 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   assert.ok(/klein: "", titelStil/.test(p) && /id="schKlein"/.test(p) && /klein: txt\(d\.klein, 1200\)/.test(sv), "Kleingedrucktes: App, Editor, Server");
   // Druckpaket: Verweise mit Anzahl und Haken, gespeichert wie ein Schild, Server prüft; nichts fällt stillschweigend weg
   assert.ok(/druckpaket: \{ bauen: \(\) => schPaketDruckSeite\(\) \}/.test(p), "Druckpaket über den zentralen Druck");
-  assert.ok(/if \(d\.vorlage === "druckpaket"\)/.test(sv) && /slice\(0, 40\)/.test(sv) && /Math\.min\(50, Math\.max\(1,/.test(sv) && /const SCHILD_PAKET_TYP = \["schild", "vorlage", "archiv"\]/.test(sv), "Server: Paket geprüft (Typen, 40 Teile, 1–50 Stück)");
+  assert.ok(/if \(d\.vorlage === "druckpaket"\)/.test(sv) && /slice\(0, 150\)/.test(sv) && /Math\.min\(50, Math\.max\(1,/.test(sv) && /const SCHILD_PAKET_TYP = \["schild", "vorlage", "archiv", "live", "etikett", "karte", "etformat"\]/.test(sv), "Server: Paket geprüft (Typen, 150 Teile – 3.40.0 Druckordner, 1–50 Stück)");
   assert.ok(/daten: \{ vorlage: "druckpaket", paket: P\.teile \}/.test(p) && /const L = SDR\.paket\.teile\.filter\(\(t\) => t\.an\)/.test(p) && /for \(let i = 0; i < t\.n; i\+\+\) seiten\.push/.test(p), "nur angehakte Teile, so oft wie gewählt");
   assert.ok(/⚠️ Nicht druckbar:/.test(p) && /fehlt\.push/.test(p), "Fehlendes wird genannt");
   assert.ok(/!schIstPaket\(x\)\), pakete =/.test(p), "Pakete getrennt von den Schildern");

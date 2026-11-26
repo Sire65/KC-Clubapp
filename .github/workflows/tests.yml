@@ -243,6 +243,7 @@ jobs:
       - run: node tests/chat-vorhanden.test.mjs
       - run: node tests/tippspiel.test.mjs
       - run: node tests/kundenpreisliste.test.mjs
+      - run: node tests/druckordner.test.mjs
       - run: node tests/start-warum.test.mjs
       - run: node tests/teilen-eigen.test.mjs
       - run: node tests/clubabend-anwesend.test.mjs
