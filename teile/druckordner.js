@@ -73,9 +73,9 @@ function doZeigen(f) {
     <div class="do-fuss"><b id="doSumme"></b>
       <div class="knoepfe"><button class="knopf haupt" id="doDruck">🖨️ Alles drucken</button><button class="knopf" id="doSpeichern">💾 Speichern</button><button class="knopf" data-zu="1">Schließen</button></div></div>
     <style>#doBlatt .do-grp{margin:12px 0}#doBlatt .do-gk{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;border-bottom:2px solid #c9a227;margin-bottom:4px}
-      #doBlatt .do-gk h4{margin:4px 0;color:#741521}#doBlatt .do-z{display:flex;align-items:center;gap:8px;padding:5px 4px;border-bottom:1px solid #eee}#doBlatt .do-z.an{background:#fbf6ee}
-      #doBlatt .do-z label{flex:1;display:flex;gap:8px;align-items:center;cursor:pointer;min-width:0}#doBlatt .do-z label span{display:flex;flex-direction:column;min-width:0}
-      #doBlatt .do-z small{opacity:.75}#doBlatt .do-n{display:inline-flex;gap:4px;align-items:center}#doBlatt .do-n b{min-width:1.8em;text-align:center}
+      #doBlatt .do-gk h4{margin:4px 0;color:var(--textRot,#741521)}#doBlatt .do-z{display:flex;align-items:center;gap:8px;padding:5px 4px;border-bottom:1px solid var(--linie,#eee);color:var(--text,#2b1a1c)}#doBlatt .do-z.an{background:var(--karte2,#fbf6ee)}
+      #doBlatt .do-z label{flex:1;display:flex;gap:8px;align-items:center;cursor:pointer;min-width:0;color:var(--text,#2b1a1c)}#doBlatt .do-z label b{color:var(--text,#2b1a1c)}#doBlatt .do-z label span{display:flex;flex-direction:column;min-width:0}
+      #doBlatt .do-z small{opacity:.75}#doBlatt .do-n{display:inline-flex;gap:4px;align-items:center}#doBlatt .do-n b{min-width:1.8em;text-align:center;color:var(--text,#2b1a1c)}
       #doBlatt .do-fuss{position:sticky;bottom:0;background:var(--karte,#fff);padding:8px 0;border-top:2px solid #741521}</style>`;
   const summe = () => { let teile = 0, aus = 0; for (const x of DO.auswahl.values()) if (x.n > 0) { teile++; aus += x.n; } $("doSumme").textContent = `🖨️ ${teile} ${teile === 1 ? "Teil" : "Teile"} gewählt · ${aus} ${aus === 1 ? "Ausdruck/Stück" : "Ausdrucke/Stück"}`; };
   const zeile = (z) => { const x = doGet(z.dataset.typ, z.dataset.ref); z.classList.toggle("an", x.n > 0); z.querySelector("[data-do=haken]").checked = x.n > 0; z.querySelector(".do-n b").textContent = x.n; summe(); };

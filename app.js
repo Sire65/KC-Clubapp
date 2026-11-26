@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "3.42.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "3.43.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12,7 +12,7 @@ const APP_STUFE = "RC";
 // Pflege: gleiche Namen in sw.js (TEILE); nach jeder Änderung an teile/*.js: node tools/teile-pruefsumme.mjs (der Vertragstest prüft beides).
 // Rückweg: docs/AUFTEILEN.md.
 const TEILE_LISTE = {
-  druckordner: { einstieg: ["doStart"], sri: "sha384-QP0PTYX02uuAb+k9UUIJygFs70Lk8JKywRuUooTk8OhsIoMJViJU0KQG2kDSAv/z" }, // KC-CLUB-DRUCKORDNER: Büro → Drucker → 🗂️ Druckordner (Kundenpreisliste, Interne Preisliste, Allergene, Etiketten, Kassen-Karten, Ordner Weihnachtsmarkt)
+  druckordner: { einstieg: ["doStart"], sri: "sha384-YQEJJCXp+VdJG4XkILmd2+loS4OPngF+P1YWX6hjREO2g9SvaYdM7GRrcHGwyd6J" }, // KC-CLUB-DRUCKORDNER: Büro → Drucker → 🗂️ Druckordner (Kundenpreisliste, Interne Preisliste, Allergene, Etiketten, Kassen-Karten, Ordner Weihnachtsmarkt)
   kundenpreisliste: { einstieg: ["kplStart"], sri: "sha384-DmV0OmLTEZVKfp4uw7N4JOQiUPdTz7iX4jWgoO06oZyE/PknYjdPdRiO7x/QM9CD" }, // KC-CLUB-KUNDENPREISLISTE (3.32.0): Büro → Drucker → 📋 Kundenpreisliste (Entwurf 20, Preise/Allergene automatisch, nur Clubleitung)
   etiketten: { einstieg: ["peStart"], sri: "sha384-hZPVTBtZRkjm/gH7EiiPwId/cpV/5bFoQ/Zasy+rHzKYdMbfrZ1Muv762mCmZd7d" }, // KC-CLUB-PREISETIKETTEN (12.11.2026): Büro → Drucker → 🏷️ Preisetiketten (nur Clubleitung)
   videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl", "installAnleitung"], sri: "sha384-XbJ76UW8rzNFPJfs6+if9rKs+S7dG0ijZuhJZro9fxSnaVnOhZ9e3so/Kuds6F3x" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)

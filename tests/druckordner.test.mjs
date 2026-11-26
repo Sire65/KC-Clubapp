@@ -40,6 +40,11 @@ assert.deepEqual(J(t.doKassenCodes().map((a) => a.id)), ["glasplus", "zangeplus"
 const app = lies("app.js"), buero = lies("teile/buero.js"), server = lies("supabase/functions/kc-club/index.ts");
 assert.ok(/druckordner: \{ einstieg: \["doStart"\]/.test(app) && /druckordner: \["kundenpreisliste", "etiketten"\]/.test(app) && /druckordner: \{ bauen: \(\) => doDruckSeite\(\) \}/.test(app));
 assert.ok(/"doStart\(\)"/.test(buero) && /SCHILD_PAKET_TYP = \["schild", "vorlage", "archiv", "live", "etikett", "karte", "etformat"\]/.test(server) && /\.slice\(0, 150\)/.test(server));
+// 3.43.0 KC-CLUB-DRUCKORDNER-KONTRAST (Fund Hansi 26.11.2026): im dunklen Design keine feste helle Zeilenfarbe – Designfarben nutzen
+{
+  const t = fs.readFileSync(new URL("../teile/druckordner.js", import.meta.url), "utf8");
+  assert.ok(t.includes("#doBlatt .do-z.an{background:var(--karte2,#fbf6ee)}") && t.includes("color:var(--text,#2b1a1c)") && t.includes("#doBlatt .do-gk h4{margin:4px 0;color:var(--textRot,#741521)}"), "Druckordner nimmt die Designfarben");
+}
 console.log("OK – Druckordner: interne Preisliste inkl. Pfand, Allergen-Aushang aus den Daten, Auswahl, Einbindung");
 const quelle = lies("teile/druckordner.js");
 assert.ok(/admin_qr_kassen/.test(quelle) && /Kasse verbinden/.test(quelle) && /formatK: 5/.test(quelle) && /if \(a\.spezial !== "bar"\) return peEtikett/.test(quelle), "Kassen-Karten nur Verbinden-QR, BAR als Etikett, Größe 5 cm vorgegeben");

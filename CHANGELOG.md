@@ -1,5 +1,9 @@
 # Änderungen
 
+## 3.43.0 – 2026-11-26 – 🗂️ Druckordner: lesbar im dunklen Design (KC-CLUB-DRUCKORDNER-KONTRAST)
+Fund Hansi 26.11.2026 (Bildschirmfoto „Kontrast???“): im dunklen Design waren gewählte Zeilen hell hinterlegt, die Schrift aber auch hell – kaum lesbar.
+- `teile/druckordner.js`: Zeilen, Überschriften und Anzahl nehmen die Farben des gewählten Designs (`--karte2`, `--text`, `--textRot`, `--linie`) statt fester heller Farben. Nur App, Server unverändert.
+
 ## 3.42.0 – 2026-11-26 – 🎭 Pseudonym verdeckt unter dem Ausweis-QR (KC-CLUB-AUSWEIS-PSEUDONYM) · Server 3.42.0
 Wunsch Hansi 26.11.2026: „Der Pseudoname ist zur Sicherheit unter dem Code, aber verdeckt. Ansehen kann man mit dem Auge.“
 - 🪪 Mein Ausweis-QR: unter Name und Mitgliedsnummer „🎭 Pseudonym: ••••••“ mit 👁️ – zeigt das eigene Pseudonym 10 Sekunden, dann wieder verdeckt (nochmal tippen verdeckt sofort). Ohne Netz aus dem gemerkten Stand.
