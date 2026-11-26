@@ -231,10 +231,6 @@ const TW_FAQ = [
   { id: "schlafmodus", sym: "💤", t: "Warum ist die App auf einmal dunkel und zeigt nur Logo und Uhr?", x: "Das ist der <b>💤 Schlafmodus</b>: Nach 15 Minuten ohne Tippen schläft die offene App ein. Antippen weckt sie – du bist wieder dort, wo du warst. Einstellen: ⚙️ → „🎨 Darstellung“ → „💤 Schlafmodus“.", los: () => hzZuEintrag("h:schlafmodus") },
   { id: "sendebericht", sym: "📊", t: "Wie sehe ich, wer meine Einladung bekommen hat?", nur: () => !!(ICH?.vorstand || ICH?.admin), x: "Im <b>📊 Sendebericht</b> – nach dem Senden und im Büro unter „📊 Sendebericht der letzten Einladung“: je Person Push, E-Mail und Ruhezeit.", los: () => hzZuEintrag("h:sendebericht") },
   { id: "kundenpreisliste", sym: "📋", t: "Wie drucke ich die Preisliste für die Kunden am Stand?", nur: () => !!(ICH?.vorstand || ICH?.admin), x: "Büro → <b>🖨️ Drucker → 📋 Kundenpreisliste</b>: Preise und Allergene kommen automatisch aus den Kassen-Artikeln.", los: () => hzZuEintrag("h:kundenpreisliste") },
-  { id: "zusage-link", sym: "✉️", t: "Wie können Mitglieder ohne App zu- oder absagen?", nur: () => !!ICH?.admin, x: "Am Treffen <b>„✉️ Zusage-Link mailen“</b> – sie bekommen eine Mail mit einem persönlichen Link zum Antworten.", los: () => hzZuEintrag("h:zusage_link") },
-  { id: "qr-codes", sym: "🔳", t: "Wo finde ich die QR-Codes der Kassen und der Mitglieder?", nur: () => !!ICH?.admin, x: "Admin-Zentrale → <b>„🔳 QR-Codes ›“</b> – Reiter 🧾 Kassen und 🪪 Mitglieder.", los: () => hzZuEintrag("h:admin_qr") },
-  { id: "notaus", sym: "⛔", t: "Wie stoppe ich sofort alle Nachrichten?", nur: () => !!ICH?.admin, x: "Mit dem roten <b>NOT-AUS</b> oben in Nachrichten: 1,5 Sekunden gedrückt halten. Wieder frei mit „🔓 Entriegeln“.", los: () => hzZuEintrag("h:notaus_knopf") },
-  { id: "plaene-freigeben", sym: "📣", t: "Wie gebe ich den Dienstplan für alle Mitglieder frei?", nur: () => !!ICH?.admin, x: "Im Ordner „🗓️ Dienstplan-Druck“ auf <b>„📣 Diesen Stand für alle Mitglieder freigeben“</b> – dazu dort „📤 An DP2 übergeben“.", los: () => hzZuEintrag("h:dp_druck_admin") },
 ];
 const twNorm = (t) => String(t || "").toLowerCase().replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss").replace(/[^a-z0-9 ]+/g, " ");
 const twStamm = (w) => (w.length > 4 ? w.replace(/(ungen|ung|en|er|es|e|n|s)$/, "") : w);
@@ -693,7 +689,7 @@ function suAppListe() {
     ["🎬", "Videos: Nachfrage nach eigenem Video (ein/aus, Später-Liste)", "video verweis nachfrage später gemerkt nicht mehr fragen erklär videos liste eigenes video", () => erklaerVideos()], // 2.346.0
     ["⏱", "Trainingsuhr auf der Bühne", "uhr training trainingsuhr zeit schon noch bühne twinkey", () => esOeffnen("buehne")],
     ["📧", "Dienstwünsche: Bestätigung per E-Mail", "dienstwunsch dienstwünsche bestätigung e-mail mail fertig zusammenfassung", () => dwOeffnen()],
-    // 3.33.0 KC-CLUB-HILFE-3330: Neuheiten 2.955.0–3.32.0 – auch per 🎤 Sprachsuche; Clubleitung/Admin nur mit der Rolle
+    // 3.33.0 KC-CLUB-HILFE-3330: Neuheiten 2.955.0–3.32.0 – auch per 🎤 Sprachsuche; Clubleitung nur mit der Rolle, keine Admin-Funktionen
     ["💌", "Karte schicken (Gute Besserung, Geburtstag, Danke …)", "karte karten grußkarte genesungskarte gute besserung geburtstag glückwunsch danke hochzeit geburt beileid motiv spruch drucken", () => hzZuEintrag("h:karten_baukasten")],
     ["👥", "Gemeinsame Karte unterschreiben", "gemeinsame karte unterschreiben unterschrift club gesicht gute wünsche genesung", () => hzZuEintrag("h:karte_gemeinsam")],
     ["✨", "Kluge Helfer im Chat (Für dich, offene Fragen, noch nicht gelesen)", "kluge helfer für dich frage umfrage fotos album nachfragen noch nicht gelesen erinnern", ein("setKhFuerDich")],
@@ -722,15 +718,6 @@ function suAppListe() {
     ...(ICH?.vorstand || ICH?.admin ? [["📊", "Sendebericht (wer wurde erreicht?)", "sendebericht erreicht push e-mail einladung zustellung", () => hzZuEintrag("h:sendebericht")],
       ["📋", "Kundenpreisliste Weihnachtsmarkt", "kundenpreisliste preisliste preise allergene stand drucken", () => hzZuEintrag("h:kundenpreisliste")],
       ["👥", "Gemeinsame Karte starten", "gemeinsame karte starten club unterschreiben", () => hzZuEintrag("h:karte_starten")]] : []),
-    ...(ICH?.admin ? [["✉️", "Zusage-Link mailen", "zusage link mail ohne app antwort treffen", () => hzZuEintrag("h:zusage_link")],
-      ["🔳", "QR-Codes der Kassen und Mitglieder", "qr codes kasse kassen mitglieder ausweis einbuchen", () => hzZuEintrag("h:admin_qr")],
-      ["🙈", "Verborgene Mitglieder online sehen", "verborgen online versteckt unsichtbar admin", () => hzZuEintrag("h:admin_verborgen")],
-      ["⛔", "NOT-AUS auslösen / entriegeln", "notaus not-aus stopp alle nachrichten anhalten entriegeln pilz", () => hzZuEintrag("h:notaus_knopf")],
-      ["🗓️", "Dienstplan freigeben / an DP2 übergeben / festschreiben", "dienstplan freigeben dp2 übergeben festschreiben wunschplan alle tage druck", () => hzZuEintrag("h:dp_druck_admin")],
-      ["🔑", "Wer darf stempeln?", "stempeln stempeluhr wer darf freischalten gruppen ohne kasse", () => hzZuEintrag("h:stempel_wer")],
-      ["✏️", "Änderung erbitten", "änderung erbitten handynummer adresse mitglied melden", () => hzZuEintrag("h:aenderung_erbitten")],
-      ["📖", "Fehlerkatalog / Datenverkehr-Säulen", "fehlerkatalog fehler-id datenverkehr säulen puls lesen schreiben", () => hzZuEintrag("h:fehlerkatalog")],
-      ["🍲", "Gemeinschaftsgericht: Runde starten", "gemeinschaftsgericht runde starten zutaten rezept pdf", () => hzZuEintrag("h:gericht_admin")]] : []),
     ["🆘", "Wo bin ich? (SOS)", "wo bin ich adresse standort notfall sos", () => sosStart()], ["🪪", "Mein Notfallpass", "notfallpass allergien medikamente blutgruppe notfall", () => { sosStart(); nfpBearbeiten(); }],
   ].map(([sym, t, w, fn]) => ({ sym, t, w, fn }));
   const kach = Object.values(KACHELN).flat().filter((k) => !k.bald && (!k.nur || k.nur()) && !SU_NIE.has(k.id))

@@ -19,8 +19,12 @@ const alle = ["karten_baukasten", "karte_gemeinsam", "kluge_helfer", "kh_erinner
   "laufband_liste", "mitfahrt_laufband", "rollkartei", "dp_plaene", "dp_gruss", "ta_andere_zeit", "aenderung_bitte", "push_zeichen", "start_warum", "fehler_id", "lese_schreibtest"];
 const freigabe = { dienst_stempeln: 'frei("dienst_stempel")', tippspiel: 'frei("tippspiel")', gemeinschaftsgericht: 'frei("gemeinschaftsgericht")', advent_gadget: "akSichtbar()" };
 const leitung = ["sendebericht", "kundenpreisliste", "karte_starten"];
-const admin = ["zusage_link", "admin_qr", "admin_verborgen", "notaus_knopf", "dp_druck_admin", "stempel_wer", "aenderung_erbitten", "fehlerkatalog", "gericht_admin"];
-for (const id of [...alle, ...Object.keys(freigabe), ...leitung, ...admin]) {
+// Wunsch Hansi 26.11.2026: „Keine Admin-Funktionen in allgemeinen Hilfen erklären und nicht darauf hinweisen“
+const adminWeg = ["zusage_link", "admin_qr", "admin_verborgen", "notaus_knopf", "dp_druck_admin", "stempel_wer", "aenderung_erbitten", "fehlerkatalog", "gericht_admin"];
+for (const id of adminWeg) assert.ok(!ids.has(id), `keine Admin-Hilfe ${id}`);
+const neu33 = HILFE.split("\n").filter((z) => /seit: "3\.33\.0"/.test(z));
+for (const z of neu33) assert.ok(!/nur: \(\) => !!ICH\?\.admin/.test(z) && !/\bAdmin\b/.test(z.replace(/ICH\?\.admin/g, "")), "neue Hilfe ohne Admin: " + (z.match(/id: "([^"]+)"/) || [])[1]);
+for (const id of [...alle, ...Object.keys(freigabe), ...leitung]) {
   const z = zeile(id);
   assert.ok(z, `Hilfe ${id} vorhanden`);
   assert.ok(/seit: "3\.33\.0"/.test(z), `Hilfe ${id} mit seit 3.33.0 (🆕 / Tipp des Tages)`);
@@ -29,7 +33,6 @@ for (const id of [...alle, ...Object.keys(freigabe), ...leitung, ...admin]) {
 for (const id of alle) assert.ok(!/nur: /.test(zeile(id)), `Hilfe ${id} für alle Mitglieder`);
 for (const [id, f] of Object.entries(freigabe)) assert.ok(zeile(id).includes(`nur: () => ${f}`), `Hilfe ${id} nur mit ${f}`);
 for (const id of leitung) assert.ok(zeile(id).includes("nur: () => !!(ICH?.vorstand || ICH?.admin)"), `Hilfe ${id} nur für die Clubleitung`);
-for (const id of admin) assert.ok(zeile(id).includes("nur: () => !!ICH?.admin") && /\(Admin\)/.test(zeile(id)), `Hilfe ${id} nur für den Admin`);
 for (const id of alle) assert.ok(!/\bAdmin\b|\(Clubleitung\)/.test(zeile(id).replace(/Gruppen-Admin/g, "")), `Hilfe ${id}: für Mitglieder kein Admin-Text`);
 
 // geänderte Einträge
@@ -48,10 +51,7 @@ for (const k of ["Karte schicken", "Ja, zur Karte", "Hier tippen – mit Name un
   "Als Aufgabe übernehmen", "Text anzeigen", "Ich lese lieber WhatsApp", "WhatsApp automatisch öffnen", "Aus WhatsApp", "In einen Club-Chat", "Ja, dort schreiben", "weitere Empfänger",
   "Anlage bereit – du kannst jetzt senden", "Auf dem Gerät speichern", "Ja, erledigt", "Stand melden", "Stand der Aufgaben", "keine Rückmeldung", "Pläne Weihnachtsmarkt", "Stand des Dienstplans",
   "Ja, aber zu anderer Zeit", "Heute zu gewinnen", "Ich mache mit", "Gewonnen hat", "Ja, ich tippe mit", "Eigene Zutat", "Diesmal nicht", "Sofort erledigen", "Hat sich nichts geändert",
-  "Lese- und Schreibtest", "Neue Rolle", "Karte groß", "Rastgeräusch", "Sendebericht der letzten Einladung", "Kundenpreisliste", "Als gemeinsame Karte starten", "Zusage-Link mailen",
-  "Antwort abschicken", "QR-Codes", "Probe-NOT-AUS", "Entriegeln", "Alle jetzt senden", "Alle verwerfen", "Angehalten lassen", "Wunschplan – alle Tage", "Dienstplan – alle Tage",
-  "Diesen Stand für alle Mitglieder freigeben", "An DP2 übergeben", "Festgeschrieben", "Wer darf stempeln", "nutzt es nicht", "Änderung erbitten", "Fehlerkatalog", "Datenverkehr-Anzeige im Kopf",
-  "Rezept finden & verschicken", "Andere bitte", "Dienst beginnen", "Dienst beenden", "Nur, wenn ich gerade nicht in der App bin", "Autoantwort"])
+  "Lese- und Schreibtest", "Neue Rolle", "Karte groß", "Rastgeräusch", "Sendebericht der letzten Einladung", "Kundenpreisliste", "Als gemeinsame Karte starten", "Dienst beginnen", "Dienst beenden", "Nur, wenn ich gerade nicht in der App bin", "Autoantwort"])
   assert.ok(programm.includes(k), "Knopf im Programm: " + k);
 for (const id of ["setKhFuerDich", "setWaLieber", "setRkRolle", "schlafWahl", "naAaKnopf"]) assert.ok(programm.includes(`id="${id}"`), "Ziel vorhanden: #" + id);
 
@@ -71,7 +71,7 @@ for (const m of TV.matchAll(/"([hf]):([a-z0-9_-]+)": \[([^\]]+)\]/g)) for (const
 for (const k of ["h:kluge_helfer", "h:autoantwort", "h:aufgaben_stand", "h:dp_plaene", "h:push_zeichen", "h:ta_andere_zeit"]) assert.ok(TV.includes(`"${k}":`), "Video-Verweis " + k);
 
 // --- Lupe und Twinkey ---
-for (const id of [...alle.filter((x) => !["kluge_helfer", "wa_lieber", "rollkartei", "lese_schreibtest", "autoantwort"].includes(x)), "dienst_stempeln", "advent_gadget", "gemeinschaftsgericht", ...leitung, ...admin])
+for (const id of [...alle.filter((x) => !["kluge_helfer", "wa_lieber", "rollkartei", "lese_schreibtest", "autoantwort"].includes(x)), "dienst_stempeln", "advent_gadget", "gemeinschaftsgericht", ...leitung])
   assert.ok(hilfe.includes(`hzZuEintrag("h:${id}")`), "Lupe/Twinkey führt zu " + id);
 for (const m of hilfe.matchAll(/hzZuEintrag\("h:([a-z_0-9]+)"\)/g)) assert.ok(ids.has(m[1]), "Lupe/Twinkey: Hilfe h:" + m[1] + " gibt es");
 const f0 = hilfe.indexOf("const TW_FAQ = ["), FAQ = hilfe.slice(f0, hilfe.indexOf("\n];", f0));
@@ -82,13 +82,15 @@ for (const id of ["karte-schicken", "karte-unterschreiben", "fuer-dich", "nachri
 for (const [id, f] of [["dienst-stempeln", 'frei("dienst_stempel")'], ["advent-verlosung", "akSichtbar()"], ["tippspiel", 'frei("tippspiel")'], ["gemeinschaftsgericht", 'frei("gemeinschaftsgericht")']])
   assert.ok(faq(id).includes(`nur: () => ${f}`), `Twinkey ${id} nur mit ${f}`);
 for (const id of ["sendebericht", "kundenpreisliste"]) assert.ok(faq(id).includes("nur: () => !!(ICH?.vorstand || ICH?.admin)"), "Twinkey nur Clubleitung: " + id);
-for (const id of ["zusage-link", "qr-codes", "notaus", "plaene-freigeben"]) assert.ok(faq(id).includes("nur: () => !!ICH?.admin"), "Twinkey nur Admin: " + id);
+const tw33 = FAQ.slice(FAQ.indexOf("3.33.0 KC-CLUB-HILFE-3330"));
+assert.ok(!/nur: \(\) => !!ICH\?\.admin/.test(tw33) && !/\bAdmin\b/.test(tw33.replace(/ICH\?\.admin/g, "")), "neue Twinkey-Fragen ohne Admin");
 assert.ok(/rot und pulsierend = an/.test(faq("autoantwort")) && !/blau/.test(faq("autoantwort")), "Twinkey Autoantwort: rot statt blau");
 const faqIds = [...FAQ.matchAll(/\{ id: "([a-z0-9-]+)",/g)].map((m) => m[1]);
 assert.equal(faqIds.length, new Set(faqIds).size, "Twinkey-Fragen ohne doppelte Kennung");
 for (const g of ["grusskarte", "rollkartei", "tippspiel", "gemeinschaftsgericht", "stempeluhr", "verlosung", "schlafmodus", "sendebericht"]) assert.ok(new RegExp(`\\[[^\\]]*"${g}"`).test(hilfe), "Wortgruppe " + g);
 assert.ok(!/\["grusskarte"[^\]]*"karte"/.test(hilfe), "„karte“ bleibt bei Standort (keine Doppel-Gruppe)");
-assert.ok(/\.\.\.\(ICH\?\.admin \? \[\["✉️", "Zusage-Link mailen"/.test(hilfe), "Lupe: Admin-Einträge nur für Admin");
+const lu0 = hilfe.indexOf("// 3.33.0 KC-CLUB-HILFE-3330: Neuheiten"), LU = hilfe.slice(lu0, hilfe.indexOf("\n    [\"🆘\", \"Wo bin ich?", lu0));
+assert.ok(lu0 > 0 && !/\(ICH\?\.admin \?/.test(LU) && !/QR-Codes|NOT-AUS|Zusage-Link|DP2/.test(LU), "Lupe: keine Admin-Funktionen");
 assert.ok(/\.\.\.\(ICH\?\.vorstand \|\| ICH\?\.admin \? \[\["📊", "Sendebericht/.test(hilfe), "Lupe: Clubleitungs-Einträge nur mit Rolle");
 assert.ok(/\.\.\.\(frei\("tippspiel"\) \? \[\["⚽"/.test(hilfe) && /\.\.\.\(frei\("gemeinschaftsgericht"\) \? \[\["🍲"/.test(hilfe), "Lupe: Tippspiel/Gemeinschaftsgericht nur mit Freigabe");
 

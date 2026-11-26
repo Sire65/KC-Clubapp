@@ -1,4 +1,4 @@
-// 3.33.0 KC-CLUB-HILFE-3330: Twinkey und Lupe finden die Neuheiten 2.955.0–3.32.0; ein Mitglied sieht in Hilfe, Twinkey und Lupe nichts von Admin/Clubleitung,
+// 3.33.0 KC-CLUB-HILFE-3330: Twinkey und Lupe finden die Neuheiten 2.955.0–3.32.0; ein Mitglied sieht in Hilfe, Twinkey und Lupe nichts von Admin/Clubleitung, Admin-Funktionen werden nicht erklärt,
 // die Clubleitung sieht ihre Einträge. Echtes app.js, Browser abgeschirmt (KC-TESTS-OHNE-ECHTSERVER), nur Testdaten.
 // Start: PW_CORE=playwright PW_CHROME=/opt/pw-browsers/chromium-1243/chrome-linux64/chrome node tools/hilfe/hilfe-3330-browser.mjs
 import http from "node:http"; import fs from "node:fs"; import path from "node:path"; import { createRequire } from "node:module";
@@ -56,6 +56,6 @@ ok(!["sendebericht", "kundenpreisliste", "zusage_link", "admin_qr", "notaus_knop
 const v = await sicht("vorstand");
 ok(["sendebericht", "kundenpreisliste", "karte_starten"].every((id) => v.ids.includes(id)) && !v.ids.includes("admin_qr") && v.lus.some((x) => /Sendebericht/.test(x)) && !v.lus.some((x) => /QR-Codes der Kassen/.test(x)), "Clubleitung: eigene Einträge, keine Admin-Einträge");
 const a = await sicht("admin");
-ok(["zusage_link", "admin_qr", "admin_verborgen", "notaus_knopf", "dp_druck_admin", "stempel_wer", "aenderung_erbitten", "fehlerkatalog", "gericht_admin"].every((id) => a.ids.includes(id)) && a.tws.includes("qr-codes") && a.lus.some((x) => /QR-Codes der Kassen/.test(x)), "Admin: alle Admin-Einträge");
+ok(!["zusage_link", "admin_qr", "admin_verborgen", "notaus_knopf", "dp_druck_admin", "stempel_wer", "aenderung_erbitten", "fehlerkatalog", "gericht_admin"].some((id) => a.ids.includes(id)) && !a.tws.includes("qr-codes") && !a.lus.some((x) => /QR-Codes der Kassen|Zusage-Link/.test(x)), "keine neuen Admin-Hilfen (Wunsch Hansi: Admin-Funktionen nicht erklären)");
 ok(!fehler.length, "keine Fehler auf der Seite" + (fehler.length ? ": " + fehler.join(" | ") : ""));
 await browser.close(); srv.close(); console.log("ALLE TESTS GRÜN");
