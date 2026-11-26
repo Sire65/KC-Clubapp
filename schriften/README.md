@@ -17,3 +17,12 @@ der Schriftzug „Köcheclub Werne“ und alles Gedruckte bleiben im Corporate D
 
 Quelle: Google Fonts (Lizenztexte aus github.com/google/fonts), WOFF2-Dateien (Zeichensatz „latin“ mit Umlauten) über Fontsource.
 Neue Schrift = Datei + Lizenz hier ablegen und in `THEMA_SCHRIFTEN` (app.js) eintragen.
+
+## Kundenpreisliste (KC-CLUB-KUNDENPREISLISTE, 3.32.0)
+
+Nur für die gedruckte Kundenpreisliste Weihnachtsmarkt (Büro → 🖨️ Drucker → 📋 Kundenpreisliste), geladen erst beim Öffnen.
+
+| Datei | Schrift | Lizenz |
+|---|---|---|
+| source-serif-4-latin-600-normal/-italic.woff2, -700-normal/-italic.woff2 | Source Serif 4 | SIL OFL 1.1 (source-serif-4-OFL.txt) |
+| source-sans-3-latin-400/600/700-normal.woff2 | Source Sans 3 | SIL OFL 1.1 (source-sans-3-OFL.txt) |

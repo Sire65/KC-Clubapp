@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "3.31.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "3.32.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12,6 +12,7 @@ const APP_STUFE = "RC";
 // Pflege: gleiche Namen in sw.js (TEILE); nach jeder Änderung an teile/*.js: node tools/teile-pruefsumme.mjs (der Vertragstest prüft beides).
 // Rückweg: docs/AUFTEILEN.md.
 const TEILE_LISTE = {
+  kundenpreisliste: { einstieg: ["kplStart"], sri: "sha384-DmV0OmLTEZVKfp4uw7N4JOQiUPdTz7iX4jWgoO06oZyE/PknYjdPdRiO7x/QM9CD" }, // KC-CLUB-KUNDENPREISLISTE (3.32.0): Büro → Drucker → 📋 Kundenpreisliste (Entwurf 20, Preise/Allergene automatisch, nur Clubleitung)
   etiketten: { einstieg: ["peStart"], sri: "sha384-hZPVTBtZRkjm/gH7EiiPwId/cpV/5bFoQ/Zasy+rHzKYdMbfrZ1Muv762mCmZd7d" }, // KC-CLUB-PREISETIKETTEN (12.11.2026): Büro → Drucker → 🏷️ Preisetiketten (nur Clubleitung)
   videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl", "installAnleitung"], sri: "sha384-eAAjAsra7n6WSzBUKOSx5Hqm9q8OzAHCGb//HVeoE9LH/7OQqJ2Gb07lND8kHTcc" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
   szenen: { einstieg: ["jahreszeitVorschau"], sri: "sha384-mAuFkYPP7UnZNUqE/gD38eJ/THfwNSgLrJyvGLQUb5PBmCArQZ8wIH5DiImNHvlj" }, // Stufe 3b: Kopf-Szenen (Jahreszeiten, Sim-Jü, Themen) – kurz nach dem Start über szenenSpaeter
@@ -19,7 +20,7 @@ const TEILE_LISTE = {
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-NDuho5dgDL13uhtcTY8d0cGESAWhk+B+5qyWyvBuOxPgmADzmvY9YFCcwWM0s+kx" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
   spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-NJ7DJt5uvf95NJ5rn9MLHZr1dmZK0XLZYNYM5Frr2Pt/wetRMf4ARaCPhe/O30Zz" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
   tischlive: { einstieg: ["tlStart", "tlStopp", "tlZeichnen", "tlPlatz", "tlRegeln"], sri: "sha384-RCmsKY+DTRfsCMRHkJVG2UJlySANNdHxnEdMps4tkL9kgf8DC5O/b1jMcwVeY3XB" }, // 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: Ton, Kamera, Bildschirm, Unterlagen zeigen am Tisch
-  buero: { einstieg: ["ersBuchOeffnen", "eblDruck", "buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-PiWnqvoOu5768bW0DkVrWPeiw3hLJ1Sfso9N0/VKnANETlNUJbdaVCjVxTkWOy1n" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
+  buero: { einstieg: ["ersBuchOeffnen", "eblDruck", "buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-6+by7OJyM25Njj7xx5B5BaHNHfPGdtooI2f7URD0uFoZcjA7/nsDzjxjIZ2xsKEE" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
   hilfe: { einstieg: ["twFrageStart", "twOffenStart", "sucheAuf", "suSucheKnopf"], sri: "sha384-50UNMIWceEI9exc0cwewXPxce5HBwsInfyhI3ephfVKMHTpbxDvupFpXU25ZzGA4" }, // Stufe 5: Hilfe-Werkzeuge (Frag Twinkey, Mitglied fragen, Schnellsuche) – beim ersten Antippen
   rechner: { einstieg: ["rechnerOeffnen"], sri: "sha384-UWrOf1EIXxhsoWWwxnLDzpzALsaxzNGXgeqoLAjVvqoQ6wbFnIGxYTkQPFpiRuQ4" }, // 2.811.0 KC-CLUB-RECHNER: Tischrechner im Büro, „rechne …“ per Sprache
   tippspiel: { einstieg: ["tpStart", "tpTag", "tpMitmachen", "tpTippen", "tpZeigen"], sri: "sha384-KNPQv0SkmN1bZrgFpl3dE1Osi/OcP0KUNKuIWQeEqe/98OM34+NRwv5m+2ePuBJ6" }, // 2.971.0 KC-CLUB-TIPPSPIEL (Wunschliste #96): Bundesliga-Tippspiel
@@ -33540,6 +33541,7 @@ const DRUCKARTEN = {
   dpLuecken: { titel: "🧩 Wo noch Helfer fehlen", optionen: () => '<p class="hinweis">Ein Blatt mit Logo: alle Tage und Stunden, an denen noch Leute fehlen – zum Aushängen oder für die, die noch keine Wünsche abgegeben haben. Rechnet sich von selbst neu, sobald ein Wunschplan dazukommt.</p><p class="hinweis">Beim Drucken „A4 Querformat“ und „Hintergrundgrafiken“ wählen.</p>', bauen: () => dpdLueckenBauen() }, // 2.676.0 KC-CLUB-DP-LUECKEN
   haendlerausweis: { bauen: (o, p) => ({ ohneRahmen: true, randlos: true, titel: p.probe ? "Händler-Ausweise – Probeblatt Duplex" : `Händler-Ausweise Weihnachtsmarkt ${p.jahr} (${p.n} Stück)`, html: p.bilder.map((b) => `<img class="dseite" src="${b}" alt="">`).join("") }) }, // 2.690.0 KC-CLUB-HAENDLERAUSWEIS
   haendlerausweis_liste: { bauen: (o, p) => druckHaendlerListe(p) },
+  kundenpreisliste: { bauen: (o, p) => ({ ohneRahmen: true, randlos: true, quer: true, titel: "Kundenpreisliste Weihnachtsmarkt 2026", html: `<img class="dseite quer" src="${p.bild}" alt="">` }) }, // KC-CLUB-KUNDENPREISLISTE
   preisetiketten: { bauen: (o, p) => ({ ohneRahmen: true, randlos: true, titel: p.probe ? `Preisetikett – Probe ${p.format} × ${p.format} cm` : `Preisetiketten ${p.format} × ${p.format} cm (${p.n} Stück)`, html: p.bilder.map((b) => `<img class="dseite" src="${b}" alt="">`).join("") }) }, // KC-CLUB-PREISETIKETTEN
   einrichtungskarte: { bauen: (o, param) => druckEinrichtungskarte(param) }, // KC-CLUB-EINRICHTUNGSKARTE (1.88.0) // KC-CLUB-BESTAETIGUNG (1.69.0): Aufstellung der eigenen Eingaben
 };
@@ -38209,6 +38211,7 @@ const FENSTER_NAMEN = {
   aqBlatt: "🔳 QR-Codes (Admin)", aqGrossBlatt: "🔳 QR-Code groß", // 3.13.0 KC-CLUB-ADMIN-QR
   mfGast: "🧳 Gast zur Mitfahrt mitnehmen", // KC-CLUB-MITFAHRT-GAST
   peBlatt: "🏷️ Preisetiketten", // KC-CLUB-PREISETIKETTEN
+  kplBlatt: "📋 Kundenpreisliste", // KC-CLUB-KUNDENPREISLISTE
   aaBlatt: "🤖 Autoantwort einstellen", // KC-CLUB-AUTOANTWORT
   sendeBerichtBlatt: "📊 Sendebericht", // KC-CLUB-SENDEBERICHT (19.11.2026)
   // 2.794.0 KC-CLUB-FENSTER-NAMEN-NACHTRAG (Fund Hansi 31.10.: in den Wegen stand „Fenster: „niFenster““) – Fenster, die nicht über blattAuf entstehen

@@ -1,5 +1,13 @@
 # Änderungen
 
+## 3.32.0 – 2026-11-26 – 📋 Kundenpreisliste Weihnachtsmarkt 2026 – Preise und Allergene automatisch (KC-CLUB-KUNDENPREISLISTE)
+Wunsch Hansi 24.11.2026: „Entwurf 20 soll es werden, Schrift etwas größer und ‚Nur Barzahlung‘ etwas größer“ – „bau es in die Club-App, die sich alles automatisch holt wie Preise und Allergene, für Version 2026 Kundenpreisliste“; 25./26.11.: „Wir schneiden Ihre Wurst“ entfällt, Winterapfel „Apfelpunsch mit feinen Gewürzen“, Sauerkrauteintopf „mit magerem Bauchspeck“.
+- Büro → 🖨️ Drucker → **📋 Kundenpreisliste** (nur Clubleitung): Entwurf 20 „Tannenzweig & Kugeln“, A4 quer, Schrift so groß wie es passt, „Nur Barzahlung“ als weinrotes Schild. Vorschau, dann Drucken/PDF/Teilen wie jede Druckseite.
+- Daten wie bei den Preisetiketten: zuerst der vom PC-Manager veröffentlichte Stand (`etiketten_artikel`), sonst der Grundstand der Kasse. Preise, Glas-/Feuerzangenpfand und Thermobecher aus den Artikeln; Kennzeichnung (LMIV-Buchstaben, Zusatzstoff-Ziffern) aus der Allergen- und Zusatzstoffangabe – „Spuren“ zählen nicht. Legende nur mit den benutzten Kennzeichen.
+- Fest sind nur Aufbau, Kundennamen und Unterzeilen (`KPL_AUFBAU` in `teile/kundenpreisliste.js`). Fehlt ein Artikel oder seine Allergenangabe (zurzeit „Schuss Amaretto“), steht das gelb in der Vorschau.
+- Neues Programmteil `teile/kundenpreisliste.js` (lädt erst beim Öffnen), Hintergrund `bilder/kundenpreisliste/hintergrund.jpg` (aus Entwurf 20), Schriften Source Serif 4 / Source Sans 3 in `schriften/` (SIL OFL). Gemalt mit html2canvas aus `lib/`. Nur App.
+- Test `tests/kundenpreisliste.test.mjs`.
+
 ## 3.31.0 – 2026-11-25 – 📬 Sammel-E-Mail übersichtlicher (KC-CLUB-SAMMELMAIL) · Server 3.31.0
 Hansi 25.11. nach der Testmail: „Sieht unübersichtlich aus. Die Linien können dann etwas kürzer sein.“
 - Trennlinie kürzer (20 Zeichen) – passt auf dem Handy in eine Zeile, kein Umbruch mehr.
