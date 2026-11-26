@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "3.41.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "3.42.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -2895,7 +2895,7 @@ const HILFE = [
   { id: "abmelden", thema: "privat", sym: "🚪", t: "Von einem Gerät abmelden (Handy weitergeben)", x: "Gibst du ein Handy oder Tablet weiter, tippe vorher unter ⚙️ → <b>„🔒 Privatsphäre“</b> ganz unten auf <b>„🚪 Von diesem Gerät abmelden“</b>. Dann sind dein Zugang und alle Club-Daten auf diesem Gerät gelöscht – auch Notfallpass und Entwürfe. Auf deinen anderen Geräten bleibt alles; wieder anmelden geht mit deinem Zugangslink.", zeig: () => einstiegHin("privat"), seit: "2.337.0" }, // 2.337.0 KC-CLUB-ABMELDEN
   { id: "handy_verloren", thema: "privat", sym: "🔒", t: "Handy verloren oder gestohlen – was tun?", x: "Auf einem anderen Gerät, auf dem die Club-App läuft, unter ⚙️ → <b>„🔒 Privatsphäre“</b> auf <b>„🔒 Alle anderen Geräte abmelden“</b> tippen. Dann ist die Club-App auf dem verlorenen Handy sofort abgemeldet und bekommt keine Benachrichtigungen mehr. Hast du kein anderes Gerät, sag der Clubleitung Bescheid: Ein neuer Link macht den alten sofort ungültig.", zeig: () => einstiegHin("privat"), seit: "2.352.0" }, // 2.352.0 KC-CLUB-GERAETE-ABMELDEN
   { id: "meine_daten", thema: "privat", sym: "🔐", t: "Meine Daten ansehen", x: "Was weiß die App über dich? Die Kachel <b>„🔐 Meine Daten“</b> (Register Meins) zeigt es: Angaben, Zugang, Rechte, Benachrichtigungen und wie viel du angelegt hast. Du kannst es ausdrucken oder als Datei sichern; stimmt etwas nicht, meldest du es gleich dort.", zeig: () => mdatStart(), seit: "2.23.82" },
-  { id: "ausweis_qr", thema: "privat", sym: "🪪", t: "Mein Ausweis-QR für Kasse & Stechuhr", x: "Den Mitgliedsausweis hast du jetzt auch im Handy: Auf der Startseite neben <b>Schnellzugriff</b> auf <b>QR</b> tippen – oder unter <b>Meins → 🪪 Mein Ausweis-QR</b>. Der QR-Code enthält deine <b>Mitgliedsnummer</b> (z. B. KC-0005) – genau wie der Plastik-Ausweis. An der <b>Kasse</b> (Anmelden als Bediener) oder an der <b>Stechuhr</b> einfach vor den Scanner halten; Bildschirm ganz hell stellen. Klappt auch <b>ohne Netz</b>, wenn du ihn einmal geöffnet hattest. Die Versionsnummer steht weiter klein unter der Kochmütze.", zeig: () => ausweisZeigen(), seit: "2.443.0" },
+  { id: "ausweis_qr", thema: "privat", sym: "🪪", t: "Mein Ausweis-QR für Kasse & Stechuhr", x: "Den Mitgliedsausweis hast du jetzt auch im Handy: Auf der Startseite neben <b>Schnellzugriff</b> auf <b>QR</b> tippen – oder unter <b>Meins → 🪪 Mein Ausweis-QR</b>. Der QR-Code enthält deine <b>Mitgliedsnummer</b> (z. B. KC-0005) – genau wie der Plastik-Ausweis. An der <b>Kasse</b> (Anmelden als Bediener) oder an der <b>Stechuhr</b> einfach vor den Scanner halten; Bildschirm ganz hell stellen. Klappt auch <b>ohne Netz</b>, wenn du ihn einmal geöffnet hattest. Darunter steht verdeckt dein <b>🎭 Pseudonym</b> (dein Name an Kasse und im Dienstplan) – mit dem <b>👁️ Auge</b> 10 Sekunden lang anzeigen. Geht der QR-Code nicht, meldest du dich an der Kasse notfalls mit deinem <b>Geburtsdatum</b> an. Die Versionsnummer steht weiter klein unter der Kochmütze.", zeig: () => ausweisZeigen(), seit: "2.443.0" },
   { id: "mein_dienst", thema: "termine", sym: "🗓️", t: "Mein Dienst: Wunsch, Plan und Zeiten", x: "Die Kachel <b>„🗓️ Mein Dienst“</b> (Meins, erweiterte Ansicht) zeigt alles an einer Stelle: <b>📝 Wunschplan</b> (abgegeben oder übernommen), <b>📅 Sollplan</b> (deine nächsten Dienste), <b>⏱️ Istplan</b> (wann du wirklich da warst) und <b>★ Sonderstunden</b> (gutgeschrieben, offen oder abgelehnt). Beim Sollplan steht <b>„📅 Stand des Dienstplans“</b>; sind die Pläne freigegeben, auch die Karte <b>„📄 Pläne Weihnachtsmarkt“</b> (Dienstplan und Wunschplan zum Ansehen und Drucken). Alle Stunden und Kilometer: <b>⏱️ Mein Stundenkonto</b>.", nur: () => !einfach(), zeig: () => mdStart(), seit: "3.33.0" },
   { id: "pfeil_menue", thema: "nachrichten", sym: "✂️", t: "Mehr am Pfeil einer Nachricht", x: "Der kleine Pfeil neben einer Nachricht bietet: ↪️ Weiterleiten, 📋 Kopieren, ✂️ Ausschneiden, 🗄️ ins eigene Archiv legen und 🗑️ Löschen. Bei eigenen Nachrichten kommt <b>❗ Wichtig</b> dazu.", zeig: () => zeige("nachrichten"), seit: "2.23.80" },
   { id: "wichtig_nachtraeglich", thema: "nachrichten", sym: "❗", t: "Eine Nachricht nachträglich wichtig machen", x: "Vergessen, ❗ anzutippen? Am Pfeil deiner Nachricht <b>„❗ Wichtig“</b> wählen – sie bekommt den orangefarbenen Rahmen für alle im Chat. Mit „➖ Nicht wichtig“ nimmst du es zurück. Es geht keine neue Benachrichtigung raus.", zeig: () => zeige("nachrichten"), seit: "2.23.80" },
@@ -35287,16 +35287,31 @@ function ausweisHtml(x, frisch) {
   const kopf = `<div class="kopf2" style="margin:0 0 6px"><h3 style="margin:0;flex:1">🪪 Mein Ausweis-QR</h3><button class="knopf klein" onclick="$('ausweisBlatt').remove()" aria-label="Schließen" title="Schließen">✕</button></div>`;
   if (!x) return kopf + `<p class="hinweis">Für dich ist noch keine Mitgliedsnummer hinterlegt. Bitte bei der Clubleitung melden – dann erscheint hier dein QR-Code.</p>`;
   return kopf + `<div class="ausweis-karte"><div class="ausweis-kopf">${cdLogo(9)}<b>${esc(KC_CD.name)}</b></div>
-    <div class="ausweis-qr">${x.svg}</div><div class="ausweis-name">${esc(ICH?.name || "")}</div><div class="ausweis-nr">${esc(x.nummer)}</div></div>
+    <div class="ausweis-qr">${x.svg}</div><div class="ausweis-name">${esc(ICH?.name || "")}</div><div class="ausweis-nr">${esc(x.nummer)}</div>${ausweisPseudoHtml(x.pseudonym)}</div>
     <p class="hinweis" style="text-align:center">An der <b>Kasse</b> oder <b>Stechuhr</b> einfach vor den Scanner halten – wie den Plastik-Ausweis.<br>Tipp: Bildschirm ganz hell stellen.${frisch ? "" : "<br><small>⚠️ Ohne Netz: zuletzt gemerkter Stand.</small>"}</p>`;
+}
+// 3.42.0 KC-CLUB-AUSWEIS-PSEUDONYM (Wunsch Hansi 26.11.2026 „der Pseudoname ist zur Sicherheit unter dem Code, aber verdeckt. Ansehen kann man mit dem Auge“):
+// verdeckt (••••••), 👁️ zeigt es 10 Sekunden lang, dann wieder verdeckt. Nur das eigene Pseudonym (Server mein_ausweis).
+function ausweisPseudoHtml(p) {
+  if (!p) return "";
+  return `<div class="ausweis-pseudo">🎭 Pseudonym: <span id="ausweisPseudo" data-p="${esc(p)}" aria-live="polite">••••••</span>
+    <button type="button" class="knopf klein" id="ausweisAuge" onclick="ausweisPseudoZeigen()" aria-pressed="false" aria-label="Pseudonym anzeigen" title="Pseudonym anzeigen">👁️</button></div>`;
+}
+let ausweisPseudoUhr = 0;
+function ausweisPseudoZeigen() {
+  const s = $("ausweisPseudo"), b = $("ausweisAuge"); if (!s || !b) return;
+  const zu = () => { clearTimeout(ausweisPseudoUhr); const s2 = $("ausweisPseudo"), b2 = $("ausweisAuge"); if (s2) s2.textContent = "••••••"; if (b2) { b2.setAttribute("aria-pressed", "false"); b2.setAttribute("aria-label", "Pseudonym anzeigen"); } };
+  if (b.getAttribute("aria-pressed") === "true") return zu();
+  s.textContent = s.dataset.p || ""; b.setAttribute("aria-pressed", "true"); b.setAttribute("aria-label", "Pseudonym verdecken");
+  clearTimeout(ausweisPseudoUhr); ausweisPseudoUhr = setTimeout(zu, 10000);
 }
 async function ausweisZeigen() {
   const alt = ausweisGemerkt();
   blattAuf("ausweisBlatt", alt ? ausweisHtml(alt, false) : '<p class="hinweis">⏳ Ausweis wird geladen …</p>');
   try {
-    const { nummer } = await api("mein_ausweis");
+    const { nummer, pseudonym } = await api("mein_ausweis");
     if (!nummer) { try { localStorage.removeItem(ausweisSpeicher()); } catch {} }
-    const x = nummer ? { nummer, svg: alt?.nummer === nummer ? alt.svg : (await qrLaden(), ausweisSvg(nummer)) } : null;
+    const x = nummer ? { nummer, pseudonym: pseudonym || "", svg: alt?.nummer === nummer ? alt.svg : (await qrLaden(), ausweisSvg(nummer)) } : null;
     if (x) try { localStorage.setItem(ausweisSpeicher(), JSON.stringify(x)); } catch {}
     const f = $("ausweisBlatt")?.querySelector(".blatt-innen"); if (f) f.innerHTML = ausweisHtml(x, true);
   } catch (e) { if (!alt) { $("ausweisBlatt")?.remove(); meldeFehler(e); } }
