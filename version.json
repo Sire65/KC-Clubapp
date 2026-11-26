@@ -1,5 +1,5 @@
 {
-  "version": "3.35.0",
+  "version": "3.36.0",
   "datum": "2026-11-26",
   "stufe": "RC",
   "mindest": "2.977.0",
@@ -7,6 +7,13 @@
     "Kleine Systemanpassung"
   ],
   "verlauf": [
+    {
+      "version": "3.36.0",
+      "datum": "2026-11-26",
+      "neu": [
+        "Kleine Systemanpassung"
+      ]
+    },
     {
       "version": "3.35.0",
       "datum": "2026-11-26",
@@ -276,13 +283,6 @@
     {
       "version": "2.996.0",
       "datum": "2026-11-21",
-      "neu": [
-        "Kleine Systemanpassung"
-      ]
-    },
-    {
-      "version": "2.995.0",
-      "datum": "2026-11-20",
       "neu": [
         "Kleine Systemanpassung"
       ]
