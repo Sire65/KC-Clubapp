@@ -197,7 +197,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "3.37.0";
+const SERVER_VERSION = "3.38.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -4820,6 +4820,7 @@ const ZUGANG_AKTIONEN: Record<"basis" | "aushilfe", readonly string[]> = {
     "eingaben_bestaetigen", "wunschbogen_mailen", "eingaben_ablegen", "fotos_neueste", "fotos_liste", "foto_oeffnen",
     "schulung_meine", "schulung_antwort", "gericht_zutat_setzen", "gericht_antwort", "tipp_stand", "tipp_mitmachen", "tipp_abgeben", "advent_gadget_stand", "advent_gadget_mitmachen", // KC-CLUB-ADVENT-GADGETS
     "advent_preis_melden", "advent_preise_meine", // KC-CLUB-ADVENT-AUSHILFEN (Hansi 22.11.2026)
+    "terminanfragen_liste", "terminanfrage_antwort", "terminanfrage_gelesen", "terminanfrage_gegenvorschlag", // 3.38.0 KC-CLUB-AUSHILFE-TERMINANFRAGE (Fund Hansi 26.11.: Leon fand die Einladung zur Kassenschulung nicht) – nur eigene Anfragen (Server prüft Empfänger)
     "sondereinsatz_zusage", "stunden_melden", "mein_ausweis", "dienst_stand", "dienst_buchen", "dienst_korrigieren", "dienst_tausch_liste", "dienst_tausch_anbieten", "dienst_tausch_aktion", "dp_einzelplan", "ist_offen", "ist_antworten", "ist_feedback"], // 2.590.0: Aushilfen dürfen sich auch anmelden (Hansi 22.10.); 2.606.0: und Dienste tauschen
 };
 const ZUGANG_ERLAUBT = { gast: new Set(ZUGANG_AKTIONEN.basis), aushilfe: new Set([...ZUGANG_AKTIONEN.basis, ...ZUGANG_AKTIONEN.aushilfe]), tischgast: new Set<string>(TISCHGAST_AKTIONEN) };

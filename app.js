@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "3.37.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "3.38.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -10328,6 +10328,7 @@ const ZUGANG_AKTIONEN = {
     "eingaben_bestaetigen", "wunschbogen_mailen", "eingaben_ablegen", "fotos_neueste", "fotos_liste", "foto_oeffnen",
     "schulung_meine", "schulung_antwort", "gericht_zutat_setzen", "gericht_antwort", "tipp_stand", "tipp_mitmachen", "tipp_abgeben", "advent_gadget_stand", "advent_gadget_mitmachen", // KC-CLUB-ADVENT-GADGETS
     "advent_preis_melden", "advent_preise_meine", // KC-CLUB-ADVENT-AUSHILFEN (Hansi 22.11.2026)
+    "terminanfragen_liste", "terminanfrage_antwort", "terminanfrage_gelesen", "terminanfrage_gegenvorschlag", // 3.38.0 KC-CLUB-AUSHILFE-TERMINANFRAGE (Fund Hansi 26.11.: Leon fand die Einladung zur Kassenschulung nicht) – nur eigene Anfragen (Server prüft Empfänger)
     "sondereinsatz_zusage", "stunden_melden", "mein_ausweis", "dienst_stand", "dienst_buchen", "dienst_korrigieren", "dienst_tausch_liste", "dienst_tausch_anbieten", "dienst_tausch_aktion", "dp_einzelplan", "ist_offen", "ist_antworten", "ist_feedback"], // 2.590.0 KC-CLUB-DIENST-STEMPEL; 2.606.0 KC-CLUB-DIENST-TAUSCH
 };
 const ZUGANG_KACHELN = { basis: ["termine", "kommunikation", "sos", "spiele", "status", "einstellungen", "hilfezentrum", "twinkey", "erklaer", "update", "sicherheit", "feedback", "test"],

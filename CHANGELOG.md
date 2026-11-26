@@ -1,5 +1,12 @@
 # Änderungen
 
+## 3.38.0 – 2026-11-26 – 🧑‍🍳 Fehler: Aushilfen sahen Terminanfragen nicht (KC-CLUB-AUSHILFE-TERMINANFRAGE) · Server 3.38.0 · Fehlerbeseitigung
+Fund Hansi 26.11.: Leon (Aushilfe) meldete sich per WhatsApp – „in der App wäre er nicht so gut drangekommen“. Er war zur Kassenschulung eingeladen (Push kam an), die Anfrage erschien in der App aber nicht.
+- **Ursache:** Die Terminanfrage-Aktionen fehlten in der Freigabeliste für Aushilfen (`ZUGANG_AKTIONEN.aushilfe`). Der Server lehnte das Laden ab („für Aushilfen nicht freigeschaltet“), die App blendet den Fehler still aus – die Einladung war unsichtbar.
+- **Jetzt:** Aushilfen dürfen `terminanfragen_liste`, `terminanfrage_antwort`, `terminanfrage_gelesen` und `terminanfrage_gegenvorschlag` – also eigene Anfragen sehen und mit Ja/Vielleicht/Nein, anderer Zeit oder Gegenvorschlag antworten. Der Server zeigt und nimmt nur Anfragen, bei denen die Person Empfänger ist. Anlegen, Ändern, Absagen bleibt Mitgliedern vorbehalten.
+- Leons Zusage (27.11., 13:45–14:45) ist bereits eingetragen.
+- Test: `tests/app-vertrag.test.mjs` (Zugang). Rückweg: App/Server 3.37.0.
+
 ## 3.37.0 – 2026-11-26 – 🎭 QR-Codes: wer welches Pseudonym hat (KC-CLUB-ADMIN-QR-PSEUDONYM) · Server 3.37.0
 Wunsch Hansi 26.11.: „Baue mir eine Übersicht in der Club-App, am besten wo die QR-Codes sind, wer welches Pseudonym hat. Mir dort mit anzeigen.“
 - **Admin-Zentrale → 🔳 QR-Codes:** neuer Reiter **„🎭 Pseudonyme“** – alle aktiven Mitglieder als Tabelle Name · Pseudonym · KC-Nr., mit Suche; wer noch keins hat, steht als „– noch keins“ (Anzahl oben).
