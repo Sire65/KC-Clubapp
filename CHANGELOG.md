@@ -4,7 +4,7 @@
 Wunsch Hansi 26.11.2026: „Wenn am 03.12. der Stand aufgebaut ist und das ganze System steht, checken ob alles läuft – Mini-PC, Router, 3 Kassen, TV mit Präsentation usw. Alles checken und abhaken.“
 - Admin-Zentrale → **🧰 Aufbau-Check** (nur Clubleitung), Programmteil `teile/aufbaucheck.js`.
 - 🤖 **Automatisch geprüft** (Server `aufbau_check`, nur Technik-Meldungen des Mini-PCs): Mini-PC meldet sich (= Internet über den Router), Manager-Dienst, Kasse 1–3 gekoppelt und aktiv, WLAN-Verzögerung je Kasse, Fernseher holt die Präsentation (neu vom Mini-PC gemeldet, Kasse-Repo), Kassen-QR-Codes, PC-Manager, Preise veröffentlicht, Update-Sperre. ✅/⚠️/❌, alle 30 Sekunden neu (ruht im Schlafmodus).
-- ☑️ **Liste zum Abhaken** (Strom & Netz, Mini-PC, Kassen inkl. Testbuchung, Scanner, Pfand, BAR, Stechuhr, Wechselgeld, Fernseher, Aushänge, Gläser/Schalen) – je Tag gespeichert (`kc_club_aufbau_check`, nur Server), alle sehen denselben Stand mit Name und Uhrzeit.
+- ☑️ **Liste zum Abhaken** (Strom & Netz, Mini-PC, Kassen inkl. Barcode-Scanner je Kasse aufgeladen und Testscan, Testbuchung, Pfand, BAR, Stechuhr, Wechselgeld, Fernseher, Aushänge, Gläser/Schalen) – je Tag gespeichert (`kc_club_aufbau_check`, nur Server), alle sehen denselben Stand mit Name und Uhrzeit.
 - Hilfe-Eintrag, Test `tests/aufbau-check.test.mjs` (CI).
 
 ## 3.44.0 – 2026-11-26 – 📋 Ablagekorb: als Protokoll-Anlage einfügen, mit Protokoll-Auswahl (KC-CLUB-ABLAGEKORB-PROTOKOLL) · Server 3.44.0

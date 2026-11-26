@@ -12,7 +12,7 @@ const APP_STUFE = "RC";
 // Pflege: gleiche Namen in sw.js (TEILE); nach jeder Änderung an teile/*.js: node tools/teile-pruefsumme.mjs (der Vertragstest prüft beides).
 // Rückweg: docs/AUFTEILEN.md.
 const TEILE_LISTE = {
-  aufbaucheck: { einstieg: ["acStart"], sri: "sha384-XWeJa+qY3nmywidwZucd9NOaxjYTWlbMmPaSLhK8fXItikbSwUUiUSH1Tdxo9R1K" }, // 3.45.0 KC-CLUB-AUFBAU-CHECK: Admin-Zentrale → 🧰 Aufbau-Check (Stand startklar? Mini-PC, Kassen, WLAN, TV + Liste zum Abhaken)
+  aufbaucheck: { einstieg: ["acStart"], sri: "sha384-NhJaUPXtxMDN+8hxBW1p8O6ceyHS1CtWZWjBgCXmAoMNV3ZW7E1kCkD8iATQfAFq" }, // 3.45.0 KC-CLUB-AUFBAU-CHECK: Admin-Zentrale → 🧰 Aufbau-Check (Stand startklar? Mini-PC, Kassen, WLAN, TV + Liste zum Abhaken)
   druckordner: { einstieg: ["doStart"], sri: "sha384-YQEJJCXp+VdJG4XkILmd2+loS4OPngF+P1YWX6hjREO2g9SvaYdM7GRrcHGwyd6J" }, // KC-CLUB-DRUCKORDNER: Büro → Drucker → 🗂️ Druckordner (Kundenpreisliste, Interne Preisliste, Allergene, Etiketten, Kassen-Karten, Ordner Weihnachtsmarkt)
   kundenpreisliste: { einstieg: ["kplStart"], sri: "sha384-DmV0OmLTEZVKfp4uw7N4JOQiUPdTz7iX4jWgoO06oZyE/PknYjdPdRiO7x/QM9CD" }, // KC-CLUB-KUNDENPREISLISTE (3.32.0): Büro → Drucker → 📋 Kundenpreisliste (Entwurf 20, Preise/Allergene automatisch, nur Clubleitung)
   etiketten: { einstieg: ["peStart"], sri: "sha384-hZPVTBtZRkjm/gH7EiiPwId/cpV/5bFoQ/Zasy+rHzKYdMbfrZ1Muv762mCmZd7d" }, // KC-CLUB-PREISETIKETTEN (12.11.2026): Büro → Drucker → 🏷️ Preisetiketten (nur Clubleitung)

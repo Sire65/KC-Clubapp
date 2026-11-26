@@ -24,7 +24,7 @@ assert.equal(st["Mini-PC meldet sich (Internet über den Router)"], "fehlt"); as
 assert.equal(st["Kassen-QR-Codes zum Koppeln"], "warn"); assert.equal(st["Fernseher holt die Präsentation"], "info", "ohne TV-Meldung nur Hinweis, Haken von Hand");
 const ids = AC_LISTE.flatMap(([, l]) => l.map(([id]) => id));
 assert.ok(ids.length >= 20 && new Set(ids).size === ids.length && ids.every((i) => /^[a-z0-9_-]{2,60}$/.test(i)), "Prüfpunkte eindeutig und gültig");
-for (const p of ["router", "minipc", "kasse1", "kasse2", "kasse3", "tv", "testbon", "stechuhr"]) assert.ok(ids.includes(p), "Punkt " + p);
+for (const p of ["router", "minipc", "kasse1", "kasse2", "kasse3", "scanner1", "scanner2", "scanner3", "tv", "testbon", "stechuhr"]) assert.ok(ids.includes(p), "Punkt " + p);
 assert.ok(/!document\.hidden && !ruht\(\)\) acLaden\(\); \}, 30000\)/.test(teil), "Takt alle 30 s, ruht im Schlafmodus");
 assert.ok(lies(".github/workflows/tests.yml").includes("node tests/aufbau-check.test.mjs"), "läuft in der CI");
 console.log("aufbau-check: ok");
