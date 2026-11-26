@@ -231,8 +231,8 @@ async function qzWeiter(ueberspringen) {
 }
 async function qzBestenliste() {
   qzStop(); const f = $("hrFlaeche"); if (!f) return;
-  f.innerHTML = '<div class="qz"><div class="qz-start"><div class="qz-laedt">⏳ Bestenliste wird geladen …</div></div></div>';
-  await qzStandHolen(); const s = QZ.stand; if (!$("hrFlaeche")) return;
+  f.innerHTML = '<div class="qz"><div class="qz-start"><div class="qz-laedt" id="qzBlLaedt">⏳ Bestenliste wird geladen …</div></div></div>';
+  await qzStandHolen(); const s = QZ.stand; if (!$("hrFlaeche") || !$("qzBlLaedt")) return; // 3.37.0 KC-CLUB-QZ-BESTENLISTE-ZURUECK: inzwischen zurück zur Auswahl (Zurück, Erklär-Video) → nicht darüber zeichnen
   const zeile = (r, i, wert) => `<li class="${r.ich ? "ich" : ""}"><span>${i < 3 ? ["🥇", "🥈", "🥉"][i] : i + 1 + "."}</span><b>${esc(r.name)}</b><em>${wert}</em></li>`;
   f.innerHTML = `<div class="qz"><div class="qz-start qz-liste"><div class="qz-titel">🏆 Club-Bestenliste</div>
     ${s ? `<h4>Diese Woche (${esc(s.woche.slice(-2).replace(/^0/, ""))}. KW)</h4><ol>${s.woche_liste.length ? s.woche_liste.map((r, i) => zeile(r, i, `${r.punkte} · ${r.richtig}/${QZ_RUNDE} ✓`)).join("") : "<li class='leer'>Noch niemand – sei die oder der Erste!</li>"}</ol>
