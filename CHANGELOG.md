@@ -1,5 +1,13 @@
 # Änderungen
 
+## 3.38.0 – 2026-11-26 – 🎬 Erklär-Videos geprüft: Bestenliste zeichnet nicht mehr über die Auswahl · Video speichert keine Kachel-Anordnung mehr (KC-CLUB-VIDEO-PRUEFUNG) · nur App
+Hansi 26.11.: „Ja ansehen und berichtigen“ (die Videos, in denen je eine Station ihr Ziel nicht zeigte) und „Ja“ (Prüfwerkzeug mit Beispieldaten, auf main).
+- **Befund:** Die fünf zuerst gemeldeten Videos (Einfache Ansicht, Bühne, Nachrichten 1 und 2, Geheim schreiben) hatten **keinen** Fehler – das Prüfwerkzeug maß während der Tipp-Animation, die Startseite hatte ohne Server keine Kacheln, und leere Testantworten ließen Mitglieder-Kacheln und Chat-Menü abbrechen. Mit Beispieldaten laufen alle Videos vollständig.
+- **🧩 Rätsel – Bestenliste:** Die Bestenliste lädt nachträglich vom Server. War man inzwischen zurück in der Auswahl („↩ Zurück“ oder im Video die Station „📜 Bildnachweise“), zeichnete sie sich trotzdem darüber. Jetzt nur, wenn ihre „wird geladen“-Anzeige noch steht (`teile/rueckseite.js`).
+- **🔎 Video „Versteckte Helfer“:** übernahm die Station „✋ Verschieben“ aus „Oberfläche nach Wunsch“, aber nicht deren Schluss – beim Wechsel zu den Einstellungen beendete die App das „Anordnen“ wie bei einem Mitglied: „💾 Startseite gespeichert“ und Speichern der (unveränderten) Kachel-Anordnung beim Server. Jetzt beendet der Video-Spieler ein selbst geöffnetes „Anordnen“ vor jedem Seitenwechsel ohne Speichern (`teile/videos.js`).
+- **Prüfwerkzeug `tools/hilfe/alle-videos-browser.mjs`:** echter App-Start mit nachgebautem Club-Server und den Beispieldaten der Erklärfilme („Hans Test“ …) plus Beispielen für Geburtstag, SOS, Archiv, archivierten Chat und Rätsel; misst nach der Tipp-Animation, meldet still übersprungene Stationen, zählt Server-Aufrufe an der Leitung (nichts darf gespeichert werden), hält die App wach (Schlafmodus), `DIAGNOSE=1` nennt den Grund. Ergebnis: alle Videos (53 für ein Mitglied) vollständig, nichts gespeichert, keine Programmfehler.
+- Test: neu `tests/video-pruefung.test.mjs` (CI). Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“. Keine Datenbank-, keine Server-Änderung. Rückweg: App 3.37.0.
+
 ## 3.37.0 – 2026-11-26 – 🎭 QR-Codes: wer welches Pseudonym hat (KC-CLUB-ADMIN-QR-PSEUDONYM) · Server 3.37.0
 Wunsch Hansi 26.11.: „Baue mir eine Übersicht in der Club-App, am besten wo die QR-Codes sind, wer welches Pseudonym hat. Mir dort mit anzeigen.“
 - **Admin-Zentrale → 🔳 QR-Codes:** neuer Reiter **„🎭 Pseudonyme“** – alle aktiven Mitglieder als Tabelle Name · Pseudonym · KC-Nr., mit Suche; wer noch keins hat, steht als „– noch keins“ (Anzahl oben).

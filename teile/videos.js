@@ -3257,6 +3257,7 @@ function rgZeigen() {
   }
   if (RG.vorI !== RG.i) { // Station wechselt: vorige aufräumen, neue vorbereiten (nur einmal – nicht beim Fortsetzen nach Pause)
     const alt = RG.st[RG.vorI]; RG.vorI = RG.i; RG.liveI = -1; RG.satzNr = 0; try { alt?.nach?.(); } catch {}
+    if (s.v !== "start" && RG.anordnenZurueck && kaBearb) rgAnordnen(false); // 3.37.0 KC-CLUB-VIDEO-ANORDNEN-OHNE-SPEICHERN: vom Video geöffnetes „Anordnen“ ohne Speichern beenden – sonst schließt zeige() es mit kaBearbeiten(false), speichert die Anordnung beim Server und meldet „💾 Startseite gespeichert“ (Fund „Versteckte Helfer“)
     if (s.v !== aktuelleAnsicht) zeige(s.v, true); // ohne neue Verlaufs-Einträge – „Zurück“ bleibt wie vorher
     if (!s.nur || s.nur()) try { s.vor?.(); } catch (e) { console.warn("rundgang vor", e); }
     if (!s.nur || s.nur()) try { rgAutoSicht(s); } catch (e) { console.warn("rundgang sicht", e); } // 2.346.0 KC-CLUB-VIDEO-PASST
