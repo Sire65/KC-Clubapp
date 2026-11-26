@@ -20,6 +20,9 @@ const doPfand = (a) => (Array.isArray(a?.pfand) ? a.pfand : []).reduce((s, k) =>
 const doArtikel = () => (PE.artikel || []).filter((a) => a && a.nummer && a.name);
 const doVerkauf = () => doArtikel().filter((a) => !a.spezial && !/^(Pfand|Sonstiges)$/i.test(a.kategorie || "") && Number(a.preis) > 0);
 const doPfandArt = () => doArtikel().filter((a) => /^Pfand$/i.test(a.kategorie || ""));
+// 26.11.2026 (Hansi: „Die Etiketten haben kein Scheckkarten-Format. Es sollen nur die Kassen-QR-Codes haben“): Scheckkarten nur für die
+// Kassen-Codes – Pfandartikel (Pfand, Rückgaben) und der Bezahl-Code BAR. Getränke und Speisen gibt es als Preisetiketten.
+const doKassenCodes = () => [...doPfandArt(), ...doArtikel().filter((a) => a.spezial === "bar")];
 
 async function doStart() {
   const f = blattAuf("doBlatt", `<h3 style="margin-top:0">🗂️ Druckordner</h3><div id="doInhalt"><p class="hinweis">⏳ Aktuelle Preise, Etiketten und Ordner werden geholt …</p></div>`);
@@ -55,8 +58,8 @@ function doZeigen(f) {
     ${grp("⭐ Immer aktuell", DO_FEST.map(([ref, sym, t, u]) => doZeile("live", ref, sym, t, u)).join(""))}
     ${grp(`🏷️ Preisetiketten <small class="hinweis">(Größe ${[8, 7, 6, 5].map((k) => `<button type="button" class="chip${DO.format === k ? " an" : ""}" data-format="${k}">${k} cm</button>`).join("")})</small>`,
       doArtikel().filter((a) => !a.spezial).map((a) => doZeile("etikett", a.id, "🏷️", a.name, `${a.kategorie || ""} · ${art(a)}`)).join(""), alle("etikett"))}
-    ${grp("🔳 Kassen-Codes als Scheckkarte <small class=\"hinweis\">(85 × 54 mm zum Ausschneiden, 10 je Bogen)</small>",
-      [...doVerkauf(), ...doPfandArt(), ...doArtikel().filter((a) => a.spezial === "bar")].map((a) => doZeile("karte", a.id, a.spezial ? "💶" : /^Pfand$/i.test(a.kategorie || "") ? "♻️" : "🔳", a.name, a.spezial ? "Bezahl-Code: scannen = bar kassieren" : art(a))).join(""), alle("karte"))}
+    ${grp("🔳 Kassen-Codes als Scheckkarte <small class=\"hinweis\">(Pfand, Rückgaben, BAR · 85 × 54 mm zum Ausschneiden, 10 je Bogen)</small>",
+      doKassenCodes().map((a) => doZeile("karte", a.id, a.spezial ? "💶" : /^Pfand$/i.test(a.kategorie || "") ? "♻️" : "🔳", a.name, a.spezial ? "Bezahl-Code: scannen = bar kassieren" : art(a))).join(""), alle("karte"))}
     ${grp("📁 Aus dem Büro-Ordner „Weihnachtsmarkt“", DO.archiv.length ? DO.archiv.map((d) => doZeile("archiv", d.datei, arDateiSym(d.mime), d.titel || d.name, d.datum ? wann(d.datum) : "")).join("")
       : `<p class="hinweis">Im Büro-Ordner „Weihnachtsmarkt“ liegt noch nichts. Dateien dort ablegen (📥 Einlesen), dann erscheinen sie hier.</p>`)}
     <div class="do-fuss"><b id="doSumme"></b>
@@ -256,7 +259,7 @@ async function doDrucken(knopf) {
       } catch (e) { fehlt.push(`${t.titel} (${e?.message || e})`); }
     }
     const et = reihe("etikett"); if (et.length) { melde(`⏳ ${et.length} Preisetiketten …`); try { seiten.push(...(await doEtikettSeiten(et))); } catch (e) { fehlt.push(`Preisetiketten (${e?.message || e})`); } }
-    const ka = [...doVerkauf(), ...doPfandArt(), ...doArtikel().filter((a) => a.spezial === "bar")].filter((a) => doGet("karte", a.id).n > 0).flatMap((a) => Array(doGet("karte", a.id).n).fill(a));
+    const ka = doKassenCodes().filter((a) => doGet("karte", a.id).n > 0).flatMap((a) => Array(doGet("karte", a.id).n).fill(a));
     if (ka.length) { melde(`⏳ ${ka.length} Kassen-Karten …`); try { seiten.push(...(await doKartenSeiten(ka))); } catch (e) { fehlt.push(`Kassen-Karten (${e?.message || e})`); } }
     for (const t of L.filter((x) => x.typ === "archiv")) { melde(`⏳ ${t.titel} …`); try { const b = await schPaketBilder(t); for (let i = 0; i < t.n; i++) seiten.push(...b); } catch (e) { fehlt.push(`${t.titel} (${e?.message || e})`); } }
     for (const x of L.filter((x) => (x.typ === "etikett" || x.typ === "karte") && !nach.has(x.ref))) fehlt.push(`${x.titel} (Artikel gibt es nicht mehr)`);

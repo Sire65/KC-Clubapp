@@ -8,7 +8,7 @@ const ctx = { esc: (s) => String(s).replace(/[&<>"]/g, (z) => ({ "&": "&amp;", "
   KC_CD: { name: "Köcheclub Werne", zeile: "Gemeinsam kochen, gemeinsam helfen", logo: "kc-kochmuetze-weiss.webp" } };
 vm.createContext(ctx);
 vm.runInContext(lies("teile/kundenpreisliste.js") + "\n" + lies("teile/etiketten.js") + "\n" + lies("teile/druckordner.js") +
-  ";this.t={PE,DO,doSet,doGet,doMplGruppen,doMplHtml,doAllergenStatus,doAllergenHtml,doVerkauf,doPfandArt};", ctx);
+  ";this.t={PE,DO,doSet,doGet,doMplGruppen,doMplHtml,doAllergenStatus,doAllergenHtml,doVerkauf,doPfandArt,doKassenCodes};", ctx);
 const { t } = ctx; const J = (x) => JSON.parse(JSON.stringify(x)); // Werte aus dem vm-Kontext vergleichbar machen
 const A = (id, name, preis, kategorie, pfand = [], x = {}) => ({ id, name, preis, kategorie, nummer: "0" + Math.abs(preis * 100 + id.length), pfand, ...x });
 const G = [{ name: "Glaspfand", betrag: 2 }];
@@ -34,6 +34,8 @@ assert.ok(t.doAllergenHtml().includes("Allergene &amp; Zusatzstoffe"));
 t.doSet("karte", "cmd-bar", 3, "BAR"); assert.deepEqual(J([t.doGet("karte", "cmd-bar").n, t.doGet("karte", "cmd-bar").an]), [3, true]);
 t.doSet("karte", "cmd-bar", 0); assert.equal(t.doGet("karte", "cmd-bar").an, false);
 assert.deepEqual(J(t.doPfandArt().map((a) => a.id)), ["glasplus", "zangeplus", "glasminus"]);
+// Scheckkarten nur für Kassen-Codes: Pfandartikel und BAR, keine Getränke/Speisen
+assert.deepEqual(J(t.doKassenCodes().map((a) => a.id)), ["glasplus", "zangeplus", "glasminus", "cmd-bar"]);
 // eingebunden: Teil, Abhängigkeiten, Druckart, Kachel, Server nimmt die neuen Teile an
 const app = lies("app.js"), buero = lies("teile/buero.js"), server = lies("supabase/functions/kc-club/index.ts");
 assert.ok(/druckordner: \{ einstieg: \["doStart"\]/.test(app) && /druckordner: \["kundenpreisliste", "etiketten"\]/.test(app) && /druckordner: \{ bauen: \(\) => doDruckSeite\(\) \}/.test(app));
