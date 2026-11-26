@@ -563,9 +563,6 @@ function suAppListe() {
     ["↔️", "Gegenvorschlag zu einem Thema (A oder B)", "gegenvorschlag vorschlag thema andere idee alternative a oder b unterstützen stimme wandert tagesordnung", () => hzZuEintrag("h:gegenvorschlag_thema")],
     ...(ICH?.vorstand || ICH?.admin ? [["📒", "Buchungsliste der Erstattungen (Kassenwart)", "buchungsliste buchung erstattungen kassenwart summen km fahrtkosten bar überwiesen excel csv", () => hzZuEintrag("h:buchungsliste")],
       ["🏷️", "Preisetiketten drucken", "preisetiketten etiketten preis preise etikett kasse warengruppe qr pfand bar drucken", () => hzZuEintrag("h:preis_etiketten")]] : []),
-    ...(ICH?.admin ? [["📋", "Einsatzplan je Tag (Dienstplan)", "einsatzplan einsatz dienstplan tag seite balken besetzung soll wunsch drucken", () => hzZuEintrag("h:einsatzplan")],
-      ...(akSichtbar() ? [["🎄", "Adventskalender: Wer bekommt was", "advent adventskalender preise wer bekommt was nikolaus kinderriegel liste austeilen", () => hzZuEintrag("h:advent_wer_was")]] : []),
-      ["👣", "Wege der Mitglieder: Dienst-Vorgänge", "wege spur dienst dienstwünsche geändert ist-zeiten kommen gehen tausch vorgänge", () => hzZuEintrag("h:wege_dienst")]] : []),
     // 2.855.0 KC-CLUB-HILFE-NACHTRAG-6: Neuheiten 2.672.0–2.847.0 (nur Mitglieder-Funktionen) – auch per 🎤 Sprachsuche
     ["✔️", "Lese-Stand in der Chat-Übersicht (17 → ✓✓ 10 · ✓✓ 4)", "lesestand übersicht chatliste empfänger angekommen gelesen blaue haken zahlen deine letzte", () => hzZuEintrag("h:lesestand_liste")],
     ["🎬", "Videos im Fotoalbum (Handy-Video hochladen, ansehen)", "video videos handyvideo film filmen aufnehmen hochladen fotoalbum abspielen speichern", () => { zeige("fotos"); setTimeout(() => faArt("videos"), 300); }],
@@ -633,8 +630,6 @@ function suAppListe() {
     ["↩️", "Nachricht zurückholen", "zurückholen zurueckholen vertippt zurücknehmen ändern korrigieren falsch", () => { melde("↩️ Nachricht antippen (PC: rechte Maustaste) → „Zurückholen und ändern“ – geht, solange sie noch niemand gelesen hat"); zeige("nachrichten"); }],
     ["⏰", "Nachricht später senden", "später senden planen zeit morgen montag wiederholen", () => { melde("⏰ Nachricht schreiben, unten auf ⏰ tippen und Zeit wählen"); zeige("nachrichten"); }],
     ["📨", "Offene Terminanfragen", "terminanfrage anfrage termin offen antworten einladung", () => zeige("termine")],
-    ...(ICH?.admin ? [["📝", "Wünsche an Claude", "wunsch wünsche claude vorschlag idee fehler aufgabe liste entwickler", () => wuStart()]] : []), // 2.440.0
-    ...(ICH?.admin ? [["📅", "Wer kommt wann? (Nutzung)", "wer kommt wann nutzung uhrzeit wochentag statistik öffnen", () => wannStatistik()]] : []),
     // 18.10.2026 KC-CLUB-HILFE-AKTUELL: neue Funktionen seit 2.416.0 auch über die Lupe
     ["📣", "Info-Laufband auf der Startseite", "info laufband infoband infofeld meldungen startseite wichtig erledigen zusagen gratulieren ausblenden", () => hzZuEintrag("h:info_laufband")],
     ["🕰️", "Uhr zur vollen Stunde (Kuckuck, Big Ben, Kölner Dom …)", "kuckuck kuckucksuhr uhr volle stunde stundenschlag glocke glockenspiel big ben dom michel schiffsglocke standuhr ton", ein("setKuckuck")],

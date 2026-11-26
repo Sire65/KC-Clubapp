@@ -17,7 +17,8 @@ const ids = new Set([...HILFE.matchAll(/\{ id: "([a-z_0-9]+)",/g)].map((m) => m[
 
 // neue Einträge (🆕 über seit) – Admin/Clubleitung nur mit „nur“
 const neu = ["kopf_knopf", "ka_kopf_toggle", "sprache_flagge", "netz_balken", "frist_erinnerung", "offline_push", "ta_aendern", "ta_tagesordnung", "ta_protokoll", "gegenvorschlag_thema"];
-const leitung = ["buchungsliste", "preis_etiketten", "einsatzplan", "advent_wer_was", "wege_dienst"];
+const leitung = ["buchungsliste", "preis_etiketten"]; /* Wunsch Hansi 26.11.2026: keine Admin-Funktionen in den allgemeinen Hilfen – Eintrag entfernt */
+for (const id of ["einsatzplan", "advent_wer_was", "wege_dienst"]) assert.ok(!ids.has(id) && !hilfe.includes(`"h:${id}"`), "keine Admin-Hilfe " + id);
 for (const id of [...neu, ...leitung]) assert.ok(/seit: "2\.955\.0"/.test(zeile(id)), `Hilfe ${id} mit seit 2.955.0`);
 for (const id of leitung) assert.ok(/nur: \(\) => !!(\(ICH\?\.vorstand \|\| ICH\?\.admin\)|ICH\?\.admin)/.test(zeile(id)), `Hilfe ${id} nur für Admin/Clubleitung`);
 for (const id of neu.filter((x) => x !== "ka_kopf_toggle")) assert.ok(!/nur: \(\) => !!\(?ICH/.test(zeile(id)), `Hilfe ${id} für alle`);
@@ -60,11 +61,11 @@ for (const [id, st] of [["oberflaeche", "4"], ["spezial", "2"], ["terminfinden",
   assert.ok(new RegExp(`\\{ id: "${id}", stand: "${st}"`).test(app), `Video ${id}: neue Fassung ${st} (Bewertungen getrennt)`);
 
 // --- Lupe und Twinkey ---
-for (const id of ["kopf_knopf", "ka_kopf_toggle", "sprache_flagge", "netz_balken", "offline_push", "kontakt_extern", "ta_aendern", "ta_tagesordnung", "ta_protokoll", "gegenvorschlag_thema", "buchungsliste", "preis_etiketten", "einsatzplan", "advent_wer_was", "wege_dienst"])
+for (const id of ["kopf_knopf", "ka_kopf_toggle", "sprache_flagge", "netz_balken", "offline_push", "kontakt_extern", "ta_aendern", "ta_tagesordnung", "ta_protokoll", "gegenvorschlag_thema", "buchungsliste", "preis_etiketten"])
   assert.ok(hilfe.includes(`hzZuEintrag("h:${id}")`) || hilfe.includes(`"h:${id}")`), "Lupe/Twinkey führt zu " + id);
 for (const m of hilfe.matchAll(/hzZuEintrag\("h:([a-z_0-9]+)"\)/g)) assert.ok(ids.has(m[1]), "Lupe/Twinkey: Hilfe h:" + m[1] + " gibt es");
 for (const id of ["kopf-einrollen", "ausgeblendete-kacheln", "sprache-englisch", "verbindungs-balken", "frist-erinnerung", "kontakt-extern", "terminanfrage-aendern", "tagesordnung", "besprechung-protokoll", "gegenvorschlag-erlauben", "gegenvorschlag-thema", "offline-meldung"])
   assert.ok(hilfe.includes(`{ id: "${id}",`), "Twinkey-Frage " + id);
 assert.ok(/\{ id: "buchungsliste", [^\n]*nur: \(\) => !!\(ICH\?\.vorstand \|\| ICH\?\.admin\)/.test(hilfe), "Twinkey: Buchungsliste nur Clubleitung");
-assert.ok(/\.\.\.\(ICH\?\.admin \? \[\["📋", "Einsatzplan je Tag/.test(hilfe), "Lupe: Admin-Einträge nur für Admin");
+assert.ok(!/\(ICH\?\.admin \? \[\[/.test(hilfe), "Lupe: keine Admin-Einträge (Wunsch Hansi 26.11.2026)");
 console.log("hilfe-2955: ok");

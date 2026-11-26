@@ -22,6 +22,14 @@ const leitung = ["sendebericht", "kundenpreisliste", "karte_starten"];
 // Wunsch Hansi 26.11.2026: „Keine Admin-Funktionen in allgemeinen Hilfen erklären und nicht darauf hinweisen“
 const adminWeg = ["zusage_link", "admin_qr", "admin_verborgen", "notaus_knopf", "dp_druck_admin", "stempel_wer", "aenderung_erbitten", "fehlerkatalog", "gericht_admin"];
 for (const id of adminWeg) assert.ok(!ids.has(id), `keine Admin-Hilfe ${id}`);
+// Hansi 26.11.2026: „Ja auch ältere Admin Hilfen raus, Clubleitung Hilfen lassen“
+for (const id of ["besuche", "schulungen", "was_gespeichert", "wer_kommt_wann", "buero_ansicht", "anbieter_neues", "ablagekorb_admin", "nachsenden", "inkognito_chat", "inkognito_blinkt", "mitschauen", "wege_frage", "einsatzplan", "advent_wer_was", "wege_dienst"])
+  assert.ok(!ids.has(id), `ältere Admin-Hilfe ${id} entfernt`);
+for (const z of HILFE.split("\n").filter((z) => /^  \{ id: "/.test(z))) assert.ok(!/nur: \(\) => [^,]*ICH\?\.admin/.test(z) || /ICH\?\.vorstand \|\| ICH\?\.admin/.test(z), "keine reine Admin-Hilfe: " + (z.match(/id: "([^"]+)"/) || [])[1]);
+assert.ok(!/\(ICH\?\.admin \? \[\[/.test(hilfe), "Lupe: keine Admin-Einträge");
+const ew0 = app.indexOf("const EINWEISUNG = ["), EW = app.slice(ew0, app.indexOf("\n];", ew0));
+for (const z of EW.split("\n").filter((z) => /nur: \(\) => !!ICH\?\.admin[ },]/.test(z))) assert.ok(/adminBereich: true/.test(z), "Kurz erklärt (Admin) nicht im Hilfe-Zentrum: " + (z.match(/id: "([^"]+)"/) || [])[1]);
+assert.ok(/EINWEISUNG\.filter\(\(e\) => \(!e\.nur \|\| e\.nur\(\)\) && !e\.adminBereich\)/.test(app), "Hilfe-Zentrum lässt adminBereich weg");
 const neu33 = HILFE.split("\n").filter((z) => /seit: "3\.33\.0"/.test(z));
 for (const z of neu33) assert.ok(!/nur: \(\) => !!ICH\?\.admin/.test(z) && !/\bAdmin\b/.test(z.replace(/ICH\?\.admin/g, "")), "neue Hilfe ohne Admin: " + (z.match(/id: "([^"]+)"/) || [])[1]);
 for (const id of [...alle, ...Object.keys(freigabe), ...leitung]) {

@@ -3763,8 +3763,8 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 }
 // 358. 2.23.8: Hilfen zu den Neuerungen aus 2.23.6
 {
-  for (const id of ["eingangskorb", "ablage_mehrere", "buero_neue_nachricht", "ttt_toene", "inkognito_blinkt"]) assert.ok(new RegExp(`\\{ id: "${id}", thema: "(club|privat)",[^\\n]*seit: "2\\.23\\.8" \\}`).test(html), `Hilfe ${id}`);
-  assert.ok(/\{ id: "inkognito_blinkt",[^\n]*nur: \(\) => !!ICH\?\.admin/.test(html) && /\{ id: "eingangskorb",[^\n]*nur: \(\) => !!\(ICH\?\.vorstand \|\| ICH\?\.admin\)/.test(html), "Clubleitung/Admin-Hilfen nur für sie");
+  for (const id of ["eingangskorb", "ablage_mehrere", "buero_neue_nachricht", "ttt_toene"]) assert.ok(new RegExp(`\\{ id: "${id}", thema: "(club|privat)",[^\\n]*seit: "2\\.23\\.8" \\}`).test(html), `Hilfe ${id}`);
+  assert.ok(!/\{ id: "inkognito_blinkt",/.test(html) && /\{ id: "eingangskorb",[^\n]*nur: \(\) => !!\(ICH\?\.vorstand \|\| ICH\?\.admin\)/.test(html), "Clubleitung/Admin-Hilfen nur für sie");
 }
 // 359. 2.23.9: Spar-Takt (KC-CLUB-SPARTAKT) – weniger Server-Aufrufe, damit die kostenlose Grenze sicher hält
 {
@@ -4499,7 +4499,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
     && /spur\(mitBild \? "video" : "anruf", pid\)/.test(html) && /spur\("anklopfen", pid\)/.test(html) && /spur\('telefon', mitgliedId\)/.test(html), "Mitglied, Chat, gesendet, Anruf, Anklopfen, Telefon");
   assert.ok(!/spur\([^)]*(text|\$\("text"\))/.test(html), "nie Text in der Spur");
   assert.ok(/onclick="spurAdmin\(heuteIso\(\), null\)">👣 Wege der Mitglieder/.test(html), "Admin: Nutzung → Wege der Mitglieder");
-  assert.ok(/id: "was_gespeichert", thema: "privat", sym: "🗂️", nur: \(\) => !!ICH\?\.admin,[^\n]*30 Tage lang[^\n]*ohne Inhalte[^\n]*nur der Admin/.test(html), "Satz in der Hilfe");
+  assert.ok(!/id: "was_gespeichert", thema: "privat"/.test(html), "keine Admin-Hilfe was_gespeichert"); // Wunsch Hansi 26.11.2026: keine Admin-Funktionen in den allgemeinen Hilfen
   assert.ok(!/was_gespeichert|spurAdmin/.test(html.slice(html.indexOf("function mdatAbschnitte"), html.indexOf("function mdatAbschnitte") + 4000)), "nicht in „Meine Daten“");
 }
 
@@ -4963,7 +4963,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/api\("start_melden", \{ ms: eintrag\.ges, teile: p,/.test(html) && /system: fpSystem\(\), browser: fpBrowser\(\)/.test(html), "App meldet jeden Start");
   assert.ok(/onclick="startStatistik\(30\)">⏱️ Startstatistik/.test(html) && /Je Mitglied/.test(html) && /Je Gerät und Browser/.test(html) && /Starts einzeln/.test(html), "Ansicht unter Nutzung");
   assert.ok(/API_LESEN = [^\n]*\.\*_statistik/.test(html), "Statistik zählt als Lesen");
-  assert.ok(/Außerdem 180 Tage lang jeden App-Start/.test(html), "Hilfe nennt die Aufzeichnung");
+  // Hilfe „was_gespeichert“ (nur Admin) entfernt – Wunsch Hansi 26.11.2026: keine Admin-Funktionen in den allgemeinen Hilfen
 }
 // KC-KALENDER-STILL (Fall Thomas 07.10.2026): Google-Einträge mit Gästen nie mit Mail-Benachrichtigung ändern oder löschen
 {
@@ -6361,7 +6361,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 }
 // 2.396.0 KC-CLUB-HILFE-NEUHEITEN (Wunsch Hansi „Videos, Hilfetexte, Suche und Twinkey auf die neuen Funktionen“)
 {
-  for (const id of ["express_zaehler", "express_status", "chat_favoriten", "zustell_alle", "online_uhrzeit", "terminanfrage_oben", "wer_kommt_wann"]) assert.ok(new RegExp(`\\{ id: "${id}", thema: "[a-z]+"`).test(html), `Hilfe-Eintrag ${id}`);
+  for (const id of ["express_zaehler", "express_status", "chat_favoriten", "zustell_alle", "online_uhrzeit", "terminanfrage_oben"]) assert.ok(new RegExp(`\\{ id: "${id}", thema: "[a-z]+"`).test(html), `Hilfe-Eintrag ${id}`);
   for (const id of ["express", "zurueckholen", "favoriten", "spaeter"]) assert.ok(new RegExp(`\\{ id: "${id}", sym: "[^"]+", t: "[^"]+\\?"`).test(html), `Twinkey-Frage ${id}`);
   assert.ok(/\["express", "eilig", "eilt", "dringend"/.test(html) && /\["favorit", "favoriten", "stern"/.test(html), "Twinkey versteht neue Wörter");
   assert.ok(/\["⭐", "Favoriten \(Lieblings-Chats\)"/.test(html) && /\["🏎️", "Express-Nachricht \(5 am Tag\)"/.test(html) && /\["↩️", "Nachricht zurückholen"/.test(html), "Lupe findet die neuen Funktionen");
@@ -8954,7 +8954,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(fs.statSync(new URL("../dokumente/Koecheclub-App_Anleitung_V10.pdf", import.meta.url)).size < 10.5e6, "V10-PDF vorhanden, nicht zu groß");
   assert.ok(fs.existsSync(new URL("../dokumente/Koecheclub-App_Anleitung_V8.pdf", import.meta.url)), "V8 bleibt unverändert");
   assert.ok(/\{ id: "bedienung-club-app-v10",[^}]*datei: "dokumente\/Koecheclub-App_Anleitung_V10\.pdf"/.test(html) && !/id: "bedienung-club-app-v9"/.test(html), "V10 in Meine Dokumente (ersetzt V9)");
-  for (const id of ["schnecke", "laden_dauert", "twinkey_haengt", "termin_zahl", "notfallkontakt_wer", "aenderung_rueckfrage", "schritt_hilfe_ueberall", "code_ipad", "buero_einlesen", "buero_mail", "mitschauen", "wege_frage"])
+  for (const id of ["schnecke", "laden_dauert", "twinkey_haengt", "termin_zahl", "notfallkontakt_wer", "aenderung_rueckfrage", "schritt_hilfe_ueberall", "code_ipad", "buero_einlesen", "buero_mail"])
     assert.ok(new RegExp(`\\{ id: "${id}", thema: "`).test(programm), "Hilfe-Eintrag " + id);
   assert.ok(/schickt die Datei direkt aus der App an Mitglieder \(An, CC, BCC\)/.test(programm), "Hinweis „Wohin damit?“ aktuell");
 }

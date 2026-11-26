@@ -54,5 +54,5 @@ assert.match(app, /\$\("buInhalt"\)\.innerHTML = buAnsichtHinweis\(\) \+ \(BU\.s
 assert.match(app, /const buAnsichtHinweis = \(\) => ICH\?\.bueroAnsicht \?/);
 assert.match(app, /<span class="mk-sym">👀<\/span><span class="mk-titel">Für alle zur Ansicht<\/span>/, "Schnellzugang in der Verwaltung");
 assert.match(app, /const buSchreiben = \(\) => ICH\?\.buero === "schreiben";/, "Leser sehen keine Schreib-Knöpfe");
-assert.match(app, /id: "buero_ansicht", thema: "club", sym: "👀", nur: \(\) => !!ICH\?\.admin/, "Hilfe (nur Admin)");
+assert.doesNotMatch(app, /id: "buero_ansicht", thema: "club"/, "keine Admin-Hilfe"); /* Wunsch Hansi 26.11.2026: keine Admin-Funktionen in den allgemeinen Hilfen – Eintrag entfernt */
 console.log("OK – KC-CLUB-BUERO-ANSICHT (2.765.0)");
