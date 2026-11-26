@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "3.38.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "3.39.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -29827,12 +29827,17 @@ async function taLaden() {
   // KC-CLUB-TA-PROTOKOLL: aus dem Kalender angetippte Anfrage immer zeigen; eigene Besprechung ohne verschicktes Protokoll 3 Tage, mit Protokoll 14 Tage
   const kommend = TA.liste.filter((a) => new Date(a.ende || a.beginn) > Date.now() - 3 * 3600000 || a.id === TA.markiert
     || (a.status !== "abgesagt" && !a.spiel && (a.protokoll ? Date.parse(a.beginn) > Date.now() - 14 * 86400000 : a.vonMir && Date.parse(a.beginn) > Date.now() - 3 * 86400000)));
-  $("terminanfragen").innerHTML = kommend.length ? `<details class="karte tm-klappe" data-klappe="tm_anfragen" data-ohne-unten open><summary>📨 Terminanfragen${kommend.some((a) => a.status !== "abgesagt") ? ` <span class="marke">${kommend.filter((a) => a.status !== "abgesagt").length}</span>` : ""}</summary>${kommend.map(taKarte).join("")}</details>` : ""; // 1.46.0
+  $("terminanfragen").innerHTML = kommend.length ? `<details class="karte tm-klappe" data-klappe="tm_anfragen" data-ohne-unten open><summary>📨 Terminanfragen${kommend.some((a) => a.status !== "abgesagt") ? ` <span class="marke">${kommend.filter((a) => a.status !== "abgesagt").length}</span>` : ""}</summary>${taAufraeumenHtml()}${kommend.map(taKarte).join("")}</details>` : ""; // 1.46.0
   klappenMerken($("terminanfragen"));
   // KC-CLUB-TERMINANFRAGE-STATUS (2.23.50): angezeigt = „👁️ gelesen“ für den, der angefragt hat
   const ungelesen = kommend.filter((a) => !a.vonMir && !a.meinGelesen && a.status !== "abgesagt").map((a) => a.id);
   if (ungelesen.length) api("terminanfrage_gelesen", { ids: ungelesen }).catch(() => {});
   if (TA.markiert) { const k = document.getElementById("ta-" + TA.markiert); if (k) { k.classList.add("ta-markiert"); k.scrollIntoView({ behavior: "smooth", block: "center" }); } TA.markiert = null; }
+}
+// 3.39.0 KC-CLUB-TA-AUFRAEUMEN: alle abgelaufenen/abgesagten eigenen Anfragen auf einmal löschen (ab 2 Stück)
+function taAufraeumenHtml() {
+  const weg = TA.liste.filter(taLoeschbar);
+  return weg.length > 1 ? `<div class="knoepfe" style="margin:6px 0"><button class="knopf klein" onclick="taLoeschen(TA.liste.filter(taLoeschbar).map((a) => a.id))">🗑️ Abgelaufene löschen (${weg.length})</button></div>` : "";
 }
 function taZeigen(id) { TA.markiert = id; termineArt = "liste"; if (aktuelleAnsicht === "termine") treffenLaden(); else zeige("termine"); }
 // KC-CLUB-TA-HERAUSNEHMEN (16.11.2026, Wunsch Hansi „nimm Karla raus aus der Terminbestätigung … in Zukunft muss ich das als Admin auch können“):
@@ -29873,7 +29878,7 @@ function taKarte(a) {
     ${taKalHtml(a, ab)}
     ${!ab && !a.spiel && (a.vonMir || a.meine === "ja" || a.meine === "vielleicht") ? taToSchalterHtml(a) : ""}
     ${!ab && !a.spiel && (a.protokoll || (a.vonMir && Date.parse(a.beginn) <= Date.now() + 2 * 3600000)) ? `<div class="knoepfe"><button class="knopf klein${a.vonMir && !a.protokoll ? " haupt" : ""}" onclick="${a.vonMir ? "taProtokoll" : "taProtokollLesen"}('${a.id}')">📝 ${a.vonMir ? (a.protokoll ? (a.protokoll.status === "gesendet" ? "Protokoll (verschickt)" : "Protokoll (Entwurf)") : "Protokoll schreiben") : "Protokoll lesen"}</button>${a.vonMir && a.protokoll?.status === "gesendet" ? `<button class="knopf klein" onclick="taProtokollLesen('${a.id}')">👁️ So sieht ${esc(a.empfaenger.length === 1 ? a.empfaenger[0].name.split(" ")[0] : "es der Empfänger")} es</button>` : ""}</div>` : ""}
-    ${a.vonMir && !ab ? `<div class="knoepfe">${a.spiel ? "" : `<button class="knopf klein" onclick="taAendern('${a.id}')">✏️ Ändern / ergänzen</button>`}<button class="knopf klein" onclick="taAbsagen('${a.id}')">🚫 Absagen</button></div>` : ""}</div>`;
+    ${a.vonMir && !ab ? `<div class="knoepfe">${a.spiel ? "" : `<button class="knopf klein" onclick="taAendern('${a.id}')">✏️ Ändern / ergänzen</button>`}<button class="knopf klein" onclick="taAbsagen('${a.id}')">🚫 Absagen</button></div>` : ""}${taLoeschbar(a) ? `<div class="knoepfe"><button class="knopf klein" onclick="taLoeschen(['${a.id}'])">🗑️ Löschen</button></div>` : ""}</div>`;
 }
 // KC-CLUB-TA-TAGESORDNUNG (12.11.2026, Wunsch Hansi „als Tagesordnung übernehmen mit einem Häkchen und daraus eine Besprechungsvorlage bauen mit den Punkten“):
 // In der Terminanfrage ein Häkchen „📋 Als Tagesordnung übernehmen“ – die Notiz wird in Punkte zerlegt (je Zeile bzw. „;“, Aufzählungszeichen weg),
@@ -31270,10 +31275,30 @@ function erinKalender(t, minuten) {
   if (t.id && !t.spielId) taKalMerken(t.id, t.beginn); // KC-CLUB-ANFRAGE-KALENDER: merken, welche Zeit im Handy-Kalender steht
   melde("📅 Termin-Datei erstellt – antippen, dann „Zum Kalender hinzufügen“. Der Kalender erinnert dich mit Ton.");
 }
+// 3.39.0 KC-CLUB-TA-AUFRAEUMEN (Wunsch Hansi 26.11.2026 „wenn ich auf Absage klicke, dann erst fragen, ob ich Absage-Infos rausschicken will“)
+function taAbsageFrage(a) {
+  const wen = a ? a.empfaenger.filter((e) => e.antwort !== "nein").length : 0;
+  return new Promise((fertig) => {
+    const f = dlgOeffnen(`<h3 class="dlg-kopf">🚫 Anfrage absagen?</h3><p class="dlg-text">${a ? `„${esc(a.anlass)}“ – ${esc(wann(a.beginn))}<br>` : ""}Sollen die Angefragten eine <b>Absage-Info</b> bekommen${wen ? ` (${wen} ${wen === 1 ? "Person" : "Personen"}, alle außer denen, die schon Nein gesagt haben)` : ""}?</p>
+      <label class="feld" id="taAbsGrundFeld">Grund (freiwillig, steht in der Absage-Info)<input id="taAbsGrund" type="text" maxlength="300" autocomplete="off"></label>
+      <div class="dlg-knoepfe"><button class="knopf haupt dlg-gefahr" data-w="info">📨 Absagen und Bescheid schicken</button><button class="knopf" data-w="still">🔕 Still absagen – ohne Info</button><button class="knopf" data-w="zu">Abbrechen</button></div>`, () => fertig(null));
+    f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => { const w = b.dataset.w, grund = String(f.querySelector("#taAbsGrund")?.value || "").trim(); f.remove();
+      fertig(w === "zu" ? null : { info: w === "info", grund }); }));
+  });
+}
 async function taAbsagen(id) {
-  const grund = (await eingabe("Anfrage absagen? Alle, die nicht schon Nein gesagt haben, bekommen Bescheid.\n\nGrund (freiwillig):", ""));
-  if (grund === null) return;
-  try { await api("terminanfrage_absagen", { id, grund: grund.trim() }); melde("🚫 Abgesagt – Bescheid ist raus"); await taLaden(); } catch (e) { meldeFehler(e); }
+  const a = TA.liste.find((x) => x.id === id), w = await taAbsageFrage(a);
+  if (!w) return;
+  try { await api("terminanfrage_absagen", { id, grund: w.grund, benachrichtigen: w.info }); melde(w.info ? "🚫 Abgesagt – Bescheid ist raus" : "🚫 Abgesagt – ohne Info an die Angefragten"); await taLaden(); } catch (e) { meldeFehler(e); }
+}
+// Abgelaufene (oder abgesagte) eigene Anfragen löschen – einzeln oder alle; der Server prüft Ersteller/Admin und „vorbei oder abgesagt“
+const taLoeschbar = (a) => !!(a.vonMir || ICH?.admin) && (a.status === "abgesagt" || Date.parse(a.ende || a.beginn) < Date.now());
+async function taLoeschen(ids) {
+  const liste = TA.liste.filter((a) => ids.includes(a.id) && taLoeschbar(a)); if (!liste.length) return;
+  const text = liste.length === 1 ? `„${liste[0].anlass}“ (${wann(liste[0].beginn)}) löschen?\n\nDie Anfrage verschwindet mit allen Antworten. Es geht keine Nachricht an die Angefragten.`
+    : `${liste.length} abgelaufene bzw. abgesagte Anfragen löschen?\n\nSie verschwinden mit allen Antworten. Es geht keine Nachricht an die Angefragten.`;
+  if (!(await frage(text, { ja: "🗑️ Löschen" }))) return;
+  try { const r = await api("terminanfrage_loeschen", { ids: liste.map((a) => a.id) }); melde(`🗑️ ${r.geloescht === 1 ? "Anfrage gelöscht" : r.geloescht + " Anfragen gelöscht"}`); await taLaden(); } catch (e) { meldeFehler(e); }
 }
 async function taGruppen() {
   if (TA.gruppen.length) return TA.gruppen;

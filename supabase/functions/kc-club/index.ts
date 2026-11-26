@@ -197,7 +197,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "3.38.0";
+const SERVER_VERSION = "3.39.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -12304,7 +12304,29 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (!a) throw new Fehler("Anfrage nicht gefunden.", 404);
         if (a.erstellt_von !== ich.person_id) throw new Fehler("Absagen kann nur, wer angefragt hat.", 403);
         if (a.status === "abgesagt") return json({ ok: true });
-        return json({ ok: true, versand: await anfrageAbsagen(ich, a, txt(p.grund, 300), true) });
+        // 3.39.0 KC-CLUB-TA-AUFRAEUMEN (Wunsch Hansi 26.11.2026 „beim Absagen erst fragen, ob ich Absage-Infos rausschicken will“): benachrichtigen=false → still absagen
+        return json({ ok: true, versand: await anfrageAbsagen(ich, a, txt(p.grund, 300), p.benachrichtigen !== false) });
+      }
+      // 3.39.0 KC-CLUB-TA-AUFRAEUMEN (Wunsch Hansi 26.11.2026 „wenn es Termine gibt, die abgelaufen sind, dass ich die löschen kann“): wer angefragt hat
+      // (oder der Admin) löscht vorbeigegangene oder abgesagte Anfragen – einzeln oder alle auf einmal. Vorher Sicherung ins Änderungsprotokoll (geloescht),
+      // Antworten und Erinnerungen gehen per Fremdschlüssel mit. Keine Nachricht an die Angefragten. Laufende/kommende Anfragen nie (dafür „Absagen“).
+      case "terminanfrage_loeschen": {
+        const ids = (Array.isArray(p.ids) ? p.ids : [p.id]).map(String).filter((x: string) => /^[0-9a-f-]{36}$/i.test(x)).slice(0, 200);
+        if (!ids.length) throw new Fehler("Keine Anfrage angegeben.");
+        const { data: liste } = await db.from("kc_club_terminanfragen").select("*").in("id", ids);
+        const jetztMs = Date.now(), weg: any[] = [];
+        for (const a of liste ?? []) {
+          if (a.erstellt_von !== ich.person_id && !ich.admin) continue;
+          if (a.status !== "abgesagt" && Date.parse(a.ende || a.beginn) > jetztMs) continue; // nur Vorbeigegangenes oder Abgesagtes
+          weg.push(a);
+        }
+        if (!weg.length) throw new Fehler(ids.length === 1 ? "Diese Anfrage kann nicht gelöscht werden – nur vorbeigegangene oder abgesagte eigene Anfragen." : "Keine passenden Anfragen zum Löschen.", 409);
+        const { data: zeilen } = await db.from("kc_club_terminanfrage_empfaenger").select("*").in("anfrage_id", weg.map((a) => a.id));
+        await geloescht(ich, "terminanfrage", { anfragen: weg, empfaenger: zeilen ?? [] });
+        const { error } = await db.from("kc_club_terminanfragen").delete().in("id", weg.map((a) => a.id));
+        if (error) throw new Fehler("Löschen fehlgeschlagen.", 500);
+        await protokoll(ich.person_id, "terminanfrage_geloescht_anzahl", { anzahl: weg.length });
+        return json({ ok: true, geloescht: weg.length });
       }
 
       // KC-CLUB-TA-AENDERN (12.11.2026, Wunsch Hansi „ändern der Anfrage, damit man selber noch ändern und was dazuschreiben kann – dann den anderen

@@ -297,6 +297,7 @@ jobs:
       - run: node tests/dp-soll-uebergabe.test.mjs
       - run: node tests/zwei-browser-klar.test.mjs
       - run: node tests/sammelmail.test.mjs
+      - run: node tests/ta-aufraeumen.test.mjs
       - run: node tests/actions-fest.test.mjs
       - run: node tests/wege-links.test.mjs
       - run: node tests/db-aussetzer.test.mjs

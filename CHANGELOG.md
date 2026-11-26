@@ -1,5 +1,12 @@
 # Änderungen
 
+## 3.39.0 – 2026-11-26 – 📨 Terminanfragen aufräumen: abgelaufene löschen, Absage mit oder ohne Info (KC-CLUB-TA-AUFRAEUMEN) · Server 3.39.0
+Wunsch Hansi 26.11.: „Wenn es Termine gibt, die abgelaufen sind, dass ich die löschen kann – und wenn ich auf Absage klicke, dann erst fragen, ob ich Absage-Infos rausschicken will.“
+- **🗑️ Löschen:** Auf jeder eigenen Terminanfrage, die vorbei oder abgesagt ist, ein Knopf „🗑️ Löschen“; ab zwei solchen oben „🗑️ Abgelaufene löschen (n)“. Rückfrage vorher; es geht **keine** Nachricht an die Angefragten. Kommende Anfragen lassen sich nicht löschen (dafür „Absagen“). Der Admin darf auch fremde abgelaufene löschen.
+- **🚫 Absagen:** erst die Frage „Sollen die Angefragten eine Absage-Info bekommen?“ – **📨 Absagen und Bescheid schicken** (mit freiwilligem Grund) · **🔕 Still absagen – ohne Info** · Abbrechen.
+- Server: neue Aktion `terminanfrage_loeschen` (nur Ersteller/Admin, nur Vorbeigegangenes/Abgesagtes, vorher Sicherung ins Änderungsprotokoll, Antworten/Erinnerungen gehen per Fremdschlüssel mit); `terminanfrage_absagen` nimmt `benachrichtigen` (Standard wie bisher: Bescheid).
+- Test: `tests/ta-aufraeumen.test.mjs`. Rückweg: App/Server 3.38.0.
+
 ## 3.38.0 – 2026-11-26 – 🧑‍🍳 Fehler: Aushilfen sahen Terminanfragen nicht (KC-CLUB-AUSHILFE-TERMINANFRAGE) · Server 3.38.0 · Fehlerbeseitigung
 Fund Hansi 26.11.: Leon (Aushilfe) meldete sich per WhatsApp – „in der App wäre er nicht so gut drangekommen“. Er war zur Kassenschulung eingeladen (Push kam an), die Anfrage erschien in der App aber nicht.
 - **Ursache:** Die Terminanfrage-Aktionen fehlten in der Freigabeliste für Aushilfen (`ZUGANG_AKTIONEN.aushilfe`). Der Server lehnte das Laden ab („für Aushilfen nicht freigeschaltet“), die App blendet den Fehler still aus – die Einladung war unsichtbar.

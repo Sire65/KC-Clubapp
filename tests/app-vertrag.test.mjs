@@ -3881,7 +3881,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 377. 2.23.29: Spiel-Herausforderung zurückgezogen/abgelehnt → ihre Terminanfrage wird mit abgesagt (KC-CLUB-SPIEL-TERMIN-ABSAGE)
 {
   assert.ok(/async function anfrageAbsagen\(ich: Ich, a: any, grund: string, benachrichtigen: boolean\)/.test(server) && /\.eq\("id", a\.id\)\.eq\("status", "offen"\)\.select\("id"\)/.test(server), "eine Stelle zum Absagen");
-  assert.ok(/return json\(\{ ok: true, versand: await anfrageAbsagen\(ich, a, txt\(p\.grund, 300\), true\) \}\);/.test(server), "„Absagen“ nutzt sie");
+  assert.ok(/return json\(\{ ok: true, versand: await anfrageAbsagen\(ich, a, txt\(p\.grund, 300\), p\.benachrichtigen !== false\) \}\);/.test(server), "„Absagen“ nutzt sie (3.39.0: Bescheid wählbar)");
   assert.ok(/if \(g\.status === "angefragt"\) await spielTerminAbsagen\(ich, g\.id, "Herausforderung zurückgezogen", true\);/.test(server), "Zurückziehen sagt Termin ab");
   assert.ok(/if \(!p\.annehmen\) await spielTerminAbsagen\(ich, g\.id, "Herausforderung abgelehnt", false\);/.test(server), "Ablehnen sagt Termin ab");
   assert.ok(/anfragen: anfragen\.filter\(\(x: any\) => x\.status !== "abgesagt"/.test(server), "Kalender zeigt Abgesagtes nicht");
