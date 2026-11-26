@@ -1,10 +1,11 @@
 # Änderungen
 
-## 3.35.0 – 2026-11-26 – 📖 Hilfe zu Fahrten & Abrechnung und Parken · ältere Admin-Hilfen entfernt (KC-CLUB-HILFE-3340)
+## 3.35.0 – 2026-11-26 – 📖 Hilfe zu Fahrten & Abrechnung und Parken (zwei Sorten) · ältere Admin-Hilfen entfernt (KC-CLUB-HILFE-3340) · Server bleibt 3.34.0
 Hansi 26.11.: „Es wird aber gerade noch an einer neuen Funktion gebaut mit einer neuen Kachel unter Meins, Erstattung, Parkausweis usw. – die musst du noch mit rein nehmen.“
 - **Hilfe:** „🚗 Fahrtkosten einfach abrechnen“ ergänzt (nur km, Plausibilität über 300 km, Erinnerung „Abrechnung ist bereit“), neu „🅿️ Parkausweis für den Weihnachtsmarkt“ (für alle) und „Sammel-Abrechnungen freigeben und Parkausweis-Liste“ (nur Clubleitung).
 - **Twinkey:** 3 neue Fragen (Freigabe nur Clubleitung), Wortgruppen Parkausweis/Kennzeichen und Fahrtprofil. **Lupe:** Fahrtkosten, Parkausweis, Sammel-Freigabe (nur Clubleitung). **Video** „Erstattung beantragen“ (Fassung 2) nennt Fahrten & Abrechnung und den Parkausweis.
 - **Auch ältere Admin-Hilfen entfernt** (Hansi 26.11.: „Ja auch ältere Admin Hilfen raus, Clubleitung Hilfen lassen“): 15 Hilfe-Einträge nur für den Admin (Besuchsprotokoll, Schulungen verwalten, Was speichert die App, Wer kommt wann, Büro zur Ansicht, Anbieter-Neues, Ablagekorb bearbeiten, Nachsenden, Inkognito ×2, Mitschauen, Wege eines Mitglieds, Einsatzplan, Advent „Wer bekommt was“, Dienst-Wege) und die Admin-Treffer der Lupe (Einsatzplan/Advent/Wege, Wünsche an Claude, Wer kommt wann). „Bereiche kurz erklärt“ für Admin-Bereiche (7) erscheint nicht mehr im Hilfe-Zentrum (`adminBereich`), bleibt aber als Einführungskarte beim ersten Öffnen des Admin-Bereichs. Admin-Kacheln findet die Lupe weiter als Kachel (keine Erklärung). Clubleitungs-Hilfen bleiben (nur mit Rolle). Tests `app-vertrag`, `hilfe-2955`, `anbieter-neues`, `buero-ansicht` entsprechend umgestellt.
+- **Parken laut 3.34.0:** Hilfe, Twinkey und Clubleitungs-Hilfe beschreiben die zwei Sorten (🚚 Auf-/Abbau ohne Gebühr · 🅿️ Marktzeit 5 oder 10 Tage zu 2 € je Tag), „💾 Wunsch speichern“, „📄 Liste für die Stadt drucken“ und „⚙️ Preis und Ausgabe ändern“.
 - Test: neu `tests/hilfe-3340.test.mjs` (CI). Keine Admin-Funktionen in den Hilfen.
 
 ## 3.34.0 – 2026-11-26 – 🅿️ Parken auf dem Weihnachtsmarkt: Ausnahmegenehmigung Auf-/Abbau und Parkausweis Marktzeit (KC-CLUB-PARKAUSWEIS) · Server 3.34.0 · Datenbank: `20261126_kc_club_parkausweis.sql`
