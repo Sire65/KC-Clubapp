@@ -111,7 +111,7 @@ ctx.FSS.aend = { "A-1": { aus: true } }; s = ctx.fsSummen(); assert.equal(s.fahr
 assert.match(app, /\{ id: "fahrten", sym: "🚗", t: "Fahrten & Abrechnung", u: "Fahrtprofil · km nach der Veranstaltung abrechnen", aktion: "fsStart\(\)" \}/, "Kachel unter Meins");
 assert.ok(app.indexOf('{ id: "fahrten", sym: "🚗"') > app.indexOf("  mein: ["));
 assert.match(app, /\n  fahrten: \{ einstieg: \["fsStart", "fsLeitung"\], sri: "sha384-/);
-assert.match(app, /onclick="fsLeitung\(\)">🚗 Sammel-Freigabe<\/button>/, "Clubleitung: Knopf auf der Erstattungsseite");
+assert.match(app, /onclick="fsLeitung\(\\'freigabe\\'\)">🚗 Sammel-Freigabe<\/button>/, "Clubleitung: Knopf auf der Erstattungsseite");
 assert.match(app, /else if \(h === "#fahrten"\) fsStart\(\);/, "Link aus der Erinnerung");
 assert.match(app, /\{ id: "fahrten", thema: "club", sym: "🚗", t: "Fahrtkosten einfach abrechnen"/, "Hilfe-Eintrag");
 assert.match(teil, /api\("erstattung_erledigen", \{ id: a\.id, status: "erstattet", ausgezahlt: a\.auszahlung === "bar" \? "bar" : "ueberweisung" \}\)/, "Freigabe über die vorhandene Aktion");
@@ -150,7 +150,7 @@ assert.match(teil, /<th style="width:20mm">ID<\/th><th>Name<\/th><th>Vorname<\/t
 assert.match(teil, /1\. Park-Ausnahmegenehmigung Auf- und Abbau/); assert.match(teil, /2\. Parkausweis Marktzeit – alle öffentlichen Parkplätze/);
 console.log("fahrten: alle Prüfungen bestanden");
 
-// KC-CLUB-BUERO-FAHRTEN (3.36.0): Büro-Ordner und Zugang nur Kassenwart, Clubsprecher, Admin – App und Server gleich
+// KC-CLUB-BUERO-FAHRTEN (3.36.0): im Büro-Ordner Erstattung, Zugang nur Kassenwart, Clubsprecher, Admin – App und Server gleich
 {
   const { readFileSync: rf } = await import("node:fs");
   const lies = (f) => rf(new URL("../" + f, import.meta.url), "utf8");
@@ -163,9 +163,9 @@ console.log("fahrten: alle Prüfungen bestanden");
   assert.equal(darf({ aemter: ["Clubsprecher"] }), true);
   assert.equal(darf({ vorstand: true, aemter: ["Schriftführer"] }), false, "übrige Clubleitung nicht");
   assert.equal(darf(null), false);
-  assert.ok(/\{ id: "fahrten", sym: "🅿️", t: "Fahrten & Parken", [^}]*fn: "fsLeitung\('park'\)", recht: "F" \}/.test(buero), "Ordner im Regal");
-  assert.ok(buero.includes('(x.recht === "F" && fsDarfLeitung())'), "Recht F");
-  assert.ok(buero.includes('${fsDarfLeitung() ? buBereich("fahrten"'), "Bereich in der Listenansicht");
+  assert.ok(!/id: "fahrten", sym: "🅿️"/.test(buero) && !buero.includes("fsDarfLeitung"), "kein eigener Büro-Ordner (Hansi: nicht schon wieder ein weiterer Ordner)");
+  assert.ok(/\{ id: "erstattung", sym: "💶", t: "Erstattung", [^}]*fn: "zeige\('erstattung'\)"/.test(buero) && /erstattung: \["erstattung", "kasse", "kosten", "parkausweis"/.test(buero), "Büro-Ordner Erstattung, Sprachbefehl Parkausweis");
+  assert.ok(app.includes(`(fsDarfLeitung() ? '<button type="button" class="knopf" style="width:auto" onclick="fsLeitung(\\'park\\')">🅿️ Parkausweise</button>`), "Erstattungsseite: Knopf Parkausweise nur für die drei");
   assert.ok(/const fahrtLeitung = \(ich: Ich\) => !!ich\.admin \|\| \(ich\.aemter \|\| \[\]\)\.some\(\(a: string\) => \/\^\(kassenwart\|clubsprecher\)\/i\.test\(a\)\);/.test(srv), "Server-Regel gleich");
   for (const c of ["parkausweis_liste", "parkausweis_konfig", "fahrtprofil_liste", "erstattung_sammel_liste"])
     assert.ok(srv.includes(`case "${c}": {\n        nurFahrtLeitung(ich);`), "Server prüft " + c);

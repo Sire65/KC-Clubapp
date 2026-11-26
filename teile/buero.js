@@ -493,7 +493,6 @@ function buStartListeHtml() {
     </div>`) : ""}
     ${buBereich("mitglieder", "👥 Mitglieder", `<div class="mini-kacheln">${L ? k("kontakt", "👥", "Mitglieder kontaktieren", "Gruppe wählen · schreiben · anrufen", "buKontakt()") : ""}${k("feste", "🎂", "Geburtstage & Jubiläen", festBald ? `${festBald} in den nächsten 7 Tagen` : "gratulieren · Liste drucken", "buFeste()", festHeute.length ? '<span class="marke gelb">heute!</span>' : "")}${L ? k("fl", "🤍", "Freud & Leid", FL.d ? (FL.d.faelle.filter((f) => f.status === "offen").length ? `${FL.d.faelle.filter((f) => f.status === "offen").length} offen` : "Geburt, Hochzeit, Trauerfall …") : "Geburt, Hochzeit, Trauerfall …", "buFreudLeid()") : ""}${L ? k("liste", "📇", "Mitgliederliste drucken", "Übersicht · Telefon · Adressen · Unterschriften", "buListe()") : ""}</div>`)}
     ${!S ? "" : buBereich("schreiben", "✉️ Schreiben", `<div class="mini-kacheln">${k("brief", "✉️", "Briefbogen", "Brief mit Logo – Spende, Dank, Einladung …", "buBrief()")}</div>`)}
-    ${fsDarfLeitung() ? buBereich("fahrten", "🅿️ Fahrten & Parken", `<div class="mini-kacheln">${k("parkausweise", "🅿️", "Parkausweise", "Liste für die Stadt · Preis & Ausgabe", "fsLeitung('park')")}${k("sammel", "📋", "Sammel-Freigabe", "Fahrtkosten nach der Veranstaltung", "fsLeitung('freigabe')")}${k("fahrtprofile", "🚗", "Fahrtprofile", "wer mit wie vielen km abrechnet", "fsLeitung('profile')")}</div>`) : ""}
     ${buBereich("drucken", "🖨️ Drucken & Vorlagen", `<div class="mini-kacheln">${k("drucker", "🖨️", "Alle Druckvorlagen", "Sitzung · Listen · Termine · Briefbogen …", "buDrucker()")}${L ? k("haendler", "🪪", "Händler-Ausweis", "Weihnachtsmarkt · Rabatt · QR-Code", "haStart()") : ""}${L ? k("preisetiketten", "🏷️", "Preisetiketten", "Foto · Preis · Allergene · QR", "peStart()") : ""}</div>`)} <!-- 2.691.0 KC-CLUB-DRUCKER-LISTE: auch in der Listen-Ansicht (Fund Hansi „wo sind die Ausweise“) -->
     ${!L ? "" : buBereich("eingang", `📥 Eingang ${summe ? `<span class="marke gelb">${summe}</span>` : ""}`, `<button class="knopf haupt" style="width:100%;margin:0 0 8px" onclick="buEingang()">📥 Eingang öffnen – alles auf einen Blick erledigen</button>
     <div class="mini-kacheln">${eingang.map(([sym, t2, z, fn]) => `<button class="mini-kachel${z ? " mk-offen" : ""}" onclick="${fn}"><span class="mk-sym">${sym}</span><span class="mk-titel">${esc(t2)}</span><span class="mk-gross">${z || "–"}</span></button>`).join("")}</div>`)}`;
@@ -514,7 +513,6 @@ const BU_REGAL = [
   { id: "schilder", sym: "🪧", t: "Schilder-Druckerei", farbe: "#7a5c3e", fn: "schStart()", recht: "L" },
   { id: "anleitungen", sym: "📚", t: "Anleitungen", farbe: "#4f6d7a", fn: "anlStart()", recht: "L" }, // 2.822.0 KC-CLUB-ANLEITUNGEN (Wunschliste #68) // KC-CLUB-SCHILDER (2.150.0): Hinweise, Preislisten, Öffnungszeiten … // KC-CLUB-SCHILDER (2.150.0): Hinweise, Preislisten, Öffnungszeiten …
   { id: "erstattung", sym: "💶", t: "Erstattung", farbe: "#7a7f5e", fn: "zeige('erstattung')", recht: "L" },
-  { id: "fahrten", sym: "🅿️", t: "Fahrten & Parken", farbe: "#741521", fn: "fsLeitung('park')", recht: "F" }, // KC-CLUB-BUERO-FAHRTEN (Hansi 26.11.2026): Parkausweise, Sammel-Freigabe, Fahrtprofile – Kassenwart, Clubsprecher, Admin
   { id: "weihnachtsmarkt", sym: "🎄", t: "Weihnachtsmarkt", farbe: "#2e5d3a", fn: "arStartFest('weihnachtsmarkt')", recht: "L" }, // 2.147.0 (Wunsch Hansi): Ordner mit Jahren und Unterregistern
   { id: "besprechungen", sym: "🤝", t: "Besprechungen", farbe: "#6b6f86", fn: "arStartFest('besprechungen')", recht: "L" }, // KC-CLUB-ARCHIV-KOPIEREN (2.59.0): Entwürfe/Unterlagen, bevor es ein Protokoll ist
   { id: "chronik", sym: "📖", t: "Chronik", farbe: "#8a6d4e", fn: "arStartArt('chronik')" },
@@ -628,7 +626,7 @@ async function adbZurueck(id) {
   if (!(await frage("Diese Meldung zurückziehen?"))) return;
   try { await api("buero_adresse_zurueckziehen", { id }, { warten: true }); melde("↩️ Zurückgezogen"); adbLaden(); } catch (e) { meldeFehler(e); }
 }
-const buRecht = (x) => !x.recht || (x.recht === "S" && buSchreiben()) || (x.recht === "L" && !!ICH?.vorstand) || (x.recht === "A" && !!ICH?.admin) || (x.recht === "oL" && !ICH?.vorstand) || (x.recht === "F" && fsDarfLeitung());
+const buRecht = (x) => !x.recht || (x.recht === "S" && buSchreiben()) || (x.recht === "L" && !!ICH?.vorstand) || (x.recht === "A" && !!ICH?.admin) || (x.recht === "oL" && !ICH?.vorstand);
 // ---------- 2.769.0 KC-CLUB-AKTENSCHRANK-JALOUSIE (Wunsch Hansi 30.10.2026 „Jalousie-Funktion ins Ordnerregal, von rechts nach links; rechts mittig ein
 // Pfeilschalter, der öffnet den Schrank, dann ändert sich der Pfeil und ist ganz links. Geschlossen komplett ein Einklapp-Bereich: nur eine Zeile
 // ‚Aktenschrank‘ mit Anzahl Ordner, ganz rechts der Einklapp-Pfeil; öffnet man ihn, geht der Aktenschrank von alleine auf. Vorne auf die Tür das Logo und
@@ -1041,7 +1039,7 @@ const BU_SPRACHE = [
 ];
 const BU_REGAL_WORTE = { sitzung: ["sitzung", "sitzungen", "vorbereiten", "einladung"], nachher: ["nachbereitung", "nachher", "mitschrift"], protokolle: ["protokoll", "protokolle"],
   feste: ["geburtstag", "geburtstage", "jubilaum", "jubilaen", "feste"], fl: ["freud", "leid", "trauer", "hochzeit"], liste: ["mitglieder", "mitgliederliste", "adressen"],
-  termine: ["termin", "termine", "kalender"], briefe: ["brief", "briefe", "briefbogen"], erstattung: ["erstattung", "kasse", "kosten"], fahrten: ["parkausweis", "parkausweise", "parken", "fahrten", "sammelfreigabe"], chronik: ["chronik", "geschichte"],
+  termine: ["termin", "termine", "kalender"], briefe: ["brief", "briefe", "briefbogen"], erstattung: ["erstattung", "kasse", "kosten", "parkausweis", "parkausweise", "parken", "fahrten", "sammelfreigabe"], chronik: ["chronik", "geschichte"],
   archiv: ["archiv"], zeitungsartikel: ["zeitung", "zeitungsartikel", "presse", "artikel"], verwaltung: ["freigabe", "freigaben", "rechte"] };
 const sprWorte = (t) => suNorm(t).replace(/[^a-z0-9ß ]/g, " ").split(/\s+/).filter(Boolean);
 // Text → Befehl { fn, t } oder null (rein, testbar). Reihenfolge: Anrufen/Nachricht mit Name → Regal-Ordner → Schreibtisch.

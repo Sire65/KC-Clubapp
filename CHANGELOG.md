@@ -1,9 +1,9 @@
 # Änderungen
 
-## 3.36.0 – 2026-11-26 – 🗂️ Büro: Ordner „🅿️ Fahrten & Parken“ für Kassenwart, Clubsprecher und Admin (KC-CLUB-BUERO-FAHRTEN) · Server 3.36.0
-Hansi 26.11.: „Baue die Parkausweis usw. ins Büro ein, Zugang für Dieter, Clubsprecher und Admin.“
-- **Büro:** neuer Ordner **🅿️ Fahrten & Parken** im Regal und als Bereich in der Listenansicht mit 🅿️ Parkausweise (Liste für die Stadt, Preis & Ausgabe), 📋 Sammel-Freigabe und 🚗 Fahrtprofile. Auch per 🎙️ Sprechen („Parkausweise“).
-- **Zugang:** nur **Kassenwart, Clubsprecher und Admin** (Amt in der Rolle bzw. Admin) – in App (`fsDarfLeitung`) und Server (`nurFahrtLeitung` für `parkausweis_liste`, `parkausweis_konfig`, `fahrtprofil_liste`, `erstattung_sammel_liste`). Der Knopf „🚗 Sammel-Freigabe“ auf der Erstattungsseite erscheint nur noch für diese drei; Hilfe, Twinkey und Lupe entsprechend.
+## 3.36.0 – 2026-11-26 – 🗂️ Büro → 💶 Erstattung: 🅿️ Parkausweise und 🚗 Sammel-Freigabe für Kassenwart, Clubsprecher und Admin (KC-CLUB-BUERO-FAHRTEN) · Server 3.36.0
+Hansi 26.11.: „Baue die Parkausweis usw. ins Büro ein, Zugang für Dieter, Clubsprecher und Admin.“ – „Das könnte aber auch in den Ordner … Erstattungen, damit nicht schon wieder ein weiterer Ordner da ist.“
+- **Büro:** kein neuer Ordner – im vorhandenen Ordner **💶 Erstattung** stehen oben bei „Für die Clubleitung“ die Knöpfe **🅿️ Parkausweise** (Liste für die Stadt, Preis & Ausgabe) und **🚗 Sammel-Freigabe** (mit Reiter Fahrtprofile). 🎙️ Sprechen: „Parkausweise“ öffnet den Ordner Erstattung.
+- **Zugang:** nur **Kassenwart, Clubsprecher und Admin** (Amt in der Rolle bzw. Admin) – in App (`fsDarfLeitung`) und Server (`nurFahrtLeitung` für `parkausweis_liste`, `parkausweis_konfig`, `fahrtprofil_liste`, `erstattung_sammel_liste`). Hilfe, Twinkey und Lupe nennen den Weg Büro → Erstattung.
 - Test-Block in `tests/fahrten.test.mjs`. Rückweg: App/Server 3.35.0/3.34.0.
 
 ## 3.35.0 – 2026-11-26 – 📖 Hilfe zu Fahrten & Abrechnung und Parken (zwei Sorten) · ältere Admin-Hilfen entfernt (KC-CLUB-HILFE-3340) · Server bleibt 3.34.0
