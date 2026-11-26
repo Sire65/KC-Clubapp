@@ -57,5 +57,7 @@ const v = await sicht("vorstand");
 ok(["sendebericht", "kundenpreisliste", "karte_starten"].every((id) => v.ids.includes(id)) && !v.ids.includes("admin_qr") && v.lus.some((x) => /Sendebericht/.test(x)) && !v.lus.some((x) => /QR-Codes der Kassen/.test(x)), "Clubleitung: eigene Einträge, keine Admin-Einträge");
 const a = await sicht("admin");
 ok(!["zusage_link", "admin_qr", "admin_verborgen", "notaus_knopf", "dp_druck_admin", "stempel_wer", "aenderung_erbitten", "fehlerkatalog", "gericht_admin"].some((id) => a.ids.includes(id)) && !a.tws.includes("qr-codes") && !a.lus.some((x) => /QR-Codes der Kassen|Zusage-Link/.test(x)), "keine neuen Admin-Hilfen (Wunsch Hansi: Admin-Funktionen nicht erklären)");
+const hzAdmin = await seite.evaluate(() => hzEintraege().filter((e) => /\(Admin\)|Admin-Register|Admin-Zentrale/.test(e.t || e.titel || "")).map((e) => e.t || e.titel));
+ok(!hzAdmin.length && !a.lus.some((x) => /Wer kommt wann\? \(Nutzung\)|Einsatzplan je Tag/.test(x)), "auch der Admin sieht im Hilfe-Zentrum und in der Lupe keine Admin-Hilfen " + JSON.stringify([hzAdmin, a.lus.filter((x) => /Wer kommt wann\? \(Nutzung\)|Einsatzplan je Tag/.test(x))]));
 ok(!fehler.length, "keine Fehler auf der Seite" + (fehler.length ? ": " + fehler.join(" | ") : ""));
 await browser.close(); srv.close(); console.log("ALLE TESTS GRÜN");
