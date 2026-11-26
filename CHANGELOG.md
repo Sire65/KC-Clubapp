@@ -1,5 +1,12 @@
 # Änderungen
 
+## 3.37.0 – 2026-11-26 – 🎭 QR-Codes: wer welches Pseudonym hat (KC-CLUB-ADMIN-QR-PSEUDONYM) · Server 3.37.0
+Wunsch Hansi 26.11.: „Baue mir eine Übersicht in der Club-App, am besten wo die QR-Codes sind, wer welches Pseudonym hat. Mir dort mit anzeigen.“
+- **Admin-Zentrale → 🔳 QR-Codes:** neuer Reiter **„🎭 Pseudonyme“** – alle aktiven Mitglieder als Tabelle Name · Pseudonym · KC-Nr., mit Suche; wer noch keins hat, steht als „– noch keins“ (Anzahl oben).
+- Reiter **„🪪 Mitglieder“**: unter jedem Namen das Pseudonym, Suche auch nach Pseudonym; der große Ausweis-QR zeigt „Name („Pseudonym“) · KC-Nr.“.
+- Server `admin_qr_mitglieder` (nur Admin) liest das Pseudonym aus `kc_core_operational_directory.preferred_name` – **nur lesen**, vergeben wird es weiter ausschließlich in der KC-Verwaltung (KC Manager, KC-CORE-PSEUDONYM-SCHUTZ).
+- Test: `tests/admin-qr.test.mjs` ergänzt. Rückweg: App/Server 3.36.0.
+
 ## 3.36.0 – 2026-11-26 – 🗂️ Büro → 💶 Erstattung: 🅿️ Parkausweise und 🚗 Sammel-Freigabe für Kassenwart, Clubsprecher und Admin (KC-CLUB-BUERO-FAHRTEN) · Server 3.36.0
 Hansi 26.11.: „Baue die Parkausweis usw. ins Büro ein, Zugang für Dieter, Clubsprecher und Admin.“ – „Das könnte aber auch in den Ordner … Erstattungen, damit nicht schon wieder ein weiterer Ordner da ist.“
 - **Büro:** kein neuer Ordner – im vorhandenen Ordner **💶 Erstattung** stehen oben bei „Für die Clubleitung“ die Knöpfe **🅿️ Parkausweise** (Liste für die Stadt, Preis & Ausgabe) und **🚗 Sammel-Freigabe** (mit Reiter Fahrtprofile). 🎙️ Sprechen: „Parkausweise“ öffnet den Ordner Erstattung.

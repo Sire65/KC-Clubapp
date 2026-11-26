@@ -197,7 +197,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "3.36.0";
+const SERVER_VERSION = "3.37.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -22571,9 +22571,15 @@ Köcheclub-App`,
         nurAdmin(ich);
         const { data, error } = await db.from("kc_core_personen").select("person_id,vorname,nachname,name,mitgliedsnummer").eq("aktiv", true).limit(1000);
         if (error) throw new Fehler("Mitglieder gerade nicht abrufbar.", 503);
-        const liste = (data ?? []).map((x: any) => ({ name: String(x.name || [x.vorname, x.nachname].filter(Boolean).join(" ") || "").trim(), nummer: String(x.mitgliedsnummer ?? "").trim().toUpperCase() }))
-          .filter((x: any) => /^KC-\d{3,5}$/.test(x.nummer)).sort((a: any, b: any) => a.name.localeCompare(b.name, "de"));
-        return json({ liste });
+        // 3.37.0 KC-CLUB-ADMIN-QR-PSEUDONYM (Wunsch Hansi 26.11.2026 „Übersicht, wer welches Pseudonym hat – dort bei den QR-Codes mit anzeigen“):
+        // Pseudonym = kc_core_operational_directory.preferred_name (vergibt nur der KC Manager, KC-CORE-PSEUDONYM-SCHUTZ) – hier nur lesen.
+        const ids = (data ?? []).map((x: any) => x.person_id);
+        const { data: dir } = ids.length ? await db.from("kc_core_operational_directory").select("person_id,preferred_name").eq("org_id", ORG).in("person_id", ids) : { data: [] as any[] };
+        const pseudo = new Map((dir ?? []).map((d: any) => [d.person_id, String(d.preferred_name ?? "").trim()]));
+        const alle = (data ?? []).map((x: any) => ({ name: String(x.name || [x.vorname, x.nachname].filter(Boolean).join(" ") || "").trim(), nummer: String(x.mitgliedsnummer ?? "").trim().toUpperCase(),
+          pseudonym: pseudo.get(x.person_id) || "" })).sort((a: any, b: any) => a.name.localeCompare(b.name, "de"));
+        const liste = alle.filter((x: any) => /^KC-\d{3,5}$/.test(x.nummer));
+        return json({ liste, alle });
       }
       case "wl_liste": {
         nurAdmin(ich);

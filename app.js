@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "3.36.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "3.37.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -35276,11 +35276,11 @@ async function ausweisZeigen() {
 // dazu die QR-Codes aller Mitglieder, damit ich sie einbuchen kann, wenn sie ihr Handy vergessen haben“) ----------
 // Admin-Zentrale → „🔳 QR-Codes“. Kassen-QR kommt vom Mini-PC (enthält den Kassen-Schlüssel – nur Admin, nicht gespeichert, nur im Arbeitsspeicher).
 // Mitglieder-QR = Mitgliedsnummer wie auf dem Plastik-Ausweis (an Kasse/Stechuhr vor den Scanner halten).
-const AQ = { reiter: "kassen", kassen: null, mitglieder: null, suche: "", fehler: "" };
+const AQ = { reiter: "kassen", kassen: null, mitglieder: null, alle: null, suche: "", fehler: "" };
 function aqKopf() {
   const r = (id, t) => `<button class="knopf klein${AQ.reiter === id ? " haupt" : ""}" aria-pressed="${AQ.reiter === id}" onclick="AQ.reiter='${id}';aqZeichnen()">${t}</button>`;
   return `<div class="kopf2" style="margin:0 0 8px"><h3 style="margin:0;flex:1">🔳 QR-Codes</h3><button class="knopf klein" onclick="$('aqBlatt').remove()" aria-label="Schließen" title="Schließen">✕</button></div>
-    <div class="knoepfe" style="margin-bottom:8px">${r("kassen", "🧾 Kassen")}${r("mitglieder", "🪪 Mitglieder")}</div>`;
+    <div class="knoepfe" style="margin-bottom:8px">${r("kassen", "🧾 Kassen")}${r("mitglieder", "🪪 Mitglieder")}${r("pseudonyme", "🎭 Pseudonyme")}</div>`;
 }
 function aqKassenHtml() {
   if (AQ.kassen === null) return '<p class="hinweis">⏳ Wird geladen …</p>';
@@ -35293,36 +35293,54 @@ function aqKassenHtml() {
 function aqMitgliederHtml() {
   if (AQ.mitglieder === null) return '<p class="hinweis">⏳ Wird geladen …</p>';
   const q = AQ.suche.trim().toLowerCase();
-  const liste = AQ.mitglieder.filter((m) => !q || m.name.toLowerCase().includes(q) || m.nummer.toLowerCase().includes(q));
+  const liste = AQ.mitglieder.filter((m) => aqTrifft(m, q));
   return `<p class="hinweis">Handy vergessen? Namen antippen und den QR-Code an der <b>Kasse</b> oder <b>Stechuhr</b> vor den Scanner halten (Bildschirm hell).</p>
-    <input id="aqSuche" type="search" placeholder="Name oder KC-Nummer suchen" value="${esc(AQ.suche)}" oninput="AQ.suche=this.value;aqListe()" style="width:100%;margin-bottom:8px" autocomplete="off">
+    <input id="aqSuche" type="search" placeholder="Name, Pseudonym oder KC-Nummer suchen" value="${esc(AQ.suche)}" oninput="AQ.suche=this.value;aqListe()" style="width:100%;margin-bottom:8px" autocomplete="off">
     <div id="aqListe">${aqListeHtml(liste)}</div>`;
 }
 function aqListeHtml(liste) {
   if (!liste.length) return '<p class="hinweis">Niemand gefunden.</p>';
-  return liste.map((m) => `<button type="button" class="aq-zeile" onclick="aqMitglied(${jsArg(m.nummer)})"><span>${esc(m.name)}</span><span>${esc(m.nummer)} ›</span></button>`).join("");
+  return liste.map((m) => `<button type="button" class="aq-zeile" onclick="aqMitglied(${jsArg(m.nummer)})"><span>${esc(m.name)}${m.pseudonym ? `<small class="aq-pseudo">🎭 ${esc(m.pseudonym)}</small>` : ""}</span><span>${esc(m.nummer)} ›</span></button>`).join("");
 }
+// 3.37.0 KC-CLUB-ADMIN-QR-PSEUDONYM (Wunsch Hansi 26.11.2026): Pseudonym (Kasse/Dienstplan, vergibt der KC Manager) anzeigen und danach suchen
+const aqTrifft = (m, q) => !q || m.name.toLowerCase().includes(q) || m.nummer.toLowerCase().includes(q) || String(m.pseudonym || "").toLowerCase().includes(q);
 function aqListe() {
   const q = AQ.suche.trim().toLowerCase(), z = $("aqListe");
-  if (z) z.innerHTML = aqListeHtml((AQ.mitglieder || []).filter((m) => !q || m.name.toLowerCase().includes(q) || m.nummer.toLowerCase().includes(q)));
+  if (z) z.innerHTML = aqListeHtml((AQ.mitglieder || []).filter((m) => aqTrifft(m, q)));
+}
+// Übersicht „🎭 Pseudonyme“: alle aktiven Mitglieder – Name, KC-Nummer, Pseudonym (auch wer noch keins oder keine gültige Nummer hat)
+function aqPseudonymeHtml() {
+  if (AQ.alle === null) return '<p class="hinweis">⏳ Wird geladen …</p>';
+  const q = AQ.suche.trim().toLowerCase(), liste = AQ.alle.filter((m) => aqTrifft(m, q)), ohne = AQ.alle.filter((m) => !m.pseudonym).length;
+  return `<p class="hinweis">Wer welches Pseudonym hat (so heißt man an der Kasse und im Dienstplan). Vergeben werden die Pseudonyme in der <b>KC-Verwaltung</b>.${ohne ? ` Noch ohne Pseudonym: <b>${ohne}</b>.` : ""}</p>
+    <input id="aqSuche" type="search" placeholder="Name, Pseudonym oder KC-Nummer suchen" value="${esc(AQ.suche)}" oninput="AQ.suche=this.value;aqPseudoListe()" style="width:100%;margin-bottom:8px" autocomplete="off">
+    <div id="aqPseudoListe">${aqPseudoTabelle(liste)}</div>`;
+}
+function aqPseudoTabelle(liste) {
+  if (!liste.length) return '<p class="hinweis">Niemand gefunden.</p>';
+  return `<table class="aq-pseudo-tab"><thead><tr><th>Name</th><th>Pseudonym</th><th>KC-Nr.</th></tr></thead><tbody>${liste.map((m) => `<tr><td>${esc(m.name)}</td><td>${m.pseudonym ? `🎭 <b>${esc(m.pseudonym)}</b>` : '<span class="hinweis">– noch keins</span>'}</td><td>${/^KC-\d{3,5}$/.test(m.nummer) ? esc(m.nummer) : '<span class="hinweis">–</span>'}</td></tr>`).join("")}</tbody></table>`;
+}
+function aqPseudoListe() {
+  const q = AQ.suche.trim().toLowerCase(), z = $("aqPseudoListe");
+  if (z) z.innerHTML = aqPseudoTabelle((AQ.alle || []).filter((m) => aqTrifft(m, q)));
 }
 function aqZeichnen() {
   const f = $("aqBlatt")?.querySelector(".blatt-innen"); if (!f) return;
-  f.innerHTML = aqKopf() + (AQ.fehler ? `<p class="hinweis">⚠️ ${esc(AQ.fehler)}</p>` : "") + (AQ.reiter === "kassen" ? aqKassenHtml() : aqMitgliederHtml());
-  if (AQ.reiter === "mitglieder" && AQ.mitglieder === null) aqLaden("mitglieder");
+  f.innerHTML = aqKopf() + (AQ.fehler ? `<p class="hinweis">⚠️ ${esc(AQ.fehler)}</p>` : "") + (AQ.reiter === "kassen" ? aqKassenHtml() : AQ.reiter === "pseudonyme" ? aqPseudonymeHtml() : aqMitgliederHtml());
+  if (AQ.reiter !== "kassen" && AQ.mitglieder === null) aqLaden("mitglieder");
 }
 async function aqLaden(was) {
   try {
     await qrLaden();
     if (was === "kassen") AQ.kassen = (await api("admin_qr_kassen")).kassen || [];
-    else AQ.mitglieder = (await api("admin_qr_mitglieder")).liste || [];
+    else { const r = await api("admin_qr_mitglieder"); AQ.mitglieder = r.liste || []; AQ.alle = r.alle || AQ.mitglieder; }
     AQ.fehler = "";
-  } catch (e) { AQ.fehler = e?.message || "Gerade nicht abrufbar."; if (was === "kassen") AQ.kassen = []; else AQ.mitglieder = []; }
+  } catch (e) { AQ.fehler = e?.message || "Gerade nicht abrufbar."; if (was === "kassen") AQ.kassen = []; else { AQ.mitglieder = []; AQ.alle = []; } }
   aqZeichnen();
 }
 function adminQrBlatt() {
   if (!ICH?.admin) return;
-  Object.assign(AQ, { reiter: "kassen", kassen: null, mitglieder: null, suche: "", fehler: "" }); // Kassen-Codes nie aufheben – jedes Öffnen frisch
+  Object.assign(AQ, { reiter: "kassen", kassen: null, mitglieder: null, alle: null, suche: "", fehler: "" }); // Kassen-Codes nie aufheben – jedes Öffnen frisch
   blattAuf("aqBlatt", aqKopf() + aqKassenHtml());
   aqLaden("kassen");
 }
@@ -35334,7 +35352,7 @@ function aqGrossHtml(titel, unter, inhalt) {
 function aqGross(i) { const k = AQ.kassen?.[i]; if (k) blattAuf("aqGrossBlatt", aqGrossHtml(`🧾 ${k.kasse}`, k.stand, k.url)); }
 function aqMitglied(nummer) {
   const m = (AQ.mitglieder || []).find((x) => x.nummer === nummer); if (!m) return;
-  blattAuf("aqGrossBlatt", aqGrossHtml("🪪 Ausweis", `${m.name} · ${m.nummer}`, m.nummer));
+  blattAuf("aqGrossBlatt", aqGrossHtml("🪪 Ausweis", `${m.name}${m.pseudonym ? ` („${m.pseudonym}“)` : ""} · ${m.nummer}`, m.nummer));
 }
 // ---------- 2.690.0 KC-CLUB-HAENDLERAUSWEIS (Wunsch Hansi „Händler und Marktbeschicker bekommen auf dem Weihnachtsmarkt Rabatt – vorher einen Ausweis,
 // den sie am Stand vorzeigen; draufstehen soll ‚nicht übertragbar‘ usw.“ + „QR-Code oben rechts“ + „ins Büro, wo die Formulare und Druckvorlagen sind“) ----------

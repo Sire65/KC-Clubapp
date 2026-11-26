@@ -1615,6 +1615,13 @@
   /* 3.14.0 KC-CLUB-ADMIN-QR-FIX: Mitgliederliste im hellen Fenster - Schrift in Textfarbe (vorher .wlink = weiß auf weiß) */
   .aq-zeile { display: flex; width: 100%; justify-content: space-between; gap: 8px; padding: 12px 6px; border: 0; border-bottom: 1px solid rgba(127,127,127,.35); background: transparent; color: inherit; font: inherit; font-size: 1.05rem; text-align: left; cursor: pointer; }
   .aq-zeile:active { background: rgba(127,127,127,.15); }
+  /* 3.37.0 KC-CLUB-ADMIN-QR-PSEUDONYM */
+  .aq-zeile > span:first-child { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; }
+  .aq-pseudo { font-size: .9rem; opacity: .8; }
+  .aq-pseudo-tab { width: 100%; border-collapse: collapse; font-size: 1rem; }
+  .aq-pseudo-tab th, .aq-pseudo-tab td { text-align: left; padding: 9px 6px; border-bottom: 1px solid rgba(127,127,127,.35); vertical-align: top; }
+  .aq-pseudo-tab th { font-size: .85rem; opacity: .75; font-weight: 600; }
+  .aq-pseudo-tab td:last-child { white-space: nowrap; font-variant-numeric: tabular-nums; }
   .wlink { border: 1px solid rgba(255,255,255,.4); background: rgba(255,255,255,.12); color: #fff; border-radius: 10px; padding: 4px 10px; font: inherit; font-weight: 700; cursor: pointer; }
   .wsonne { position: absolute; top: -34px; right: -34px; width: 140px; height: 140px; border-radius: 50%; background: radial-gradient(circle, #ffe27a 0 26%, rgba(255,214,90,.55) 27% 36%, transparent 37%); }
   .wsonne::before { content: ""; position: absolute; inset: -18px; border-radius: 50%; background: repeating-conic-gradient(rgba(255,226,122,.4) 0 7deg, transparent 7deg 22deg);
@@ -7446,7 +7453,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=3.36.0" data-v="3.36.0"></script>
+<script src="app.js?v=3.37.0" data-v="3.37.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>
