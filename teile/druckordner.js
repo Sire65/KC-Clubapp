@@ -200,7 +200,7 @@ async function doKartenSeiten(liste) {
   await qrLaden(); const M = PE_MM, KW = 85.6, KH = 54, sp = 2, ze = 5, x0 = (210 - sp * KW) / 2, y0 = (297 - ze * KH) / 2, W = Math.round(210 * M), H = Math.round(297 * M), seiten = [];
   for (let i = 0; i < liste.length; i += sp * ze) {
     const teil = liste.slice(i, i + sp * ze), c = document.createElement("canvas"); c.width = W; c.height = H; const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, W, H);
-    teil.forEach((a, k) => doKarte(g, a, x0 + (k % sp) * KW, y0 + Math.floor(k / sp) * KH, KW, KH));
+    for (let k = 0; k < teil.length; k++) await doKarte(g, teil[k], x0 + (k % sp) * KW, y0 + Math.floor(k / sp) * KH, KW, KH);
     const rz = Math.ceil(teil.length / sp); g.fillStyle = "#000"; const mk = (x, y, w, h) => g.fillRect(x * M, y * M, w * M, h * M);
     for (let s = 0; s <= sp; s++) { const x = x0 + s * KW; mk(x - 0.125, y0 - 6, 0.25, 4); mk(x - 0.125, y0 + rz * KH + 2, 0.25, 4); }
     for (let z = 0; z <= rz; z++) { const y = y0 + z * KH; mk(x0 - 6, y - 0.125, 4, 0.25); mk(x0 + sp * KW + 2, y - 0.125, 4, 0.25); }
@@ -208,23 +208,37 @@ async function doKartenSeiten(liste) {
   }
   return seiten;
 }
-function doKarte(g, a, x, y, w, h) {
+// 26.11.2026 (Hansi: „Bei den Pfandrückgaben müssen noch die Bilder drauf wie bei den Artikel-Etiketten. Und die Check-Out müssen auch das
+// Format haben, aber ohne Bild“): jede Karte gleich aufgebaut – Farbband mit Name, links das Foto (wie auf den Preisetiketten, aus der Kasse),
+// daneben Preis und Zusatz, rechts der QR-Code; ohne Foto (BAR, Artikel ohne Bild) rückt der Text nach links.
+async function doKarte(g, a, x, y, w, h) {
   const M = PE_MM, X = (v) => (x + v) * M, Y = (v) => (y + v) * M, bar = a.spezial === "bar", pf = /^Pfand$/i.test(a.kategorie || "");
   const farbe = bar ? "#1b5e20" : pf ? "#29689a" : /^#[0-9a-f]{6}$/i.test(a.warengruppeFarbe || "") ? a.warengruppeFarbe : "#741521", S = PE_SCHRIFT;
+  const foto = bar ? null : await peFoto(a).catch(() => null);
   g.save(); g.fillStyle = "#fff"; peRund(g, X(0.6), Y(0.6), (w - 1.2) * M, (h - 1.2) * M, 3 * M); g.fill(); g.lineWidth = 0.5 * M; g.strokeStyle = farbe; g.stroke(); g.clip();
-  g.fillStyle = farbe; g.fillRect(X(0), Y(0), w * M, 11 * M);
+  g.fillStyle = farbe; g.fillRect(X(0), Y(0), w * M, 10 * M);
+  const qs = 32, qx0 = w - qs - 3, qy0 = 12.5;
   g.fillStyle = "#fff"; g.textAlign = "left"; g.textBaseline = "middle";
-  let gr = 5.2; g.font = `800 ${gr * M}px ${S}`; const titel = bar ? "BAR – bezahlen" : a.name; while (g.measureText(titel).width > (w - 8) * M && gr > 3) { gr -= 0.1; g.font = `800 ${gr * M}px ${S}`; }
-  g.fillText(titel, X(4), Y(6));
-  const qs = 36, q = qrcode(0, "M"); q.addData(String(a.nummer)); q.make(); const n = q.getModuleCount(), z = (qs * M) / (n + 2), qx = X(w - qs - 3), qy = Y(13.5);
+  let gr = 5; g.font = `800 ${gr * M}px ${S}`; const titel = bar ? "BAR – bezahlen" : a.name; while (g.measureText(titel).width > (w - 8) * M && gr > 3) { gr -= 0.1; g.font = `800 ${gr * M}px ${S}`; }
+  g.fillText(titel, X(4), Y(5.3));
+  // Foto links (quadratischer Ausschnitt wie auf dem Etikett)
+  let tx = 4;
+  if (foto) { const fs = 27, fh = Math.min(fs, fs * foto.height / foto.width); g.save(); peRund(g, X(4), Y(qy0), fs * M, fh * M, 2 * M); g.clip(); g.drawImage(foto, X(4), Y(qy0), fs * M, fh * M); g.restore(); tx = 4 + fs + 2.5; }
+  const tb = qx0 - tx - 1.5; // Platz zwischen Foto und QR-Code
+  const q = qrcode(0, "M"); q.addData(String(a.nummer)); q.make(); const n = q.getModuleCount(), z = (qs * M) / (n + 2), qx = X(qx0), qy = Y(qy0);
   g.fillStyle = "#000"; for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (q.isDark(r, c)) g.fillRect(Math.floor(qx + (c + 1) * z), Math.floor(qy + (r + 1) * z), Math.ceil(z), Math.ceil(z));
-  g.fillStyle = "#1d1a17"; g.textBaseline = "alphabetic";
-  if (bar) { g.font = `900 ${14 * M}px ${S}`; g.fillStyle = farbe; g.fillText("BAR", X(4), Y(31)); g.fillStyle = "#333"; g.font = `600 ${3 * M}px ${S}`; g.fillText("Scannen = Verkauf bar abschließen", X(4), Y(38)); }
+  const passen = (t, gr0, min, gew) => { let k = gr0; g.font = `${gew} ${k * M}px ${S}`; while (g.measureText(t).width > tb * M && k > min) { k -= 0.1; g.font = `${gew} ${k * M}px ${S}`; } return k; };
+  const zeilen = (t, gr0, y0, gew, farb) => { g.font = `${gew} ${gr0 * M}px ${S}`; g.fillStyle = farb; const w0 = t.split(" "), l = []; let z0 = "";
+    for (const wort of w0) { const v = z0 ? z0 + " " + wort : wort; if (g.measureText(v).width > tb * M && z0) { l.push(z0); z0 = wort; } else z0 = v; } if (z0) l.push(z0);
+    l.slice(0, 3).forEach((zz, i) => g.fillText(zz, X(tx), Y(y0 + i * gr0 * 1.2))); };
+  g.textBaseline = "alphabetic";
+  if (bar) { const k = passen("BAR", 14, 6, 900); g.fillStyle = farbe; g.fillText("BAR", X(tx), Y(qy0 + k * 0.85)); zeilen("Scannen = Verkauf bar abschließen", 3, qy0 + k * 0.85 + 5, 600, "#333"); }
   else {
-    const pfand = doPfand(a), preis = Number(a.preis) + pfand; g.font = `900 ${12 * M}px ${S}`; g.fillText(doGeld(preis).replace("-", "−"), X(4), Y(29));
-    g.font = `700 ${3.2 * M}px ${S}`; g.fillStyle = farbe; g.fillText(pf ? (preis < 0 ? "Rückgabe – Pfand zurück" : "Pfand") : pfand ? `inkl. ${doGeld(pfand)} € Pfand` : "€ · ohne Pfand", X(4), Y(35));
+    const pfand = doPfand(a), preis = Number(a.preis) + pfand, t = doGeld(preis).replace("-", "−"), k = passen(t, foto ? 9.5 : 12, 5, 900);
+    g.fillStyle = "#1d1a17"; g.fillText(t, X(tx), Y(qy0 + k * 0.85));
+    zeilen(pf ? (preis < 0 ? "Rückgabe – Pfand zurück" : "Pfand") : pfand ? `inkl. ${doGeld(pfand)} € Pfand` : "€ · ohne Pfand", 2.8, qy0 + k * 0.85 + 4.5, 700, farbe);
   }
-  g.fillStyle = "#555"; g.font = `600 ${2.8 * M}px ${S}`; g.fillText(`${a.kategorie || "Kasse"} · Nr. ${a.nummer}`, X(4), Y(h - 4.5));
+  g.fillStyle = "#555"; g.font = `600 ${2.6 * M}px ${S}`; g.fillText(`${a.kategorie || "Kasse"} · Nr. ${a.nummer}`, X(4), Y(h - 3.2));
   g.restore();
 }
 

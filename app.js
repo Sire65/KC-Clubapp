@@ -12,7 +12,7 @@ const APP_STUFE = "RC";
 // Pflege: gleiche Namen in sw.js (TEILE); nach jeder Änderung an teile/*.js: node tools/teile-pruefsumme.mjs (der Vertragstest prüft beides).
 // Rückweg: docs/AUFTEILEN.md.
 const TEILE_LISTE = {
-  druckordner: { einstieg: ["doStart"], sri: "sha384-oUZ9PQJEJRlboTwCkKJGnPmERsXQhgRnblPGeNZnKIX5HpczQcSnviB/soYmhtzt" }, // KC-CLUB-DRUCKORDNER: Büro → Drucker → 🗂️ Druckordner (Kundenpreisliste, Interne Preisliste, Allergene, Etiketten, Kassen-Karten, Ordner Weihnachtsmarkt)
+  druckordner: { einstieg: ["doStart"], sri: "sha384-JRKVfejpX0jxCWAFtPPt8h6rtdxkFOn2H5VSv4rfYeBaPymoGx/WEKtwpZuRshG2" }, // KC-CLUB-DRUCKORDNER: Büro → Drucker → 🗂️ Druckordner (Kundenpreisliste, Interne Preisliste, Allergene, Etiketten, Kassen-Karten, Ordner Weihnachtsmarkt)
   kundenpreisliste: { einstieg: ["kplStart"], sri: "sha384-DmV0OmLTEZVKfp4uw7N4JOQiUPdTz7iX4jWgoO06oZyE/PknYjdPdRiO7x/QM9CD" }, // KC-CLUB-KUNDENPREISLISTE (3.32.0): Büro → Drucker → 📋 Kundenpreisliste (Entwurf 20, Preise/Allergene automatisch, nur Clubleitung)
   etiketten: { einstieg: ["peStart"], sri: "sha384-hZPVTBtZRkjm/gH7EiiPwId/cpV/5bFoQ/Zasy+rHzKYdMbfrZ1Muv762mCmZd7d" }, // KC-CLUB-PREISETIKETTEN (12.11.2026): Büro → Drucker → 🏷️ Preisetiketten (nur Clubleitung)
   videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl", "installAnleitung"], sri: "sha384-EYu5GfcTHir/r2zFFqCbnm7ac9IpNp4U1wZlspfWqVCJXshmXDLk0EFl1Xuea4yI" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
