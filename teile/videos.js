@@ -241,7 +241,7 @@ const RG_ERSTATTUNG = [
   { v: "erstattung", sel: [() => $("v-erstattung")?.querySelector(".zk")], t: "🏦 Wie ausgezahlt?", x: "Dann wählst du, wie du das Geld bekommst: per Überweisung oder bar." },
   { v: "erstattung", sel: [rgFeld("ersBemerkung")], t: "✏️ Bemerkung", x: "Eine Bemerkung ist freiwillig – zum Beispiel ein Hinweis für den Kassenwart." },
   { v: "erstattung", sel: ["#ersSendenKnopf"], t: "📨 Antrag senden", x: "Mit Antrag senden geht alles an den Kassenwart, und du bekommst eine Bestätigung. Hier sende ich nichts." },
-  { v: "erstattung", t: "✅ Fertig", x: "So einfach bekommst du dein Geld zurück." },
+  { v: "erstattung", t: "✅ Fertig", x: "So einfach bekommst du dein Geld zurück. Und für die Fahrten zum Stand geht es noch einfacher: Unter Meins, Fahrten und Abrechnung stellst du einmal deine Kilometer ein – nach der Veranstaltung reichst du alle Fahrten mit einem Antrag ein. Dort bestellst du auch den Parkausweis für den Weihnachtsmarkt." }, // 3.34.0 KC-CLUB-HILFE-3340
 ];
 const RG_HILFE = [
   { v: "hilfezentrum", sel: ["#v-hilfezentrum .tw-chef-knopf"], t: "🧑‍🍳 Frag Twinkey", x: "In Hilfe und Tipps fragst du Twinkey: Tippe deine Frage in eigenen Worten oder sprich sie – zum Beispiel: Wie schicke ich eine Nachricht verschlüsselt? Twinkey zeigt die Antwort, auf Wunsch genau die Stelle – und bietet passende Erklär-Videos an." },

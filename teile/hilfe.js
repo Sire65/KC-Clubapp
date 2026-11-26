@@ -46,7 +46,7 @@ const TW_SYN = [["termin", "verabredung", "treffen", "datum", "verabreden", "aus
   ["grusskarte", "genesungskarte", "glueckwunschkarte", "geburtstagskarte", "dankeskarte", "beileidskarte", "besserung", "unterschreiben", "unterschrift"],
   ["rollkartei", "kartei", "karteikarte", "einrasten", "rastet", "drehregister"], ["tippspiel", "bundesliga", "fussball", "spieltag", "anpfiff"],
   ["gemeinschaftsgericht", "zutat", "zutaten", "gewuerz", "gewuerze", "kraut"], ["stempeln", "stempeluhr", "stechuhr", "einstempeln", "ausstempeln"],
-  ["verlosung", "gewinnspiel", "gewinnen", "auslosung", "gewonnen"], ["schlafmodus", "schlaeft", "eingeschlafen", "bildschirmschoner"], ["sendebericht", "erreicht", "zustellung"]]; // 2.252.0 Fund Hansi: Wilfried fragte „Kochbild“
+  ["verlosung", "gewinnspiel", "gewinnen", "auslosung", "gewonnen"], ["parkausweis", "parkausweise", "parkplatz", "kennzeichen", "nummernschild", "autokennzeichen"], ["fahrtprofil", "sammelabrechnung", "kilometergeld", "fahrtgeld"], ["schlafmodus", "schlaeft", "eingeschlafen", "bildschirmschoner"], ["sendebericht", "erreicht", "zustellung"]]; // 2.252.0 Fund Hansi: Wilfried fragte „Kochbild“
 // Twinkeys eigene Fragen und Antworten (Wunsch Hansi: „mehr Fragen und Antworten“) – kurz, mit Sprung an die richtige Stelle
 const TW_FAQ = [
   { id: "chat-nur-hg", sym: "🖼️", t: "Wie sehe ich meinen Chat-Hintergrund ohne die Nachrichten?", x: "Im Chat in der kleinen Zeile über dem Schreibfeld dreimal auf <b>👥</b> tippen – dann steht dort <b>🖼️</b>, alle Nachrichten sind ausgeblendet und du siehst nur den Hintergrund. Noch einmal tippen (oder den gelben Hinweis oben) zeigt wieder alles.", los: () => hzZuEintrag("h:chat_filter") }, // 2.591.0
@@ -231,6 +231,10 @@ const TW_FAQ = [
   { id: "schlafmodus", sym: "💤", t: "Warum ist die App auf einmal dunkel und zeigt nur Logo und Uhr?", x: "Das ist der <b>💤 Schlafmodus</b>: Nach 15 Minuten ohne Tippen schläft die offene App ein. Antippen weckt sie – du bist wieder dort, wo du warst. Einstellen: ⚙️ → „🎨 Darstellung“ → „💤 Schlafmodus“.", los: () => hzZuEintrag("h:schlafmodus") },
   { id: "sendebericht", sym: "📊", t: "Wie sehe ich, wer meine Einladung bekommen hat?", nur: () => !!(ICH?.vorstand || ICH?.admin), x: "Im <b>📊 Sendebericht</b> – nach dem Senden und im Büro unter „📊 Sendebericht der letzten Einladung“: je Person Push, E-Mail und Ruhezeit.", los: () => hzZuEintrag("h:sendebericht") },
   { id: "kundenpreisliste", sym: "📋", t: "Wie drucke ich die Preisliste für die Kunden am Stand?", nur: () => !!(ICH?.vorstand || ICH?.admin), x: "Büro → <b>🖨️ Drucker → 📋 Kundenpreisliste</b>: Preise und Allergene kommen automatisch aus den Kassen-Artikeln.", los: () => hzZuEintrag("h:kundenpreisliste") },
+  // 3.34.0 KC-CLUB-HILFE-3340: Fahrten & Abrechnung, Parkausweis
+  { id: "fahrtkosten", sym: "🚗", t: "Wie rechne ich meine Fahrten zum Stand ab?", x: "Einmal unter <b>Meins → 🚗 Fahrten &amp; Abrechnung</b> „🚗 Eigenes Auto“ und die km hin und zurück eintragen. Nach der Veranstaltung steht dort die fertige Abrechnung – prüfen und <b>✅ Abrechnung einreichen</b>.", los: () => hzZuEintrag("h:fahrten") },
+  { id: "parkausweis", sym: "🅿️", t: "Wie bekomme ich einen Parkausweis für den Weihnachtsmarkt?", x: "Unter <b>Meins → 🚗 Fahrten &amp; Abrechnung → 🅿️ Parkausweis</b>: „🅿️ Ja“, Kennzeichen und von–bis eintragen, speichern. Der Kassenwart beantragt die Ausweise gesammelt.", los: () => hzZuEintrag("h:parkausweis") },
+  { id: "fahrten-freigeben", sym: "✅", t: "Wie gebe ich die Fahrtkosten-Abrechnungen frei – und wo ist die Parkausweis-Liste?", nur: () => !!(ICH?.vorstand || ICH?.admin), x: "Erstattung → <b>🚗 Sammel-Freigabe</b>: anhaken, <b>✅ Alle … freigeben</b>. Im Reiter <b>🅿️ Parkausweise</b> → <b>📄 Liste drucken</b>.", los: () => hzZuEintrag("h:fahrten_leitung") },
 ];
 const twNorm = (t) => String(t || "").toLowerCase().replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss").replace(/[^a-z0-9 ]+/g, " ");
 const twStamm = (w) => (w.length > 4 ? w.replace(/(ungen|ung|en|er|es|e|n|s)$/, "") : w);
@@ -713,6 +717,10 @@ function suAppListe() {
     ...(ICH?.vorstand || ICH?.admin ? [["📊", "Sendebericht (wer wurde erreicht?)", "sendebericht erreicht push e-mail einladung zustellung", () => hzZuEintrag("h:sendebericht")],
       ["📋", "Kundenpreisliste Weihnachtsmarkt", "kundenpreisliste preisliste preise allergene stand drucken", () => hzZuEintrag("h:kundenpreisliste")],
       ["👥", "Gemeinsame Karte starten", "gemeinsame karte starten club unterschreiben", () => hzZuEintrag("h:karte_starten")]] : []),
+    // 3.34.0 KC-CLUB-HILFE-3340
+    ["🚗", "Fahrtkosten zum Stand abrechnen (Fahrtprofil)", "fahrtkosten fahrt fahrten abrechnung km kilometer auto stand fahrtprofil sammelabrechnung einreichen", () => hzZuEintrag("h:fahrten")],
+    ["🅿️", "Parkausweis Weihnachtsmarkt", "parkausweis parken parkplatz kennzeichen nummernschild auto weihnachtsmarkt", () => hzZuEintrag("h:parkausweis")],
+    ...(ICH?.vorstand || ICH?.admin ? [["✅", "Sammel-Freigabe Fahrtkosten / Parkausweis-Liste", "sammel freigabe fahrtkosten alle freigeben parkausweise liste drucken kassenwart", () => hzZuEintrag("h:fahrten_leitung")]] : []),
     ["🆘", "Wo bin ich? (SOS)", "wo bin ich adresse standort notfall sos", () => sosStart()], ["🪪", "Mein Notfallpass", "notfallpass allergien medikamente blutgruppe notfall", () => { sosStart(); nfpBearbeiten(); }],
   ].map(([sym, t, w, fn]) => ({ sym, t, w, fn }));
   const kach = Object.values(KACHELN).flat().filter((k) => !k.bald && (!k.nur || k.nur()) && !SU_NIE.has(k.id))

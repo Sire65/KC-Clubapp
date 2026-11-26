@@ -272,6 +272,7 @@ jobs:
       - run: node tests/hilfe-passend.test.mjs
       - run: node tests/hilfe-2955.test.mjs
       - run: node tests/hilfe-3330.test.mjs
+      - run: node tests/hilfe-3340.test.mjs
       - run: node tests/spur-wieder.test.mjs
       - run: node tests/einspielen-fenster.test.mjs
       - run: node tests/einspielen-sperre.test.mjs
