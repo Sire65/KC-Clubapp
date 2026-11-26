@@ -1,5 +1,11 @@
 # Änderungen
 
+## 3.36.0 – 2026-11-26 – 🗂️ Büro → 💶 Erstattung: 🅿️ Parkausweise und 🚗 Sammel-Freigabe für Kassenwart, Clubsprecher und Admin (KC-CLUB-BUERO-FAHRTEN) · Server 3.36.0
+Hansi 26.11.: „Baue die Parkausweis usw. ins Büro ein, Zugang für Dieter, Clubsprecher und Admin.“ – „Das könnte aber auch in den Ordner … Erstattungen, damit nicht schon wieder ein weiterer Ordner da ist.“
+- **Büro:** kein neuer Ordner – im vorhandenen Ordner **💶 Erstattung** stehen oben bei „Für die Clubleitung“ die Knöpfe **🅿️ Parkausweise** (Liste für die Stadt, Preis & Ausgabe) und **🚗 Sammel-Freigabe** (mit Reiter Fahrtprofile). 🎙️ Sprechen: „Parkausweise“ öffnet den Ordner Erstattung.
+- **Zugang:** nur **Kassenwart, Clubsprecher und Admin** (Amt in der Rolle bzw. Admin) – in App (`fsDarfLeitung`) und Server (`nurFahrtLeitung` für `parkausweis_liste`, `parkausweis_konfig`, `fahrtprofil_liste`, `erstattung_sammel_liste`). Hilfe, Twinkey und Lupe nennen den Weg Büro → Erstattung.
+- Test-Block in `tests/fahrten.test.mjs`. Rückweg: App/Server 3.35.0/3.34.0.
+
 ## 3.35.0 – 2026-11-26 – 📖 Hilfe zu Fahrten & Abrechnung und Parken (zwei Sorten) · ältere Admin-Hilfen entfernt (KC-CLUB-HILFE-3340) · Server bleibt 3.34.0
 Hansi 26.11.: „Es wird aber gerade noch an einer neuen Funktion gebaut mit einer neuen Kachel unter Meins, Erstattung, Parkausweis usw. – die musst du noch mit rein nehmen.“
 - **Hilfe:** „🚗 Fahrtkosten einfach abrechnen“ ergänzt (nur km, Plausibilität über 300 km, Erinnerung „Abrechnung ist bereit“), neu „🅿️ Parkausweis für den Weihnachtsmarkt“ (für alle) und „Sammel-Abrechnungen freigeben und Parkausweis-Liste“ (nur Clubleitung).

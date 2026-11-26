@@ -197,7 +197,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "3.34.0";
+const SERVER_VERSION = "3.36.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -2980,6 +2980,9 @@ const EK_ARTEN: Record<string, { sym: string; t: string; register: string[]; per
 };
 const ERST_STATUS: Record<string, string> = { eingereicht: "eingereicht", erstattet: "erstattet", abgelehnt: "abgelehnt" };
 const nurLeitung = (ich: Ich) => { if (!ich.vorstand && !ich.admin) throw new Fehler("Das darf nur die Clubleitung.", 403); };
+// KC-CLUB-BUERO-FAHRTEN (Hansi 26.11.2026: „Parkausweis usw. ins Büro, Zugang für Dieter, Clubsprecher und Admin“): Fahrten & Parken nur Kassenwart, Clubsprecher, Admin
+const fahrtLeitung = (ich: Ich) => !!ich.admin || (ich.aemter || []).some((a: string) => /^(kassenwart|clubsprecher)/i.test(a));
+const nurFahrtLeitung = (ich: Ich) => { if (!fahrtLeitung(ich)) throw new Fehler("Das dürfen nur Kassenwart, Clubsprecher und Admin.", 403); };
 async function ekStaende(art: string, ids: string[]) {
   if (!ids.length) return new Map<string, any>();
   const { data } = await db.from("kc_club_eingang_stand").select("*").eq("art", art).in("ref_id", ids);
@@ -15757,7 +15760,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       }
       // Clubleitung: Liste für die Stadt (ID = Mitgliedsnummer, Name, Vorname, Kennzeichen; je Sorte), Betrag = Tage × Preis je Tag
       case "parkausweis_liste": {
-        nurLeitung(ich);
+        nurFahrtLeitung(ich);
         const [ev, k, { data }] = await Promise.all([fsZeitraum(DW.veranstaltung), pkKonfig(),
           db.from("kc_club_fahrtprofil").select("person_id,kennzeichen,park_aufbau,park_tage,park_von,park_bis").eq("park_event", DW.veranstaltung).limit(500)]);
         const ids = (data ?? []).map((x: any) => String(x.person_id));
@@ -15772,7 +15775,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       }
       // Clubleitung: Preis je Tag und Abholung ändern (z. B. nächstes Jahr laut neuem Schreiben)
       case "parkausweis_konfig": {
-        nurLeitung(ich);
+        nurFahrtLeitung(ich);
         const alt = await pkKonfig(), preis = Math.round(Number(String(p.preisTag ?? alt.preisTag).replace(",", ".")) * 100) / 100;
         if (!(preis >= 0 && preis <= 50)) throw new Fehler("Bitte einen Preis je Tag zwischen 0 und 50 € angeben.");
         const neu = { ...alt, preisTag: preis, abholung: txt(p.abholung ?? alt.abholung, 160) };
@@ -15785,7 +15788,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         return json(await fsVorschlag(ich.person_id, txt(p.veranstaltung, 80)));
       }
       case "fahrtprofil_liste": {
-        nurLeitung(ich);
+        nurFahrtLeitung(ich);
         const [aktiv, { data: prof }] = await Promise.all([aktiveMitglieder(), db.from("kc_club_fahrtprofil").select("person_id,art,km,geaendert_am")]);
         const pm = new Map((prof ?? []).map((x: any) => [String(x.person_id), x]));
         const liste = aktiv.map((m: any) => { const x: any = pm.get(m.person_id); return { name: m.display_name, art: x?.art === "auto" ? "auto" : "keine", km: x?.art === "auto" ? Number(x.km) : null, geaendert: x?.geaendert_am || null }; })
@@ -15793,7 +15796,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         return json({ liste });
       }
       case "erstattung_sammel_liste": {
-        nurLeitung(ich);
+        nurFahrtLeitung(ich);
         const { data: alle } = await db.from("kc_club_erstattung").select("sammel").not("sammel", "is", null).limit(2000);
         const evs = [...new Set([DW.veranstaltung, ...(alle ?? []).map((x: any) => String(x.sammel))])];
         const ev = evs.includes(txt(p.veranstaltung, 80)) ? txt(p.veranstaltung, 80) : DW.veranstaltung;

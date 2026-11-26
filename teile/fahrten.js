@@ -155,7 +155,7 @@ async function fsEinreichen() {
 // ---------- Clubleitung: Sammel-Freigabe und Fahrtprofile ----------
 async function fsLeitung(tab) {
   if (tab) FSS.leitTab = tab;
-  if (!$("fsLeitBlatt")) blattAuf("fsLeitBlatt", `<h3 style="margin:0">🚗 Fahrtkosten – Clubleitung</h3><div class="umschalter" style="margin:8px 0" role="tablist" id="fsLeitTabs"></div><div id="fsLeitInhalt"><p class="hinweis">Wird geladen …</p></div>`);
+  if (!$("fsLeitBlatt")) blattAuf("fsLeitBlatt", `<h3 style="margin:0">🅿️ Fahrten &amp; Parken</h3><div class="umschalter" style="margin:8px 0" role="tablist" id="fsLeitTabs"></div><div id="fsLeitInhalt"><p class="hinweis">Wird geladen …</p></div>`);
   $("fsLeitTabs").innerHTML = [["freigabe", "📋 Sammel-Freigabe"], ["profile", "🚗 Fahrtprofile"], ["park", "🅿️ Parkausweise"]].map(([t, n]) => `<button type="button" role="tab" aria-selected="${FSS.leitTab === t}" class="${FSS.leitTab === t ? "an" : ""}" onclick="fsLeitung('${t}')">${n}</button>`).join("");
   try {
     FSS.leit = FSS.leitTab === "profile" ? await api("fahrtprofil_liste", {}, { warten: true }) : FSS.leitTab === "park" ? await api("parkausweis_liste", {}, { warten: true })

@@ -90,7 +90,7 @@ const ohne = { positionen: [] }; assert.equal(S.FS_SAMMEL.has(ohne), false, "ein
 assert.match(server, /case "fahrt_sammel_einreichen": \{\s*await fsSammelVorbereiten\(ich, p\);\s*\} \/\/ fällt bewusst durch in erstattung_senden\s*\/\/ falls through\s*case "erstattung_senden": \{/, "Sammel läuft durch den normalen Erstattungsweg");
 assert.match(server, /sammelKz = FS_SAMMEL\.get\(p\) \|\| null, pos = erstattungPruefen\(p\.positionen, ich, saetze, sammelKz \? FS\.maxPos : 20\)/);
 assert.match(server, /\.\.\.\(sammelKz \? \{ sammel: sammelKz\.event \} : \{\}\)/);
-assert.match(server, /case "fahrtprofil_liste": \{\s*nurLeitung\(ich\);/); assert.match(server, /case "erstattung_sammel_liste": \{\s*nurLeitung\(ich\);/);
+assert.match(server, /case "fahrtprofil_liste": \{\s*nurFahrtLeitung\(ich\);/); assert.match(server, /case "erstattung_sammel_liste": \{\s*nurFahrtLeitung\(ich\);/);
 assert.match(server, /await fsErinnern\(\)\.catch/, "Erinnerung nach der Veranstaltung in der Wartung");
 assert.match(sql, /create unique index if not exists kc_club_erstattung_sammel_einmal on public\.kc_club_erstattung \(person_id, sammel\) where sammel is not null and status <> 'abgelehnt'/);
 assert.match(sql, /check \(art in \('keine', 'auto'\)\)/); assert.match(sql, /km > 0 and km <= 500/);
@@ -111,7 +111,7 @@ ctx.FSS.aend = { "A-1": { aus: true } }; s = ctx.fsSummen(); assert.equal(s.fahr
 assert.match(app, /\{ id: "fahrten", sym: "🚗", t: "Fahrten & Abrechnung", u: "Fahrtprofil · km nach der Veranstaltung abrechnen", aktion: "fsStart\(\)" \}/, "Kachel unter Meins");
 assert.ok(app.indexOf('{ id: "fahrten", sym: "🚗"') > app.indexOf("  mein: ["));
 assert.match(app, /\n  fahrten: \{ einstieg: \["fsStart", "fsLeitung"\], sri: "sha384-/);
-assert.match(app, /onclick="fsLeitung\(\)">🚗 Sammel-Freigabe<\/button>/, "Clubleitung: Knopf auf der Erstattungsseite");
+assert.match(app, /onclick="fsLeitung\(\\'freigabe\\'\)">🚗 Sammel-Freigabe<\/button>/, "Clubleitung: Knopf auf der Erstattungsseite");
 assert.match(app, /else if \(h === "#fahrten"\) fsStart\(\);/, "Link aus der Erinnerung");
 assert.match(app, /\{ id: "fahrten", thema: "club", sym: "🚗", t: "Fahrtkosten einfach abrechnen"/, "Hilfe-Eintrag");
 assert.match(teil, /api\("erstattung_erledigen", \{ id: a\.id, status: "erstattet", ausgezahlt: a\.auszahlung === "bar" \? "bar" : "ueberweisung" \}\)/, "Freigabe über die vorhandene Aktion");
@@ -139,13 +139,35 @@ assert.match(sql + fs.readFileSync(new URL("../supabase/migrations/20261126_kc_c
 const pk = server.slice(server.indexOf('case "parkausweis": {'), server.indexOf('case "fahrt_sammel_vorschlag": {'));
 assert.match(pk, /if \(!kz\) throw new Fehler/); assert.match(pk, /if \(!k\.tage\.includes\(tage\)\) throw new Fehler/, "nur Tage laut Einstellung");
 assert.match(pk, /keine \$\{tage\} Markttage mehr/, "5 Tage nur, wenn noch 5 Markttage folgen"); assert.match(pk, /betrag: Math\.round\(\(x\.park_tage \|\| 0\) \* k\.preisTag \* 100\) \/ 100/, "Betrag = Tage × Preis je Tag");
-assert.match(pk, /case "parkausweis_konfig": \{\s*nurLeitung\(ich\);/, "Preis nur Clubleitung");
+assert.match(pk, /case "parkausweis_konfig": \{\s*nurFahrtLeitung\(ich\);/, "Preis nur Kassenwart/Clubsprecher/Admin");
 const pkSql = fs.readFileSync(new URL("../supabase/migrations/20261126_kc_club_parkausweis.sql", import.meta.url), "utf8");
 assert.match(pkSql, /'preisTag', 2, 'tage', jsonb_build_array\(5, 10\)/, "2 € je Tag, 5 oder 10 Tage – als Einstellung, nicht im Programmcode");
 assert.match(pkSql, /Tourist-Info, Markt 19/);
-assert.match(pk, /case "parkausweis_liste": \{\s*nurLeitung\(ich\);/, "Liste nur Clubleitung");
+assert.match(pk, /case "parkausweis_liste": \{\s*nurFahrtLeitung\(ich\);/, "Liste nur Kassenwart/Clubsprecher/Admin");
 assert.match(pk, /kc_core_personen"\)\.select\("person_id,mitgliedsnummer,vorname,nachname"\)/, "ID, Name, Vorname aus der Mitgliederverwaltung");
 assert.match(teil, /\["park", "🅿️ Parkausweise"\]/); assert.match(teil, /druckStarten\("parkausweise"\)/);
 assert.match(teil, /<th style="width:20mm">ID<\/th><th>Name<\/th><th>Vorname<\/th><th style="width:27mm">Kennzeichen<\/th>/, "Druckliste mit ID, Name, Vorname, Kennzeichen");
 assert.match(teil, /1\. Park-Ausnahmegenehmigung Auf- und Abbau/); assert.match(teil, /2\. Parkausweis Marktzeit – alle öffentlichen Parkplätze/);
 console.log("fahrten: alle Prüfungen bestanden");
+
+// KC-CLUB-BUERO-FAHRTEN (3.36.0): im Büro-Ordner Erstattung, Zugang nur Kassenwart, Clubsprecher, Admin – App und Server gleich
+{
+  const { readFileSync: rf } = await import("node:fs");
+  const lies = (f) => rf(new URL("../" + f, import.meta.url), "utf8");
+  const app = lies("app.js"), buero = lies("teile/buero.js"), srv = lies("supabase/functions/kc-club/index.ts");
+  const fn = app.match(/function fsDarfLeitung\(\) \{ return ([^}]+); \}/);
+  assert.ok(fn, "fsDarfLeitung in app.js");
+  const darf = new Function("ICH", "return " + fn[1]);
+  assert.equal(darf({ admin: true, aemter: [] }), true);
+  assert.equal(darf({ aemter: ["Kassenwart"] }), true);
+  assert.equal(darf({ aemter: ["Clubsprecher"] }), true);
+  assert.equal(darf({ vorstand: true, aemter: ["Schriftführer"] }), false, "übrige Clubleitung nicht");
+  assert.equal(darf(null), false);
+  assert.ok(!/id: "fahrten", sym: "🅿️"/.test(buero) && !buero.includes("fsDarfLeitung"), "kein eigener Büro-Ordner (Hansi: nicht schon wieder ein weiterer Ordner)");
+  assert.ok(/\{ id: "erstattung", sym: "💶", t: "Erstattung", [^}]*fn: "zeige\('erstattung'\)"/.test(buero) && /erstattung: \["erstattung", "kasse", "kosten", "parkausweis"/.test(buero), "Büro-Ordner Erstattung, Sprachbefehl Parkausweis");
+  assert.ok(app.includes(`(fsDarfLeitung() ? '<button type="button" class="knopf" style="width:auto" onclick="fsLeitung(\\'park\\')">🅿️ Parkausweise</button>`), "Erstattungsseite: Knopf Parkausweise nur für die drei");
+  assert.ok(/const fahrtLeitung = \(ich: Ich\) => !!ich\.admin \|\| \(ich\.aemter \|\| \[\]\)\.some\(\(a: string\) => \/\^\(kassenwart\|clubsprecher\)\/i\.test\(a\)\);/.test(srv), "Server-Regel gleich");
+  for (const c of ["parkausweis_liste", "parkausweis_konfig", "fahrtprofil_liste", "erstattung_sammel_liste"])
+    assert.ok(srv.includes(`case "${c}": {\n        nurFahrtLeitung(ich);`), "Server prüft " + c);
+  console.log("fahrten (Büro-Zugang 3.36.0): ok");
+}

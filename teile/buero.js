@@ -1039,7 +1039,7 @@ const BU_SPRACHE = [
 ];
 const BU_REGAL_WORTE = { sitzung: ["sitzung", "sitzungen", "vorbereiten", "einladung"], nachher: ["nachbereitung", "nachher", "mitschrift"], protokolle: ["protokoll", "protokolle"],
   feste: ["geburtstag", "geburtstage", "jubilaum", "jubilaen", "feste"], fl: ["freud", "leid", "trauer", "hochzeit"], liste: ["mitglieder", "mitgliederliste", "adressen"],
-  termine: ["termin", "termine", "kalender"], briefe: ["brief", "briefe", "briefbogen"], erstattung: ["erstattung", "kasse", "kosten"], chronik: ["chronik", "geschichte"],
+  termine: ["termin", "termine", "kalender"], briefe: ["brief", "briefe", "briefbogen"], erstattung: ["erstattung", "kasse", "kosten", "parkausweis", "parkausweise", "parken", "fahrten", "sammelfreigabe"], chronik: ["chronik", "geschichte"],
   archiv: ["archiv"], zeitungsartikel: ["zeitung", "zeitungsartikel", "presse", "artikel"], verwaltung: ["freigabe", "freigaben", "rechte"] };
 const sprWorte = (t) => suNorm(t).replace(/[^a-z0-9ß ]/g, " ").split(/\s+/).filter(Boolean);
 // Text → Befehl { fn, t } oder null (rein, testbar). Reihenfolge: Anrufen/Nachricht mit Name → Regal-Ordner → Schreibtisch.
