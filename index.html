@@ -6215,6 +6215,9 @@
   .fs-haken { width: 34px; display: flex; justify-content: center; } .fs-haken input { width: 22px; height: 22px; }
   .fs-euro { white-space: nowrap; font-variant-numeric: tabular-nums; } .fs-summe .fs-rechts { grid-template-columns: auto auto; } .fs-summe { border-bottom: 0; }
   .fs-kopfzeile { font-size: .8rem; color: var(--grau); font-weight: 700; padding: 4px 0; }
+  .fs-pk-zeile { display: grid; gap: 4px; padding: 8px 0; border-top: 1px solid var(--linie); } .fs-pk-zeile small { display: block; color: var(--grau); font-size: .8rem; }
+  .fs-pk-wahl { grid-auto-flow: column; grid-template-columns: none; grid-auto-columns: 1fr; margin: 0; } .fs-pk-wahl button { padding: 8px 4px; } .fs-pk-wahl button small { display: block; font-weight: 500; font-size: .75rem; color: var(--grau); }
+  @media (min-width: 700px) { .fs-pk-zeile { grid-template-columns: 1fr minmax(240px, 50%); align-items: center; } }
   .fs-aus { opacity: .5; } .fs-ab .fs-links { opacity: .6; text-decoration: line-through; text-decoration-color: var(--grau); } .fs-leer { color: var(--grau); }
   /* KICC-F-113 KC-CLUB-STUNDENKONTO (3.22.0): Farben je Art (CD Weinrot/Gold + Blau), im Nacht-Design heller */
   :root { --sk-stand: #741521; --sk-sonder: #b8862b; --sk-erstattung: #2f6f8f; --sk-vorl: #8c7f79; }
@@ -7443,7 +7446,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=3.33.0" data-v="3.33.0"></script>
+<script src="app.js?v=3.34.0" data-v="3.34.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

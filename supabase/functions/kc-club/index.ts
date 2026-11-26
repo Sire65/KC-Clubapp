@@ -197,7 +197,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "3.33.0";
+const SERVER_VERSION = "3.34.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -15721,6 +15721,66 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         }
         return json({ profil: await fsProfil(ich.person_id), kmMax: FS.kmMax });
       }
+      // KC-CLUB-PARKAUSWEIS: eigenen Wunsch lesen/setzen – Sorte 1 Ausnahmegenehmigung Auf-/Abbau (ja/nein), Sorte 2 Parkausweis Marktzeit (Tage laut Einstellung,
+      // zusammenhängende Markttage ab „von“; die längste Auswahl = ganze Marktzeit). Nein zu beidem meldet ab, das Kennzeichen bleibt gemerkt.
+      case "parkausweis": {
+        const [ev, k] = await Promise.all([fsZeitraum(DW.veranstaltung), pkKonfig()]);
+        if (p.aufbau !== undefined || p.tage !== undefined) {
+          const aufbau = p.aufbau === true, tage = Number(p.tage) || 0;
+          const { data: alt } = await db.from("kc_club_fahrtprofil").select("art,km").eq("person_id", ich.person_id).maybeSingle();
+          const basis = { person_id: ich.person_id, art: alt?.art || "keine", km: alt?.art === "auto" ? alt.km : null, geaendert_am: jetzt() };
+          if (!aufbau && !tage) {
+            const { error } = await db.from("kc_club_fahrtprofil").upsert({ ...basis, park_event: null, park_aufbau: false, park_tage: null, park_von: null, park_bis: null });
+            if (error) throw new Fehler("Konnte nicht gespeichert werden.", 500);
+            await protokoll(ich.person_id, "parkausweis_abgemeldet", { veranstaltung: DW.veranstaltung });
+          } else {
+            const kz = fsKennzeichen(p.kennzeichen);
+            if (!kz) throw new Fehler("Bitte das Kennzeichen so eingeben: z. B. UN-AB 123.");
+            let von: string | null = null, bis: string | null = null;
+            if (tage) {
+              if (!k.tage.includes(tage)) throw new Fehler(`Bitte ${k.tage.join(" oder ")} Tage wählen.`);
+              if (!ev.markt.length) throw new Fehler("Für den Markt sind noch keine Tage veröffentlicht.", 409);
+              const start = tage >= Math.max(...k.tage) ? ev.markt[0] : String(p.von || "");
+              const i = ev.markt.indexOf(start);
+              if (i < 0) throw new Fehler("Bitte einen Markttag als Beginn wählen.");
+              const ende = ev.markt[Math.min(i + tage, ev.markt.length) - 1];
+              if (i + tage > ev.markt.length && tage < Math.max(...k.tage)) throw new Fehler(`Ab diesem Tag gibt es keine ${tage} Markttage mehr – bitte früher beginnen.`);
+              von = start; bis = ende;
+            }
+            const tageZahl = von && bis ? ev.markt.filter((d: string) => d >= von! && d <= bis!).length : null;
+            const { error } = await db.from("kc_club_fahrtprofil").upsert({ ...basis, kennzeichen: kz, park_event: DW.veranstaltung, park_aufbau: aufbau, park_tage: tageZahl, park_von: von, park_bis: bis });
+            if (error) throw new Fehler("Der Parkausweis-Wunsch konnte nicht gespeichert werden.", 500);
+            await protokoll(ich.person_id, "parkausweis_gewuenscht", { veranstaltung: DW.veranstaltung, aufbau, tage: tageZahl, von, bis });
+          }
+        }
+        return json({ park: await fsPark(ich.person_id), veranstaltung: ev, konfig: k });
+      }
+      // Clubleitung: Liste für die Stadt (ID = Mitgliedsnummer, Name, Vorname, Kennzeichen; je Sorte), Betrag = Tage × Preis je Tag
+      case "parkausweis_liste": {
+        nurLeitung(ich);
+        const [ev, k, { data }] = await Promise.all([fsZeitraum(DW.veranstaltung), pkKonfig(),
+          db.from("kc_club_fahrtprofil").select("person_id,kennzeichen,park_aufbau,park_tage,park_von,park_bis").eq("park_event", DW.veranstaltung).limit(500)]);
+        const ids = (data ?? []).map((x: any) => String(x.person_id));
+        const [{ data: ps }, leute] = await Promise.all([ids.length ? db.from("kc_core_personen").select("person_id,mitgliedsnummer,vorname,nachname").in("person_id", ids) : Promise.resolve({ data: [] as any[] }), personen(ids)]);
+        const pm = new Map((ps ?? []).map((x: any) => [String(x.person_id), x]));
+        const liste = (data ?? []).map((x: any) => { const q: any = pm.get(String(x.person_id)) || {}, n = String(leute.get(x.person_id)?.display_name || "").trim(), teile = n.split(" ");
+          return { id: q.mitgliedsnummer || x.person_id, nachname: q.nachname || teile.slice(1).join(" ") || n, vorname: q.vorname || teile[0] || "", kennzeichen: x.kennzeichen,
+            aufbau: !!x.park_aufbau, tage: x.park_tage || 0, von: x.park_von, bis: x.park_bis, betrag: Math.round((x.park_tage || 0) * k.preisTag * 100) / 100 }; })
+          .sort((a: any, b: any) => String(a.nachname).localeCompare(String(b.nachname), "de") || String(a.vorname).localeCompare(String(b.vorname), "de"));
+        await protokoll(ich.person_id, "parkausweis_liste", { veranstaltung: DW.veranstaltung, anzahl: liste.length });
+        return json({ veranstaltung: ev, konfig: k, liste });
+      }
+      // Clubleitung: Preis je Tag und Abholung ändern (z. B. nächstes Jahr laut neuem Schreiben)
+      case "parkausweis_konfig": {
+        nurLeitung(ich);
+        const alt = await pkKonfig(), preis = Math.round(Number(String(p.preisTag ?? alt.preisTag).replace(",", ".")) * 100) / 100;
+        if (!(preis >= 0 && preis <= 50)) throw new Fehler("Bitte einen Preis je Tag zwischen 0 und 50 € angeben.");
+        const neu = { ...alt, preisTag: preis, abholung: txt(p.abholung ?? alt.abholung, 160) };
+        const { error } = await db.from("kc_club_konfig").upsert({ schluessel: "parkausweis", wert: neu, geaendert_von: ich.person_id, geaendert_am: jetzt() }, { onConflict: "schluessel" });
+        if (error) throw new Fehler("Die Einstellung konnte nicht gespeichert werden.", 500);
+        await protokoll(ich.person_id, "parkausweis_konfig", { vorher: alt, nachher: neu });
+        return json({ konfig: neu });
+      }
       case "fahrt_sammel_vorschlag": {
         return json(await fsVorschlag(ich.person_id, txt(p.veranstaltung, 80)));
       }
@@ -23983,6 +24043,32 @@ async function fsSammelVorbereiten(ich: Ich, p: any) {
   Object.assign(p, { positionen: pos, vorschuss: 0, auszahlung: p.auszahlung === "bar" ? "bar" : "ueberweisung",
     bemerkung: txt(`Sammel-Abrechnung ${v.veranstaltung.name}: ${pos.length} Fahrt${pos.length === 1 ? "" : "en"}${minuten ? `, dabei ${String(Math.round(minuten / 60 * 100) / 100).replace(".", ",")} Std. (stehen im Stundenkonto)` : ""}.`, 1000) });
   FS_SAMMEL.set(p, { event: v.veranstaltung.id, name: v.veranstaltung.name });
+}
+// ---------- KC-CLUB-PARKAUSWEIS (Hansi 26.11.2026): Parkausweis für die Veranstaltung (Kennzeichen, von–bis); Kassenwart druckt die Liste für die Stadt ----------
+// Kennzeichen deutsches Format „UN-AB 123“ (E/H am Ende erlaubt), höchstens 8 Zeichen ohne Trennzeichen; Zeitraum innerhalb der Veranstaltungstage.
+function fsKennzeichen(roh: unknown) {
+  const t = String(roh ?? "").toUpperCase().replace(/\s+/g, " ").trim();
+  const m = /^([A-ZÄÖÜ]{1,3})[\s-]+([A-Z]{1,2})[\s-]*([1-9]\d{0,3})([EH]?)$/.exec(t);
+  if (!m || (m[1] + m[2] + m[3]).length > 8) return null;
+  return `${m[1]}-${m[2]} ${m[3]}${m[4]}`;
+}
+const PK_STANDARD = { preisTag: 2, tage: [5, 10], abholung: "", quelle: "" }; // nur Rückfall – maßgeblich ist kc_club_konfig „parkausweis“
+async function pkKonfig() {
+  const { data } = await db.from("kc_club_konfig").select("wert").eq("schluessel", "parkausweis").maybeSingle();
+  const w: any = data?.wert || {};
+  const tage = (Array.isArray(w.tage) ? w.tage : PK_STANDARD.tage).map(Number).filter((n: number) => Number.isInteger(n) && n >= 1 && n <= 31).sort((x: number, y: number) => x - y);
+  return { preisTag: Number.isFinite(Number(w.preisTag)) && Number(w.preisTag) >= 0 ? Number(w.preisTag) : PK_STANDARD.preisTag, tage: tage.length ? tage : PK_STANDARD.tage,
+    abholung: txt(w.abholung ?? PK_STANDARD.abholung, 160), quelle: txt(w.quelle ?? "", 160) };
+}
+async function fsZeitraum(eventId: string) { // alle veröffentlichten Tage (Auf-/Abbau eingeschlossen) und die Markttage
+  const { data } = await db.from("kc_dp_days_published").select("work_date,day_type").eq("org_id", ORG).eq("event_id", eventId).eq("status", "published").order("work_date", { ascending: true }).limit(400);
+  const tage = (data ?? []).map((x: any) => String(x.work_date)), markt = (data ?? []).filter((x: any) => x.day_type === "market").map((x: any) => String(x.work_date));
+  return { id: eventId, name: fsName(eventId), von: tage[0] || null, bis: tage[tage.length - 1] || null, markt };
+}
+async function fsPark(pid: string) {
+  const { data } = await db.from("kc_club_fahrtprofil").select("kennzeichen,park_event,park_aufbau,park_tage,park_von,park_bis").eq("person_id", pid).maybeSingle();
+  const da = !!data?.park_event && data.park_event === DW.veranstaltung;
+  return { kennzeichen: data?.kennzeichen || null, ja: da, aufbau: da && !!data?.park_aufbau, tage: da ? data?.park_tage ?? null : null, von: da ? data?.park_von || null : null, bis: da ? data?.park_bis || null : null };
 }
 // Wartung: nach dem letzten Tag der aktuellen Veranstaltung einmal erinnern (nur 9–20 Uhr, nur Fahrtprofil „Auto“, nur wer Zeilen hat und noch nicht abgerechnet hat)
 async function fsErinnern() {

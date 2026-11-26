@@ -19,7 +19,8 @@ const block = server.slice(server.indexOf("// ---------- KICC-F-113 / KC-CLUB-ST
 assert.ok(block.includes("// ---------- KICC-F-114 / KC-CLUB-FAHRTKOSTEN-SAMMEL"), "Block KC-CLUB-FAHRTKOSTEN-SAMMEL fehlt");
 const T = {
   kc_club_fahrtprofil: [{ person_id: "P1", art: "auto", km: 24, geaendert_am: "2026-11-20T10:00:00Z" }, { person_id: "P2", art: "keine", km: null }],
-  kc_dp_days_published: [{ org_id: "KC_WERNE", event_id: "KC-WM-2026", status: "published", work_date: "2026-12-04" }, { org_id: "KC_WERNE", event_id: "KC-WM-2026", status: "published", work_date: "2026-12-20" }],
+  kc_dp_days_published: [{ org_id: "KC_WERNE", event_id: "KC-WM-2026", status: "published", work_date: "2026-12-02", day_type: "setup" },
+    ...["04", "05", "06", "07", "08", "09", "10", "11", "12", "20"].map((t) => ({ org_id: "KC_WERNE", event_id: "KC-WM-2026", status: "published", work_date: `2026-12-${t}`, day_type: "market" }))],
   kc_dp_konto_published: [
     { org_id: "KC_WERNE", person_id: "P1", event_id: "KC-WM-2026", status: "published", entry_key: "A-SE-1", work_date: "2026-11-10", start_h: 7, end_h: 15.5, minutes: 510, art: "sonder", anlass: "Grünkohl kochen", special_event_id: "SE-GK" },
     { org_id: "KC_WERNE", person_id: "P1", event_id: "KC-WM-2026", status: "published", entry_key: "A-SE-2", work_date: "2026-11-20", start_h: 14, end_h: 15.5, minutes: 90, art: "erstattung", anlass: "Besorgungen & Fahrten", special_event_id: "SE-BF" },
@@ -116,4 +117,35 @@ assert.match(app, /\{ id: "fahrten", thema: "club", sym: "🚗", t: "Fahrtkosten
 assert.match(teil, /api\("erstattung_erledigen", \{ id: a\.id, status: "erstattet", ausgezahlt: a\.auszahlung === "bar" \? "bar" : "ueberweisung" \}\)/, "Freigabe über die vorhandene Aktion");
 assert.ok(!/https?:\/\//.test(teil), "kein fremder Dienst");
 assert.match(ci, /node tests\/fahrten\.test\.mjs/, "Test läuft in den GitHub-Tests");
+// ---------- 5. KC-CLUB-PARKAUSWEIS ----------
+const S2 = Function("db", "ORG", "DW", "berlinTag", "berlinStunde", "txt", "dtPlaner", "Fehler", "kmSaetze", "satzFuer", "senden", "APP_URL", "jetzt",
+  `${stripTypeScriptTypes(block)}\nreturn { fsKennzeichen, fsZeitraum, fsPark };`)(
+  db, "KC_WERNE", { veranstaltung: "KC-WM-2026", name: "Weihnachtsmarkt Werne 2026" }, () => HEUTE, () => 10, (v, max) => String(v ?? "").trim().slice(0, max), () => false, Fehler,
+  async () => [], () => 0.3, async () => null, "https://x", () => "x");
+for (const [roh, soll] of [["UN-AB 123", "UN-AB 123"], ["un ab 123", "UN-AB 123"], ["UNAB123", null], ["UN AB123", "UN-AB 123"], ["d-x 1", "D-X 1"], ["HAM-K 77E", "HAM-K 77E"], ["MÜ-A 12", "MÜ-A 12"],
+  ["UN-AB 0123", null], ["UN 123", null], ["UNNA-AB 1", null], ["UN-ABC 1", null], ["HAM-XY 1234", null], ["", null]]) {
+  assert.equal(S2.fsKennzeichen(roh), soll, `Kennzeichen „${roh}“`);
+  assert.equal(ctx2KZ(roh), soll, `App gleiche Regel „${roh}“`);
+}
+function ctx2KZ(roh) { const c = { console }; vm.createContext(c); vm.runInContext(teil.slice(teil.indexOf("const fsKz ="), teil.indexOf("function fsParkHtml")) + "\nthis.f = fsKz;", c); return c.f(roh); }
+const zr = await S2.fsZeitraum("KC-WM-2026"); assert.equal(zr.von, "2026-12-02", "mit Aufbau"); assert.equal(zr.bis, "2026-12-20"); assert.equal(zr.markt.length, 10); assert.equal(zr.markt[0], "2026-12-04");
+// App: Zeitraum der Tage-Wahl (10 = ganze Marktzeit, 5 = zusammenhängend ab „von“)
+{ const c = { console, Math, FSS: { parkEv: zr, parkKonfig: { preisTag: 2, tage: [5, 10] } } }; vm.createContext(c);
+  vm.runInContext(teil.slice(teil.indexOf("function fsParkZeitraum"), teil.indexOf("function fsParkHtml")) + "\nthis.f = fsParkZeitraum;", c);
+  assert.equal(JSON.stringify(c.f(10, null)), JSON.stringify({ von: "2026-12-04", bis: "2026-12-20", tage: 10 }), "10 Tage = ganze Marktzeit");
+  assert.equal(JSON.stringify(c.f(5, "2026-12-06")), JSON.stringify({ von: "2026-12-06", bis: "2026-12-10", tage: 5 }));
+  assert.equal(c.f(0, null), null); }
+assert.match(sql + fs.readFileSync(new URL("../supabase/migrations/20261126_kc_club_parkausweis.sql", import.meta.url), "utf8"), /kennzeichen ~ '\^\[A-ZÄÖÜ\]\{1,3\}-\[A-Z\]\{1,2\} \[1-9\]\[0-9\]\{0,3\}\[EH\]\?\$'/, "Datenbank prüft das Format");
+const pk = server.slice(server.indexOf('case "parkausweis": {'), server.indexOf('case "fahrt_sammel_vorschlag": {'));
+assert.match(pk, /if \(!kz\) throw new Fehler/); assert.match(pk, /if \(!k\.tage\.includes\(tage\)\) throw new Fehler/, "nur Tage laut Einstellung");
+assert.match(pk, /keine \$\{tage\} Markttage mehr/, "5 Tage nur, wenn noch 5 Markttage folgen"); assert.match(pk, /betrag: Math\.round\(\(x\.park_tage \|\| 0\) \* k\.preisTag \* 100\) \/ 100/, "Betrag = Tage × Preis je Tag");
+assert.match(pk, /case "parkausweis_konfig": \{\s*nurLeitung\(ich\);/, "Preis nur Clubleitung");
+const pkSql = fs.readFileSync(new URL("../supabase/migrations/20261126_kc_club_parkausweis.sql", import.meta.url), "utf8");
+assert.match(pkSql, /'preisTag', 2, 'tage', jsonb_build_array\(5, 10\)/, "2 € je Tag, 5 oder 10 Tage – als Einstellung, nicht im Programmcode");
+assert.match(pkSql, /Tourist-Info, Markt 19/);
+assert.match(pk, /case "parkausweis_liste": \{\s*nurLeitung\(ich\);/, "Liste nur Clubleitung");
+assert.match(pk, /kc_core_personen"\)\.select\("person_id,mitgliedsnummer,vorname,nachname"\)/, "ID, Name, Vorname aus der Mitgliederverwaltung");
+assert.match(teil, /\["park", "🅿️ Parkausweise"\]/); assert.match(teil, /druckStarten\("parkausweise"\)/);
+assert.match(teil, /<th style="width:20mm">ID<\/th><th>Name<\/th><th>Vorname<\/th><th style="width:27mm">Kennzeichen<\/th>/, "Druckliste mit ID, Name, Vorname, Kennzeichen");
+assert.match(teil, /1\. Park-Ausnahmegenehmigung Auf- und Abbau/); assert.match(teil, /2\. Parkausweis Marktzeit – alle öffentlichen Parkplätze/);
 console.log("fahrten: alle Prüfungen bestanden");
