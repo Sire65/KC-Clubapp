@@ -197,7 +197,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "3.31.0";
+const SERVER_VERSION = "3.33.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -3360,8 +3360,8 @@ async function kmSaetze(): Promise<KmSatz[]> {
   return (data ?? []).map((x: any) => ({ id: x.id, satz: Number(x.satz), ab: x.gilt_ab }));
 }
 const satzFuer = (saetze: KmSatz[], datum: string) => { let s = ERSTATTUNG.kmSatzStandard; for (const x of saetze) if (x.ab <= datum) s = x.satz; return s; };
-function erstattungPruefen(roh: unknown, ich: Ich, saetze: KmSatz[]) {
-  const liste = (Array.isArray(roh) ? roh : []).slice(0, 20), pos: any[] = [], heute = Date.now();
+function erstattungPruefen(roh: unknown, ich: Ich, saetze: KmSatz[], max = 20) {
+  const liste = (Array.isArray(roh) ? roh : []).slice(0, max), pos: any[] = [], heute = Date.now();
   for (const x of liste as any[]) {
     const datum = /^\d{4}-\d{2}-\d{2}$/.test(String(x?.datum || "")) ? String(x.datum) : "";
     if (!datum || new Date(datum + "T00:00:00Z").getTime() > heute + 86400000) throw new Fehler("Bitte bei jeder Position ein gültiges Datum angeben (nicht in der Zukunft).");
@@ -10871,6 +10871,7 @@ const kcAnfrage = async (req: Request): Promise<Response> => {
       if (stuendlich) await geburtstagZettelAbnehmen().catch((e) => console.error("geburtstag zettel ab", String(e))); // KC-CLUB-GEBURTSTAG-PINNWAND (2.134.0)
       if (stuendlich) await gebGrussLauf().catch((e) => console.error("geburtstag gruss lauf", String(e))); // 2.617.0 KC-CLUB-GEBURTSTAG-GRUSS: 0 Uhr (00:04) senden, ab 9 Uhr erinnern
       await sonderstundenWartung().catch((e) => console.error("sonderstunden wartung", String(e))); // KICC-F-100 (2.419.0)
+      await fsErinnern().catch((e) => console.error("fahrt erinnerung", String(e))); // KICC-F-114
       if (stuendlich) await zeitumstellungMelden().catch((e) => console.error("zeitumstellung", String(e))); // 2.442.0 KC-CLUB-ZEITUMSTELLUNG
       await tischWartung(stuendlich).catch((e) => console.error("runder tisch", String(e))); // 2.762.0 KC-CLUB-RUNDER-TISCH: Erinnerung (alle 15 Min.), Aufräumen (stündlich)
       if (stuendlich) await db.from("kc_club_chat_quittung").delete().lt("am", new Date(Date.now() - 400 * 86400000).toISOString()).then(() => {}, () => {}); // 2.447.0: nach 400 Tagen weg
@@ -15707,6 +15708,42 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         return json({ orte });
       }
 
+      // KICC-F-114 KC-CLUB-FAHRTKOSTEN-SAMMEL: eigenes Fahrtprofil lesen/setzen, Vorschlag der Sammel-Abrechnung, Listen für die Clubleitung
+      case "fahrtprofil": {
+        if (p.art !== undefined) {
+          const art = p.art === "auto" ? "auto" : p.art === "keine" ? "keine" : null;
+          if (!art) throw new Fehler("Bitte wählen: keine Fahrtkosten oder eigenes Auto.");
+          let km: number | null = null;
+          if (art === "auto") { km = Math.round(Number(String(p.km ?? "").replace(",", ".")) * 10) / 10; if (!(km >= 0.5 && km <= FS.kmMax)) throw new Fehler(`Bitte die km hin und zurück angeben (0,5 bis ${FS.kmMax}).`); }
+          const { error } = await db.from("kc_club_fahrtprofil").upsert({ person_id: ich.person_id, art, km, geaendert_am: jetzt() });
+          if (error) throw new Fehler("Das Fahrtprofil konnte nicht gespeichert werden.", 500);
+          await protokoll(ich.person_id, "fahrtprofil_gesetzt", { art, km });
+        }
+        return json({ profil: await fsProfil(ich.person_id), kmMax: FS.kmMax });
+      }
+      case "fahrt_sammel_vorschlag": {
+        return json(await fsVorschlag(ich.person_id, txt(p.veranstaltung, 80)));
+      }
+      case "fahrtprofil_liste": {
+        nurLeitung(ich);
+        const [aktiv, { data: prof }] = await Promise.all([aktiveMitglieder(), db.from("kc_club_fahrtprofil").select("person_id,art,km,geaendert_am")]);
+        const pm = new Map((prof ?? []).map((x: any) => [String(x.person_id), x]));
+        const liste = aktiv.map((m: any) => { const x: any = pm.get(m.person_id); return { name: m.display_name, art: x?.art === "auto" ? "auto" : "keine", km: x?.art === "auto" ? Number(x.km) : null, geaendert: x?.geaendert_am || null }; })
+          .sort((a: any, b: any) => (a.art === b.art ? (Number(b.km) || 0) - (Number(a.km) || 0) || String(a.name).localeCompare(String(b.name), "de") : a.art === "auto" ? -1 : 1));
+        return json({ liste });
+      }
+      case "erstattung_sammel_liste": {
+        nurLeitung(ich);
+        const { data: alle } = await db.from("kc_club_erstattung").select("sammel").not("sammel", "is", null).limit(2000);
+        const evs = [...new Set([DW.veranstaltung, ...(alle ?? []).map((x: any) => String(x.sammel))])];
+        const ev = evs.includes(txt(p.veranstaltung, 80)) ? txt(p.veranstaltung, 80) : DW.veranstaltung;
+        const { data } = await db.from("kc_club_erstattung").select("id,person_id,summe,auszahlung,positionen,status,erstellt_am").eq("sammel", ev).neq("status", "abgelehnt").order("erstellt_am").limit(500);
+        const leute = await personen([...new Set<string>((data ?? []).map((a: any) => String(a.person_id)))]);
+        return json({ veranstaltung: { id: ev, name: fsName(ev) }, veranstaltungen: evs.map((id) => ({ id, name: fsName(id) })),
+          antraege: (data ?? []).map((a: any) => ({ id: a.id, name: leute.get(a.person_id)?.display_name || a.person_id, summe: Number(a.summe), auszahlung: a.auszahlung, status: a.status, am: a.erstellt_am,
+            fahrten: (a.positionen || []).filter((x: any) => x?.art === "fahrt").length, km: Math.round((a.positionen || []).reduce((n: number, x: any) => n + (x?.art === "fahrt" ? Number(x.km) || 0 : 0), 0) * 10) / 10 })) });
+      }
+
       // KICC-F-113 KC-CLUB-STUNDENKONTO: eigenes Konto; Vorstand und Planer auch das eines anderen Mitglieds (protokolliert, ohne Inhalte)
       case "stundenkonto": {
         const darf = skDarfAndere(ich), wunsch = txt(p.person, 80);
@@ -19065,8 +19102,13 @@ Köcheclub-App`,
         return json({ ok: true });
       }
 
+      // KICC-F-114: Sammel-Abrechnung – Server baut die Positionen aus dem Vorschlag und läuft dann durch den normalen Erstattungsweg
+      case "fahrt_sammel_einreichen": {
+        await fsSammelVorbereiten(ich, p);
+      } // fällt bewusst durch in erstattung_senden
+      // falls through
       case "erstattung_senden": {
-        const saetze = await kmSaetze(), pos = erstattungPruefen(p.positionen, ich, saetze);
+        const saetze = await kmSaetze(), sammelKz = FS_SAMMEL.get(p) || null, pos = erstattungPruefen(p.positionen, ich, saetze, sammelKz ? FS.maxPos : 20); // KICC-F-114
         // KC-CLUB-ERSTATTUNG-BESUCHE (2.25.4): Fahrten aus Besuchen – Besuch muss stattgefunden haben, Datum und km wie im Besuch,
         // und darf nicht schon in einem anderen (nicht abgelehnten) Antrag stehen
         const bIds = pos.map((x) => x.besuch_id).filter(Boolean) as string[];
@@ -19117,8 +19159,8 @@ Köcheclub-App`,
         const zeilen = pos.map((x, i) => `${i + 1}. ${d(x.datum)} – ${ersPosText(x)}`).join("\n\n")
           + (vorschuss ? `\n\nVorschuss vom Club erhalten: ${euro(vorschuss)} → ${summe - vorschuss >= 0 ? "Auszahlung " + euro(Math.round((summe - vorschuss) * 100) / 100) : "Rückzahlung an den Club " + euro(Math.round((vorschuss - summe) * 100) / 100)}` : "");
         const text = `Hallo,\n\n${ich.name} beantragt eine Erstattung über die Köcheclub-App:\n\n${zeilen}\n\n────────────\nSumme: ${euro(summe)}\nAuszahlung: ${auszahlung === "bar" ? "bar" : "per Überweisung"}${bemerkung ? "\nBemerkung: " + bemerkung : ""}\n\n(Kilometerpauschale je nach Fahrtdatum laut Club-Einstellung. Belege, falls vorhanden, sind angehängt.)\n\nViele Grüße\nKöcheclub Werne`;
-        const { data: a, error } = await db.from("kc_club_erstattung").insert({ person_id: ich.person_id, positionen: pos, summe, km_satz: satzFuer(saetze, berlinTag(new Date())), auszahlung, bemerkung: bemerkung || null, ...(vorschuss ? { vorschuss } : {}) }).select("id").single();
-        if (error || !a) throw new Fehler("Antrag konnte nicht gespeichert werden.", 500);
+        const { data: a, error } = await db.from("kc_club_erstattung").insert({ person_id: ich.person_id, positionen: pos, summe, km_satz: satzFuer(saetze, berlinTag(new Date())), auszahlung, bemerkung: bemerkung || null, ...(vorschuss ? { vorschuss } : {}), ...(sammelKz ? { sammel: sammelKz.event } : {}) }).select("id").single();
+        if (error || !a) throw new Fehler(sammelKz && /duplicate|unique/i.test(String(error?.message)) ? "Für diese Veranstaltung ist die Abrechnung schon eingereicht." : "Antrag konnte nicht gespeichert werden.", sammelKz ? 409 : 500);
         const stundenZeilen = await ersStundenAnlegen(ich, a.id, pos); // KICC-F-112: sofort gutgeschrieben (vor dem Versand; Fehler → Antrag zurück)
         const versand = await routerSenden("club_nachricht_mail", an, {
           titel: `💶 Erstattung von ${ich.vorname}: ${euro(summe)}`, kurz: `${pos.length} Position${pos.length === 1 ? "" : "en"} · ${euro(summe)}`,
@@ -23855,6 +23897,115 @@ async function stundenkontoLaden(pid: string) {
   const standDp2 = (dp ?? []).reduce((m: string, x: any) => (String(x.published_at || "") > m ? String(x.published_at) : m), "") || null;
   return { standDp2, zeilen, soll: [...sollTage.entries()].map(([datum, min]) => ({ datum, min, veranstaltung: DW.name })).sort((a, b) => a.datum.localeCompare(b.datum)),
     stand: stand || null, phase: (dp ?? []).length ? 2 : 1 };
+}
+// ---------- KICC-F-114 / KC-CLUB-FAHRTKOSTEN-SAMMEL (Hansi 25./26.11.2026): Fahrtprofil + Sammel-Abrechnung je Veranstaltung ----------
+// Entscheidungen: Fahrt zum Budendienst wird erstattet · Abrechnung einmal nach der Veranstaltung · Kassenwart gibt alle auf einmal frei ·
+// jeder entscheidet selbst (keine Mindestentfernung, Vorgabe „keine Fahrtkosten“) · Clubleitung sieht eine Liste · gilt für alle Veranstaltungen.
+// Vorschlag nur aus GEPRÜFTEN Zeilen (DP2-Kontoauszug, KICC-F-113); je Tag höchstens eine Fahrt; Mitfahrer einer Fahrgemeinschaft 0 km;
+// schon abgerechnete Tage (Einzel-Erstattung „Fahrt“) nie doppelt. Eingereicht wird über den vorhandenen Weg erstattung_senden (Mail an Kassenwart,
+// Eingangskorb, Bestätigung) – nichts ohne „Ja“ des Mitglieds. Konzept: KICC docs/KONZEPT-CLUB-FAHRTKOSTEN-SAMMEL.md
+const FS = { kmMax: 500, maxPos: 60, erinnerTage: 30 };
+const FS_SAMMEL = new WeakMap<object, { event: string; name: string }>(); // nur der Server setzt das Kennzeichen „Sammel-Abrechnung“
+async function fsProfil(pid: string) {
+  const { data } = await db.from("kc_club_fahrtprofil").select("art,km,geaendert_am").eq("person_id", pid).maybeSingle();
+  return data ? { art: data.art === "auto" ? "auto" : "keine", km: data.km == null ? null : Number(data.km), geaendert: data.geaendert_am } : { art: "keine", km: null, geaendert: null };
+}
+const fsName = (ev: unknown) => (ev === DW.veranstaltung ? DW.name : String(ev || "Veranstaltung"));
+async function fsEnde(eventId: string) { // letzter veröffentlichter Veranstaltungstag
+  const { data } = await db.from("kc_dp_days_published").select("work_date").eq("org_id", ORG).eq("event_id", eventId).eq("status", "published").order("work_date", { ascending: false }).limit(1);
+  return (data ?? [])[0]?.work_date || null;
+}
+async function fsVeranstaltungen(pid: string) {
+  const { data } = await db.from("kc_dp_konto_published").select("event_id").eq("org_id", ORG).eq("person_id", pid).eq("status", "published").limit(3000);
+  const ids = [...new Set([DW.veranstaltung, ...(data ?? []).map((x: any) => String(x.event_id))])];
+  const enden = await Promise.all(ids.map(fsEnde));
+  return ids.map((id, i) => ({ id, name: fsName(id), ende: enden[i] }));
+}
+const fsTagPlus = (iso: string, n: number) => { const d = new Date(iso + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+async function fsVorschlag(pid: string, wunsch: string) {
+  const heute = berlinTag(new Date()), [profil, evs] = await Promise.all([fsProfil(pid), fsVeranstaltungen(pid)]);
+  const ev = evs.find((e) => e.id === wunsch) || evs[0];
+  const [{ data: dp }, { data: tc }, { data: ers }, { data: cps }, saetze] = await Promise.all([
+    db.from("kc_dp_konto_published").select("entry_key,work_date,start_h,end_h,minutes,art,anlass,special_event_id").eq("org_id", ORG).eq("person_id", pid).eq("event_id", ev.id).eq("status", "published").limit(1000),
+    db.from("kc_dp_timeclock_actuals").select("id,work_date,start_time,end_time,break_minutes,status").eq("org_id", ORG).eq("person_id", pid).eq("event_id", ev.id).neq("status", "voided").limit(1000),
+    db.from("kc_club_erstattung").select("id,positionen,status,sammel,summe,erstellt_am").eq("person_id", pid).neq("status", "abgelehnt").limit(500),
+    db.from("kc_dp_carpools").select("special_event_id,fahrer_id,mitfahrer").eq("org_id", ORG).eq("event_id", ev.id).eq("status", "published"),
+    kmSaetze()]);
+  const sammel = (ers ?? []).find((a: any) => a.sammel === ev.id) || null;
+  const abgerechnet = new Map<string, string>(); // Tag → Datum des Antrags, in dem schon eine Fahrt steht
+  for (const a of ers ?? []) for (const x of a.positionen || []) if (x?.art === "fahrt" && x.datum && !abgerechnet.has(x.datum)) abgerechnet.set(x.datum, String(a.erstellt_am || "").slice(0, 10));
+  const mitfahrer = new Set((cps ?? []).filter((c: any) => (c.mitfahrer ?? []).includes(pid)).map((c: any) => String(c.special_event_id)));
+  const dpTage = new Set((dp ?? []).map((d: any) => d.work_date)), zeilen: any[] = [];
+  for (const d of dp ?? []) zeilen.push({ key: String(d.entry_key), datum: d.work_date, von: d.start_h == null ? null : skHHMM(Number(d.start_h)), bis: d.end_h == null ? null : skHHMM(Number(d.end_h)),
+    min: Number(d.minutes) || 0, art: d.art, anlass: txt(d.anlass || (d.art === "stand" ? "Dienst am Stand" : "Sondereinsatz"), 80), special_event_id: d.special_event_id || null, geprueft: true });
+  for (const r of tc ?? []) if (!dpTage.has(r.work_date)) { const ganz = r.status === "complete" && r.start_time && r.end_time;
+    zeilen.push({ key: `K-${skKurz(r.id)}`, datum: r.work_date, von: String(r.start_time || "").slice(0, 5) || null, bis: String(r.end_time || "").slice(0, 5) || null,
+      min: ganz ? skMinZeit(r.start_time, r.end_time, r.break_minutes) : 0, art: "stand", anlass: "Dienst am Stand", special_event_id: null, geprueft: false }); }
+  zeilen.sort((a, b) => String(a.datum).localeCompare(String(b.datum)) || String(a.von || "").localeCompare(String(b.von || ""))); // chronologisch
+  const gezaehlt = new Set<string>(), dd = (iso: string) => iso.split("-").reverse().join(".");
+  for (const z of zeilen) {
+    z.satz = satzFuer(saetze, z.datum); z.km = 0; z.zaehlt = false;
+    z.grund = !z.geprueft ? "noch nicht vom Planer geprüft – kommt, sobald DP2 den Tag geprüft hat"
+      : z.art === "erstattung" ? "km schon mit der Erstattung abgerechnet"
+      : z.datum > heute ? "liegt in der Zukunft"
+      : profil.art !== "auto" ? "keine Fahrtkosten (dein Fahrtprofil)"
+      : z.special_event_id && mitfahrer.has(String(z.special_event_id)) ? "Mitfahrer – der Fahrer rechnet die Fahrt ab"
+      : abgerechnet.has(z.datum) ? `schon abgerechnet (Antrag vom ${dd(abgerechnet.get(z.datum) || z.datum)})`
+      : gezaehlt.has(z.datum) ? "gleicher Tag – Fahrt schon gezählt" : null;
+    if (!z.grund) { z.zaehlt = true; z.km = Number(profil.km) || 0; gezaehlt.add(z.datum); }
+  }
+  const zaehlt = zeilen.filter((z) => z.zaehlt), vorbei = !!ev.ende && heute > ev.ende;
+  return { veranstaltungen: evs, veranstaltung: ev, profil, zeilen, heute,
+    sammel: sammel ? { id: sammel.id, status: sammel.status, summe: Number(sammel.summe), am: sammel.erstellt_am } : null,
+    abWann: ev.ende ? fsTagPlus(ev.ende, 1) : null,
+    abrechenbar: vorbei && !sammel && profil.art === "auto" && zaehlt.length > 0,
+    hinweis: sammel ? "Für diese Veranstaltung ist die Abrechnung schon eingereicht." : !ev.ende ? "Für diese Veranstaltung gibt es noch keine veröffentlichten Tage."
+      : !vorbei ? `Abrechnen geht ab ${dd(fsTagPlus(ev.ende, 1))} (nach dem letzten Tag).` : profil.art !== "auto" ? "Dein Fahrtprofil steht auf „keine Fahrtkosten“ – oben ändern, wenn du mit dem Auto kommst."
+      : !zaehlt.length ? "Es gibt keine Fahrten zum Abrechnen." : null };
+}
+// Server baut die Positionen selbst (Grundlage ist immer der Vorschlag); das Mitglied darf km je Zeile ändern oder Zeilen streichen.
+async function fsSammelVorbereiten(ich: Ich, p: any) {
+  const v = await fsVorschlag(ich.person_id, txt(p?.veranstaltung, 80));
+  if (v.sammel) throw new Fehler("Für diese Veranstaltung ist die Abrechnung schon eingereicht.", 409);
+  if (!v.abrechenbar) throw new Fehler(v.hinweis || "Die Abrechnung ist noch nicht möglich.", 409);
+  const aend = p?.zeilen && typeof p.zeilen === "object" ? p.zeilen : {};
+  const pos: any[] = []; let minuten = 0;
+  for (const z of v.zeilen.filter((x: any) => x.zaehlt)) {
+    const e = aend[z.key] || {}; if (e.aus === true) continue;
+    const km = e.km == null || e.km === "" ? z.km : Math.round(Number(String(e.km).replace(",", ".")) * 10) / 10;
+    if (!(km >= 0 && km <= FS.kmMax)) throw new Fehler(`${z.datum.split("-").reverse().join(".")}: bitte km zwischen 0 und ${FS.kmMax} angeben.`);
+    if (!km) continue;
+    minuten += z.min;
+    pos.push({ art: "fahrt", datum: z.datum, km, grund: txt(z.art === "sonder" ? `Sondereinsatz: ${z.anlass}` : `Budendienst ${v.veranstaltung.name}`, 120), ziel: "", ...(z.special_event_id ? { special_event_id: z.special_event_id } : {}) });
+  }
+  if (!pos.length) throw new Fehler("Es ist keine Fahrt ausgewählt.");
+  if (pos.length > FS.maxPos) throw new Fehler(`Höchstens ${FS.maxPos} Fahrten je Abrechnung.`);
+  Object.assign(p, { positionen: pos, vorschuss: 0, auszahlung: p.auszahlung === "bar" ? "bar" : "ueberweisung",
+    bemerkung: txt(`Sammel-Abrechnung ${v.veranstaltung.name}: ${pos.length} Fahrt${pos.length === 1 ? "" : "en"}${minuten ? `, dabei ${String(Math.round(minuten / 60 * 100) / 100).replace(".", ",")} Std. (stehen im Stundenkonto)` : ""}.`, 1000) });
+  FS_SAMMEL.set(p, { event: v.veranstaltung.id, name: v.veranstaltung.name });
+}
+// Wartung: nach dem letzten Tag der aktuellen Veranstaltung einmal erinnern (nur 9–20 Uhr, nur Fahrtprofil „Auto“, nur wer Zeilen hat und noch nicht abgerechnet hat)
+async function fsErinnern() {
+  const std = berlinStunde(new Date()); if (std < 9 || std >= 20) return 0;
+  const heute = berlinTag(new Date()), ende = await fsEnde(DW.veranstaltung);
+  if (!ende || heute <= ende || heute > fsTagPlus(ende, FS.erinnerTage)) return 0;
+  const [{ data: prof }, { data: schon }, { data: abger }] = await Promise.all([
+    db.from("kc_club_fahrtprofil").select("person_id").eq("art", "auto"),
+    db.from("kc_club_fahrt_erinnerung").select("person_id").eq("event_id", DW.veranstaltung),
+    db.from("kc_club_erstattung").select("person_id").eq("sammel", DW.veranstaltung).neq("status", "abgelehnt")]);
+  const weg = new Set([...(schon ?? []), ...(abger ?? [])].map((x: any) => String(x.person_id)));
+  let n = 0;
+  for (const { person_id: pid } of prof ?? []) {
+    if (weg.has(pid)) continue;
+    const { count } = await db.from("kc_dp_konto_published").select("entry_key", { count: "exact", head: true }).eq("org_id", ORG).eq("person_id", pid).eq("event_id", DW.veranstaltung).eq("status", "published");
+    if (!count) continue;
+    const { error } = await db.from("kc_club_fahrt_erinnerung").insert({ person_id: pid, event_id: DW.veranstaltung }); if (error) continue; // schon erinnert (parallel)
+    await senden("club_dienst", [pid], { titel: "🚗 Deine Fahrtkosten-Abrechnung ist bereit", kurz: `${DW.name} – bitte kurz prüfen und einreichen`,
+      betreff: `Köcheclub Werne – Fahrtkosten ${DW.name}`, text: `Hallo,\n\ndie Fahrtkosten-Abrechnung für ${DW.name} ist fertig vorbereitet. Bitte in der App unter Meins → 🚗 Fahrten & Abrechnung kurz prüfen und mit einem Tipp einreichen.\n\nViele Grüße\nKöcheclub-App`,
+      url: APP_URL + "#fahrten" }, `club-fahrt-sammel:${DW.veranstaltung}:${pid}`).catch((e) => console.error("fahrt erinnerung", String(e)));
+    n++;
+  }
+  return n;
 }
 async function sonderstundenLaden(pid: string) {
   const [{ data: ev }, { data: st }] = await Promise.all([

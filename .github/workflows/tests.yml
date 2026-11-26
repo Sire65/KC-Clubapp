@@ -178,6 +178,8 @@ jobs:
       - run: node tests/erstattung-stunden.test.mjs
       # KICC-F-113 KC-CLUB-STUNDENKONTO (3.22.0): Mein Stundenkonto
       - run: node tests/stundenkonto.test.mjs
+      # KICC-F-114 KC-CLUB-FAHRTKOSTEN-SAMMEL: Fahrtprofil + Sammel-Abrechnung
+      - run: node tests/fahrten.test.mjs
       - run: node tests/nutzung-person.test.mjs
       - run: node tests/ist-rueckfrage.test.mjs
       - run: node tests/start-balken.test.mjs
