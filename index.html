@@ -6199,6 +6199,23 @@
   .ir-vorschau { margin: 8px 0 0; } .ir-fehler { color: var(--textOrange); font-weight: 700; }
   /* KC-CLUB-NUTZUNG-PERSON: 📊 Meine Nutzung / Nutzung je Mitglied (gleiche Bausteine wie nu-*) */
   .np-filter { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 2px; }
+  /* KICC-F-114 KC-CLUB-FAHRTKOSTEN-SAMMEL: Erfassungsmaske – zweispaltig ausgerichtet (links Tag/Einsatz, rechts km + Haken), Ausgegrautes mit Grund */
+  .fs-karte { padding: 10px 12px; } .fs-kopf { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; } .fs-kopf small { color: var(--grau); }
+  .fs-kopf select { max-width: 100%; }
+  .fs-wahl button { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 6px; } .fs-wahl button small { font-weight: 500; font-size: .78rem; color: var(--grau); }
+  .fs-kmzeile { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: end; margin-top: 8px; } .fs-kmzeile .knopf { width: auto; margin: 0; }
+  .fs-status { margin: 0 0 4px; font-weight: 700; color: var(--textOrange); } .fs-status.fs-ok { color: var(--textGruen); }
+  .fs-tabelle { border-top: 1px solid var(--linie); }
+  .fs-zeile { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--linie); }
+  .fs-links { min-width: 0; overflow-wrap: anywhere; } .fs-z1 { display: flex; gap: 8px; flex-wrap: wrap; align-items: baseline; } .fs-z1 .fs-std { margin-left: auto; color: var(--grau); white-space: nowrap; }
+  .fs-z2 { font-size: .9rem; } .fs-grund { font-size: .8rem; font-style: italic; color: var(--grau); } .fs-warn { font-size: .8rem; color: var(--textOrange); } .fs-warn.fs-fehler, .hinweis.fs-fehler { color: var(--textRot); }
+  .fs-rechts { display: grid; grid-template-columns: 74px 34px; gap: 6px; align-items: center; justify-items: end; }
+  .fs-km { width: 74px; text-align: right; font-variant-numeric: tabular-nums; } input.fs-km { padding: 6px 8px; border-radius: 10px; border: 1px solid var(--linie); background: var(--karte); color: var(--text); font: inherit; }
+  input.fs-km.fs-gelb { border-color: var(--gelb); background: var(--gelbbg); } input.fs-km.fs-fehler { border-color: var(--textRot); background: var(--rotbg); }
+  .fs-haken { width: 34px; display: flex; justify-content: center; } .fs-haken input { width: 22px; height: 22px; }
+  .fs-euro { white-space: nowrap; font-variant-numeric: tabular-nums; } .fs-summe .fs-rechts { grid-template-columns: auto auto; } .fs-summe { border-bottom: 0; }
+  .fs-kopfzeile { font-size: .8rem; color: var(--grau); font-weight: 700; padding: 4px 0; }
+  .fs-aus { opacity: .5; } .fs-ab .fs-links { opacity: .6; text-decoration: line-through; text-decoration-color: var(--grau); } .fs-leer { color: var(--grau); }
   /* KICC-F-113 KC-CLUB-STUNDENKONTO (3.22.0): Farben je Art (CD Weinrot/Gold + Blau), im Nacht-Design heller */
   :root { --sk-stand: #741521; --sk-sonder: #b8862b; --sk-erstattung: #2f6f8f; --sk-vorl: #8c7f79; }
   :root.dunkel { --sk-stand: #ff8a9a; --sk-sonder: #e8c070; --sk-erstattung: #7cc6e6; --sk-vorl: #b9a8a3; }
@@ -7426,7 +7443,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=3.33.0" data-v="3.33.0"></script>
+<script src="app.js?v=3.34.0" data-v="3.34.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>
