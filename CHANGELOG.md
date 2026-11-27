@@ -1,5 +1,9 @@
 # Änderungen
 
+## (Version folgt) – 2026-11-27 – ✍️ „… schreibt dir gerade“ auffällig (KC-CLUB-SCHREIBT-AUFFAELLIG)
+Wunsch Hansi 27.11.2026: Der Hinweis oben, wenn jemand schreibt und man in einem anderen Fenster der App ist, muss auffälliger sein – „gelb, orange, rot pulsieren“.
+- `index.html`: `.schreibt-hinweis` größer, fett, einzeilig; Farbe pulsiert gelb → orange → rot mit Leuchtrand (`@keyframes schreibt-puls`, nur Farbe/Leuchten). Hilfe-Satz ergänzt, Prüfung in `tests/app-vertrag.test.mjs`. Nur App.
+
 ## 3.44.0 – 2026-11-26 – 📋 Ablagekorb: als Protokoll-Anlage einfügen, mit Protokoll-Auswahl (KC-CLUB-ABLAGEKORB-PROTOKOLL) · Server 3.44.0
 Wunsch Hansi 26.11.2026: „Und baue dort als Option auch ein, dass ich es als Protokoll-Anlage einfügen kann mit Protokoll-Auswahl.“ Anlass: der Scan der Mitschrift vom 24.11. kam per Mail → Teilen → Köcheclub in den Ablagekorb, von dort ging es nicht ans Protokoll.
 - 📥 Ablagekorb: neuer Knopf **📋 Als Protokoll-Anlage** (bei Einträgen mit Dateien). Im Fenster Dateien anhaken (vorbelegt mit der Auswahl im Korb, sonst alle) und das Protokoll wählen – wählbar sind Entwürfe, die man bearbeiten darf; veröffentlichte stehen grau dabei mit Hinweis „dort erst Korrigieren tippen“.
