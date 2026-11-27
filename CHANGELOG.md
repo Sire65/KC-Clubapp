@@ -1,11 +1,12 @@
 # Änderungen
 
-## 3.45.0 – 2026-11-26 – 🧰 Aufbau-Check: Ist der Stand startklar? (KC-CLUB-AUFBAU-CHECK) · Server 3.45.0
+## 3.45.0 – 2026-11-27 – 🧰 Aufbau- und Morgen-Check: Ist der Stand startklar? (KC-CLUB-AUFBAU-CHECK, KC-CLUB-MORGEN-CHECK) · Server 3.45.0
 Wunsch Hansi 26.11.2026: „Wenn am 03.12. der Stand aufgebaut ist und das ganze System steht, checken ob alles läuft – Mini-PC, Router, 3 Kassen, TV mit Präsentation usw. Alles checken und abhaken.“
 - Admin-Zentrale → **🧰 Aufbau-Check** (nur Clubleitung), Programmteil `teile/aufbaucheck.js`.
 - 🤖 **Automatisch geprüft** (Server `aufbau_check`, nur Technik-Meldungen des Mini-PCs): Mini-PC meldet sich (= Internet über den Router), Manager-Dienst, Kasse 1–3 gekoppelt und aktiv, WLAN-Verzögerung je Kasse, Fernseher holt die Präsentation (neu vom Mini-PC gemeldet, Kasse-Repo), Kassen-QR-Codes, PC-Manager, Preise veröffentlicht, Update-Sperre. ✅/⚠️/❌, alle 30 Sekunden neu (ruht im Schlafmodus).
 - ☑️ **Liste zum Abhaken** (Strom & Netz, Mini-PC, Kassen inkl. Barcode-Scanner je Kasse aufgeladen und Testscan, Testbuchung, Pfand, BAR, Stechuhr, Wechselgeld, Fernseher, Aushänge, Gläser/Schalen) – je Tag gespeichert (`kc_club_aufbau_check`, nur Server), alle sehen denselben Stand mit Name und Uhrzeit.
-- Hilfe-Eintrag, Test `tests/aufbau-check.test.mjs` (CI).
+- 🌅 **Morgen-Check** (Wunsch Hansi 27.11.2026, jeden Markttag nach dem Hochfahren): Umschalter 🧰 Aufbau · 🌅 Morgen · 🌙 Abend. Zeiten aus dem Dienstplan (erster Dienstbeginn ohne Vor-/Nachbereitung; Öffnung 1 Std. später, am 04.12. 2 Std.). Zum Dienstbeginn Push an den ersten Dienst (#morgencheck), 30 Min. danach Warnung an Clubleitung + ersten Dienst, falls Mini-PC/Kasse sich nicht melden, 15 Min. vor Öffnung Erinnerung, falls noch nicht abgehakt. Sehen und abhaken dürfen Clubleitung und wer heute Dienst hat.
+- Hilfe-Einträge, Test `tests/aufbau-check.test.mjs` (CI).
 
 ## 3.44.0 – 2026-11-26 – 📋 Ablagekorb: als Protokoll-Anlage einfügen, mit Protokoll-Auswahl (KC-CLUB-ABLAGEKORB-PROTOKOLL) · Server 3.44.0
 Wunsch Hansi 26.11.2026: „Und baue dort als Option auch ein, dass ich es als Protokoll-Anlage einfügen kann mit Protokoll-Auswahl.“ Anlass: der Scan der Mitschrift vom 24.11. kam per Mail → Teilen → Köcheclub in den Ablagekorb, von dort ging es nicht ans Protokoll.

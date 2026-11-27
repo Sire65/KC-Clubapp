@@ -4,7 +4,9 @@
 // WLAN-Verzögerung, Fernseher holt die Präsentation, Kassen-QR, PC-Manager, Preise). Darunter die Liste zum Abhaken – je Tag gespeichert,
 // alle aus der Clubleitung sehen denselben Stand (wer, wann). Solange die Seite offen ist: alle 30 Sekunden neu prüfen.
 
-const AC = { daten: null, uhr: 0, fehler: "" };
+// 3.45.0 KC-CLUB-MORGEN-CHECK (Wunsch Hansi 27.11.2026): dieselbe Seite als kurzer Morgen-Check (jeden Markttag nach dem Hochfahren, abhaken macht
+// wer den ersten Dienst hat – Push vom Server um Dienstbeginn) und als Abend-Liste. Umschalter oben; Push/Link #morgencheck öffnet „Morgen“.
+const AC = { daten: null, uhr: 0, fehler: "", modus: "aufbau" };
 const AC_KASSEN = ["KASSE-01", "KASSE-02", "KASSE-03"];
 const AC_LISTE = [
   ["⚡ Strom & Netz", [["strom", "Strom da, Kabel und Mehrfachstecker sicher verlegt (keine Stolperfallen)"], ["router", "Router an, WLAN des Stands sichtbar"],
@@ -21,6 +23,12 @@ const AC_LISTE = [
   ["🏷️ Aushänge & Ausgabe", [["preisliste", "Kundenpreisliste hängt"], ["allergene", "Allergen-Aushang hängt"], ["etiketten", "Preisetiketten an der Ware"],
     ["glaeser", "Gläser und Feuerzangen da"], ["schalen", "Einwegschalen, Thermobecher und Servietten da"]]],
 ];
+const AC_MORGEN = [["🌅 Jeden Morgen nach dem Hochfahren", [["m_router", "Router zuerst eingeschaltet, dann den Mini-PC"], ["m_minipc", "Mini-PC: im schwarzen Fenster steht „ALLES BEREIT“ (Fenster offen lassen)"],
+  ["m_tablets", "Alle 3 Tablets: Kassen-Symbol angetippt, Lampe grün"], ["m_scanner", "Alle 3 Barcode-Scanner geladen, je ein Testscan – Scanner-Symbol grün"],
+  ["m_tv", "Fernseher an, Präsentation läuft mit Ton"], ["m_wechselgeld", "Wechselgeld in allen Kassen"]]]];
+const AC_ABEND = [["🌙 Abends vor dem Ausschalten", [["a_abschluss", "Kassenabschluss an allen Kassen gemacht"], ["a_laden", "Tablets und Scanner an die Ladekabel"],
+  ["a_minipc", "Mini-PC heruntergefahren (erst nach dem Abschluss)"], ["a_aus", "Fernseher und Router aus, Geld sicher verstaut"]]]];
+const acListe = () => (AC.modus === "morgen" ? AC_MORGEN : AC.modus === "abend" ? AC_ABEND : AC_LISTE);
 const acMin = (iso) => (iso ? (Date.now() - Date.parse(iso)) / 60000 : Infinity);
 const acZeit = (iso) => (iso ? new Date(iso).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }) : "");
 // Ampel: ok (grün), warn (gelb), fehlt (rot), info (grau – nur Hinweis)
@@ -49,13 +57,14 @@ function acHtml() {
   const d = AC.daten;
   if (!d) return AC.fehler ? `<p class="hinweis">⚠️ ${esc(AC.fehler)}</p>` : '<p class="hinweis">⏳ Wird geprüft …</p>';
   const auto = acAuto(d), gut = auto.filter((x) => x[1] === "ok").length, schlecht = auto.filter((x) => x[1] === "fehlt").length;
-  const haken = new Map((d.haken || []).map((h) => [h.punkt, h])), alle = AC_LISTE.flatMap(([, l]) => l), erledigt = alle.filter(([id]) => haken.get(id)?.erledigt).length;
+  const haken = new Map((d.haken || []).map((h) => [h.punkt, h])), liste = acListe(), alle = liste.flatMap(([, l]) => l), erledigt = alle.filter(([id]) => haken.get(id)?.erledigt).length;
+  const reiter = [["aufbau", "🧰 Aufbau"], ["morgen", "🌅 Morgen"], ["abend", "🌙 Abend"]].map(([m, t]) => `<button type="button" class="knopf klein${AC.modus === m ? " haupt" : ""}" aria-pressed="${AC.modus === m}" data-acmodus="${m}">${t}</button>`).join("");
   const fertig = schlecht === 0 && erledigt === alle.length;
-  return `<p class="hinweis" style="margin:0 0 8px">${fertig ? "🎉 <b>Alles geprüft – der Stand ist startklar.</b>" : `Automatisch: <b>${gut} von ${auto.filter((x) => x[1] !== "info").length}</b> grün · Abgehakt: <b>${erledigt} von ${alle.length}</b>`}
+  return `<div class="knoepfe" style="margin:0 0 8px">${reiter}</div><p class="hinweis" style="margin:0 0 8px">${fertig ? (AC.modus === "abend" ? "🌙 <b>Alles erledigt – gute Nacht!</b>" : "🎉 <b>Alles geprüft – der Stand ist startklar.</b>") : `Automatisch: <b>${gut} von ${auto.filter((x) => x[1] !== "info").length}</b> grün · Abgehakt: <b>${erledigt} von ${alle.length}</b>`}
       <br><small>Stand ${acZeit(d.jetzt)} Uhr · prüft alle 30 Sekunden neu</small></p>
     <h4 class="ac-h">🤖 Automatisch geprüft</h4>
     <div class="ac-liste">${auto.map(([t, st, u]) => `<div class="ac-z ac-${st}"><span class="ac-sym" aria-hidden="true">${AC_SYM[st]}</span><span><b>${esc(t)}</b><small>${esc(u)}</small></span></div>`).join("")}</div>
-    ${AC_LISTE.map(([titel, liste]) => `<h4 class="ac-h">${esc(titel)}</h4><div class="ac-liste">${liste.map(([id, t]) => { const h = haken.get(id);
+    ${liste.map(([titel, liste]) => `<h4 class="ac-h">${esc(titel)}</h4><div class="ac-liste">${liste.map(([id, t]) => { const h = haken.get(id);
       return `<label class="ac-z ac-haken${h?.erledigt ? " ac-ok" : ""}"><input type="checkbox" data-ac="${id}" ${h?.erledigt ? "checked" : ""}><span><b>${esc(t)}</b>${h?.erledigt ? `<small>✓ ${esc(h.von || "")} ${acZeit(h.am)} Uhr</small>` : ""}</span></label>`; }).join("")}</div>`).join("")}
     <div class="knoepfe" style="margin-top:10px"><button class="knopf" onclick="acLaden()">↻ Neu prüfen</button><button class="knopf" onclick="$('acBlatt').remove()">Schließen</button></div>
     <style>#acBlatt .ac-h{margin:12px 0 4px;color:var(--textRot,#741521)}#acBlatt .ac-liste{display:grid;gap:4px}
@@ -68,6 +77,7 @@ function acZeichnen() {
   const f = $("acInhalt"); if (!f) { clearInterval(AC.uhr); AC.uhr = 0; return; }
   f.innerHTML = acHtml();
   f.querySelectorAll("[data-ac]").forEach((c) => c.addEventListener("change", () => acHaken(c.dataset.ac, c.checked)));
+  f.querySelectorAll("[data-acmodus]").forEach((b) => b.addEventListener("click", () => { AC.modus = b.dataset.acmodus; acZeichnen(); }));
 }
 async function acLaden() {
   try { AC.daten = await api("aufbau_check", {}, { warten: true }); AC.fehler = ""; } catch (e) { AC.fehler = e?.message || "Prüfung gerade nicht möglich."; }
@@ -77,8 +87,10 @@ async function acHaken(punkt, erledigt) {
   try { await api("aufbau_haken", { punkt, erledigt }); } catch (e) { meldeFehler(e); }
   await acLaden();
 }
-async function acStart() {
-  blattAuf("acBlatt", `<div class="kopf2" style="margin:0 0 6px"><h3 style="margin:0;flex:1">🧰 Aufbau-Check</h3><button class="knopf klein" onclick="$('acBlatt').remove()" aria-label="Schließen" title="Schließen">✕</button></div><div id="acInhalt"></div>`);
+async function acStart(modus) {
+  // ohne Angabe: vor dem ersten Markttag „Aufbau“, danach „Morgen“ (abends ab 18 Uhr „Abend“)
+  AC.modus = ["aufbau", "morgen", "abend"].includes(modus) ? modus : new Date() < new Date("2026-12-04T00:00:00") ? "aufbau" : new Date().getHours() >= 18 ? "abend" : "morgen";
+  blattAuf("acBlatt", `<div class="kopf2" style="margin:0 0 6px"><h3 style="margin:0;flex:1">🧰 Stand-Check</h3><button class="knopf klein" onclick="$('acBlatt').remove()" aria-label="Schließen" title="Schließen">✕</button></div><div id="acInhalt"></div>`);
   AC.daten = null; acZeichnen();
   clearInterval(AC.uhr); AC.uhr = setInterval(() => { if (!$("acInhalt")) { clearInterval(AC.uhr); AC.uhr = 0; return; } if (!document.hidden && !ruht()) acLaden(); }, 30000);
   await acLaden();
