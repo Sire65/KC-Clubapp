@@ -1,5 +1,11 @@
 # Änderungen
 
+## 3.50.0 – 2026-11-27 – 🗓️ Mein Dienst: alle kommenden Dienste aufklappbar (KC-CLUB-DIENSTE-ALLE) · Server 3.50.0
+Hansi 27.11.2026 (Bildschirmfoto „Mein Dienst“): „Warum nur ein paar Tage angezeigt, wie kann man den Zeitraum ändern?“
+- Server `mein_dienst`: alle kommenden Dienste (bis 60) statt nur der nächsten 5. App: die nächsten 5 wie bisher, darunter „▾ Alle 11 Dienste anzeigen“ zum Aufklappen.
+- Karte „📄 Pläne Weihnachtsmarkt“: statt „freigegeben 25.11.“ jetzt „Dienstzeiten aus DP2 – wie oben“ (KC-CLUB-DP2-EIN-STAND).
+- Test `tests/dienste-alle.test.mjs` (CI).
+
 ## 3.49.0 – 2026-11-27 – 📅 Termin-Vorschlag mit rotem ✕ · 🧑‍🍳 Aushilfen einzeln freischalten · 🗓️ nur noch ein Dienstplan (DP2) (KC-CLUB-NT-AUS, KC-CLUB-ZUGANG-EINZELN, KC-CLUB-DP2-EIN-STAND) · Server 3.49.0
 Wunsch Hansi 27.11.2026: „Wenn in Nachrichten ein Termin genannt wird, zeigst du ihn als Übernahme-Vorschlag. Daneben in die Zeile ein kleines rotes Kreuz, um in dem Moment die Funktion auszuschalten.“
 - Neben „📅 … – eintragen“ an der Nachricht ein rotes ✕: schaltet die Termin-Vorschläge sofort aus (alle verschwinden, Hinweis, wie man sie wieder einschaltet).
