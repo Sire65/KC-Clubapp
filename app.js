@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "3.49.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "3.50.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -21546,7 +21546,10 @@ async function mdStart() {
       <div class="knoepfe"><button class="knopf haupt klein" onclick="$('mdBlatt').remove();dwOeffnen()">📝 Wünsche ${w.status ? "ansehen/ändern" : "eintragen"}</button></div></div>
     <div class="karte"><h4 style="margin:0 0 4px">${schritt("2", so.anzahl > 0)} 📅 Sollplan <small class="hinweis">vom Planer veröffentlicht</small></h4>
       ${dpStandZeile(so.stand)}
-      ${so.anzahl ? `<div>${so.anzahl} kommende Dienste · ${so.monat} in diesem Monat</div>${so.naechste.map((d) => `<div>• <b>${esc(mdTag(d.datum))}</b> ${esc(d.start)}–${esc(d.ende)} Uhr${d.bereich ? ` <span class="hinweis">${esc(d.bereich)}</span>` : ""}${d.getauscht ? ' <span class="hinweis">🔁 übernommen</span>' : ""}</div>`).join("")}`
+      ${so.anzahl ? (() => { // 3.50.0 KC-CLUB-DIENSTE-ALLE (Hansi 27.11.2026 „warum nur ein paar Tage angezeigt“): die nächsten 5, der Rest aufklappbar
+        const zeile = (d) => `<div>• <b>${esc(mdTag(d.datum))}</b> ${esc(d.start)}–${esc(d.ende)} Uhr${d.bereich ? ` <span class="hinweis">${esc(d.bereich)}</span>` : ""}${d.getauscht ? ' <span class="hinweis">🔁 übernommen</span>' : ""}</div>`;
+        const vorne = so.naechste.slice(0, 5), rest = so.naechste.slice(5);
+        return `<div>${so.anzahl} kommende Dienste · ${so.monat} in diesem Monat</div>${vorne.map(zeile).join("")}${rest.length ? `<details class="md-alle"><summary>▾ Alle ${so.naechste.length} Dienste anzeigen</summary>${rest.map(zeile).join("")}</details>` : ""}`; })()
         : "<div>Noch keine Dienste für dich veröffentlicht.</div>"}
       <div class="knoepfe"><button class="knopf haupt klein" onclick="$('mdBlatt').remove();dpNurIch()">📅 Meinen Dienstplan ansehen</button>${frei("dp_einzelplan") ? `<button class="knopf klein" onclick="$('mdBlatt').remove();epStart()">📄 Mein Einzelplan${nurTest("dp_einzelplan") ? " 🔒" : ""}</button>` : ""}${frei("dienst_tausch") ? `<button class="knopf klein" onclick="$('mdBlatt').remove();dtOeffnen()">🔁 Tauschbörse${nurTest("dienst_tausch") ? " 🔒" : ""}</button>` : ""}</div></div>${dpdPlaeneKarte(MD_D?.plaene)}
     <div class="karte"><h4 style="margin:0 0 4px">${schritt("3", ist.anzahl > 0)} ⏱️ Istplan <small class="hinweis">gearbeitet (Stempeluhr), letzte 60 Tage</small></h4>
@@ -36472,7 +36475,7 @@ async function dpdSollUebergeben(btn) {
   } catch (e) { meldeFehler(e); } finally { if (btn) btn.disabled = false; dpdSollZeigen(); }
 }
 // Karte für Mitglieder: erscheint, sobald freigegeben
-const dpdPlaeneKarte = (frei) => frei ? `<div class="karte"><h4 style="margin:0 0 4px">📄 Pläne Weihnachtsmarkt <small class="hinweis">freigegeben ${esc(wann(frei.am))}</small></h4>
+const dpdPlaeneKarte = (frei) => frei ? `<div class="karte"><h4 style="margin:0 0 4px">📄 Pläne Weihnachtsmarkt <small class="hinweis">Dienstzeiten aus DP2 – wie oben</small></h4>
   <div class="hinweis">Zum Ansehen, Drucken oder als PDF speichern – alle Tage, mit Uhrzeiten und Stunden, am Ende Stundenübersicht und wo noch Helfer fehlen.</div>
   <div class="knoepfe"><button class="knopf haupt klein" onclick="document.getElementById('mdBlatt')?.remove();druckStarten('dpPlan',{frei:true})">🗓️ Dienstplan</button><button class="knopf klein" onclick="document.getElementById('mdBlatt')?.remove();druckStarten('dpWunsch',{frei:true})">🙋 Wunschplan</button></div></div>` : "";
 function dpdOptionen() {

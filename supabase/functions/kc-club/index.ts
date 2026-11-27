@@ -197,7 +197,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "3.49.0";
+const SERVER_VERSION = "3.50.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -16044,7 +16044,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           plaene: plFrei ? { am: plFrei.geaendert_am } : null, // 2.999.0 KC-CLUB-DP-PLAENE-FREI: Wunschplan/Dienstplan für alle freigegeben
           wunsch: { veranstaltung: DW.name, phase: ph?.status || null, schluss: ph?.close_at || ph?.deadline_date || null,
             status: w?.status || null, tage: Array.isArray(w?.entries) ? w.entries.length : 0, abgegeben: w?.submitted_at || null, uebernommen: w?.taken_at || null },
-          soll: { naechste: (soll ?? []).slice(0, 5).map(zeit), anzahl: (soll ?? []).length, monat: (soll ?? []).filter((x: any) => String(x.work_date).startsWith(monat)).length,
+          soll: { naechste: (soll ?? []).slice(0, 60).map(zeit), anzahl: (soll ?? []).length, monat: (soll ?? []).filter((x: any) => String(x.work_date).startsWith(monat)).length,
             stand: sollLetzte?.[0]?.published_at ?? null }, // 3.19.0 KC-CLUB-DP-STAND
           ist: { liste: (ist ?? []).slice(0, 10).map((x: any) => ({ ...zeit(x), status: x.status })), anzahl: (ist ?? []).length,
             istMin: (ist ?? []).reduce((a: number, x: any) => a + min(x.start_time, x.end_time, x.break_minutes), 0),
