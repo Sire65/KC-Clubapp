@@ -13947,7 +13947,7 @@ assert.ok(/#druck \{ --bg: #fff; --karte: #fff;[^}]*--schatten: none;[^}]*color-
 assert.ok(/import \{ DPG, dpgHeute, dpgMorgenText, dpgAenderungen, dpgAenderungText \} from "\.\/dp-gruss\.js";/.test(server)
   && /const dpGruss = await dpgMorgen\(\)/.test(server) && /schluessel", "dp_plaene_frei"\)\.maybeSingle\(\);\n  const f: any = data\?\.wert; return f\?\.plan/.test(server)
   && /await protokoll\(null, DPG\.aktion, \{ tag: heute, person: pid/.test(server) && /routerSenden\(`club_dienst_\$\{weg\}`/.test(server)
-  && /if \(p\.vorschau === true\) return json\(\{ benachrichtigt:/.test(server) && /nebenbei\(dpgAenderungenSenden\(altFrei\.plan, w, frei\.am\)/.test(server), "Dienst-Nachrichten nur aus dem freigegebenen Plan, je Person einmal");
+  && /if \(p\.vorschau === true\) return json\(\{ benachrichtigt:/.test(server) && /const n = await dpgAenderungenSenden\(vorher, neu, stand\);/.test(server), "Dienst-Nachrichten je Person einmal – seit 3.49.0 (KC-CLUB-DP2-EIN-STAND) bei neuem DP2-Stand statt bei der Freigabe");
 assert.ok(/api\("dp_plaene_freigeben", \{ vorschau: true \}\)/.test(programm) && /Am Morgen jedes Diensttags \(ab 8 Uhr\)/.test(programm), "Rückfrage vor dem Freigeben nennt die Nachrichten");
 // 3.28.0 KC-CLUB-DP-PLAN-LESBAR (Hansi 25.11.: freie Zeile zwischen Tagen, Blatt bis unten, höhere Zeilen, dünnere Balken)
 assert.ok(/const DPD_ZEILEN_PLAN = 27;/.test(programm) && /\.join\(luft \? `<tbody class="dpd-luft">/.test(programm) && /zf = luft \? Math\.min\(1\.25, Math\.max\(1, 172 \/ zeilen \/ 6\.4\)\) : 1;/.test(programm)

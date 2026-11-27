@@ -6035,8 +6035,8 @@ async function dpgFrei(): Promise<any | null> {
 // Morgengruß: in der Wartung ab DPG.ab Uhr – je Person und Tag genau einmal
 async function dpgMorgen() {
   const std = berlinStunde(new Date()); if (std < DPG.ab || std >= DPG.bis) return 0;
-  const f = await dpgFrei(); if (!f) return 0;
-  const heute = berlinTag(new Date()), wer = dpgHeute(f.plan, heute); if (!wer.size) return 0;
+  const f = await dpgFrei(); // 3.49.0 KC-CLUB-DP2-EIN-STAND: Dienste aus DP2, Bereitschaft aus dem Gerüst
+  const heute = berlinTag(new Date()), wer = dpgHeute(await dp2Plan(f?.plan ?? null), heute); if (!wer.size) return 0;
   const { data: schon } = await db.from("kc_club_protokoll").select("details").eq("aktion", DPG.aktion).contains("details", { tag: heute }).limit(500);
   const fertig = new Set((schon ?? []).map((x: any) => String(x.details?.person || "")));
   const leute = new Map((await aktiveMitglieder()).map((m: any) => [m.person_id, m]));
@@ -6062,6 +6062,66 @@ async function dpgAenderungenSenden(altPlan: any, neuPlan: any, stand: string) {
     const r = await dpgSenden(pid, dpgAenderungText(vorname(leute.get(pid)), x.tage), `club-dp-aenderung:${stand}:${pid}`).catch((e) => { console.error("dp aenderung", String(e)); return null; });
     if (r) n++;
   }
+  return n;
+}
+// ---------- 3.49.0 KC-CLUB-DP2-EIN-STAND (Hansi 27.11.2026: „Auf jeden Fall dürfen nicht zwei verschiedene Stände existieren“) ----------
+// Die Dienstzeiten kommen IMMER aus dem in DP2 veröffentlichten Plan (kc_dp_plan_published, mit bestätigten Tauschen – wie „Mein Dienst“).
+// Der freigegebene Club-Stand (dp_plaene_frei) liefert nur noch das Gerüst: Tage, Bedarf, Wünsche, Bereitschaft (DP2 veröffentlicht keine Bereitschaft).
+// Druckansicht (dp_plaene), Morgengruß und „Dein Dienstplan hat sich geändert“ rechnen damit – es gibt keinen zweiten Stand der Dienste mehr.
+// Veröffentlicht Thomas in DP2 etwas Neues, merkt das die Wartung (dp2AenderungLauf): Betroffene bekommen ihre neuen Zeiten, die Admins einen Hinweis.
+async function dp2Zeilen() {
+  const [{ data: plan }, ueb] = await Promise.all([
+    db.from("kc_dp_plan_published").select("person_id,source_shift_id,event_id,work_date,start_time,end_time,break_minutes,area,zone").eq("org_id", ORG).eq("status", "published").limit(3000),
+    dtUebergaben({ ab: "2000-01-01" })]);
+  return dtPlanZeilen(plan ?? [], ueb).filter((r: any) => r.person_id && !String(r.person_id).startsWith("KC-P-TEST"));
+}
+const dp2Std = (t: unknown) => { const [h, m] = String(t || "").split(":").map(Number); return (h || 0) + (m || 0) / 60; };
+const dp2Zone = (r: any) => (/^vorne$/i.test(String(r.area || "")) || r.zone === "front" ? "vorne" : /^hinten$/i.test(String(r.area || "")) || r.zone === "back" ? "hinten" : "vorne+hinten");
+// Gerüst (freigegebener Club-Stand, darf fehlen) + DP2-Zeilen → Plan im gewohnten Format (tage[].leute[] mit n, p, s, w, z; besetzt/fehlt neu gezählt)
+function dpPlanAusDp2(basis: any, zeilen: any[], namen: Map<string, string>) {
+  const je = new Map<string, Map<string, { s: number[]; z: string }>>();
+  for (const r of zeilen) {
+    const d = String(r.work_date), m = je.get(d) ?? new Map(); je.set(d, m);
+    const s = [dp2Std(r.start_time), dp2Std(r.end_time)]; if (s[1] <= s[0]) s[1] += 24;
+    const alt = m.get(r.person_id); if (alt) alt.s = [Math.min(alt.s[0], s[0]), Math.max(alt.s[1], s[1])]; else m.set(r.person_id, { s, z: dp2Zone(r) });
+  }
+  const von = Number(basis?.von ?? 8), tb: any[] = Array.isArray(basis?.tage) ? basis.tage : [];
+  const tage = [...new Set([...tb.map((t) => String(t.d)), ...je.keys()])].sort().map((d) => {
+    const t0: any = tb.find((t) => String(t.d) === d) ?? { d, art: "", bedarf: [], ber: [], leute: [] }, dp = je.get(d) ?? new Map();
+    const leute: any[] = (Array.isArray(t0.leute) ? t0.leute : []).map((l: any) => { const x = l.p ? dp.get(l.p) : null; return { ...l, s: x ? x.s : null, ...(x ? { z: x.z } : {}) }; });
+    for (const [pid, x] of dp) if (!leute.some((l) => l.p === pid)) leute.push({ n: namen.get(pid) || pid, p: pid, s: x.s, w: "", z: x.z });
+    const bedarf: number[] = Array.isArray(t0.bedarf) ? t0.bedarf : [];
+    const besetzt = bedarf.map((_, i) => { const a = von + i / 2; return leute.filter((l) => l.s && l.s[0] <= a && l.s[1] >= a + 0.5).length; });
+    return { ...t0, leute, besetzt, fehlt: bedarf.map((b, i) => Math.max(0, Number(b || 0) - besetzt[i])) };
+  });
+  return { ...(basis || {}), tage };
+}
+async function dp2Plan(basis: any) {
+  const zeilen = await dp2Zeilen(), ids = [...new Set(zeilen.map((r: any) => String(r.person_id)))];
+  const namen = new Map([...(await personen(ids)).entries()].map(([k, v]) => [k, String(v.display_name || k)]));
+  return dpPlanAusDp2(basis, zeilen, namen);
+}
+const dp2Kurz = (plan: any) => ({ tage: (plan?.tage || []).map((t: any) => ({ d: t.d, leute: (t.leute || []).filter((l: any) => l.s).map((l: any) => ({ n: l.n, p: l.p, s: l.s })) })) });
+// Wartung: hat DP2 etwas Neues veröffentlicht? (erst nach 5 Min. Ruhe – DP2 schreibt in Schritten) → Betroffene + Admins benachrichtigen
+async function dp2AenderungLauf() {
+  const { data: st } = await db.from("kc_dp_plan_published").select("updated_at").eq("org_id", ORG).order("updated_at", { ascending: false }).limit(1);
+  const stand = st?.[0]?.updated_at ? String(st[0].updated_at) : ""; if (!stand) return 0;
+  const { data: k } = await db.from("kc_club_konfig").select("wert").eq("schluessel", "dp2_gesehen").maybeSingle();
+  const alt: any = k?.wert;
+  if (alt?.stand === stand || Date.now() - Date.parse(stand) < 5 * 60000) return 0;
+  const neu = dp2Kurz(await dp2Plan(null));
+  const { error: me } = await db.from("kc_club_konfig").upsert({ schluessel: "dp2_gesehen", wert: { stand, plan: neu }, geaendert_von: "system", geaendert_am: jetzt() }); // erst merken, dann senden
+  if (me) { console.error("dp2 gesehen", me.message); return 0; } // nicht gemerkt → nichts senden (sonst käme es bei jedem Lauf wieder)
+  // erster Lauf: gegen den bisher freigegebenen Club-Stand vergleichen – wer dort andere Zeiten hatte als in DP2, bekommt einmal die richtigen
+  const vorher = alt?.plan ?? (await dpgFrei().then((f) => (f ? dp2Kurz(f.plan) : null)).catch(() => null));
+  if (!vorher) return 0;
+  const heute = berlinTag(new Date()), ae = dpgAenderungen(vorher, neu, heute);
+  await protokoll(null, "dp2_neu", { stand, betroffen: ae.size });
+  if (!ae.size) return 0;
+  const n = await dpgAenderungenSenden(vorher, neu, stand);
+  const namen = [...ae.values()].map((x: any) => String(x.name || "").split(" ")[0]).filter(Boolean).sort();
+  const v = { titel: "🗓️ Neuer Dienstplan aus DP2", kurz: `${ae.size} ${ae.size === 1 ? "Person" : "Personen"} mit geänderten Diensten: ${namen.slice(0, 6).join(", ")}${namen.length > 6 ? " …" : ""} – sie haben ihre neuen Zeiten bekommen. Gilt überall in der Club-App.` };
+  await sendenGewaehlt("club_dienst", await adminIds(), ["push"], { ...v, betreff: "Neuer Dienstplan aus DP2", text: `${v.kurz}\n\n${APP_URL}#dienste`, url: `${APP_URL}#dienste` }, `club-dp2-neu:${stand}`).catch((e) => console.error("dp2 neu", String(e)));
   return n;
 }
 async function dpSollStand(adminId: string, w: any) {
@@ -11039,6 +11099,8 @@ const kcAnfrage = async (req: Request): Promise<Response> => {
       const dsErin = await dienstStempelErinnern().catch((e) => { console.error("dienst stempel erinnern", String(e)); return 0; });
       const irErin = await irErinnern().catch((e) => { console.error("ist rueckfrage", String(e)); return 0; }); // KC-CLUB-IST-RUECKFRAGE
       if (irErin) console.log(JSON.stringify({ ist_rueckfrage: irErin }));
+      const dp2N = await dp2AenderungLauf().catch((e) => { console.error("dp2 aenderung", String(e)); return 0; }); // 3.49.0 KC-CLUB-DP2-EIN-STAND
+      if (dp2N) console.log(JSON.stringify({ dp2_aenderung: dp2N }));
       const mcN = await morgenCheckLauf().catch((e) => { console.error("morgen check", String(e)); return 0; }); // 3.45.0 KC-CLUB-MORGEN-CHECK
       if (mcN) console.log(JSON.stringify({ morgen_check: mcN }));
       if (stunde < 9) return json({ ok: true, erinnerungen: 0, beendet, dienst, dsErin });
@@ -13466,15 +13528,14 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           w = (await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "dp_druck").maybeSingle()).data?.wert; }
         if (!w || !Array.isArray(w.tage) || !w.tage.length) throw new Fehler("Es gibt noch keinen gerechneten Plan zum Freigeben.", 409);
         const altFrei = await dpgFrei().catch(() => null); // 3.25.0 KC-CLUB-DP-GRUSS: vorheriger Stand für die Änderungs-Nachrichten
-        if (p.vorschau === true) return json({ benachrichtigt: altFrei ? dpgAenderungen(altFrei.plan, w, berlinTag(new Date())).size : 0, erste: !altFrei }); // nur zählen
+        if (p.vorschau === true) return json({ benachrichtigt: 0, erste: !altFrei }); // 3.49.0: Dienstzeiten kommen aus DP2 – hier wird niemand benachrichtigt
         const frei = { am: jetzt(), stand: w.stand || null, plan: w };
         const { error } = await db.from("kc_club_konfig").upsert({ schluessel: "dp_plaene_frei", wert: frei, geaendert_von: ich.person_id, geaendert_am: frei.am });
         if (error) throw new Fehler("Die Freigabe konnte nicht gespeichert werden.", 500);
         await protokoll(ich.person_id, "dp_plaene_frei", { stand: frei.stand });
         // 3.25.0 KC-CLUB-DP-GRUSS: wessen Dienst sich (ab heute) geändert hat, bekommt sofort eine Nachricht mit den neuen Zeiten – nebenbei
-        const betroffen = altFrei ? dpgAenderungen(altFrei.plan, w, berlinTag(new Date())).size : 0;
-        if (betroffen) nebenbei(dpgAenderungenSenden(altFrei.plan, w, frei.am).catch((e) => console.error("dp aenderungen", String(e))));
-        return json({ ok: true, frei: { am: frei.am, stand: frei.stand }, benachrichtigt: betroffen });
+        // 3.49.0 KC-CLUB-DP2-EIN-STAND: Dienst-Änderungen meldet nur noch DP2 (dp2AenderungLauf) – die Freigabe ändert keine Dienstzeiten
+        return json({ ok: true, frei: { am: frei.am, stand: frei.stand }, benachrichtigt: 0 });
       }
       // KC-DP-SOLL-UEBERGABE (Hansi 23.11.2026): gerechneten Sollplan an DP2 übergeben – nur Admin (wie dp_plaene_freigeben).
       // { pruefen: true } → nur den gespeicherten Stand zählen (rechnet nie neu – Datenverkehr sparen)
@@ -13516,11 +13577,13 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const f: any = z?.wert;
         if (!f?.plan || !Array.isArray(f.plan.tage)) return json({ frei: null });
         if (p.nurInfo === true) return json({ frei: { am: f.am, stand: f.stand } });
+        const plan0 = await dp2Plan(f.plan); // 3.49.0 KC-CLUB-DP2-EIN-STAND: Dienste aus DP2 (wie „Mein Dienst“)
+        const { data: dst } = await db.from("kc_dp_plan_published").select("updated_at").eq("org_id", ORG).order("updated_at", { ascending: false }).limit(1);
         // KC-DP-SOLL-UEBERGABE: Personen-IDs (leute[].p/pm) nur für die Übergabe an DP2 – nicht an Mitglieder herausgeben
-        const tage = f.plan.tage.map((t: any) => ({ ...t, leute: (Array.isArray(t.leute) ? t.leute : []).map(({ p: _p, pm: _pm, ...rest }: any) => rest),
+        const tage = plan0.tage.map((t: any) => ({ ...t, leute: (Array.isArray(t.leute) ? t.leute : []).map(({ p: _p, pm: _pm, ...rest }: any) => rest),
           ber: (Array.isArray(t.ber) ? t.ber : []).map(({ p: _p, ...rest }: any) => rest) })); // KC-DP-SOLL-BEREITSCHAFT: auch ber[].p nicht an Mitglieder
-        const { pids: _pids, ...plan } = f.plan;
-        return json({ ...plan, tage, frei: { am: f.am, stand: f.stand } });
+        const { pids: _pids, ...plan } = plan0;
+        return json({ ...plan, tage, stand: dst?.[0]?.updated_at || plan.stand, frei: { am: f.am, stand: f.stand, dp2: dst?.[0]?.updated_at || null } });
       }
       case "dp_druck": {
         nurAdmin(ich);
