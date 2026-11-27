@@ -22338,7 +22338,24 @@ function mdSonder(so) {
     ${so.liste.map((d) => `<div>• ${esc(mdTag(d.datum))} ${esc(d.start)}–${esc(d.ende)} Uhr · ${esc(d.titel)} · ${mdHm(d.min)} Std. · <span class="${d.status === "bestaetigt" ? "ta-st-ja" : d.status === "abgelehnt" ? "ta-st-nein" : "ta-st-gv"}">${esc(MD_SONDER[d.status] || d.status)}</span>${d.grund ? ` <span class="hinweis">Grund: ${esc(d.grund)}</span>` : ""}</div>`).join("")}
     <div class="hinweis">Melden: 🗓️ Dienstwunsch → Twinkey → „Sonderstunden melden“.</div></div>`;
 }
-function dpWoche(n) { dpStart = n === 0 ? montag(heuteIso()) : tagPlus(dpStart, 7 * n); dienstLaden(); }
+function dpWoche(n) { dpGanzSetzen(false); dpStart = n === 0 ? montag(heuteIso()) : tagPlus(dpStart, 7 * n); dienstLaden(); }
+// KC-CLUB-UEBERSICHT-ZEITRAUM (Wunsch Hansi 27.11.2026): neben der Woche „📅 Ganzer Zeitraum“ – alle Tage des Markts/Plans (z. B. 02.–14.12.) auf einmal.
+// Eine Abfrage „dienste“ über den ganzen Zeitraum statt je Woche (keine zusätzliche Aktion); die Wahl merkt sich das Gerät.
+let dpGanz = (() => { try { return localStorage.getItem("kc_dp_zeitraum") === "ganz"; } catch { return false; } })(), dpGanzZeit = null;
+function dpGanzSetzen(an) { dpGanz = !!an; try { localStorage.setItem("kc_dp_zeitraum", dpGanz ? "ganz" : "woche"); } catch {} }
+function dpGanzWahl() { dpGanzSetzen(!dpGanz); dienstLaden(); }
+// Bereich zum Laden: Woche – oder ganzer Zeitraum (Wunschzeiten-Tage, sonst ab heute 8 Wochen; der Server erlaubt höchstens zwei Monate)
+function dpBereich(ganz, start, zeit, heute) {
+  if (!ganz) return [start, tagPlus(start, 6)];
+  if (zeit) return [zeit.von, zeit.bis < tagPlus(zeit.von, 61) ? zeit.bis : tagPlus(zeit.von, 61)];
+  return [heute, tagPlus(heute, 55)];
+}
+// Tage im ganzen Zeitraum: vom ersten bis zum letzten Tag mit Dienst oder Wunschzeit (sonst der geladene Bereich, höchstens 62 Tage)
+function dpGanzTage(von, bis, daten) {
+  const d = daten.filter((x) => x >= von && x <= bis).sort(), a = d[0] || von, e = d[d.length - 1] || bis, out = [];
+  for (let t = a; t <= e && out.length < 62; t = tagPlus(t, 1)) out.push(t);
+  return out;
+}
 function dpFarbe(pid) { const i = (DP?.personen || []).findIndex((p) => p.person_id === pid); return DP_FARBEN[Math.max(0, i) % DP_FARBEN.length]; }
 function dpPerson(pid) {
   const w = new Set(dpWahl || []);
@@ -22347,10 +22364,15 @@ function dpPerson(pid) {
 }
 async function dienstLaden() {
   dpStart = dpStart || montag(heuteIso());
-  const bis = tagPlus(dpStart, 6);
-  $("dpZeitraum").textContent = `${fTagDp.format(new Date(dpStart + "T12:00:00Z"))} – ${fTagDp.format(new Date(bis + "T12:00:00Z"))}`;
+  const [von, bis] = dpBereich(dpGanz, dpStart, dpGanzZeit, heuteIso()); // KC-CLUB-UEBERSICHT-ZEITRAUM
+  $("dpZeitraum").textContent = `${dpGanz ? "📅 " : ""}${fTagDp.format(new Date(von + "T12:00:00Z"))} – ${fTagDp.format(new Date(bis + "T12:00:00Z"))}`;
+  $("dpGanzKnopf")?.classList.toggle("haupt", dpGanz);
   try {
-    DP = await api("dienste", { von: dpStart, bis, personen: dpWahl || [] });
+    DP = await api("dienste", { von, bis, personen: dpWahl || [] });
+    // ganzer Zeitraum: erst jetzt bekannt, wann die Wunschzeiten liegen → einmal mit dem richtigen Bereich nachladen
+    if (dpGanz && !dpGanzZeit && DP.wunschTage) { dpGanzZeit = DP.wunschTage; const [v2, b2] = dpBereich(true, dpStart, dpGanzZeit, heuteIso()); if (v2 < von || b2 > bis) return dienstLaden(); }
+    if (dpGanz) { const t = dpGanzTage(DP.von || von, DP.bis || bis, [...DP.dienste.map((x) => x.datum), ...(DP.wuensche || []).map((x) => x.datum)]);
+      if (t.length) $("dpZeitraum").textContent = `📅 ${fTagDp.format(new Date(t[0] + "T12:00:00Z"))} – ${fTagDp.format(new Date(t[t.length - 1] + "T12:00:00Z"))}`; }
     dpWahl = DP.gewaehlt;
     $("dpUebersicht")?.classList.toggle("versteckt", !dvDarf()); // KC-CLUB-DV-UEBERALL
     $("dpFreigabe").checked = !!DP.freigabe;
@@ -22384,12 +22406,59 @@ function dpwHinweis(tage) {
   if (DP.wuensche === null) return `<div class="karte ta-st-nein">⚠️ Die Wunschzeiten konnten gerade nicht geladen werden. <button class="knopf klein" onclick="dienstLaden()">🔄 Nochmal</button></div>`;
   const z = DP.wunschTage, inWoche = (DP.wuensche || []).some((x) => tage.includes(x.datum));
   if (!z) return "";
-  const springen = !inWoche ? ` <button class="knopf klein" onclick="dpStart = montag('${z.von}'); dienstLaden()">📝 Zu den Wunschzeiten (${dpwDatum(z.von)}–${dpwDatum(z.bis)})</button>` : "";
+  const springen = !inWoche ? ` <button class="knopf klein" onclick="dpGanzSetzen(false); dpStart = montag('${z.von}'); dienstLaden()">📝 Zu den Wunschzeiten (${dpwDatum(z.von)}–${dpwDatum(z.bis)})</button>` : "";
   return `<div class="karte dpw-hinweis"><b>📝 Abgegebene Wunschzeiten – unter Vorbehalt</b><br>Das ist <b>noch kein Dienstplan</b>, sondern was die Mitglieder für den ${esc(DP.veranstaltung || "Weihnachtsmarkt")} angegeben haben. Feste Dienste stehen erst nach der Veröffentlichung hier.${springen}
     <div class="dpw-legende">${Object.values(DPW_ARTEN).map(([sym, txt, k]) => `<span class="dpw-t ${k}">${sym} ${txt}</span>`).join(" ")}</div>${DP.wunschStand ? `<div class="hinweis" style="margin:4px 0 0;font-size:.8rem">Zuletzt geändert: ${zeitKurz(DP.wunschStand)} Uhr</div>` : ""}</div>`;
 }
+// KC-CLUB-BALKEN-ZEIT (Fund Hansi 27.11.2026, Handy): bei kurzen Diensten war die Uhrzeit im Balken links und rechts abgeschnitten („1:00–14:0“).
+// Jetzt: passt „11:00–14:00“ → so; sonst Kurzform „11–14“ (halbe Stunde „18½“); passt auch die nicht → Beschriftung neben dem Balken
+// (rechts, wenn dort Platz ist, sonst links). Antippen zeigt immer die volle Uhrzeit. Test: tests/balken-zeit.test.mjs
+function balkenKurz(start, ende) { // „11:00“,„14:00“ → „11–14“ · „14:00“,„18:30“ → „14–18½“ · „14:15“,„18:00“ → „14:15–18“
+  const k = (t) => { const [h, m] = String(t).split(":").map(Number); return !m ? String(h) : m === 30 ? `${h}½` : `${h}:${String(m).padStart(2, "0")}`; };
+  return `${k(start)}–${k(ende)}`;
+}
+// Wo steht die Beschriftung? Breiten in Pixeln: Balken, freier Platz links/rechts daneben, Textbreite voll/kurz.
+// → { art: "innen" | "rechts" | "links", text: "voll" | "kurz" }
+function balkenLage(breite, links, rechts, vollPx, kurzPx, rand = 6) {
+  if (vollPx + rand <= breite) return { art: "innen", text: "voll" };
+  if (kurzPx + rand <= breite) return { art: "innen", text: "kurz" };
+  const text = (p) => (vollPx + 4 <= p ? "voll" : "kurz");
+  if (kurzPx + 4 <= rechts) return { art: "rechts", text: text(rechts) };
+  if (kurzPx + 4 <= links) return { art: "links", text: text(links) };
+  return rechts >= links ? { art: "rechts", text: "kurz" } : { art: "links", text: "kurz" };
+}
+let balkenMessCanvas = null, balkenBeobachter = null;
+function balkenTextPx(t, schrift) {
+  try { if (!balkenMessCanvas) balkenMessCanvas = document.createElement("canvas"); const c = balkenMessCanvas.getContext("2d"); c.font = schrift; return c.measureText(t).width; }
+  catch { return String(t).length * 7; } // grob: Zeichen × ~7 px bei .72rem
+}
+function dpBalkenBeschriften(wurzel) {
+  if (!wurzel) return;
+  if (!balkenBeobachter && window.ResizeObserver) { // beim Drehen/Größenwechsel und wenn die Seite erst später sichtbar wird neu einteilen
+    let w0 = -1; balkenBeobachter = new ResizeObserver(() => { const w = wurzel.clientWidth; if (w !== w0) { w0 = w; dpBalkenBeschriften(wurzel); } });
+    balkenBeobachter.observe(wurzel);
+  }
+  wurzel.querySelectorAll(".spur2").forEach((spur) => {
+    const W = spur.clientWidth; if (!W) return; // unsichtbar → später (ResizeObserver)
+    spur.querySelectorAll(".bl").forEach((x) => x.remove());
+    const bs = [...spur.querySelectorAll(".b")].sort((x, y) => x.offsetLeft - y.offsetLeft);
+    bs.forEach((b, i) => {
+      const l = b.offsetLeft, w = b.offsetWidth, vorher = i ? bs[i - 1].offsetLeft + bs[i - 1].offsetWidth : 0, nachher = i < bs.length - 1 ? bs[i + 1].offsetLeft : W;
+      const schrift = getComputedStyle(b).font, voll = b.dataset.voll, kurz = b.dataset.kurz;
+      const lage = balkenLage(w, l - vorher, nachher - (l + w), balkenTextPx(voll, schrift), balkenTextPx(kurz, schrift));
+      const text = lage.text === "voll" ? voll : kurz;
+      if (lage.art === "innen") { b.textContent = text; return; }
+      b.textContent = "";
+      const s = document.createElement("span"); s.className = "bl"; s.textContent = text; s.title = b.title; s.onclick = () => dpBalkenTipp(b);
+      if (lage.art === "rechts") s.style.left = `${l + w + 3}px`; else s.style.right = `${W - l + 3}px`;
+      spur.appendChild(s);
+    });
+  });
+}
+function dpBalkenTipp(b) { if (b?.title) melde(b.title); }
 function dpZeichnen() {
-  const tage = [...Array(7)].map((_, i) => tagPlus(dpStart, i)), heute = heuteIso();
+  const tage = dpGanz ? dpGanzTage(DP.von, DP.bis, [...DP.dienste.map((x) => x.datum), ...(DP.wuensche || []).map((x) => x.datum)]) // KC-CLUB-UEBERSICHT-ZEITRAUM
+    : [...Array(7)].map((_, i) => tagPlus(dpStart, i)), heute = heuteIso();
   const wNamen = new Map(DP.personen.map((p) => [p.person_id, p.ich ? "Ich" : p.vorname || p.name])), wHin = dpwHinweis(tage);
   // Schichten aufbereiten: über Mitternacht → bis 24:00 (mit Pfeil)
   const sch = DP.dienste.map((d) => { const a = minuten(d.start), e0 = minuten(d.ende); return { ...d, a, e: e0 > a ? e0 : 1440, ueber: e0 <= a }; });
@@ -22424,14 +22493,17 @@ function dpZeichnen() {
       const g = gemeinsam.map(([a, e]) => `<i class="g" style="left:${pos(a)}%;width:${pos(e) - pos(a)}%"></i>`).join("");
       const bahnen = dpWahl.map((pid) => {
         const f = dpFarbe(pid), eig = heuteS.filter((s) => s.person_id === pid);
-        return `<div class="bahn"><div class="wer" style="color:${f}">${esc(namen.get(pid) || pid)}</div><div class="spur2">${g}${eig.map((s) =>
-          `<i class="b" style="left:${pos(s.a)}%;width:${Math.max(4, pos(s.e) - pos(s.a))}%;background:${f}">${esc(s.start)}–${s.ueber ? esc(s.ende) + "→" : esc(s.ende)}</i>`).join("")}</div></div>`;
+        // KC-CLUB-BALKEN-ZEIT: Beschriftung voll/kurz/neben dem Balken – dpBalkenBeschriften() misst nach dem Zeichnen; Antippen zeigt die volle Zeit
+        return `<div class="bahn"><div class="wer" style="color:${f}">${esc(namen.get(pid) || pid)}</div><div class="spur2">${g}${eig.map((s) => {
+          const voll = `${s.start}–${s.ueber ? s.ende + "→" : s.ende}`, kurz = balkenKurz(s.start, s.ende) + (s.ueber ? "→" : "");
+          return `<i class="b" style="left:${pos(s.a)}%;width:${Math.max(4, pos(s.e) - pos(s.a))}%;background:${f}" data-voll="${esc(voll)}" data-kurz="${esc(kurz)}" title="${esc(`${namen.get(pid) || ""}: ${s.start}–${s.ende} Uhr${s.ueber ? " (bis nächster Tag)" : ""}`)}" onclick="dpBalkenTipp(this)">${esc(voll)}</i>`; }).join("")}</div></div>`;
       }).join("");
       const detail = heuteS.map((s) => `<div><b style="color:${dpFarbe(s.person_id)}">●</b> ${esc(namen.get(s.person_id) || "")}: <b>${esc(s.start)}–${esc(s.ende)} Uhr</b>${s.ueber ? " (bis nächster Tag)" : ""}${s.pause ? ` · Pause ${s.pause} Min.` : ""}${s.bereich ? " · " + esc(s.bereich) : ""}${s.zone ? " · " + esc(s.zone) : ""}</div>`).join("");
       return `<div class="tag${t === heute ? " heute" : ""}"><h4><span>${kopf}</span>${gemeinsam.length ? `<span class="marke gelb">🤝 ${gemeinsam.map(([a, e]) => hhmm(a) + "–" + hhmm(e)).join(", ")}</span>` : ""}</h4>
         ${bahnen}<div class="skala"><div></div><div class="s">${skala}</div></div><div class="dpdetail">${detail}</div>${dpwTagHtml(t, wNamen)}</div>`;
     }).join("");
     if (wHin) $("dpListe").insertAdjacentHTML("afterbegin", wHin);
+    dpBalkenBeschriften($("dpListe"));
   }
   if (DP.plaene) $("dpListe").insertAdjacentHTML("afterbegin", dpdPlaeneKarte(DP.plaene)); // 2.999.0 KC-CLUB-DP-PLAENE-FREI: Wunschplan/Dienstplan oben
   // Rule 11: Datenstand sichtbar machen

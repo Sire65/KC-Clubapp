@@ -1,5 +1,13 @@
 # Änderungen
 
+## (Version folgt) – 🕐 Uhrzeiten in den Dienst-Balken immer lesbar (KC-CLUB-BALKEN-ZEIT) · 📅 ganzer Zeitraum wählbar (KC-CLUB-UEBERSICHT-ZEITRAUM)
+Fund Hansi 27.11.2026 (Handy, Dunkelmodus): Im Dienstplan mit Zeitachse („09 13 17 21“) war bei kurzen Diensten die Uhrzeit im Balken links und rechts abgeschnitten („1:00–14:0“).
+- 🕐 Passt „11:00–14:00“ nicht in den Balken, steht dort die Kurzform **„11–14“** (halbe Stunden „14–18½“, Viertel „14:15–18“).
+- ➡️ Passt auch die nicht, steht die Zeit **neben dem Balken** (rechts, wenn dort Platz ist, sonst links) – in der Textfarbe, hell und dunkel gut lesbar, nichts mehr abgeschnitten.
+- 👆 **Antippen** eines Balkens zeigt kurz die volle Uhrzeit (z. B. „Ich: 11:00–14:00 Uhr“).
+- 📐 Gemessen wird nach dem Zeichnen und bei jedem Größenwechsel (Drehen des Handys) neu. Test `tests/balken-zeit.test.mjs`.
+- 📅 Wunsch Hansi 27.11.2026: In der Übersicht neben der Woche neu **„📅 Ganzer Zeitraum“** – alle Tage des Markts/Plans (z. B. 02.–14.12.) auf einmal, vom ersten bis zum letzten Tag mit Dienst oder Wunschzeit. Die Wahl merkt sich das Gerät; ‹ Woche / Woche › / Heute schalten zurück auf die Woche. Eine Abfrage über den ganzen Zeitraum statt je Woche (vorhandene Aktion, höchstens zwei Monate).
+
 ## 3.44.0 – 2026-11-26 – 📋 Ablagekorb: als Protokoll-Anlage einfügen, mit Protokoll-Auswahl (KC-CLUB-ABLAGEKORB-PROTOKOLL) · Server 3.44.0
 Wunsch Hansi 26.11.2026: „Und baue dort als Option auch ein, dass ich es als Protokoll-Anlage einfügen kann mit Protokoll-Auswahl.“ Anlass: der Scan der Mitschrift vom 24.11. kam per Mail → Teilen → Köcheclub in den Ablagekorb, von dort ging es nicht ans Protokoll.
 - 📥 Ablagekorb: neuer Knopf **📋 Als Protokoll-Anlage** (bei Einträgen mit Dateien). Im Fenster Dateien anhaken (vorbelegt mit der Auswahl im Korb, sonst alle) und das Protokoll wählen – wählbar sind Entwürfe, die man bearbeiten darf; veröffentlichte stehen grau dabei mit Hinweis „dort erst Korrigieren tippen“.
