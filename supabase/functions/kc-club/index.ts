@@ -197,7 +197,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "3.51.0";
+const SERVER_VERSION = "3.52.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -13608,7 +13608,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const { data: zeilen } = await db.from("kc_club_person_einstellung").select("person_id,schluessel,wert,geaendert_am").in("schluessel", ["dp_druck", "dp_druck_konfig"]).in("person_id", adm).limit(20);
         const plan = (zeilen ?? []).filter((z: any) => z.schluessel === "dp_druck" && Array.isArray(z.wert?.tage)).sort((x: any, y: any) => String(y.geaendert_am).localeCompare(String(x.geaendert_am)))[0];
         if (!plan) return json({ leer: true });
-        const w: any = plan.wert, konf: any = (zeilen ?? []).find((z: any) => z.schluessel === "dp_druck_konfig" && z.person_id === plan.person_id)?.wert || {};
+        // 3.52.0 KC-CLUB-DP2-EIN-STAND: Dienstzeiten aus DP2 (wie Mein Dienst und das große PDF) – der Entwurf liefert nur Regelzeit, Wünsche, Bereitschaft
+        const w: any = await dp2Plan(plan.wert), konf: any = (zeilen ?? []).find((z: any) => z.schluessel === "dp_druck_konfig" && z.person_id === plan.person_id)?.wert || {};
         const [{ data: pe }, { data: wi }] = await Promise.all([
           db.from("kc_core_people").select("display_name,postal_code,city").eq("person_id", pid).maybeSingle(),
           db.from("kc_dp_wish_inbox").select("standby_general").eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("person_id", pid).maybeSingle()]);
@@ -13619,7 +13620,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           const ich2 = (t.leute || []).find((l: any) => l.n === name), ber = (t.ber || []).find((x: any) => x.n === name);
           return { d: t.d, art: t.art, rz: an >= 0 ? [von + an / 2, von + (ab + 1) / 2] : null, w: ich2?.w || "", s: ich2?.s || null, z: ich2?.z || "", ber: ber?.s || null };
         });
-        return json({ name, titel: w.titel || "Dienstplan", stand: w.stand || plan.geaendert_am, von, bis: Number(w.bis) || 23, tage, stunden: w.stunden?.[name] ?? 0,
+        const { data: dst } = await db.from("kc_dp_plan_published").select("updated_at").eq("org_id", ORG).order("updated_at", { ascending: false }).limit(1);
+        const stundenDp2 = tage.reduce((n: number, t: any) => n + (Array.isArray(t.s) ? t.s[1] - t.s[0] : 0), 0);
+        return json({ name, titel: w.titel || "Dienstplan", stand: dst?.[0]?.updated_at || w.stand || plan.geaendert_am, von, bis: Number(w.bis) || 23, tage, stunden: stundenDp2,
           maxDienst: Number.isFinite(Number(pk.maxDienst)) ? Number(pk.maxDienst) : null, maxGesamt: Number.isFinite(Number(pk.maxGesamt)) ? Number(pk.maxGesamt) : null,
           km: km == null ? null : Math.round(km), bereitschaft: wi?.standby_general === true && pk.keineBereitschaft !== true && pk.aus !== true,
           personen: ich.admin ? await (async () => { const n = Object.keys(w.stunden || {}); if (!n.length) return [];
