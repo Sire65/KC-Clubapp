@@ -6236,6 +6236,18 @@
   .fs-karte { padding: 10px 12px; } .fs-kopf { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; } .fs-kopf small { color: var(--grau); }
   .fs-kopf select { max-width: 100%; }
   .fs-wahl button { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 6px; } .fs-wahl button small { font-weight: 500; font-size: .78rem; color: var(--grau); }
+  /* KC-CLUB-FAHRT-KNOEPFE (Wunsch Hansi 27.11.2026 „Fahrrad und Auto erkennt man nicht gut – besser unterscheiden“): großes Symbol, eigene Farbe je Art
+     (Fahrrad grün, Auto blau), gewählter Knopf kräftig gefüllt mit ✓ und dickem Rand, der andere blass mit gestricheltem Rand. */
+  .fs-wahl { gap: 10px; background: none; padding: 0; }
+  .fs-wahl button { position: relative; border: 3px dashed var(--linie); background: var(--karte); color: var(--grau); opacity: .75; padding: 12px 6px 10px; font-size: 1.02rem; }
+  .fs-wahl button .fs-sym { font-size: 2.4rem; line-height: 1.1; filter: grayscale(.6); }
+  .fs-wahl button.an { opacity: 1; border-style: solid; color: #fff; box-shadow: 0 4px 14px rgba(0,0,0,.22); }
+  .fs-wahl button.an .fs-sym { filter: none; }
+  .fs-wahl button.an small { color: rgba(255,255,255,.92); }
+  .fs-wahl button.an::after { content: "✓"; position: absolute; top: 6px; right: 8px; width: 26px; height: 26px; border-radius: 50%; background: #fff; font-weight: 900; line-height: 26px; text-align: center; }
+  .fs-wahl button.fs-keine.an { background: #17663a; border-color: #0d4a28; } .fs-wahl button.fs-keine.an::after { color: #17663a; }
+  .fs-wahl button.fs-auto.an { background: #1f5fa8; border-color: #123f74; } .fs-wahl button.fs-auto.an::after { color: #1f5fa8; }
+  .fs-wahl button.fs-keine:not(.an) { border-color: #7bd88f; } .fs-wahl button.fs-auto:not(.an) { border-color: #8cbbe8; }
   .fs-kmzeile { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: end; margin-top: 8px; } .fs-kmzeile .knopf { width: auto; margin: 0; }
   .fs-status { margin: 0 0 4px; font-weight: 700; color: var(--textOrange); } .fs-status.fs-ok { color: var(--textGruen); }
   .fs-tabelle { border-top: 1px solid var(--linie); }
@@ -7479,7 +7491,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=3.46.0" data-v="3.46.0"></script>
+<script src="app.js?v=3.47.0" data-v="3.47.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

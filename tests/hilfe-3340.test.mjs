@@ -10,7 +10,7 @@ const zeile = (id) => HILFE.split("\n").find((z) => z.includes(`{ id: "${id}",`)
 for (const id of ["fahrten", "parkausweis", "fahrten_leitung"]) assert.ok(/seit: "3\.34\.0"/.test(zeile(id)), `Hilfe ${id} mit seit 3.34.0`);
 for (const id of ["fahrten", "parkausweis"]) assert.ok(!/nur: /.test(zeile(id)) && !/\bAdmin\b/.test(zeile(id)), `Hilfe ${id} für alle, ohne Admin`);
 assert.ok(zeile("fahrten_leitung").includes("nur: () => fsDarfLeitung()") && !/\bAdmin\b/.test(zeile("fahrten_leitung")), "Hilfe nur Kassenwart/Clubsprecher/Admin (3.36.0), ohne Admin-Text");
-for (const k of ["🚗 Eigenes Auto", "🚶 Keine Fahrtkosten", "✅ Abrechnung einreichen", "🅿️ Parkausweis", "🚚 Auf- und Abbau", "🅿️ Parken in der Marktzeit", "Wunsch speichern", "📄 Liste für die Stadt drucken", "⚙️ Preis und Ausgabe ändern", "📋 Sammel-Freigabe", "🚗 Fahrtprofile", "🅿️ Parkausweise", "über 300 km"])
+for (const k of ["🚗</span>Eigenes Auto", "🚲</span>Fahrrad / zu Fuß", "✅ Abrechnung einreichen", "🅿️ Parkausweis", "🚚 Auf- und Abbau", "🅿️ Parken in der Marktzeit", "Wunsch speichern", "📄 Liste für die Stadt drucken", "⚙️ Preis und Ausgabe ändern", "📋 Sammel-Freigabe", "🚗 Fahrtprofile", "🅿️ Parkausweise", "über 300 km"])
   assert.ok(fahrten.includes(k), "Beschriftung in teile/fahrten.js: " + k);
 assert.ok(app.includes("🚗 Sammel-Freigabe") && lies("supabase/functions/kc-club/index.ts").length > 0, "Sammel-Freigabe auf der Erstattungsseite");
 for (const id of ["fahrten", "parkausweis", "fahrten_leitung"]) assert.ok(hilfe.includes(`hzZuEintrag("h:${id}")`), "Lupe/Twinkey führt zu " + id);
@@ -24,3 +24,9 @@ assert.ok(/Fahrten und Abrechnung/.test(ER) && /Parkausweis/.test(ER) && /\{ id:
 assert.ok(/"h:fahrten": \["erstattung"\]/.test(app), "Video-Verweis Fahrtkosten");
 assert.ok(/zwei Sorten/.test(zeile("parkausweis")) && /2 € je Tag/.test(zeile("parkausweis")), "Hilfe nennt beide Sorten und den Preis (3.35.0)");
 console.log("hilfe-3340: ok");
+// KC-CLUB-FAHRT-KNOEPFE (Wunsch Hansi 27.11.2026): Fahrrad und Auto deutlich unterscheidbar – großes Symbol, grün/blau, gewählt mit ✓
+{
+  const seite = lies("index.html");
+  assert.ok(/class="fs-keine\$\{auto \? "" : " an"\}"/.test(fahrten) && /class="fs-auto\$\{auto \? " an" : ""\}"/.test(fahrten), "eigene Klassen je Art");
+  assert.ok(/\.fs-wahl button\.fs-keine\.an \{ background: #17663a;/.test(seite) && /\.fs-wahl button\.fs-auto\.an \{ background: #1f5fa8;/.test(seite) && /\.fs-wahl button\.an::after \{ content: "✓";/.test(seite) && /\.fs-wahl button \.fs-sym \{ font-size: 2\.4rem;/.test(seite), "Fahrrad grün, Auto blau, gewählt mit ✓, großes Symbol");
+}
