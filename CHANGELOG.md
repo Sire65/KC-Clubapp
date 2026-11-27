@@ -8,6 +8,9 @@ Wunsch Hansi 26.11.2026: „Wenn am 03.12. der Stand aufgebaut ist und das ganze
 - 🌅 **Morgen-Check** (Wunsch Hansi 27.11.2026, jeden Markttag nach dem Hochfahren): Umschalter 🧰 Aufbau · 🌅 Morgen · 🌙 Abend. Zeiten aus dem Dienstplan (erster Dienstbeginn ohne Vor-/Nachbereitung; Öffnung 1 Std. später, am 04.12. 2 Std.). Zum Dienstbeginn Push an den ersten Dienst (#morgencheck), 30 Min. danach Warnung an Clubleitung + ersten Dienst, falls Mini-PC/Kasse sich nicht melden, 15 Min. vor Öffnung Erinnerung, falls noch nicht abgehakt. Sehen und abhaken dürfen Clubleitung und wer heute Dienst hat.
 - Hilfe-Einträge, Test `tests/aufbau-check.test.mjs` (CI).
 
+### ✍️ „… schreibt dir gerade“ auffällig: gelb, orange, rot pulsierend (KC-CLUB-SCHREIBT-AUFFAELLIG)
+Wunsch Hansi 27.11.: Der Hinweis, dass jemand gerade schreibt, pulsiert jetzt farbig (gelb → orange → rot), damit man ihn nicht übersieht. Nur Darstellung (CSS) und ein Hilfe-Satz.
+
 ### 🖼️ Kein Ladefehler mehr beim Profilbild-Platzhalter (KC-CLUB-AVATAR-PLATZHALTER)
 Fund Prüfung 27.11.: Im Fehlerprotokoll stand „img nicht geladen: gif;base64,R0lGODlhAQABAAAAACw=“. Der unsichtbare Platzhalter für noch nicht geladene Profilfotos war ein abgeschnittenes GIF (ohne Ende-Zeichen) – manche Browser melden das als Ladefehler. Jetzt ein vollständiges 1×1-GIF. Test `tests/avatar-platzhalter.test.mjs`.
 
