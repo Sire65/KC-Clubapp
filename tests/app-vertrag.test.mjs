@@ -11461,12 +11461,13 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   // 3.38.0 KC-CLUB-AUSHILFE-TERMINANFRAGE: Aushilfen beantworten eigene Terminanfragen, anlegen/ändern/absagen bleibt Mitgliedern vorbehalten
   for (const a of ["terminanfrage_senden", "terminanfrage_aendern", "terminanfrage_absagen", "terminanfrage_empfaenger_entfernen", "terminanfrage_vorschlag_entscheiden", "terminanfrage_protokoll"]) assert.ok(!sv.aushilfe.includes(a) && !sv.basis.includes(a), `Zugang: „${a}“ nicht für Aushilfen/Gäste`);
   assert.ok(/async function aktionAusfuehren\(a: string, p: any, ich: Ich, req: Request, t0Anfrage: number, anmeldungMs: number\): Promise<Response> \{\s*zugangPruefen\(a, ich\);/.test(server), "Zugang: Prüfung als erste Zeile von aktionAusfuehren (alle vier Aufrufwege)");
-  assert.ok(/if \(ich\.zugang === "mitglied" \|\| ZUGANG_ERLAUBT\[ich\.zugang\]\.has\(a\)\) return;\s*throw new Fehler\([^;]*, 403\);/.test(server), "Zugang: alles andere 403");
+  // 3.49.0 KC-CLUB-ZUGANG-EINZELN: dazwischen die Einzel-Freischaltungen je Person (minus sperrt, plus erlaubt) – sonst wie bisher
+  assert.ok(/if \(ich\.zugang === "mitglied"\) return;[\s\S]{0,600}?if \(ZUGANG_ERLAUBT\[ich\.zugang\]\.has\(a\)\) return;\s*throw new Fehler\([^;]*, 403\);/.test(server), "Zugang: alles andere 403");
   assert.ok(/const zugangAus = \(r: any\): Zugang => \(r\?\.ist_admin \? "mitglied" :/.test(server) && /return zugangAnwenden\(\{ person_id: p\.person_id/.test(server), "Zugang: Admin immer Mitglied, ichAus wendet den Zugang an");
   assert.ok(/const zugangAnwenden = \(ich: Ich\): Ich => \(ich\.zugang === "mitglied" \? ich : \{ \.\.\.ich, protokolle: false, kontakte: false \}\);/.test(server), "Zugang: Gäste/Aushilfen nie Protokolle oder Kontakte");
   assert.ok(/leute\.filter\(\(m\) => !eingeschraenkt \|\| m\.person_id === ich\.person_id \|\| istLeitung\(m\.person_id\)\)/.test(server), "Zugang: SOS zeigt Gästen nur Clubleitung und sich selbst");
   assert.ok(/if \(\["mitglied", "aushilfe", "gast", "passiv"\]\.includes\(p\.zugang\)\) zeile\.zugang = p\.zugang;/.test(server) && /delete zeile\.zugang; zugangFehlt = true;/.test(server), "Zugang: Rollen-Fenster speichert den Zugang (auch vor dem Datenbank-Update ohne Fehler)");
-  assert.ok(/name="roZugang" value="\$\{w\}"/.test(programm) && /zugang: zugangWahl \}\);/.test(programm), "Zugang: Auswahl im Rollen-Fenster");
+  assert.ok(/name="roZugang" value="\$\{w\}"/.test(programm) && /zugang: zugangWahl(,\s*extra: [\s\S]{0,300}?\(\)\s*)? \}\);/.test(programm), "Zugang: Auswahl im Rollen-Fenster"); // 3.49.0: + Einzel-Freischaltungen (extra)
   assert.ok(/try \{ for \((?:let dbNochmal = 0; ; )?(?:;;)?\) \{\s*\/\/ 2\.422\.0 KC-CLUB-ZUGANG[^\n]*\s*if \(!zugangAktion\(action\)\) throw/.test(programm), "Zugang: App schickt Verbotenes gar nicht erst");
   assert.ok(/\(!k\.nur \|\| k\.nur\(\)\) && zugangKachel\(k\.id\)\)/.test(programm) && /\(\(k\) => k && \(!k\.nur \|\| k\.nur\(\)\) && zugangKachel\(k\.id\)\)/.test(programm), "Zugang: Kacheln (erweitert + einfach) gefiltert");
   // App-Regeln im Sandkasten
@@ -13946,7 +13947,7 @@ assert.ok(/#druck \{ --bg: #fff; --karte: #fff;[^}]*--schatten: none;[^}]*color-
 assert.ok(/import \{ DPG, dpgHeute, dpgMorgenText, dpgAenderungen, dpgAenderungText \} from "\.\/dp-gruss\.js";/.test(server)
   && /const dpGruss = await dpgMorgen\(\)/.test(server) && /schluessel", "dp_plaene_frei"\)\.maybeSingle\(\);\n  const f: any = data\?\.wert; return f\?\.plan/.test(server)
   && /await protokoll\(null, DPG\.aktion, \{ tag: heute, person: pid/.test(server) && /routerSenden\(`club_dienst_\$\{weg\}`/.test(server)
-  && /if \(p\.vorschau === true\) return json\(\{ benachrichtigt:/.test(server) && /nebenbei\(dpgAenderungenSenden\(altFrei\.plan, w, frei\.am\)/.test(server), "Dienst-Nachrichten nur aus dem freigegebenen Plan, je Person einmal");
+  && /if \(p\.vorschau === true\) return json\(\{ benachrichtigt:/.test(server) && /const n = await dpgAenderungenSenden\(vorher, neu, stand\);/.test(server), "Dienst-Nachrichten je Person einmal – seit 3.49.0 (KC-CLUB-DP2-EIN-STAND) bei neuem DP2-Stand statt bei der Freigabe");
 assert.ok(/api\("dp_plaene_freigeben", \{ vorschau: true \}\)/.test(programm) && /Am Morgen jedes Diensttags \(ab 8 Uhr\)/.test(programm), "Rückfrage vor dem Freigeben nennt die Nachrichten");
 // 3.28.0 KC-CLUB-DP-PLAN-LESBAR (Hansi 25.11.: freie Zeile zwischen Tagen, Blatt bis unten, höhere Zeilen, dünnere Balken)
 assert.ok(/const DPD_ZEILEN_PLAN = 27;/.test(programm) && /\.join\(luft \? `<tbody class="dpd-luft">/.test(programm) && /zf = luft \? Math\.min\(1\.25, Math\.max\(1, 172 \/ zeilen \/ 6\.4\)\) : 1;/.test(programm)
