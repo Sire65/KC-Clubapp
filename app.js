@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "3.44.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "3.45.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12,6 +12,7 @@ const APP_STUFE = "RC";
 // Pflege: gleiche Namen in sw.js (TEILE); nach jeder Änderung an teile/*.js: node tools/teile-pruefsumme.mjs (der Vertragstest prüft beides).
 // Rückweg: docs/AUFTEILEN.md.
 const TEILE_LISTE = {
+  aufbaucheck: { einstieg: ["acStart"], sri: "sha384-NSDW7YTpye6djZPdyWhHZdSzFOwPWKDFZwyYQadFvuLqgqobXJK0G9b2WlfQ0jFx" }, // 3.45.0 KC-CLUB-AUFBAU-CHECK: Admin-Zentrale → 🧰 Aufbau-Check (Stand startklar? Mini-PC, Kassen, WLAN, TV + Liste zum Abhaken)
   druckordner: { einstieg: ["doStart"], sri: "sha384-YQEJJCXp+VdJG4XkILmd2+loS4OPngF+P1YWX6hjREO2g9SvaYdM7GRrcHGwyd6J" }, // KC-CLUB-DRUCKORDNER: Büro → Drucker → 🗂️ Druckordner (Kundenpreisliste, Interne Preisliste, Allergene, Etiketten, Kassen-Karten, Ordner Weihnachtsmarkt)
   kundenpreisliste: { einstieg: ["kplStart"], sri: "sha384-DmV0OmLTEZVKfp4uw7N4JOQiUPdTz7iX4jWgoO06oZyE/PknYjdPdRiO7x/QM9CD" }, // KC-CLUB-KUNDENPREISLISTE (3.32.0): Büro → Drucker → 📋 Kundenpreisliste (Entwurf 20, Preise/Allergene automatisch, nur Clubleitung)
   etiketten: { einstieg: ["peStart"], sri: "sha384-hZPVTBtZRkjm/gH7EiiPwId/cpV/5bFoQ/Zasy+rHzKYdMbfrZ1Muv762mCmZd7d" }, // KC-CLUB-PREISETIKETTEN (12.11.2026): Büro → Drucker → 🏷️ Preisetiketten (nur Clubleitung)
@@ -518,7 +519,7 @@ function neuPulsieren(v) {
   setTimeout(() => k.classList.remove("neu-puls"), 4100); // 3 × 1,3 s
 }
 // ---------- KC-CLUB-AVATAR-FOTO (2.23.89, Wunsch Hansi): eigenes Foto als Bild (Selfie, Galerie, Datei) – 256×256 JPEG, Code „f…“ ----------
-const AVF_RE = /^f[0-9a-z]{9}$/, AVF_LEER = "data:image/gif;base64,R0lGODlhAQABAAAAACw=";
+const AVF_RE = /^f[0-9a-z]{9}$/, AVF_LEER = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"; // 27.11.2026 KC-CLUB-AVATAR-PLATZHALTER: vorher unvollständiges GIF (14 Byte) → Browser meldete „img nicht geladen“ (Ladefehler im Fehlerprotokoll); jetzt gültiges 1×1-GIF
 const AVF = { bild: (() => { try { const o = JSON.parse(localStorage.getItem("kc_club_avf") || "{}"); return o && typeof o === "object" ? o : {}; } catch { return {}; } })(), offen: new Map(), timer: null, neu: null };
 function avfSetzen(code, bild) {
   AVF.bild[code] = bild;
@@ -2817,7 +2818,7 @@ const HILFE = [
   // 2.533.0 KC-CLUB-HILFE-NACHTRAG-4 (Wunsch Hansi „Prüfe alles und baue die Hilfen neu auf wie Twinkey, Lupe, Suchfunktion, Sprachsuche, Video auch mit Verschlüsselung“)
   { id: "schluesselbund", thema: "nachrichten", sym: "🔑", t: "Schlüsselbund: verschlüsselt schreiben ohne Eintippen", x: "Schreibst du jemandem öfter geheim, geht es bequemer mit einem <b>Schlüsselbund</b>: im Zweier-Chat oben <b>⋮ → „🔑 Schlüsselbund mit …“</b> → <b>„🔑 Anlegen und … schicken“</b>. Die App legt 5 zufällige Schlüssel an und gibt sie als <b>Datei</b> weiter – am besten per WhatsApp oder Signal, nicht per E-Mail. Der Partner tippt die Datei an → <b>Teilen → Club-App</b> (oder im Fenster „📥 Datei einlesen“); sie landet nicht im Ablagekorb und geht nie über den Club-Server. Danach: 🔒 an und senden – kein Eintippen, beim Partner öffnet sich die Nachricht von selbst. Passt kein Schlüssel, kommt eine Fehlermeldung. Neues Handy? Im Fenster <b>„💾 Sicherung speichern“</b>. Das Fenster schließt du mit ✕.", zeig: () => rgListeAbspielen(["geheim"]), seit: "2.518.0" },
   { id: "versand_leiste", thema: "nachrichten", sym: "📝", t: "Normal, ❗ Wichtig oder 🏎️ Express – die Leiste über dem Schreibfeld", x: "Sobald du etwas ins Schreibfeld tippst (oder etwas anhängst), erscheint darüber die Leiste <b>📝 Normal · ❗ Wichtig · 🏎️ Express</b>. <b>Normal</b> ist schon angehakt – eine normale Nachricht braucht nur ➤. Hakst du <b>❗ Wichtig</b> oder <b>🏎️ Express</b> an, geht der Haken bei Normal weg; beides zusammen geht auch. Neben Express steht, wie viele du heute schon hattest (z. B. 2/5). Nach dem Senden und beim Chatwechsel steht wieder Normal. Soll die Leiste immer zu sehen sein: ⚙️ → „🔔 Benachrichtigungen“ → <b>„📝❗🏎️ Versand-Leiste immer zeigen“</b>.", zeig: () => einstiegHin("benachrichtigung", "setWichtigFrage"), seit: "2.524.0" },
-  { id: "schreibt_hinweis", thema: "nachrichten", sym: "✍️", t: "„… schreibt dir gerade“ – auch wenn der Chat zu ist", x: "Schreibt dir jemand im <b>Zweier-Chat</b>, während du woanders in der App bist, steht oben kurz <b>„✍️ Anne schreibt dir gerade …“</b> – oder <b>„🗣️ … diktiert dir gerade eine Nachricht …“</b> bzw. <b>„🎤 … nimmt gerade eine Sprachnachricht für dich auf …“</b>. So weißt du: Gleich kommt etwas. Antippen öffnet den Chat; ist die Nachricht da, verschwindet der Hinweis. Im offenen Chat steht es wie gewohnt über dem Schreibfeld – der ✏️ Stift schreibt dabei Buchstabe für Buchstabe mit (nur zur Zierde – den echten Text siehst du erst, wenn er gesendet ist). Nicht in Gruppen und nicht bei stumm geschalteten Chats; wer seine Online-Anzeige ausgeschaltet hat, meldet kein Schreiben.", seit: "2.529.0" },
+  { id: "schreibt_hinweis", thema: "nachrichten", sym: "✍️", t: "„… schreibt dir gerade“ – auch wenn der Chat zu ist", x: "Schreibt dir jemand im <b>Zweier-Chat</b>, während du woanders in der App bist, steht oben kurz <b>„✍️ Anne schreibt dir gerade …“</b> – oder <b>„🗣️ … diktiert dir gerade eine Nachricht …“</b> bzw. <b>„🎤 … nimmt gerade eine Sprachnachricht für dich auf …“</b> – groß und auffällig, die Farbe pulsiert gelb, orange, rot. So weißt du: Gleich kommt etwas. Antippen öffnet den Chat; ist die Nachricht da, verschwindet der Hinweis. Im offenen Chat steht es wie gewohnt über dem Schreibfeld – der ✏️ Stift schreibt dabei Buchstabe für Buchstabe mit (nur zur Zierde – den echten Text siehst du erst, wenn er gesendet ist). Nicht in Gruppen und nicht bei stumm geschalteten Chats; wer seine Online-Anzeige ausgeschaltet hat, meldet kein Schreiben.", seit: "2.529.0" },
   { id: "druck_pdf", thema: "club", sym: "📄", t: "Aus jeder Druckvorschau ein PDF", x: "Überall, wo die App etwas zum Drucken zeigt (Termine, Protokoll, Erstattung, Wunschbogen …), gibt es neben <b>🖨️ Drucken</b> den Knopf <b>📄 PDF speichern / teilen</b>. Die App baut das PDF selbst auf dem Handy – du kannst es z. B. per WhatsApp oder Mail weiterschicken oder speichern. Noch einfacher: <b>💬 In der Club-App senden</b> macht dasselbe PDF und öffnet „Neue Nachricht“ mit dem PDF als Anlage. Nichts geht dafür an fremde Dienste.", seit: "2.526.0" },
   { id: "sammelmail", thema: "nachrichten", sym: "📬", t: "Zu viele E-Mails? Sammel-E-Mail", x: "Bekommst du Benachrichtigungen über neue Nachrichten per E-Mail (zum Beispiel, weil auf deinem Handy kein Push eingerichtet ist), kommen sie <b>gesammelt</b> – das ist für alle eingeschaltet (Einstellungen → 🔔 Benachrichtigungen → <b>„📬 Sammel-E-Mail“</b>; dort abschaltbar). Es kommt <b>eine</b> E-Mail um 9, 12, 15, 18 und 21 Uhr – oder, wenn du es so einstellst, einmal am Tag um 18 Uhr – mit allem, was seitdem kam – sauber untereinander, mit Trennlinie zwischen den Nachrichten. Push kommt weiter sofort; nur Express und Notfall kommen als Einzel-Mail.", testen: () => einstiegHin("benachrichtigung", "sammelAn"), seit: "3.30.0" },
   { id: "chat_filter", thema: "nachrichten", sym: "👥", t: "Nur die anderen, nur meine – oder nur den Hintergrund", x: "Im Chat in der kleinen Zeile über dem Schreibfeld sitzt der Knopf <b>👥</b>. Einmal antippen: <b>👤 nur die Nachrichten der anderen</b>. Zweimal: <b>🙋 nur deine</b>. Dreimal: <b>🖼️ nur der Hintergrund</b> – alle Nachrichten verschwinden, und du siehst dein Hintergrundbild in voller Stärke (eins wählen: oben ⋮ → Chat-Farben). Viermal: wieder alle. Oben steht dabei ein gelber Hinweis – antippen zeigt sofort wieder alles. Es wird nur ausgeblendet, nichts gelöscht; beim nächsten Öffnen des Chats siehst du wieder alle Nachrichten.", seit: "2.591.0" },
@@ -2839,6 +2840,8 @@ const HILFE = [
   // 🔔 Benachrichtigungen & Töne
   { id: "meine_geraete", thema: "toene", sym: "📱", t: "Auf welchen Geräten kommt Push an?", x: "Kommt auf dem Tablet nichts an? Unter ⚙️ → „🔔 Benachrichtigungen“ zeigt <b>„📱 Meine Geräte“</b>, welche deiner Handys und Tablets Benachrichtigungen bekommen. Daneben schickt „Test-Push senden“ eine Probe.", zeig: () => einstiegHin("benachrichtigung"), seit: "2.23.1" },
   { id: "spassstimme", thema: "toene", sym: "🎭", t: "Spaßstimmen im Gespräch", x: "Im App-Gespräch auf <b>🎭</b> tippen und eine Stimme wählen – z. B. 🐭 Mäusestimme, 🎈 Helium, 🤖 Roboter, 🐻 Brummbär oder 👻 Gespenst. Dein Gegenüber hört dich damit, du selbst hörst normal; mit 🙂 Normal geht es zurück. Klopft jemand mit „Sprechen“ an, kannst du gleich <b>„🎭 Mit Spaßstimme annehmen“</b>. Ausprobieren: ⚙️ → Privatsphäre → beim Anklopfton.", seit: "2.650.0" },
+  { id: "aufbau_check", thema: "club", sym: "🧰", t: "Aufbau-Check: Ist der Stand startklar?", nur: () => !!(ICH?.vorstand || ICH?.admin), x: "Admin-Zentrale → <b>🧰 Aufbau-Check</b>: oben prüft die App selbst, was der Stand meldet – <b>Mini-PC</b> (und damit Internet über den Router), <b>Manager-Dienst</b>, <b>Kasse 1–3</b> gekoppelt und aktiv, <b>WLAN-Verzögerung</b> je Kasse, ob der <b>Fernseher</b> die Präsentation holt, Kassen-QR-Codes, PC-Manager und veröffentlichte Preise (✅ grün, ⚠️ gelb, ❌ rot). Darunter die Liste zum <b>Abhaken</b> (Strom, Router, Tablets, Testbuchung, Scanner, Stechuhr, Fernseher, Aushänge, Gläser …) – gilt für heute, alle aus der Clubleitung sehen denselben Stand mit Name und Uhrzeit. Prüft alle 30 Sekunden neu, solange die Seite offen ist. Oben umschalten: <b>🧰 Aufbau</b> (03.12.), <b>🌅 Morgen</b> (jeden Markttag, kurz) und <b>🌙 Abend</b>.", zeig: () => acStart("aufbau"), seit: "3.45.0" },
+  { id: "morgen_check", thema: "termine", sym: "🌅", t: "Morgen-Check am Stand (erster Dienst)", x: "Wer am Markttag den <b>ersten Dienst</b> hat, bekommt zum Dienstbeginn einen Push <b>„🧰 Morgen-Check“</b>. Antippen und kurz abhaken: Router zuerst, dann Mini-PC („ALLES BEREIT“), 3 Tablets grün, 3 Scanner geladen mit Testscan, Fernseher mit Ton, Wechselgeld. Oben zeigt die App selbst, ob Mini-PC und Kassen sich melden (✅/❌). Meldet sich 30 Minuten nach Dienstbeginn etwas nicht, bekommen Clubleitung und erster Dienst einen Hinweis; 15 Minuten vor der Öffnung erinnert die App, falls noch Punkte offen sind. Abends unter <b>🌙 Abend</b>: Kassenabschluss, Laden, Mini-PC herunterfahren.", zeig: () => acStart("morgen"), seit: "3.45.0" },
   { id: "haendlerausweis", thema: "club", sym: "🪪", t: "Händler-Ausweis für den Weihnachtsmarkt", nur: () => !!(ICH?.vorstand || ICH?.admin), x: "Büro → <b>🖨️ Drucker</b> → <b>🪪 Händler-Ausweis</b>: Jahr, Rabatt in % und die Nummern wählen – je A4-Blatt 10 Ausweise mit Schnittmarken, beidseitig drucken (lange Kante). Jeder Ausweis hat Nummer und QR-Code mit Prüfcode. Mit <b>📋 Ausgabeliste</b> trägst du ein, wer welchen Ausweis bekommen hat; am Stand QR-Code scannen und Prüfcode vergleichen. Rabatt ist auf 10 % vorbelegt. Verloren oder missbraucht? <b>🚫 Sperren / Entsperren</b> – die Kasse gibt darauf nach dem nächsten Abgleich keinen Rabatt mehr.", seit: "2.690.0" },
   { id: "fett", thema: "nachrichten", sym: "𝐅", t: "Ein Wort fett, kursiv oder durchgestrichen", x: "Im Schreibfeld ein Wort <b>markieren</b> (lange drücken oder doppelt tippen) – darüber erscheinen <b>F fett</b>, <i>K kursiv</i> und <s>D durch</s>. Antippen, fertig. Oder in der kleinen Zeile über dem Schreibfeld auf <b>F</b> tippen. Wie bei WhatsApp geht es auch mit Zeichen: <b>*fett*</b>, <i>_kursiv_</i>, <s>~durchgestrichen~</s>. Nochmal antippen nimmt es wieder weg. Daneben die Farben <span class=\"nf nf-rot\">Rot</span>, <span class=\"nf nf-blau\">Blau</span>, <span class=\"nf nf-gruen\">Grün</span> und <span class=\"nf nf-gelb\">Gelb</span> (Textmarker) – genauso: markieren, Farbe antippen.", seit: "2.686.0" },
   { id: "anklopfton", thema: "toene", sym: "🔔", t: "Ein Anklopfton nach deinem Geschmack", x: "Holz-Klopfen, Ding-Dong, Gong oder Glöckchen: Welcher Ton erklingt, wenn jemand bei dir anklopft, suchst du dir unter ⚙️ → „🔒 Privatsphäre“ aus.", zeig: () => einstiegHin("privat"), seit: "2.23.1" },
@@ -14289,7 +14292,7 @@ function infoAdmin() {
       <span>👥 <b>${m.gesamt}</b> Mitglieder</span><span>🔑 <b>${m.mitZugang}</b> mit Zugang</span><span>🟢 <b>${m.online}</b> online</span>
       <span>📅 <b>${m.heute}</b> heute</span><span>🗓️ <b>${m.woche}</b> in 7 Tagen</span><span>⏳ <b>${m.nieAngemeldet}</b> nie angemeldet</span>
       <span>🔔 <b>${m.pushAbos}</b> mit Push</span><span>🔄 <b>${m.alteVersion}</b> alte Version</span></div>
-    <div class="knoepfe" style="margin-top:8px"><button class="wlink" onclick="inkognitoSetzen(!inkognitoAn())" aria-pressed="${inkognitoAn()}">${inkognitoAn() ? "🕶️ Inkognito: AN – ausschalten" : "🕶️ Inkognito einschalten"}</button><button class="wlink" onclick="adminQrBlatt()">🔳 QR-Codes ›</button><button class="wlink" onclick="adminBlatt()">📋 Einzelheiten ›</button><button class="wlink" onclick="INFO_DATEN.admin.geholt=0;infoDatenLaden(INFO_FELDER[INFO_I], true)">↻ Neu prüfen</button></div>`;
+    <div class="knoepfe" style="margin-top:8px"><button class="wlink" onclick="inkognitoSetzen(!inkognitoAn())" aria-pressed="${inkognitoAn()}">${inkognitoAn() ? "🕶️ Inkognito: AN – ausschalten" : "🕶️ Inkognito einschalten"}</button><button class="wlink" onclick="adminQrBlatt()">🔳 QR-Codes ›</button><button class="wlink" onclick="acStart()">🧰 Aufbau-Check ›</button><button class="wlink" onclick="adminBlatt()">📋 Einzelheiten ›</button><button class="wlink" onclick="INFO_DATEN.admin.geholt=0;infoDatenLaden(INFO_FELDER[INFO_I], true)">↻ Neu prüfen</button></div>`;
 }
 // Notfall: Spiegel sofort anstoßen (verbraucht Neon-Rechenzeit – daher mit Rückfrage)
 async function adminSpiegeln() {
@@ -17700,6 +17703,7 @@ function hashSprung(h) {
     else if (h === "#anrufbeantworter") abOeffnen(); // 2.568.0 KC-CLUB-ANRUFBEANTWORTER (Link aus dem Push)
     else if (h === "#dienststempel") dsOeffnen(); // 2.590.0 KC-CLUB-DIENST-STEMPEL (Link aus der Erinnerung)
     else if (h === "#istzeit") irOeffnen(); // KC-CLUB-IST-RUECKFRAGE (Link aus der Rückfrage nach dem Dienst)
+    else if (h === "#morgencheck") acStart("morgen"); // 3.45.0 KC-CLUB-MORGEN-CHECK (Push zum Dienstbeginn am Markttag)
     else if (h === "#istaenderungen") irAenderungen(); // KC-CLUB-IST-RUECKFRAGE: Bescheid an Clubsprecher/Kassenwart/Admin
     else if (h === "#diensttausch") dtOeffnen(); // 2.606.0 KC-CLUB-DIENST-TAUSCH (Link aus dem Push)
     else if (h === "#tisch") rundOeffnen(); // 2.762.0 KC-CLUB-RUNDER-TISCH
@@ -22338,7 +22342,24 @@ function mdSonder(so) {
     ${so.liste.map((d) => `<div>• ${esc(mdTag(d.datum))} ${esc(d.start)}–${esc(d.ende)} Uhr · ${esc(d.titel)} · ${mdHm(d.min)} Std. · <span class="${d.status === "bestaetigt" ? "ta-st-ja" : d.status === "abgelehnt" ? "ta-st-nein" : "ta-st-gv"}">${esc(MD_SONDER[d.status] || d.status)}</span>${d.grund ? ` <span class="hinweis">Grund: ${esc(d.grund)}</span>` : ""}</div>`).join("")}
     <div class="hinweis">Melden: 🗓️ Dienstwunsch → Twinkey → „Sonderstunden melden“.</div></div>`;
 }
-function dpWoche(n) { dpStart = n === 0 ? montag(heuteIso()) : tagPlus(dpStart, 7 * n); dienstLaden(); }
+function dpWoche(n) { dpGanzSetzen(false); dpStart = n === 0 ? montag(heuteIso()) : tagPlus(dpStart, 7 * n); dienstLaden(); }
+// KC-CLUB-UEBERSICHT-ZEITRAUM (Wunsch Hansi 27.11.2026): neben der Woche „📅 Ganzer Zeitraum“ – alle Tage des Markts/Plans (z. B. 02.–14.12.) auf einmal.
+// Eine Abfrage „dienste“ über den ganzen Zeitraum statt je Woche (keine zusätzliche Aktion); die Wahl merkt sich das Gerät.
+let dpGanz = (() => { try { return localStorage.getItem("kc_dp_zeitraum") === "ganz"; } catch { return false; } })(), dpGanzZeit = null;
+function dpGanzSetzen(an) { dpGanz = !!an; try { localStorage.setItem("kc_dp_zeitraum", dpGanz ? "ganz" : "woche"); } catch {} }
+function dpGanzWahl() { dpGanzSetzen(!dpGanz); dienstLaden(); }
+// Bereich zum Laden: Woche – oder ganzer Zeitraum (Wunschzeiten-Tage, sonst ab heute 8 Wochen; der Server erlaubt höchstens zwei Monate)
+function dpBereich(ganz, start, zeit, heute) {
+  if (!ganz) return [start, tagPlus(start, 6)];
+  if (zeit) return [zeit.von, zeit.bis < tagPlus(zeit.von, 61) ? zeit.bis : tagPlus(zeit.von, 61)];
+  return [heute, tagPlus(heute, 55)];
+}
+// Tage im ganzen Zeitraum: vom ersten bis zum letzten Tag mit Dienst oder Wunschzeit (sonst der geladene Bereich, höchstens 62 Tage)
+function dpGanzTage(von, bis, daten) {
+  const d = daten.filter((x) => x >= von && x <= bis).sort(), a = d[0] || von, e = d[d.length - 1] || bis, out = [];
+  for (let t = a; t <= e && out.length < 62; t = tagPlus(t, 1)) out.push(t);
+  return out;
+}
 function dpFarbe(pid) { const i = (DP?.personen || []).findIndex((p) => p.person_id === pid); return DP_FARBEN[Math.max(0, i) % DP_FARBEN.length]; }
 function dpPerson(pid) {
   const w = new Set(dpWahl || []);
@@ -22347,10 +22368,15 @@ function dpPerson(pid) {
 }
 async function dienstLaden() {
   dpStart = dpStart || montag(heuteIso());
-  const bis = tagPlus(dpStart, 6);
-  $("dpZeitraum").textContent = `${fTagDp.format(new Date(dpStart + "T12:00:00Z"))} – ${fTagDp.format(new Date(bis + "T12:00:00Z"))}`;
+  const [von, bis] = dpBereich(dpGanz, dpStart, dpGanzZeit, heuteIso()); // KC-CLUB-UEBERSICHT-ZEITRAUM
+  $("dpZeitraum").textContent = `${dpGanz ? "📅 " : ""}${fTagDp.format(new Date(von + "T12:00:00Z"))} – ${fTagDp.format(new Date(bis + "T12:00:00Z"))}`;
+  $("dpGanzKnopf")?.classList.toggle("haupt", dpGanz);
   try {
-    DP = await api("dienste", { von: dpStart, bis, personen: dpWahl || [] });
+    DP = await api("dienste", { von, bis, personen: dpWahl || [] });
+    // ganzer Zeitraum: erst jetzt bekannt, wann die Wunschzeiten liegen → einmal mit dem richtigen Bereich nachladen
+    if (dpGanz && !dpGanzZeit && DP.wunschTage) { dpGanzZeit = DP.wunschTage; const [v2, b2] = dpBereich(true, dpStart, dpGanzZeit, heuteIso()); if (v2 < von || b2 > bis) return dienstLaden(); }
+    if (dpGanz) { const t = dpGanzTage(DP.von || von, DP.bis || bis, [...DP.dienste.map((x) => x.datum), ...(DP.wuensche || []).map((x) => x.datum)]);
+      if (t.length) $("dpZeitraum").textContent = `📅 ${fTagDp.format(new Date(t[0] + "T12:00:00Z"))} – ${fTagDp.format(new Date(t[t.length - 1] + "T12:00:00Z"))}`; }
     dpWahl = DP.gewaehlt;
     $("dpUebersicht")?.classList.toggle("versteckt", !dvDarf()); // KC-CLUB-DV-UEBERALL
     $("dpFreigabe").checked = !!DP.freigabe;
@@ -22384,12 +22410,59 @@ function dpwHinweis(tage) {
   if (DP.wuensche === null) return `<div class="karte ta-st-nein">⚠️ Die Wunschzeiten konnten gerade nicht geladen werden. <button class="knopf klein" onclick="dienstLaden()">🔄 Nochmal</button></div>`;
   const z = DP.wunschTage, inWoche = (DP.wuensche || []).some((x) => tage.includes(x.datum));
   if (!z) return "";
-  const springen = !inWoche ? ` <button class="knopf klein" onclick="dpStart = montag('${z.von}'); dienstLaden()">📝 Zu den Wunschzeiten (${dpwDatum(z.von)}–${dpwDatum(z.bis)})</button>` : "";
+  const springen = !inWoche ? ` <button class="knopf klein" onclick="dpGanzSetzen(false); dpStart = montag('${z.von}'); dienstLaden()">📝 Zu den Wunschzeiten (${dpwDatum(z.von)}–${dpwDatum(z.bis)})</button>` : "";
   return `<div class="karte dpw-hinweis"><b>📝 Abgegebene Wunschzeiten – unter Vorbehalt</b><br>Das ist <b>noch kein Dienstplan</b>, sondern was die Mitglieder für den ${esc(DP.veranstaltung || "Weihnachtsmarkt")} angegeben haben. Feste Dienste stehen erst nach der Veröffentlichung hier.${springen}
     <div class="dpw-legende">${Object.values(DPW_ARTEN).map(([sym, txt, k]) => `<span class="dpw-t ${k}">${sym} ${txt}</span>`).join(" ")}</div>${DP.wunschStand ? `<div class="hinweis" style="margin:4px 0 0;font-size:.8rem">Zuletzt geändert: ${zeitKurz(DP.wunschStand)} Uhr</div>` : ""}</div>`;
 }
+// KC-CLUB-BALKEN-ZEIT (Fund Hansi 27.11.2026, Handy): bei kurzen Diensten war die Uhrzeit im Balken links und rechts abgeschnitten („1:00–14:0“).
+// Jetzt: passt „11:00–14:00“ → so; sonst Kurzform „11–14“ (halbe Stunde „18½“); passt auch die nicht → Beschriftung neben dem Balken
+// (rechts, wenn dort Platz ist, sonst links). Antippen zeigt immer die volle Uhrzeit. Test: tests/balken-zeit.test.mjs
+function balkenKurz(start, ende) { // „11:00“,„14:00“ → „11–14“ · „14:00“,„18:30“ → „14–18½“ · „14:15“,„18:00“ → „14:15–18“
+  const k = (t) => { const [h, m] = String(t).split(":").map(Number); return !m ? String(h) : m === 30 ? `${h}½` : `${h}:${String(m).padStart(2, "0")}`; };
+  return `${k(start)}–${k(ende)}`;
+}
+// Wo steht die Beschriftung? Breiten in Pixeln: Balken, freier Platz links/rechts daneben, Textbreite voll/kurz.
+// → { art: "innen" | "rechts" | "links", text: "voll" | "kurz" }
+function balkenLage(breite, links, rechts, vollPx, kurzPx, rand = 6) {
+  if (vollPx + rand <= breite) return { art: "innen", text: "voll" };
+  if (kurzPx + rand <= breite) return { art: "innen", text: "kurz" };
+  const text = (p) => (vollPx + 4 <= p ? "voll" : "kurz");
+  if (kurzPx + 4 <= rechts) return { art: "rechts", text: text(rechts) };
+  if (kurzPx + 4 <= links) return { art: "links", text: text(links) };
+  return rechts >= links ? { art: "rechts", text: "kurz" } : { art: "links", text: "kurz" };
+}
+let balkenMessCanvas = null, balkenBeobachter = null;
+function balkenTextPx(t, schrift) {
+  try { if (!balkenMessCanvas) balkenMessCanvas = document.createElement("canvas"); const c = balkenMessCanvas.getContext("2d"); c.font = schrift; return c.measureText(t).width; }
+  catch { return String(t).length * 7; } // grob: Zeichen × ~7 px bei .72rem
+}
+function dpBalkenBeschriften(wurzel) {
+  if (!wurzel) return;
+  if (!balkenBeobachter && window.ResizeObserver) { // beim Drehen/Größenwechsel und wenn die Seite erst später sichtbar wird neu einteilen
+    let w0 = -1; balkenBeobachter = new ResizeObserver(() => { const w = wurzel.clientWidth; if (w !== w0) { w0 = w; dpBalkenBeschriften(wurzel); } });
+    balkenBeobachter.observe(wurzel);
+  }
+  wurzel.querySelectorAll(".spur2").forEach((spur) => {
+    const W = spur.clientWidth; if (!W) return; // unsichtbar → später (ResizeObserver)
+    spur.querySelectorAll(".bl").forEach((x) => x.remove());
+    const bs = [...spur.querySelectorAll(".b")].sort((x, y) => x.offsetLeft - y.offsetLeft);
+    bs.forEach((b, i) => {
+      const l = b.offsetLeft, w = b.offsetWidth, vorher = i ? bs[i - 1].offsetLeft + bs[i - 1].offsetWidth : 0, nachher = i < bs.length - 1 ? bs[i + 1].offsetLeft : W;
+      const schrift = getComputedStyle(b).font, voll = b.dataset.voll, kurz = b.dataset.kurz;
+      const lage = balkenLage(w, l - vorher, nachher - (l + w), balkenTextPx(voll, schrift), balkenTextPx(kurz, schrift));
+      const text = lage.text === "voll" ? voll : kurz;
+      if (lage.art === "innen") { b.textContent = text; return; }
+      b.textContent = "";
+      const s = document.createElement("span"); s.className = "bl"; s.textContent = text; s.title = b.title; s.onclick = () => dpBalkenTipp(b);
+      if (lage.art === "rechts") s.style.left = `${l + w + 3}px`; else s.style.right = `${W - l + 3}px`;
+      spur.appendChild(s);
+    });
+  });
+}
+function dpBalkenTipp(b) { if (b?.title) melde(b.title); }
 function dpZeichnen() {
-  const tage = [...Array(7)].map((_, i) => tagPlus(dpStart, i)), heute = heuteIso();
+  const tage = dpGanz ? dpGanzTage(DP.von, DP.bis, [...DP.dienste.map((x) => x.datum), ...(DP.wuensche || []).map((x) => x.datum)]) // KC-CLUB-UEBERSICHT-ZEITRAUM
+    : [...Array(7)].map((_, i) => tagPlus(dpStart, i)), heute = heuteIso();
   const wNamen = new Map(DP.personen.map((p) => [p.person_id, p.ich ? "Ich" : p.vorname || p.name])), wHin = dpwHinweis(tage);
   // Schichten aufbereiten: über Mitternacht → bis 24:00 (mit Pfeil)
   const sch = DP.dienste.map((d) => { const a = minuten(d.start), e0 = minuten(d.ende); return { ...d, a, e: e0 > a ? e0 : 1440, ueber: e0 <= a }; });
@@ -22424,14 +22497,17 @@ function dpZeichnen() {
       const g = gemeinsam.map(([a, e]) => `<i class="g" style="left:${pos(a)}%;width:${pos(e) - pos(a)}%"></i>`).join("");
       const bahnen = dpWahl.map((pid) => {
         const f = dpFarbe(pid), eig = heuteS.filter((s) => s.person_id === pid);
-        return `<div class="bahn"><div class="wer" style="color:${f}">${esc(namen.get(pid) || pid)}</div><div class="spur2">${g}${eig.map((s) =>
-          `<i class="b" style="left:${pos(s.a)}%;width:${Math.max(4, pos(s.e) - pos(s.a))}%;background:${f}">${esc(s.start)}–${s.ueber ? esc(s.ende) + "→" : esc(s.ende)}</i>`).join("")}</div></div>`;
+        // KC-CLUB-BALKEN-ZEIT: Beschriftung voll/kurz/neben dem Balken – dpBalkenBeschriften() misst nach dem Zeichnen; Antippen zeigt die volle Zeit
+        return `<div class="bahn"><div class="wer" style="color:${f}">${esc(namen.get(pid) || pid)}</div><div class="spur2">${g}${eig.map((s) => {
+          const voll = `${s.start}–${s.ueber ? s.ende + "→" : s.ende}`, kurz = balkenKurz(s.start, s.ende) + (s.ueber ? "→" : "");
+          return `<i class="b" style="left:${pos(s.a)}%;width:${Math.max(4, pos(s.e) - pos(s.a))}%;background:${f}" data-voll="${esc(voll)}" data-kurz="${esc(kurz)}" title="${esc(`${namen.get(pid) || ""}: ${s.start}–${s.ende} Uhr${s.ueber ? " (bis nächster Tag)" : ""}`)}" onclick="dpBalkenTipp(this)">${esc(voll)}</i>`; }).join("")}</div></div>`;
       }).join("");
       const detail = heuteS.map((s) => `<div><b style="color:${dpFarbe(s.person_id)}">●</b> ${esc(namen.get(s.person_id) || "")}: <b>${esc(s.start)}–${esc(s.ende)} Uhr</b>${s.ueber ? " (bis nächster Tag)" : ""}${s.pause ? ` · Pause ${s.pause} Min.` : ""}${s.bereich ? " · " + esc(s.bereich) : ""}${s.zone ? " · " + esc(s.zone) : ""}</div>`).join("");
       return `<div class="tag${t === heute ? " heute" : ""}"><h4><span>${kopf}</span>${gemeinsam.length ? `<span class="marke gelb">🤝 ${gemeinsam.map(([a, e]) => hhmm(a) + "–" + hhmm(e)).join(", ")}</span>` : ""}</h4>
         ${bahnen}<div class="skala"><div></div><div class="s">${skala}</div></div><div class="dpdetail">${detail}</div>${dpwTagHtml(t, wNamen)}</div>`;
     }).join("");
     if (wHin) $("dpListe").insertAdjacentHTML("afterbegin", wHin);
+    dpBalkenBeschriften($("dpListe"));
   }
   if (DP.plaene) $("dpListe").insertAdjacentHTML("afterbegin", dpdPlaeneKarte(DP.plaene)); // 2.999.0 KC-CLUB-DP-PLAENE-FREI: Wunschplan/Dienstplan oben
   // Rule 11: Datenstand sichtbar machen
@@ -38350,6 +38426,7 @@ const FENSTER_NAMEN = {
   peBlatt: "🏷️ Preisetiketten", // KC-CLUB-PREISETIKETTEN
   kplBlatt: "📋 Kundenpreisliste", // KC-CLUB-KUNDENPREISLISTE
   doBlatt: "🗂️ Druckordner", // KC-CLUB-DRUCKORDNER
+  acBlatt: "🧰 Aufbau-Check", // 3.45.0 KC-CLUB-AUFBAU-CHECK
   aaBlatt: "🤖 Autoantwort einstellen", // KC-CLUB-AUTOANTWORT
   sendeBerichtBlatt: "📊 Sendebericht", // KC-CLUB-SENDEBERICHT (19.11.2026)
   // 2.794.0 KC-CLUB-FENSTER-NAMEN-NACHTRAG (Fund Hansi 31.10.: in den Wegen stand „Fenster: „niFenster““) – Fenster, die nicht über blattAuf entstehen

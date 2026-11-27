@@ -18,6 +18,7 @@ jobs:
       - run: node tests/app-vertrag.test.mjs
       - run: node tests/admin-qr.test.mjs
       - run: node tests/ausweis-pseudonym.test.mjs
+      - run: node tests/aufbau-check.test.mjs
       - run: node tests/fra-verschluesselung.test.mjs
       - run: node tests/fra-teile.test.mjs
       - run: node tests/notfall-tresor.test.mjs
@@ -239,6 +240,7 @@ jobs:
       - run: node tests/video-stimme-stumm.test.mjs
       - run: node tests/advent-2026.test.mjs
       - run: node tests/advent-preise.test.mjs
+      - run: node tests/balken-zeit.test.mjs
       - run: node tests/advent-gadgets.test.mjs
       - run: node tests/erstattung-sicher.test.mjs
       - run: node tests/ablage-neu.test.mjs
@@ -281,6 +283,7 @@ jobs:
       - run: node tests/spur-wieder.test.mjs
       - run: node tests/einspielen-fenster.test.mjs
       - run: node tests/einspielen-sperre.test.mjs
+      - run: node tests/avatar-platzhalter.test.mjs
       - run: node tests/begruessung-fix.test.mjs
       - run: node tests/video-nachrichten.test.mjs
       - run: node tests/glueck.test.mjs

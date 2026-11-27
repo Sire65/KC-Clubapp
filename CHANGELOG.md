@@ -1,5 +1,27 @@
 # Änderungen
 
+## 3.45.0 – 2026-11-27 – 🧰 Aufbau- und Morgen-Check: Ist der Stand startklar? (KC-CLUB-AUFBAU-CHECK, KC-CLUB-MORGEN-CHECK) · Server 3.45.0
+Wunsch Hansi 26.11.2026: „Wenn am 03.12. der Stand aufgebaut ist und das ganze System steht, checken ob alles läuft – Mini-PC, Router, 3 Kassen, TV mit Präsentation usw. Alles checken und abhaken.“
+- Admin-Zentrale → **🧰 Aufbau-Check** (nur Clubleitung), Programmteil `teile/aufbaucheck.js`.
+- 🤖 **Automatisch geprüft** (Server `aufbau_check`, nur Technik-Meldungen des Mini-PCs): Mini-PC meldet sich (= Internet über den Router), Manager-Dienst, Kasse 1–3 gekoppelt und aktiv, WLAN-Verzögerung je Kasse, Fernseher holt die Präsentation (neu vom Mini-PC gemeldet, Kasse-Repo), Kassen-QR-Codes, PC-Manager, Preise veröffentlicht, Update-Sperre. ✅/⚠️/❌, alle 30 Sekunden neu (ruht im Schlafmodus).
+- ☑️ **Liste zum Abhaken** (Strom & Netz, Mini-PC, Kassen inkl. Barcode-Scanner je Kasse aufgeladen und Testscan, Testbuchung, Pfand, BAR, Stechuhr, Wechselgeld, Fernseher, Aushänge, Gläser/Schalen) – je Tag gespeichert (`kc_club_aufbau_check`, nur Server), alle sehen denselben Stand mit Name und Uhrzeit.
+- 🌅 **Morgen-Check** (Wunsch Hansi 27.11.2026, jeden Markttag nach dem Hochfahren): Umschalter 🧰 Aufbau · 🌅 Morgen · 🌙 Abend. Zeiten aus dem Dienstplan (erster Dienstbeginn ohne Vor-/Nachbereitung; Öffnung 1 Std. später, am 04.12. 2 Std.). Zum Dienstbeginn Push an den ersten Dienst (#morgencheck), 30 Min. danach Warnung an Clubleitung + ersten Dienst, falls Mini-PC/Kasse sich nicht melden, 15 Min. vor Öffnung Erinnerung, falls noch nicht abgehakt. Sehen und abhaken dürfen Clubleitung und wer heute Dienst hat.
+- Hilfe-Einträge, Test `tests/aufbau-check.test.mjs` (CI).
+
+### ✍️ „… schreibt dir gerade“ auffällig: gelb, orange, rot pulsierend (KC-CLUB-SCHREIBT-AUFFAELLIG)
+Wunsch Hansi 27.11.: Der Hinweis, dass jemand gerade schreibt, pulsiert jetzt farbig (gelb → orange → rot), damit man ihn nicht übersieht. Nur Darstellung (CSS) und ein Hilfe-Satz.
+
+### 🖼️ Kein Ladefehler mehr beim Profilbild-Platzhalter (KC-CLUB-AVATAR-PLATZHALTER)
+Fund Prüfung 27.11.: Im Fehlerprotokoll stand „img nicht geladen: gif;base64,R0lGODlhAQABAAAAACw=“. Der unsichtbare Platzhalter für noch nicht geladene Profilfotos war ein abgeschnittenes GIF (ohne Ende-Zeichen) – manche Browser melden das als Ladefehler. Jetzt ein vollständiges 1×1-GIF. Test `tests/avatar-platzhalter.test.mjs`.
+
+### 🕐 Uhrzeiten in den Dienst-Balken immer lesbar (KC-CLUB-BALKEN-ZEIT) · 📅 ganzer Zeitraum wählbar (KC-CLUB-UEBERSICHT-ZEITRAUM)
+Fund Hansi 27.11.2026 (Handy, Dunkelmodus): Im Dienstplan mit Zeitachse („09 13 17 21“) war bei kurzen Diensten die Uhrzeit im Balken links und rechts abgeschnitten („1:00–14:0“).
+- 🕐 Passt „11:00–14:00“ nicht in den Balken, steht dort die Kurzform **„11–14“** (halbe Stunden „14–18½“, Viertel „14:15–18“).
+- ➡️ Passt auch die nicht, steht die Zeit **neben dem Balken** (rechts, wenn dort Platz ist, sonst links) – in der Textfarbe, hell und dunkel gut lesbar, nichts mehr abgeschnitten.
+- 👆 **Antippen** eines Balkens zeigt kurz die volle Uhrzeit (z. B. „Ich: 11:00–14:00 Uhr“).
+- 📐 Gemessen wird nach dem Zeichnen und bei jedem Größenwechsel (Drehen des Handys) neu. Test `tests/balken-zeit.test.mjs`.
+- 📅 Wunsch Hansi 27.11.2026: In der Übersicht neben der Woche neu **„📅 Ganzer Zeitraum“** – alle Tage des Markts/Plans (z. B. 02.–14.12.) auf einmal, vom ersten bis zum letzten Tag mit Dienst oder Wunschzeit. Die Wahl merkt sich das Gerät; ‹ Woche / Woche › / Heute schalten zurück auf die Woche. Eine Abfrage über den ganzen Zeitraum statt je Woche (vorhandene Aktion, höchstens zwei Monate).
+
 ## 3.44.0 – 2026-11-26 – 📋 Ablagekorb: als Protokoll-Anlage einfügen, mit Protokoll-Auswahl (KC-CLUB-ABLAGEKORB-PROTOKOLL) · Server 3.44.0
 Wunsch Hansi 26.11.2026: „Und baue dort als Option auch ein, dass ich es als Protokoll-Anlage einfügen kann mit Protokoll-Auswahl.“ Anlass: der Scan der Mitschrift vom 24.11. kam per Mail → Teilen → Köcheclub in den Ablagekorb, von dort ging es nicht ans Protokoll.
 - 📥 Ablagekorb: neuer Knopf **📋 Als Protokoll-Anlage** (bei Einträgen mit Dateien). Im Fenster Dateien anhaken (vorbelegt mit der Auswahl im Korb, sonst alle) und das Protokoll wählen – wählbar sind Entwürfe, die man bearbeiten darf; veröffentlichte stehen grau dabei mit Hinweis „dort erst Korrigieren tippen“.

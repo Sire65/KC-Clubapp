@@ -197,7 +197,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "3.44.0";
+const SERVER_VERSION = "3.45.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -6675,6 +6675,73 @@ async function irErinnern() {
   }
   return n;
 }
+// ---------- 3.45.0 KC-CLUB-MORGEN-CHECK (Wunsch Hansi 27.11.2026): jeden Markttag nach dem Hochfahren prüfen, ob alles läuft ----------
+// Zeiten kommen aus dem veröffentlichten Dienstplan: „Ankunft“ = erster Dienstbeginn des Tages (ohne Vorbereitung/Nachbereitung) – Hansi: „wir sind
+// 1 Stunde eher da, am ersten Freitag 2 Stunden“. Ablauf je Tag (je Schritt einmal, erst merken, dann senden – kc_club_protokoll):
+//   Ankunft           → Push an alle mit dem ersten Dienst: „🧰 Morgen-Check: bitte kurz abhaken“ (#morgencheck)
+//   Ankunft + 30 Min. → meldet sich Mini-PC oder eine Kasse nicht: Push an Clubleitung und ersten Dienst (was fehlt) – ist alles grün, keine Meldung
+//   Öffnung − 15 Min. → Morgen-Liste noch nicht ganz abgehakt: Erinnerung an den ersten Dienst
+const MC = { aktion: "morgen_check", nachMin: 30, vorOeffnungMin: 15, ohne: /vorbereitung|nachbereitung/i, vorlauf: { "2026-12-04": 120 } as Record<string, number>, vorlaufStandard: 60,
+  liste: ["m_router", "m_minipc", "m_tablets", "m_scanner", "m_tv", "m_wechselgeld"] };
+async function mcTag(heute: string) {
+  const d = (await irDienste([heute])).filter((x: any) => x.datum === heute && !MC.ohne.test(String(x.bereich || "")) && !x.person.startsWith("KC-P-TEST"));
+  if (!d.length) return null;
+  const ankunft = Math.min(...d.map((x: any) => x.startMs));
+  return { ankunft, oeffnung: ankunft + (MC.vorlauf[heute] ?? MC.vorlaufStandard) * 60000, erste: [...new Set(d.filter((x: any) => x.startMs === ankunft).map((x: any) => x.person as string))] };
+}
+// Technik-Lage (nur Technik-Meldungen des Mini-PCs): was meldet sich nicht? Leere Liste = alles grün
+async function mcProbleme(): Promise<string[]> {
+  const { data: st } = await db.from("kc_stand").select("id,zuletzt_gemeldet").eq("aktiv", true).order("zuletzt_gemeldet", { ascending: false }).limit(1);
+  const s = st?.[0], alt = (iso: string | null | undefined, min: number) => !iso || Date.now() - Date.parse(iso) > min * 60000;
+  if (!s || alt(s.zuletzt_gemeldet, 15)) return ["Mini-PC meldet sich nicht (Router an? „KC Kasse starten“ gelaufen?)"];
+  const { data: sp } = await db.from("kc_stand_spiegel").select("inhalt").eq("stand_id", s.id).eq("pfad", "/kassen-verbindungen").maybeSingle();
+  const kassen = Array.isArray((sp as any)?.inhalt?.kassen) ? (sp as any).inhalt.kassen : [], aus: string[] = [];
+  if ((sp as any)?.inhalt?.managerLaeuft === false) aus.push("Manager-Dienst auf dem Mini-PC läuft nicht");
+  for (const k of ["KASSE-01", "KASSE-02", "KASSE-03"]) { const x = kassen.find((y: any) => y.kasse === k); if (!x?.gekoppelt || alt(x.zuletztGemeldet, 15)) aus.push(`Kasse ${k.slice(-1)} meldet sich nicht`); }
+  return aus;
+}
+async function morgenCheckLauf() {
+  const jetztMs = Date.now(), heute = berlinTag(new Date(jetztMs)), tag = await mcTag(heute);
+  if (!tag || jetztMs < tag.ankunft || jetztMs > tag.oeffnung + 3 * 3600000) return 0;
+  const { data: schon } = await db.from("kc_club_protokoll").select("details").eq("aktion", MC.aktion).contains("details", { tag: heute }).limit(20);
+  const erledigt = new Set((schon ?? []).map((x: any) => String(x.details?.schritt || "")));
+  const uhr = (ms: number) => new Intl.DateTimeFormat("de-DE", { timeZone: TZ, hour: "2-digit", minute: "2-digit" }).format(new Date(ms));
+  const url = `${APP_URL}#morgencheck`;
+  let n = 0;
+  if (!erledigt.has("start")) {
+    await protokoll(null, MC.aktion, { tag: heute, schritt: "start", an: tag.erste.length });
+    const v = { titel: "🧰 Morgen-Check", kurz: `Guten Morgen! Bitte kurz abhaken: Router, Mini-PC, Tablets, Scanner, Fernseher, Wechselgeld – Öffnung ${uhr(tag.oeffnung)} Uhr. Hier antippen.` };
+    await sendenGewaehlt("club_dienst", tag.erste, ["push"], { ...v, betreff: "Morgen-Check am Stand", text: `${v.kurz}\n\n${url}`, url }, `club-morgencheck:${heute}:start`).catch((e) => console.error("morgen check", String(e)));
+    n++;
+  }
+  if (!erledigt.has("technik") && jetztMs >= tag.ankunft + MC.nachMin * 60000) {
+    const p = await mcProbleme();
+    await protokoll(null, MC.aktion, { tag: heute, schritt: "technik", probleme: p.length });
+    if (p.length) {
+      const an = [...new Set([...(await leitungIds()), ...tag.erste])];
+      const v = { titel: "⚠️ Stand: noch nicht alles bereit", kurz: `${p.join(" · ")} – Öffnung ${uhr(tag.oeffnung)} Uhr. Morgen-Check öffnen.` };
+      await sendenGewaehlt("club_dienst", an, ["push"], { ...v, betreff: "Stand noch nicht bereit", text: `${v.kurz}\n\n${url}`, url }, `club-morgencheck:${heute}:technik`).catch((e) => console.error("morgen check", String(e)));
+      n++;
+    }
+  }
+  if (!erledigt.has("erinnerung") && jetztMs >= tag.oeffnung - MC.vorOeffnungMin * 60000) {
+    const { data: h } = await db.from("kc_club_aufbau_check").select("punkt").eq("tag", heute).eq("erledigt", true).in("punkt", MC.liste);
+    const offen = MC.liste.length - (h ?? []).length;
+    await protokoll(null, MC.aktion, { tag: heute, schritt: "erinnerung", offen });
+    if (offen > 0) {
+      const v = { titel: "🧰 Morgen-Check noch offen", kurz: `Noch ${offen} von ${MC.liste.length} Punkten nicht abgehakt – in ${MC.vorOeffnungMin} Minuten öffnet der Stand. Hier antippen.` };
+      await sendenGewaehlt("club_dienst", tag.erste, ["push"], { ...v, betreff: "Morgen-Check noch offen", text: `${v.kurz}\n\n${url}`, url }, `club-morgencheck:${heute}:erinnerung`).catch((e) => console.error("morgen check", String(e)));
+      n++;
+    }
+  }
+  return n;
+}
+// Wer darf den Aufbau-/Morgen-Check sehen und abhaken? Clubleitung immer, sonst wer heute Dienst am Stand hat
+async function mcDarf(ich: Ich) {
+  if (ich.vorstand || ich.admin) return true;
+  const heute = berlinTag(new Date());
+  return (await irDienste([heute], ich.person_id)).some((x: any) => x.datum === heute);
+}
 async function nurWennFrei(id: string, ich: Ich, was: string) {
   if (ich.zugang === "tischgast") return; // 2.776.0: der Gast ist von einem Mitglied zu genau einem Tisch eingeladen (Aktionen prüfen die Tisch-Kennung)
   if (!ich.admin && (await freigaben())[id] !== "alle") throw new Fehler(`${was} ist noch nicht freigegeben.`, 403);
@@ -10930,6 +10997,8 @@ const kcAnfrage = async (req: Request): Promise<Response> => {
       const dsErin = await dienstStempelErinnern().catch((e) => { console.error("dienst stempel erinnern", String(e)); return 0; });
       const irErin = await irErinnern().catch((e) => { console.error("ist rueckfrage", String(e)); return 0; }); // KC-CLUB-IST-RUECKFRAGE
       if (irErin) console.log(JSON.stringify({ ist_rueckfrage: irErin }));
+      const mcN = await morgenCheckLauf().catch((e) => { console.error("morgen check", String(e)); return 0; }); // 3.45.0 KC-CLUB-MORGEN-CHECK
+      if (mcN) console.log(JSON.stringify({ morgen_check: mcN }));
       if (stunde < 9) return json({ ok: true, erinnerungen: 0, beendet, dienst, dsErin });
       // KC-CLUB-GEBURTSTAG-PUSH: 2 Tage vorher und am Tag – nur freigegebene Geburtstage, nur an Mitglieder mit geöffneter App
       let geb = 0;
@@ -22636,6 +22705,49 @@ Köcheclub-App`,
           pseudonym: pseudo.get(x.person_id) || "" })).sort((a: any, b: any) => a.name.localeCompare(b.name, "de"));
         const liste = alle.filter((x: any) => /^KC-\d{3,5}$/.test(x.nummer));
         return json({ liste, alle });
+      }
+      // ----- 3.45.0 KC-CLUB-AUFBAU-CHECK (Wunsch Hansi 26.11.2026 „wenn am 03.12. der Stand aufgebaut ist und das ganze System steht, checken ob alles
+      // läuft – Mini-PC, Router, 3 Kassen, TV mit Präsentation usw. Alles checken und abhaken“). Nur Clubleitung. Automatisch aus den Technik-Meldungen
+      // des Mini-PCs (kc_stand, kc_stand_spiegel: Kassen-Verbindungen, Verbindungsqualität – keine Umsätze, keine Namen), dazu Haken je Tag (kc_club_aufbau_check).
+      case "aufbau_check": {
+        if (!(await mcDarf(ich))) throw new Fehler("Den Aufbau- und Morgen-Check sehen die Clubleitung und wer heute Dienst am Stand hat.", 403); // 3.45.0 KC-CLUB-MORGEN-CHECK
+        const tag = berlinTag(new Date());
+        const [{ data: st }, { data: qr }, { data: hb }, { data: preise }, { data: haken }] = await Promise.all([
+          db.from("kc_stand").select("id,name,zuletzt_gemeldet,info").eq("aktiv", true).order("zuletzt_gemeldet", { ascending: false }).limit(1),
+          db.from("kc_stand_kassen_qr").select("kasse,gemeldet_am").limit(20),
+          db.from("kicc_program_heartbeats").select("received_at").eq("program_id", "kc-pc-manager").order("received_at", { ascending: false }).limit(1),
+          db.from("kc_etikett_artikel_stand").select("veroeffentlicht_am").eq("org_id", ORG).maybeSingle(),
+          db.from("kc_club_aufbau_check").select("punkt,erledigt,notiz,geaendert_von,geaendert_am").eq("tag", tag).limit(200),
+        ]);
+        const stand = st?.[0] ?? null;
+        const { data: sp } = stand ? await db.from("kc_stand_spiegel").select("pfad,inhalt,stand_zeit").eq("stand_id", stand.id).in("pfad", ["/kassen-verbindungen", "/verbindungsqualitaet"]) : { data: [] as any[] };
+        const spiegel = new Map((sp ?? []).map((x: any) => [x.pfad, x]));
+        const kv: any = spiegel.get("/kassen-verbindungen"), vq: any = spiegel.get("/verbindungsqualitaet");
+        // Verbindungsqualität: Mittelwert der letzten 20 Messungen je Kasse (nur Zahlen)
+        const lag = new Map<string, number[]>();
+        for (const e of (Array.isArray(vq?.inhalt?.eintraege) ? vq.inhalt.eintraege : []).slice(-200)) { const k = String(e?.register_id || ""); if (k && Number.isFinite(Number(e?.lag_ms))) lag.set(k, [...(lag.get(k) || []), Number(e.lag_ms)].slice(-20)); }
+        const kassen = (Array.isArray(kv?.inhalt?.kassen) ? kv.inhalt.kassen : []).map((k: any) => {
+          const l = lag.get(String(k.kasse)) || [];
+          return { kasse: txt(k.kasse, 40), gekoppelt: !!k.gekoppelt, zustand: txt(k.zustand, 30), zuletzt: k.zuletztGemeldet || null, lag_ms: l.length ? Math.round(l.reduce((s, x) => s + x, 0) / l.length) : null };
+        }).sort((a: any, b: any) => a.kasse.localeCompare(b.kasse));
+        const info: any = stand?.info || {};
+        const nameNamen = new Map([...(await personen((haken ?? []).map((h: any) => h.geaendert_von))).entries()].map(([k, v]) => [k, vorname(v)]));
+        return json({ tag, jetzt: jetzt(),
+          stand: stand ? { name: stand.name, zuletzt: stand.zuletzt_gemeldet, version: txt(info.version, 40) || null, rueckstand: Number(info.rueckstand) || 0,
+            sperre: info.update?.sperre ? { aktiv: !!info.update.sperre.aktiv, von: info.update.sperre.von || null, bis: info.update.sperre.bis || null } : null,
+            router: info.router ?? null, tv: info.tv?.zuletzt ? { zuletzt: info.tv.zuletzt } : null, manager: kv?.inhalt?.managerLaeuft ?? null, kassen_stand: kv?.stand_zeit || null } : null,
+          kassen, qr: (qr ?? []).length, pc_manager: hb?.[0]?.received_at || null, preise: preise?.veroeffentlicht_am || null,
+          haken: (haken ?? []).map((h: any) => ({ punkt: h.punkt, erledigt: !!h.erledigt, notiz: h.notiz || "", von: nameNamen.get(h.geaendert_von) || "", am: h.geaendert_am })) });
+      }
+      case "aufbau_haken": {
+        if (!(await mcDarf(ich))) throw new Fehler("Abhaken dürfen die Clubleitung und wer heute Dienst am Stand hat.", 403);
+        const punkt = txt(p.punkt, 60);
+        if (!/^[a-z0-9_-]{2,60}$/.test(punkt)) throw new Fehler("Unbekannter Prüfpunkt.");
+        const zeile = { tag: berlinTag(new Date()), punkt, erledigt: p.erledigt === true, notiz: txt(p.notiz, 300) || null, geaendert_von: ich.person_id, geaendert_am: jetzt() };
+        const { error } = await db.from("kc_club_aufbau_check").upsert(zeile, { onConflict: "tag,punkt" });
+        if (error) throw new Fehler("Konnte nicht gespeichert werden.", 500);
+        await protokoll(ich.person_id, "aufbau_haken", { punkt, erledigt: zeile.erledigt });
+        return json({ ok: true });
       }
       case "wl_liste": {
         nurAdmin(ich);
