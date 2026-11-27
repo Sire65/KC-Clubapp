@@ -302,6 +302,7 @@ jobs:
       - run: node tests/senden-nach-upload.test.mjs
       - run: node tests/notaus.test.mjs
       - run: node tests/autoantwort.test.mjs
+      - run: node tests/weiterleitung.test.mjs
       - run: node tests/kartei-wege.test.mjs
       - run: node tests/dp-bereitschaft-weit.test.mjs
       - run: node tests/dp-einzelplan.test.mjs

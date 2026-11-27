@@ -1,5 +1,14 @@
 # Änderungen
 
+## 3.53.0 – 2026-11-27 – ↪️ Nachrichten automatisch weiterleiten (KC-CLUB-WEITERLEITUNG) · Server 3.53.0
+Wunsch Hansi 27.11.2026: „Kannst du bei Nachrichten eine Autoweiterleitung einbauen, z. B. an eine andere E-Mail-Adresse oder einen anderen Chat?“ – „Alle sollen es haben, an andere E-Mail oder anderen Chat.“
+- ⚙️ → 🔔 Benachrichtigungen → „↪️ Automatisch weiterleiten“: Ziel andere E-Mail-Adresse (einmal mit 6-stelligem Code aus einer Mail bestätigt, 30 Min. gültig, höchstens 3 Codes je Stunde, 5 Versuche) oder der Einzelchat mit einem anderen Mitglied; „auch Gruppen“ wählbar (sonst nur Einzelchats); Zeitraum von–bis freiwillig (sonst bis auf Widerruf).
+- Weitergeleitet wird eine Kopie – die Nachricht bleibt beim Empfänger. Chat-Kopie: „↪️ Weitergeleitet – von …“ im Namen des Empfängers (mit Anlagen); E-Mail über den Versanddienst (Regel `club_nachricht_mail`, direkte Adresse).
+- Nie weitergeleitet: Weiterleitungen (keine Schleife), SOS-Probe, Autoantworten; 🔒 verschlüsselte, ⏳ selbstlöschende Nachrichten und Einmal-Fotos nur als Hinweis ohne Inhalt. NOT-AUS hält sie an.
+- Der Absender sieht im Chat „↪️ … leitet Nachrichten gerade weiter (an eine andere E-Mail-Adresse / an einen anderen Chat)“ – nie die Adresse oder das Ziel.
+- Protokoll nur „weiterleitung_*“ mit Art – nie Text oder Adresse. Code nur als Prüfsumme gespeichert, nie im Start-Paket.
+- Test `tests/weiterleitung.test.mjs` (CI).
+
 ## 3.52.0 – 2026-11-27 – 📄 Mein Einzelplan aus DP2 (KC-CLUB-DP2-EIN-STAND) · Server 3.52.0
 Hansi 27.11.2026: „Erst prüfen, ob alle Ansichten und PDF richtig sind.“ Prüfung aller Dienstplan-Ansichten gegen DP2 (125 Dienste): Mein Dienst, Wochen-Dienstpläne, Dienstplan-PDF, Morgengruß, Morgen-Check, Stempeln lesen DP2 – stimmen. Fund: **„📄 Mein Einzelplan“** las noch den selbst gerechneten Vorschlag.
 - Server `dp_einzelplan`: Dienstzeiten aus DP2 (`dp2Plan`), Stunden aus den DP2-Zeiten, Stand = DP2-Stand. Regelzeit, Wünsche, Bereitschaft weiter aus dem Gerüst.

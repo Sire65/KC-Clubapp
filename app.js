@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "3.52.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "3.53.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -10318,7 +10318,7 @@ const ZUGANG_AKTIONEN = {
     "wetter", "wetter_ort_suchen", "treffen_liste", "treffen_antwort", "erinnerung_setzen", "kalender", "kalender_abo", "kalender_abo_holen", "privattermin_speichern",
     "privattermin_loeschen", "privattermine_liste", "countdowns", "terminumfragen_liste", "terminumfrage_antwort", "mitglieder", "mitglied_details",
     "unterhaltungen", "unterhaltung", "unterhaltung_stand", "tippen_stand", "tippen", "nachricht_senden", "nachricht_details", "einzelchat_finden", "gruppenchat_finden", "express_stand", "express_angezeigt",
-    "express_antwort", "autoantwort_laden", "autoantwort_speichern", "startnachricht_bestaetigen", "stadt_woche", "ferien", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "geplant_abrufen", "wecker_setzen", "wecker_loeschen", "nachricht_erinnerung_setzen", "nachricht_erinnerung_liste", "nachricht_erinnerung_loeschen", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
+    "express_antwort", "autoantwort_laden", "autoantwort_speichern", "weiterleitung_laden", "weiterleitung_code", "weiterleitung_speichern", "startnachricht_bestaetigen", "stadt_woche", "ferien", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "geplant_abrufen", "wecker_setzen", "wecker_loeschen", "nachricht_erinnerung_setzen", "nachricht_erinnerung_liste", "nachricht_erinnerung_loeschen", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
     "chat_selbstloeschen", "link_vorschau", "unterstuetzung_meine", "unterstuetzung_senden", "nachricht_bearbeiten", "nachricht_merken", "gemerkte_nachrichten", "chat_umfrage_stimmen", "nachricht_ausblenden",
     "unterhaltung_ausblenden", "unterhaltung_archivieren", "unterhaltung_leeren", "gruppe_verlassen", "anlage_hochladen", "anlage_url",
     "einmal_foto_ansehen", "meine_nachrichten_statistik", "mf_antwort", "mf_gelesen", "sos_kontakte", "sos_ort", "notfall_setzen", "spiele_liste",
@@ -23023,6 +23023,7 @@ async function chatLaden(scrollen, merk) {
     let st = "";
     if (andere.length === 1) { const m = MITGLIEDER?.find((x) => x.person_id === andere[0].person_id); if (m?.status) st = statusText(m.status); }
     $("chatTeilnehmer").textContent = !andere.length ? "Nur du (Test-Unterhaltung)" : u.gruppe ? `🔗 Feste Gruppe · ${andere.length + 1} Mitglieder: Du, ${andere.map((x) => x.name.split(" ")[0]).join(", ")} ›` : andere.length > 1 ? "Runde (keine feste Gruppe) · Mit: " + andere.map((x) => x.name).join(", ") : u.betreff ? "Mit: " + andere.map((x) => x.name).join(", ") : [zuletztText(u.partnerDa), st].filter(Boolean).join(" · "); // 1.20.0: zuletzt da
+    wlChatHinweis(u); // 3.53.0 KC-CLUB-WEITERLEITUNG
     CHAT_TN_NORMAL = $("chatTeilnehmer").textContent; // KC-CLUB-CHAT-WIEDER: gilt wieder, wenn der Merker als aktuell bestätigt ist
     if (merk) $("chatTeilnehmer").textContent = `🔄 Stand von ${fZeit.format(new Date(merk.zeit))} Uhr – wird aktualisiert …`; // Regel 11: nicht als aktuell zeigen
     else if (u.tippt?.length && andere.length === 1) $("chatTeilnehmer").textContent = "✍️ schreibt …";
@@ -27966,6 +27967,7 @@ function aaZeigen() {
     if (b.dataset.stand !== html) { b.dataset.stand = html; b.innerHTML = html; b.classList.toggle("versteckt", !html); }
   }
   if ($("setAaStand")) $("setAaStand").textContent = aaKurz();
+  if ($("setWlStand")) $("setWlStand").textContent = wlKurz(AWL.stand || wlAusInit()); // 3.53.0 KC-CLUB-WEITERLEITUNG
 }
 function aaKnopfVerbinden(k) {
   if (k.dataset.an) return; k.dataset.an = "1";
@@ -28025,6 +28027,79 @@ function aaFenster() {
       nachStatus: f.querySelector("#aaStatus").checked, nurOffline: f.querySelector("#aaOffline").checked };
     if (n.von && n.bis && n.bis < n.von) return melde("„Bis“ liegt vor „von“.", true);
     if (await aaSpeichern(n, true)) f.remove();
+  };
+}
+// ---------- KC-CLUB-WEITERLEITUNG (3.53.0, Wunsch Hansi 27.11.2026 „Autoweiterleitung an eine andere E-Mail oder einen anderen Chat – alle sollen es haben“) ----------
+// ⚙️ → 🔔 Benachrichtigungen → „↪️ Automatisch weiterleiten“. Ziel: andere E-Mail-Adresse (einmal mit Code bestätigt) oder Einzelchat mit einem
+// anderen Mitglied. Weitergeleitet wird eine Kopie – die Nachricht bleibt auch bei dir. Im Chat sieht der Absender „↪️ … leitet Nachrichten gerade weiter“.
+var AWL = { stand: null, laeuft: false };
+function wlKurz(st = AWL.stand) {
+  const w = st?.wert; if (!w) return "↪️ Weiterleitung ist aus";
+  const heute = heuteIso();
+  if (!st.aktiv) return w.an && w.von && w.von > heute ? `↪️ Weiterleitung startet am ${fDatumKurz(w.von)}` : w.an && w.bis && w.bis < heute ? `↪️ Weiterleitung ist aus (abgelaufen am ${fDatumKurz(w.bis)})` : "↪️ Weiterleitung ist aus";
+  return `↪️ Weiterleitung an ${w.ziel === "email" ? w.email : `den Chat mit ${st.personName || "?"}`}${w.gruppen ? " (auch Gruppen)" : ""}${w.bis ? ` bis ${fDatumKurz(w.bis)}` : ""}`;
+}
+// Stand aus dem Start-Paket (ohne Namen des Ziel-Mitglieds) – gleiche Regel wie der Club-Server (wlAktiv)
+function wlAusInit() {
+  const w = INIT?.einstellungen?.weiterleitung; if (!w) return null;
+  const heute = heuteIso(), zeit = (!w.von || w.von <= heute) && (!w.bis || heute <= w.bis);
+  const personName = w.person ? (MITGLIEDER || []).find((m) => m.person_id === w.person)?.name || "" : "";
+  return { wert: w, personName, aktiv: !!(w.an && zeit && (w.ziel === "chat" ? w.person : w.bestaetigt)) };
+}
+function wlChatHinweis(u) {
+  const el = $("chatWlHinweis"); if (!el) return;
+  const l = Array.isArray(u?.weiterleitung) ? u.weiterleitung : [];
+  const t = !l.length ? "" : l.length === 1 ? `↪️ ${l[0].name} leitet Nachrichten gerade weiter (${l[0].art === "email" ? "an eine andere E-Mail-Adresse" : "an einen anderen Chat"})`
+    : `↪️ ${l.map((x) => x.name).join(", ")} leiten Nachrichten gerade weiter`;
+  el.textContent = t; el.classList.toggle("versteckt", !t);
+}
+async function wlLaden() { try { AWL.stand = await api("weiterleitung_laden"); } catch (e) { meldeFehler(e); } if ($("setWlStand")) $("setWlStand").textContent = wlKurz(); return AWL.stand; }
+async function wlFenster() {
+  const st = await wlLaden(); if (!st) return;
+  if (!MITGLIEDER?.length) { try { await mitgliederHolen(); } catch {} }
+  const w = st.wert, ich = ICH?.person_id;
+  const opt = (MITGLIEDER || []).filter((m) => m.person_id !== ich).sort((a, b) => String(a.name || a.display_name).localeCompare(String(b.name || b.display_name)))
+    .map((m) => `<option value="${esc(m.person_id)}"${m.person_id === w.person ? " selected" : ""}>${esc(m.name || m.display_name || m.person_id)}</option>`).join("");
+  const f = blattAuf("wlBlatt", `<h3 style="margin:0 0 6px">↪️ Automatisch weiterleiten</h3>
+    <p class="hinweis" style="margin:0 0 8px">Neue Nachrichten an dich gehen zusätzlich als <b>Kopie</b> an dein Ziel – sie bleiben auch hier bei dir. Wer dir schreibt, sieht im Chat „↪️ … leitet Nachrichten gerade weiter“ (ohne Adresse). 🔒 verschlüsselte und ⏳ selbstlöschende Nachrichten gehen nur als Hinweis weiter.</p>
+    <div class="schalter"><div><b>Weiterleitung an</b><div class="hinweis" id="wlStandZeile">${esc(wlKurz(st))}</div></div><input type="checkbox" id="wlAn"${w.an ? " checked" : ""}></div>
+    <div class="wl-ziel"><label><input type="radio" name="wlZiel" value="email"${w.ziel !== "chat" ? " checked" : ""}> ✉️ andere E-Mail</label><label><input type="radio" name="wlZiel" value="chat"${w.ziel === "chat" ? " checked" : ""}> 💬 anderer Chat</label></div>
+    <div id="wlMailTeil"><label class="feld">E-Mail-Adresse<input type="email" id="wlMail" autocomplete="email" value="${esc(w.email || "")}" placeholder="name@beispiel.de"></label>
+      <div class="hinweis" id="wlMailStand" style="margin:-4px 0 6px"></div>
+      <div class="knoepfe" id="wlCodeZeile" style="margin:0 0 8px"><button type="button" class="knopf klein" id="wlCodeSenden">📨 Code senden</button><input type="text" id="wlCode" inputmode="numeric" maxlength="6" placeholder="Code aus der Mail" style="max-width:140px"></div></div>
+    <div id="wlChatTeil"><label class="feld">An den Einzelchat mit<select id="wlPerson"><option value="">– Mitglied wählen –</option>${opt}</select></label>
+      <div class="hinweis" style="margin:-4px 0 8px">Die Kopie erscheint in deinem Chat mit diesem Mitglied, gesendet von dir, mit „↪️ Weitergeleitet – von …“.</div></div>
+    <div class="schalter"><div><b>Auch Nachrichten aus Gruppen</b><div class="hinweis">Aus: nur Einzelchats.</div></div><input type="checkbox" id="wlGruppen"${w.gruppen ? " checked" : ""}></div>
+    <div class="zwei"><label class="feld">Von (freiwillig)<input type="date" id="wlVon" value="${esc(w.von || "")}"></label><label class="feld">Bis (freiwillig)<input type="date" id="wlBis" value="${esc(w.bis || "")}"></label></div>
+    <button type="button" class="knopf klein" id="wlOhneZeit" style="margin:-4px 0 8px">✖ Zeitraum leeren – bis auf Widerruf</button>
+    <div class="knoepfe"><button type="button" class="knopf haupt" id="wlSichern">💾 Speichern</button><button type="button" class="knopf" id="wlZu">Abbrechen</button></div>`);
+  const q = (s) => f.querySelector(s), ziel = () => q('input[name="wlZiel"]:checked')?.value || "email";
+  const zeigen = () => {
+    const mail = ziel() === "email"; q("#wlMailTeil").classList.toggle("versteckt", !mail); q("#wlChatTeil").classList.toggle("versteckt", mail);
+    const m = q("#wlMail").value.trim().toLowerCase(), ok = !!m && w.bestaetigt && w.email === m;
+    q("#wlMailStand").textContent = !m ? "" : ok ? "✅ Adresse bestätigt" : st.codeOffenFuer === m ? "📨 Code ist unterwegs – bitte aus der Mail eintragen" : "Neue Adresse: einmal mit Code bestätigen (Code senden, dann eintragen, dann Speichern).";
+    q("#wlCodeZeile").classList.toggle("versteckt", !m || ok);
+  };
+  for (const r of f.querySelectorAll('input[name="wlZiel"]')) r.onchange = zeigen;
+  q("#wlMail").oninput = zeigen; zeigen();
+  q("#wlCodeSenden").onclick = async () => {
+    const email = q("#wlMail").value.trim().toLowerCase(); if (!email) return melde("Bitte erst die E-Mail-Adresse eingeben.", true);
+    try { const r = await api("weiterleitung_code", { email }); st.codeOffenFuer = email; zeigen(); melde(`📨 Code an ${email} gesendet – gilt ${r.minuten || 30} Minuten`); q("#wlCode").focus(); } catch (e) { meldeFehler(e); }
+  };
+  q("#wlOhneZeit").onclick = () => { q("#wlVon").value = ""; q("#wlBis").value = ""; };
+  q("#wlZu").onclick = () => f.remove();
+  q("#wlSichern").onclick = async () => {
+    if (AWL.laeuft) return;
+    const n = { an: q("#wlAn").checked, ziel: ziel(), email: q("#wlMail").value.trim().toLowerCase(), person: q("#wlPerson").value, gruppen: q("#wlGruppen").checked,
+      von: q("#wlVon").value || null, bis: q("#wlBis").value || null, bestaetigt: w.bestaetigt };
+    if (n.von && n.bis && n.bis < n.von) return melde("„Bis“ liegt vor „von“.", true);
+    AWL.laeuft = true;
+    try {
+      const code = q("#wlCode").value.replace(/\D/g, "");
+      AWL.stand = await api("weiterleitung_speichern", { wert: n, ...(code ? { code } : {}) });
+      if (INIT) INIT.einstellungen = { ...(INIT.einstellungen || {}), weiterleitung: AWL.stand.wert };
+      if ($("setWlStand")) $("setWlStand").textContent = wlKurz(); melde(wlKurz()); f.remove();
+    } catch (e) { meldeFehler(e); } finally { AWL.laeuft = false; }
   };
 }
 // Status-Fenster: wer Urlaub/krank/nicht erreichbar wählt und keine Autoantwort an hat, wird einmal gefragt
@@ -38475,6 +38550,7 @@ const FENSTER_NAMEN = {
   doBlatt: "🗂️ Druckordner", // KC-CLUB-DRUCKORDNER
   acBlatt: "🧰 Aufbau-Check", // 3.45.0 KC-CLUB-AUFBAU-CHECK
   aaBlatt: "🤖 Autoantwort einstellen", // KC-CLUB-AUTOANTWORT
+  wlBlatt: "↪️ Weiterleitung einstellen", // KC-CLUB-WEITERLEITUNG
   sendeBerichtBlatt: "📊 Sendebericht", // KC-CLUB-SENDEBERICHT (19.11.2026)
   // 2.794.0 KC-CLUB-FENSTER-NAMEN-NACHTRAG (Fund Hansi 31.10.: in den Wegen stand „Fenster: „niFenster““) – Fenster, die nicht über blattAuf entstehen
   niFenster: "ℹ️ Nachricht-Info: gelesen/zugestellt", naMenue: "💬 Nachricht: Menü", naLoeschen: "🗑️ Nachricht löschen?", wlFenster: "↪️ Nachricht weiterleiten",
