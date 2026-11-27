@@ -519,7 +519,7 @@ function neuPulsieren(v) {
   setTimeout(() => k.classList.remove("neu-puls"), 4100); // 3 × 1,3 s
 }
 // ---------- KC-CLUB-AVATAR-FOTO (2.23.89, Wunsch Hansi): eigenes Foto als Bild (Selfie, Galerie, Datei) – 256×256 JPEG, Code „f…“ ----------
-const AVF_RE = /^f[0-9a-z]{9}$/, AVF_LEER = "data:image/gif;base64,R0lGODlhAQABAAAAACw=";
+const AVF_RE = /^f[0-9a-z]{9}$/, AVF_LEER = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"; // 27.11.2026 KC-CLUB-AVATAR-PLATZHALTER: vorher unvollständiges GIF (14 Byte) → Browser meldete „img nicht geladen“ (Ladefehler im Fehlerprotokoll); jetzt gültiges 1×1-GIF
 const AVF = { bild: (() => { try { const o = JSON.parse(localStorage.getItem("kc_club_avf") || "{}"); return o && typeof o === "object" ? o : {}; } catch { return {}; } })(), offen: new Map(), timer: null, neu: null };
 function avfSetzen(code, bild) {
   AVF.bild[code] = bild;
