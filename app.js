@@ -2110,7 +2110,7 @@ const EINWEISUNG = [
   { id: "b-mikro-wahl", blatt: true, sym: "🎤", t: "Sprachnachricht oder Diktieren", x: "<b>🎤 Sprachnachricht</b>: deine Stimme wird verschickt. <b>✍️ Diktieren</b>: die App schreibt mit, verschickt wird Text. Mit <b>Immer so</b> fragt die App nicht mehr – ändern unter ⚙️ → Ansagen, Töne &amp; Tipps." },
   { id: "b-neu-wahl", blatt: true, sym: "＋", t: "Etwas Neues anlegen", x: "Wähle, was du neu anlegen möchtest – unter jedem Punkt steht kurz, wofür er da ist. <b>Abbrechen</b> schließt das Fenster, ohne etwas anzulegen." },
   { id: "b-eltern", blatt: true, sym: "👪", t: "Eltern-Handy", x: "Für Kinder kannst du hier ein <b>Eltern-Handy</b> eintragen (Name und Handynummer). Beim Eintragen öffnet sich WhatsApp mit Link und Erklärung; später schickst du ihn mit <b>🟢 Link per WhatsApp</b> erneut, <b>📋 Link kopieren</b> macht immer einen frischen Link (der alte gilt dann nicht mehr). Die Eltern tippen dort auf „Einschalten“. Danach kommt <b>nur ein kurzer Hinweis</b>, wenn das Kind einen Termin hat (Club-Treffen, Schulung, Erinnerung, Absage) oder eine Nachricht der Clubleitung bekommt – <b>nie der Text</b>, nie Chats unter Mitgliedern. Das Kind sieht unter ⚙️ → Privatsphäre, wer benachrichtigt wird.", nur: () => !!(ICH?.admin || ICH?.vorstand) },
-  { id: "b-rolle", blatt: true, adminBereich: true, sym: "🎖️", t: "Ämter und Rechte", x: "Hier legst du fest, welche <b>Ämter</b> das Mitglied hat und was es darf – z. B. Termine anlegen, Protokolle lesen und schreiben oder Kontaktdaten anderer sehen. Schalter aus heißt: darf das nicht. Unter <b>Zugang</b> wählst du 👤 Mitglied (alles), 🧑‍🍳 Aushilfe (Termine, Nachrichten, SOS, Spiele, Mein Dienst, Fotos ansehen) oder 🙋 Gast (Termine, Nachrichten, SOS, Spiele) – das sperrt auch der Server. Aushilfen und Gäste bekommen keine Rundnachrichten „an alle“ (Termine, Abstimmungen, Hilfe-Aufrufe …) – nur, was gezielt an sie geht, und den SOS-Notfall. <b>💾 Speichern</b> übernimmt es.", nur: () => !!ICH?.admin },
+  { id: "b-rolle", blatt: true, adminBereich: true, sym: "🎖️", t: "Ämter und Rechte", x: "Hier legst du fest, welche <b>Ämter</b> das Mitglied hat und was es darf – z. B. Termine anlegen, Protokolle lesen und schreiben oder Kontaktdaten anderer sehen. Schalter aus heißt: darf das nicht. Unter <b>Zugang</b> wählst du 👤 Mitglied (alles), 🧑‍🍳 Aushilfe (Termine, Nachrichten, SOS, Spiele, Mein Dienst, Fotos ansehen) oder 🙋 Gast (Termine, Nachrichten, SOS, Spiele) – das sperrt auch der Server. Aushilfen und Gäste bekommen keine Rundnachrichten „an alle“ (Termine, Abstimmungen, Hilfe-Aufrufe …) – nur, was gezielt an sie geht, und den SOS-Notfall. Bei Aushilfe oder Gast erscheint darunter <b>„Einzeln für diese Person“</b>: ➕ zusätzlich erlauben (z. B. 🚗 Fahrten & Abrechnung, ⬆️ Fotos hochladen, 📖 Rezeptbuch, 📄 Protokolle) oder ➖ wegnehmen (z. B. 🎲 Spiele, 📷 Fotoalbum, 🔁 Diensttausch) – gilt nur für diese Person, auch der Server prüft es. <b>💾 Speichern</b> übernimmt es.", nur: () => !!ICH?.admin },
   { id: "b-sp-herausfordern", blatt: true, sym: "🎲", t: "Herausfordern", x: "<b>Spiel wählen</b> (Tic-Tac-Toe, Schach, Bauernskat, Küchenterror, Mensch ärgere dich nicht), je nach Spiel Feldgröße, Zeit oder Mitspieler, dann antippen, <b>wen</b> du herausfordern möchtest. Das Mitglied bekommt die Einladung und kann annehmen oder ablehnen." },
   { id: "b-sp-termin", blatt: true, sym: "📅", t: "Termin für die Partie", x: "<b>Tag, Uhrzeit</b> und <b>Ort</b> wählen. Dein Mitspieler bekommt die Anfrage und kann zu- oder absagen; danach steht der Termin bei euch beiden im Kalender – auf Wunsch mit Erinnerung." },
   { id: "b-teilen", blatt: true, sym: "📥", t: "Mit Köcheclub geteilt", x: "Du hast etwas aus einer anderen App mit dem Köcheclub geteilt. Wähle, wohin es soll: in einen <b>💬 Club-Chat</b>, bei Fotos ins <b>📷 Fotoalbum</b> oder in <b>🗄️ dein Archiv</b>." },
@@ -10338,8 +10338,28 @@ const ZUGANG_AKTIONEN = {
 const ZUGANG_KACHELN = { basis: ["termine", "kommunikation", "sos", "spiele", "status", "einstellungen", "hilfezentrum", "twinkey", "erklaer", "update", "sicherheit", "feedback", "test"],
   aushilfe: ["mein_dienst", "meindienst", "dienstwunsch", "fotos", "schulungen", "ausweis", "gericht"] }; // gericht: KC-CLUB-GEMEINSCHAFTSGERICHT (Hansi: „alle bekommen die Frage“)
 const zugang = () => (ICH?.zugang === "gast" || ICH?.zugang === "aushilfe" ? ICH.zugang : "mitglied");
-const zugangKachel = (id) => zugang() === "mitglied" || ZUGANG_KACHELN.basis.includes(id) || (zugang() === "aushilfe" && ZUGANG_KACHELN.aushilfe.includes(id));
-const zugangAktion = (a) => zugang() === "mitglied" || ZUGANG_AKTIONEN.basis.includes(a) || (zugang() === "aushilfe" && ZUGANG_AKTIONEN.aushilfe.includes(a));
+// 3.49.0 KC-CLUB-ZUGANG-EINZELN (Wunsch Hansi 27.11.2026 „für Aushilfen einige bestimmte Funktionen freischalten bzw. sperren“): je Person
+// zusätzlich erlauben (plus) oder aus dem Paket wegnehmen (minus) – eingestellt in 🎖️ Ämter und Rechte, gilt nur für Aushilfe/Gast.
+// aktionen = dieselbe Liste wie ZUGANG_EXTRA im Server (Vertragstest), kacheln = was dazu auf der Startseite erscheint bzw. verschwindet.
+const ZUGANG_EXTRA = {
+  fahrten: { art: "plus", t: "🚗 Fahrten & Abrechnung", u: "Fahrtprofil, km abrechnen, Parkausweis", kacheln: ["fahrten"], aktionen: ["fahrtprofil", "fahrt_sammel_vorschlag", "fahrt_sammel_einreichen", "parkausweis"] },
+  erstattung: { art: "plus", t: "💶 Erstattung", u: "eigene Auslagen einreichen", kacheln: ["erstattung"], aktionen: ["erstattung_meine", "erstattung_senden", "erstattung_position_setzen"] },
+  mitfahrt: { art: "plus", t: "🚙 Mitfahrt", u: "Mitfahrt anbieten und suchen", kacheln: ["mitfahrt"], aktionen: ["mitfahrt_anbieten", "mitfahrt_suchen", "mitfahrt_platz", "mitfahrt_loeschen", "mitfahrt_gast"] },
+  fotos_hoch: { art: "plus", t: "⬆️ Fotos hochladen", u: "eigene Fotos ins Album", kacheln: ["foto_neu"], aktionen: ["foto_hochladen", "foto_aendern", "foto_loeschen", "foto_ort"] },
+  rezepte: { art: "plus", t: "📖 Rezeptbuch", u: "lesen, bewerten, eigene Rezepte", kacheln: ["rezepte"], aktionen: ["rezepte_liste", "rezept_bewerten", "rezept_speichern", "rezept_loeschen"] },
+  magazin: { art: "plus", t: "📰 Club-Küche", u: "das Club-Magazin lesen", kacheln: ["magazin"], aktionen: ["rezepte_liste", "magazin_einreichen", "magazin_meine"] },
+  vorschlaege: { art: "plus", t: "🗳️ Vorschläge & Abstimmungen", u: "ansehen und mit abstimmen", kacheln: ["vorschlaege"], aktionen: ["vorschlaege_liste", "vorschlag_stimme"] },
+  protokolle: { art: "plus", t: "📄 Protokolle lesen", u: "Sitzungsprotokolle lesen", kacheln: ["protokolle"], aktionen: ["protokolle_liste", "protokoll_laden", "protokoll_info", "protokoll_einwand"] },
+  kontakte: { art: "plus", t: "📇 Kontaktdaten anderer", u: "Telefon/Adresse, soweit freigegeben", kacheln: [], aktionen: [] },
+  spiele: { art: "minus", t: "🎲 Spiele", u: "Spiele und Rätsel ausblenden", kacheln: ["spiele"], aktionen: ["spiele_liste", "spiel_holen", "spiel_herausfordern", "spiel_antwort", "spiel_zug", "spiel_aufgeben", "spiel_revanche", "raetsel_stand", "raetsel_ergebnis"] },
+  tippspiel: { art: "minus", t: "🎄 Tippspiel & Advent", u: "Tippspiel und Advents-Aktionen", kacheln: [], aktionen: ["tipp_stand", "tipp_mitmachen", "tipp_abgeben", "advent_gadget_stand", "advent_gadget_mitmachen", "advent_preis_melden", "advent_preise_meine"] },
+  fotos_sehen: { art: "minus", t: "📷 Fotoalbum ansehen", u: "das Fotoalbum ausblenden", kacheln: ["fotos"], aktionen: ["fotos_neueste", "fotos_liste", "foto_oeffnen"] },
+  tausch: { art: "minus", t: "🔁 Diensttausch", u: "keine Dienste tauschen", kacheln: [], aktionen: ["dienst_tausch_liste", "dienst_tausch_anbieten", "dienst_tausch_aktion"] },
+};
+const zugangExtraHat = (art, pruef) => zugang() !== "mitglied" && (ICH?.extra?.[art] || []).some((g) => ZUGANG_EXTRA[g]?.art === art && pruef(ZUGANG_EXTRA[g]));
+const zugangKachel = (id) => zugang() === "mitglied" || (!zugangExtraHat("minus", (g) => g.kacheln.includes(id)) && (zugangExtraHat("plus", (g) => g.kacheln.includes(id))
+  || ZUGANG_KACHELN.basis.includes(id) || (zugang() === "aushilfe" && ZUGANG_KACHELN.aushilfe.includes(id))));
+const zugangAktion = (a) => zugang() === "mitglied" || (!zugangExtraHat("minus", (g) => g.aktionen.includes(a)) && (zugangExtraHat("plus", (g) => g.aktionen.includes(a)) || ZUGANG_AKTIONEN.basis.includes(a) || (zugang() === "aushilfe" && ZUGANG_AKTIONEN.aushilfe.includes(a))));
 // KC-CLUB-KACHELN: eigene Reihenfolge + ausgeblendete Kacheln je Mitglied (Server-Einstellung „kacheln“, hier zwischengespeichert).
 // Neue Kacheln (noch nicht in der gespeicherten Reihenfolge) erscheinen hinten; ausgeblendete bleiben über „Anordnen“ erreichbar.
 let KA = { reihenfolge: {}, aus: [], register: [] }, kaBearb = false, kaFrisch = null;
@@ -35727,13 +35747,27 @@ function rolleBearbeiten(pid) {
     <div class="ro-zugang">${[["mitglied", "👤 Mitglied", "alles wie bisher"], ["aushilfe", "🧑‍🍳 Aushilfe", "Termine, Nachrichten, SOS, Spiele, Mein Dienst, Fotos ansehen · nichts von „an alle“"], ["gast", "🙋 Gast", "Termine, Nachrichten, SOS, Spiele · nichts von „an alle“"],
       ["passiv", "💤 Passiv", "bleibt Mitglied, App wie bisher · keine Einladungen, nichts von „an alle“ · zählt bei Treffen nicht als „noch offen“"]].map(([w, t, h]) =>
       `<label class="bu-haken" title="${h}"><input type="radio" name="roZugang" value="${w}" ${(m.zugang || "mitglied") === w ? "checked" : ""}> ${t}<small class="hinweis" style="display:block;margin-left:24px">${h}</small></label>`).join("")}</div>
+    ${roExtraHtml()}
     <div class="hl-frage">Rechte</div>
     ${schalter("roLeitung", "Termine & Abstimmungen anlegen", "Termine, Veranstaltungen und Abstimmungen anlegen (Clubleitung)", !!m.vorstand)}
     ${schalter("roProtokolle", "Protokolle lesen & schreiben", "aus z. B. für Aushilfen", m.protokolle !== false)}
     ${schalter("roKontakte", "Kontaktdaten anderer sehen", "Telefon, Adresse … soweit freigegeben – aus z. B. für Aushilfen", m.kontakte !== false)}
     ${ICH?.admin && pid !== ICH.person_id ? schalter("roAdmin", "🛡️ Admin (Vertretung)", "Volle Rechte wie der Admin: Links, Rollen, Freigaben, Admin-Zentrale. Nur für die feste Vertretung.", !!m.admin) : ""}
     <div class="dlg-knoepfe"><button class="knopf haupt" onclick="rolleSpeichern('${pid}', this)">💾 Speichern</button><button class="knopf" onclick="$('rolleBlatt').remove()">Abbrechen</button></div>`);
+  roExtraSichtbar(); document.querySelectorAll('#rolleBlatt input[name="roZugang"]').forEach((r) => r.addEventListener("change", roExtraSichtbar));
+  if (ICH?.admin) api("zugang_extra_laden", { person_id: pid }).then(({ extra }) => { // 3.49.0 KC-CLUB-ZUGANG-EINZELN: gespeicherte Auswahl anhaken
+    for (const g of [...(extra?.plus || []), ...(extra?.minus || [])]) { const c = document.querySelector(`#rolleBlatt .roExtra[value="${g}"]`); if (c) c.checked = true; }
+  }).catch(() => {});
 }
+// 3.49.0 KC-CLUB-ZUGANG-EINZELN: nur sichtbar, wenn „Aushilfe“ oder „Gast“ gewählt ist
+function roExtraHtml() {
+  const zeile = (art) => Object.entries(ZUGANG_EXTRA).filter(([, g]) => g.art === art).map(([id, g]) => `<label class="bu-haken"><input type="checkbox" class="roExtra" value="${id}"> ${g.t}<small class="hinweis" style="display:block;margin-left:24px">${g.u}</small></label>`).join("");
+  return `<div id="roExtra" class="karte" style="margin:8px 0;padding:8px 10px"><div class="hl-frage" style="margin-top:0">Einzeln für diese Person</div>
+    <p class="hinweis" style="margin:0 0 6px">Zum Aushilfen- bzw. Gast-Paket <b>zusätzlich erlauben</b> oder etwas daraus <b>wegnehmen</b>. Gilt nur für diese Person.</p>
+    <div class="hinweis" style="font-weight:700;margin:4px 0">➕ Zusätzlich erlauben</div><div class="bu-haken-liste">${zeile("plus")}</div>
+    <div class="hinweis" style="font-weight:700;margin:8px 0 4px">➖ Wegnehmen</div><div class="bu-haken-liste">${zeile("minus")}</div></div>`;
+}
+function roExtraSichtbar() { const w = document.querySelector('#rolleBlatt input[name="roZugang"]:checked')?.value, k = $("roExtra"); if (k) k.hidden = !(w === "aushilfe" || w === "gast"); }
 async function rolleSpeichern(pid, knopf) {
   const aemter = [...document.querySelectorAll("#rolleBlatt .roAmt:checked")].map((x) => x.value);
   const neu = $("roNeu").value.trim(); if (neu) aemter.push(neu);
@@ -35742,7 +35776,8 @@ async function rolleSpeichern(pid, knopf) {
   if (adminSchalter && admin && !m?.admin && !(await frage(`${m?.name || "Dieses Mitglied"} wirklich zur Admin-Vertretung machen?\nVolle Rechte: Links erzeugen, Rollen und Freigaben ändern, Admin-Zentrale. Wird protokolliert, ${m?.name?.split(" ")[0] || "das Mitglied"} bekommt Bescheid.`, { ja: "🛡️ Ja, Admin-Vertretung" }))) return;
   knopf.disabled = true;
   const zugangWahl = document.querySelector('#rolleBlatt input[name="roZugang"]:checked')?.value || "mitglied"; // 2.422.0 KC-CLUB-ZUGANG
-  try { const r = await api("rolle_setzen", { person_id: pid, vorstand: $("roLeitung").checked, protokolle: $("roProtokolle").checked, kontakte: $("roKontakte").checked, admin, aemter: [...new Set(aemter)].slice(0, 5), zugang: zugangWahl });
+  try { const r = await api("rolle_setzen", { person_id: pid, vorstand: $("roLeitung").checked, protokolle: $("roProtokolle").checked, kontakte: $("roKontakte").checked, admin, aemter: [...new Set(aemter)].slice(0, 5), zugang: zugangWahl,
+      extra: (() => { const an = [...document.querySelectorAll("#rolleBlatt .roExtra:checked")].map((c) => c.value); return { plus: an.filter((g) => ZUGANG_EXTRA[g]?.art === "plus"), minus: an.filter((g) => ZUGANG_EXTRA[g]?.art === "minus") }; })() });
     $("rolleBlatt").remove(); MITGLIEDER = null; melde(r?.zugangFehlt ? "🎖️ Gespeichert – der Zugang (Gast/Aushilfe) wirkt erst nach dem Datenbank-Update" : "🎖️ Gespeichert"); mitgliederLaden(); }
   catch (e) { meldeFehler(e); knopf.disabled = false; }
 }

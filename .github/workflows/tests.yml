@@ -21,6 +21,7 @@ jobs:
       - run: node tests/aufbau-check.test.mjs
       - run: node tests/fahrt-wechsel.test.mjs
       - run: node tests/nt-aus.test.mjs
+      - run: node tests/zugang-einzeln.test.mjs
       - run: node tests/fra-verschluesselung.test.mjs
       - run: node tests/fra-teile.test.mjs
       - run: node tests/notfall-tresor.test.mjs

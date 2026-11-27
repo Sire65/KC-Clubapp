@@ -197,7 +197,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "3.45.0";
+const SERVER_VERSION = "3.49.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -4640,6 +4640,7 @@ const ohneLinks = (t: string) => t.replace(/(https?:\/\/|www\.)\S+/gi, "[Link en
 type Ich = { person_id: string; name: string; vorname: string; admin: boolean; vorstand: boolean; aemter: string[]; protokolle: boolean; kontakte: boolean; buero: BueroRecht;
   zugang: "mitglied" | "aushilfe" | "gast" | "tischgast"; // 2.422.0 KC-CLUB-ZUGANG; 2.776.0 KC-CLUB-RUNDER-TISCH-GAST
   tischgast?: { id: string; tisch: string; name: string; rolle: string | null }; // 2.776.0: nur für Tischgäste – ihr einziger Tisch
+  extra?: { plus: string[]; minus: string[] }; // 3.49.0 KC-CLUB-ZUGANG-EINZELN: für diese Aushilfe/diesen Gast einzeln erlaubt (plus) bzw. weggenommen (minus)
   vertreter?: { person_id: string; name: string; vorname: string }; // KC-CLUB-VERTRETUNG: wer gerade für dieses Mitglied handelt
   nurLesen?: boolean; // KC-CLUB-NOTBETRIEB: true = Antwort nur für das Notfall-Paket berechnen, nichts schreiben
   bueroAnsicht?: { bis: string | null } }; // 2.765.0 KC-CLUB-BUERO-ANSICHT: Büro gerade für alle zur Ansicht frei (bis = null: bis auf Widerruf)
@@ -4788,7 +4789,14 @@ async function anmeldenDb(hash: string, version: string | null, ua = "", req?: R
     const lauf = onlinePushMelden(ichAus(p, r), ua, req ? GERAET_HINWEIS.get(req) : "").catch((e) => console.error("online push", String(e)));
     try { (globalThis as any).EdgeRuntime?.waitUntil?.(lauf); } catch { /* ohne Hintergrund-Hilfe läuft es trotzdem an */ }
   }
-  return ichAus(p, r);
+  return zugangExtraAnwenden(ichAus(p, r));
+}
+// 3.49.0 KC-CLUB-ZUGANG-EINZELN: bei der Anmeldung (mit ihr gemerkt; rolle_setzen leert den Merker) die Einzel-Freischaltungen dazu
+async function zugangExtraAnwenden(ich: Ich): Promise<Ich> {
+  if (ich.zugang !== "aushilfe" && ich.zugang !== "gast") return ich;
+  const x = await zugangExtraVon(ich.person_id).catch(() => null);
+  if (!x) return ich;
+  return { ...ich, extra: x, ...(x.plus.includes("protokolle") ? { protokolle: true } : {}), ...(x.plus.includes("kontakte") ? { kontakte: true } : {}) };
 }
 // ----- 2.422.0 KC-CLUB-ZUGANG (Wunsch Hansi „den Zugang für Gäste und Aushilfen einschränken: Nachrichten schreiben, SOS, Clubtermine, Spiele“) -----
 // Zugang aus kc_club_rollen.zugang: „mitglied“ (alles wie bisher), „aushilfe“, „gast“. Admin ist immer „mitglied“. Für Gäste und Aushilfen gilt
@@ -4827,8 +4835,42 @@ const ZUGANG_ERLAUBT = { gast: new Set(ZUGANG_AKTIONEN.basis), aushilfe: new Set
 const zugangAus = (r: any): Zugang => (r?.ist_admin ? "mitglied" : r?.zugang === "gast" || r?.zugang === "aushilfe" ? r.zugang : "mitglied");
 // 2.422.0 KC-CLUB-ZUGANG: Gäste/Aushilfen nie Protokolle, nie Kontaktdaten anderer (unabhängig von den Schaltern im Rollen-Fenster)
 const zugangAnwenden = (ich: Ich): Ich => (ich.zugang === "mitglied" ? ich : { ...ich, protokolle: false, kontakte: false });
+// ---------- 3.49.0 KC-CLUB-ZUGANG-EINZELN (Wunsch Hansi 27.11.2026 „für Aushilfen einige bestimmte Funktionen freischalten bzw. sperren“) ----------
+// Je Person (nur Aushilfe/Gast) in 🎖️ Ämter und Rechte: Funktionen ZUSÄTZLICH erlauben (plus) oder aus dem Aushilfen-Paket WEGNEHMEN (minus).
+// Gespeichert in kc_club_person_einstellung „zugang_extra“ = { plus: [...], minus: [...] }. Dieselbe Liste steht in app.js (Vertragstest prüft das).
+const ZUGANG_EXTRA: Record<string, { art: "plus" | "minus"; aktionen: readonly string[]; recht?: "protokolle" | "kontakte" }> = {
+  fahrten: { art: "plus", aktionen: ["fahrtprofil", "fahrt_sammel_vorschlag", "fahrt_sammel_einreichen", "parkausweis"] },
+  erstattung: { art: "plus", aktionen: ["erstattung_meine", "erstattung_senden", "erstattung_position_setzen"] },
+  mitfahrt: { art: "plus", aktionen: ["mitfahrt_anbieten", "mitfahrt_suchen", "mitfahrt_platz", "mitfahrt_loeschen", "mitfahrt_gast"] },
+  fotos_hoch: { art: "plus", aktionen: ["foto_hochladen", "foto_aendern", "foto_loeschen", "foto_ort"] },
+  rezepte: { art: "plus", aktionen: ["rezepte_liste", "rezept_bewerten", "rezept_speichern", "rezept_loeschen"] },
+  magazin: { art: "plus", aktionen: ["rezepte_liste", "magazin_einreichen", "magazin_meine"] },
+  vorschlaege: { art: "plus", aktionen: ["vorschlaege_liste", "vorschlag_stimme"] },
+  protokolle: { art: "plus", aktionen: ["protokolle_liste", "protokoll_laden", "protokoll_info", "protokoll_einwand"], recht: "protokolle" },
+  kontakte: { art: "plus", aktionen: [], recht: "kontakte" },
+  spiele: { art: "minus", aktionen: ["spiele_liste", "spiel_holen", "spiel_herausfordern", "spiel_antwort", "spiel_zug", "spiel_aufgeben", "spiel_revanche", "raetsel_stand", "raetsel_ergebnis"] },
+  tippspiel: { art: "minus", aktionen: ["tipp_stand", "tipp_mitmachen", "tipp_abgeben", "advent_gadget_stand", "advent_gadget_mitmachen", "advent_preis_melden", "advent_preise_meine"] },
+  fotos_sehen: { art: "minus", aktionen: ["fotos_neueste", "fotos_liste", "foto_oeffnen"] },
+  tausch: { art: "minus", aktionen: ["dienst_tausch_liste", "dienst_tausch_anbieten", "dienst_tausch_aktion"] },
+};
+const zugangExtraSauber = (w: any) => ({ plus: [...new Set((Array.isArray(w?.plus) ? w.plus : []).map(String))].filter((g) => ZUGANG_EXTRA[g]?.art === "plus"),
+  minus: [...new Set((Array.isArray(w?.minus) ? w.minus : []).map(String))].filter((g) => ZUGANG_EXTRA[g]?.art === "minus") });
+const ZX = { bis: 0, werte: new Map<string, { plus: string[]; minus: string[] }>() };
+async function zugangExtraVon(pid: string) { // alle Einträge auf einmal, MERK_MS gemerkt (es sind nur wenige Aushilfen/Gäste)
+  if (Date.now() > ZX.bis) {
+    const { data, error } = await db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "zugang_extra").limit(500);
+    if (!error) { ZX.werte = new Map((data ?? []).map((x: any) => [x.person_id, zugangExtraSauber(x.wert)])); ZX.bis = Date.now() + MERK_MS; }
+  }
+  return ZX.werte.get(pid) || null;
+}
 function zugangPruefen(a: string, ich: Ich) {
-  if (ich.zugang === "mitglied" || ZUGANG_ERLAUBT[ich.zugang].has(a)) return;
+  if (ich.zugang === "mitglied") return;
+  const x = ich.extra;
+  if (x && (ich.zugang === "aushilfe" || ich.zugang === "gast")) {
+    if (x.minus.some((g) => ZUGANG_EXTRA[g]?.aktionen.includes(a))) throw new Fehler("Das ist für dich nicht freigeschaltet.", 403);
+    if (x.plus.some((g) => ZUGANG_EXTRA[g]?.aktionen.includes(a))) return;
+  }
+  if (ZUGANG_ERLAUBT[ich.zugang].has(a)) return;
   throw new Fehler(ich.zugang === "tischgast" ? "Als Tischgast geht nur der Tisch, zu dem du eingeladen bist." : ich.zugang === "gast" ? "Das ist für Gäste nicht freigeschaltet." : "Das ist für Aushilfen nicht freigeschaltet.", 403);
 }
 // Person + Rollen → angemeldetes Mitglied (gemeinsam für Anmeldung und Notfall-Paket – eine Regel, nicht zwei)
@@ -23631,6 +23673,11 @@ Köcheclub-App`,
         return json({ ok: true, geaendert: ziel.length });
       }
 
+      case "zugang_extra_laden": { // 3.49.0 KC-CLUB-ZUGANG-EINZELN: fürs Fenster 🎖️ Ämter und Rechte
+        nurAdmin(ich);
+        ZX.bis = 0;
+        return json({ extra: (await zugangExtraVon(String(p.person_id || ""))) || { plus: [], minus: [] } });
+      }
       case "rolle_setzen": {
         nurAdmin(ich);
         const pid = String(p.person_id || "");
@@ -23648,6 +23695,14 @@ Köcheclub-App`,
         let { error: re } = await db.from("kc_club_rollen").upsert(zeile), zugangFehlt = false;
         if (re && "zugang" in zeile && /zugang/i.test(String(re.message || ""))) { delete zeile.zugang; zugangFehlt = true; ({ error: re } = await db.from("kc_club_rollen").upsert(zeile)); } // Spalte noch nicht eingespielt
         if (re) throw new Fehler("Die Rolle konnte nicht gespeichert werden – bitte gleich noch einmal versuchen.", 500);
+        if (p.extra && typeof p.extra === "object") { // 3.49.0 KC-CLUB-ZUGANG-EINZELN: nur für Aushilfe/Gast, sonst gelöscht
+          const ex = zugangExtraSauber(p.extra);
+          if ((zeile.zugang === "aushilfe" || zeile.zugang === "gast") && (ex.plus.length || ex.minus.length))
+            await db.from("kc_club_person_einstellung").upsert({ person_id: pid, schluessel: "zugang_extra", wert: ex, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
+          else await db.from("kc_club_person_einstellung").delete().eq("person_id", pid).eq("schluessel", "zugang_extra");
+          ZX.bis = 0;
+          await protokoll(ich.person_id, "zugang_extra_gesetzt", { fuer: pid, plus: ex.plus, minus: ex.minus });
+        }
         if (adminNeu === false && adminAlt) await db.from("kc_club_person_einstellung").delete().eq("person_id", pid).eq("schluessel", "inkognito"); // KC-CLUB-INKOGNITO
         anmeldungenVergessen(); // KC-CLUB-ANMELDECACHE: neue Rolle sofort wirksam
         await protokoll(ich.person_id, "rolle_gesetzt", { fuer: pid, vorstand: !!p.vorstand, aemter, protokolle: p.protokolle ?? null, admin: adminNeu, zugang: zeile.zugang ?? null });

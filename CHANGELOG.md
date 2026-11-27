@@ -1,10 +1,11 @@
 # Änderungen
 
-## 3.49.0 – 2026-11-27 – 📅 Termin-Vorschlag an Nachrichten mit rotem ✕ zum Ausschalten (KC-CLUB-NT-AUS)
+## 3.49.0 – 2026-11-27 – 📅 Termin-Vorschlag mit rotem ✕ · 🧑‍🍳 Aushilfen einzeln freischalten (KC-CLUB-NT-AUS, KC-CLUB-ZUGANG-EINZELN) · Server 3.49.0
 Wunsch Hansi 27.11.2026: „Wenn in Nachrichten ein Termin genannt wird, zeigst du ihn als Übernahme-Vorschlag. Daneben in die Zeile ein kleines rotes Kreuz, um in dem Moment die Funktion auszuschalten.“
 - Neben „📅 … – eintragen“ an der Nachricht ein rotes ✕: schaltet die Termin-Vorschläge sofort aus (alle verschwinden, Hinweis, wie man sie wieder einschaltet).
 - ⚙️ → ✨ Kluge Helfer: neuer Schalter „📅 Termin-Vorschlag an Nachrichten“ (Vorgabe an, je Gerät). Von Hand geht es weiter: Nachricht antippen → „📅 Als Termin übernehmen“.
-- Hilfe ergänzt, Test `tests/nt-aus.test.mjs` (CI). Nur App.
+- Hilfe ergänzt, Test `tests/nt-aus.test.mjs` (CI).
+- 🧑‍🍳 **Aushilfen/Gäste einzeln freischalten** (Wunsch Hansi 27.11.2026 „für Aushilfen einige bestimmte Funktionen freischalten bzw. sperren“): Admin-Zentrale → Mitglieder → 🎖️ Ämter und Rechte, bei Aushilfe/Gast „Einzeln für diese Person“. ➕ zusätzlich erlauben: 🚗 Fahrten & Abrechnung, 💶 Erstattung, 🚙 Mitfahrt, ⬆️ Fotos hochladen, 📖 Rezeptbuch, 📰 Club-Küche, 🗳️ Vorschläge & Abstimmungen, 📄 Protokolle lesen, 📇 Kontaktdaten. ➖ wegnehmen: 🎲 Spiele, 🎄 Tippspiel & Advent, 📷 Fotoalbum, 🔁 Diensttausch. Gespeichert in `kc_club_person_einstellung` „zugang_extra“ (keine Migration), Server prüft (`ZUGANG_EXTRA`, `zugangPruefen`), neue Aktion `zugang_extra_laden` (nur Admin). Test `tests/zugang-einzeln.test.mjs` (CI).
 
 ## 3.48.0 – 2026-11-27 – 🚲↔🚗 Fahrtkosten: Fahrrad und Auto beliebig hin und her wechseln (KC-CLUB-FAHRT-WECHSEL)
 Fund Hansi 27.11.2026: „Lass den Wechsel zu – erst Fahrrad, dann Auto, dann wieder Fahrrad usw., wenn man es sich anders überlegt.“
