@@ -2473,7 +2473,9 @@
   .bahn { display: grid; grid-template-columns: 64px 1fr; gap: 8px; align-items: center; margin-top: 6px; }
   .bahn .wer { font-size: .78rem; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .spur2 { position: relative; height: 30px; background: var(--karte2); border-radius: 8px; overflow: hidden; }
-  .spur2 .b { font-style: normal; position: absolute; top: 3px; bottom: 3px; border-radius: 6px; color: #fff; font-size: .72rem; font-weight: 800; display: flex; align-items: center; justify-content: center; white-space: nowrap; overflow: hidden; padding: 0 3px; }
+  .spur2 .b { font-style: normal; position: absolute; top: 3px; bottom: 3px; border-radius: 6px; color: #fff; font-size: .72rem; font-weight: 800; display: flex; align-items: center; justify-content: center; white-space: nowrap; padding: 0 3px; cursor: pointer; }
+  /* KC-CLUB-BALKEN-ZEIT: passt die Zeit nicht in den Balken, steht sie daneben – Schriftfarbe wie der Text (hell/dunkel) */
+  .spur2 .bl { position: absolute; top: 0; bottom: 0; display: flex; align-items: center; white-space: nowrap; font-size: .72rem; font-weight: 800; color: var(--text); cursor: pointer; }
   .spur2 .g { position: absolute; top: 0; bottom: 0; background: rgba(201,164,106,.45); }
   .skala { display: grid; grid-template-columns: 64px 1fr; gap: 8px; font-size: .68rem; color: var(--grau); margin-top: 2px; }
   .skala .s { position: relative; height: 14px; }
@@ -6574,7 +6576,7 @@
       <p class="hinweis" style="font-size:.85rem;margin:8px 0 0">Tippe mehrere Namen an, um die Zeiten untereinander zu vergleichen. <span style="background:rgba(201,164,106,.45);border-radius:4px;padding:0 4px;color:var(--text)">Gold</span> = gleichzeitig im Dienst.</p>
     </details>
     <div class="dpnav"><button class="knopf klein" onclick="dpWoche(-1)">‹ Woche</button><b id="dpZeitraum"></b><button class="knopf klein" onclick="dpWoche(1)">Woche ›</button></div>
-    <div style="text-align:center"><button class="knopf klein" onclick="dpWoche(0)">Heute</button></div>
+    <div style="text-align:center"><button class="knopf klein" onclick="dpWoche(0)">Heute</button> <button class="knopf klein" id="dpGanzKnopf" onclick="dpGanzWahl()" title="Alle Tage des Markts/Plans auf einmal">📅 Ganzer Zeitraum</button></div>
     <div id="dpStandOben"></div>
     <div id="dpListe"></div>
     <p class="hinweis" id="dpStand" style="font-size:.85rem"></p>
