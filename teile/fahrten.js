@@ -34,9 +34,17 @@ function fsProfilHtml() {
       <button type="button" class="knopf haupt" onclick="fsProfilSpeichern('auto')">💾 Speichern</button></div>
     <p class="hinweis" style="margin:6px 0 0">${p.geaendert ? `✓ Gespeichert am ${esc(fsTag(String(p.geaendert).slice(0, 10)))} · ` : ""}Gespeichert werden nur die km – keine Adresse. Bei einer Fahrgemeinschaft bekommt nur der Fahrer km.</p></section>`;
 }
+// KC-CLUB-FAHRT-WECHSEL (Fund Hansi 27.11.2026 „Wechsel zulassen: erst Fahrrad, dann Auto, dann wieder Fahrrad usw., wenn man es sich anders überlegt“):
+// die Anzeige wechselt bei jedem Tipp sofort (vorher blieb nach „Auto“ – noch ohne km gespeichert – ein Tipp auf „Fahrrad“ ohne Wirkung, weil
+// gespeichert ja noch „Fahrrad“ stand). Gespeichert wird „Fahrrad“ nur, wenn vorher „Auto“ gespeichert war; „Auto“ erst mit km und 💾.
+function fsArtZeigen(art) {
+  const auto = art === "auto";
+  $("fsKmZeile")?.classList.toggle("versteckt", !auto);
+  document.querySelectorAll(".fs-wahl button").forEach((b, i) => { const an = (i === 1) === auto; b.classList.toggle("an", an); b.setAttribute("aria-checked", String(an)); });
+}
 function fsArt(art) {
+  fsArtZeigen(art);
   if (art === "keine") { if ((FSS.profil?.art || "keine") !== "keine") fsProfilSpeichern("keine"); return; }
-  $("fsKmZeile")?.classList.remove("versteckt"); document.querySelectorAll(".fs-wahl button").forEach((b, i) => { b.classList.toggle("an", i === 1); b.setAttribute("aria-checked", String(i === 1)); });
   $("fsKm")?.focus();
 }
 async function fsProfilSpeichern(art) {
