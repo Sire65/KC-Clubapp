@@ -12412,6 +12412,8 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   const mig = lies("supabase/migrations/20261020_kc_club_rt_spricht.sql");
   assert.ok(/create trigger kc_club_rt_spricht after insert or update on public\.kc_club_tippen\s+for each row when \(new\.art = 'sprache'\)/.test(mig) && /case when new\.text = 'diktat' then 'diktiert' else 'spricht' end/.test(mig) && /exception when others then null;/.test(mig), "DB: Signal „spricht“/„diktiert“ an die anderen");
   assert.ok(/\.schreibt-hinweis \{ position: fixed;/.test(seite), "Aussehen des Hinweises");
+  // KC-CLUB-SCHREIBT-AUFFAELLIG (Wunsch Hansi 27.11.2026): gelb → orange → rot pulsierend, groß und fett
+  assert.ok(/\.schreibt-hinweis \{ width: max-content; max-width: 92vw; font-size: 1\.08rem; font-weight: 800;[^}]*animation: schreibt-puls 1\.6s ease-in-out infinite; \}/.test(seite) && /@keyframes schreibt-puls \{[\s\S]*?#ffd400[\s\S]*?#ff9800[\s\S]*?#ff4d2e/.test(seite), "Hinweis pulsiert gelb, orange, rot");
 }
 // 2.530.0 KC-CLUB-GEHEIMAGENT (Wunsch Hansi „Schlüssel kurz anzeigen … besondere Figur bringt die verschlüsselte weg“ → Geheimagent)
 {
