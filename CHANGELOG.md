@@ -1,5 +1,9 @@
 # Änderungen
 
+## 3.51.0 – 2026-11-27 – 🧑‍🍳 Einzel-Freischaltungen lesbar: eine Spalte, Beschreibung darunter (KC-CLUB-ZUGANG-LISTE)
+Fund Hansi 27.11.2026 (Bildschirmfoto „Überlappen??“): In 🎖️ Ämter und Rechte → „Einzeln für diese Person“ standen zwei Spalten, die Beschreibung neben dem Namen – auf dem Handy überlappend.
+- Jetzt eine Spalte, je Zeile Häkchen, Name fett und die Beschreibung klein darunter. Nur App.
+
 ## 3.50.0 – 2026-11-27 – 🗓️ Mein Dienst: alle kommenden Dienste aufklappbar (KC-CLUB-DIENSTE-ALLE) · Server 3.50.0
 Hansi 27.11.2026 (Bildschirmfoto „Mein Dienst“): „Warum nur ein paar Tage angezeigt, wie kann man den Zeitraum ändern?“
 - Server `mein_dienst`: alle kommenden Dienste (bis 60) statt nur der nächsten 5. App: die nächsten 5 wie bisher, darunter „▾ Alle 11 Dienste anzeigen“ zum Aufklappen.

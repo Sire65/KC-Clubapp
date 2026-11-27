@@ -5061,6 +5061,8 @@
   .bu-logo { width: 54px; height: 54px; border-radius: 50%; background: var(--rot); padding: 7px; box-sizing: border-box; }
   .bu-haken-liste { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
   .bu-haken { display: flex; gap: 6px; align-items: center; background: var(--karte2); border-radius: 12px; padding: 9px 10px; font-weight: 700; cursor: pointer; border: 2px solid transparent; }
+  /* 3.51.0 KC-CLUB-ZUGANG-LISTE: Einzel-Freischaltungen in einer Spalte, Beschreibung unter dem Namen (Fund Hansi „Überlappen??“) */
+  .bu-haken-liste.ro-extra-liste { grid-template-columns: 1fr; } .ro-extra-z { align-items: flex-start; } .ro-extra-z > span { display: flex; flex-direction: column; min-width: 0; } .ro-extra-z small { font-weight: 500; margin-top: 2px; } .ro-extra-z input { margin-top: 3px; flex: none; }
   .bu-haken.an, .bu-haken:has(input:checked) { border-color: var(--gruen); }
   .bu-haken input { width: 20px; height: 20px; }
   .bu-top { margin: 0; padding-left: 26px; display: grid; gap: 6px; }
@@ -7496,7 +7498,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=3.50.0" data-v="3.50.0"></script>
+<script src="app.js?v=3.51.0" data-v="3.51.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>
