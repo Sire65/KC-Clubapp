@@ -5704,6 +5704,20 @@
   .mag-titelfoto img { width: 34%; max-width: 140px; opacity: .85; } .mag-titelfoto small { font: .8rem system-ui, sans-serif; opacity: .8; } .wm-foto { background: radial-gradient(circle at 50% 40%, #2f7a50, #0c2a1b); } .wm-foto span { font-size: 4.5rem; }
   .mag-schlagzeilen { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 1.05rem; } .mag-schlagzeilen li { display: flex; gap: 8px; align-items: center; border-top: 1px solid rgba(255,248,238,.25); padding-top: 6px; }
   .mag-entwurf { align-self: center; font: 700 .72rem system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; background: #f5d68a; color: #4d0e16; padding: 3px 10px; border-radius: 99px; }
+  /* KC-CLUB-MAGAZIN-TITEL-HELL (27.11.2026, Wunsch Hansi „weißer Hintergrund, weinrot und gold – beim Ausdruck wird viel Tinte gebraucht“): Vorschlag A „Klassisch“ –
+     weißes Titelblatt mit doppeltem Goldrahmen, Titel weinrot, Kochmütze weinrot (≈ 3 % statt 77 % Tintendeckung). Gilt für Bildschirm und Druck; der Weihnachtsmarkt-Prospekt (.wm-titel) bleibt grün. */
+  .mag-titel:not(.wm-titel) { position: relative; background: #fff; color: #2b1a1c; padding: 30px 28px 22px; }
+  .mag-titel:not(.wm-titel)::before { content: ""; position: absolute; inset: 10px; border: 1.5px solid #c9a44c; pointer-events: none; }
+  .mag-titel:not(.wm-titel)::after { content: ""; position: absolute; inset: 14px; border: .6px solid #c9a44c; pointer-events: none; }
+  .mag-titel:not(.wm-titel) .mag-ueber { font: 700 .68rem system-ui, sans-serif; letter-spacing: .22em; text-transform: uppercase; color: #9a7a2e; }
+  .mag-titel:not(.wm-titel) .mag-marke { color: #741521; letter-spacing: -.01em; margin-top: 4px; }
+  .mag-titel:not(.wm-titel) .mag-unter { color: #5a4a40; opacity: 1; }
+  .mag-titel:not(.wm-titel) .mag-ausgabe { color: #9a7a2e; letter-spacing: .2em; margin-top: 10px; padding-top: 8px; background: linear-gradient(90deg, transparent, #c9a44c 18%, #c9a44c 82%, transparent) top / 100% 2px no-repeat; }
+  .mag-titel:not(.wm-titel) .mag-titelfoto { position: relative; background: none; border: 0; border-radius: 0; }
+  .mag-titel:not(.wm-titel) .mag-titelfoto img { opacity: 1; } .mag-titel:not(.wm-titel) .mag-titelfoto small { font-style: italic; color: #a89a90; opacity: 1; }
+  .mag-titel:not(.wm-titel) .mag-schlagzeilen li { border-top: 1px solid #e3d3b8; color: #2b1a1c; }
+  .mag-titel:not(.wm-titel) .mag-schlagzeilen li:first-child { border-top: 2px solid #c9a44c; color: #741521; font-weight: 700; font-size: 1.18em; }
+  .mag-motto { text-align: center; font: 600 .6rem system-ui, sans-serif; letter-spacing: .2em; text-transform: uppercase; color: #9a7a2e; }
   .wm-titel { background: linear-gradient(180deg, #1f5a3a, #0f3322); } .wm-seite .mag-kopf { color: #1f5a3a; border-color: #1f5a3a; } .wm-seite .mag-h { color: #1f5a3a; }
   .mag-inhalt { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
   .mag-inhalt button { width: 100%; display: grid; grid-template-columns: 34px 1fr auto; gap: 8px; align-items: center; text-align: left; background: none; border: none; border-bottom: 1px dotted #c9b8a6; padding: 8px 2px; font: inherit; color: inherit; cursor: pointer; }
@@ -7465,7 +7479,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=3.45.0" data-v="3.45.0"></script>
+<script src="app.js?v=3.46.0" data-v="3.46.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

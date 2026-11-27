@@ -957,11 +957,13 @@ function magSeiten({ termine, rezept }) {
   const seiten = [];
   // Titelblatt: Kopf, Ausgabe-Nr., Titelfoto (Platzhalter bis die Redaktion eins wählt), drei Schlagzeilen
   const heft = MAG_AUSGABEN[nr] || {}, schlag = heft.schlagzeilen ? heft.schlagzeilen.map(([sym, t]) => ({ sym, t })) : MAG_RUBRIKEN.filter((r) => !/später/.test(r.u)).slice(0, 3);
+  // KC-CLUB-MAGAZIN-TITEL-HELL (27.11.2026, Wunsch Hansi „weißer Hintergrund, weinrot und gold – beim Ausdruck wird viel Tinte gebraucht“): Vorschlag A „Klassisch“
   seiten.push({ art: "html", register: "Titel", titel: "", html: `<div class="mag-titel">
-    <div class="mag-titel-kopf"><span class="mag-marke">CLUB-KÜCHE</span><span class="mag-unter">Das Magazin des Köcheclubs Werne</span>
+    <div class="mag-titel-kopf"><span class="mag-ueber">Köcheclub Werne</span><span class="mag-marke">CLUB-KÜCHE</span><span class="mag-unter">Das Magazin des Köcheclubs Werne</span>
       <span class="mag-ausgabe">Ausgabe Nr. ${nr} · ${mon}</span></div>
-    <div class="mag-titelfoto" role="img" aria-label="Titelfoto (Platzhalter)"><img src="kc-kochmuetze-weiss.webp" alt=""><small>Titelfoto – wählt die Redaktion</small></div>
+    <div class="mag-titelfoto" role="img" aria-label="Titelfoto (Platzhalter)"><img src="kc-kochmuetze-weinrot.webp" alt=""><small>Titelfoto – wählt die Redaktion</small></div>
     <ul class="mag-schlagzeilen">${schlag.map((r) => `<li><span>${r.sym}</span> ${esc(r.t)}</li>`).join("")}</ul>
+    <div class="mag-motto">Genuss · Handwerk · Geschichten · Gemeinschaft</div>
     <div class="mag-entwurf">Entwurf · nur für den Admin sichtbar</div></div>` });
   // KC-CLUB-MAGAZIN-VORWORT: fester Platz gleich nach dem Titelblatt (Seite 2), jede Ausgabe ihr eigenes – sonst Platzhalter für die Redaktion
   seiten.push({ art: "html", register: "Vorwort", titel: "", html: magSeite(`<h2 class="mag-h"><span>✒️</span> Vorwort</h2>${heft.vorwort ? magVorwortHtml(heft.vorwort) : magPlatz("Hier steht das Vorwort der Redaktion zu dieser Ausgabe – ein paar persönliche Zeilen: was drin ist, was ansteht, ein Dank an alle, die mitgemacht haben.")}`, 2) });
@@ -1182,7 +1184,7 @@ async function magHeftSeiten(nr) {
     try { if (img.dataset.anlage && !img.getAttribute("src")) await bildLaden(img); img.src = await magDatenUrl(img.src); img.removeAttribute("loading"); img.removeAttribute("data-anlage"); img.classList.remove("oa-bild"); }
     catch { (img.closest("figure") || img).remove(); }
   }
-  let ruecken = ""; try { ruecken = await magDatenUrl("kc-kochmuetze-weiss.webp"); } catch {}
+  let ruecken = ""; try { ruecken = await magDatenUrl("kc-kochmuetze-weinrot.webp"); } catch {}
   const stil = [...document.styleSheets].flatMap((sh) => { try { return [...sh.cssRules].map((r) => r.cssText); } catch { return []; } }).filter((t) => /\.mag-/.test(t) && !/^@media/.test(t)).join("\n");
   const css = `${stil}
     .heft { width: ${MAGH.cb}px; font: 12.5px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: #2b1a1c; }
@@ -1196,7 +1198,8 @@ async function magHeftSeiten(nr) {
     .hs-titel .mag-titel { width: ${MAGH.b}px; height: ${MAGH.h}px; box-sizing: border-box; border-radius: 0; padding: 26px 24px; }
     .mag-heft-inhalt li { display: grid; grid-template-columns: 30px 1fr auto; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px dotted #c9b8a6; }
     .notiz h2 { font: 700 17px Georgia, "Times New Roman", serif; color: #741521; margin: 0 0 6px; } .notiz-zeile { height: 27px; border-bottom: 0.6px solid #c9b8a6; }
-    .rueck { width: ${MAGH.b}px; height: ${MAGH.h}px; display: grid; place-items: center; text-align: center; background: linear-gradient(180deg, #741521, #4d0e16); color: #fff8ee; font-family: Georgia, "Times New Roman", serif; }`;
+    .rueck { position: relative; width: ${MAGH.b}px; height: ${MAGH.h}px; display: grid; place-items: center; text-align: center; background: #fff; color: #741521; font-family: Georgia, "Times New Roman", serif; }
+    .rueck::before { content: ""; position: absolute; inset: 14px; border: 1.5px solid #c9a44c; } .rueck::after { content: ""; position: absolute; inset: 19px; border: .6px solid #c9a44c; }`;
   // Messen in einem unsichtbaren Rahmen mit genau der Druckbreite
   magHeftStand("Seiten werden umbrochen …");
   const ifr = document.createElement("iframe"); ifr.setAttribute("aria-hidden", "true");
@@ -1226,7 +1229,7 @@ async function magHeftSeiten(nr) {
       const c = await magHeftBild(html, css); magHeftRahmen(c, nr, i + 2, mon); bilder.push(c);
     }
     for (let i = 0; i < notizen; i++) { const c = await magHeftBild(`<div class="heft" style="position:absolute;left:${MAGH.seite}px;top:${MAGH.oben}px"><section class="hs notiz"><h2>Notizen &amp; eigene Rezepte</h2>${'<div class="notiz-zeile"></div>'.repeat(Math.floor((MAGH.ch - 40) / 27))}</section></div>`, css); magHeftRahmen(c, nr, bilder.length + 1, mon); bilder.push(c); }
-    bilder.push(await magHeftBild(`<div class="rueck"><div><div style="font:800 30px Georgia,serif;letter-spacing:.08em">CLUB-KÜCHE</div><div style="font-style:italic;opacity:.9;margin:4px 0 26px">Das Magazin des Köcheclubs Werne</div>${ruecken ? `<img src="${ruecken}" alt="" style="width:110px;opacity:.9"/>` : ""}<div style="margin-top:22px;font:600 11px system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#f5d68a">Nr. ${nr} · ${esc(mon)}</div><div style="margin-top:6px;font:11px system-ui,sans-serif;opacity:.8">Nur für Mitglieder · auch in der Club-App</div></div></div>`, css));
+    bilder.push(await magHeftBild(`<div class="rueck"><div><div style="font:800 30px Georgia,serif;letter-spacing:.08em">CLUB-KÜCHE</div><div style="font-style:italic;color:#5a4a40;margin:4px 0 26px">Das Magazin des Köcheclubs Werne</div>${ruecken ? `<img src="${ruecken}" alt="" style="width:110px"/>` : ""}<div style="font:italic 600 15px Georgia,serif;color:#9a7a2e;margin-top:6px">since 1991</div><div style="width:120px;height:1.5px;background:#c9a44c;margin:20px auto 0"></div><div style="margin-top:14px;font:600 11px system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#9a7a2e">Nr. ${nr} · ${esc(mon)}</div><div style="margin-top:6px;font:11px system-ui,sans-serif;color:#5a4a40">Nur für Mitglieder · auch in der Club-App</div></div></div>`, css));
     return bilder;
   } finally { ifr.remove(); }
 }

@@ -59,3 +59,21 @@ test("CSS-Syntax: geschlossene Blockklammern ausserhalb von Kommentaren und Stri
   assert.equal(inComment, false, "Unbeendeter CSS-Kommentar");
   assert.equal(quote, null, "Unbeendeter CSS-String");
 });
+
+test("KC-CLUB-MAGAZIN-TITEL-HELL: Titelblatt und Rückseite weiß mit Weinrot und Gold (Tinte sparen), Rückseite mit Kochmütze und „since 1991“", () => {
+  const t0 = magazin.indexOf('register: "Titel", titel: "", html: `<div class="mag-titel">'), titel = magazin.slice(t0, magazin.indexOf("register: \"Vorwort\"", t0));
+  assert.match(titel, /kc-kochmuetze-weinrot\.webp/, "weinrote Kochmütze auf dem Titel");
+  assert.match(titel, /class="mag-ueber">Köcheclub Werne</);
+  assert.match(titel, /class="mag-motto">Genuss · Handwerk · Geschichten · Gemeinschaft</);
+  const basis = index.slice(index.indexOf("KC-CLUB-MAGAZIN-TITEL-HELL"), index.indexOf(".mag-motto {", index.indexOf("KC-CLUB-MAGAZIN-TITEL-HELL")));
+  assert.match(basis, /\.mag-titel:not\(\.wm-titel\) \{[^}]*background: #fff/, "Titel im Druck weiß");
+  assert.match(basis, /::before \{[^}]*border: 1\.5px solid #c9a44c/, "Goldrahmen");
+  const bild = style.slice(style.indexOf("/* 2. Aufmacher"), style.indexOf("/* 3. Inhaltsverzeichnis"));
+  assert.doesNotMatch(bild, /linear-gradient\(156deg|#2e1019|#54131f/, "kein dunkles Weinrot mehr auf dem Bildschirm-Titel");
+  assert.match(bild, /background: var\(--mag-paper\)/);
+  assert.match(magazin, /\.rueck \{ position: relative;[^\n]*background: #fff;/, "Rückseite weiß");
+  assert.match(magazin, /ruecken = await magDatenUrl\("kc-kochmuetze-weinrot\.webp"\)/);
+  assert.match(magazin, /<div class="rueck">[\s\S]{0,600}since 1991/, "„since 1991“ auf der Rückseite");
+  assert.match(worker, /"kc-kochmuetze-weinrot\.webp"/, "weinrote Mütze im Offline-Speicher");
+  assert.ok(fs.existsSync(fileURLToPath(new URL("../kc-kochmuetze-weinrot.webp", import.meta.url))));
+});

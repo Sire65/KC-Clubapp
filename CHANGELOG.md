@@ -1,5 +1,11 @@
 # Änderungen
 
+## 3.46.0 – 2026-11-27 – 📰 Club-Küche: helles Titelblatt und helle Rückseite (KC-CLUB-MAGAZIN-TITEL-HELL)
+Wunsch Hansi 27.11.2026: „Das Cover müssen wir ändern. Am besten weißen Hintergrund, weinrot und gold kann ja bleiben. Aber beim Ausdruck wird viel Tinte gebraucht.“ – „Nimm Vorschlag A und mach die Rückseite auch hell, aber das Logo Kochmütze und since 1991 muss drauf.“
+- Titelblatt (Bildschirm und Druck/A5-Heft) nach Vorschlag A „Klassisch“: weißes Papier, doppelter Goldrahmen, „Köcheclub Werne“ klein über dem Titel, CLUB-KÜCHE weinrot, Goldlinie, Kochmütze weinrot (neue Datei `kc-kochmuetze-weinrot.webp`, aus der weißen erzeugt), erste Schlagzeile weinrot, unten „Genuss · Handwerk · Geschichten · Gemeinschaft“. Tintendeckung grob 3 % statt 77 %.
+- Rückseite des A5-Hefts weiß mit Goldrahmen, CLUB-KÜCHE weinrot, Kochmütze weinrot und „since 1991“.
+- Der Weihnachtsmarkt-Prospekt (grün) bleibt unverändert. Test in `tests/magazin-premium.test.mjs`. Nur App, Server unverändert. Rückweg: App 3.45.0.
+
 ## 3.45.0 – 2026-11-27 – 🧰 Aufbau- und Morgen-Check: Ist der Stand startklar? (KC-CLUB-AUFBAU-CHECK, KC-CLUB-MORGEN-CHECK) · Server 3.45.0
 Wunsch Hansi 26.11.2026: „Wenn am 03.12. der Stand aufgebaut ist und das ganze System steht, checken ob alles läuft – Mini-PC, Router, 3 Kassen, TV mit Präsentation usw. Alles checken und abhaken.“
 - Admin-Zentrale → **🧰 Aufbau-Check** (nur Clubleitung), Programmteil `teile/aufbaucheck.js`.
