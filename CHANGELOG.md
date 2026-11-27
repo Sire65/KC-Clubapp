@@ -1,5 +1,10 @@
 # Änderungen
 
+## 3.52.0 – 2026-11-27 – 📄 Mein Einzelplan aus DP2 (KC-CLUB-DP2-EIN-STAND) · Server 3.52.0
+Hansi 27.11.2026: „Erst prüfen, ob alle Ansichten und PDF richtig sind.“ Prüfung aller Dienstplan-Ansichten gegen DP2 (125 Dienste): Mein Dienst, Wochen-Dienstpläne, Dienstplan-PDF, Morgengruß, Morgen-Check, Stempeln lesen DP2 – stimmen. Fund: **„📄 Mein Einzelplan“** las noch den selbst gerechneten Vorschlag.
+- Server `dp_einzelplan`: Dienstzeiten aus DP2 (`dp2Plan`), Stunden aus den DP2-Zeiten, Stand = DP2-Stand. Regelzeit, Wünsche, Bereitschaft weiter aus dem Gerüst.
+- Prüfung in `tests/dp2-ein-stand.test.mjs`.
+
 ## 3.51.0 – 2026-11-27 – 🧑‍🍳 Einzel-Freischaltungen lesbar · 🗓️ DP2-Erkennung läuft (KC-CLUB-ZUGANG-LISTE, KC-CLUB-DP2-EIN-STAND) · Server 3.51.0
 Fund Hansi 27.11.2026 (Bildschirmfoto „Überlappen??“): In 🎖️ Ämter und Rechte → „Einzeln für diese Person“ standen zwei Spalten, die Beschreibung neben dem Namen – auf dem Handy überlappend.
 - Jetzt eine Spalte, je Zeile Häkchen, Name fett und die Beschreibung klein darunter.

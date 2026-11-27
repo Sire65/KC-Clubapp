@@ -34,6 +34,8 @@ for (const k of [...server.matchAll(/from\("kc_club_konfig"\)[^\n]*?schluessel(?
 assert.ok(/"dpzwei_gesehen"/.test(lauf) && !/dp2_gesehen"/.test(server), "Schlüssel ohne Ziffer");
 assert.ok(/await adminIds\(\)/.test(lauf) && /club-dp2-neu:\$\{stand\}/.test(lauf), "Hinweis an die Admins, je Stand einmal");
 assert.ok(/await dp2AenderungLauf\(\)\.catch/.test(server), "läuft im Zeitplaner");
+const ep = server.slice(server.indexOf('case "dp_einzelplan": {'), server.indexOf('case "dp_druck_rechnen": {'));
+assert.ok(/const w: any = await dp2Plan\(plan\.wert\)/.test(ep) && /stunden: stundenDp2/.test(ep), "3.52.0: Mein Einzelplan aus DP2, Stunden aus DP2-Zeiten");
 assert.ok(/Die Dienstzeiten kommen immer aus DP2/.test(app), "Hinweis in der App");
 assert.ok(lies(".github/workflows/tests.yml").includes("node tests/dp2-ein-stand.test.mjs"), "läuft in der CI");
 console.log("dp2-ein-stand: ok");
