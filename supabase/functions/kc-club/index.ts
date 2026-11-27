@@ -197,7 +197,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "3.52.0";
+const SERVER_VERSION = "3.53.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -4814,7 +4814,7 @@ const ZUGANG_AKTIONEN: Record<"basis" | "aushilfe", readonly string[]> = {
     "wetter", "wetter_ort_suchen", "treffen_liste", "treffen_antwort", "erinnerung_setzen", "kalender", "kalender_abo", "kalender_abo_holen", "privattermin_speichern",
     "privattermin_loeschen", "privattermine_liste", "countdowns", "terminumfragen_liste", "terminumfrage_antwort", "mitglieder", "mitglied_details",
     "unterhaltungen", "unterhaltung", "unterhaltung_stand", "tippen_stand", "tippen", "nachricht_senden", "nachricht_details", "einzelchat_finden", "gruppenchat_finden", "express_stand", "express_angezeigt",
-    "express_antwort", "autoantwort_laden", "autoantwort_speichern", "startnachricht_bestaetigen", "stadt_woche", "ferien", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "geplant_abrufen", "wecker_setzen", "wecker_loeschen", "nachricht_erinnerung_setzen", "nachricht_erinnerung_liste", "nachricht_erinnerung_loeschen", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
+    "express_antwort", "autoantwort_laden", "autoantwort_speichern", "weiterleitung_laden", "weiterleitung_code", "weiterleitung_speichern", "startnachricht_bestaetigen", "stadt_woche", "ferien", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "geplant_abrufen", "wecker_setzen", "wecker_loeschen", "nachricht_erinnerung_setzen", "nachricht_erinnerung_liste", "nachricht_erinnerung_loeschen", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
     "chat_selbstloeschen", "link_vorschau", "unterstuetzung_meine", "unterstuetzung_senden", "nachricht_bearbeiten", "nachricht_merken", "gemerkte_nachrichten", "chat_umfrage_stimmen", "nachricht_ausblenden",
     "unterhaltung_ausblenden", "unterhaltung_archivieren", "unterhaltung_leeren", "gruppe_verlassen", "anlage_hochladen", "anlage_url",
     "einmal_foto_ansehen", "meine_nachrichten_statistik", "mf_antwort", "mf_gelesen", "sos_kontakte", "sos_ort", "notfall_setzen", "spiele_liste",
@@ -5031,6 +5031,97 @@ async function geburtstageSichtbar(ich: Ich) {
   const frei = new Set((fr ?? []).map((x: any) => x.person_id));
   return leute.filter((m: any) => m.birth_date && (frei.has(m.person_id) || m.person_id === ich.person_id))
     .map((m: any) => ({ person_id: m.person_id, name: m.display_name, vorname: vorname(m), md: String(m.birth_date).slice(5, 10) }));
+}
+
+// ---------- KC-CLUB-WEITERLEITUNG (3.53.0, Wunsch Hansi 27.11.2026 „Autoweiterleitung … an eine andere E-Mail-Adresse oder einen anderen Chat – alle sollen es haben“) ----------
+// Jede/r stellt für sich ein (⚙️ → 🔔 Benachrichtigungen → „↪️ Automatisch weiterleiten“): Ziel = eigene andere E-Mail-Adresse (einmal mit Code bestätigt)
+// ODER der Einzelchat mit einem anderen Mitglied; „nur Einzelchats“ oder „auch Gruppen“; Zeitraum freiwillig (von/bis, Tage deutscher Zeit).
+// Die Nachricht bleibt immer auch beim Empfänger selbst (Weiterleitung = Kopie, nichts wird umgeleitet). Nie weitergeleitet: Weiterleitungen selbst
+// (keine Schleife), SOS-Probe, Autoantworten (legt der Server direkt an). 🔒 verschlüsselte und ⏳ selbstlöschende Nachrichten gehen nur als Hinweis
+// weiter (ohne Text), Einmal-Fotos nie. Der Absender sieht im Einzelchat „↪️ … leitet Nachrichten gerade weiter“ (ohne Ziel).
+// Ins Protokoll nur „weiterleitung_*“ mit Art (E-Mail/Chat) – nie Text, nie Adresse.
+const WL_SCHLUESSEL = "weiterleitung", WL_CODE_SCHLUESSEL = "weiterleitung_code", WL_CODE_MIN = 30, WL_CODE_MAX_STD = 3, WL_CODE_VERSUCHE = 5;
+const wlMailOk = (e: string) => /^[^\s@<>,;"']+@[^\s@<>,;"']+\.[^\s@<>,;"']{2,}$/.test(e) && e.length <= 200;
+function wlWert(w: any) {
+  const von = aaTag(w?.von), bis = aaTag(w?.bis);
+  const ziel = w?.ziel === "chat" ? "chat" : "email";
+  const email = txt(w?.email, 200).toLowerCase();
+  return { an: w?.an === true, ziel, email: ziel === "email" && wlMailOk(email) ? email : "", person: ziel === "chat" ? txt(w?.person, 60) : "",
+    gruppen: w?.gruppen === true, von, bis, bestaetigt: ziel === "email" && w?.bestaetigt === true && wlMailOk(email) };
+}
+function wlAktiv(w: any, heute = berlinTag(new Date())) {
+  const a = wlWert(w);
+  if (!a.an || (a.von && a.von > heute) || (a.bis && heute > a.bis)) return false;
+  return a.ziel === "email" ? a.bestaetigt : !!a.person;
+}
+async function wlStand(pid: string) {
+  const { data } = await db.from("kc_club_person_einstellung").select("schluessel,wert").eq("person_id", pid).in("schluessel", [WL_SCHLUESSEL, WL_CODE_SCHLUESSEL]);
+  const w = (data ?? []).find((x: any) => x.schluessel === WL_SCHLUESSEL)?.wert, c: any = (data ?? []).find((x: any) => x.schluessel === WL_CODE_SCHLUESSEL)?.wert;
+  const wert = wlWert(w);
+  const personName = wert.person ? (await personen([wert.person])).get(wert.person)?.display_name ?? "" : "";
+  return { wert, aktiv: wlAktiv(w), personName, codeOffenFuer: c?.email && Date.parse(c?.bis || "") > Date.now() ? String(c.email) : null };
+}
+// eine Mail an eine freie Adresse (nicht an ein Mitglied) – über den Versanddienst, Regel „club_nachricht_mail“ (nur E-Mail)
+async function wlMailSenden(email: string, vars: Record<string, unknown>, korrelation: string) {
+  const r = await fetch(`${SUPA}/functions/v1/kc-communication-router`, { signal: AbortSignal.timeout(20000), method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE}`, apikey: SERVICE },
+    body: JSON.stringify({ sourceProgram: "kc-club", eventKey: "club_nachricht_mail", recipients: [{ email }], variables: vars, correlationId: korrelation }) });
+  const out: any = await r.json().catch(() => ({}));
+  dbPufferLeeren();
+  if (notausAngehalten(r.status, out)) { notausVergessen(); return true; } // KC-NOTAUS: geht nach dem Entriegeln raus
+  return r.ok && Number(out?.failed || 0) === 0;
+}
+// nach dem Speichern einer Nachricht (im Hintergrund): alleTn = alle Teilnehmer, gruppe = Gruppe/Runde (mehr als 2 oder feste Gruppe)
+async function weiterleitungAusloesen(ich: Ich, m: { id: string }, threadId: string, alleTn: string[], gruppe: boolean, info: {
+  text: string; slHinweis: string; anlagen: string[]; einmal: boolean; grpName: string; notfall: boolean; wichtig: boolean }) {
+  const andere = alleTn.filter((x) => x !== ich.person_id);
+  if (!andere.length || ich.nurLesen) return 0;
+  const { data: ws } = await db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", WL_SCHLUESSEL).in("person_id", andere);
+  const aktiv = (ws ?? []).filter((x: any) => wlAktiv(x.wert) && (!gruppe || x.wert?.gruppen === true)); // fast immer leer → 1 kleine Abfrage
+  if (!aktiv.length) return 0;
+  if ((await notausLesen()).aktiv) return 0; // KC-NOTAUS
+  const leute = await personen([...aktiv.map((x: any) => String(x.person_id)), ...aktiv.map((x: any) => String(x.wert?.person || "")).filter(Boolean)]);
+  const tnSet = new Set(alleTn);
+  const inhalt = info.einmal ? "👁️ Einmal-Foto – nur in der Club-App ansehen" : info.slHinweis || ohneFarbe(info.text);
+  const anlHinweis = info.anlagen.length && !info.einmal ? `\n\n📎 ${info.anlagen.length === 1 ? "1 Anlage" : `${info.anlagen.length} Anlagen`}` : "";
+  const marke = info.notfall ? "🚨 NOTFALL – " : info.wichtig ? "❗ Wichtig – " : "";
+  let n = 0;
+  for (const x of aktiv) {
+    const an = String(x.person_id), w = wlWert(x.wert), anName = leute.get(an)?.display_name || "Mitglied";
+    try {
+      if (w.ziel === "email") {
+        const ok = await wlMailSenden(w.email, {
+          titel: `↪️ ${marke}${ich.name}`, kurz: txt(inhalt, 140),
+          betreff: `↪️ ${marke}Köcheclub Werne – Nachricht von ${ich.name}${info.grpName ? ` (${info.grpName})` : ""} an ${anName}`,
+          text: `Hallo,\n\ndiese Nachricht wurde automatisch weitergeleitet (Einstellung von ${anName} in der Köcheclub-App).\n\nVon: ${ich.name}${info.grpName ? `\nGruppe: ${info.grpName}` : ""}\n\n${inhalt}${anlHinweis}\n\nAntworten in der Köcheclub-App: ${APP_URL}#nachricht=${threadId}\n\nViele Grüße\nKöcheclub Werne`,
+          url: `${APP_URL}#nachricht=${threadId}` }, `club-weiterleitung:${m.id}:${an}`);
+        if (ok) n++;
+        await protokoll(an, "weiterleitung_gesendet", { art: "email", ok, thread: threadId });
+      } else {
+        // an das andere Mitglied: in den Einzelchat „an ↔ Ziel“, gesendet im Namen von „an“ – nicht, wenn das Ziel selbst schon im Chat ist oder der Absender ist
+        if (!w.person || w.person === an || tnSet.has(w.person)) continue;
+        const anIch = await geplantIch(an);
+        if (!anIch || !leute.get(w.person)) continue;
+        const kopf = `↪️ Weitergeleitet – von ${ich.name}${info.grpName ? ` (${info.grpName})` : ""}:`;
+        const mitAnl = info.anlagen.length && !info.einmal && !info.slHinweis;
+        const r = await aktionAusfuehren("nachricht_senden", { empfaenger: { personen: [w.person] }, text: `${kopf}\n\n${marke}${inhalt}`.slice(0, 4000), wege: ["push"],
+          ohne_autoantwort: true, aus_weiterleitung: true, ...(mitAnl ? { anlagen: info.anlagen, weiterleiten_von: m.id } : {}) },
+          anIch, new Request(APP_URL, { method: "POST" }), Date.now(), 0);
+        if (r.ok) n++;
+        await protokoll(an, "weiterleitung_gesendet", { art: "chat", ok: r.ok, thread: threadId });
+      }
+    } catch (e) { console.error("weiterleitung", String(e)); }
+  }
+  return n;
+}
+// Einzelchat geöffnet: leitet das Gegenüber gerade weiter? (nur ja/nein + Art – nie die Adresse oder das Ziel)
+async function wlHinweisFuer(ids: string[], gruppe: boolean): Promise<{ name: string; art: string }[]> {
+  if (!ids.length) return [];
+  const { data: ws } = await db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", WL_SCHLUESSEL).in("person_id", ids.slice(0, 200));
+  const aktiv = (ws ?? []).filter((x: any) => wlAktiv(x.wert) && (!gruppe || x.wert?.gruppen === true));
+  if (!aktiv.length) return [];
+  const leute = await personen(aktiv.map((x: any) => String(x.person_id)));
+  return aktiv.map((x: any) => ({ name: vorname(leute.get(String(x.person_id)) ?? null) || "?", art: wlWert(x.wert).ziel }));
 }
 
 // ---------- Treffen ----------
@@ -11996,6 +12087,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const terminfindungOffen = await pTermin;
         const [{ data: nf }, { data: kab }, wartung, { data: pe }, pwFristen, starts, eiFristen, { count: fbAnzahl }, anrufAntw] = await pRest;
         const einstellungen = Object.fromEntries((pe ?? []).map((x: any) => [x.schluessel, x.wert]));
+        delete einstellungen[WL_CODE_SCHLUESSEL]; // KC-CLUB-WEITERLEITUNG: der Code-Merker (Prüfsumme) bleibt auf dem Server
         const vtIds = vertretungIds(einstellungen[VERTRETUNG_KEY]); delete einstellungen[VERTRETUNG_KEY]; // KC-CLUB-VERTRETUNG: nur die Liste mit Namen
         const pVertretung = vtIds.length ? db.from("kc_core_people").select("person_id,display_name,given_name,preferred_name,active").in("person_id", vtIds)
           .then(({ data }) => (data ?? []).filter((x: any) => x.active).map((x: any) => ({ person_id: x.person_id, name: x.display_name, vorname: vorname(x) }))) : Promise.resolve([]);
@@ -12130,6 +12222,56 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         schreibOk(await db.from("kc_club_person_einstellung").upsert({ person_id: ich.person_id, schluessel: AA_SCHLUESSEL, wert: w, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" }));
         await protokoll(ich.person_id, "autoantwort_gespeichert", { an: w.an, zeitraum: !!(w.von || w.bis), nach_status: w.nachStatus }); // ohne Text
         return json({ ok: true, ...(await aaStand(ich.person_id)) });
+      }
+
+      // ----- KC-CLUB-WEITERLEITUNG (3.53.0): eigene automatische Weiterleitung laden/Code anfordern/speichern – jede/r nur die eigene -----
+      case "weiterleitung_laden": return json(await wlStand(ich.person_id));
+      case "weiterleitung_code": {
+        if (ich.nurLesen) throw new Fehler("Im Notbetrieb nicht möglich.", 409);
+        const email = txt(p.email, 200).toLowerCase();
+        if (!wlMailOk(email)) throw new Fehler("Bitte eine gültige E-Mail-Adresse eingeben.");
+        if (!(await protokollPlatz(ich.person_id, "weiterleitung_code", WL_CODE_MAX_STD))) throw new Fehler(`Höchstens ${WL_CODE_MAX_STD} Codes je Stunde – bitte etwas später noch einmal.`, 429);
+        const code = String(crypto.getRandomValues(new Uint32Array(1))[0] % 1000000).padStart(6, "0");
+        schreibOk(await db.from("kc_club_person_einstellung").upsert({ person_id: ich.person_id, schluessel: WL_CODE_SCHLUESSEL,
+          wert: { email, hash: await sha256(`${ich.person_id}|${email}|${code}`), bis: new Date(Date.now() + WL_CODE_MIN * 60000).toISOString(), versuche: 0 }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" }));
+        await protokoll(ich.person_id, "weiterleitung_code", {}); // ohne Adresse
+        const ok = await wlMailSenden(email, { titel: "↪️ Bestätigungscode", kurz: `Code: ${code}`, betreff: "Köcheclub Werne – Code für die Weiterleitung",
+          text: `Hallo,\n\n${ich.name} möchte Nachrichten aus der Köcheclub-App automatisch an diese E-Mail-Adresse weiterleiten lassen.\n\nBestätigungscode: ${code}\n\nDer Code gilt ${WL_CODE_MIN} Minuten. Wenn du das nicht veranlasst hast, ignoriere diese Mail einfach – ohne Code wird nichts weitergeleitet.\n\nViele Grüße\nKöcheclub Werne`,
+          url: APP_URL }, `club-weiterleitung-code:${ich.person_id}:${Date.now()}`);
+        if (!ok) throw new Fehler("Der Code konnte gerade nicht gesendet werden – bitte gleich noch einmal versuchen.", 502);
+        return json({ ok: true, minuten: WL_CODE_MIN });
+      }
+      case "weiterleitung_speichern": {
+        if (ich.nurLesen) return json(await wlStand(ich.person_id));
+        const w = wlWert(p.wert);
+        if (w.von && w.bis && w.bis < w.von) throw new Fehler("„Bis“ liegt vor „von“.");
+        if (w.an && w.bis && w.bis < berlinTag(new Date())) throw new Fehler("„Bis“ liegt in der Vergangenheit – bitte ein späteres Datum wählen oder den Zeitraum leeren.");
+        const alt = (await wlStand(ich.person_id)).wert;
+        if (w.ziel === "email") {
+          if (w.an && !w.email) throw new Fehler("Bitte eine gültige E-Mail-Adresse eingeben.");
+          // bestätigt bleibt nur dieselbe, schon bestätigte Adresse – eine neue braucht den Code aus der Mail
+          w.bestaetigt = !!w.email && alt.bestaetigt && alt.email === w.email;
+          if (w.email && !w.bestaetigt && p.code) {
+            const { data: c } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", WL_CODE_SCHLUESSEL).maybeSingle();
+            const cw: any = c?.wert;
+            if (!cw || cw.email !== w.email || !(Date.parse(cw.bis || "") > Date.now())) throw new Fehler("Der Code ist abgelaufen oder gehört zu einer anderen Adresse – bitte einen neuen anfordern.");
+            if (Number(cw.versuche || 0) >= WL_CODE_VERSUCHE) throw new Fehler("Zu viele falsche Versuche – bitte einen neuen Code anfordern.", 429);
+            if (cw.hash !== await sha256(`${ich.person_id}|${w.email}|${txt(p.code, 10).replace(/\D/g, "")}`)) {
+              await db.from("kc_club_person_einstellung").update({ wert: { ...cw, versuche: Number(cw.versuche || 0) + 1 } }).eq("person_id", ich.person_id).eq("schluessel", WL_CODE_SCHLUESSEL);
+              throw new Fehler("Der Code stimmt nicht.");
+            }
+            w.bestaetigt = true;
+            await db.from("kc_club_person_einstellung").delete().eq("person_id", ich.person_id).eq("schluessel", WL_CODE_SCHLUESSEL);
+          }
+          if (w.an && !w.bestaetigt) throw new Fehler("Bitte zuerst die E-Mail-Adresse mit dem Code bestätigen.");
+        } else {
+          if (w.an && !w.person) throw new Fehler("Bitte ein Mitglied als Ziel wählen.");
+          if (w.person === ich.person_id) throw new Fehler("Weiterleiten an dich selbst geht nicht – bitte ein anderes Mitglied wählen.");
+          if (w.person && !(await aktiveMitglieder()).some((x) => x.person_id === w.person)) throw new Fehler("Mitglied nicht gefunden.", 404);
+        }
+        schreibOk(await db.from("kc_club_person_einstellung").upsert({ person_id: ich.person_id, schluessel: WL_SCHLUESSEL, wert: w, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" }));
+        await protokoll(ich.person_id, "weiterleitung_gespeichert", { an: w.an, art: w.ziel, gruppen: w.gruppen, zeitraum: !!(w.von || w.bis) }); // ohne Adresse/Ziel
+        return json({ ok: true, ...(await wlStand(ich.person_id)) });
       }
 
       // ----- Treffen -----
@@ -16647,7 +16789,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const geplant = await pGeplant; // KC-CLUB-SPAETER-SENDEN (2.362.0): nur meine, nur in diesem Chat
         const geplantVorab = await pGeplantVorab; // 2.551.0 KC-CLUB-GEPLANT-VORAB: für mich bereit (ohne Text)
         const stand = (await pStand) ?? null; // KC-CLUB-CHAT-STAND
-        return json({ id, betreff: t?.subject ?? "", stand, tippt, entwurf, spricht, diktiert, angeheftet, gelesenBis, partnerDa, runde, selbstloeschen: slStd(slChat?.stunden), sendeEffekte, geplant, geplantVorab,
+        // KC-CLUB-WEITERLEITUNG (3.53.0): leitet jemand im Chat gerade automatisch weiter? (nur Vorname + Art, nie Adresse/Ziel)
+        const weiterleitung = ich.nurLesen ? [] : await wlHinweisFuer(andere.map((x: any) => x.person_id), !!gr || andere.length > 1).catch(() => []);
+        return json({ id, betreff: t?.subject ?? "", stand, tippt, entwurf, spricht, diktiert, angeheftet, gelesenBis, partnerDa, runde, selbstloeschen: slStd(slChat?.stunden), sendeEffekte, geplant, geplantVorab, weiterleitung,
           gruppe: gr ? { name: gr.name, symbol: gr.symbol, erstellt_von: gr.erstellt_von, admins: gr.admins ?? [], darfVerwalten: gruppenAdmin(gr, ich.person_id) || ich.vorstand } : null, teilnehmer: (tn ?? []).map((x: any) => ({ person_id: x.person_id, name: leute.get(x.person_id)?.display_name || x.person_id })), nachrichten });
       }
 
@@ -17046,6 +17190,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const tnIds = new Set((alleTn ?? []).map((x: any) => x.person_id));
         // KC-CLUB-AUTOANTWORT: nur Zweier-Chat, nie bei Notfall/Probe und nie aus Systemwegen (Geburtstagsgruß, geplante Nachricht) – im Hintergrund
         if (!notfall && !probe && p.ohne_autoantwort !== true && tnIds.size === 2 && !grp) nebenbei(autoantwortAusloesen(ich, threadId, [...tnIds], false).catch((e) => console.error("autoantwort", String(e))));
+        // KC-CLUB-WEITERLEITUNG (3.53.0): Kopie an die eigene andere E-Mail-Adresse / den anderen Chat der Empfänger – nie aus einer Weiterleitung (keine Schleife), nie bei der SOS-Probe
+        if (!probe && p.aus_weiterleitung !== true && tnIds.size >= 2) nebenbei(weiterleitungAusloesen(ich, m, threadId, [...tnIds], !!grp || tnIds.size > 2,
+          { text, slHinweis, anlagen, einmal, grpName: grp ? `${grp.symbol} ${grp.name}` : "", notfall, wichtig }).catch((e) => console.error("weiterleitung", String(e))));
         const erwaehnt =[...new Set((Array.isArray(p.erwaehnt) ? p.erwaehnt : []).map(String))].filter((id) => id !== ich.person_id && tnIds.has(id)).slice(0, 50);
         let versandErw: any = null;
         if (erwaehnt.length) {

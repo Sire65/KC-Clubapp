@@ -6394,6 +6394,10 @@
 .notaus-fenster .na-kanal { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid rgba(128,128,128,.25); }
 .notaus-fenster .dlg-knoepfe { flex-direction: column; gap: 8px; }
 .notaus-fenster .dlg-knoepfe .knopf { width: 100%; }
+/* 3.53.0 KC-CLUB-WEITERLEITUNG */
+.wl-chat{margin:2px 12px 0 54px;padding:3px 8px;border-radius:8px;font-size:.82em;background:var(--wl-bg,#e8f1ff);color:var(--wl-fg,#1d4f91);width:max-content;max-width:calc(100% - 70px)}
+@media (prefers-color-scheme: dark){.wl-chat{--wl-bg:#1d2f4a;--wl-fg:#cfe2ff}}
+.wl-ziel{display:flex;gap:8px;margin:6px 0}.wl-ziel label{flex:1;display:flex;gap:6px;align-items:center;padding:8px;border:1px solid var(--linie,#ccc);border-radius:10px}
 </style>
 <!-- Club-Küche: redaktionelles Premium-Design, nur für Magazin (nicht Weihnachtsmarkt-Prospekt) -->
 <link rel="stylesheet" href="magazin/premium.css">
@@ -6646,6 +6650,7 @@
       <div class="kopf2"><button class="zurueck" onclick="zurueck('nachrichten')" aria-label="Zurück">‹</button><span class="chat-kopf-bild" id="chatKopfBild" aria-hidden="true" onclick="chatMitgliederZeigen()"></span><h2 id="chatTitel" onclick="chatMitgliederZeigen()" style="cursor:pointer">…</h2><button class="rund" id="chatVorlesenKnopf" title="Neue Nachrichten vorlesen" aria-label="Neue Nachrichten vorlesen" aria-pressed="false" onclick="vorlesenSchalter(!vorlesenAn())">🔇</button><button class="rund" id="chatSuchKnopf" title="Im Chat suchen" aria-label="Im Chat suchen" onclick="chatSucheAuf()">🔍</button><button class="rund" id="chatMenueKnopf" title="Mehr" onclick="chatMenue()">⋮</button></div>
       <div id="chatSuchLeiste" class="versteckt"><input id="chatSuchFeld" type="search" aria-label="Im Chat suchen" placeholder="Im Chat suchen …" autocomplete="off" oninput="chatSucheJetzt(true)" onkeydown="if(event.key==='Enter'){event.preventDefault();chatSucheSpringen(1)}"><span id="chatSuchZahl"></span><button title="vorheriger Treffer" onclick="chatSucheSpringen(-1)">▲</button><button title="nächster Treffer" onclick="chatSucheSpringen(1)">▼</button><button title="Suche schließen" onclick="chatSucheZu()">✕</button></div>
       <div class="chat-unterzeile" id="chatUnterzeile"><div class="hinweis" id="chatTeilnehmer" style="margin-left:54px;cursor:pointer" onclick="if(CHAT?.gruppe||(CHAT?.teilnehmer||[]).length>2)chatMitgliederZeigen()"></div><button type="button" class="tz-pfeil ct-pfeil versteckt" id="chatTeilnehmerPfeil" aria-expanded="false" title="Alle Teilnehmer zeigen" onclick="chatTnKlappen()">▸</button><button class="sl-kopf versteckt" id="chatSlMarke" title="Selbstlöschen in diesem Chat – antippen zum Ändern" onclick="slWahl('chat')"></button></div> <!-- KC-CLUB-SELBSTLOESCHEN 2.148.0: ⏳ neben „online“ -->
+      <div class="wl-chat versteckt" id="chatWlHinweis" role="status"></div> <!-- 3.53.0 KC-CLUB-WEITERLEITUNG: „↪️ … leitet Nachrichten gerade weiter“ -->
       <div id="chatFilterHinweis" class="chat-filter-hinweis versteckt" onclick="chatFilterSetzen('alle')"></div><!-- 2.577.0 KC-CLUB-CHAT-FILTER -->
       <div id="chatNotaus" class="versteckt" aria-live="assertive"></div><!-- KC-NOTAUS -->
       <div id="chatAngeheftet"></div>
@@ -6860,6 +6865,7 @@
       <p class="hinweis" style="margin:0 0 6px">Wobei möchtest du eine Nachricht aufs Handy (Push) oder eine E-Mail bekommen?</p>
       <!-- KC-CLUB-AUTOANTWORT (Wunschliste #101) -->
       <div class="schalter"><div><b>🤖 Autoantwort</b><div class="hinweis" id="setAaStand">🤖 Autoantwort ist aus</div><div class="hinweis">Antwortet in Einzelchats automatisch für dich, wenn du nicht da bist – schneller: 🤖 oben in 💬 Nachrichten.</div></div><button type="button" class="knopf klein" onclick="aaFenster()">Einstellen</button></div>
+      <div class="schalter"><div><b>↪️ Automatisch weiterleiten</b><div class="hinweis" id="setWlStand">↪️ Weiterleitung ist aus</div><div class="hinweis">Kopie deiner Nachrichten an eine andere E-Mail-Adresse oder an den Chat mit einem anderen Mitglied.</div></div><button type="button" class="knopf klein" onclick="wlFenster()">Einstellen</button></div>
       <table class="wahltabelle"><thead><tr><th></th><th>📲 Push</th><th>✉️ E-Mail</th></tr></thead><tbody id="wahlTabelle"></tbody></table>
       <p class="hinweis" style="font-size:.85rem" id="wahlHinweis">Nur Push: Kommt der Push nicht an, schicken wir automatisch eine E-Mail.</p>
       <!-- 2.883.0 KC-CLUB-FRIST-ERINNERUNG -->
@@ -7498,7 +7504,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=3.52.0" data-v="3.52.0"></script>
+<script src="app.js?v=3.53.0" data-v="3.53.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>
