@@ -1682,6 +1682,10 @@
   .na-seite button { width: 30px; height: 30px; border-radius: 50%; border: none; padding: 0; display: grid; place-items: center; cursor: pointer; box-shadow: var(--schatten); }
   .na-seite .na-pfeil { background: var(--karte); color: var(--grau); } .na-seite .na-pfeil svg { width: 17px; height: 17px; fill: currentColor; }
   .blase .nt-knopf { display: block; margin: 6px 0 2px; padding: 4px 10px; border: 1px solid #c9a46a; border-radius: 12px; background: #f3e9dc; color: #741521; font: 600 .82rem/1.3 inherit; cursor: pointer; text-align: left; max-width: 100%; } /* 2.608.0 KC-CLUB-NACHRICHT-TERMIN */
+  /* KC-CLUB-NT-AUS (Wunsch Hansi 27.11.2026): rotes ✕ neben dem Termin-Vorschlag – schaltet die Vorschläge aus */
+  .blase .nt-zeile { display: flex; align-items: center; gap: 6px; margin: 6px 0 2px; max-width: 100%; } .blase .nt-zeile .nt-knopf { margin: 0; min-width: 0; }
+  .blase .nt-aus { flex: none; width: 26px; height: 26px; border-radius: 50%; border: 2px solid #c0392b; background: #fff; color: #c0392b; font: 900 .9rem/1 inherit; cursor: pointer; padding: 0; }
+  .blase .nt-aus:active { background: #c0392b; color: #fff; }
   .blase .erk-zeile { display: flex; gap: 4px; align-items: stretch; margin: 6px 0 2px; } /* 2.666.0 KC-CLUB-ERKENNUNG-NACHRICHT */
   .blase .erk-knopf { flex: 1; padding: 4px 10px; border: 1px dashed #c9a46a; border-radius: 12px; background: #fff8e6; color: #741521; font: 600 .82rem/1.3 inherit; cursor: pointer; text-align: left; }
   .blase .erk-weg { padding: 0 8px; border: 1px solid #ddd; border-radius: 12px; background: transparent; color: inherit; opacity: .7; cursor: pointer; }
@@ -7121,6 +7125,7 @@
       <p class="hinweis" style="margin:0 0 6px">Kleine Hilfen im Chat. Deine App sucht sie auf dem Handy aus den Nachrichten heraus – nichts geht an fremde Dienste, nichts wird ungefragt gesendet. Gilt für dieses Gerät.</p>
       <div class="schalter"><div><b>📌 Zeile „Für dich“</b><div class="hinweis">Oben im Chat eine Zeile, wenn etwas auf dich wartet: Fragen an dich, Erwähnungen, offene Umfragen, Aufgaben mit Frist, Fotos fürs Album. Antippen zeigt die Liste, ✕ blendet sie aus.</div></div><input type="checkbox" id="setKhFuerDich" aria-label="📌 Zeile „Für dich“" onchange="einstellung('khFuerDich', this.checked);chatStand=''"></div>
       <div class="schalter"><div><b>💬 Schnellantworten</b><div class="hinweis">Unter der neuesten Nachricht an dich bis zu 3 Knöpfe, z. B. „✅ Bin dabei“ oder „👍 Mach ich“. Antippen sendet nach 5 Sekunden – bis dahin rückgängig.</div></div><input type="checkbox" id="setKhChips" aria-label="💬 Schnellantworten" onchange="einstellung('khChips', this.checked);chatStand=''"></div>
+      <div class="schalter"><div><b>📅 Termin-Vorschlag an Nachrichten</b><div class="hinweis">Steht in einer Nachricht ein Termin, erscheint darunter „📅 … – eintragen“. Das rote ✕ daneben schaltet die Vorschläge sofort aus; hier wieder ein. Von Hand geht es immer: Nachricht antippen → „📅 Als Termin übernehmen“.</div></div><input type="checkbox" id="setKhTermin" aria-label="📅 Termin-Vorschlag an Nachrichten" onchange="einstellung('khTermin', this.checked);chatStand=''"></div>
       <div class="schalter"><div><b>❓ Hinweis auf offene Fragen</b><div class="hinweis">Hast du etwas gefragt und nach 12 Stunden noch keine Antwort, steht ein ❓ am Chat – mit „🔔 Freundlich nachfragen“.</div></div><input type="checkbox" id="setKhFragen" aria-label="❓ Hinweis auf offene Fragen" onchange="einstellung('khFragen', this.checked);chatStand=''"></div>
       <div class="schalter"><div><b>📝 Text zu Sprachnachrichten</b><div class="hinweis">Beim Aufnehmen schreibt die Spracherkennung des Handys mit. Der Text steht einklappbar unter der Sprachnachricht („automatisch erkannt“). Geht das auf deinem Handy nicht, kommt die Sprachnachricht wie bisher ohne Text.</div></div><input type="checkbox" id="setKhSprachText" aria-label="📝 Text zu Sprachnachrichten" onchange="einstellung('khSprachText', this.checked);chatStand=''"></div>
     </details>
@@ -7491,7 +7496,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=3.48.0" data-v="3.48.0"></script>
+<script src="app.js?v=3.49.0" data-v="3.49.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>
