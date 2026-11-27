@@ -1,5 +1,10 @@
 # Änderungen
 
+## 3.48.0 – 2026-11-27 – 🚲↔🚗 Fahrtkosten: Fahrrad und Auto beliebig hin und her wechseln (KC-CLUB-FAHRT-WECHSEL)
+Fund Hansi 27.11.2026: „Lass den Wechsel zu – erst Fahrrad, dann Auto, dann wieder Fahrrad usw., wenn man es sich anders überlegt.“
+- `teile/fahrten.js` `fsArtZeigen`: jeder Tipp wechselt die Anzeige sofort. Vorher blieb nach „Auto“ (noch ohne km gespeichert) ein Tipp auf „Fahrrad“ ohne Wirkung, weil gespeichert noch „Fahrrad“ stand. Gespeichert wird „Fahrrad“ nur, wenn vorher „Auto“ gespeichert war; „Auto“ wie bisher erst mit km und 💾.
+- Test `tests/fahrt-wechsel.test.mjs` (CI) spielt Fahrrad → Auto → Fahrrad → Auto … durch. Nur App.
+
 ## 3.47.0 – 2026-11-27 – 🚲🚗 Fahrtkosten: Fahrrad und Auto deutlich unterscheidbar (KC-CLUB-FAHRT-KNOEPFE)
 Wunsch Hansi 27.11.2026: „Die beiden Buttons für Fahrrad und Auto erkennt man nicht gut. Es muss besser unterscheiden.“
 - Meins → 🚗 Fahrten & Abrechnung → „1. Meine Fahrt zum Stand“: großes Symbol (🚲 / 🚗), eigene Farbe je Art – **Fahrrad / zu Fuß** grün, **Eigenes Auto** blau. Gewählt: kräftig gefüllt, weiße Schrift, dicker Rand und ✓ oben rechts; nicht gewählt: blass mit gestricheltem Rand in der jeweiligen Farbe. „Keine Fahrtkosten“ heißt jetzt „🚲 Fahrrad / zu Fuß“ (keine Fahrtkosten · wohne am Ort). Nur App.
