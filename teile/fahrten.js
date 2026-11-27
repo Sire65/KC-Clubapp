@@ -27,8 +27,8 @@ function fsProfilHtml() {
   const p = FSS.profil || { art: "keine" }, auto = p.art === "auto";
   return `<section class="karte fs-karte"><div class="fs-kopf"><b>1. Meine Fahrt zum Stand</b><small>gilt für alle Veranstaltungen</small></div>
     <div class="umschalter fs-wahl" role="radiogroup" aria-label="Fahrtkosten">
-      <button type="button" role="radio" aria-checked="${!auto}" class="${auto ? "" : "an"}" onclick="fsArt('keine')">🚶 Keine Fahrtkosten<small>zu Fuß, Rad, wohne am Ort</small></button>
-      <button type="button" role="radio" aria-checked="${auto}" class="${auto ? "an" : ""}" onclick="fsArt('auto')">🚗 Eigenes Auto<small>km hin und zurück</small></button></div>
+      <button type="button" role="radio" aria-checked="${!auto}" class="fs-keine${auto ? "" : " an"}" onclick="fsArt('keine')"><span class="fs-sym" aria-hidden="true">🚲</span>Fahrrad / zu Fuß<small>keine Fahrtkosten · wohne am Ort</small></button>
+      <button type="button" role="radio" aria-checked="${auto}" class="fs-auto${auto ? " an" : ""}" onclick="fsArt('auto')"><span class="fs-sym" aria-hidden="true">🚗</span>Eigenes Auto<small>km hin und zurück</small></button></div>
     <div id="fsKmZeile" class="fs-kmzeile${auto ? "" : " versteckt"}"><label class="feld" style="margin:0">km hin und zurück (je Dienst)
       <input id="fsKm" inputmode="decimal" placeholder="z. B. 12" value="${auto && p.km ? esc(String(p.km).replace(".", ",")) : ""}"></label>
       <button type="button" class="knopf haupt" onclick="fsProfilSpeichern('auto')">💾 Speichern</button></div>

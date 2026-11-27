@@ -1,5 +1,9 @@
 # Änderungen
 
+## 3.47.0 – 2026-11-27 – 🚲🚗 Fahrtkosten: Fahrrad und Auto deutlich unterscheidbar (KC-CLUB-FAHRT-KNOEPFE)
+Wunsch Hansi 27.11.2026: „Die beiden Buttons für Fahrrad und Auto erkennt man nicht gut. Es muss besser unterscheiden.“
+- Meins → 🚗 Fahrten & Abrechnung → „1. Meine Fahrt zum Stand“: großes Symbol (🚲 / 🚗), eigene Farbe je Art – **Fahrrad / zu Fuß** grün, **Eigenes Auto** blau. Gewählt: kräftig gefüllt, weiße Schrift, dicker Rand und ✓ oben rechts; nicht gewählt: blass mit gestricheltem Rand in der jeweiligen Farbe. „Keine Fahrtkosten“ heißt jetzt „🚲 Fahrrad / zu Fuß“ (keine Fahrtkosten · wohne am Ort). Nur App.
+
 ## 3.46.0 – 2026-11-27 – 📰 Club-Küche: helles Titelblatt und helle Rückseite (KC-CLUB-MAGAZIN-TITEL-HELL)
 Wunsch Hansi 27.11.2026: „Das Cover müssen wir ändern. Am besten weißen Hintergrund, weinrot und gold kann ja bleiben. Aber beim Ausdruck wird viel Tinte gebraucht.“ – „Nimm Vorschlag A und mach die Rückseite auch hell, aber das Logo Kochmütze und since 1991 muss drauf.“
 - Titelblatt (Bildschirm und Druck/A5-Heft) nach Vorschlag A „Klassisch“: weißes Papier, doppelter Goldrahmen, „Köcheclub Werne“ klein über dem Titel, CLUB-KÜCHE weinrot, Goldlinie, Kochmütze weinrot (neue Datei `kc-kochmuetze-weinrot.webp`, aus der weißen erzeugt), erste Schlagzeile weinrot, unten „Genuss · Handwerk · Geschichten · Gemeinschaft“. Tintendeckung grob 3 % statt 77 %.
