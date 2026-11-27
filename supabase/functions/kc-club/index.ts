@@ -197,7 +197,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "3.50.0";
+const SERVER_VERSION = "3.51.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -6106,11 +6106,11 @@ const dp2Kurz = (plan: any) => ({ tage: (plan?.tage || []).map((t: any) => ({ d:
 async function dp2AenderungLauf() {
   const { data: st } = await db.from("kc_dp_plan_published").select("updated_at").eq("org_id", ORG).order("updated_at", { ascending: false }).limit(1);
   const stand = st?.[0]?.updated_at ? String(st[0].updated_at) : ""; if (!stand) return 0;
-  const { data: k } = await db.from("kc_club_konfig").select("wert").eq("schluessel", "dp2_gesehen").maybeSingle();
+  const { data: k } = await db.from("kc_club_konfig").select("wert").eq("schluessel", "dpzwei_gesehen").maybeSingle();
   const alt: any = k?.wert;
   if (alt?.stand === stand || Date.now() - Date.parse(stand) < 5 * 60000) return 0;
   const neu = dp2Kurz(await dp2Plan(null));
-  const { error: me } = await db.from("kc_club_konfig").upsert({ schluessel: "dp2_gesehen", wert: { stand, plan: neu }, geaendert_von: "system", geaendert_am: jetzt() }); // erst merken, dann senden
+  const { error: me } = await db.from("kc_club_konfig").upsert({ schluessel: "dpzwei_gesehen", wert: { stand, plan: neu }, geaendert_von: "system", geaendert_am: jetzt() }); // erst merken, dann senden
   if (me) { console.error("dp2 gesehen", me.message); return 0; } // nicht gemerkt → nichts senden (sonst käme es bei jedem Lauf wieder)
   // erster Lauf: gegen den bisher freigegebenen Club-Stand vergleichen – wer dort andere Zeiten hatte als in DP2, bekommt einmal die richtigen
   const vorher = alt?.plan ?? (await dpgFrei().then((f) => (f ? dp2Kurz(f.plan) : null)).catch(() => null));

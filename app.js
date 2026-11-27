@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "3.50.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "3.51.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -35764,11 +35764,12 @@ function rolleBearbeiten(pid) {
 }
 // 3.49.0 KC-CLUB-ZUGANG-EINZELN: nur sichtbar, wenn „Aushilfe“ oder „Gast“ gewählt ist
 function roExtraHtml() {
-  const zeile = (art) => Object.entries(ZUGANG_EXTRA).filter(([, g]) => g.art === art).map(([id, g]) => `<label class="bu-haken"><input type="checkbox" class="roExtra" value="${id}"> ${g.t}<small class="hinweis" style="display:block;margin-left:24px">${g.u}</small></label>`).join("");
+  // 3.51.0 KC-CLUB-ZUGANG-LISTE (Fund Hansi 27.11.2026 „Überlappen??“): eine Spalte, Beschreibung unter dem Namen statt daneben
+  const zeile = (art) => Object.entries(ZUGANG_EXTRA).filter(([, g]) => g.art === art).map(([id, g]) => `<label class="bu-haken ro-extra-z"><input type="checkbox" class="roExtra" value="${id}"><span><span class="ro-extra-t">${g.t}</span><small class="hinweis">${g.u}</small></span></label>`).join("");
   return `<div id="roExtra" class="karte" style="margin:8px 0;padding:8px 10px"><div class="hl-frage" style="margin-top:0">Einzeln für diese Person</div>
     <p class="hinweis" style="margin:0 0 6px">Zum Aushilfen- bzw. Gast-Paket <b>zusätzlich erlauben</b> oder etwas daraus <b>wegnehmen</b>. Gilt nur für diese Person.</p>
-    <div class="hinweis" style="font-weight:700;margin:4px 0">➕ Zusätzlich erlauben</div><div class="bu-haken-liste">${zeile("plus")}</div>
-    <div class="hinweis" style="font-weight:700;margin:8px 0 4px">➖ Wegnehmen</div><div class="bu-haken-liste">${zeile("minus")}</div></div>`;
+    <div class="hinweis" style="font-weight:700;margin:4px 0">➕ Zusätzlich erlauben</div><div class="bu-haken-liste ro-extra-liste">${zeile("plus")}</div>
+    <div class="hinweis" style="font-weight:700;margin:8px 0 4px">➖ Wegnehmen</div><div class="bu-haken-liste ro-extra-liste">${zeile("minus")}</div></div>`;
 }
 function roExtraSichtbar() { const w = document.querySelector('#rolleBlatt input[name="roZugang"]:checked')?.value, k = $("roExtra"); if (k) k.hidden = !(w === "aushilfe" || w === "gast"); }
 async function rolleSpeichern(pid, knopf) {

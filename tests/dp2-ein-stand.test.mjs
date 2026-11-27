@@ -28,7 +28,10 @@ assert.ok(/const plan0 = await dp2Plan\(f\.plan\);/.test(server), "Druckansicht 
 assert.ok(!/dpgAenderungenSenden\(altFrei\.plan, w/.test(server), "Freigabe verschickt keine Dienständerungen mehr");
 const lauf = teil("async function dp2AenderungLauf()", "async function dpSollStand(");
 assert.ok(/Date\.now\(\) - Date\.parse\(stand\) < 5 \* 60000/.test(lauf), "erst nach 5 Min. Ruhe");
-assert.ok(lauf.indexOf('schluessel: "dp2_gesehen"') < lauf.indexOf("dpgAenderungenSenden") && /geaendert_von: "system"/.test(lauf) && /if \(me\) \{[^}]*return 0; \}/.test(lauf), "erst merken (mit Pflichtfeld), bei Fehler nichts senden");
+assert.ok(lauf.indexOf('schluessel: "dpzwei_gesehen"') < lauf.indexOf("dpgAenderungenSenden") && /geaendert_von: "system"/.test(lauf) && /if \(me\) \{[^}]*return 0; \}/.test(lauf), "erst merken (mit Pflichtfeld), bei Fehler nichts senden");
+// 3.51.0: kc_club_konfig erlaubt nur ^[a-z_]{2,40}$ – „dp2_gesehen“ (mit Ziffer) wurde abgelehnt
+for (const k of [...server.matchAll(/from\("kc_club_konfig"\)[^\n]*?schluessel(?:", |: )"([^"]+)"/g)].map((m) => m[1])) assert.ok(/^[a-z_]{2,40}$/.test(k), "kc_club_konfig-Schlüssel erlaubt: " + k);
+assert.ok(/"dpzwei_gesehen"/.test(lauf) && !/dp2_gesehen"/.test(server), "Schlüssel ohne Ziffer");
 assert.ok(/await adminIds\(\)/.test(lauf) && /club-dp2-neu:\$\{stand\}/.test(lauf), "Hinweis an die Admins, je Stand einmal");
 assert.ok(/await dp2AenderungLauf\(\)\.catch/.test(server), "läuft im Zeitplaner");
 assert.ok(/Die Dienstzeiten kommen immer aus DP2/.test(app), "Hinweis in der App");

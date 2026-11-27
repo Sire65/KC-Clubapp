@@ -38,5 +38,6 @@ assert.ok(/\$\{roExtraHtml\(\)\}/.test(app) && /extra: \(\(\) => \{/.test(app), 
   assert.ok(!h.zugangKachel("spiele") && !h.zugangAktion("spiele_liste") && o.zugangKachel("spiele") && h.zugangKachel("mein_dienst"), "App: minus nimmt weg, Rest bleibt");
   assert.ok(m.zugangKachel("spiele") && m.zugangAktion("spiele_liste"), "Mitglieder unberührt");
 }
+assert.ok(/class="bu-haken-liste ro-extra-liste"/.test(app) && /\.bu-haken-liste\.ro-extra-liste \{ grid-template-columns: 1fr; \}/.test(lies("index.html")), "3.51.0: eine Spalte, Beschreibung darunter (Fund „Überlappen??“)");
 assert.ok(lies(".github/workflows/tests.yml").includes("node tests/zugang-einzeln.test.mjs"), "läuft in der CI");
 console.log("zugang-einzeln: ok");
