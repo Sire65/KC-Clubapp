@@ -1,5 +1,12 @@
 # Änderungen
 
+## 3.57.0 – 2026-11-28 – 🏠 Heimarbeit: Eingabe übersichtlich mit Datumsauswahl (KC-CLUB-HEIMARBEIT) · App + Server 3.57.0
+Hansi 28.11.: „Der Button ‚Mischung gemacht‘ muss besser erkennbar sein und eine Datumsauswahl muss möglich sein, mit Pfeil zum nächsten Tag. Das Ganze einfach, übersichtlich, bedienerfreundlich, alles gut erkennbar und ausgerichtet und logisch ausgegraut anzeigen.“
+- 📅 Tag: ◀ Kalender ▶ – jeder Tag im Einsatzzeitraum bis heute (Server erlaubt das jetzt auch, vorher nur 3 Tage zurück); Pfeile an den Grenzen ausgegraut; darunter Wochentag/„heute“ und was an dem Tag schon eingetragen ist.
+- 🕘 Von – Bis nebeneinander (Uhrzeit-Auswahl des Handys), ☕ Pause als Knöpfe, 📝 „🥣 Mischung gemacht“ als großer Auswahl-Knopf (✓ wenn gewählt) + eigener Text.
+- Zusammenfassung „x Std. · Tag · von–bis“; „✅ Eintragen“ ist ausgegraut, solange etwas nicht passt (mit Hinweis warum).
+- Rückweg: App + Server 3.56.0.
+
 ## 3.56.0 – 2026-11-28 – 🌱 Mein Garten auch für Aushilfen (KC-CLUB-GARTEN-AUSHILFEN) · Server 3.56.0
 Hansi 28.11.2026: „OK, Aushilfen dürfen auch mitmachen“ – „Sofort, aber Bündel beachten“ (3.55.0 der Heimarbeit-Sitzung war inzwischen schon eingespielt).
 - Kachel „🌱 Mein Garten“, Samentütchen, Säen, Pflege, Automatik und Club-Garten jetzt für Mitglieder **und** Aushilfen (Freigabe `garten` = alle gilt für beide). Gäste weiter nicht.

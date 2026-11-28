@@ -197,7 +197,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "3.56.0";
+const SERVER_VERSION = "3.57.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -16173,7 +16173,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const e = (await hmEinsaetze(ich.person_id)).find((x) => x.id === txt(p.einsatz, 80));
         if (!e) throw new Fehler("Für dich ist gerade keine Heimarbeit eingerichtet.", 403);
         const datum = String(p.datum || "");
-        if (!hmTagOk(e, datum)) throw new Fehler(`Eintragen geht für Tage im Zeitraum ${tagText(e.von)}–${tagText(e.bis)}, nicht in der Zukunft und höchstens ${HM.nachTage} Tage zurück.`);
+        if (!hmTagOk(e, datum)) throw new Fehler(`Eintragen geht für Tage im Zeitraum ${tagText(e.von)}–${tagText(e.bis)}, nicht in der Zukunft.`);
         const r = await sonderstundenMelden(ich, { specialEventId: e.id, date: datum, taetigkeit: "vorbereitung", bemerkung: txt(p.text, 300),
           eintraege: [{ personId: ich.person_id, start: Number(p.von), end: Number(p.bis), breakMinutes: Math.round(Number(p.pause) || 0) }] });
         if (!(r as any)?.rows?.length && (r as any)?.skipped?.length) throw new Fehler("Für diese Zeit hast du schon etwas eingetragen – bitte den Eintrag ändern.", 409);
@@ -24400,7 +24400,7 @@ async function hmEinsaetze(pid?: string) {
 // Tage, für die gemeldet werden darf: im Zeitraum des Einsatzes, nicht in der Zukunft, höchstens HM.nachTage zurück
 function hmTagOk(e: { von: string; bis: string }, datum: string) {
   const heute = berlinTag(new Date());
-  return /^\d{4}-\d{2}-\d{2}$/.test(datum) && datum >= e.von && datum <= e.bis && datum <= heute && datum >= tagDazu(heute, -HM.nachTage);
+  return /^\d{4}-\d{2}-\d{2}$/.test(datum) && datum >= e.von && datum <= e.bis && datum <= heute; // 3.57.0: jeder Tag im Zeitraum bis heute (Datumsauswahl, Wunsch Hansi)
 }
 // Abend-Erinnerung (Wartung, 20–22 Uhr): wer an einem Einsatztag noch nichts eingetragen hat, bekommt einmal Bescheid (Push, sonst E-Mail)
 async function hmErinnern() {
