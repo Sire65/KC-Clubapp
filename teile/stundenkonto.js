@@ -245,8 +245,10 @@ function hmTage() { // heute, gestern, vorgestern … – nur im Zeitraum, nicht
 }
 function hmZeichnen() {
   const el = $("hmInhalt"); if (!el || !HMS.e) return;
-  const uhr = (feld, titel) => `<div class="ds-uhr-feld"><div class="ds-uhr-titel">${titel}</div><div class="ds-uhr">${hmUhr(HMS[feld])}</div>
-    <div class="ds-schritte"><button class="knopf" onclick="hmSchieben('${feld}',-1)">−1 Std.</button><button class="knopf" onclick="hmSchieben('${feld}',-0.25)">−15</button><button class="knopf" onclick="hmSchieben('${feld}',0.25)">+15</button><button class="knopf" onclick="hmSchieben('${feld}',1)">+1 Std.</button></div></div>`;
+  // 3.55.0 (Hansi 28.11.: „Die Uhrzeit muss sich verstellen lassen … mach unten die plus eine Stunde etc. weg“): Von/Bis direkt antippen – Uhrzeit-Auswahl des Handys, Viertelstunden
+  const uhr = (feld, titel) => `<label class="ds-uhr-feld" style="display:block;text-align:center"><div class="ds-uhr-titel">${titel}</div>
+    <input type="time" step="900" class="hm-zeit" value="${hmUhr(HMS[feld] >= 24 ? 0 : HMS[feld])}" onchange="hmZeitSetzen('${feld}', this.value)" aria-label="${titel}"
+      style="font-size:2rem;font-weight:800;text-align:center;width:100%;max-width:300px;padding:6px 8px;border-radius:14px;border:2px solid var(--linie);background:var(--karte);color:var(--text)"></label>`;
   const tage = hmTage();
   el.innerHTML = `<h3 style="margin-top:0">🏠 ${HMS.rid ? "Eintrag ändern" : "Stunden eintragen"}</h3><p class="hinweis" style="margin:0 0 8px">${esc(HMS.e.titel)}</p>
     <div class="ds-gruende" style="margin-bottom:8px">${tage.map(([iso, t]) => `<button type="button" class="chip${HMS.datum === iso ? " an" : ""}" onclick="HMS.datum='${iso}';hmZeichnen()">${esc(t)}</button>`).join("") || '<span class="hinweis">Kein Tag im Zeitraum.</span>'}</div>
@@ -256,11 +258,15 @@ function hmZeichnen() {
     <label class="feld">Was gemacht? <small class="hinweis">(freiwillig)</small><input id="hmText" maxlength="300" value="${esc(HMS.text)}" placeholder="z. B. Plätzchen gebacken" oninput="HMS.text=this.value"></label>
     <div class="knoepfe" style="flex-direction:column;align-items:stretch;margin-top:8px"><button class="knopf haupt" onclick="hmSpeichern(this)">✅ ${HMS.rid ? "Änderung speichern" : "Eintragen"}</button>
       ${HMS.rid ? '<button class="knopf" onclick="hmZurueck(this)">🗑️ Eintrag zurückziehen</button>' : ""}<button class="knopf" onclick="fensterZu($('hmBlatt'))">Abbrechen</button></div>
-    <p class="hinweis" style="margin:8px 0 0">Hansi bestätigt deine Stunden – bis dahin stehen sie mit ⏳ in deinem Stundenkonto und du kannst sie noch ändern.</p>`;
+    <p class="hinweis" style="margin:8px 0 0">Deine Stunden werden noch bestätigt – bis dahin stehen sie mit ⏳ in deinem Stundenkonto und du kannst sie noch ändern.</p>`;
 }
-function hmSchieben(feld, h) { HMS[feld] = Math.min(24, Math.max(0, Math.round((HMS[feld] + h) * 4) / 4)); if (feld === "von" && HMS.bis <= HMS.von) HMS.bis = Math.min(24, HMS.von + 0.25); if (feld === "bis" && HMS.bis <= HMS.von) HMS.von = Math.max(0, HMS.bis - 0.25); hmZeichnen(); }
+function hmZeitSetzen(feld, wert) { // „HH:MM“ → Stunden (auf Viertelstunden gerundet); Bis 00:00 = Mitternacht (24 Uhr)
+  const [h, m] = String(wert || "").split(":").map(Number); if (!Number.isFinite(h)) return;
+  let x = Math.round((h + (m || 0) / 60) * 4) / 4; if (feld === "bis" && x === 0) x = 24;
+  HMS[feld] = Math.min(24, Math.max(0, x)); hmZeichnen();
+}
 async function hmSpeichern(knopf) {
-  if (!(HMS.bis > HMS.von)) return melde("Bis muss nach Von liegen.", true);
+  if (!(HMS.bis > HMS.von)) return melde("Bis muss nach Von liegen – bitte die Uhrzeiten prüfen.", true);
   await einmal(knopf, async () => {
     const daten = { datum: HMS.datum, von: HMS.von, bis: HMS.bis, pause: HMS.pause, text: HMS.text.trim() };
     try { await api(HMS.rid ? "heimarbeit_aendern" : "heimarbeit_melden", HMS.rid ? { id: HMS.rid, ...daten } : { einsatz: HMS.e.id, ...daten }, { warten: true });

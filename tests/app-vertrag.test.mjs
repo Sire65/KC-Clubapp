@@ -13965,3 +13965,6 @@ assert.ok(/const DPD_ZEILEN_PLAN = 27;/.test(programm) && /\.join\(luft \? `<tbo
   assert.ok(/function hmKarteHtml\(d\)/.test(sk) && /if \(!d\?\.heimarbeit\?\.length \|\| d\.person\?\.id !== ICH\?\.person_id\) return "";/.test(sk) && /api\(HMS\.rid \? "heimarbeit_aendern" : "heimarbeit_melden"/.test(sk), "App: Knopf nur bei eigener Heimarbeit");
   assert.ok(/h === "#stundenkonto"\) skStart\(\)/.test(programm), "Link aus der Erinnerung öffnet das Stundenkonto");
 }
+// 3.55.0 KC-CLUB-HEIMARBEIT: Uhrzeit direkt einstellen, keine ±-Knöpfe mehr (Hansi 28.11.)
+{ const sk = lies("teile/stundenkonto.js");
+  assert.ok(/<input type="time" step="900" class="hm-zeit"/.test(sk) && /function hmZeitSetzen\(feld, wert\)/.test(sk) && !/hmSchieben/.test(sk), "Heimarbeit: Von/Bis direkt einstellbar"); }
