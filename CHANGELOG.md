@@ -1,5 +1,12 @@
 # Änderungen
 
+## 3.58.0 – 2026-11-28 – 📋 Kopiertes Foto im Chat einfügen (KC-CLUB-EINFUEGEN-FOTO) · nur App
+Wunsch Hansi 28.11.: „In einem anderen Programm markiert man einen Text oder Foto, klickt auf Kopieren, dann in der Club-App im Chat-Schreibfenster einen Moment reintippen, dann erscheint Einfügen und ich kann Text oder Foto direkt einfügen.“
+- Text: ging schon (lange drücken → Einfügen; WhatsApp-Text wird aufbereitet).
+- **Foto:** beim normalen Einfügen ins Schreibfeld wird ein kopiertes Foto jetzt als Anlage angehängt (wie „🖼️ Bild aus der Galerie“); Text und Foto zusammen: Text ins Feld, Foto als Anlage.
+- 📎 → **„📋 Kopiertes einfügen (Foto oder Text)“**: liest die Zwischenablage selbst (Foto → Anlage, Text → Schreibfeld) – für Handys, die beim langen Drücken für Fotos kein „Einfügen“ anbieten. Das Handy fragt ggf. einmal nach der Erlaubnis.
+- Gesendet wird nie von selbst – immer erst mit ➤. Rückweg: App 3.57.0.
+
 ## 3.57.0 – 2026-11-28 – 🏠 Heimarbeit: Eingabe übersichtlich mit Datumsauswahl (KC-CLUB-HEIMARBEIT) · App + Server 3.57.0
 Hansi 28.11.: „Der Button ‚Mischung gemacht‘ muss besser erkennbar sein und eine Datumsauswahl muss möglich sein, mit Pfeil zum nächsten Tag. Das Ganze einfach, übersichtlich, bedienerfreundlich, alles gut erkennbar und ausgerichtet und logisch ausgegraut anzeigen.“
 - 📅 Tag: ◀ Kalender ▶ – jeder Tag im Einsatzzeitraum bis heute (Server erlaubt das jetzt auch, vorher nur 3 Tage zurück); Pfeile an den Grenzen ausgegraut; darunter Wochentag/„heute“ und was an dem Tag schon eingetragen ist.

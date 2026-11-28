@@ -13975,3 +13975,6 @@ assert.ok(/const HM_WAS = \["Mischung gemacht"\]/.test(lies("teile/stundenkonto.
   assert.ok(/<input type="date" value="\$\{HMS\.datum \|\| ""\}" min="\$\{g\.min\}" max="\$\{g\.max\}"/.test(sk) && /pfeil\(-1, vorAus, "Tag zurück"\)/.test(sk) && /pfeil\(1, nachAus, "Tag vor"\)/.test(sk)
     && /\$\{fehler \? "disabled" : ""\} onclick="hmSpeichern\(this\)"/.test(sk), "Heimarbeit: Datumsauswahl mit Pfeilen, Ausgrauen");
   assert.ok(/datum >= e\.von && datum <= e\.bis && datum <= heute; \/\/ 3\.57\.0/.test(server), "jeder Tag im Zeitraum bis heute"); }
+// 3.58.0 KC-CLUB-EINFUEGEN-FOTO (Hansi 28.11.: kopiertes Foto im Chat einfügen)
+assert.ok(/function clipFotosAnhaengen\(dateien\)/.test(programm) && /dateienGewaehlt\(\{ files: bilder, value: "" \}\)/.test(programm) && /if \(dat\.length && !\(e\.clipboardData\.getData\("text\/plain"\) \|\| ""\)\.trim\(\)\) \{ e\.preventDefault\(\); clipFotosAnhaengen\(dat\); return; \}/.test(programm)
+  && /onclick="clipEinfuegen\(\)">📋 Kopiertes einfügen \(Foto oder Text\)<\/button>/.test(seite), "Kopiertes Foto wird als Anlage eingefügt, nichts wird von selbst gesendet");

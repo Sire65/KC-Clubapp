@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "3.57.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "3.58.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -25948,7 +25948,17 @@ function waMitgliedZuName(namen) { // nur bei eindeutigem Treffer (Kontaktname i
     const x = voll.length === 1 ? voll : vor.length === 1 ? vor : []; if (x.length) treffer.add(x[0]); }
   return treffer.size === 1 ? [...treffer][0] : null;
 }
-function waEinfuegenAuto(e) { // normales Einfügen (lange drücken → Einfügen) ins Schreibfeld – nur WhatsApp-Text wird umgewandelt
+// 3.58.0 KC-CLUB-EINFUEGEN-FOTO (Wunsch Hansi 28.11.2026 „in einem anderen Programm Text oder Foto kopieren, im Chat-Schreibfenster lange drücken → Einfügen“):
+// kopierte Fotos werden wie „🖼️ Bild aus der Galerie“ angehängt (gleicher Weg: dateienGewaehlt), Text bleibt beim normalen Einfügen
+function clipDateiName(f, i) { const typ = (String(f.type || "image/png").split("/")[1] || "png").replace("jpeg", "jpg"); return f.name && !/^image\.\w+$/i.test(f.name) ? f : new File([f], `Foto-${new Date().toISOString().slice(0, 19).replace(/[-:T]/g, "")}${i ? "-" + (i + 1) : ""}.${typ}`, { type: f.type || "image/png" }); }
+function clipFotosAnhaengen(dateien) {
+  const bilder = [...dateien].filter((f) => /^image\//.test(f.type || "")).slice(0, 10).map(clipDateiName); if (!bilder.length) return 0;
+  dateienGewaehlt({ files: bilder, value: "" }); melde(`📷 ${bilder.length === 1 ? "Foto" : bilder.length + " Fotos"} eingefügt – wird angehängt, dann mit ➤ senden.`); return bilder.length;
+}
+function waEinfuegenAuto(e) { // normales Einfügen (lange drücken → Einfügen) ins Schreibfeld – nur WhatsApp-Text wird umgewandelt; Fotos werden angehängt (3.58.0)
+  const dat = [...(e?.clipboardData?.files || [])].filter((f) => /^image\//.test(f.type || ""));
+  if (dat.length && !(e.clipboardData.getData("text/plain") || "").trim()) { e.preventDefault(); clipFotosAnhaengen(dat); return; }
+  if (dat.length) clipFotosAnhaengen(dat); // Text und Foto zusammen: Text normal einfügen lassen, Foto anhängen
   const roh = e?.clipboardData?.getData("text/plain"), w = roh && waAufbereiten(roh); if (!w?.wa) return;
   e.preventDefault(); const t = $("text"), a = t.selectionStart ?? t.value.length, b = t.selectionEnd ?? a;
   t.value = t.value.slice(0, a) + w.text + t.value.slice(b); t.selectionStart = t.selectionEnd = a + w.text.length;
@@ -27846,6 +27856,27 @@ async function waEinfuegen() {
 }
 function anlageMenue() { $("anlageBlatt").classList.toggle("versteckt"); }
 function anlageWahl(id) { $("anlageBlatt").classList.add("versteckt"); dateiWahl(id, dateienGewaehlt); }
+// 3.58.0 KC-CLUB-EINFUEGEN-FOTO: Knopf „📋 Kopiertes einfügen“ – liest die Zwischenablage (Foto → Anlage, Text → Schreibfeld). Das Handy fragt ggf. einmal nach.
+async function clipEinfuegen() {
+  $("anlageBlatt").classList.add("versteckt");
+  const textRein = (txt) => { const t = $("text"); if (!t || !txt) return false; const w = waAufbereiten(txt), neu = w?.wa ? w.text : txt, a = t.selectionStart ?? t.value.length, b = t.selectionEnd ?? a;
+    t.value = t.value.slice(0, a) + neu + t.value.slice(b); t.selectionStart = t.selectionEnd = a + neu.length; t.dispatchEvent(new Event("input")); t.focus(); return true; };
+  try {
+    if (navigator.clipboard?.read) {
+      const teile = await navigator.clipboard.read(), bilder = []; let text = "";
+      for (const it of teile) {
+        const bt = it.types.find((x) => /^image\//.test(x)); if (bt) { bilder.push(new File([await it.getType(bt)], "image." + bt.split("/")[1], { type: bt })); continue; }
+        if (!text && it.types.includes("text/plain")) text = await (await it.getType("text/plain")).text();
+      }
+      const n = clipFotosAnhaengen(bilder), t = textRein(text);
+      if (!n && !t) melde("📋 In der Zwischenablage ist nichts zum Einfügen – erst in einem anderen Programm Text oder Foto kopieren.");
+      else if (t && !n) melde("📋 Text eingefügt – prüfen und mit ➤ senden.");
+      return;
+    }
+    if (navigator.clipboard?.readText) { if (textRein(await navigator.clipboard.readText())) return melde("📋 Text eingefügt – prüfen und mit ➤ senden."); }
+    melde("📋 Bitte lange ins Schreibfeld drücken und „Einfügen“ wählen.");
+  } catch (e) { melde("📋 Einfügen wurde nicht erlaubt – lange ins Schreibfeld drücken und „Einfügen“ wählen.", true); }
+}
 // KC-CLUB-ANHANG-ANSEHEN (2.39.1, Meldung Hansi „Bildschirmfoto beim Antippen weg“): Antippen des Anhangs zeigt ihn groß –
 // entfernt wird nur noch über das eigene ✕ bzw. „🗑️ Entfernen“. Bilder bekommen ein kleines Vorschaubild (nur auf diesem Gerät).
 const anlageVorschau = (datei) => { try { return /^image\//.test(datei?.type || "") ? URL.createObjectURL(datei) : null; } catch { return null; } };
