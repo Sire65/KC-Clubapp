@@ -1,9 +1,11 @@
 # Änderungen
 
-## 3.55.0 – 2026-11-28 – 🏠 Heimarbeit: Uhrzeit direkt einstellen (KC-CLUB-HEIMARBEIT) · nur App
+## 3.55.0 – 2026-11-28 – 🏠 Heimarbeit: Uhrzeit direkt einstellen, „Mischung gemacht“ (KC-CLUB-HEIMARBEIT) · 🚗 Grund „Anlieferfahrt“ · App + Server 3.55.0
 Hansi 28.11. beim Test: „Der Test zeigt mir fest von 9 bis 12. Die Uhrzeit muss sich verstellen lassen … mach unten die plus eine Stunde etc. weg.“
 - Von/Bis sind jetzt direkt antippbar (Uhrzeit-Auswahl des Handys, Viertelstunden); die Knöpfe −1 Std./−15/+15/+1 Std. sind weg. Bis 00:00 gilt als Mitternacht.
-- Teil `teile/stundenkonto.js` (Fingerabdruck neu). Server unverändert (3.54.0). Rückweg: App 3.54.0.
+- „Was gemacht?“: Auswahl „Mischung gemacht“ zum Antippen (füllt das Feld; freier Text bleibt möglich).
+- 💶 Erstattung → Fahrtkosten: neuer Grund **„Anlieferfahrt“** in der Auswahlliste (Server).
+- Teil `teile/stundenkonto.js` (Fingerabdruck neu). Rückweg: App + Server 3.54.0.
 
 ## 3.54.0 – 2026-11-28 – 🏠 Heimarbeit-Stunden im „Mein Stundenkonto“ eintragen (KC-CLUB-HEIMARBEIT) · 🌱 Garten-Rezepte für Sträucher und alle Kräuter (KC-CLUB-GARTEN-STRAEUCHER) · App + Server 3.54.0
 Wunsch Hansi 28.11.: „Andrea arbeitet zu Hause und macht Vorbereitungen. Sie muss täglich ihre Einsatzstunden manuell über die App eingeben … es gibt eine Kachel Mein Stundenkonto, könnte das dort angebunden werden … die Möglichkeit aber nur für Andrea erst mal.“ Konzept: KICC `docs/KONZEPT-CLUB-HEIMARBEIT-STUNDEN.md`.

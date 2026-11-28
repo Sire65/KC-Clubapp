@@ -13968,3 +13968,5 @@ assert.ok(/const DPD_ZEILEN_PLAN = 27;/.test(programm) && /\.join\(luft \? `<tbo
 // 3.55.0 KC-CLUB-HEIMARBEIT: Uhrzeit direkt einstellen, keine ±-Knöpfe mehr (Hansi 28.11.)
 { const sk = lies("teile/stundenkonto.js");
   assert.ok(/<input type="time" step="900" class="hm-zeit"/.test(sk) && /function hmZeitSetzen\(feld, wert\)/.test(sk) && !/hmSchieben/.test(sk), "Heimarbeit: Von/Bis direkt einstellbar"); }
+// 3.55.0: „Mischung gemacht“ zum Antippen, Erstattungsgrund „Anlieferfahrt“ (Hansi 28.11.)
+assert.ok(/const HM_WAS = \["Mischung gemacht"\]/.test(lies("teile/stundenkonto.js")) && /"Abholen \/ Liefern von Material", "Anlieferfahrt"\]/.test(server), "Mischung gemacht + Anlieferfahrt");

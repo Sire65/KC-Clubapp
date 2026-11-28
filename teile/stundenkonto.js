@@ -216,6 +216,7 @@ function skDruckSeite() {
 // ---------- 3.54.0 KC-CLUB-HEIMARBEIT (Wunsch Hansi 28.11.2026: „Andrea arbeitet zu Hause … Stunden täglich über die App, angebunden an Mein Stundenkonto“) ----------
 // Nur wer in einem laufenden Heimarbeit-Einsatz vorgesehen ist, sieht den Knopf (Server liefert d.heimarbeit). Gespeichert als Sonderstunden („gemeldet“),
 // der Planer bestätigt in DP2 – bis dahin ⏳ vorläufig, selbst änderbar oder zurückziehbar.
+const HM_WAS = ["Mischung gemacht"]; // 3.55.0 (Hansi 28.11.: „beim Was gemacht muss Mischung gemacht hin“) – antippen füllt das Feld
 const HMS = { e: null, rid: null, datum: null, von: 9, bis: 12, pause: 0, text: "" };
 const hmUhr = (h) => `${String(Math.floor(h)).padStart(2, "0")}:${String(Math.round((h % 1) * 60)).padStart(2, "0")}`;
 const hmStdText = () => (Math.max(0, HMS.bis - HMS.von - HMS.pause / 60)).toLocaleString("de-DE", { maximumFractionDigits: 2 });
@@ -255,7 +256,8 @@ function hmZeichnen() {
     ${uhr("von", "Von")}${uhr("bis", "Bis")}
     <label class="feld">☕ Pause<select onchange="HMS.pause=Number(this.value);hmZeichnen()">${[0, 15, 30, 45, 60].map((m) => `<option value="${m}"${m === HMS.pause ? " selected" : ""}>${m ? m + " Min." : "keine"}</option>`).join("")}</select></label>
     <p style="text-align:center;font-size:1.15rem;margin:6px 0"><b>= ${hmStdText()} Std.</b></p>
-    <label class="feld">Was gemacht? <small class="hinweis">(freiwillig)</small><input id="hmText" maxlength="300" value="${esc(HMS.text)}" placeholder="z. B. Plätzchen gebacken" oninput="HMS.text=this.value"></label>
+    <label class="feld">Was gemacht? <small class="hinweis">(freiwillig)</small><input id="hmText" maxlength="300" value="${esc(HMS.text)}" placeholder="z. B. Mischung gemacht" oninput="HMS.text=this.value"></label>
+    <div class="ds-gruende" style="margin:-4px 0 8px">${HM_WAS.map((w) => `<button type="button" class="chip${HMS.text === w ? " an" : ""}" onclick="HMS.text=${jsArg(w)};hmZeichnen()">${esc(w)}</button>`).join("")}</div>
     <div class="knoepfe" style="flex-direction:column;align-items:stretch;margin-top:8px"><button class="knopf haupt" onclick="hmSpeichern(this)">✅ ${HMS.rid ? "Änderung speichern" : "Eintragen"}</button>
       ${HMS.rid ? '<button class="knopf" onclick="hmZurueck(this)">🗑️ Eintrag zurückziehen</button>' : ""}<button class="knopf" onclick="fensterZu($('hmBlatt'))">Abbrechen</button></div>
     <p class="hinweis" style="margin:8px 0 0">Deine Stunden werden noch bestätigt – bis dahin stehen sie mit ⏳ in deinem Stundenkonto und du kannst sie noch ändern.</p>`;
