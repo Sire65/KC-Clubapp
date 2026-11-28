@@ -238,29 +238,43 @@ function hmOeffnen(einsatz, rid) {
   Object.assign(HMS, { e, rid: rid || null, datum: z ? z.datum : heute > e.bis ? e.bis : heute, von: z ? zahl(z.von) : 9, bis: z ? zahl(z.bis) : 12, pause: z ? z.pause || 0 : 0, text: z ? z.text || "" : "" });
   blattAuf("hmBlatt", '<div id="hmInhalt"></div>'); hmZeichnen();
 }
-function hmTage() { // heute, gestern, vorgestern … – nur im Zeitraum, nicht in der Zukunft, höchstens 3 Tage zurück
-  const out = [], h = heuteIso();
-  for (let i = 0; i <= 3; i++) { const d = new Date(h + "T12:00:00"); d.setDate(d.getDate() - i); const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-    if (iso >= HMS.e.von && iso <= HMS.e.bis) out.push([iso, i === 0 ? "heute" : i === 1 ? "gestern" : i === 2 ? "vorgestern" : skDatum(iso)]); }
-  return out;
-}
+// 3.57.0 (Hansi 28.11.: „Datumsauswahl muss möglich sein, mit Pfeil zum nächsten Tag; ‚Mischung gemacht‘ besser erkennbar; einfach, übersichtlich,
+// bedienerfreundlich, gut erkennbar, ausgerichtet und logisch ausgegraut“): Tag mit ◀ Kalender ▶ (jeder Tag im Einsatzzeitraum bis heute),
+// Von/Bis nebeneinander, Pause als Knöpfe, „Was gemacht?“ als große Auswahl-Knöpfe + eigener Text, Eintragen erst aktiv, wenn alles passt.
+const hmTagPlus = (iso, n) => { const d = new Date(iso + "T12:00:00"); d.setDate(d.getDate() + n); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+const hmGrenzen = () => { const h = heuteIso(); return { min: HMS.e.von, max: HMS.e.bis < h ? HMS.e.bis : h }; };
+function hmTagName(iso) { const h = heuteIso(); return iso === h ? "heute" : iso === hmTagPlus(h, -1) ? "gestern" : iso === hmTagPlus(h, -2) ? "vorgestern" : ""; }
+function hmFehler() { const g = hmGrenzen();
+  if (!HMS.datum || HMS.datum < g.min || HMS.datum > g.max) return "Bitte einen Tag im Zeitraum wählen.";
+  if (!(HMS.bis > HMS.von)) return "„Bis“ muss nach „Von“ liegen.";
+  if (HMS.pause / 60 >= HMS.bis - HMS.von) return "Die Pause ist länger als die Zeit.";
+  return ""; }
 function hmZeichnen() {
   const el = $("hmInhalt"); if (!el || !HMS.e) return;
-  // 3.55.0 (Hansi 28.11.: „Die Uhrzeit muss sich verstellen lassen … mach unten die plus eine Stunde etc. weg“): Von/Bis direkt antippen – Uhrzeit-Auswahl des Handys, Viertelstunden
-  const uhr = (feld, titel) => `<label class="ds-uhr-feld" style="display:block;text-align:center"><div class="ds-uhr-titel">${titel}</div>
-    <input type="time" step="900" class="hm-zeit" value="${hmUhr(HMS[feld] >= 24 ? 0 : HMS[feld])}" onchange="hmZeitSetzen('${feld}', this.value)" aria-label="${titel}"
-      style="font-size:2rem;font-weight:800;text-align:center;width:100%;max-width:300px;padding:6px 8px;border-radius:14px;border:2px solid var(--linie);background:var(--karte);color:var(--text)"></label>`;
-  const tage = hmTage();
-  el.innerHTML = `<h3 style="margin-top:0">🏠 ${HMS.rid ? "Eintrag ändern" : "Stunden eintragen"}</h3><p class="hinweis" style="margin:0 0 8px">${esc(HMS.e.titel)}</p>
-    <div class="ds-gruende" style="margin-bottom:8px">${tage.map(([iso, t]) => `<button type="button" class="chip${HMS.datum === iso ? " an" : ""}" onclick="HMS.datum='${iso}';hmZeichnen()">${esc(t)}</button>`).join("") || '<span class="hinweis">Kein Tag im Zeitraum.</span>'}</div>
-    ${uhr("von", "Von")}${uhr("bis", "Bis")}
-    <label class="feld">☕ Pause<select onchange="HMS.pause=Number(this.value);hmZeichnen()">${[0, 15, 30, 45, 60].map((m) => `<option value="${m}"${m === HMS.pause ? " selected" : ""}>${m ? m + " Min." : "keine"}</option>`).join("")}</select></label>
-    <p style="text-align:center;font-size:1.15rem;margin:6px 0"><b>= ${hmStdText()} Std.</b></p>
-    <label class="feld">Was gemacht? <small class="hinweis">(freiwillig)</small><input id="hmText" maxlength="300" value="${esc(HMS.text)}" placeholder="z. B. Mischung gemacht" oninput="HMS.text=this.value"></label>
-    <div class="ds-gruende" style="margin:-4px 0 8px">${HM_WAS.map((w) => `<button type="button" class="chip${HMS.text === w ? " an" : ""}" onclick="HMS.text=${jsArg(w)};hmZeichnen()">${esc(w)}</button>`).join("")}</div>
-    <div class="knoepfe" style="flex-direction:column;align-items:stretch;margin-top:8px"><button class="knopf haupt" onclick="hmSpeichern(this)">✅ ${HMS.rid ? "Änderung speichern" : "Eintragen"}</button>
+  const g = hmGrenzen(), vorAus = !HMS.datum || HMS.datum <= g.min, nachAus = !HMS.datum || HMS.datum >= g.max, fehler = hmFehler();
+  const schon = (SKS.d?.zeilen || []).filter((z) => z.datum === HMS.datum && (z.einsatz === HMS.e.id || z.anlass === HMS.e.titel) && z.rid !== HMS.rid);
+  const pfeil = (n, aus, t) => `<button type="button" class="knopf" style="min-width:52px;font-size:1.4rem;padding:6px 0${aus ? ";opacity:.35" : ""}" ${aus ? "disabled" : ""} aria-label="${t}" onclick="HMS.datum=hmTagPlus(HMS.datum,${n});hmZeichnen()">${n < 0 ? "◀" : "▶"}</button>`;
+  const zeit = (feld, t) => `<label style="flex:1;min-width:0;text-align:center"><div class="hinweis" style="margin:0 0 2px;font-weight:700">${t}</div>
+    <input type="time" step="900" value="${hmUhr(HMS[feld] >= 24 ? 0 : HMS[feld])}" onchange="hmZeitSetzen('${feld}', this.value)" aria-label="${t}"
+      style="width:100%;min-width:0;box-sizing:border-box;font-size:1.35rem;font-weight:800;text-align:center;padding:8px 2px;border-radius:14px;border:2px solid var(--linie);background:var(--karte);color:var(--text)"></label>`;
+  const chip = (an, txt, js) => `<button type="button" class="knopf${an ? " haupt" : ""}" style="flex:1;min-width:0;padding:8px 2px;font-size:.95rem;white-space:nowrap" onclick="${js}">${txt}</button>`;
+  const abschnitt = (t, inhalt) => `<div style="margin:0 0 12px"><div style="font-weight:700;margin:0 0 4px">${t}</div>${inhalt}</div>`;
+  el.innerHTML = `<h3 style="margin:0 0 2px">🏠 ${HMS.rid ? "Eintrag ändern" : "Stunden eintragen"}</h3><p class="hinweis" style="margin:0 0 12px">${esc(HMS.e.titel)}</p>
+    ${abschnitt("📅 Tag", `<div style="display:flex;gap:6px;align-items:center">${pfeil(-1, vorAus, "Tag zurück")}
+      <input type="date" value="${HMS.datum || ""}" min="${g.min}" max="${g.max}" onchange="HMS.datum=this.value;hmZeichnen()" aria-label="Tag"
+        style="flex:1;min-width:0;font-size:1.15rem;font-weight:700;text-align:center;padding:8px 4px;border-radius:14px;border:2px solid var(--linie);background:var(--karte);color:var(--text)">
+      ${pfeil(1, nachAus, "Tag vor")}</div>
+      <div class="hinweis" style="text-align:center;margin:4px 0 0">${HMS.datum ? esc(skDatum(HMS.datum)) + (hmTagName(HMS.datum) ? " · " + hmTagName(HMS.datum) : "") : ""}${schon.length ? ` · <b>schon eingetragen: ${schon.map((z) => `${esc(z.von)}–${esc(z.bis)}`).join(", ")}</b>` : ""}</div>`)}
+    ${abschnitt("🕘 Zeit", `<div style="display:flex;gap:6px;align-items:flex-end">${zeit("von", "Von")}<div style="font-size:1.4rem;padding-bottom:12px">–</div>${zeit("bis", "Bis")}</div>`)}
+    ${abschnitt("☕ Pause", `<div style="display:flex;gap:4px">${[0, 15, 30, 45, 60].map((m) => chip(HMS.pause === m, m ? m + " Min." : "keine", `HMS.pause=${m};hmZeichnen()`)).join("")}</div>`)}
+    ${abschnitt("📝 Was gemacht? <small class=\"hinweis\" style=\"font-weight:400\">(freiwillig)</small>", `<div style="display:flex;gap:6px;margin:0 0 6px">${HM_WAS.map((w) => chip(HMS.text === w, (HMS.text === w ? "✓ " : "") + "🥣 " + esc(w), `HMS.text=HMS.text===${jsArg(w)}?'':${jsArg(w)};hmZeichnen()`)).join("")}</div>
+      <input id="hmText" maxlength="300" value="${esc(HMS.text)}" placeholder="oder selbst schreiben …" oninput="HMS.text=this.value" style="width:100%;box-sizing:border-box;font-size:1.05rem;padding:10px 12px;border-radius:14px;border:2px solid var(--linie);background:var(--karte);color:var(--text)">`)}
+    <div class="karte" style="text-align:center;margin:0 0 10px;padding:8px"><span style="font-size:1.25rem"><b>${fehler ? "–" : hmStdText() + " Std."}</b></span>
+      <div class="hinweis" style="margin:2px 0 0">${fehler ? esc(fehler) : `${esc(skDatum(HMS.datum))} · ${hmUhr(HMS.von)}–${hmUhr(HMS.bis)} Uhr${HMS.pause ? ` · ${HMS.pause} Min. Pause` : ""}`}</div></div>
+    <div class="knoepfe" style="flex-direction:column;align-items:stretch;gap:8px">
+      <button class="knopf haupt" style="font-size:1.1rem;padding:12px${fehler ? ";opacity:.4" : ""}" ${fehler ? "disabled" : ""} onclick="hmSpeichern(this)">✅ ${HMS.rid ? "Änderung speichern" : "Eintragen"}</button>
       ${HMS.rid ? '<button class="knopf" onclick="hmZurueck(this)">🗑️ Eintrag zurückziehen</button>' : ""}<button class="knopf" onclick="fensterZu($('hmBlatt'))">Abbrechen</button></div>
-    <p class="hinweis" style="margin:8px 0 0">Deine Stunden werden noch bestätigt – bis dahin stehen sie mit ⏳ in deinem Stundenkonto und du kannst sie noch ändern.</p>`;
+    <p class="hinweis" style="margin:10px 0 0;text-align:center">Deine Stunden werden noch bestätigt – bis dahin stehen sie mit ⏳ in deinem Stundenkonto und du kannst sie noch ändern.</p>`;
 }
 function hmZeitSetzen(feld, wert) { // „HH:MM“ → Stunden (auf Viertelstunden gerundet); Bis 00:00 = Mitternacht (24 Uhr)
   const [h, m] = String(wert || "").split(":").map(Number); if (!Number.isFinite(h)) return;
@@ -268,11 +282,11 @@ function hmZeitSetzen(feld, wert) { // „HH:MM“ → Stunden (auf Viertelstund
   HMS[feld] = Math.min(24, Math.max(0, x)); hmZeichnen();
 }
 async function hmSpeichern(knopf) {
-  if (!(HMS.bis > HMS.von)) return melde("Bis muss nach Von liegen – bitte die Uhrzeiten prüfen.", true);
+  const f = hmFehler(); if (f) return melde(f, true);
   await einmal(knopf, async () => {
     const daten = { datum: HMS.datum, von: HMS.von, bis: HMS.bis, pause: HMS.pause, text: HMS.text.trim() };
     try { await api(HMS.rid ? "heimarbeit_aendern" : "heimarbeit_melden", HMS.rid ? { id: HMS.rid, ...daten } : { einsatz: HMS.e.id, ...daten }, { warten: true });
-      fensterZu($("hmBlatt")); melde(`✅ ${HMS.rid ? "Geändert" : "Eingetragen"}: ${hmUhr(HMS.von)}–${hmUhr(HMS.bis)} Uhr (${hmStdText()} Std.) – danke!`); skStart(); }
+      fensterZu($("hmBlatt")); melde(`✅ ${HMS.rid ? "Geändert" : "Eingetragen"}: ${skDatum(HMS.datum)}, ${hmUhr(HMS.von)}–${hmUhr(HMS.bis)} Uhr (${hmStdText()} Std.) – danke!`); skStart(); }
     catch (e) { meldeFehler(e); }
   });
 }

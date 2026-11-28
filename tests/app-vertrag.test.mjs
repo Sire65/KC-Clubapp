@@ -13967,6 +13967,11 @@ assert.ok(/const DPD_ZEILEN_PLAN = 27;/.test(programm) && /\.join\(luft \? `<tbo
 }
 // 3.55.0 KC-CLUB-HEIMARBEIT: Uhrzeit direkt einstellen, keine ±-Knöpfe mehr (Hansi 28.11.)
 { const sk = lies("teile/stundenkonto.js");
-  assert.ok(/<input type="time" step="900" class="hm-zeit"/.test(sk) && /function hmZeitSetzen\(feld, wert\)/.test(sk) && !/hmSchieben/.test(sk), "Heimarbeit: Von/Bis direkt einstellbar"); }
+  assert.ok(/<input type="time" step="900" value=/.test(sk) && /function hmZeitSetzen\(feld, wert\)/.test(sk) && !/hmSchieben/.test(sk), "Heimarbeit: Von/Bis direkt einstellbar"); }
 // 3.55.0: „Mischung gemacht“ zum Antippen, Erstattungsgrund „Anlieferfahrt“ (Hansi 28.11.)
 assert.ok(/const HM_WAS = \["Mischung gemacht"\]/.test(lies("teile/stundenkonto.js")) && /"Abholen \/ Liefern von Material", "Anlieferfahrt"\]/.test(server), "Mischung gemacht + Anlieferfahrt");
+// 3.57.0 KC-CLUB-HEIMARBEIT: Tag mit ◀ Kalender ▶, Grenzen ausgegraut, Eintragen erst aktiv wenn alles passt (Hansi 28.11.)
+{ const sk = lies("teile/stundenkonto.js");
+  assert.ok(/<input type="date" value="\$\{HMS\.datum \|\| ""\}" min="\$\{g\.min\}" max="\$\{g\.max\}"/.test(sk) && /pfeil\(-1, vorAus, "Tag zurück"\)/.test(sk) && /pfeil\(1, nachAus, "Tag vor"\)/.test(sk)
+    && /\$\{fehler \? "disabled" : ""\} onclick="hmSpeichern\(this\)"/.test(sk), "Heimarbeit: Datumsauswahl mit Pfeilen, Ausgrauen");
+  assert.ok(/datum >= e\.von && datum <= e\.bis && datum <= heute; \/\/ 3\.57\.0/.test(server), "jeder Tag im Zeitraum bis heute"); }

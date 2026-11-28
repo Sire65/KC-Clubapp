@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "3.56.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "3.57.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -35,7 +35,7 @@ const TEILE_LISTE = {
   nutzperson: { einstieg: ["npStart", "npAlle"], sri: "sha384-Z+v9oW3/Vp/DObApKnj6423OFyD/mLKqkI6+rUmBzRUYABaoE9X1rnta/qubtMEX" }, // KC-CLUB-NUTZUNG-PERSON: „📊 Meine Nutzung“ / „📊 Nutzung je Mitglied“ (nur beim Öffnen)
   nutzung: { einstieg: ["nuStart"], sri: "sha384-V8qj7CYfmmydkhppRZkaB/XjF0ATARL/4dwYcdXMeRUQ+cFMm2ijWGLzZIt1uha/" }, // 2.829.0 KC-CLUB-NUTZUNG-ALLE: „📈 So nutzen wir die App“ für alle (nur beim Öffnen)
   garten: { einstieg: ["gartenStart", "gartenTag", "gartenReif"], sri: "sha384-qCmf2gnU+rjoWwtEc7STnrzJ3Nxx29d4TecNCHKJkH0I0hgaDszCv3YOevyyqC8E" }, // KC-CLUB-SAMEN (#84): „🌱 Mein Garten“ – nur beim Öffnen und einmal am Tag beim Start
-  stundenkonto: { einstieg: ["skStart"], sri: "sha384-vUcHv4N7Lh4VQPaseUsNBEX0xu7TzmjEuxaHrXPJMvej70oygb1ZP8kHAnJYEdKY" }, // KICC-F-113 KC-CLUB-STUNDENKONTO (3.22.0): „⏱️ Mein Stundenkonto“ – Filter, Diagramme, PDF
+  stundenkonto: { einstieg: ["skStart"], sri: "sha384-EGNMdBFAMKb7waf0gADd0ACATD7rImUz2ZkfOK8KO5OYd035aJIJnx2YCR72EsuU" }, // KICC-F-113 KC-CLUB-STUNDENKONTO (3.22.0): „⏱️ Mein Stundenkonto“ – Filter, Diagramme, PDF
   fahrten: { einstieg: ["fsStart", "fsLeitung"], sri: "sha384-/8sJlJE/T9/G1YHOqEZCawNB2zGftZWLWv/mT3G8Y95zZTN9ndlMS3lO/M3iu4ol" }, // KICC-F-114 KC-CLUB-FAHRTKOSTEN-SAMMEL: „🚗 Fahrten & Abrechnung“ + Clubleitung
   probe: { einstieg: ["teilProbe"], sri: "sha384-11uzQ0U/9pY4FZjTqOq5jlmzO0XsA4hQVrV8iqqTT7Jp9y3/VSG/gTIggGmcZud8" }, // Probe für den Nachlade-Weg (Klick-Rundgang, Sicherheits-Check)
 };
