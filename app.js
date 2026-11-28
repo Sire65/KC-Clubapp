@@ -13476,7 +13476,7 @@ function akZeigen() {
     <div class="ak-raster">${AK_REIHE.map((n) => `<button type="button" class="ak-tuer${offen.includes(n) ? " auf" : ""}${n === h ? " heute" : ""}${n > h && !vorschau ? " zu" : ""}${n === 24 ? " ak-24" : ""}" data-n="${n}" onclick="akTuer(${n})" aria-label="Türchen ${n}"><span class="ak-zahl">${n}</span><span class="ak-sym" aria-hidden="true">${AK_TUERCHEN[n - 1].sym}</span><span class="ak-art" aria-hidden="true">${n}</span></button>`).join("")}<span class="ak-muetze" aria-hidden="true"><img src="kc-kochmuetze-weiss.webp" alt=""></span></div>
     <div class="ak-legende">${["riegel", "basteln", "spruch", "geschichte", "einladung"].map((a) => `<span>${AK_ARTEN[a][0]} ${AK_ARTEN[a][1]}</span>`).join("")}</div>
     <div id="akInhalt" class="ak-inhalt" aria-live="polite"></div>
-    ${h || vorschau ? `<button type="button" class="knopf ak-fach" onclick="akNaschFach()">📖 Alle Bastel- und Naschideen</button>` : ""}${ICH?.admin ? `<button type="button" class="knopf ak-fach" onclick="akPreisListe()">📋 Wer bekommt was</button>` : ""}
+    ${h || vorschau ? `<button type="button" class="knopf ak-fach" onclick="akNaschFach()">📖 Alle Bastel- und Naschideen</button>` : ""}${ICH?.admin ? `<button type="button" class="knopf ak-fach" onclick="akPreisListe()">📋 Wer bekommt was</button>` : ""}${ICH?.admin ? `<button type="button" class="knopf ak-fach" onclick="akMitnehmen()">🎒 Mitnehmen zum Markt</button>` : ""}
     <p class="ak-quelle">Bild: Altes Rathaus Werne im Advent – Hansi, Köcheclub Werne</p>`);
   f.classList.add("ak-blatt");
 }
@@ -13519,7 +13519,7 @@ async function akPreisMelden(n, knopf) {
 async function akPreisListe() { // nur Admin: wer bekommt was (zum Austeilen im Januar) – ansehen und drucken
   const b = blattAuf("akPreisBlatt", '<h3 style="margin:0">📋 Adventskalender – wer bekommt was</h3><div id="akPreisListe"><p class="hinweis">⏳ Wird geladen …</p></div>');
   let r; try { r = await api("advent_preise_liste", {}, { warten: true }); } catch (e) { if ($("akPreisListe")) $("akPreisListe").innerHTML = `<p class="hinweis">⚠️ ${esc(fehlerText(e))}</p>`; return; }
-  const gruppen = Object.values(AK_PREISE).filter((P) => !P.folgt).map((P) => ({ P, leute: r.preise.filter((x) => x.preis === P.name).map((x) => x.name).sort((a, c) => a.localeCompare(c, "de")) }));
+  const gruppen = Object.values(AK_PREISE).filter((P) => !P.folgt).map((P) => ({ P, leute: r.preise.filter((x) => x.preis === P.name).map((x) => x.name + (x.uebergeben ? " ✅ schon übergeben" : "")).sort((a, c) => a.localeCompare(c, "de")) })); // KC-CLUB-ADVENT-MITNEHMEN
   const gezogen = new Map((r.gadgets || []).map((x) => [x.tag, x])); // KC-CLUB-ADVENT-GADGETS: eigener Abschnitt für die verlosten Einzelstücke
   const html = gruppen.map(({ P, leute }) => `<h4 style="margin:12px 0 4px">${P.sym} ${esc(P.name)} – ${leute.length} Stück</h4>${leute.length ? `<ol style="margin:0;padding-left:22px">${leute.map((x) => `<li>${esc(x)}</li>`).join("")}</ol>` : '<p class="hinweis" style="margin:0">Noch niemand gemeldet.</p>'}`).join("")
     + `<h4 style="margin:12px 0 4px">🎁 Gadgets (verlost)</h4><ul style="margin:0;padding-left:22px">${Object.entries(AK_GADGETS).map(([t, G]) => { const x = gezogen.get(Number(t));
@@ -13608,6 +13608,35 @@ function akNaschFach() { // 2.869.0: alle Nasch-Anleitungen – die aus dem Kale
   $("akInhalt").scrollIntoView({ block: "nearest", behavior: "smooth" });
 }
 function akMehrZeigen(i) { const x = AK_MEHR[i]; if (!x) return; $("akInhalt").innerHTML = akAnleitung(x, 0) + '<button type="button" class="knopf klein" style="margin-top:8px" onclick="akNaschFach()">← Alle Bastel- und Naschideen</button>'; }
+// KC-CLUB-ADVENT-MITNEHMEN (Wunsch Hansi 28.11.2026): Tagesliste für Hansis Dienste am Weihnachtsmarkt – wer hat zur selben Zeit Dienst und welche
+// gemeldeten Süßigkeiten sind noch nicht übergeben. „✅ übergeben“ abhaken (Server merkt es sich, dann nicht doppelt beim Weihnachtsessen). Nur Admin.
+const AK_MIT = { r: null };
+async function akMitnehmen() {
+  if (!ICH?.admin) return;
+  if (!$("akMitBlatt")) blattAuf("akMitBlatt", `<div class="ak-kopf"><h3 style="margin:0">🎒 Mitnehmen zum Markt</h3><button type="button" class="knopf klein" onclick="fensterZu($('akMitBlatt'))" aria-label="Schließen">✕</button></div><div id="akMitListe"><p class="hinweis">⏳ Wird geladen …</p></div>`);
+  try { AK_MIT.r = await api("advent_mitnehmen", {}, { warten: true }); } catch (e) { if ($("akMitListe")) $("akMitListe").innerHTML = `<p class="hinweis">⚠️ ${esc(fehlerText(e))}</p>`; return; }
+  akMitZeigen();
+}
+const akTagLang = (d) => new Date(d + "T12:00:00").toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long" });
+function akMitZeigen() {
+  const r = AK_MIT.r; if (!r || !$("akMitListe")) return;
+  const name = (pr) => `${AK_TUERCHEN[pr.tag - 1]?.sym || "🍬"} ${esc(pr.preis)} <span class="hinweis">(Türchen ${pr.tag})</span>`;
+  const kollege = (k) => `<li><b>${esc(k.name)}</b> <span class="hinweis">${esc(k.dienst)}</span>${k.preise.length
+    ? `<ul>${k.preise.map((pr) => `<li><label><input type="checkbox" onchange="akUebergeben('${esc(k.person_id)}', ${pr.tag}, this)"><span>${name(pr)}</span></label></li>`).join("")}</ul>`
+    : '<div class="hinweis">noch nichts gemeldet</div>'}</li>`;
+  const tag = (t) => `<div class="karte ak-mit-tag"><b>${t.datum === r.heute ? "Heute – " : ""}${esc(akTagLang(t.datum))}</b>
+    <div class="hinweis">Dein Dienst: ${esc(t.meinDienst)} · ${t.stueck ? `<b>${t.stueck} Stück mitnehmen</b>` : "nichts mitzunehmen"}</div>
+    ${t.kollegen.length ? `<ul class="ak-mit-liste">${t.kollegen.map(kollege).join("")}</ul>` : '<p class="hinweis" style="margin:4px 0 0">Niemand sonst zur selben Zeit eingeteilt.</p>'}</div>`;
+  $("akMitListe").innerHTML = '<p class="hinweis" style="margin:4px 0 8px">Für jeden deiner Dienste: wer zur selben Zeit Dienst hat und welche Süßigkeiten er/sie im Kalender gemeldet hat. Nach dem Übergeben abhaken – dann steht es auf der Liste fürs Weihnachtsessen als „schon übergeben“. Spätere Türchen können noch dazukommen.</p>'
+    + (r.tage.length ? r.tage.map(tag).join("") : '<p class="hinweis">In den nächsten Wochen ist für dich kein Dienst im Dienstplan eingetragen.</p>')
+    + '<div class="knoepfe" style="margin-top:10px"><button type="button" class="knopf" onclick="akMitnehmen()">🔄 Neu laden</button></div>';
+}
+async function akUebergeben(pid, tag, box) {
+  box.disabled = true;
+  try { await api("advent_uebergeben", { person_id: pid, tag, an: box.checked }, { warten: true }); melde(box.checked ? "✅ Als übergeben vermerkt" : "Zurückgenommen"); }
+  catch (e) { box.checked = !box.checked; meldeFehler(e); }
+  box.disabled = false;
+}
 function akNaschZeigen(i) { const x = AK_NASCH[i]; if (!x) return; const tg = AK_TUERCHEN.find((T) => T.art === "naschen" && T.t === x.t); $("akInhalt").innerHTML = akAnleitung({ art: "naschen", ...x, ...(tg?.link ? { link: tg.link } : {}) }, 0) + '<button type="button" class="knopf klein" style="margin-top:8px" onclick="akNaschFach()">← Alle Bastel- und Naschideen</button>'; }
 // 2.478.0 (Wunsch Hansi „Die neue Aufteilung gefällt mir nicht – besser wieder wie vorher, aber innerhalb der Bereiche einklappbare Bereiche“):
 // die Hauptbereiche aus 2.469.0 (KC-CLUB-EINST-GRUPPEN) sind wieder entfernt; Unterauswahlen klappen jetzt mit ihrem Häkchen auf (KC-CLUB-EINST-ABHAENGIG).
@@ -38592,7 +38621,7 @@ const FENSTER_NAMEN = {
   stadtBlatt: "🏙️ Termine der Stadt Werne", uaBlatt: "🙋 Unterstützung bei der Club-App", treffenInfo: "📅 Termin-Details", ugBlatt: "📭 Noch nicht gelesen", snAdmin: "📣 Startnachricht schreiben",
   ltBlatt: "🔴 Live-Abstimmung", aeBlatt: "✏️ Meine Daten haben sich geändert", aeEingBlatt: "📬 Änderungen der Mitglieder", ausweisBlatt: "🪪 Mitgliedsausweis", fdkAbgabeBlatt: "🃏 Fang den Koch: Abgabe",
   abAufnahmeBlatt: "🎙️ Sprachaufnahme", ablageBlatt: "🗄️ Ablage", ablkBlatt: "📥 Ablagekorb", ablkEgBlatt: "📥 In die Eingangskörbe der Mitglieder", ablkPrBlatt: "📋 Als Protokoll-Anlage", pfoBlatt: "🔎 Protokoll-Fotos lesen", prWunschBlatt: "✏️ Protokoll: Änderung wünschen", nuBlatt: "📈 So nutzen wir die App", npBlatt: "📊 Nutzungsstatistik", irBlatt: "🗓️ Meine Ist-Zeiten", kwxBlatt: "📤 Kontakt weiterleiten", kkBlatt: "📇 Kontaktkarte",irAeBlatt: "📋 Zeitänderungen", impressumBlatt: "§ Impressum", teilnahmeBlatt: "👥 Teilnahme an den Sitzungen", einlEgBlatt: "👥 Einlesen: in die Eingangskörbe", adBlatt: "🛠️ Verwaltung",
-  adbBlatt: "📒 Adressbuch", akPreisBlatt: "📋 Adventskalender – wer bekommt was", adbFormBlatt: "📒 Adresse melden/ändern", adminBlatt: "🛠️ Verwaltungsfenster", akBlatt: "🎄 Adventskalender", alarmBlatt: "🚨 Notfall-Meldung",
+  adbBlatt: "📒 Adressbuch", akPreisBlatt: "📋 Adventskalender – wer bekommt was", akMitBlatt: "🎒 Mitnehmen zum Markt", adbFormBlatt: "📒 Adresse melden/ändern", adminBlatt: "🛠️ Verwaltungsfenster", akBlatt: "🎄 Adventskalender", alarmBlatt: "🚨 Notfall-Meldung",
   alarmVorschau: "🚨 Notfall-Probe", ampelInfo: "🚦 Die Ampel", angebotInfo: "🎁 Angebot ansehen", anlAnsehBlatt: "📎 Anhang", anlBlatt: "📄 Anhang",
   anlLinkBlatt: "📄 Anhang (Link)", anlageBlatt: "📎 Anlage hinzufügen", ansichtBlatt: "👓 Ansicht wählen", arMenue: "🗄️ Archiv: Dokument", arWegBlatt: "🗑️ Dokument entfernen",
   arWohinBlatt: "🗄️ Dokument ablegen", asBlatt: "⚠️ Die App läuft nicht rund", fkBlatt: "🧊 Fehler mit Ursache und Lösung",atArchivBlatt: "🗄️ Aus dem Archiv dazulegen", schArchivBlatt: "🖨️ Druckpaket: aus dem Archiv", tlArchivBlatt: "🔴 Live: Unterlage aus dem Archiv", atBlatt: "💼 Aktentasche packen", atDruckBlatt: "🖨️ Was soll gedruckt werden?",
@@ -38728,7 +38757,7 @@ const spurZeile = (x) => { const was = spurWas(x.w), mit = x.mit || (x.k ? spurM
 // (der Server schickt die Kennung sonst gar nicht – fremde Chats bleiben zu, KC-CHATS-PRIVAT). Kein Ziel → Zeile wie bisher, ohne Link.
 const FENSTER_OEFFNEN = { mdBlatt: () => mdStart(), wuBlatt: () => wuStart(), schBlatt: () => schZeigen(), dvBlatt: () => dvStart(), ugBlatt: () => ugStart(),
   geFenster: () => geraeteBlatt(), rsFenster: () => rsBlatt(), ansFenster: () => ansBlatt(), ausweisBlatt: () => ausweisZeigen(), avBlatt: () => avWahl(), ablkBlatt: () => ablkZeigen(),
-  adbBlatt: () => adbStart(), stadtBlatt: () => stadtTermine(), uaBlatt: () => uaStart(), aeEingBlatt: () => aeEingang(), akBlatt: () => akZeigen(), einlBlatt: () => buEinlesen(),
+  adbBlatt: () => adbStart(), stadtBlatt: () => stadtTermine(), uaBlatt: () => uaStart(), aeEingBlatt: () => aeEingang(), akBlatt: () => akZeigen(), akMitBlatt: () => akMitnehmen(), einlBlatt: () => buEinlesen(),
   buGruss: () => tagesinfoZeigen(true), wasNeuBlatt: () => wasNeuZeigen(), atBlatt: () => atPackenZeigen(), stFenster: () => stBlatt() };
 const SPUR_OHNE_ZIEL = ["chat", "mitglied", "dokansicht", "protokoll", "gruppe", "geoeffnet", "fenster"]; // Bereiche, die eine Kennung brauchen
 function spurZiel(x) {

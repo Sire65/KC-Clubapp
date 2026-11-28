@@ -569,6 +569,11 @@ async function tippAbgleich(): Promise<void> { // aktueller und nächster Spielt
   } catch (e) { console.error("tippAbgleich", String(e)); }
 }
 const ADVENT_PREISE: Record<number, string> = { 6: "Mini-Schoko-Nikolaus", 20: "Kinderriegel" };
+// KC-CLUB-ADVENT-MITNEHMEN: schon übergebene Preise („person_id|tag“ → Zeitpunkt) aus kc_club_konfig „advent_uebergeben“ (je Jahr)
+async function adventUebergeben(jahr: number): Promise<Record<string, string>> {
+  const { data } = await db.from("kc_club_konfig").select("wert").eq("schluessel", "advent_uebergeben").maybeSingle();
+  const w: any = data?.wert; return w && typeof w === "object" && w[jahr] && typeof w[jahr] === "object" ? w[jahr] : {};
+}
 const berlinTag = (d: Date) => new Intl.DateTimeFormat("sv-SE", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
 const berlinStunde = (d: Date) => Number(new Intl.DateTimeFormat("en-US", { timeZone: TZ, hourCycle: "h23", hour: "2-digit" }).format(d));
 // KC-CLUB-ADVENT-GADGETS (Wunsch Hansi 22.11.2026): 4 Einzelstücke, verlost unter allen, die das Türchen AM TAG öffnen und bis 22 Uhr (Server-Uhr, deutsche Zeit)
@@ -14455,7 +14460,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           const { data: gw } = await db.from("kc_club_advent_gadget_gewinn").select("tag,gadget,person_id,teilnehmer,gezogen_am").eq("jahr", j).order("tag");
           const gl = await personen([...new Set((gw ?? []).filter((x: any) => x.person_id).map((x: any) => x.person_id))]);
           const gadgets = (gw ?? []).map((x: any) => ({ tag: x.tag, gadget: x.gadget, teilnehmer: x.teilnehmer, am: x.gezogen_am, name: x.person_id ? gl.get(x.person_id)?.display_name || vorname(gl.get(x.person_id)) || "Mitglied" : null }));
-          return json({ ok: true, jahr: j, preise: (data ?? []).map((x: any) => ({ tag: x.tag, preis: x.preis, am: x.gemeldet_am, name: leute.get(x.person_id)?.display_name || vorname(leute.get(x.person_id)) || "Mitglied" })), gadgets });
+          const ueb = await adventUebergeben(j); // KC-CLUB-ADVENT-MITNEHMEN: schon am Weihnachtsmarkt übergeben
+          return json({ ok: true, jahr: j, preise: (data ?? []).map((x: any) => ({ tag: x.tag, preis: x.preis, am: x.gemeldet_am, name: leute.get(x.person_id)?.display_name || vorname(leute.get(x.person_id)) || "Mitglied",
+            ...(ueb[`${x.person_id}|${x.tag}`] ? { uebergeben: ueb[`${x.person_id}|${x.tag}`] } : {}) })), gadgets });
         }
         if (a === "advent_preise_meine") {
           const { data } = await db.from("kc_club_advent_preise").select("tag").eq("person_id", ich.person_id).eq("jahr", jahr);
@@ -14467,6 +14474,54 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const { error } = await db.from("kc_club_advent_preise").upsert({ person_id: ich.person_id, jahr, tag, preis }, { onConflict: "person_id,jahr,tag", ignoreDuplicates: true });
         if (error) throw new Fehler("Das hat gerade nicht geklappt – bitte gleich noch einmal.", 503);
         return json({ ok: true, tag, preis });
+      }
+      // KC-CLUB-ADVENT-MITNEHMEN (Wunsch Hansi 28.11.2026: „Evtl. nehme ich die Sachen schon mit zum Weihnachtsmarkt, wenn ich Dienst habe – für die Mitglieder,
+      // die zusammen mit mir Dienst haben. Baue dafür eine tägliche Liste, für wen ich etwas mitnehmen muss.“): nur Admin. Für jeden eigenen Dienst (Plan + bestätigte
+      // Tausche) ab heute: wer am selben Tag zur selben Zeit (überschneidend) Dienst hat und welche Süßigkeiten er/sie gemeldet hat, die noch nicht übergeben sind.
+      // „Übergeben“ merkt sich der Server in kc_club_konfig „advent_uebergeben“ (keine neue Tabelle) – dann fehlt es auf der Liste fürs Weihnachtsessen nicht doppelt.
+      case "advent_mitnehmen": case "advent_uebergeben": {
+        if (!ich.admin) throw new Fehler("Nur für den Admin.", 403);
+        const heute = berlinTag(new Date()), jahr = Number(heute.slice(0, 4));
+        if (a === "advent_uebergeben") {
+          const pid = String(p.person_id || ""), tag = Math.round(Number(p.tag));
+          if (!/^[A-Za-z0-9_-]{3,60}$/.test(pid) || !(tag >= 1 && tag <= 24)) throw new Fehler("Ungültige Angabe.");
+          const { data: k } = await db.from("kc_club_konfig").select("wert").eq("schluessel", "advent_uebergeben").maybeSingle();
+          const w: any = k?.wert && typeof k.wert === "object" ? k.wert : {}; const jw = w[jahr] && typeof w[jahr] === "object" ? w[jahr] : {};
+          if (p.an === false) delete jw[`${pid}|${tag}`]; else jw[`${pid}|${tag}`] = jetzt();
+          w[jahr] = jw;
+          const { error } = await db.from("kc_club_konfig").upsert({ schluessel: "advent_uebergeben", wert: w, geaendert_von: ich.person_id, geaendert_am: jetzt() }, { onConflict: "schluessel" });
+          if (error) throw new Fehler("Das hat gerade nicht geklappt – bitte gleich noch einmal.", 503);
+          return json({ ok: true });
+        }
+        const bis = berlinTag(new Date(Date.now() + 45 * 86400000));
+        const [{ data: meinPlan }, meineUeb] = await Promise.all([
+          db.from("kc_dp_plan_published").select("source_shift_id,person_id,work_date,start_time,end_time,area").eq("org_id", ORG).eq("person_id", ich.person_id).eq("status", "published").gte("work_date", heute).lte("work_date", bis).limit(100),
+          dtUebergaben({ ab: heute }, ich.person_id)]);
+        const meine = dtPlanZeilen(meinPlan ?? [], meineUeb, ich.person_id).filter((x: any) => x.person_id === ich.person_id && x.work_date >= heute && x.work_date <= bis);
+        const tage = [...new Set(meine.map((x: any) => x.work_date))].sort();
+        if (!tage.length) return json({ ok: true, tage: [] });
+        const [{ data: alle }, ueb, { data: pr }, uebergeben] = await Promise.all([
+          db.from("kc_dp_plan_published").select("source_shift_id,person_id,work_date,start_time,end_time,area").eq("org_id", ORG).eq("status", "published").in("work_date", tage).limit(2000),
+          dtUebergaben(tage), db.from("kc_club_advent_preise").select("person_id,tag,preis").eq("jahr", jahr).limit(2000), adventUebergeben(jahr)]);
+        const zeilen = dtPlanZeilen(alle ?? [], ueb);
+        const min = (x: unknown) => { const [h, m] = String(x || "").split(":").map(Number); return Number.isFinite(h) ? h * 60 + (m || 0) : null; };
+        const ueberlappt = (a1: any, b1: any) => { const [s1, e1, s2, e2] = [min(a1.start_time), min(a1.end_time), min(b1.start_time), min(b1.end_time)];
+          if (s1 == null || e1 == null || s2 == null || e2 == null) return true; return s1 < (e2 > s2 ? e2 : e2 + 1440) && s2 < (e1 > s1 ? e1 : e1 + 1440); };
+        const offen = new Map<string, any[]>();
+        for (const x of pr ?? []) { if (uebergeben[`${x.person_id}|${x.tag}`]) continue; offen.set(x.person_id, [...(offen.get(x.person_id) ?? []), { tag: x.tag, preis: x.preis }]); }
+        const ids = [...new Set(zeilen.map((z: any) => z.person_id))].filter((id) => id && id !== ich.person_id && !String(id).startsWith("KC-P-TEST"));
+        const leute = await personen(ids);
+        const hhmm = (x: unknown) => String(x || "").slice(0, 5);
+        const ergebnis = tage.map((t) => {
+          const ich2 = meine.filter((m: any) => m.work_date === t);
+          const kollegen = new Map<string, any>();
+          for (const z of zeilen) if (z.work_date === t && ids.includes(z.person_id) && ich2.some((m: any) => ueberlappt(m, z)))
+            kollegen.set(z.person_id, { person_id: z.person_id, name: leute.get(z.person_id)?.display_name || vorname(leute.get(z.person_id)) || "Mitglied", dienst: `${hhmm(z.start_time)}–${hhmm(z.end_time)}`, bereich: z.area || null,
+              preise: (offen.get(z.person_id) ?? []).sort((x: any, y: any) => x.tag - y.tag) });
+          const k = [...kollegen.values()].sort((x, y) => x.name.localeCompare(y.name, "de"));
+          return { datum: t, meinDienst: ich2.map((m: any) => `${hhmm(m.start_time)}–${hhmm(m.end_time)}`).join(", "), kollegen: k, stueck: k.reduce((n, x) => n + x.preise.length, 0) };
+        });
+        return json({ ok: true, heute, tage: ergebnis });
       }
       case "advent_gadget_stand": case "advent_gadget_mitmachen": { // KC-CLUB-ADVENT-GADGETS: Stand bzw. mitmachen (nur am Tag bis 22 Uhr, Server-Uhr)
         if (ich.zugang !== "mitglied" && ich.zugang !== "aushilfe") throw new Fehler("Mitmachen können nur Mitglieder und Aushilfen.", 403);
