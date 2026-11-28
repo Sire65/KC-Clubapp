@@ -1,5 +1,13 @@
 # Änderungen
 
+## 3.54.0 – 2026-11-28 – 🏠 Heimarbeit-Stunden im „Mein Stundenkonto“ eintragen (KC-CLUB-HEIMARBEIT) · App + Server 3.54.0
+Wunsch Hansi 28.11.: „Andrea arbeitet zu Hause und macht Vorbereitungen. Sie muss täglich ihre Einsatzstunden manuell über die App eingeben … es gibt eine Kachel Mein Stundenkonto, könnte das dort angebunden werden … die Möglichkeit aber nur für Andrea erst mal.“ Konzept: KICC `docs/KONZEPT-CLUB-HEIMARBEIT-STUNDEN.md`.
+- **Meins → ⏱️ Mein Stundenkonto → „➕ Stunden eintragen“**: Tag (heute / gestern / vorgestern), Von/Bis in Viertelstunden, Pause, „Was gemacht?“ (freiwillig), „= x Std.“ – ein Tipp „✅ Eintragen“. Einsatz und Tätigkeit („Vorbereitung“) setzt die App selbst.
+- Gespeichert als Sonderstunden-Meldung (Status „gemeldet“) zum Einsatz – erscheint sofort mit ⏳ im Konto; der Planer bestätigt in DP2, dann zählt sie. Bis dahin selbst **ändern** oder **zurückziehen** („✏️ ändern“ in der Zeile).
+- Freischaltung über den Sondereinsatz: `payload.heimarbeit = true` + Person in `vorgesehen` + Termin FEST mit Zeitraum. Angelegt: „Weihnachtsmarkt-Vorbereitung zu Hause“ 01.–14.12.2026, nur Andrea. In DP2 entspricht das Zone Z „Vorbereitung zuhause“.
+- Abend-Erinnerung (20 Uhr, einmal je Tag, nur an Einsatztagen ohne Eintrag): „🏠 Heimarbeit-Stunden eintragen?“ – Push, sonst E-Mail; Link öffnet das Stundenkonto (`#stundenkonto`).
+- Regel „Club-App meldet nur“ bleibt – einzige neue Ausnahme: eigene, selbst gemeldete, noch nicht bestätigte Heimarbeit ändern/zurückziehen (Test in `tests/app-vertrag.test.mjs`). Rückweg: App + Server 3.53.0.
+
 ## 3.53.0 – 2026-11-27 – ↪️ Nachrichten automatisch weiterleiten (KC-CLUB-WEITERLEITUNG) · Server 3.53.0
 Wunsch Hansi 27.11.2026: „Kannst du bei Nachrichten eine Autoweiterleitung einbauen, z. B. an eine andere E-Mail-Adresse oder einen anderen Chat?“ – „Alle sollen es haben, an andere E-Mail oder anderen Chat.“
 - ⚙️ → 🔔 Benachrichtigungen → „↪️ Automatisch weiterleiten“: Ziel andere E-Mail-Adresse (einmal mit 6-stelligem Code aus einer Mail bestätigt, 30 Min. gültig, höchstens 3 Codes je Stunde, 5 Versuche) oder der Einzelchat mit einem anderen Mitglied; „auch Gruppen“ wählbar (sonst nur Einzelchats); Zeitraum von–bis freiwillig (sonst bis auf Widerruf).

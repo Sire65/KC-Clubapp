@@ -11591,7 +11591,11 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   // KICC-F-112 (Entscheidung Hansi 24.11.2026 „nicht erst in DP2 freigeben“): einzige Ausnahme ist Zeit aus der Erstattung (Quelle 'erstattung') –
   // nur im Block KC-CLUB-ERSTATTUNG-STUNDEN: sofort bestätigt anlegen, bei Fehler zurückrollen, bei abgelehntem Antrag zurückziehen.
   const ers112 = server.slice(server.indexOf("// ---------- KICC-F-112 / KC-CLUB-ERSTATTUNG-STUNDEN"), server.indexOf("// KC-CLUB-ERSTATTUNG-BESUCHE (2.25.4): Besuche, die schon"));
-  const ohne112 = server.replace(ers112, "");
+  // 3.54.0 KC-CLUB-HEIMARBEIT (Hansi 28.11.2026): einzige weitere Ausnahme – eigene, selbst gemeldete, noch NICHT bestätigte Heimarbeit ändern/zurückziehen
+  const hm = server.slice(server.indexOf('case "heimarbeit_melden": {'), server.indexOf('case "mein_dienst": {'));
+  assert.ok(hm.length > 500 && /r\.person_id !== ich\.person_id \|\| r\.gemeldet_von !== ich\.person_id \|\| r\.source !== "club_app"/.test(hm) && /if \(r\.status !== "gemeldet"\) throw/.test(hm)
+    && (hm.match(/\.eq\("id", r\.id\)\.eq\("status", "gemeldet"\)/g) || []).length === 2 && !/status: "bestaetigt"/.test(hm) && !/\.delete\(/.test(hm), "Heimarbeit: nur eigene, noch nicht bestätigte Meldungen ändern/zurückziehen");
+  const ohne112 = server.replace(ers112, "").replace(hm, "");
   assert.ok(ers112.length > 500 && /status: "bestaetigt", verspaetet: [^\n]*?, source: "erstattung", erstattung_id: antragId/.test(ers112)
     && /\.eq\("erstattung_id", antragId\)\.eq\("source", "erstattung"\)\.eq\("status", "bestaetigt"\)/.test(ers112) && /update\(\{ status: "zurueckgezogen"/.test(ers112),
     "Zeit aus der Erstattung: nur Quelle erstattung, sofort bestätigt, Rücknahme nur eigener bestätigter Zeilen");
@@ -13952,3 +13956,12 @@ assert.ok(/api\("dp_plaene_freigeben", \{ vorschau: true \}\)/.test(programm) &&
 // 3.28.0 KC-CLUB-DP-PLAN-LESBAR (Hansi 25.11.: freie Zeile zwischen Tagen, Blatt bis unten, höhere Zeilen, dünnere Balken)
 assert.ok(/const DPD_ZEILEN_PLAN = 27;/.test(programm) && /\.join\(luft \? `<tbody class="dpd-luft">/.test(programm) && /zf = luft \? Math\.min\(1\.25, Math\.max\(1, 172 \/ zeilen \/ 6\.4\)\) : 1;/.test(programm)
   && /#druck \.dpd\.plan \.dpd-blatt > \.dpd-raster \{ flex: 1 1 auto;/.test(seite) && /#druck \.dpd\.plan \.dpd-raster td\.dienst\.anf\.end \{ box-shadow: inset 0 0 0 \.45mm var\(--dienst\); \}/.test(seite), "Dienstplan-Druck: Luft zwischen Tagen, füllt das Blatt, dünnere Balken");
+// 3.54.0 KC-CLUB-HEIMARBEIT (Hansi 28.11.2026: Andrea trägt Heimarbeit-Stunden im Stundenkonto ein – erst nur für sie)
+{
+  const sk = lies("teile/stundenkonto.js");
+  assert.ok(/\.eq\("payload->>heimarbeit", "true"\)/.test(server) && /if \(pid\) q = q\.contains\("payload", \{ vorgesehen: \[pid\] \}\);/.test(server), "Heimarbeit nur für Einsätze mit heimarbeit=true und nur für vorgesehene Personen");
+  assert.ok(/const heimarbeit = pid === ich\.person_id \? \(await hmEinsaetze\(pid\)/.test(server) && /taetigkeit: "vorbereitung"/.test(server) && /if \(!hmTagOk\(e, datum\)\) throw/.test(server), "nur eigenes Konto, nur Tage im Zeitraum, höchstens 3 Tage zurück");
+  assert.ok(/const hmErin = await hmErinnern\(\)/.test(server) && /await protokoll\(null, HM\.aktion, \{ tag: heute, person: pid, einsatz: e\.id \}\); \/\/ erst merken/.test(server), "Abend-Erinnerung einmal je Tag");
+  assert.ok(/function hmKarteHtml\(d\)/.test(sk) && /if \(!d\?\.heimarbeit\?\.length \|\| d\.person\?\.id !== ICH\?\.person_id\) return "";/.test(sk) && /api\(HMS\.rid \? "heimarbeit_aendern" : "heimarbeit_melden"/.test(sk), "App: Knopf nur bei eigener Heimarbeit");
+  assert.ok(/h === "#stundenkonto"\) skStart\(\)/.test(programm), "Link aus der Erinnerung öffnet das Stundenkonto");
+}

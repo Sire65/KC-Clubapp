@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "3.53.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "3.54.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -35,7 +35,7 @@ const TEILE_LISTE = {
   nutzperson: { einstieg: ["npStart", "npAlle"], sri: "sha384-Z+v9oW3/Vp/DObApKnj6423OFyD/mLKqkI6+rUmBzRUYABaoE9X1rnta/qubtMEX" }, // KC-CLUB-NUTZUNG-PERSON: „📊 Meine Nutzung“ / „📊 Nutzung je Mitglied“ (nur beim Öffnen)
   nutzung: { einstieg: ["nuStart"], sri: "sha384-V8qj7CYfmmydkhppRZkaB/XjF0ATARL/4dwYcdXMeRUQ+cFMm2ijWGLzZIt1uha/" }, // 2.829.0 KC-CLUB-NUTZUNG-ALLE: „📈 So nutzen wir die App“ für alle (nur beim Öffnen)
   garten: { einstieg: ["gartenStart", "gartenTag", "gartenReif"], sri: "sha384-/ydTNoIDsiedFVIAayJkP6bgrCAPv+fa7q5ktl5nts9bsSIypSeVNedb6aiUIVx/" }, // KC-CLUB-SAMEN (#84): „🌱 Mein Garten“ – nur beim Öffnen und einmal am Tag beim Start
-  stundenkonto: { einstieg: ["skStart"], sri: "sha384-a6yxrh5N7eGrHH0R7igOcIlHWsIK+RQmP4HSiTUDDNbQ4kHYEoJaoK4X1uLs3ymU" }, // KICC-F-113 KC-CLUB-STUNDENKONTO (3.22.0): „⏱️ Mein Stundenkonto“ – Filter, Diagramme, PDF
+  stundenkonto: { einstieg: ["skStart"], sri: "sha384-gb4UM1UjtjQm4usi4ujKHrkzOzIJqdDP/F22ST9UDbZR5nwDGsPPK0y6BlCI7MD6" }, // KICC-F-113 KC-CLUB-STUNDENKONTO (3.22.0): „⏱️ Mein Stundenkonto“ – Filter, Diagramme, PDF
   fahrten: { einstieg: ["fsStart", "fsLeitung"], sri: "sha384-/8sJlJE/T9/G1YHOqEZCawNB2zGftZWLWv/mT3G8Y95zZTN9ndlMS3lO/M3iu4ol" }, // KICC-F-114 KC-CLUB-FAHRTKOSTEN-SAMMEL: „🚗 Fahrten & Abrechnung“ + Clubleitung
   probe: { einstieg: ["teilProbe"], sri: "sha384-11uzQ0U/9pY4FZjTqOq5jlmzO0XsA4hQVrV8iqqTT7Jp9y3/VSG/gTIggGmcZud8" }, // Probe für den Nachlade-Weg (Klick-Rundgang, Sicherheits-Check)
 };
@@ -17722,6 +17722,7 @@ function hashSprung(h) {
     else if (h === "#mikrofon") mikroAssistent(); // KC-CLUB-MIKRO-ASSISTENT (2.23.72)
     else if (h === "#anrufbeantworter") abOeffnen(); // 2.568.0 KC-CLUB-ANRUFBEANTWORTER (Link aus dem Push)
     else if (h === "#dienststempel") dsOeffnen(); // 2.590.0 KC-CLUB-DIENST-STEMPEL (Link aus der Erinnerung)
+    else if (h === "#stundenkonto") skStart(); // 3.54.0 KC-CLUB-HEIMARBEIT (Link aus der Abend-Erinnerung)
     else if (h === "#istzeit") irOeffnen(); // KC-CLUB-IST-RUECKFRAGE (Link aus der Rückfrage nach dem Dienst)
     else if (h === "#morgencheck") acStart("morgen"); // 3.45.0 KC-CLUB-MORGEN-CHECK (Push zum Dienstbeginn am Markttag)
     else if (h === "#istaenderungen") irAenderungen(); // KC-CLUB-IST-RUECKFRAGE: Bescheid an Clubsprecher/Kassenwart/Admin
@@ -38571,7 +38572,7 @@ const FENSTER_NAMEN = {
   buGruss: "🏢 Büro: Tagesinfo", buSprachBlatt: "🏢 Büro: Sprechen", buTelBlatt: "🏢 Büro: Person wählen", buTermin: "🍽️ Büro: Termin ansehen", buWahl: "🏢 Büro: Sitzung wählen",
   buWeiter: "🏢 Büro: Wie weiter?", bwEinBlatt: "👋 Bühne: Einladung", caBlatt: "🍽️ Clubabend Live", cfBlatt: "🎨 Chat-Farben", chatBlatt: "💬 Unterhaltung (Fenster)",
   chatMitgliederBlatt: "👥 Teilnehmer der Unterhaltung", cjBlatt: "📅 Clubjahr", cuFenster: "📊 Kurze Abstimmung", dgBlatt: "👨‍🍳 Dienst-Gruß", diagBlatt: "🩺 Server-Diagnose",
-  diktatBlatt: "✍️ Diktieren", druckBlatt: "🖨️ Drucken", dsBlatt: "🗓️ Dienstplan", dsOrteBlatt: "📍 Dienst-Orte", dsWerBlatt: "👥 Wer ist heute im Dienst", dsWerAuswahl: "🔑 Wer darf stempeln",
+  diktatBlatt: "✍️ Diktieren", druckBlatt: "🖨️ Drucken", dsBlatt: "🗓️ Dienstplan", dsOrteBlatt: "📍 Dienst-Orte", dsWerBlatt: "👥 Wer ist heute im Dienst", dsWerAuswahl: "🔑 Wer darf stempeln", hmBlatt: "🏠 Heimarbeit-Stunden",
   rundBlatt: "🪑 Runder Tisch", rundNeuBlatt: "🪑 Zum Runden Tisch einladen", rundTischBlatt: "🪑 Am Runden Tisch", rundTascheBlatt: "💼 Tasche für den Runden Tisch", rundArchivBlatt: "🗄️ Tasche: aus dem Archiv", // 2.762.0 KC-CLUB-RUNDER-TISCH
   dtBlatt: "🗓️ Dienst-Tausch", dvBlatt: "📊 Dienstzeiten-Übersicht", dwSperreBlatt: "💡 Sperrzeit nicht nötig", egBlatt: "📥 Mein Eingangskorb", eingangBlatt: "📥 In den Eingangskorb eines Mitglieds",
   einlBlatt: "📥 Dokument einlesen", ekAblageBlatt: "🗄️ Eingangskorb: ablegen", ekDwBlatt: "📅 Dienstzeiten", ekErstBlatt: "💶 Erstattung", ekErstOkBlatt: "✅ Erstattung als erstattet markieren?", gkBlatt: "💐 Genesungskarte", tpBlatt: "⚽ Bundesliga-Tippspiel", gkGemBlatt: "👥 Gemeinsame Karte", gknBlatt: "💐 Frage: Gemeinsame Karte", astBlatt: "📌 Wie steht's mit deiner Aufgabe?", anlAlleBlatt: "📎 Alle Anlagen im Chat", /* KC-CLUB-CHAT-ANLAGEN-SICHTBAR */ekHinweisBlatt: "📥 Hinweis: Eingangskorb",
