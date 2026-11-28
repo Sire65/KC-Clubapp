@@ -1,5 +1,10 @@
 # Änderungen
 
+## 3.56.0 – 2026-11-28 – 🌱 Mein Garten auch für Aushilfen (KC-CLUB-GARTEN-AUSHILFEN) · Server 3.56.0
+Hansi 28.11.2026: „OK, Aushilfen dürfen auch mitmachen“ – „Sofort, aber Bündel beachten“ (3.55.0 der Heimarbeit-Sitzung war inzwischen schon eingespielt).
+- Kachel „🌱 Mein Garten“, Samentütchen, Säen, Pflege, Automatik und Club-Garten jetzt für Mitglieder **und** Aushilfen (Freigabe `garten` = alle gilt für beide). Gäste weiter nicht.
+- Server `gartenDarf` + `ZUGANG_AKTIONEN.aushilfe` (App und Server gleich), App `ZUGANG_KACHELN.aushilfe` + Tageszählung. Test `tests/garten-aushilfen.test.mjs` (CI).
+
 ## 3.55.0 – 2026-11-28 – 🏠 Heimarbeit: Uhrzeit direkt einstellen, „Mischung gemacht“ (KC-CLUB-HEIMARBEIT) · 🚗 Grund „Anlieferfahrt“ · App + Server 3.55.0
 Hansi 28.11. beim Test: „Der Test zeigt mir fest von 9 bis 12. Die Uhrzeit muss sich verstellen lassen … mach unten die plus eine Stunde etc. weg.“
 - Von/Bis sind jetzt direkt antippbar (Uhrzeit-Auswahl des Handys, Viertelstunden); die Knöpfe −1 Std./−15/+15/+1 Std. sind weg. Bis 00:00 gilt als Mitternacht.
