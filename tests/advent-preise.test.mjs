@@ -11,9 +11,12 @@ const js = programmText(), srv = lies("supabase/functions/kc-club/index.ts"), mi
 const block = js.slice(js.indexOf("const AK_NASCH = ["), js.indexOf("const AK_REIHE"));
 const { AK_TUERCHEN, AK_PREISE } = new Function(block + "; return { AK_TUERCHEN, AK_PREISE };")();
 const srvPreise = Function("return " + srv.match(/const ADVENT_PREISE: Record<number, string> = (\{[^}]*\});/)[1])();
-const appPreise = Object.fromEntries(AK_TUERCHEN.map((T, i) => [i + 1, T]).filter(([, T]) => T.art === "riegel").map(([n, T]) => [n, AK_PREISE[T.preis].name]));
+const appPreise = Object.fromEntries(AK_TUERCHEN.map((T, i) => [i + 1, T]).filter(([, T]) => T.art === "riegel" && !AK_PREISE[T.preis].folgt).map(([n, T]) => [n, AK_PREISE[T.preis].name])); // KC-CLUB-ADVENT-SUESS: Süßigkeit ohne Namen/Foto noch ohne Meldung
 assert.deepEqual(appPreise, srvPreise, "Preis-Tage in App und Server gleich");
 assert.deepEqual(srvPreise, { 6: "Mini-Schoko-Nikolaus", 20: "Kinderriegel" }, "6.12. Schoko-Nikolaus, 20.12. Kinderriegel");
+// KC-CLUB-ADVENT-SUESS (Hansi 28.11.2026): jeder gerade Tag 2–22 ist ein Süßigkeiten-Türchen; ohne Namen/Foto (folgt) kein Knopf
+assert.deepEqual(AK_TUERCHEN.map((T, i) => [i + 1, T]).filter(([, T]) => T.art === "riegel").map(([n]) => n), [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22], "Süßigkeit an jedem zweiten Tag");
+assert.ok(/if \(P\.folgt\) return `/.test(js) && /if \(T\.art === "riegel" && !AK_PREISE\[T\.preis\]\.folgt\) akPreiseLaden\(n\);/.test(js), "Platzhalter ohne Meldeknopf");
 
 // Server: nur Mitglieder, nur ab dem Tag im Dezember, doppelt melden geht nicht, Liste nur für den Admin
 const fall = srv.slice(srv.indexOf('case "advent_preis_melden"'), srv.indexOf('case "rezept_bewerten"'));

@@ -7,23 +7,27 @@ import { programmText } from "./programm.mjs";
 const lies = (p) => fs.readFileSync(new URL("../" + p, import.meta.url), "utf8");
 const js = programmText(), seite = lies("index.html");
 const block = js.slice(js.indexOf("const AK_NASCH = ["), js.indexOf("const AK_REIHE"));
-const { AK_NASCH, AK_TUERCHEN, AK_ARTEN } = new Function(block + "; return { AK_NASCH, AK_TUERCHEN, AK_ARTEN };")();
+const { AK_NASCH, AK_TUERCHEN, AK_ARTEN, AK_MEHR } = new Function(block + "; return { AK_NASCH, AK_TUERCHEN, AK_ARTEN, AK_MEHR };")();
 
-// 24 Türchen, Rhythmus Nascherei → Basteln → Deko, Sonntage 6./13./20.12.2026 Kinderriegel, Tag 24 Einladung
+// KC-CLUB-ADVENT-SUESS (Wunsch Hansi 28.11.2026): jeder zweite Tag 🍬 Süßigkeit, dazwischen ✂️ Basteln → 💬 Spruch → 📖 Geschichte, Tag 24 Einladung
+// (vorher 2.869.0: Nascherei → Basteln → Deko, Preis-Türchen nur 6./20.12.)
 assert.equal(AK_TUERCHEN.length, 24, "24 Türchen");
-assert.equal(AK_TUERCHEN.map((T) => T.art[0]).join(""), "nbdnbrdnbdnbndnbdnbrdnbe", "Reihenfolge der Sorten (2.947.0: 13.12. Mandarinen-Licht statt Gutschein)");
-AK_TUERCHEN.forEach((T, i) => {
-  assert.equal([6, 20].includes(i + 1), T.art === "riegel", `Tag ${i + 1}: Preis-Türchen nur am 6.12. (Schoko-Nikolaus) und 20.12. (Kinderriegel)`);
-  assert.ok(AK_ARTEN[T.art] && T.sym && T.t, `Tag ${i + 1}: Sorte, Symbol, Titel`);
-});
+assert.equal(AK_TUERCHEN.map((T) => T.art[0]).join(""), "srbrgrsrbrgrsrbrgrsrbrge", "Reihenfolge der Sorten");
+AK_TUERCHEN.forEach((T, i) => assert.ok(AK_ARTEN[T.art] && T.sym && T.t, `Tag ${i + 1}: Sorte, Symbol, Titel`));
 assert.equal(AK_TUERCHEN[23].art, "einladung", "Türchen 24: Einladung");
-assert.deepEqual(AK_TUERCHEN.filter((T) => T.art === "riegel").map((T) => T.preis), ["nikolaus", "kinderriegel"], "6.12. Schoko-Nikolaus, 20.12. ein Kinderriegel (Hansi 15.11.2026)");
-assert.equal(AK_TUERCHEN.filter((T) => T.art === "naschen").length, 8, "8 Naschereien (13.12. Mandarinen-Licht)");
-assert.equal(AK_TUERCHEN.filter((T) => T.art === "basteln").length, 7, "7 Bastelideen");
-assert.equal(AK_TUERCHEN.filter((T) => T.art === "deko").length, 6, "6 Deko-Ideen");
+assert.equal(AK_TUERCHEN[5].preis, "nikolaus", "6.12. Schoko-Nikolaus bleibt");
+assert.equal(AK_TUERCHEN[19].preis, "kinderriegel", "20.12. Kinderriegel bleibt");
+assert.equal(AK_TUERCHEN.filter((T) => T.art === "riegel").length, 11, "11 Süßigkeiten (2.–22.12.)");
+assert.equal(AK_TUERCHEN.filter((T) => T.art === "basteln").length, 4, "4 Bastelanleitungen");
+assert.equal(AK_TUERCHEN.filter((T) => T.art === "spruch").length, 4, "4 Sprüche");
+assert.equal(AK_TUERCHEN.filter((T) => T.art === "geschichte").length, 4, "4 Geschichten");
+for (const T of AK_TUERCHEN.filter((x) => x.art === "spruch")) assert.ok(T.zeilen?.length >= 4 && T.von, "Spruch mit Zeilen und Herkunft: " + T.t);
+for (const T of AK_TUERCHEN.filter((x) => x.art === "geschichte")) assert.ok(T.absaetze?.length >= 3 && T.von && T.absaetze.join(" ").length < 2600, "kurze Geschichte mit Herkunft: " + T.t);
+for (const T of AK_TUERCHEN.filter((x) => x.quelle)) assert.match(T.quelle, /^https:\/\/(de\.wikisource\.org|ebible\.org)\//, "gemeinfreie Quelle: " + T.t);
+assert.ok(/function akTextKarte\(T, n\)/.test(js) && /sprechen\(\[T\.t/.test(js), "Spruch/Geschichte mit Vorlesen (vorhandene Stimme)");
 
 // Anleitungen: Material, 4 Schritte, Tipp; Basteln/Deko mit Dauer, Kinder-Hinweis und Link
-for (const T of AK_TUERCHEN.filter((x) => ["naschen", "basteln", "deko"].includes(x.art))) {
+for (const T of [...AK_TUERCHEN, ...AK_MEHR].filter((x) => ["naschen", "basteln", "deko"].includes(x.art))) {
   assert.ok(T.z?.length >= 3 && T.z.length <= 5, "3–5 Zutaten/Materialien: " + T.t);
   assert.ok(T.s?.length === 4 || T.t === "Engel aus Nudeln (Baumschmuck)", "4 Schritte: " + T.t);
   assert.ok(T.tipp, "Tipp: " + T.t);
@@ -37,7 +41,8 @@ assert.ok(/href="\$\{esc\(T\.link\)\}" target="_blank" rel="noopener"/.test(js),
 assert.equal(AK_NASCH.length, 23, "alle bisherigen Anleitungen bleiben");
 for (const t of ["Lokomotive aus Dominosteinen", "Schneemann aus Pfeffernüssen", "Lebkuchen-Kerze mit Mandel-Flamme", "Hexenhaus aus Butterkeksen", "Mandarinen-Licht (Luciatag)", "Obst-Tannenbaum"]) assert.ok(AK_NASCH.some((x) => x.t === t), "bleibt: " + t);
 for (const T of AK_TUERCHEN.filter((x) => x.art === "naschen")) assert.ok(AK_NASCH.some((x) => x.t === T.t), "Kalender-Nascherei stammt aus AK_NASCH: " + T.t);
-assert.ok(/function akNaschFach\(\)/.test(js) && /onclick="akNaschFach\(\)">📖 Alle Naschereien</.test(js), "Fach „Alle Naschereien“");
+assert.ok(/function akNaschFach\(\)/.test(js) && /onclick="akNaschFach\(\)">📖 Alle Bastel- und Naschideen</.test(js), "Fach „Alle Bastel- und Naschideen“");
+assert.equal(AK_MEHR.length, 9, "die 9 übrigen Bastel-/Deko-Ideen bleiben im Fach");
 
 // Preis-Türchen: Gutschein fürs Weihnachtsessen im Januar; seit 2.947.0 (Wunsch #89, Hansi 15.11.2026) „🎁 Ja, den nehme ich“ → Hansis Liste.
 // Nur die drei eigenen Server-Wege, kein „Eingelöst“-Abhaken.
