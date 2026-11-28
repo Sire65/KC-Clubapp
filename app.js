@@ -35,7 +35,7 @@ const TEILE_LISTE = {
   nutzperson: { einstieg: ["npStart", "npAlle"], sri: "sha384-Z+v9oW3/Vp/DObApKnj6423OFyD/mLKqkI6+rUmBzRUYABaoE9X1rnta/qubtMEX" }, // KC-CLUB-NUTZUNG-PERSON: „📊 Meine Nutzung“ / „📊 Nutzung je Mitglied“ (nur beim Öffnen)
   nutzung: { einstieg: ["nuStart"], sri: "sha384-V8qj7CYfmmydkhppRZkaB/XjF0ATARL/4dwYcdXMeRUQ+cFMm2ijWGLzZIt1uha/" }, // 2.829.0 KC-CLUB-NUTZUNG-ALLE: „📈 So nutzen wir die App“ für alle (nur beim Öffnen)
   garten: { einstieg: ["gartenStart", "gartenTag", "gartenReif"], sri: "sha384-qCmf2gnU+rjoWwtEc7STnrzJ3Nxx29d4TecNCHKJkH0I0hgaDszCv3YOevyyqC8E" }, // KC-CLUB-SAMEN (#84): „🌱 Mein Garten“ – nur beim Öffnen und einmal am Tag beim Start
-  stundenkonto: { einstieg: ["skStart"], sri: "sha384-gb4UM1UjtjQm4usi4ujKHrkzOzIJqdDP/F22ST9UDbZR5nwDGsPPK0y6BlCI7MD6" }, // KICC-F-113 KC-CLUB-STUNDENKONTO (3.22.0): „⏱️ Mein Stundenkonto“ – Filter, Diagramme, PDF
+  stundenkonto: { einstieg: ["skStart"], sri: "sha384-vUcHv4N7Lh4VQPaseUsNBEX0xu7TzmjEuxaHrXPJMvej70oygb1ZP8kHAnJYEdKY" }, // KICC-F-113 KC-CLUB-STUNDENKONTO (3.22.0): „⏱️ Mein Stundenkonto“ – Filter, Diagramme, PDF
   fahrten: { einstieg: ["fsStart", "fsLeitung"], sri: "sha384-/8sJlJE/T9/G1YHOqEZCawNB2zGftZWLWv/mT3G8Y95zZTN9ndlMS3lO/M3iu4ol" }, // KICC-F-114 KC-CLUB-FAHRTKOSTEN-SAMMEL: „🚗 Fahrten & Abrechnung“ + Clubleitung
   probe: { einstieg: ["teilProbe"], sri: "sha384-11uzQ0U/9pY4FZjTqOq5jlmzO0XsA4hQVrV8iqqTT7Jp9y3/VSG/gTIggGmcZud8" }, // Probe für den Nachlade-Weg (Klick-Rundgang, Sicherheits-Check)
 };
