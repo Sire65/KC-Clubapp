@@ -103,3 +103,14 @@ Rezeptvorlagen für den Köcheclub Werne. Die Zuordnung unten ist für Claude ge
 ## Wenn die Ernte noch klein ist
 
 Ein kleiner Quark gelingt schon mit **100 g Quark, 1 EL Naturjoghurt und etwa 1 EL frisch geschnittenem Blattkraut**. Bei kräftigem Rosmarin nur eine kleine Prise fein gehackter Nadeln nehmen. Die virtuelle Ernte in der App ist ein Spielstand. Zum Kochen werden echte Kräuter verwendet.
+
+## Ergänzung 28.11.2026 – Sträucher und alle Kräuter (KC-CLUB-GARTEN-STRAEUCHER)
+
+Wunsch Hansi: auch Rezepte für die Sträucher und eines mit allen Kräutern. Die Texte stehen in `teile/garten.js` (`GT_REZEPTE`, `GT_REZEPT_ALLE`).
+
+| Pflanze | Rezept | wann |
+|---|---|---|
+| Lavendel | Lavendel-Zitronen-Limonade | Lavendel blüht |
+| Johannisbeere | Johannisbeer-Quarkspeise | trägt Beeren |
+| Hortensie | – (giftig, nie ein Rezept) | – |
+| ab 3 verschiedenen erntereifen Kräutern | Grüne Kräutersoße aus deinem Garten | Knopf über dem Beet und in der Rezept-Auswahl |

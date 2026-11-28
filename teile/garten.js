@@ -53,7 +53,22 @@ const GT_REZEPTE = {
   kresse: { t: "Kresse-Senf-Quark", lust: "einen Kresse-Senf-Quark aufs Schwarzbrot", fuer: "Für 1–2 Scheiben Schwarzbrot",
     zutaten: ["100 g Quark", "1 EL Naturjoghurt", "1 EL frisch abgeschnittene Gartenkresse", "½ TL mittelscharfer Senf", "Salz nach Geschmack"],
     schritte: ["Quark, Joghurt und Senf glatt rühren.", "Kresse unterheben und abschmecken. Auf Schwarzbrot streichen und etwas Kresse darüberstreuen."], dazu: "" },
+  // KC-CLUB-GARTEN-STRAEUCHER (Wunsch Hansi 28.11.2026 „Ja“ – Rezepte auch für Sträucher und eines mit allen Kräutern). Hortensie ist giftig → nie ein Rezept.
+  lavendel: { t: "Lavendel-Zitronen-Limonade", lust: "eine Lavendel-Zitronen-Limonade", fuer: "Für 1 Liter (4 Gläser)",
+    zutaten: ["1 TL getrocknete oder 2 TL frische Lavendelblüten (unbehandelt, für die Küche)", "60 g Zucker oder Honig", "250 ml Wasser zum Aufkochen", "Saft von 2 Zitronen", "750 ml kaltes Mineralwasser", "Eiswürfel und Zitronenscheiben"],
+    schritte: ["Wasser mit Zucker aufkochen, vom Herd nehmen, Lavendelblüten hineingeben und 10 Minuten ziehen lassen – nicht länger, sonst schmeckt es nach Seife.", "Durch ein feines Sieb gießen und abkühlen lassen.", "Mit Zitronensaft und kaltem Mineralwasser auffüllen, mit Eis und Zitronenscheiben servieren."],
+    dazu: "Wenig Lavendel ist mehr – lieber nachwürzen als zu viel." },
+  johannisbeere: { t: "Johannisbeer-Quarkspeise", lust: "eine Johannisbeer-Quarkspeise", fuer: "Für 4 Schälchen",
+    zutaten: ["250 g rote Johannisbeeren", "500 g Quark", "200 g Sahne", "60 g Zucker", "1 Päckchen Vanillezucker", "Saft von ½ Zitrone", "4 Löffelbiskuits (nach Wunsch)"],
+    schritte: ["Johannisbeeren waschen und mit einer Gabel von den Rispen streifen. Ein paar schöne Rispen zum Verzieren beiseitelegen.", "Quark mit Zucker, Vanillezucker und Zitronensaft glatt rühren. Sahne steif schlagen und unterheben.", "Abwechselnd Quarkcreme, Beeren und zerbröselte Löffelbiskuits in Schälchen schichten, mit den Rispen verzieren und 30 Minuten kühlen."],
+    dazu: "Die Säure der Beeren und die milde Creme passen perfekt zusammen." },
 };
+// Mit allen Kräutern (ab 3 verschiedenen erntereifen Kräutern) – Grüne Kräutersoße nach Frankfurter Art, angepasst an die Gartenkräuter
+const GT_KRAEUTER_ALLE = "gruene", GT_KRAEUTER_MIN = 3;
+const GT_REZEPT_ALLE = { t: "Grüne Kräutersoße aus deinem Garten", lust: "eine Grüne Kräutersoße mit allen deinen Kräutern", fuer: "Für 4 Portionen",
+  zutaten: ["100 g gemischte Kräuter aus deinem Garten: Petersilie, Schnittlauch, Dill, Kresse, etwas Basilikum (Rosmarin höchstens eine Prise)", "200 g Schmand oder saure Sahne", "150 g Naturjoghurt", "1 TL mittelscharfer Senf", "2 hart gekochte Eier", "1 Spritzer Zitronensaft", "Salz, Pfeffer, 1 Prise Zucker"],
+  schritte: ["Kräuter waschen, gut trocken schütteln und grobe Stiele entfernen.", "Kräuter mit dem Joghurt fein pürieren oder sehr fein hacken.", "Schmand, Senf und Zitronensaft unterrühren. Eier fein hacken und unterheben.", "Mit Salz, Pfeffer und einer Prise Zucker abschmecken und 30 Minuten kühl ziehen lassen."],
+  dazu: "Klassisch mit Pellkartoffeln und halbierten Eiern – je mehr verschiedene Kräuter, desto besser." };
 const GT = { g: null, versatz: 0, club: null, clubZeit: 0 };
 const gtArt = (id) => GT_ARTEN.find((a) => a.id === id);
 const gtJetzt = () => Date.now() + GT.versatz;
@@ -165,30 +180,35 @@ function gtHinweis(text, knopf, fn, versuch = 0, gezeigt = null) {
 // KC-CLUB-GARTEN-ERNTE: reife Kräuter je Pflanze nur einmal je Gerät melden – auch nach Urlaub nur ein Sammelhinweis; „Später“ wiederholt nichts
 function gtReifeHinweis(g, lagen = g.pflanzen.map((p) => [p, gtLage(p, g.automatik)])) {
   let gemeldet = []; try { gemeldet = JSON.parse(localStorage.getItem(GT_REIF_MERK) || "[]"); } catch {}
-  const reif = lagen.filter(([p, l]) => l.a.gruppe === "kraeuter" && l.stufe === 4 && GT_REZEPTE[p.art] && !gemeldet.includes(p.id));
+  const reif = lagen.filter(([p, l]) => (l.a.gruppe === "kraeuter" || l.a.gruppe === "straeucher") && l.stufe === 4 && GT_REZEPTE[p.art] && !gemeldet.includes(p.id));
   if (!reif.length) return false;
   const merken = () => { try { localStorage.setItem(GT_REIF_MERK, JSON.stringify([...gemeldet, ...reif.map(([p]) => p.id)].slice(-60))); } catch {} };
   if (reif.length === 1) { const [p, l] = reif[0];
-    gtHinweis(`🌿 ${l.a.dein} ${l.a.t} ist erntereif! Lust auf ${GT_REZEPTE[p.art].lust}?`, "📖 Rezept ansehen", () => gtRezept(p.art), 0, merken);
+    const kraut = l.a.gruppe === "kraeuter";
+    gtHinweis(`${kraut ? "🌿" : l.a.sym} ${l.a.dein} ${l.a.t} ${kraut ? "ist erntereif" : l.a.fertig}! Lust auf ${GT_REZEPTE[p.art].lust}?`, "📖 Rezept ansehen", () => gtRezept(p.art), 0, merken);
   } else { const namen = reif.map(([, l]) => `${l.a.dein.toLowerCase()} ${l.a.t}`), liste = namen.slice(0, -1).join(", ") + " und " + namen[namen.length - 1];
-    gtHinweis(`🌿 ${liste.charAt(0).toUpperCase() + liste.slice(1)} sind erntereif. Die passenden Rezepte warten auf dich.`, "📖 Rezepte ansehen", () => gtRezeptAuswahl(reif.map(([p]) => p.art)), 0, merken); }
+    const nurKraut = reif.every(([, l]) => l.a.gruppe === "kraeuter");
+    // ab 3 verschiedenen reifen Kräutern im Garten gibt es dazu die Grüne Kräutersoße
+    const arten = [...new Set(lagen.filter(([p, l]) => l.a.gruppe === "kraeuter" && l.stufe === 4).map(([p]) => p.art))];
+    gtHinweis(`${nurKraut ? "🌿" : "🧺"} ${liste.charAt(0).toUpperCase() + liste.slice(1)} sind ${nurKraut ? "erntereif" : "bereit für die Küche"}. Die passenden Rezepte warten auf dich.`, "📖 Rezepte ansehen",
+      () => gtRezeptAuswahl([...new Set(reif.map(([p]) => p.art))], arten.length >= GT_KRAEUTER_MIN), 0, merken); }
   return true;
 }
 // Start, wenn der Tag heute schon gezählt ist: ohne Abfrage nur aus dem Zwischenspeicher prüfen, ob ein Kraut reif geworden ist
 async function gartenReif() { const c = gtAusSpeicher(); if (c?.g?.pflanzen?.length) gtReifeHinweis(c.g); }
 // Rezeptkarte – nimmt der Pflanze nichts weg (die Ernte in der App ist ein Spielstand)
 function gtRezept(art) {
-  const r = GT_REZEPTE[art], a = gtArt(art); if (!r || !a) return; gtStil();
+  const alle = art === GT_KRAEUTER_ALLE, r = alle ? GT_REZEPT_ALLE : GT_REZEPTE[art], a = alle ? { sym: "🥣", t: "alle deine Kräuter", gruppe: "kraeuter" } : gtArt(art); if (!r || !a) return; gtStil();
   blattAuf("gtRezept", `<h3 style="margin:0">📖 ${esc(r.t)}</h3><p class="hinweis" style="margin:4px 0 8px">${a.sym} Aus deinem Garten: ${esc(a.t)} · ${esc(r.fuer)}</p>
     <div class="gt-rezept"><h4>Zutaten</h4><ul>${r.zutaten.map((z) => `<li>${esc(z)}</li>`).join("")}</ul>
     <h4>Zubereitung</h4><ol>${r.schritte.map((z) => `<li>${esc(z)}</li>`).join("")}</ol>${r.dazu ? `<p><b>${esc(r.dazu)}</b></p>` : ""}</div>
-    <p class="hinweis">Wenig geerntet? Ein kleiner Quark gelingt schon mit 100 g Quark, 1 EL Naturjoghurt und etwa 1 EL frisch geschnittenen Kräutern${art === "rosmarin" ? " – bei Rosmarin nur eine Prise" : ""}. Deine Pflanze bleibt im Garten – zum Kochen nimmst du echte Kräuter.</p>
+    <p class="hinweis">${a.gruppe === "kraeuter" && !alle ? `Wenig geerntet? Ein kleiner Quark gelingt schon mit 100 g Quark, 1 EL Naturjoghurt und etwa 1 EL frisch geschnittenen Kräutern${art === "rosmarin" ? " – bei Rosmarin nur eine Prise" : ""}. ` : ""}Deine Pflanze bleibt im Garten – zum Kochen nimmst du ${a.gruppe === "kraeuter" ? "echte Kräuter" : "echte Zutaten"}.</p>
     <div class="knoepfe"><button class="knopf haupt" onclick="fensterZu($('gtRezept'))">Schließen</button></div>`);
 }
-function gtRezeptAuswahl(arten) {
+function gtRezeptAuswahl(arten, mitAllen = false) {
   gtStil();
   blattAuf("gtRezept", `<h3 style="margin:0">🌿 Erntereif in deinem Garten</h3><p class="hinweis" style="margin:4px 0 8px">Welches Rezept möchtest du ansehen?</p>
-    <div class="gt-wahl">${arten.map((art) => { const a = gtArt(art), r = GT_REZEPTE[art]; return `<button type="button" class="gt-wahl-k" onclick="gtRezept('${art}')">${gtSvg(art, 4)}<b>${a.sym} ${esc(a.t)}</b><small>${esc(r.t)}</small></button>`; }).join("")}</div>
+    <div class="gt-wahl">${mitAllen ? `<button type="button" class="gt-wahl-k" onclick="gtRezept('${GT_KRAEUTER_ALLE}')"><span style="font-size:2.4em">🥣</span><b>Alle Kräuter</b><small>${esc(GT_REZEPT_ALLE.t)}</small></button>` : ""}${arten.map((art) => { const a = gtArt(art), r = GT_REZEPTE[art]; return `<button type="button" class="gt-wahl-k" onclick="gtRezept('${art}')">${gtSvg(art, 4)}<b>${a.sym} ${esc(a.t)}</b><small>${esc(r.t)}</small></button>`; }).join("")}</div>
     <div class="knoepfe"><button class="knopf haupt" onclick="fensterZu($('gtRezept'))">Schließen</button></div>`);
 }
 // ---------- Garten-Blatt ----------
@@ -212,6 +232,8 @@ function gtZeigen() {
   blattAuf("gtBlatt", `<h3 style="margin:0">🌱 Mein Garten${nurTest("garten") ? ' <small class="hinweis">🔒 nur für dich (Test)</small>' : ""}</h3>
     <p class="hinweis" style="margin:4px 0 8px">Du bist seit <b>${g.tage} Tag${g.tage === 1 ? "" : "en"}</b> dabei · nächstes Samentütchen in ${bis} Tag${bis === 1 ? "" : "en"} (bei ${g.naechste}) – oder für besondere Taten.</p>
     ${g.offen > 0 ? `<button type="button" class="gt-tuete-knopf" onclick="gtTuetchen()"><span class="gt-tuete">🎁</span><span><b>${g.offen === 1 ? "Ein Samentütchen" : g.offen + " Samentütchen"} für dich!</b><small>Antippen, öffnen und eine Pflanze aussuchen</small></span></button>` : ""}
+    ${new Set(g.pflanzen.filter((p) => { const l = gtLage(p, g.automatik); return l.a.gruppe === "kraeuter" && l.stufe === 4; }).map((p) => p.art)).size >= GT_KRAEUTER_MIN
+      ? `<button type="button" class="knopf klein haupt gt-rezept-knopf" style="margin:0 0 8px" onclick="gtRezept('${GT_KRAEUTER_ALLE}')">🥣 Rezept mit allen Kräutern: ${esc(GT_REZEPT_ALLE.t)}</button>` : ""}
     ${g.pflanzen.length ? `<div class="gt-beet">${g.pflanzen.map(karte).join("")}</div>` : `<p class="hinweis">Noch wächst hier nichts. ${g.offen ? "Öffne dein Samentütchen!" : `Dein erstes Samentütchen gibt es nach 7 Tagen in der App.`}</p>`}
     <label class="gt-schalter"><input type="checkbox" ${g.automatik ? "checked" : ""} onchange="gtAuto(this)"> 🤖 Gärtner kümmert sich (gießt und düngt von selbst)</label>
     <label class="gt-schalter"><input type="checkbox" ${g.club ? "checked" : ""} onchange="gtClub(this)"> 🏡 Meine Pflanzen im Club-Garten zeigen</label>

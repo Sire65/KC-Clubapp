@@ -1,5 +1,12 @@
 # Änderungen
 
+## 3.54.0 – 2026-11-28 – 🌱 Garten: Rezepte für Sträucher und mit allen Kräutern (KC-CLUB-GARTEN-STRAEUCHER)
+Hansi 28.11.2026: „Schalte den Garten frei für alle Mitglieder“ (Freigabe `garten` = alle, ohne neue Version) und „Ja“ zu Rezepten für Sträucher und mit allen Kräutern.
+- 💜 Lavendel blüht → Lavendel-Zitronen-Limonade · 🍒 Johannisbeere trägt Beeren → Johannisbeer-Quarkspeise. 💠 Hortensie: nie ein Rezept (giftig).
+- 🥣 Ab 3 verschiedenen erntereifen Kräutern: „Grüne Kräutersoße aus deinem Garten“ – Knopf über dem Beet und in der Rezept-Auswahl.
+- Sammelhinweis mit Sträuchern: „🧺 … sind bereit für die Küche“. Kein Server, keine Abfrage (Rezepte liegen in `teile/garten.js`).
+- Test `tests/garten-ernte.test.mjs` erweitert.
+
 ## 3.53.0 – 2026-11-27 – ↪️ Nachrichten automatisch weiterleiten (KC-CLUB-WEITERLEITUNG) · Server 3.53.0
 Wunsch Hansi 27.11.2026: „Kannst du bei Nachrichten eine Autoweiterleitung einbauen, z. B. an eine andere E-Mail-Adresse oder einen anderen Chat?“ – „Alle sollen es haben, an andere E-Mail oder anderen Chat.“
 - ⚙️ → 🔔 Benachrichtigungen → „↪️ Automatisch weiterleiten“: Ziel andere E-Mail-Adresse (einmal mit 6-stelligem Code aus einer Mail bestätigt, 30 Min. gültig, höchstens 3 Codes je Stunde, 5 Versuche) oder der Einzelchat mit einem anderen Mitglied; „auch Gruppen“ wählbar (sonst nur Einzelchats); Zeitraum von–bis freiwillig (sonst bis auf Widerruf).
