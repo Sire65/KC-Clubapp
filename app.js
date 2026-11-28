@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "3.55.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "3.56.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -10329,6 +10329,7 @@ const ZUGANG_AKTIONEN = {
     "vorfuehren_senden", "vorfuehren_ende", "vorfuehren_bild", "schnappschuss_antwort", "schnappschuss_bild", "schnappschuss_ende", "fernbedienung_melden", "push_anmelden",
     "push_pruefen", "geraete_liste", "geraet_entfernen", "andere_geraete_abmelden", "push_abmelden", "push_test", "rw_test", "neues_geraet_antwort"],
   aushilfe: ["mein_dienst", "dp_plaene", "dienstwunsch_laden", "dienstwunsch_speichern", "dienst_gruss", "dienste", "dienst_freigabe", "meine_eingaben",
+    "garten_tag", "garten_saeen", "garten_pflege", "garten_auto", "garten_club", "garten_clubgarten", // 3.56.0 KC-CLUB-GARTEN-AUSHILFEN (Hansi 28.11.2026)
     "eingaben_bestaetigen", "wunschbogen_mailen", "eingaben_ablegen", "fotos_neueste", "fotos_liste", "foto_oeffnen",
     "schulung_meine", "schulung_antwort", "gericht_zutat_setzen", "gericht_antwort", "tipp_stand", "tipp_mitmachen", "tipp_abgeben", "advent_gadget_stand", "advent_gadget_mitmachen", // KC-CLUB-ADVENT-GADGETS
     "advent_preis_melden", "advent_preise_meine", // KC-CLUB-ADVENT-AUSHILFEN (Hansi 22.11.2026)
@@ -10336,7 +10337,7 @@ const ZUGANG_AKTIONEN = {
     "sondereinsatz_zusage", "stunden_melden", "mein_ausweis", "dienst_stand", "dienst_buchen", "dienst_korrigieren", "dienst_tausch_liste", "dienst_tausch_anbieten", "dienst_tausch_aktion", "dp_einzelplan", "ist_offen", "ist_antworten", "ist_feedback"], // 2.590.0 KC-CLUB-DIENST-STEMPEL; 2.606.0 KC-CLUB-DIENST-TAUSCH
 };
 const ZUGANG_KACHELN = { basis: ["termine", "kommunikation", "sos", "spiele", "status", "einstellungen", "hilfezentrum", "twinkey", "erklaer", "update", "sicherheit", "feedback", "test"],
-  aushilfe: ["mein_dienst", "meindienst", "dienstwunsch", "fotos", "schulungen", "ausweis", "gericht"] }; // gericht: KC-CLUB-GEMEINSCHAFTSGERICHT (Hansi: „alle bekommen die Frage“)
+  aushilfe: ["mein_dienst", "meindienst", "dienstwunsch", "fotos", "schulungen", "garten", "ausweis", "gericht"] }; // gericht: KC-CLUB-GEMEINSCHAFTSGERICHT (Hansi: „alle bekommen die Frage“)
 const zugang = () => (ICH?.zugang === "gast" || ICH?.zugang === "aushilfe" ? ICH.zugang : "mitglied");
 // 3.49.0 KC-CLUB-ZUGANG-EINZELN (Wunsch Hansi 27.11.2026 „für Aushilfen einige bestimmte Funktionen freischalten bzw. sperren“): je Person
 // zusätzlich erlauben (plus) oder aus dem Paket wegnehmen (minus) – eingestellt in 🎖️ Ämter und Rechte, gilt nur für Aushilfe/Gast.
@@ -12621,7 +12622,7 @@ function gartenKurz() {
   return g.pflanzen?.length ? `${g.pflanzen.length} Pflanze${g.pflanzen.length === 1 ? "" : "n"} · ${g.tage} Tage dabei` : `${g.tage} Tage dabei`;
 }
 function gartenTagPruefen() {
-  if (!ICH || zugang() !== "mitglied" || !frei("garten")) return;
+  if (!ICH || (zugang() !== "mitglied" && zugang() !== "aushilfe") || !zugangKachel("garten") || !frei("garten")) return; // 3.56.0: auch Aushilfen
   // KC-CLUB-GARTEN-ERNTE: heute schon gezählt → ohne Abfrage nur prüfen, ob ein Kraut reif geworden ist (nur wenn Pflanzen da sind)
   if (gartenSpeicher()?.tag === heuteIso()) { if (gartenSpeicher()?.g?.pflanzen?.length) gartenReif().catch(() => {}); return; }
   gartenTag().catch(() => {}); // still – im schlechtesten Fall morgen wieder
