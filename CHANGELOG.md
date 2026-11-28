@@ -1,5 +1,10 @@
 # Änderungen
 
+## 3.55.0 – 2026-11-28 – 🌱 Mein Garten auch für Aushilfen (KC-CLUB-GARTEN-AUSHILFEN) · Server 3.55.0
+Hansi 28.11.2026: „OK, Aushilfen dürfen auch mitmachen.“
+- Kachel „🌱 Mein Garten“, Samentütchen, Säen, Pflege, Automatik und Club-Garten jetzt für Mitglieder **und** Aushilfen (Freigabe `garten` = alle gilt für beide). Gäste weiter nicht.
+- Server `gartenDarf` + `ZUGANG_AKTIONEN.aushilfe` (App und Server gleich), App `ZUGANG_KACHELN.aushilfe` + Tageszählung. Test `tests/garten-aushilfen.test.mjs` (CI).
+
 ## 3.54.0 – 2026-11-28 – 🏠 Heimarbeit-Stunden im „Mein Stundenkonto“ eintragen (KC-CLUB-HEIMARBEIT) · 🌱 Garten-Rezepte für Sträucher und alle Kräuter (KC-CLUB-GARTEN-STRAEUCHER) · App + Server 3.54.0
 Wunsch Hansi 28.11.: „Andrea arbeitet zu Hause und macht Vorbereitungen. Sie muss täglich ihre Einsatzstunden manuell über die App eingeben … es gibt eine Kachel Mein Stundenkonto, könnte das dort angebunden werden … die Möglichkeit aber nur für Andrea erst mal.“ Konzept: KICC `docs/KONZEPT-CLUB-HEIMARBEIT-STUNDEN.md`.
 - **Meins → ⏱️ Mein Stundenkonto → „➕ Stunden eintragen“**: Tag (heute / gestern / vorgestern), Von/Bis in Viertelstunden, Pause, „Was gemacht?“ (freiwillig), „= x Std.“ – ein Tipp „✅ Eintragen“. Einsatz und Tätigkeit („Vorbereitung“) setzt die App selbst.

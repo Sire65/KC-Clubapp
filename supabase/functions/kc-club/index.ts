@@ -197,7 +197,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "3.54.0";
+const SERVER_VERSION = "3.55.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -4825,6 +4825,7 @@ const ZUGANG_AKTIONEN: Record<"basis" | "aushilfe", readonly string[]> = {
     "vorfuehren_senden", "vorfuehren_ende", "vorfuehren_bild", "schnappschuss_antwort", "schnappschuss_bild", "schnappschuss_ende", "fernbedienung_melden", "push_anmelden",
     "push_pruefen", "geraete_liste", "geraet_entfernen", "andere_geraete_abmelden", "push_abmelden", "push_test", "rw_test", "neues_geraet_antwort"],
   aushilfe: ["mein_dienst", "dp_plaene", "dienstwunsch_laden", "dienstwunsch_speichern", "dienst_gruss", "dienste", "dienst_freigabe", "meine_eingaben",
+    "garten_tag", "garten_saeen", "garten_pflege", "garten_auto", "garten_club", "garten_clubgarten", // 3.55.0 KC-CLUB-GARTEN-AUSHILFEN (Hansi 28.11.2026)
     "eingaben_bestaetigen", "wunschbogen_mailen", "eingaben_ablegen", "fotos_neueste", "fotos_liste", "foto_oeffnen",
     "schulung_meine", "schulung_antwort", "gericht_zutat_setzen", "gericht_antwort", "tipp_stand", "tipp_mitmachen", "tipp_abgeben", "advent_gadget_stand", "advent_gadget_mitmachen", // KC-CLUB-ADVENT-GADGETS
     "advent_preis_melden", "advent_preise_meine", // KC-CLUB-ADVENT-AUSHILFEN (Hansi 22.11.2026)
@@ -6350,7 +6351,8 @@ function gartenWachs(p: any, jetztMs: number, auto: boolean) {
   const voll = Math.max(0, Math.min(jetztMs, bis) - st), halb = Math.max(0, jetztMs - Math.max(st, bis));
   return (Number(p.wachs) || 0) + (voll + halb / 2) / 864e5;
 }
-const gartenDarf = async (ich: Ich) => ich.zugang === "mitglied" && (ich.admin || (await freigaben()).garten === "alle");
+// 3.55.0 KC-CLUB-GARTEN-AUSHILFEN (Hansi 28.11.2026 „Aushilfen dürfen auch mitmachen“): Mitglieder und Aushilfen – Gäste nicht
+const gartenDarf = async (ich: Ich) => (ich.zugang === "mitglied" || ich.zugang === "aushilfe") && (ich.admin || (await freigaben()).garten === "alle");
 function gartenAus(g: any) {
   const verdient = gartenSchwellenBis(g.tage) + (g.taten || []).length;
   return { tage: g.tage, offen: Math.max(0, verdient - g.geoeffnet), naechste: GARTEN_SCHWELLEN.find((s) => s > g.tage) ?? (Math.floor(g.tage / 365) + 1) * 365,
