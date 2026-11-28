@@ -168,6 +168,7 @@ function skZeichnen() {
   const dia = [["saeulen", "📊 Säulen"], ["balken", "📶 Balken"], ["linie", "📈 Linie"], ["kreis", "🍩 Kreis"]];
   $("skInhalt").innerHTML = `${skFilterHtml()}
     <p class="hinweis" style="margin:4px 0">${esc(skZeitraumText())} · ${skStandText(d)}</p>
+    ${hmKarteHtml(d)}
     <div class="sk-summen">
       <div class="karte" data-z="Bestätigte Stunden – nur diese zählen"><b>${skStd(s.min)}</b><small>Std. bestätigt</small></div>
       <div class="karte" data-z="Vorläufig: noch nicht vom Planer geprüft – zählt nicht in die Summe"><b>${skStd(s.minVorl)}</b><small>⏳ vorläufig</small></div>
@@ -183,7 +184,7 @@ function skZeichnen() {
 function skZeileHtml(z) {
   const zeit = z.von ? `${z.von}–${z.bis}` : "–";
   return `<div class="sk-zeile${z.status === "bestaetigt" ? "" : " sk-vorl"}"><span><b>${esc(skDatum(z.datum))}</b> · ${esc(zeit)}<br><small>${esc(skAnlassText(z))}${z.km ? ` · 🚗 ${skKm(z.km)} km${z.kmErstattet === false ? " (noch nicht erstattet)" : ""}` : ""}${z.hinweis ? ` · ⏳ ${esc(z.hinweis)}` : ""} · <span class="sk-id">${esc(z.id)}</span></small></span>
-    <span class="sk-std">${z.min ? skStd(z.min) + " Std." : "–"}${z.status === "bestaetigt" ? "" : " ⏳"}</span></div>`;
+    <span class="sk-std">${z.min ? skStd(z.min) + " Std." : "–"}${z.status === "bestaetigt" ? "" : " ⏳"}${z.rid ? `<br><button type="button" class="knopf klein" onclick="hmOeffnen(${jsArg(z.einsatz)}, ${jsArg(z.rid)})">✏️ ändern</button>` : ""}</span></div>`;
 }
 
 // ---------- Drucken (Club-Kopfbogen über das Druck-System, KC-CLUB-CD) ----------
@@ -210,4 +211,67 @@ function skDruckSeite() {
       ${soll ? `<tr><td colspan="3" style="text-align:right">Soll zum Vergleich</td><td style="text-align:right">${skStd(soll)}</td><td colspan="3"></td></tr>` : ""}</tbody></table>
     <p class="dklein">✓ bestätigt (wie im DP2-Kontoauszug) · ⏳ vorläufig = vom Planer in DP2 noch nicht geprüft, zählt nicht in die Summe.${s.km > s.kmErst ? " * km eingereicht, noch nicht erstattet." : ""} Stunden in Dezimal (1,5 = 1 Std. 30 Min.).</p>`;
   return { titel: "Stundenkonto", unter: d.person.name, rechts: esc(skZeitraumText()), html, fuss: `${skStd(s.min)} Std. · ${skKm(s.km)} km` };
+}
+
+// ---------- 3.54.0 KC-CLUB-HEIMARBEIT (Wunsch Hansi 28.11.2026: „Andrea arbeitet zu Hause … Stunden täglich über die App, angebunden an Mein Stundenkonto“) ----------
+// Nur wer in einem laufenden Heimarbeit-Einsatz vorgesehen ist, sieht den Knopf (Server liefert d.heimarbeit). Gespeichert als Sonderstunden („gemeldet“),
+// der Planer bestätigt in DP2 – bis dahin ⏳ vorläufig, selbst änderbar oder zurückziehbar.
+const HMS = { e: null, rid: null, datum: null, von: 9, bis: 12, pause: 0, text: "" };
+const hmUhr = (h) => `${String(Math.floor(h)).padStart(2, "0")}:${String(Math.round((h % 1) * 60)).padStart(2, "0")}`;
+const hmStdText = () => (Math.max(0, HMS.bis - HMS.von - HMS.pause / 60)).toLocaleString("de-DE", { maximumFractionDigits: 2 });
+function hmKarteHtml(d) {
+  if (!d?.heimarbeit?.length || d.person?.id !== ICH?.person_id) return "";
+  const heute = heuteIso();
+  return d.heimarbeit.map((e) => {
+    const eigene = (d.zeilen || []).filter((z) => z.einsatz === e.id || (z.anlass === e.titel && z.art === "sonder")), heuteZ = eigene.filter((z) => z.datum === heute);
+    const imZeitraum = heute >= e.von && heute <= e.bis;
+    return `<div class="karte" style="margin:8px 0;border:2px solid var(--gruen,#2e7d4f)"><b>🏠 ${esc(e.titel)}</b>
+      <div class="hinweis" style="margin:2px 0 6px">${esc(skDatum(e.von))} – ${esc(skDatum(e.bis))}${heuteZ.length ? ` · heute eingetragen: ${heuteZ.map((z) => `${esc(z.von)}–${esc(z.bis)}`).join(", ")}` : imZeitraum ? " · heute noch nichts eingetragen" : ""}</div>
+      <button type="button" class="knopf haupt" onclick="hmOeffnen(${jsArg(e.id)})">➕ Stunden eintragen</button></div>`;
+  }).join("");
+}
+function hmOeffnen(einsatz, rid) {
+  const e = (SKS.d?.heimarbeit || []).find((x) => x.id === einsatz); if (!e) return melde("Diese Heimarbeit ist gerade nicht eingerichtet.", true);
+  const z = rid ? (SKS.d.zeilen || []).find((x) => x.rid === rid) : null, zahl = (t) => { const [h, m] = String(t || "0:0").split(":").map(Number); return h + (m || 0) / 60; };
+  const heute = heuteIso();
+  Object.assign(HMS, { e, rid: rid || null, datum: z ? z.datum : heute > e.bis ? e.bis : heute, von: z ? zahl(z.von) : 9, bis: z ? zahl(z.bis) : 12, pause: z ? z.pause || 0 : 0, text: z ? z.text || "" : "" });
+  blattAuf("hmBlatt", '<div id="hmInhalt"></div>'); hmZeichnen();
+}
+function hmTage() { // heute, gestern, vorgestern … – nur im Zeitraum, nicht in der Zukunft, höchstens 3 Tage zurück
+  const out = [], h = heuteIso();
+  for (let i = 0; i <= 3; i++) { const d = new Date(h + "T12:00:00"); d.setDate(d.getDate() - i); const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    if (iso >= HMS.e.von && iso <= HMS.e.bis) out.push([iso, i === 0 ? "heute" : i === 1 ? "gestern" : i === 2 ? "vorgestern" : skDatum(iso)]); }
+  return out;
+}
+function hmZeichnen() {
+  const el = $("hmInhalt"); if (!el || !HMS.e) return;
+  const uhr = (feld, titel) => `<div class="ds-uhr-feld"><div class="ds-uhr-titel">${titel}</div><div class="ds-uhr">${hmUhr(HMS[feld])}</div>
+    <div class="ds-schritte"><button class="knopf" onclick="hmSchieben('${feld}',-1)">−1 Std.</button><button class="knopf" onclick="hmSchieben('${feld}',-0.25)">−15</button><button class="knopf" onclick="hmSchieben('${feld}',0.25)">+15</button><button class="knopf" onclick="hmSchieben('${feld}',1)">+1 Std.</button></div></div>`;
+  const tage = hmTage();
+  el.innerHTML = `<h3 style="margin-top:0">🏠 ${HMS.rid ? "Eintrag ändern" : "Stunden eintragen"}</h3><p class="hinweis" style="margin:0 0 8px">${esc(HMS.e.titel)}</p>
+    <div class="ds-gruende" style="margin-bottom:8px">${tage.map(([iso, t]) => `<button type="button" class="chip${HMS.datum === iso ? " an" : ""}" onclick="HMS.datum='${iso}';hmZeichnen()">${esc(t)}</button>`).join("") || '<span class="hinweis">Kein Tag im Zeitraum.</span>'}</div>
+    ${uhr("von", "Von")}${uhr("bis", "Bis")}
+    <label class="feld">☕ Pause<select onchange="HMS.pause=Number(this.value);hmZeichnen()">${[0, 15, 30, 45, 60].map((m) => `<option value="${m}"${m === HMS.pause ? " selected" : ""}>${m ? m + " Min." : "keine"}</option>`).join("")}</select></label>
+    <p style="text-align:center;font-size:1.15rem;margin:6px 0"><b>= ${hmStdText()} Std.</b></p>
+    <label class="feld">Was gemacht? <small class="hinweis">(freiwillig)</small><input id="hmText" maxlength="300" value="${esc(HMS.text)}" placeholder="z. B. Plätzchen gebacken" oninput="HMS.text=this.value"></label>
+    <div class="knoepfe" style="flex-direction:column;align-items:stretch;margin-top:8px"><button class="knopf haupt" onclick="hmSpeichern(this)">✅ ${HMS.rid ? "Änderung speichern" : "Eintragen"}</button>
+      ${HMS.rid ? '<button class="knopf" onclick="hmZurueck(this)">🗑️ Eintrag zurückziehen</button>' : ""}<button class="knopf" onclick="fensterZu($('hmBlatt'))">Abbrechen</button></div>
+    <p class="hinweis" style="margin:8px 0 0">Hansi bestätigt deine Stunden – bis dahin stehen sie mit ⏳ in deinem Stundenkonto und du kannst sie noch ändern.</p>`;
+}
+function hmSchieben(feld, h) { HMS[feld] = Math.min(24, Math.max(0, Math.round((HMS[feld] + h) * 4) / 4)); if (feld === "von" && HMS.bis <= HMS.von) HMS.bis = Math.min(24, HMS.von + 0.25); if (feld === "bis" && HMS.bis <= HMS.von) HMS.von = Math.max(0, HMS.bis - 0.25); hmZeichnen(); }
+async function hmSpeichern(knopf) {
+  if (!(HMS.bis > HMS.von)) return melde("Bis muss nach Von liegen.", true);
+  await einmal(knopf, async () => {
+    const daten = { datum: HMS.datum, von: HMS.von, bis: HMS.bis, pause: HMS.pause, text: HMS.text.trim() };
+    try { await api(HMS.rid ? "heimarbeit_aendern" : "heimarbeit_melden", HMS.rid ? { id: HMS.rid, ...daten } : { einsatz: HMS.e.id, ...daten }, { warten: true });
+      fensterZu($("hmBlatt")); melde(`✅ ${HMS.rid ? "Geändert" : "Eingetragen"}: ${hmUhr(HMS.von)}–${hmUhr(HMS.bis)} Uhr (${hmStdText()} Std.) – danke!`); skStart(); }
+    catch (e) { meldeFehler(e); }
+  });
+}
+async function hmZurueck(knopf) {
+  if (!(await frage("Diesen Eintrag zurückziehen?", { ja: "🗑️ Zurückziehen", nein: "Abbrechen" }))) return;
+  await einmal(knopf, async () => {
+    try { await api("heimarbeit_aendern", { id: HMS.rid, zurueck: true }, { warten: true }); fensterZu($("hmBlatt")); melde("🗑️ Zurückgezogen"); skStart(); }
+    catch (e) { meldeFehler(e); }
+  });
 }

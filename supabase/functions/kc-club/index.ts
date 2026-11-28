@@ -197,7 +197,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "3.53.0";
+const SERVER_VERSION = "3.54.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -6113,10 +6113,10 @@ async function dpDruckNeu(adminId: string) {
 // 3.25.0 KC-CLUB-DP-GRUSS (Wunsch Hansi 25.11.): Nachricht aus dem FREIGEGEBENEN Sollplan – am Morgen des Diensttags und sofort bei Änderungen.
 // Weg: wer ein aktives Push-Abo hat → Push, sonst E-Mail (unabhängig von der eigenen Wahl „Dienste“ – Hansi: „jedes Mitglied“).
 // „Keine Benachrichtigungen“/Sperren gelten weiter (routerSenden). Jede Nachricht wird VOR dem Senden im Protokoll gemerkt (nie doppelt).
-async function dpgSenden(pid: string, v: { titel: string; kurz: string; text: string }, korrelation: string) {
+async function dpgSenden(pid: string, v: { titel: string; kurz: string; text: string }, korrelation: string, ziel = "#dienste") { // ziel (3.54.0): Sprungziel in der App
   const { data: abo } = await db.from("kc_member_push_subscriptions").select("id").eq("person_id", pid).eq("active", true).limit(1);
   const weg = abo?.length ? "push" : "mail";
-  const r: any = await routerSenden(`club_dienst_${weg}`, [pid], { ...v, betreff: `Köcheclub Werne – ${v.titel.replace(/^\S+ /, "")}`, url: `${APP_URL}#dienste` }, korrelation);
+  const r: any = await routerSenden(`club_dienst_${weg}`, [pid], { ...v, betreff: `Köcheclub Werne – ${v.titel.replace(/^\S+ /, "")}`, url: `${APP_URL}${ziel}` }, korrelation);
   return { weg, ok: Number(r?.gesendet || 0) > 0 };
 }
 async function dpgFrei(): Promise<any | null> {
@@ -11187,6 +11187,8 @@ const kcAnfrage = async (req: Request): Promise<Response> => {
       // kurz vor Beginn (noch nicht angemeldet), zum geplanten Ende (noch angemeldet), 1 Std. danach (Gehen vergessen). Je Dienst und Art einmal.
       const dpGruss = await dpgMorgen().catch((e) => { console.error("dp gruss", String(e)); return 0; }); // 3.25.0 KC-CLUB-DP-GRUSS: Morgengruß am Diensttag
       if (dpGruss) console.log(JSON.stringify({ dp_gruss: dpGruss }));
+      const hmErin = await hmErinnern().catch((e) => { console.error("heimarbeit erinnern", String(e)); return 0; }); // 3.54.0 KC-CLUB-HEIMARBEIT: Abend-Erinnerung
+      if (hmErin) console.log(JSON.stringify({ heimarbeit_erinnert: hmErin }));
       const dsErin = await dienstStempelErinnern().catch((e) => { console.error("dienst stempel erinnern", String(e)); return 0; });
       const irErin = await irErinnern().catch((e) => { console.error("ist rueckfrage", String(e)); return 0; }); // KC-CLUB-IST-RUECKFRAGE
       if (irErin) console.log(JSON.stringify({ ist_rueckfrage: irErin }));
@@ -16159,8 +16161,42 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           pid = wunsch; await protokoll(ich.person_id, "stundenkonto_angesehen", { person: pid });
         }
         const k = await stundenkontoLaden(pid), name = pid === ich.person_id ? ich.name : (await personen([pid])).get(pid)?.display_name || pid;
-        return json({ person: { id: pid, name }, ...k, darfAndere: darf,
+        const heimarbeit = pid === ich.person_id ? (await hmEinsaetze(pid).catch(() => [])).map(({ personen: _p, ...e }: any) => e) : []; // 3.54.0 KC-CLUB-HEIMARBEIT
+        return json({ person: { id: pid, name }, ...k, heimarbeit, darfAndere: darf,
           mitglieder: darf ? (await aktiveMitglieder()).map((m) => ({ id: m.person_id, name: m.display_name })).sort((a, b) => String(a.name).localeCompare(String(b.name), "de")) : [] });
+      }
+
+      // 3.54.0 KC-CLUB-HEIMARBEIT: Stunden von zu Hause direkt im Stundenkonto eintragen / ändern / zurückziehen (nur wer im Heimarbeit-Einsatz vorgesehen ist)
+      case "heimarbeit_melden": {
+        const e = (await hmEinsaetze(ich.person_id)).find((x) => x.id === txt(p.einsatz, 80));
+        if (!e) throw new Fehler("Für dich ist gerade keine Heimarbeit eingerichtet.", 403);
+        const datum = String(p.datum || "");
+        if (!hmTagOk(e, datum)) throw new Fehler(`Eintragen geht für Tage im Zeitraum ${tagText(e.von)}–${tagText(e.bis)}, nicht in der Zukunft und höchstens ${HM.nachTage} Tage zurück.`);
+        const r = await sonderstundenMelden(ich, { specialEventId: e.id, date: datum, taetigkeit: "vorbereitung", bemerkung: txt(p.text, 300),
+          eintraege: [{ personId: ich.person_id, start: Number(p.von), end: Number(p.bis), breakMinutes: Math.round(Number(p.pause) || 0) }] });
+        if (!(r as any)?.rows?.length && (r as any)?.skipped?.length) throw new Fehler("Für diese Zeit hast du schon etwas eingetragen – bitte den Eintrag ändern.", 409);
+        return json({ ok: true });
+      }
+      case "heimarbeit_aendern": {
+        const { data: r } = await db.from("kc_dp_hour_reports").select("id,special_event_id,person_id,gemeldet_von,status,source,version,work_date").eq("id", txt(p.id, 80)).maybeSingle();
+        if (!r || r.person_id !== ich.person_id || r.gemeldet_von !== ich.person_id || r.source !== "club_app") throw new Fehler("Eintrag nicht gefunden.", 404);
+        if (r.status !== "gemeldet") throw new Fehler("Der Planer hat den Eintrag schon bearbeitet – Änderungen bitte bei ihm melden.", 409);
+        const e = (await hmEinsaetze(ich.person_id)).find((x) => x.id === r.special_event_id);
+        if (!e) throw new Fehler("Ändern geht nur für deine Heimarbeit.", 403);
+        if (p.zurueck === true) {
+          schreibOk(await db.from("kc_dp_hour_reports").update({ status: "zurueckgezogen", ablehngrund: "Selbst zurückgezogen", version: Number(r.version || 1) + 1, updated_at: jetzt() }).eq("id", r.id).eq("status", "gemeldet"), "Zurückziehen");
+          await protokoll(ich.person_id, "heimarbeit_zurueck", { meldung: r.id, datum: r.work_date });
+          return json({ ok: true });
+        }
+        const datum = String(p.datum || r.work_date), von = Number(p.von), bis = Number(p.bis), pause = Math.round(Number(p.pause) || 0);
+        const viertel = (n: number) => Number.isFinite(n) && Math.abs(n * 4 - Math.round(n * 4)) < 1e-9;
+        if (!hmTagOk(e, datum)) throw new Fehler("Dieser Tag geht nicht.");
+        if (!viertel(von) || !viertel(bis) || von < 0 || von >= 24 || bis <= von || bis > 24 || bis - von > SH.maxSpanne) throw new Fehler("Bitte gültige Von-/Bis-Zeiten wählen.");
+        if (pause < 0 || pause > SH.maxPause || pause / 60 >= bis - von) throw new Fehler("Die Pause passt nicht zur Zeit.");
+        schreibOk(await db.from("kc_dp_hour_reports").update({ work_date: datum, start_h: von, end_h: bis, break_minutes: pause, bemerkung: txt(p.text, 300) || null,
+          version: Number(r.version || 1) + 1, updated_at: jetzt() }).eq("id", r.id).eq("status", "gemeldet"), "Ändern");
+        await protokoll(ich.person_id, "heimarbeit_geaendert", { meldung: r.id, datum });
+        return json({ ok: true });
       }
 
       case "mein_dienst": {
@@ -24345,10 +24381,50 @@ const skKurz = (v: unknown) => String(v ?? "").replace(/[^0-9a-z]/gi, "").slice(
 const skHHMM = (h: number) => `${String(Math.floor(h % 24)).padStart(2, "0")}:${String(Math.round((h % 1) * 60)).padStart(2, "0")}`;
 const skMinZeit = (a: unknown, b: unknown, pause: unknown) => { const t = (x: unknown) => { const [h, m] = String(x || "0:0").split(":").map(Number); return h * 60 + (m || 0); };
   let d = t(b) - t(a); if (d < 0) d += 1440; return Math.max(0, d - (Number(pause) || 0)); };
+// ---------- 3.54.0 KC-CLUB-HEIMARBEIT (Wunsch Hansi 28.11.2026 „Andrea arbeitet zu Hause und macht Vorbereitungen – Stunden täglich über die App,
+// angebunden an Mein Stundenkonto, erst mal nur für Andrea“). Konzept: KICC docs/KONZEPT-CLUB-HEIMARBEIT-STUNDEN.md.
+// Freischaltung über den Sondereinsatz selbst: payload.heimarbeit = true, Person in payload.vorgesehen, Termin FEST mit Zeitraum. Gespeichert wird
+// wie jede Sonderstunden-Meldung (kc_dp_hour_reports, Status „gemeldet“, Tätigkeit „vorbereitung“) – DP2 bestätigt, dann zählt es im Konto.
+const HM = { nachTage: 3, erinnerAb: 20, erinnerBis: 22, aktion: "heimarbeit_erinnert" };
+async function hmEinsaetze(pid?: string) {
+  const heute = berlinTag(new Date()), frueh = tagDazu(heute, -HM.nachTage);
+  let q = db.from("kc_dp_special_events").select("source_id,titel,datum_von,datum_bis,payload").eq("org_id", ORG).eq("event_id", DW.veranstaltung)
+    .eq("status", "published").eq("termin_status", "FEST").eq("payload->>heimarbeit", "true").lte("datum_von", heute).gte("datum_bis", frueh);
+  if (pid) q = q.contains("payload", { vorgesehen: [pid] });
+  const { data } = await q.limit(20);
+  return (data ?? []).map((e: any) => ({ id: String(e.source_id), titel: String(e.titel || "Heimarbeit"), von: String(e.datum_von), bis: String(e.datum_bis || e.datum_von),
+    personen: Array.isArray(e.payload?.vorgesehen) ? e.payload.vorgesehen.map(String) : [] }));
+}
+// Tage, für die gemeldet werden darf: im Zeitraum des Einsatzes, nicht in der Zukunft, höchstens HM.nachTage zurück
+function hmTagOk(e: { von: string; bis: string }, datum: string) {
+  const heute = berlinTag(new Date());
+  return /^\d{4}-\d{2}-\d{2}$/.test(datum) && datum >= e.von && datum <= e.bis && datum <= heute && datum >= tagDazu(heute, -HM.nachTage);
+}
+// Abend-Erinnerung (Wartung, 20–22 Uhr): wer an einem Einsatztag noch nichts eingetragen hat, bekommt einmal Bescheid (Push, sonst E-Mail)
+async function hmErinnern() {
+  const std = berlinStunde(new Date()); if (std < HM.erinnerAb || std >= HM.erinnerBis) return 0;
+  const heute = berlinTag(new Date()), ev = (await hmEinsaetze()).filter((e) => e.von <= heute && e.bis >= heute); if (!ev.length) return 0;
+  const leute = new Map((await aktiveMitglieder()).map((m: any) => [m.person_id, m]));
+  let n = 0;
+  for (const e of ev) for (const pid of e.personen) {
+    if (!leute.has(pid)) continue;
+    const [{ data: hat }, { data: schon }] = await Promise.all([
+      db.from("kc_dp_hour_reports").select("id").eq("org_id", ORG).eq("special_event_id", e.id).eq("person_id", pid).eq("work_date", heute).in("status", ["gemeldet", "bestaetigt"]).limit(1),
+      db.from("kc_club_protokoll").select("id").eq("aktion", HM.aktion).contains("details", { tag: heute, person: pid, einsatz: e.id }).limit(1)]);
+    if (hat?.length || schon?.length) continue;
+    await protokoll(null, HM.aktion, { tag: heute, person: pid, einsatz: e.id }); // erst merken, dann senden (nie doppelt)
+    const vn = vorname(leute.get(pid));
+    await dpgSenden(pid, { titel: "🏠 Heimarbeit-Stunden eintragen?", kurz: `Heute schon deine Stunden für „${e.titel}“ eingetragen?`,
+      text: `Hallo ${vn},\n\nhast du heute für „${e.titel}“ gearbeitet? Dann trag deine Stunden bitte ein:\nClub-App → Meins → ⏱️ Mein Stundenkonto → „➕ Stunden eintragen“.\n\nWenn du heute nichts gemacht hast, ist alles gut – dann einfach nichts tun.\n\nLiebe Grüße\nKöcheclub Werne` },
+      `club-heimarbeit:${heute}:${pid}`, "#stundenkonto").catch((x) => console.error("heimarbeit erinnern", String(x)));
+    n++;
+  }
+  return n;
+}
 async function stundenkontoLaden(pid: string) {
   const ab = berlinTag(new Date(Date.now() - SK.tage * 86400000));
   const [{ data: hr }, { data: tc }, { data: soll }, { data: ers }, { data: dp }] = await Promise.all([
-    db.from("kc_dp_hour_reports").select("id,event_id,special_event_title,work_date,start_h,end_h,break_minutes,taetigkeit,status,source,erstattung_id,updated_at")
+    db.from("kc_dp_hour_reports").select("id,event_id,special_event_id,special_event_title,work_date,start_h,end_h,break_minutes,taetigkeit,bemerkung,status,source,gemeldet_von,erstattung_id,updated_at")
       .eq("org_id", ORG).eq("person_id", pid).in("status", ["gemeldet", "bestaetigt"]).gte("work_date", ab).limit(2000),
     db.from("kc_dp_timeclock_actuals").select("id,event_id,work_date,start_time,end_time,break_minutes,status,updated_at")
       .eq("org_id", ORG).eq("person_id", pid).neq("status", "voided").gte("work_date", ab).limit(2000),
@@ -24386,7 +24462,9 @@ async function stundenkontoLaden(pid: string) {
       min: g ? Number(g.minutes) || 0 : Math.max(0, Math.round((Number(r.end_h) - Number(r.start_h)) * 60)), // DP2 gebucht → DP2 zählt; sonst Pausen bezahlt wie „Mein Dienst“
       art: erst ? "erstattung" : "sonder", veranstaltung: veranst(r.event_id), anlass: txt(r.special_event_title || "Sondereinsatz", 80), taetigkeit: r.taetigkeit || null,
       km: k?.km ?? 0, kmErstattet: k?.erstattet ?? null, status: r.status === "bestaetigt" ? "bestaetigt" : "vorlaeufig",
-      hinweis: r.status === "gemeldet" ? "wartet auf den Planer" : g?.abgeschlossen ? "🔒 Istplan abgeschlossen" : null });
+      hinweis: r.status === "gemeldet" ? "wartet auf den Planer" : g?.abgeschlossen ? "🔒 Istplan abgeschlossen" : null,
+      // 3.54.0 KC-CLUB-HEIMARBEIT: selbst gemeldet, noch nicht bestätigt → darf geändert/zurückgezogen werden (Kennung nur dafür)
+      ...(r.status === "gemeldet" && r.source === "club_app" && r.gemeldet_von === pid ? { rid: String(r.id), einsatz: r.special_event_id, pause: Number(r.break_minutes) || 0, text: r.bemerkung || "" } : {}) });
   }
   for (const r of tc ?? []) {
     if (dpStandTage.has(r.work_date)) continue; // DP2 hat den Tag schon geprüft – die Rohbuchung der Kasse steckt darin
