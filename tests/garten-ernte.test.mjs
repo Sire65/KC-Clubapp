@@ -10,13 +10,16 @@ const umgebung = {
   localStorage: { getItem: (k) => speicher[k] ?? null, setItem: (k, v) => { speicher[k] = String(v); } },
   esc: (t) => String(t), heuteIso: () => "2026-11-15", blattAuf: (id, html) => blaetter.push([id, html]), document: { getElementById: () => null, createElement: () => ({}), head: { appendChild() {} } },
 };
-const G = new Function(...Object.keys(umgebung), gt + `; return { GT_ARTEN, GT_REZEPTE, GT_REIF_MERK, gtLage, gtSvg, gtReifeHinweis, gtRezept, gtRezeptAuswahl, gartenReif, set gtHinweis(f) { gtHinweis = f; } };`)(...Object.values(umgebung));
+const G = new Function(...Object.keys(umgebung), gt + `; return { GT_ARTEN, GT_REZEPTE, GT_REZEPT_ALLE, GT_KRAEUTER_ALLE, GT_REIF_MERK, gtLage, gtSvg, gtReifeHinweis, gtRezept, gtRezeptAuswahl, gartenReif, set gtHinweis(f) { gtHinweis = f; } };`)(...Object.values(umgebung));
 G.gtHinweis = (text, knopf, fn, versuch, gezeigt) => { hinweise.push({ text, knopf, fn }); gezeigt && gezeigt(); };
 // 1) Sechs Kräuter, je ein Rezept mit Zutaten und Schritten; Blumen, Sträucher, Bäume ohne Rezept
 const kraeuter = G.GT_ARTEN.filter((a) => a.gruppe === "kraeuter").map((a) => a.id);
 assert.deepEqual(kraeuter, ["basilikum", "rosmarin", "schnittlauch", "petersilie", "dill", "kresse"]);
 for (const k of kraeuter) { const r = G.GT_REZEPTE[k]; assert.ok(r && r.t && r.lust && r.fuer && r.zutaten.length >= 4 && r.schritte.length >= 2, "Rezept " + k); }
-assert.deepEqual(Object.keys(G.GT_REZEPTE).sort(), [...kraeuter].sort(), "nur Kräuter haben Rezepte");
+assert.deepEqual(Object.keys(G.GT_REZEPTE).sort(), [...kraeuter, "lavendel", "johannisbeere"].sort(), "Kräuter + essbare Sträucher (KC-CLUB-GARTEN-STRAEUCHER)");
+assert.ok(!G.GT_REZEPTE.hortensie, "Hortensie ist giftig – nie ein Rezept");
+for (const k of ["lavendel", "johannisbeere"]) { const r = G.GT_REZEPTE[k]; assert.ok(r.t && r.lust && r.fuer && r.zutaten.length >= 4 && r.schritte.length >= 2, "Rezept " + k); }
+assert.ok(G.GT_REZEPT_ALLE.zutaten.length >= 4 && G.GT_REZEPT_ALLE.schritte.length >= 3, "Rezept mit allen Kräutern");
 assert.equal(G.GT_REZEPTE.petersilie.t, "Petersilien-Walnuss-Pesto"); assert.equal(G.GT_REZEPTE.kresse.t, "Kresse-Senf-Quark");
 assert.deepEqual(["petersilie", "dill", "kresse"].map((k) => G.GT_ARTEN.find((a) => a.id === k).tage), [28, 35, 7], "Wachstumszeiten aus dem Konzept");
 assert.equal(G.GT_ARTEN.find((a) => a.id === "schnittlauch").fertig, "ist erntereif und blüht");
@@ -37,7 +40,7 @@ hinweise[0].fn(); assert.equal(blaetter.at(-1)[0], "gtRezept"); assert.ok(blaett
 const g2 = { automatik: true, pflanzen: [pfl("s1", "schnittlauch", 40), pfl("d1", "dill", 40), pfl("p1", "petersilie", 40), pfl("r2", "mohn", 40)] };
 assert.equal(G.gtReifeHinweis(g2), true); assert.equal(hinweise.length, 2);
 assert.equal(hinweise[1].text, "🌿 Dein Schnittlauch, dein Dill und deine Petersilie sind erntereif. Die passenden Rezepte warten auf dich.");
-hinweise[1].fn(); assert.ok(["Schnittlauch-Radieschen-Quark", "Dill-Zitronen-Quark", "Petersilien-Walnuss-Pesto"].every((t) => blaetter.at(-1)[1].includes(t)), "Auswahl mit allen Rezepten");
+hinweise[1].fn(); assert.ok(["Schnittlauch-Radieschen-Quark", "Dill-Zitronen-Quark", "Petersilien-Walnuss-Pesto", "Grüne Kräutersoße aus deinem Garten"].every((t) => blaetter.at(-1)[1].includes(t)), "Auswahl mit allen Rezepten + Grüne Soße ab 3 Kräutern");
 assert.equal(G.gtReifeHinweis(g2), false, "Sammelhinweis nur einmal");
 assert.equal(G.gtReifeHinweis({ automatik: true, pflanzen: [pfl("x1", "mohn", 40), pfl("x2", "apfel", 90)] }), false, "Blumen und Bäume lösen keinen Kräuterhinweis aus");
 // 5) Einbau: Knopf an reifer Pflanze, Reife vor Tütchen- und Pflegehinweisen, Start ohne Abfrage, kein Push
@@ -46,4 +49,13 @@ assert.ok(gt.indexOf("if (gtReifeHinweis(g, lagen)) return;") < gt.indexOf("if (
 assert.ok(/async function gartenReif\(\) \{ const c = gtAusSpeicher\(\);/.test(gt) && !/api\(/.test(gt.match(/async function gartenReif[^\n]*/)[0]), "gartenReif ohne Abfrage");
 assert.ok(!/senden\(|webpush|Notification\(/i.test(gt), "kein Push");
 assert.ok(!/Deine \$\{l\.a\.t\}/.test(gt), "kein falsches „Deine Basilikum“ mehr");
+// 6) Sträucher: Johannisbeere trägt Beeren → eigener Hinweis; Hortensie nie; Grüne Soße erst ab 3 verschiedenen Kräutern
+assert.equal(G.gtReifeHinweis({ automatik: true, pflanzen: [pfl("h1", "hortensie", 40)] }), false, "Hortensie: kein Rezept-Hinweis");
+assert.equal(G.gtReifeHinweis({ automatik: true, pflanzen: [pfl("j1", "johannisbeere", 40)] }), true);
+assert.equal(hinweise.at(-1).text, "🍒 Deine Johannisbeere trägt Beeren! Lust auf eine Johannisbeer-Quarkspeise?");
+hinweise.at(-1).fn(); assert.ok(blaetter.at(-1)[1].includes("Johannisbeer-Quarkspeise") && blaetter.at(-1)[1].includes("echte Zutaten") && !blaetter.at(-1)[1].includes("Wenig geerntet"));
+assert.equal(G.gtReifeHinweis({ automatik: true, pflanzen: [pfl("b9", "basilikum", 40), pfl("l9", "lavendel", 40)] }), true);
+assert.ok(hinweise.at(-1).text.startsWith("🧺 ") && hinweise.at(-1).text.includes("bereit für die Küche")); hinweise.at(-1).fn();
+assert.ok(!blaetter.at(-1)[1].includes("Grüne Kräutersoße"), "1 Kraut → keine Grüne Soße");
+G.gtRezept(G.GT_KRAEUTER_ALLE); assert.ok(blaetter.at(-1)[1].includes("Grüne Kräutersoße") && blaetter.at(-1)[1].includes("Schmand"));
 console.log("garten-ernte: ok");
